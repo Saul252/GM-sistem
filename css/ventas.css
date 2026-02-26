@@ -1,0 +1,33 @@
+
+body {
+    background: #f4f6f9;
+}
+
+/* 🔥 Ajuste para que NO tape sidebar */
+.main-content {
+    margin-left: 260px; /* igual ancho que tu sidebar */
+    padding: 30px;
+}
+
+/* Si tienes navbar fijo arriba */
+.navbar-fixed {
+    margin-top: 70px;
+}
+
+.card {
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.tabla-productos tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+.carrito {
+    position: sticky;
+    top: 20px;
+}
+.tabla-scroll {
+    max-height: 500px;   /* altura máxima */
+    overflow-y: auto;    /* scroll vertical */
+}

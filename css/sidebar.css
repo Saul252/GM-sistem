@@ -1,0 +1,47 @@
+/* ===== NAVBAR ROJO ===== */
+.navbar-red{
+    background: #b71c1c !important;
+}
+
+.navbar-red .btn-outline-light{
+    border-color: rgba(255,255,255,.6);
+}
+
+.navbar-red .btn-outline-light:hover{
+    background: #ffffff;
+    color: #b71c1c;
+}
+
+
+/* ===== SIDEBAR ROJO ===== */
+.sidebar-red{
+    background: #b71c1c !important;
+    width: 260px;
+    height: 100vh;
+    position: fixed;
+    top: 56px;
+    left: 0;
+    transition: .3s ease;
+    box-shadow: 4px 0 15px rgba(0,0,0,.15);
+}
+
+/* Links */
+.sidebar-red .nav-link{
+    color: rgba(255,255,255,.85);
+    border-radius: 8px;
+    padding: 10px 12px;
+    transition: .2s;
+}
+
+/* Hover */
+.sidebar-red .nav-link:hover{
+    background: #8e0000;
+    color: #fff;
+}
+
+/* Activo */
+.sidebar-red .nav-link.active{
+    background: #7f0000;
+    color: #fff;
+    font-weight: 600;
+}
