@@ -5,6 +5,9 @@ require_once __DIR__ . '/../../includes/sidebar.php';
 require_once __DIR__ . '/../../config/conexion.php';
 
 $paginaActual = 'Historial';
+
+// Capturamos el almacén del usuario desde la sesión (0 = Admin)
+$almacen_usuario = $_SESSION['almacen_id'] ?? 0;
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -14,13 +17,13 @@ $paginaActual = 'Historial';
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link href="/cfsistem/css/almacenes.css" rel="stylesheet">
     <style>
         .input-disabled { background-color: #e9ecef !important; cursor: not-allowed; }
         .table-sm-text { font-size: 0.85rem; }
         .badge-mov { width: 80px; display: inline-block; text-align: center; }
+        .bg-ajuste { background-color: #ffc107; color: #000; } /* Amarillo para ajustes */
     </style>
 </head>
 <body>
@@ -34,6 +37,13 @@ $paginaActual = 'Historial';
                     <span class="visually-hidden">Cargando...</span>
                 </div>
             </div>
+
+            <?php if($almacen_usuario > 0): ?>
+                <div class="alert alert-light border-start border-primary border-4 shadow-sm py-2 mb-4">
+                    <i class="bi bi-info-circle-fill text-primary me-2"></i> 
+                    Vista limitada al almacén asignado.
+                </div>
+            <?php endif; ?>
             
             <div class="card shadow-sm mb-4 border-0">
                 <div class="card-body bg-light rounded">
@@ -95,8 +105,7 @@ $paginaActual = 'Historial';
                                     <th class="no-export">Acción</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                </tbody>
+                            <tbody></tbody>
                         </table>
                     </div>
                 </div>
@@ -115,35 +124,45 @@ $paginaActual = 'Historial';
 
     <script>
     $(document).ready(function() {
-        // 1. Inicializar DataTable
+        // ID del almacén desde PHP para usarlo en la petición
+        const almacenUsuario = <?= $almacen_usuario ?>;
+
         const tabla = $('#tablaHistorial').DataTable({
             language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
             dom: 'Bfrtip',
             buttons: [
-                { 
-                    extend: 'print', 
-                    text: '<i class="bi bi-printer"></i> Imprimir Reporte', 
-                    className: 'btn btn-dark btn-sm me-2 rounded',
-                    exportOptions: { columns: ':not(.no-export)' } 
+                {
+                    extend: 'pdfHtml5',
+                    text: '<i class="bi bi-file-pdf"></i> Exportar a PDF',
+                    className: 'btn btn-danger btn-sm shadow-sm me-2 rounded',
+                    title: 'Reporte de Movimientos de Inventario',
+                    orientation: 'landscape',
+                    pageSize: 'LETTER',
+                    exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] },
+                    customize: function (doc) {
+                        doc.content[1].table.widths = ['12%', '18%', '10%', '10%', '20%', '15%', '15%'];
+                        doc.styles.tableHeader.fillColor = '#212529';
+                        doc.defaultStyle.fontSize = 9;
+                    }
                 },
-                { 
-                    extend: 'pdf', 
-                    text: '<i class="bi bi-file-pdf"></i> Exportar PDF', 
-                    className: 'btn btn-danger btn-sm rounded',
-                    exportOptions: { columns: ':not(.no-export)' } 
+                {
+                    extend: 'print',
+                    text: '<i class="bi bi-printer"></i> Imprimir Tabla',
+                    className: 'btn btn-dark btn-sm shadow-sm rounded',
+                    exportOptions: { columns: ':not(.no-export)' }
                 }
             ],
             order: [[0, 'desc']],
             pageLength: 25
         });
 
-        // 2. Función para obtener datos asíncronamente
         function cargarHistorial() {
             const params = {
                 periodo: $('#selectorPeriodo').val(),
                 f_inicio: $('#f_inicio').val(),
                 f_fin: $('#f_fin').val(),
-                tipo: $('#filtroTipo').val()
+                tipo: $('#filtroTipo').val(),
+                almacen_id: almacenUsuario // Enviamos el almacén para el filtro backend
             };
 
             $('#loader').removeClass('d-none');
@@ -171,8 +190,8 @@ $paginaActual = 'Historial';
                     }
                     tabla.draw();
                 },
-                error: function() {
-                    console.error("Error al cargar los datos.");
+                error: function(xhr) {
+                    console.error("Error al cargar los datos:", xhr.responseText);
                 },
                 complete: function() {
                     $('#loader').addClass('d-none');
@@ -180,18 +199,16 @@ $paginaActual = 'Historial';
             });
         }
 
-        // 3. Control de inputs de fecha
+        // Listeners
         $('#selectorPeriodo').on('change', function() {
-            const val = $(this).val();
-            if(val === 'personalizado') {
+            if($(this).val() === 'personalizado') {
                 $('#f_inicio, #f_fin').prop('disabled', false).removeClass('input-disabled');
             } else {
                 $('#f_inicio, #f_fin').prop('disabled', true).addClass('input-disabled').val('');
-                cargarHistorial(); // Cargar automáticamente al cambiar periodo predefinido
+                cargarHistorial();
             }
         });
 
-        // 4. Listeners para tiempo real
         $('#f_inicio, #f_fin, #filtroTipo').on('change', cargarHistorial);
 
         $('#btnReset').on('click', function() {
@@ -200,34 +217,9 @@ $paginaActual = 'Historial';
             cargarHistorial();
         });
 
-        // Carga inicial al abrir la página
+        // Carga inicial
         cargarHistorial();
     });
-
-
-    // Configuración de los botones dentro del DataTable
-buttons: [
-    {
-        extend: 'pdfHtml5',
-        text: '<i class="bi bi-file-pdf"></i> Exportar Todo a PDF',
-        className: 'btn btn-danger btn-sm shadow-sm',
-        title: 'Reporte de Movimientos de Inventario',
-        orientation: 'landscape', // Mejor para tablas anchas
-        pageSize: 'LETTER',
-        exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] }, // Excluye la columna de acciones
-        customize: function (doc) {
-            doc.content[1].table.widths = ['12%', '18%', '10%', '10%', '20%', '15%', '15%'];
-            doc.styles.tableHeader.fillColor = '#212529'; // Encabezado oscuro
-            doc.defaultStyle.fontSize = 9;
-        }
-    },
-    {
-        extend: 'print',
-        text: '<i class="bi bi-printer"></i> Imprimir Tabla',
-        className: 'btn btn-dark btn-sm shadow-sm',
-        exportOptions: { columns: ':not(.no-export)' }
-    }
-]
     </script>
 </body>
 </html>

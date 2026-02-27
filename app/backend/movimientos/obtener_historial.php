@@ -1,8 +1,18 @@
 <?php
 header('Content-Type: application/json');
 date_default_timezone_set('America/Mexico_City');
+
+// 1. IMPORTANTE: Iniciar sesión para validar el rol y el almacén del usuario
+session_start(); 
 require_once $_SERVER['DOCUMENT_ROOT'] . '/cfsistem/config/conexion.php';
 
+// Validamos que el usuario esté logueado
+if (!isset($_SESSION['usuario_id'])) {
+    echo json_encode(['data' => [], 'error' => 'No autorizado']);
+    exit;
+}
+
+$almacen_usuario = $_SESSION['almacen_id'] ?? 0; // 0 significa Admin
 $periodo = $_GET['periodo'] ?? 'hoy';
 $tipo = $_GET['tipo'] ?? '';
 $f_inicio_user = $_GET['f_inicio'] ?? '';
@@ -31,9 +41,18 @@ if ($periodo !== 'personalizado') {
     $fin = !empty($f_fin_user) ? $f_fin_user : $hoy;
 }
 
-// Construcción de la consulta con todos los involucrados
+// 2. CONSTRUCCIÓN DE LA CONSULTA CON FILTRO DE SEGURIDAD
 $where = "WHERE DATE(m.fecha) BETWEEN '$inicio' AND '$fin'";
-if ($tipo) $where .= " AND m.tipo = '$tipo'";
+
+if ($tipo) {
+    $where .= " AND m.tipo = '$tipo'";
+}
+
+// SEGURIDAD: Si no es admin, filtramos forzosamente por su almacén
+if ($almacen_usuario > 0) {
+    // El usuario solo ve movimientos donde su almacén fue Origen O Destino
+    $where .= " AND (m.almacen_origen_id = $almacen_usuario OR m.almacen_destino_id = $almacen_usuario)";
+}
 
 $sql = "SELECT m.*, p.nombre as prod, p.sku, 
                a1.nombre as ori_nom, a2.nombre as des_nom, 
@@ -67,8 +86,8 @@ while ($row = $res->fetch_assoc()) {
         'tipo' => $row['tipo'],
         'color' => $badges[$row['tipo']] ?? 'secondary',
         'cantidad' => number_format($row['cantidad'], 2),
-        'origen' => $row['ori_nom'],
-        'destino' => $row['des_nom'],
+        'origen' => $row['ori_nom'] ?? '---',
+        'destino' => $row['des_nom'] ?? '---',
         'u_reg' => $row['reg_user'],
         'u_env' => $row['env_user'],
         'u_rec' => $row['rec_user'],

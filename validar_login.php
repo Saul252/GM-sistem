@@ -1,5 +1,4 @@
 <?php
-
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
@@ -19,7 +18,8 @@ if ($usuario === '' || $password === '') {
     exit();
 }
 
-$sql = "SELECT u.id, u.nombre, u.username, u.password, u.rol_id, r.nombre AS rol
+// AGREGAMOS u.almacen_id a la consulta
+$sql = "SELECT u.id, u.nombre, u.username, u.password, u.rol_id, u.almacen_id, r.nombre AS rol
         FROM usuarios u
         INNER JOIN roles r ON u.rol_id = r.id
         WHERE u.username = ? AND u.activo = 1
@@ -36,11 +36,9 @@ $stmt->execute();
 $resultado = $stmt->get_result();
 
 if ($resultado && $resultado->num_rows === 1) {
-
     $row = $resultado->fetch_assoc();
 
     if (password_verify($password, $row['password'])) {
-
         session_regenerate_id(true);
 
         $_SESSION['usuario_id'] = $row['id'];
@@ -48,6 +46,12 @@ if ($resultado && $resultado->num_rows === 1) {
         $_SESSION['nombre']     = $row['nombre'];
         $_SESSION['rol_id']     = $row['rol_id'];
         $_SESSION['rol']        = $row['rol'];
+        
+        // --- LÓGICA DE ALMACÉN ---
+        // Si es NULL en la base de datos, guardamos 0 (Administrador Global)
+        // Si tiene un ID, guardamos ese ID (Gestor de Almacén específico)
+        $_SESSION['almacen_id'] = $row['almacen_id'] ?? 0;
+        
         $_SESSION['login']      = true;
 
         header("Location: app/views/inicio.php");
@@ -57,9 +61,7 @@ if ($resultado && $resultado->num_rows === 1) {
         header("Location: index.php?error=password");
         exit();
     }
-
 } else {
     header("Location: index.php?error=usuario");
     exit();
 }
-?>

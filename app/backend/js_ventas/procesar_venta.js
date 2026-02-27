@@ -1,19 +1,29 @@
-function procesarVenta() {
-    if (carrito.length === 0) {
+window.procesarVenta = function() {
+    // 1. Validar que haya productos en el carrito global
+    if (!window.carrito || window.carrito.length === 0) {
         Swal.fire('Carrito vacío', 'Debes agregar al menos un producto.', 'warning');
         return;
     }
 
+    // 2. Validar Cliente
     const idCliente = document.getElementById('selectCliente').value;
     if (!idCliente) {
         Swal.fire('Falta Cliente', 'Por favor selecciona un cliente para la venta.', 'warning');
         return;
     }
 
-    // Confirmación antes de procesar
+    // 3. Capturar valores de pago y totales del modal
+    // Limpiamos el texto del total por si tiene símbolos o comas
+    const totalTexto = document.getElementById('totalFinalModal').innerText.replace(/[$,]/g, '');
+    const totalVenta = parseFloat(totalTexto) || 0;
+    const montoPagado = parseFloat(document.getElementById('monto_pagar').value) || 0;
+    const metodoPago = document.getElementById('metodo_pago').value;
+    const observaciones = document.getElementById('obsVenta').value;
+
+    // 4. Confirmación visual
     Swal.fire({
         title: '¿Finalizar Venta?',
-        text: "Se registrará la venta y se afectará el stock.",
+        html: `Total: <b>$${totalVenta.toFixed(2)}</b><br>Recibido: <b>$${montoPagado.toFixed(2)}</b>`,
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#28a745',
@@ -23,64 +33,83 @@ function procesarVenta() {
     }).then((result) => {
         if (result.isConfirmed) {
             
-            // Bloquear botón y mostrar loading
-            const btnFinalizar = document.querySelector('button[onclick="procesarVenta()"]');
-            btnFinalizar.disabled = true;
+            // Bloqueo del botón para evitar duplicados
+            // Buscamos el botón de finalizar venta dentro del modal
+            const btnFinalizar = document.querySelector('#modalFinalizarVenta .btn-primary');
+            if(btnFinalizar) btnFinalizar.disabled = true;
             
-            // Mostrar SweetAlert de carga
             Swal.fire({
                 title: 'Procesando...',
-                text: 'Guardando datos y actualizando inventario',
+                text: 'Guardando venta y actualizando stock...',
                 allowOutsideClick: false,
                 didOpen: () => { Swal.showLoading(); }
             });
 
-            const carritoFinal = carrito.map((item, index) => {
+            // 5. MAPEO DEL CARRITO CON DATOS DE ENTREGA
+            const carritoFinal = window.carrito.map((item, index) => {
+                // Intentamos capturar el valor del input físico en el modal por si el listener falló
                 const inputEntrega = document.querySelector(`.input-entrega[data-index="${index}"]`);
+                
+                // Prioridad: 1. Valor del input en el modal, 2. Valor guardado en el objeto, 3. Total vendido
+                let entregado = item.entrega_hoy; 
+                if (inputEntrega) {
+                    entregado = parseFloat(inputEntrega.value);
+                }
+
                 return {
                     producto_id: parseInt(item.producto_id),
                     almacen_id: parseInt(item.almacen_id),
                     cantidad: parseFloat(item.cantidad),
-                    entrega_hoy: inputEntrega ? parseFloat(inputEntrega.value) : parseFloat(item.cantidad),
+                    entrega_hoy: isNaN(entregado) ? 0 : entregado, 
                     precio_unitario: parseFloat(item.precio_unitario),
                     subtotal: parseFloat(item.subtotal),
                     tipo_precio: item.tipo_precio
                 };
             });
 
+            // 6. Preparar objeto de envío
             const datos = {
                 id_cliente: parseInt(idCliente),
-                descuento: parseFloat(document.getElementById('descuentoGeneral').value) || 0,
-                observaciones: document.getElementById('obsVenta').value,
+                descuento: 0,
+                monto_pagado: montoPagado,
+                metodo_pago: metodoPago,
+                total_venta: totalVenta,
+                observaciones: observaciones,
                 carrito: carritoFinal
             };
 
+            // Debug en consola para que verifiques antes de que se cierre el proceso
+            console.log("Datos a enviar:", datos);
+
+            // 7. Envío al servidor
             fetch('/cfsistem/app/backend/ventas/procesar_venta.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(datos)
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error('Error en la respuesta del servidor');
+                return res.json();
+            })
             .then(res => {
                 if (res.status === 'success') {
-                    // Alerta de éxito con redirección
                     Swal.fire({
                         title: '¡Venta Exitosa!',
-                        text: `Folio generado correctamente. Estado: ${res.estado.toUpperCase()}`,
+                        text: `Folio: ${res.folio || 'N/A'}. Stock actualizado.`,
                         icon: 'success',
-                        confirmButtonText: 'Imprimir Ticket'
+                        confirmButtonText: 'Ver Ticket'
                     }).then(() => {
                         window.location.href = "ticket_venta.php?id=" + res.id_venta;
                     });
                 } else {
-                    Swal.fire('Error en la venta', res.message, 'error');
-                    btnFinalizar.disabled = false;
+                    Swal.fire('Error', res.message || 'Error desconocido', 'error');
+                    if(btnFinalizar) btnFinalizar.disabled = false;
                 }
             })
             .catch(err => {
-                console.error(err);
+                console.error("Error en Fetch:", err);
                 Swal.fire('Error Crítico', 'No se pudo conectar con el servidor.', 'error');
-                btnFinalizar.disabled = false;
+                if(btnFinalizar) btnFinalizar.disabled = false;
             });
         }
     });

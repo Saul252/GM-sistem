@@ -9,43 +9,46 @@ require_once __DIR__ . '/../../includes/sidebar.php';
 require_once __DIR__ . '/../../config/conexion.php';
 
 $paginaActual = 'Almacenes';
+// Capturamos el almacén de la sesión (0 = Admin)
+$almacen_usuario = $_SESSION['almacen_id'] ?? 0;
 
-/* ================= CATEGORIAS (Convertidas a Array para reuso) ================= */
+/* ================= CATEGORIAS ================= */
 $catQuery = $conexion->query("SELECT id, nombre FROM categorias ORDER BY nombre ASC");
 $categorias = [];
-while ($row = $catQuery->fetch_assoc()) {
-    $categorias[] = $row;
-}
+while ($row = $catQuery->fetch_assoc()) { $categorias[] = $row; }
 
-/* ================= ALMACENES ================= */
-$almacenesQuery = $conexion->query("SELECT * FROM almacenes WHERE activo = 1 ORDER BY nombre ASC");
+/* ================= ALMACENES (Filtrado por Permiso) ================= */
+$sqlAlm = "SELECT * FROM almacenes WHERE activo = 1";
+if ($almacen_usuario > 0) {
+    $sqlAlm .= " AND id = " . intval($almacen_usuario);
+}
+$sqlAlm .= " ORDER BY nombre ASC";
+
+$almacenesQuery = $conexion->query($sqlAlm);
 $almacenes = [];
-while ($row = $almacenesQuery->fetch_assoc()) {
-    $almacenes[] = $row;
-}
+while ($row = $almacenesQuery->fetch_assoc()) { $almacenes[] = $row; }
 
-/* ================= PRODUCTOS ================= */
+/* ================= PRODUCTOS (Filtrado por Permiso) ================= */
 $sql = "SELECT 
-    p.id,
-    p.sku,
-    p.nombre,
-    p.categoria_id,
+    p.id, p.sku, p.nombre, p.categoria_id,
     c.nombre AS categoria_nombre,
-    i.stock,
-    i.almacen_id,
-    a.nombre AS almacen_nombre
+    i.stock, i.almacen_id, a.nombre AS almacen_nombre
 FROM inventario i
 INNER JOIN productos p ON i.producto_id = p.id
 INNER JOIN almacenes a ON i.almacen_id = a.id
 LEFT JOIN categorias c ON p.categoria_id = c.id
-WHERE p.activo = 1
-ORDER BY p.nombre ASC";
+WHERE p.activo = 1";
+
+// Si NO es admin, solo ve el inventario de su almacén asignado
+if ($almacen_usuario > 0) {
+    $sql .= " AND i.almacen_id = " . intval($almacen_usuario);
+}
+
+$sql .= " ORDER BY p.nombre ASC";
 
 $result = $conexion->query($sql);
 $productos = [];
-while($row = $result->fetch_assoc()){
-    $productos[] = $row;
-}
+while($row = $result->fetch_assoc()){ $productos[] = $row; }
 ?>
 
 <!DOCTYPE html>
@@ -80,15 +83,19 @@ while($row = $result->fetch_assoc()){
                     </select>
                 </div>
 
-                <div class="col-md-2">
-                    <select id="filtroAlmacen" class="form-select">
-                        <option value="">Almacenes</option>
-                        <?php foreach($almacenes as $alm): ?>
-                        <option value="<?= $alm['id'] ?>"><?= htmlspecialchars($alm['nombre']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
+               <div class="col-md-2">
+    <select id="filtroAlmacen" class="form-select" <?= ($almacen_usuario > 0) ? 'disabled' : '' ?>>
+        <?php if($almacen_usuario == 0): ?>
+            <option value="">Todos los Almacenes</option>
+        <?php endif; ?>
+        
+        <?php foreach($almacenes as $alm): ?>
+            <option value="<?= $alm['id'] ?>" <?= ($almacen_usuario == $alm['id']) ? 'selected' : '' ?>>
+                <?= htmlspecialchars($alm['nombre']) ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
+</div>
                 <div class="col-md-3">
                     <input type="text" id="buscador" class="form-control" placeholder="🔎 Buscar...">
                 </div>
