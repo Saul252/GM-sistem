@@ -83,6 +83,18 @@ p
     </a>
 </div>
 <?php endif; ?>
+<!-- MOVIMIENTOS -->
+<?php if (puedeVerModulo('ventashistorial')): ?>
+<div class="col-md-4 col-lg-3">
+    <a href="ventashistorial.php" class="text-decoration-none text-dark">
+        <div class="card card-modulo text-center">
+            <i class="bi bi-arrow-left-right icono-modulo icon-movimientos"></i>
+            <h6>ventashistorial</h6>
+            <small class="text-muted">Entradas y salidas</small>
+        </div>
+    </a>
+</div>
+<?php endif; ?>
 
 <!-- USUARIOS -->
 <?php if (puedeVerModulo('usuarios')): ?>

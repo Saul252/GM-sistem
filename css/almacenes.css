@@ -1,4 +1,4 @@
-body {
+ body {
         background: #f4f6f9;
     }
 
@@ -17,7 +17,13 @@ body {
         overflow-y: auto;
     }
 
-    .carrito {
-        position: sticky;
-        top: 20px;
+    .badge-stock {
+        font-size: .85rem;
+        padding: 6px 10px;
     }
+    .sticky-header th{
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #212529; /* mismo color que table-dark */
+}

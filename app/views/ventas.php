@@ -6,15 +6,29 @@ require_once __DIR__ . '/../../includes/auth.php';
 protegerPagina();
 
 require_once __DIR__ . '/../../includes/sidebar.php';
-require_once __DIR__ . '/../../conexion.php';
+require_once __DIR__ . '/../../config/conexion.php';
 
 $paginaActual = 'Ventas';
 
-/* PRODUCTOS */
+/* ================================
+   CATEGORIAS
+================================ */
+$categorias = $conexion->query("SELECT id, nombre FROM categorias ORDER BY nombre ASC");
+
+/* ================================
+   ALMACENES
+================================ */
+$almacenes = $conexion->query("SELECT id, nombre FROM almacenes WHERE activo = 1 ORDER BY nombre ASC");
+
+/* ================================
+   PRODUCTOS
+================================ */
 $sql = "SELECT 
     p.id,
     p.sku,
     p.nombre,
+    p.categoria_id,
+    c.nombre AS categoria_nombre,
     i.stock,
     i.almacen_id,
     a.nombre AS almacen_nombre,
@@ -24,6 +38,7 @@ $sql = "SELECT
 FROM inventario i
 INNER JOIN productos p ON i.producto_id = p.id
 INNER JOIN almacenes a ON i.almacen_id = a.id
+LEFT JOIN categorias c ON p.categoria_id = c.id
 LEFT JOIN precios_producto pp 
     ON pp.producto_id = p.id 
     AND pp.almacen_id = i.almacen_id
@@ -38,7 +53,6 @@ while($row = $result->fetch_assoc()){
     $productos[] = $row;
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 
@@ -48,32 +62,8 @@ while($row = $result->fetch_assoc()){
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="/cfsistem/css/ventas.css" rel="stylesheet">
 
-    <style>
-    body {
-        background: #f4f6f9;
-    }
-
-    .main-content {
-        margin-left: 260px;
-        padding: 30px;
-    }
-
-    .card {
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, .08);
-    }
-
-    .tabla-scroll {
-        max-height: 500px;
-        overflow-y: auto;
-    }
-
-    .carrito {
-        position: sticky;
-        top: 20px;
-    }
-    </style>
 </head>
 
 <body>
@@ -88,12 +78,40 @@ while($row = $result->fetch_assoc()){
 
         <div class="row">
 
-            <!-- PRODUCTOS -->
+            <!-- ================= PRODUCTOS ================= -->
             <div class="col-lg-8">
                 <div class="card p-3">
-                    
 
-                    <input type="text" id="buscador" class="form-control mb-3" placeholder="🔎 Buscar producto...">
+                    <!-- FILTROS -->
+                    <div class="row mb-3">
+
+                        <div class="col-md-4">
+                            <select id="filtroCategoria" class="form-select">
+                                <option value="">Todas las categorías</option>
+                                <?php while($cat = $categorias->fetch_assoc()): ?>
+                                <option value="<?= $cat['id'] ?>">
+                                    <?= htmlspecialchars($cat['nombre']) ?>
+                                </option>
+                                <?php endwhile; ?>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <select id="filtroAlmacen" class="form-select">
+                                <option value="">Todos los almacenes</option>
+                                <?php while($alm = $almacenes->fetch_assoc()): ?>
+                                <option value="<?= $alm['id'] ?>">
+                                    <?= htmlspecialchars($alm['nombre']) ?>
+                                </option>
+                                <?php endwhile; ?>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <input type="text" id="buscador" class="form-control" placeholder="🔎 Buscar producto...">
+                        </div>
+
+                    </div>
 
                     <div class="table-responsive tabla-scroll">
                         <table class="table table-bordered table-hover tabla-productos">
@@ -101,8 +119,8 @@ while($row = $result->fetch_assoc()){
                                 <tr>
                                     <th>SKU</th>
                                     <th>Producto</th>
-                                    <th>Almacen</th>
                                     <th>Stock</th>
+                                    <th>Almacén</th>
                                     <th>Precio</th>
                                     <th width="90">Cant</th>
                                     <th width="60"></th>
@@ -111,11 +129,12 @@ while($row = $result->fetch_assoc()){
                             <tbody>
 
                                 <?php foreach($productos as $p): ?>
-                                <tr>
+                                <tr data-categoria="<?= $p['categoria_id'] ?>" data-almacen="<?= $p['almacen_id'] ?>">
+
                                     <td><?= $p['sku'] ?></td>
                                     <td><?= htmlspecialchars($p['nombre']) ?></td>
                                     <td><span class="badge bg-success"><?= $p['stock'] ?></span></td>
-                                    <th><?=$p['almacen_nombre']?></th>
+                                    <td><?= htmlspecialchars($p['almacen_nombre']) ?></td>
 
                                     <td>
                                         <select class="form-select form-select-sm select-precio">
@@ -144,6 +163,7 @@ while($row = $result->fetch_assoc()){
                                             <i class="bi bi-plus"></i>
                                         </button>
                                     </td>
+
                                 </tr>
                                 <?php endforeach; ?>
 
@@ -153,7 +173,7 @@ while($row = $result->fetch_assoc()){
                 </div>
             </div>
 
-            <!-- CARRITO -->
+            <!-- ================= CARRITO ================= -->
             <div class="col-lg-4">
                 <div class="card p-3 carrito">
 
@@ -182,7 +202,7 @@ while($row = $result->fetch_assoc()){
                         Total: $<span id="total">0.00</span>
                     </h4>
 
-                    <button type="button" class="btn btn-primary w-100 mt-3" onclick="abrirModalFinalizar()">
+                    <button class="btn btn-primary w-100 mt-3" onclick="abrirModalFinalizar()">
                         <i class="bi bi-cash-stack"></i> Finalizar Venta
                     </button>
 
@@ -191,50 +211,167 @@ while($row = $result->fetch_assoc()){
 
         </div>
     </div>
-
-    <!-- MODAL FINALIZAR -->
     <div class="modal fade" id="modalFinalizarVenta" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">Confirmar Venta</h5>
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-receipt-cutoff me-2"></i>Finalizar Transacción</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
 
-                <div class="modal-body">
+                <div class="modal-body p-4">
+                    <div class="row g-4">
+                        <div class="col-lg-7 border-end">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="text-uppercase fw-bold m-0 text-primary">Detalle de Salida de Material</h6>
+                                <span class="badge bg-warning text-dark">Control de Stock en tiempo real</span>
+                            </div>
 
-                    <div class="table-responsive mb-3">
-                        <table class="table table-bordered">
-                            <thead class="table-dark">
-                                <tr>
-                                    
-                                    <th>Producto</th>
-                                    <th>Cantidad</th>
-                                    <th>Precio</th>
-                                    <th>Subtotal</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tablaConfirmacion"></tbody>
-                        </table>
+                            <div class="table-responsive" style="max-height: 350px;">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Producto</th>
+                                            <th class="text-center" width="100">Venta</th>
+                                            <th class="text-center" width="120">Entregar Hoy</th>
+                                            <th class="text-end" width="100">Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tablaConfirmacion">
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="card bg-light border-0 mt-3">
+                                <div class="card-body">
+                                    <div class="row align-items-center text-end">
+                                        <div class="col-6">
+                                            <label class="small fw-bold">Descuento ($)</label>
+                                            <input type="number" id="descuentoGeneral"
+                                                class="form-control form-control-sm text-end" value="0">
+                                        </div>
+                                        <div class="col-6">
+                                            <span class="text-muted small d-block">Total Final</span>
+                                            <h2 class="fw-bold mb-0 text-primary">$<span
+                                                    id="totalFinalModal">0.00</span></h2>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-5">
+                            <h6 class="text-uppercase fw-bold mb-3 text-primary">Información del Cliente</h6>
+                            <div class="input-group mb-3">
+                                <select id="selectCliente" class="form-select border-primary">
+                                    <?php 
+                                $cls = $conexion->query("SELECT * FROM clientes WHERE activo = 1 ORDER BY nombre_comercial ASC");
+                                while($c = $cls->fetch_assoc()): ?>
+                                    <option value="<?= $c['id'] ?>" data-rfc="<?= $c['rfc'] ?>"
+                                        data-rs="<?= $c['razon_social'] ?>" data-cp="<?= $c['codigo_postal'] ?>"
+                                        data-regimen="<?= $c['regimen_fiscal'] ?>">
+                                        <?= htmlspecialchars($c['nombre_comercial']) ?>
+                                    </option>
+                                    <?php endwhile; ?>
+                                </select>
+                                <button class="btn btn-outline-primary" type="button"
+                                    onclick="abrirModalNuevoCliente()">
+                                    <i class="bi bi-person-plus"></i>
+                                </button>
+                            </div>
+
+                            <div class="p-3 border rounded mb-3 bg-white shadow-sm">
+                                <div class="row g-2">
+                                    <div class="col-12"><small class="text-muted d-block">RFC:</small><span id="f_rfc"
+                                            class="fw-bold">---</span></div>
+                                    <div class="col-12"><small class="text-muted d-block">Razón Social:</small><span
+                                            id="f_razon_social" class="fw-bold small">---</span></div>
+                                    <div class="col-6"><small class="text-muted d-block">C.P.:</small><span id="f_cp"
+                                            class="fw-bold">---</span></div>
+                                    <div class="col-6"><small class="text-muted d-block">Régimen:</small><span
+                                            id="f_regimen" class="badge bg-info">---</span></div>
+                                </div>
+                            </div>
+
+                            <div class="mb-0">
+                                <label class="form-label small fw-bold text-danger"><i class="bi bi-truck"></i> Notas de
+                                    Entrega</label>
+                                <textarea id="obsVenta" class="form-control" rows="2"
+                                    placeholder="Ej: Recoge el lunes, solo pagó hoy."></textarea>
+                            </div>
+                        </div>
                     </div>
-
-                    <div class="mb-3">
-                        <label>Descuento ($)</label>
-                        <input type="number" id="descuentoGeneral" class="form-control" value="0">
-                    </div>
-
-                    <h4 class="text-end">
-                        Total Final: $<span id="totalFinalModal">0.00</span>
-                    </h4>
-
                 </div>
 
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button class="btn btn-success">Confirmar Venta</button>
+                <div class="modal-footer bg-light border-0">
+                    <button class="btn btn-link text-muted me-auto" data-bs-dismiss="modal">Cerrar</button>
+                    <button class="btn btn-success btn-lg px-5 shadow fw-bold" onclick="procesarVenta()">
+                        <i class="bi bi-check-circle-fill"></i> FINALIZAR VENTA
+                    </button>
                 </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="modalNuevoCliente" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">Registrar Nuevo Cliente</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="formNuevoCliente">
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Nombre Comercial</label>
+                                <input type="text" name="nombre_comercial" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Razón Social</label>
+                                <input type="text" name="razon_social" class="form-control">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">RFC</label>
+                                <input type="text" name="rfc" class="form-control" placeholder="XAXX010101000" required
+                                    maxlength="13">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Régimen Fiscal (SAT)</label>
+                                <input type="text" name="regimen_fiscal" class="form-control" placeholder="601"
+                                    maxlength="3">
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Uso CFDI</label>
+                                <select name="uso_cfdi" class="form-select">
+                                    <option value="G03">G03 - Gastos en general</option>
+                                    <option value="P01">P01 - Por definir</option>
+                                    <option value="S01">S01 - Sin efectos fiscales</option>
+                                </select>
+                            </div>
 
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Correo Electrónico</label>
+                                <input type="email" name="correo" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Teléfono</label>
+                                <input type="text" name="telefono" class="form-control">
+                            </div>
+                            <div class="col-md-10">
+                                <label class="form-label small fw-bold">Dirección</label>
+                                <input type="text" name="direccion" class="form-control">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold">CP</label>
+                                <input type="text" name="codigo_postal" class="form-control" required maxlength="5">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary px-4">Guardar Cliente</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -243,125 +380,26 @@ while($row = $result->fetch_assoc()){
 
     <script>
     let carrito = [];
-
-    /* AGREGAR */
-    function agregarProducto(btn) {
-
-        let fila = btn.closest("tr");
-
-        let nombre = fila.children[1].innerText;
-        let cantidad = parseFloat(fila.querySelector(".cantidad").value);
-        let select = fila.querySelector(".select-precio");
-        let precio = parseFloat(select.value);
-
-        let producto_id = btn.dataset.productoId;
-        let almacen_id = btn.dataset.almacenId;
-        let almacen_nombre = btn.dataset.almacen;
-
-        if (!cantidad || cantidad <= 0) {
-            alert("Cantidad inválida");
-            return;
-        }
-
-        carrito.push({
-            producto_id: producto_id,
-            almacen_id: almacen_id,
-            almacen_nombre: almacen_nombre,
-            nombre: nombre,
-            cantidad: cantidad,
-            precio_unitario: precio,
-            subtotal: cantidad * precio
-        });
-
-        renderCarrito();
-
-        fila.querySelector(".cantidad").value = 1;
-    }
-    /* RENDER */
-   function renderCarrito() {
-
-    let tabla = document.querySelector("#tablaCarrito tbody");
-    tabla.innerHTML = "";
-    let total = 0;
-
-    carrito.forEach((item, index) => {
-        total += item.subtotal;
-
-        tabla.innerHTML += `
-<tr>
-<td>${item.almacen_nombre}</td>
-<td>${item.nombre}</td>
-<td>${item.cantidad}</td>
-<td>$${item.subtotal.toFixed(2)}</td>
-<td>
-<button class="btn btn-danger btn-sm"
-onclick="eliminarProducto(${index})">
-<i class="bi bi-x"></i>
-</button>
-</td>
-</tr>`;
-    });
-
-    document.getElementById("total").innerText = total.toFixed(2);
-}
-    function eliminarProducto(index) {
-        carrito.splice(index, 1);
-        renderCarrito();
-    }
-
-    /* MODAL */
-    function abrirModalFinalizar() {
-
-        if (carrito.length === 0) {
-            alert("Carrito vacío");
-            return;
-        }
-
-        let tabla = document.getElementById("tablaConfirmacion");
-        tabla.innerHTML = "";
-
-        carrito.forEach(item => {
-            tabla.innerHTML += `
-<tr>
-<td>${item.nombre}</td>
-<td>${item.cantidad}</td>
-<td>$${item.precio_unitario.toFixed(2)}</td>
-<td>$${item.subtotal.toFixed(2)}</td>
-</tr>`;
-        });
-
-        recalcularTotalModal();
-
-        let modal = new bootstrap.Modal(document.getElementById('modalFinalizarVenta'));
-        modal.show();
-    }
-
-    function recalcularTotalModal() {
-        let total = 0;
-        carrito.forEach(i => total += i.subtotal);
-        let descuento = parseFloat(document.getElementById("descuentoGeneral").value) || 0;
-        total -= descuento;
-        if (total < 0) total = 0;
-        document.getElementById("totalFinalModal").innerText = total.toFixed(2);
-    }
-
-    /* DESCUENTO EVENT */
-    document.addEventListener("DOMContentLoaded", function() {
-        let descuentoInput = document.getElementById("descuentoGeneral");
-        if (descuentoInput) {
-            descuentoInput.addEventListener("input", recalcularTotalModal);
-        }
-    });
-
-    /* BUSCADOR */
-    document.getElementById("buscador").addEventListener("keyup", function() {
-        let filtro = this.value.toLowerCase();
-        document.querySelectorAll(".tabla-productos tbody tr").forEach(fila => {
-            fila.style.display = fila.innerText.toLowerCase().includes(filtro) ? "" : "none";
-        });
-    });
     </script>
+    <script src="/cfsistem/app/backend/js_ventas/carrito.js"></script>
+    <script src="/cfsistem/app/backend/js_ventas/filtros.js"></script>
+    <script src="/cfsistem/app/backend/js_ventas/modal_finalizar.js"></script>
+    <script src="/cfsistem/app/backend/js_ventas/nuevo_cliente.js"></script>
+    <script src="/cfsistem/app/backend/js_ventas/procesar_venta.js"></script>
+    <script>
+    document.getElementById('selectCliente').addEventListener('change', function() {
+    const selected = this.options[this.selectedIndex];
+    
+    // Actualizar los textos del modal
+    document.getElementById('f_rfc').textContent = selected.dataset.rfc || '---';
+    document.getElementById('f_razon_social').textContent = selected.dataset.rs || '---';
+    document.getElementById('f_cp').textContent = selected.dataset.cp || '---';
+    document.getElementById('f_regimen').textContent = selected.dataset.regimen || '---';
+});
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    </script>
 </body>
 
 </html>

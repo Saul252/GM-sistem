@@ -4,8 +4,7 @@ error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 session_start();
-require "conexion.php";
-
+require_once __DIR__ . '/config/conexion.php';
 
 if ($_SERVER["REQUEST_METHOD"] !== "POST") {
     header("Location: index.php");

@@ -13,12 +13,14 @@ function puedeVerModulo(string $modulo): bool
         'compras',
         'almacenes',
         'movimientos',
+        'ventashistorial', 
         'usuarios',
         'mermas'
     ],
 
     'almacen' => [
         'inicio',
+        'ventashistorial',
         
         'almacenes',
         'movimientos'

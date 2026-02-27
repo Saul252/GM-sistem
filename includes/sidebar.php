@@ -202,10 +202,29 @@ body.sidebar-hidden #sidebar{
 
             <?php if (puedeVerModulo('almacenes')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/pantallas/almacen.php"
+                <a href="/cfsistem/app/views/almacenes.php"
                    class="nav-link <?= $archivoActual == 'almacen.php' ? 'active' : '' ?>">
                     <i class="bi bi-box-seam"></i>
                     <span>Almacén</span>
+                </a>
+            </li>
+            <?php endif; ?>
+
+         <?php if (puedeVerModulo('movimientos')): ?>
+            <li class="nav-item">
+                <a href="/cfsistem/app/views/movimientos.php"
+                   class="nav-link <?= $archivoActual == 'movimientos.php' ? 'active' : '' ?>">
+                   <i class="bi bi-arrow-left-right icono-modulo icon-movimientos"></i>
+                    <span>Movimientos</span>
+                </a>
+            </li>
+            <?php endif; ?>
+             <?php if (puedeVerModulo('ventashistorial')): ?>
+            <li class="nav-item">
+                <a href="/cfsistem/app/views/ventashistorial.php"
+                   class="nav-link <?= $archivoActual == 'ventashistorial.php' ? 'active' : '' ?>">
+                   <i class="bi bi-arrow-left-right icono-modulo icon-movimientos"></i>
+                    <span>Historial de ventas</span>
                 </a>
             </li>
             <?php endif; ?>
