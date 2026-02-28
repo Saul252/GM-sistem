@@ -241,7 +241,7 @@ body.sidebar-hidden #sidebar{
 
             <?php if (puedeVerModulo('usuarios')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/pantallas/usuarios.php"
+                <a href="/cfsistem/app/views/usuarios.php"
                    class="nav-link <?= $archivoActual == 'usuarios.php' ? 'active' : '' ?>">
                     <i class="bi bi-people"></i>
                     <span>Usuarios</span>
@@ -251,7 +251,7 @@ body.sidebar-hidden #sidebar{
 
             <?php if (puedeVerModulo('compras')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/pantallas/gastos.php"
+                <a href="/cfsistem/app/views/compras.php"
                    class="nav-link <?= $archivoActual == 'gastos.php' ? 'active' : '' ?>">
                     <i class="bi bi-bag-check"></i>
                     <span>Compras</span>
