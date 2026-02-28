@@ -296,83 +296,71 @@ $productos_res = $conexion->query("SELECT id, nombre, sku FROM productos WHERE a
         </form>
     </div>
 </div>
-    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <script>
+<script src="/cfsistem/app/backend/compras_js/abrirmodal.js"></script>
+<script src="/cfsistem/app/backend/compras_js/elementos_modal_compra.js"></script>
+<script src="/cfsistem/app/backend/compras_js/guardando_prodcuto_nuevo.js"></script>
+<script src="/cfsistem/app/backend/compras_js/guardando_compra.js"></script>
+
+<script>
     const modalRegistro = new bootstrap.Modal('#modalRegistro');
     const modalProd = new bootstrap.Modal('#modalNuevoProducto');
     const modalDist = new bootstrap.Modal('#modalDistribucion');
-    const almacenes = <?= json_encode($almacenes_array) ?>;
-    let filaEnDistribucion = null;
-</script>
-<script src="/cfsistem/app/backend/compras_js/abrirmodal.js"></script>
-<script src="/cfsistem/app/backend/compras_js/elementos_modal_compra.js"></script>
-<sript src="/cfsistem/app/backend/compras_js/guardando_prodcuto_nuevo.js"></sript>
-<sript src="/cfsistem/app/backend/compras_js/guardando_compra.js"></sript>
-<script>
     const modalVer = new bootstrap.Modal('#modalVerDetalle');
-const modalAjusteForm = new bootstrap.Modal('#modalAjuste');
+    const modalAjusteForm = new bootstrap.Modal('#modalAjuste');
+    const almacenes = <?= json_encode($almacenes_array) ?>;
+    
+    // Sobreescribimos cualquier verDetalle anterior
+    function verDetalle(tipo, id) {
+        console.log("Ejecutando verDetalle para:", tipo, id); // Para debug
+        modalVer.show();
+        $('#contenidoDetalle').html('<div class="text-center p-5"><div class="spinner-border text-primary"></div></div>');
 
-// FUNCION PARA VER DETALLE
-function verDetalle(tipo, id) {
-    $('#contenidoDetalle').html('<div class="text-center p-4"><div class="spinner-border text-primary"></div></div>');
-    modalVer.show();
-
-    $.get('/cfsistem/app/backend/compras/obtener_detalle.php', { tipo: tipo, id: id }, function(html) {
-        $('#contenidoDetalle').html(html);
-    });
-}
-
-// FUNCION PARA ABRIR AJUSTE DE FALTANTES
-function abrirAjuste(id) {
-    $('#ajuste_compra_id').val(id);
-    $('#tablaAjuste').html('<tr><td colspan="4" class="text-center">Cargando pendientes...</td></tr>');
-    modalAjusteForm.show();
-
-    $.getJSON('/cfsistem/app/backend/compras/obtener_pendientes.php', { id: id }, function(data) {
-        let html = '';
-        data.forEach(item => {
-            html += `
-            <tr>
-                <td>${item.nombre}<br><small class="text-muted">SKU: ${item.sku}</small></td>
-                <td class="fw-bold text-danger">${item.cantidad_faltante}</td>
-                <td>
-                    <input type="number" step="0.01" class="form-control form-control-sm cant-ajuste" 
-                           name="ajuste[${item.id}][cantidad]" max="${item.cantidad_faltante}" value="${item.cantidad_faltante}">
-                    <input type="hidden" name="ajuste[${item.id}][producto_id]" value="${item.producto_id}">
-                </td>
-                <td>
-                    <select class="form-select form-select-sm" name="ajuste[${item.id}][almacen_id]">
-                        ${almacenes.map(a => `<option value="${a.id}">${a.nombre}</option>`).join('')}
-                    </select>
-                </td>
-            </tr>`;
+        $.get('/cfsistem/app/backend/compras/obtener_detalle.php', { tipo: tipo, id: id }, function(html) {
+            $('#contenidoDetalle').html(html);
+        }).fail(function() {
+            $('#contenidoDetalle').html('<div class="alert alert-danger">Error: No se encontró el archivo PHP.</div>');
         });
-        $('#tablaAjuste').html(html || '<tr><td colspan="4" class="text-center">No hay pendientes.</td></tr>');
-    });
-}
+    }
 
-// PROCESAR EL FORMULARIO DE AJUSTE
-$('#formAjuste').on('submit', function(e) {
-    e.preventDefault();
-    $.ajax({
-        url: '/cfsistem/app/backend/compras/procesar_ajuste.php',
-        type: 'POST',
-        data: $(this).serialize(),
-        dataType: 'json',
-        success: function(res) {
+    function abrirAjuste(id) {
+        $('#ajuste_compra_id').val(id);
+        $('#tablaAjuste').html('<tr><td colspan="4" class="text-center">Cargando...</td></tr>');
+        modalAjusteForm.show();
+
+        $.getJSON('/cfsistem/app/backend/compras/obtener_pendientes.php', { id: id }, function(data) {
+            let html = '';
+            data.forEach(item => {
+                html += `<tr>
+                    <td>${item.nombre}</td>
+                    <td class="text-danger fw-bold">${item.cantidad_faltante}</td>
+                    <td><input type="number" step="0.01" class="form-control form-control-sm" name="ajuste[${item.id}][cantidad]" value="${item.cantidad_faltante}"></td>
+                    <td>
+                        <input type="hidden" name="ajuste[${item.id}][producto_id]" value="${item.producto_id}">
+                        <input type="hidden" name="ajuste[${item.id}][detalle_id]" value="${item.id}">
+                        <select class="form-select form-select-sm" name="ajuste[${item.id}][almacen_id]">
+                            ${almacenes.map(a => `<option value="${a.id}">${a.nombre}</option>`).join('')}
+                        </select>
+                    </td>
+                </tr>`;
+            });
+            $('#tablaAjuste').html(html || '<tr><td colspan="4">Sin pendientes.</td></tr>');
+        });
+    }
+
+    // CORRECCIÓN IMPORTANTE: La URL del envío debe ser procesar_ajuste.php
+    $('#formAjuste').on('submit', function(e) {
+        e.preventDefault();
+        $.post('/cfsistem/app/backend/compras/procesar_ajuste.php', $(this).serialize(), function(res) {
             if(res.status === 'success') {
-                Swal.fire("¡Ajuste Realizado!", res.message, "success").then(() => location.reload());
+                Swal.fire("Listo", res.message, "success").then(() => location.reload());
             } else {
                 Swal.fire("Error", res.message, "error");
             }
-        }
+        }, 'json');
     });
-});
 </script>
 </body>
-
-</html>
-//funciona aun trabajndo en modales de ver y ajuste
