@@ -93,14 +93,32 @@ window.procesarVenta = function() {
             })
             .then(res => {
                 if (res.status === 'success') {
-                    Swal.fire({
-                        title: '¡Venta Exitosa!',
-                        text: `Folio: ${res.folio || 'N/A'}. Stock actualizado.`,
-                        icon: 'success',
-                        confirmButtonText: 'Ver Ticket'
-                    }).then(() => {
-                        window.location.href = "ticket_venta.php?id=" + res.id_venta;
-                    });
+                    // Dentro del .then(res => { if (res.status === 'success') { ...
+Swal.fire({
+    title: '¡Venta Exitosa!',
+    html: `
+        <p>Folio: <b>${res.folio}</b></p>
+        <div class="text-left mt-3">
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="tipoTicket" id="conPrecios" value="1" checked>
+                <label class="form-check-label" for="conPrecios">Ticket con Precios (Venta)</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="tipoTicket" id="sinPrecios" value="0">
+                <label class="form-check-label" for="sinPrecios">Ticket sin Precios (Remisión)</label>
+            </div>
+        </div>
+    `,
+    icon: 'success',
+    showCancelButton: true,
+    confirmButtonText: '<i class="bi bi-printer"></i> Imprimir',
+    cancelButtonText: 'Cerrar'
+}).then((result) => {
+    if (result.isConfirmed) {
+        const mostrarPrecios = document.querySelector('input[name="tipoTicket"]:checked').value;
+       const url = `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}&precios=${conPrecios}`;
+            window.open(url, '_blank'); }
+});
                 } else {
                     Swal.fire('Error', res.message || 'Error desconocido', 'error');
                     if(btnFinalizar) btnFinalizar.disabled = false;

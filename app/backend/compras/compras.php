@@ -43,6 +43,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmtD->bind_param("iidddds", $compra_id, $p_id, $cant_fac, $cant_fal, $precio, $subtotal, $estado_e);
                 $stmtD->execute();
 
+                // NUEVO: Si hay faltante, insertar en la tabla espejo faltantes_ingreso
+                if ($cant_fal > 0) {
+                    $sqlF = "INSERT INTO faltantes_ingreso (compra_id, producto_id, cantidad_pendiente) VALUES (?, ?, ?)";
+                    $stmtF = $conexion->prepare($sqlF);
+                    $stmtF->bind_param("iid", $compra_id, $p_id, $cant_fal);
+                    $stmtF->execute();
+                }
+
                 // 3. Inventario y Movimientos (Solo lo que llegó físicamente)
                 if ($cant_real > 0 && isset($item['distribucion'])) {
                     foreach ($item['distribucion'] as $dist) {

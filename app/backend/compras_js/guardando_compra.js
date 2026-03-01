@@ -79,11 +79,3 @@
             }
         });
     });
-
-    function abrirAjuste(id) {
-        Swal.fire('Procesando', 'Abriendo panel de ajuste para la compra ID: ' + id, 'info');
-    }
-
-    function verDetalle(tipo, id) {
-        Swal.fire('Info', 'Visualizando ' + tipo + ' ID: ' + id, 'info');
-    }

@@ -1,4 +1,4 @@
-<?php
+ <?php
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../includes/sidebar.php';
 require_once __DIR__ . '/../../config/conexion.php';
@@ -261,106 +261,103 @@ $productos_res = $conexion->query("SELECT id, nombre, sku FROM productos WHERE a
         </div>
     </div>
 </div>
-
-<div class="modal fade" id="modalAjuste" tabindex="-1" data-bs-backdrop="static">
+<div class="modal fade" id="modalAjuste" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <form id="formAjuste" class="modal-content border-0 shadow">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title"><i class="bi bi-tools me-2"></i> Ajuste de Recepción (Faltantes)</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" name="compra_id" id="ajuste_compra_id">
-                <div class="alert alert-info small">
-                    Aquí puede registrar la entrada física de los productos que marcaron como faltantes originalmente.
+        <form id="formAjuste"> 
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Ajuste de Faltantes</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th>Producto</th>
-                                <th>Pendiente</th>
-                                <th>Recibir Ahora</th>
-                                <th>Almacén</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tablaAjuste">
-                            </tbody>
-                    </table>
+                <div class="modal-body">
+                    <input type="hidden" name="ajuste_compra_id" id="ajuste_compra_id">
+                    
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Faltante</th>
+                                    <th>Cantidad a Recibir</th>
+                                    <th>Almacén</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaAjuste">
+                                </tbody>
+                        </table>
+                    </div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                <button type="submit" class="btn btn-danger">Confirmar Entrada de Faltantes</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-primary">Confirmar Entrada</button>
+                </div>
             </div>
         </form>
     </div>
 </div>
-<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+   <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<script src="/cfsistem/app/backend/compras_js/abrirmodal.js"></script>
-<script src="/cfsistem/app/backend/compras_js/elementos_modal_compra.js"></script>
-<script src="/cfsistem/app/backend/compras_js/guardando_prodcuto_nuevo.js"></script>
-<script src="/cfsistem/app/backend/compras_js/guardando_compra.js"></script>
-
 <script>
+    // 1. Inicialización de constantes (Manteniendo tus nombres originales)
     const modalRegistro = new bootstrap.Modal('#modalRegistro');
     const modalProd = new bootstrap.Modal('#modalNuevoProducto');
     const modalDist = new bootstrap.Modal('#modalDistribucion');
     const modalVer = new bootstrap.Modal('#modalVerDetalle');
     const modalAjusteForm = new bootstrap.Modal('#modalAjuste');
+
+    // 2. Datos del servidor pasados a JSON (Para que JS los use sin recargar)
     const almacenes = <?= json_encode($almacenes_array) ?>;
     
-    // Sobreescribimos cualquier verDetalle anterior
-    function verDetalle(tipo, id) {
-        console.log("Ejecutando verDetalle para:", tipo, id); // Para debug
-        modalVer.show();
-        $('#contenidoDetalle').html('<div class="text-center p-5"><div class="spinner-border text-primary"></div></div>');
+    // Esta es la variable clave que corregirá que no se vea la lista
+    const productosBase = [
+        <?php
+        // Reiniciamos el puntero del resultado de productos por si se usó antes
+        $productos_res->data_seek(0); 
+        while($p = $productos_res->fetch_assoc()): 
+        ?>
+        {
+            id: "<?= $p['id'] ?>",
+            nombre: "<?= addslashes($p['nombre']) ?>",
+            sku: "<?= addslashes($p['sku']) ?>"
+        },
+        <?php endwhile; ?>
+    ];
 
-        $.get('/cfsistem/app/backend/compras/obtener_detalle.php', { tipo: tipo, id: id }, function(html) {
-            $('#contenidoDetalle').html(html);
-        }).fail(function() {
-            $('#contenidoDetalle').html('<div class="alert alert-danger">Error: No se encontró el archivo PHP.</div>');
-        });
-    }
+    let filaEnDistribucion = null;
 
-    function abrirAjuste(id) {
-        $('#ajuste_compra_id').val(id);
-        $('#tablaAjuste').html('<tr><td colspan="4" class="text-center">Cargando...</td></tr>');
-        modalAjusteForm.show();
-
-        $.getJSON('/cfsistem/app/backend/compras/obtener_pendientes.php', { id: id }, function(data) {
-            let html = '';
-            data.forEach(item => {
-                html += `<tr>
-                    <td>${item.nombre}</td>
-                    <td class="text-danger fw-bold">${item.cantidad_faltante}</td>
-                    <td><input type="number" step="0.01" class="form-control form-control-sm" name="ajuste[${item.id}][cantidad]" value="${item.cantidad_faltante}"></td>
-                    <td>
-                        <input type="hidden" name="ajuste[${item.id}][producto_id]" value="${item.producto_id}">
-                        <input type="hidden" name="ajuste[${item.id}][detalle_id]" value="${item.id}">
-                        <select class="form-select form-select-sm" name="ajuste[${item.id}][almacen_id]">
-                            ${almacenes.map(a => `<option value="${a.id}">${a.nombre}</option>`).join('')}
-                        </select>
-                    </td>
-                </tr>`;
-            });
-            $('#tablaAjuste').html(html || '<tr><td colspan="4">Sin pendientes.</td></tr>');
-        });
-    }
-
-    // CORRECCIÓN IMPORTANTE: La URL del envío debe ser procesar_ajuste.php
-    $('#formAjuste').on('submit', function(e) {
-        e.preventDefault();
-        $.post('/cfsistem/app/backend/compras/procesar_ajuste.php', $(this).serialize(), function(res) {
-            if(res.status === 'success') {
-                Swal.fire("Listo", res.message, "success").then(() => location.reload());
-            } else {
-                Swal.fire("Error", res.message, "error");
-            }
-        }, 'json');
-    });
+    // --- FUNCIONES DE CARGA DINÁMICA ---
+    // Aquí puedes añadir funciones extra si las necesitas, 
+    // pero con productosBase ya disponible, tus otros scripts 
+    // podrán leer la lista de productos correctamente.
 </script>
-</body>
+
+ <script src="/cfsistem/app/backend/compras_js/funcion_detalle.js"></script> 
+<script src="/cfsistem/app/backend/compras_js/funcion_ajuste.js"></script>
+<script src="/cfsistem/app/backend/compras_js/abrirmodal.js"></script>
+<script src="/cfsistem/app/backend/compras_js/elementos_modal_compra.js"></script>
+<!-- <script src="/cfsistem/app/backend/compras_js/guardando_prodcuto_nuevo.js"></script> -->
+ <script>
+ 
+
+    // GUARDADO PRODUCTO NUEVO (MANTENIDO)
+    $('#formNuevoProducto').on('submit', function(e) {
+        e.preventDefault();
+        $.ajax({
+            url: '/cfsistem/app/backend/almacen/guardar_producto_simple.php',
+            type: 'POST',
+            data: $(this).serialize(),
+            success: function(r) {
+                let res = JSON.parse(r);
+                if (res.status === 'success') {
+                    $('.select-prod').append(
+                        `<option value="${res.id}">${res.nombre} (${res.sku})</option>`);
+                    modalProd.hide();
+                    Swal.fire('Éxito', 'Producto creado', 'success');
+                }
+            }
+        });
+    });
+ </script>
+<script src="/cfsistem/app/backend/compras_js/guardando_compra.js"></script></body>

@@ -190,40 +190,7 @@ while($row = $result->fetch_assoc()){ $productos[] = $row; }
         z-index: 1055 !important;
     }
 </style>
-<script>
-document.getElementById('formNuevaCategoria').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    const datos = Object.fromEntries(formData.entries());
 
-    Swal.fire({
-        title: 'Guardando...',
-        didOpen: () => { Swal.showLoading(); }
-    });
-
-    fetch('/cfsistem/app/backend/almacen/guardar_categoria.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(datos)
-    })
-    .then(res => res.json())
-    .then(res => {
-        if(res.status === 'success') {
-            Swal.fire('¡Éxito!', 'Categoría guardada correctamente', 'success').then(() => {
-                // Si tienes un selector de categorías en la pantalla de productos, 
-                // aquí podrías recargarlo o simplemente refrescar la página
-                location.reload(); 
-            });
-        } else {
-            Swal.fire('Error', res.message, 'error');
-        }
-    })
-    .catch(err => {
-        console.error(err);
-        Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
-    });
-});
 </script>
     <div class="modal fade" id="modalTraspaso" tabindex="-1">
         <div class="modal-dialog">
@@ -444,7 +411,7 @@ document.getElementById('formNuevaCategoria').addEventListener('submit', functio
                                     <div class="col-md-6">
                                         <label class="form-label small">Stock Actual</label>
                                         <input type="number" step="0.01" name="stock" id="edit_stock"
-                                            class="form-control" readonly bg-light>
+                                            class="form-control"  bg-light>
                                         <div class="form-text text-muted">Para mover stock use el módulo de Traspasos.
                                         </div>
                                     </div>
@@ -598,25 +565,7 @@ document.getElementById('formNuevaCategoria').addEventListener('submit', functio
                                     <th>P. Distribuidor</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <?php foreach($almacenes as $a): ?>
-                                <tr>
-                                    <td class="text-center">
-                                        <input type="checkbox" name="almacenes[<?= $a['id'] ?>][activo]" value="1" class="form-check-input" checked>
-                                    </td>
-                                    <td class="small fw-bold"><?= htmlspecialchars($a['nombre']) ?></td>
-                                    <td>
-                                        <input type="number" step="0.01" name="almacenes[<?= $a['id'] ?>][stock]" 
-                                               class="form-control form-control-sm input-calculo border-primary fw-bold" 
-                                               oninput="validarReparto()">
-                                    </td>
-                                    <td><input type="number" step="0.01" name="almacenes[<?= $a['id'] ?>][stock_minimo]" class="form-control form-control-sm"></td>
-                                    <td><input type="number" step="0.01" name="almacenes[<?= $a['id'] ?>][precio_minorista]" class="form-control form-control-sm" placeholder="$"></td>
-                                    <td><input type="number" step="0.01" name="almacenes[<?= $a['id'] ?>][precio_mayorista]" class="form-control form-control-sm" placeholder="$"></td>
-                                    <td><input type="number" step="0.01" name="almacenes[<?= $a['id'] ?>][precio_distribuidor]" class="form-control form-control-sm" placeholder="$"></td>
-                                </tr>
-                                <?php endforeach?>
-                            </tbody>
+                            
                         </table>
                     </div>
                 </div>
@@ -630,6 +579,40 @@ document.getElementById('formNuevaCategoria').addEventListener('submit', functio
         </div>
     </div>
 </div>
+<script>
+document.getElementById('formNuevaCategoria').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const datos = Object.fromEntries(formData.entries());
+
+    Swal.fire({
+        title: 'Guardando...',
+        didOpen: () => { Swal.showLoading(); }
+    });
+
+    fetch('/cfsistem/app/backend/almacen/guardar_categoria.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(datos)
+    })
+    .then(res => res.json())
+    .then(res => {
+        if(res.status === 'success') {
+            Swal.fire('¡Éxito!', 'Categoría guardada correctamente', 'success').then(() => {
+                // Si tienes un selector de categorías en la pantalla de productos, 
+                // aquí podrías recargarlo o simplemente refrescar la página
+                location.reload(); 
+            });
+        } else {
+            Swal.fire('Error', res.message, 'error');
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
+    });
+});
 // --- Lógica de Control de Conversión ---
 <script src="/cfsistem/app/backend/js/calcular_unidades.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
