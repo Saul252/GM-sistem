@@ -12,6 +12,15 @@ if ($id <= 0 || empty($tipo)) {
     exit;
 }
 
+// --- BOTÓN DE IMPRESIÓN ---
+echo '<div class="d-flex justify-content-end mb-3">';
+echo '  <a href="/cfsistem/app/backend/compras/imprimir_egreso.php?id='.$id.'&tipo='.$tipo.'" 
+           target="_blank" 
+           class="btn btn-primary btn-sm shadow-sm px-3">
+           <i class="bi bi-printer-fill me-2"></i>IMPRIMIR COMPROBANTE
+        </a>';
+echo '</div>';
+
 try {
     if ($tipo === 'compra') {
         // --- LÓGICA PARA COMPRAS ---
@@ -27,7 +36,6 @@ try {
 
         if (!$compra) throw new Exception("Compra no encontrada.");
 
-        // Consultar los productos del detalle original
         $sqlD = "SELECT d.*, p.nombre as producto_nombre, p.sku 
                  FROM detalle_compra d 
                  JOIN productos p ON d.producto_id = p.id 
@@ -38,7 +46,7 @@ try {
         $detalle = $stmtD->get_result();
 
         // Cabecera visual
-        echo '<div class="row mb-3 shadow-sm p-3 bg-light rounded border-start border-primary border-4">';
+        echo '<div class="row mb-3 shadow-sm p-3 bg-light rounded border-start border-primary border-4 mx-0">';
         echo '  <div class="col-md-4"><b>Folio:</b> <span class="text-primary">' . $compra['folio'] . '</span></div>';
         echo '  <div class="col-md-4 text-center"><b>Almacén Principal:</b> ' . htmlspecialchars($compra['almacen_nombre'] ?? 'N/A') . '</div>';
         echo '  <div class="col-md-4 text-end"><b>Fecha:</b> ' . date('d/m/Y', strtotime($compra['fecha_compra'])) . '</div>';
@@ -51,8 +59,9 @@ try {
                         <tr>
                             <th>Producto / SKU</th>
                             <th class="text-center">Cant. Facturada</th>
-                            <th class="text-center">Unidades Individuales</th> <th class="text-center">Faltante</th>
-                            <th class="text-center">Total Ingreso</th> 
+                            <th class="text-center">U. en Almacén</th> 
+                            <th class="text-center">Faltante Factura</th>
+                            <th class="text-center">Esperado (PZ)</th> 
                             <th class="text-end">Precio U.</th>
                             <th class="text-end">Subtotal</th>
                         </tr>
@@ -61,10 +70,12 @@ try {
         
         while ($item = $detalle->fetch_assoc()) {
             $factor = $item['factor_conversion'] ?? 1;
-            $recibido_factura = $item['cantidad'] - $item['cantidad_faltante'];
-            $recibido_esperado = $recibido_factura * $factor;
+            
+            // 1. Cálculo de lo que la factura dice que llegó (en piezas)
+            $recibido_factura_unidades = $item['cantidad'] - $item['cantidad_faltante'];
+            $esperado_pz = $recibido_factura_unidades * $factor;
 
-            // --- CÁLCULO DE SUMA REAL EN ALMACENES ---
+            // 2. Consulta de lo que REALMENTE se registró en la tabla movimientos
             $sqlSuma = "SELECT SUM(cantidad) as total_piezas FROM movimientos 
                         WHERE referencia_id = ? AND producto_id = ? AND tipo = 'entrada'";
             $stmtSuma = $conexion->prepare($sqlSuma);
@@ -73,16 +84,23 @@ try {
             $resSuma = $stmtSuma->get_result()->fetch_assoc();
             $sumaRealPZ = $resSuma['total_piezas'] ?? 0;
 
-            $claseFaltante = ($item['cantidad_faltante'] > 0) ? 'table-warning' : '';
+            // 3. Lógica de alertas
+            // Si hay menos en movimientos que lo esperado por factura, es un error de ubicación manual
+            $dif_ubicacion = $esperado_pz - $sumaRealPZ;
+            $claseAlmacen = ($dif_ubicacion > 0.01) ? 'text-danger fw-bold' : 'text-primary fw-bold';
+            $claseFaltanteFactura = ($item['cantidad_faltante'] > 0) ? 'table-warning' : '';
             
-            echo "<tr class='{$claseFaltante}'>
+            echo "<tr class='{$claseFaltanteFactura}'>
                     <td>" . htmlspecialchars($item['producto_nombre']) . "<br><small class='text-muted'>SKU: {$item['sku']}</small></td>
                     <td class='text-center'>" . number_format($item['cantidad'], 2) . "</td>
                     
-                    <td class='text-center fw-bold text-primary'>" . number_format($sumaRealPZ, 2) . " PZ</td>
+                    <td class='text-center {$claseAlmacen}'>
+                        " . number_format($sumaRealPZ, 2) . " PZ
+                        " . ($dif_ubicacion > 0.01 ? "<br><small style='font-size:0.7rem'>(Faltan $dif_ubicacion por ubicar)</small>" : "") . "
+                    </td>
                     
                     <td class='text-center text-danger'>" . number_format($item['cantidad_faltante'], 2) . "</td>
-                    <td class='text-center text-success fw-bold'>" . number_format($recibido_esperado, 2) . " </td>
+                    <td class='text-center text-success fw-bold'>" . number_format($esperado_pz, 2) . " </td>
                     <td class='text-end'>$" . number_format($item['precio_unitario'], 2) . "</td>
                     <td class='text-end'>$" . number_format($item['subtotal'], 2) . "</td>
                   </tr>";
@@ -117,7 +135,7 @@ try {
                 </table>
               </div>';
 
-        // --- SECCIÓN DE FALTANTES ---
+        // --- SECCIÓN DE FALTANTES DE PROVEEDOR ---
         $sqlF = "SELECT f.*, p.nombre as producto_nombre, p.sku, dc.unidad_compra 
                  FROM faltantes_ingreso f
                  JOIN productos p ON f.producto_id = p.id
@@ -129,7 +147,7 @@ try {
         $faltantes = $stmtF->get_result();
 
         if ($faltantes->num_rows > 0) {
-            echo '<div class="alert alert-danger mt-4 py-2 small"><i class="bi bi-exclamation-octagon-fill"></i> <b>Faltantes Detectados:</b></div>';
+            echo '<div class="alert alert-danger mt-4 py-2 small"><i class="bi bi-exclamation-octagon-fill"></i> <b>Faltantes de Proveedor (No llegaron):</b></div>';
             echo '<div class="table-responsive">
                     <table class="table table-sm table-bordered border-danger" style="font-size: 0.85rem;">
                         <thead class="table-danger">
@@ -148,7 +166,7 @@ try {
         }
 
     } elseif ($tipo === 'gasto') {
-        // ... (Lógica de gastos mantenida igual para no perder funcionalidad) ...
+        // ... (Se mantiene lógica de gastos igual) ...
         $sqlG = "SELECT g.*, u.nombre as usuario, a.nombre as almacen_nombre 
                  FROM gastos g 
                  LEFT JOIN usuarios u ON g.usuario_registra_id = u.id 
@@ -190,6 +208,4 @@ try {
     }
 
 } catch (Exception $e) {
-    echo '<div class="alert alert-danger">' . $e->getMessage() . '</div>';
-}
-?>
+    echo '<div class="alert alert-danger">' . $e->getMessage() . '</div>';}?>

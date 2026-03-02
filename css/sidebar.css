@@ -1,47 +1,35 @@
-/* ===== NAVBAR ROJO ===== */
-.navbar-red{
-    background: #b71c1c !important;
+/* Clase base para todos los iconos de los módulos */
+.icono-modulo {
+    font-size: 2.8rem; /* Un poco más grande para que luzca */
+    display: flex; /* Cambiado a flex */
+    align-items: center;
+    justify-content: center;
+    height: 70px; /* Altura fija garantiza que el texto siempre empiece en el mismo punto */
+    width: 100%;  /* Ocupa todo el ancho para centrar perfecto */
+    margin-bottom: 5px;
+    transition: transform 0.3s ease;
 }
 
-.navbar-red .btn-outline-light{
-    border-color: rgba(255,255,255,.6);
+/* Colores específicos por módulo */
+.icon-movimientos { color: #198754; } /* Verde */
+.icon-historial { color: #0d6efd; }   /* Azul - Para el historial */
+
+/* Estilos para la Card de Inicio */
+.card-modulo {
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0,0,0,.08);
+    border-radius: 15px;
+    padding: 20px;
+    background: white;
 }
 
-.navbar-red .btn-outline-light:hover{
-    background: #ffffff;
-    color: #b71c1c;
+.card-modulo:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,.1);
 }
 
-
-/* ===== SIDEBAR ROJO ===== */
-.sidebar-red{
-    background: #b71c1c !important;
-    width: 260px;
-    height: 100vh;
-    position: fixed;
-    top: 56px;
-    left: 0;
-    transition: .3s ease;
-    box-shadow: 4px 0 15px rgba(0,0,0,.15);
-}
-
-/* Links */
-.sidebar-red .nav-link{
-    color: rgba(255,255,255,.85);
-    border-radius: 8px;
-    padding: 10px 12px;
-    transition: .2s;
-}
-
-/* Hover */
-.sidebar-red .nav-link:hover{
-    background: #8e0000;
-    color: #fff;
-}
-
-/* Activo */
-.sidebar-red .nav-link.active{
-    background: #7f0000;
-    color: #fff;
-    font-weight: 600;
+.card-modulo h6 {
+    margin: 10px 0 0 0; /* Margen superior para separar del icono */
+    font-weight: 700;
+    color: #333;
 }

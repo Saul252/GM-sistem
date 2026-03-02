@@ -59,27 +59,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
 
                 // 3. Inventario y Movimientos (Solo lo que llegó físicamente)
-            if ($cant_real_factura > 0 && isset($item['distribucion'])) { // Usamos la variable restada
+           // --- SECCIÓN DE INVENTARIO Y MOVIMIENTOS SIN DOBLE MULTIPLICACIÓN ---
+if (isset($item['distribucion']) && is_array($item['distribucion'])) {
+    
     foreach ($item['distribucion'] as $dist) {
         $alm_id = intval($dist['almacen_id']);
         
-        // --- LA LÍNEA CLAVE ---
-        // Multiplicamos lo distribuido por el factor (ej: 1 ton * 150 = 150 piezas)
-        $c_dist_convertida = floatval($dist['cantidad']) * $factor; 
+        // Esta es la cantidad que viene del modal de repartición
+        $cantidad_repartida = floatval($dist['cantidad']); 
+        
+        if ($cantidad_repartida <= 0) continue;
 
-        // 1. Actualizar Stock (Usamos $c_dist_convertida)
-        $sqlInv = "INSERT INTO inventario (almacen_id, producto_id, stock) VALUES (?, ?, ?) 
+        /* LÓGICA DE CONTROL:
+           Si el JS envía la cantidad en TONELADAS (unidad de compra), se multiplica.
+           Si el JS ya envía PIEZAS (porque el usuario las repartió así), NO se multiplica.
+           
+           Asumiendo que tu modal de "Repartir Stock" le pide al usuario PIEZAS (PZ):
+        */
+        
+        // OPCIÓN A: Si el usuario reparte PIEZAS directamente en el modal:
+        $c_dist_final = $cantidad_repartida; 
+
+        // OPCIÓN B: Si el usuario reparte TONELADAS en el modal (Descomenta la siguiente línea si es así):
+        // $c_dist_final = $cantidad_repartida * $factor; 
+
+        // 1. Actualizar Stock
+        $sqlInv = "INSERT INTO inventario (almacen_id, producto_id, stock) 
+                   VALUES (?, ?, ?) 
                    ON DUPLICATE KEY UPDATE stock = stock + VALUES(stock)";
         $stmtInv = $conexion->prepare($sqlInv);
-        $stmtInv->bind_param("iid", $alm_id, $p_id, $c_dist_convertida);
+        $stmtInv->bind_param("iid", $alm_id, $p_id, $c_dist_final);
         $stmtInv->execute();
 
-        // 2. Registrar Movimiento (Usamos $c_dist_convertida)
-        $obs = ($cant_fal > 0) ? "Entrada parcial ($unidad). Faltaron $cant_fal" : "Compra completa ($unidad)";
+        // 2. Registrar Movimiento
+        $obs = "Ingreso Compra Folio: " . $folio . " (Cant: " . $cantidad_repartida . " en " . $unidad . ")";
         $sqlMov = "INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_destino_id, usuario_registra_id, referencia_id, observaciones) 
                    VALUES (?, 'entrada', ?, ?, ?, ?, ?)";
         $stmtMov = $conexion->prepare($sqlMov);
-        $stmtMov->bind_param("idiiis", $p_id, $c_dist_convertida, $alm_id, $user_id, $compra_id, $obs);
+        $stmtMov->bind_param("idiiis", $p_id, $c_dist_final, $alm_id, $user_id, $compra_id, $obs);
+        
         $stmtMov->execute();
     }
 }

@@ -12,6 +12,7 @@ function puedeVerModulo(string $modulo): bool
         'ventas',
         'compras',
         'almacenes',
+        'clientes',
         'movimientos',
         'ventashistorial', 
         'usuarios',

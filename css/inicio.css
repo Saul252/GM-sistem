@@ -1,69 +1,69 @@
-
-body{
-    background:#eef2f7;
+body {
+    background: #eef2f7;
 }
 
 /* CONTENEDOR PRINCIPAL */
-.main{
-    margin-left:260px;
-    padding-top:90px;
-    padding-left:25px;
-    padding-right:25px;
-    max-width:1200px;
-    margin-right:auto;
-}
-
-/* TITULO */
-.titulo-panel{
-    font-weight:700;
-    color:#111827;
+.main {
+    margin-left: 260px;
+    padding-top: 90px;
+    padding-left: 25px;
+    padding-right: 25px;
+    max-width: 1200px;
+    margin-right: auto;
 }
 
 /* TARJETAS */
-.card-modulo{
-    border-radius:20px;
-    border:none;
-    background:#ffffff;
-    box-shadow:0 12px 25px rgba(0,0,0,.06);
-    transition:.25s ease;
-    height:100%;
-    padding:30px 20px;
+.card-modulo {
+    border-radius: 20px;
+    border: none;
+    background: #ffffff;
+    box-shadow: 0 12px 25px rgba(0,0,0,.06);
+    transition: .25s ease;
+    /* Usamos flex para asegurar que todo esté centrado perfectamente */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 25px 15px; /* Reducido un poco para mayor elegancia */
+    text-align: center;
 }
 
-.card-modulo:hover{
-    transform:translateY(-6px);
-    box-shadow:0 20px 40px rgba(0,0,0,.12);
+.card-modulo:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(0,0,0,.12);
 }
 
-/* ICONOS */
-.icono-modulo{
-    font-size:2.6rem;
-    margin-bottom:15px;
+/* ICONOS: La clave de la alineación */
+.icono-modulo {
+    font-size: 2.8rem;
+    /* Creamos un contenedor invisible cuadrado para el icono */
+    height: 70px; 
+    width: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px; /* Espacio fijo entre icono y texto */
+    transition: transform 0.3s ease;
 }
 
-/* COLORES ELEGANTES */
-.icon-ventas{ color:#0d6efd; }
-.icon-compras{ color:#6610f2; }
-.icon-almacen{ color:#fd7e14; }
-.icon-movimientos{ color:#198754; }
-.icon-usuarios{ color:#212529; }
-.icon-mermas{ color:#dc3545; }
+/* COLORES ELEGANTES (Añadido Historial) */
+.icon-ventas      { color: #0d6efd; }
+.icon-historial   { color: #0dcaf0; } /* Un azul más claro para diferenciar */
+.icon-compras     { color: #6610f2; }
+.icon-almacen     { color: #fd7e14; }
+.icon-movimientos { color: #198754; }
+.icon-usuarios    { color: #212529; }
+.icon-mermas      { color: #dc3545; }
 
-.card-modulo h6{
-    font-weight:600;
-    font-size:1rem;
-    margin-bottom:5px;
+.card-modulo h6 {
+    font-weight: 700; /* Un poco más de peso */
+    font-size: 1.05rem;
+    margin-bottom: 2px;
+    color: #1f2937;
 }
 
-.card-modulo small{
-    font-size:.85rem;
-}
-
-/* RESPONSIVE */
-@media (max-width: 992px){
-    .main{
-        margin-left:0;
-        padding-left:16px;
-        padding-right:16px;
-    }
+.card-modulo small {
+    font-size: .85rem;
+    color: #6b7280; /* Gris más suave para el subtítulo */
 }

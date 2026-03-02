@@ -70,32 +70,30 @@ $paginaActual = 'Inicio';
     </a>
 </div>
 <?php endif; ?>
-
-<!-- MOVIMIENTOS -->
+<!-- Movimientos -->
 <?php if (puedeVerModulo('movimientos')): ?>
 <div class="col-md-4 col-lg-3">
     <a href="movimientos.php" class="text-decoration-none text-dark">
-        <div class="card card-modulo text-center">
+        <div class="card card-modulo text-center p-3">
             <i class="bi bi-arrow-left-right icono-modulo icon-movimientos"></i>
-            <h6>Movimientos</h6>
+            <h6 class="mt-2">Movimientos</h6>
             <small class="text-muted">Entradas y salidas</small>
         </div>
     </a>
 </div>
 <?php endif; ?>
-<!-- MOVIMIENTOS -->
+<!-- HIstorial de ventas -->
 <?php if (puedeVerModulo('ventashistorial')): ?>
 <div class="col-md-4 col-lg-3">
     <a href="ventashistorial.php" class="text-decoration-none text-dark">
-        <div class="card card-modulo text-center">
-            <i class="bi bi-arrow-left-right icono-modulo icon-movimientos"></i>
-            <h6>ventashistorial</h6>
-            <small class="text-muted">Entradas y salidas</small>
+        <div class="card card-modulo text-center p-3">
+            <i class="bi bi-receipt icono-modulo icon-historial"></i>
+            <h6 class="mt-2">Historial de ventas</h6>
+            <small class="text-muted">Registro de facturación</small>
         </div>
     </a>
 </div>
 <?php endif; ?>
-
 <!-- USUARIOS -->
 <?php if (puedeVerModulo('usuarios')): ?>
 <div class="col-md-4 col-lg-3">
@@ -117,6 +115,17 @@ $paginaActual = 'Inicio';
             <i class="bi bi-exclamation-triangle icono-modulo icon-mermas"></i>
             <h6>Mermas</h6>
             <small class="text-muted">Control de pérdidas</small>
+        </div>
+    </a>
+</div>
+<?php endif; ?>
+<?php if (puedeVerModulo('clientes')): ?>
+<div class="col-md-4 col-lg-3">
+    <a href="clientes.php" class="text-decoration-none text-dark">
+        <div class="card card-modulo text-center">
+            <i class="bi bi-person-lines-fill icono-modulo icon-clientes"></i>
+            <h6>Clientes</h6>
+            <small class="text-muted">Cartera y facturación</small>
         </div>
     </a>
 </div>
