@@ -91,39 +91,43 @@ window.procesarVenta = function() {
                 if (!res.ok) throw new Error('Error en la respuesta del servidor');
                 return res.json();
             })
-            .then(res => {
-                if (res.status === 'success') {
-                    // Dentro del .then(res => { if (res.status === 'success') { ...
-Swal.fire({
-    title: '¡Venta Exitosa!',
-    html: `
-        <p>Folio: <b>${res.folio}</b></p>
-        <div class="text-left mt-3">
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="tipoTicket" id="conPrecios" value="1" checked>
-                <label class="form-check-label" for="conPrecios">Ticket con Precios (Venta)</label>
-            </div>
-            <div class="form-check">
-                <input class="form-check-input" type="radio" name="tipoTicket" id="sinPrecios" value="0">
-                <label class="form-check-label" for="sinPrecios">Ticket sin Precios (Remisión)</label>
-            </div>
-        </div>
-    `,
-    icon: 'success',
-    showCancelButton: true,
-    confirmButtonText: '<i class="bi bi-printer"></i> Imprimir',
-    cancelButtonText: 'Cerrar'
-}).then((result) => {
-    if (result.isConfirmed) {
-        const mostrarPrecios = document.querySelector('input[name="tipoTicket"]:checked').value;
-       const url = `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}&precios=${conPrecios}`;
-            window.open(url, '_blank'); }
-});
-                } else {
-                    Swal.fire('Error', res.message || 'Error desconocido', 'error');
-                    if(btnFinalizar) btnFinalizar.disabled = false;
-                }
-            })
+           .then(res => {
+    if (res.status === 'success') {
+        Swal.fire({
+            title: '¡Venta Exitosa!',
+            html: `Se ha generado el folio: <b>${res.folio}</b><br><br>Seleccione el tipo de impresión:`,
+            icon: 'success',
+            showDenyButton: true,
+            showCancelButton: true,
+            confirmButtonText: '<i class="bi bi-currency-dollar"></i> Con Precios',
+            denyButtonText: '<i class="bi bi-hash"></i> Sin Precios',
+            cancelButtonText: 'Cerrar',
+            confirmButtonColor: '#198754', // Verde
+            denyButtonColor: '#0dcaf0',    // Azul info
+        }).then((result) => {
+            let url = '';
+            
+            if (result.isConfirmed) {
+                // Ticket Con Precio
+                url = `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`;
+            } else if (result.isDenied) {
+                // Ticket Sin Precio
+                url = `/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=${res.id_venta}`;
+            }
+
+            if (url !== '') {
+                window.open(url, '_blank');
+                // Opcional: Recargar página o limpiar formulario tras imprimir
+                location.reload(); 
+            } else if (result.isDismissed) {
+                location.reload();
+            }
+        });
+    } else {
+        Swal.fire('Error', res.message || 'Error desconocido', 'error');
+        if(typeof btnFinalizar !== 'undefined') btnFinalizar.disabled = false;
+    }
+})
             .catch(err => {
                 console.error("Error en Fetch:", err);
                 Swal.fire('Error Crítico', 'No se pudo conectar con el servidor.', 'error');

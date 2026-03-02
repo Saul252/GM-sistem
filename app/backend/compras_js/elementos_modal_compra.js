@@ -42,6 +42,18 @@ function agregarFila() {
                     <label class="small fw-bold text-danger">¿Cuánto?</label>
                     <input type="number" step="0.01" class="form-control form-control-sm input-faltante" value="0" disabled>
                 </div>
+                <div class="col-md-1">
+                <label class="small fw-bold">Unidad</label>
+                <select class="form-select form-select-sm select-u-compra" onchange="actualizarInterfazConversion($(this))">
+                    <option value="PZA">PZA</option>
+                    <option value="TON">TON</option>
+                    <option value="MIL">MIL</option>
+                </select>
+            </div>
+            <div class="col-md-1 div-factor" style="display:none;">
+                <label class="small fw-bold text-primary">Pzas x Unid</label>
+                <input type="number" step="0.01" class="form-control form-control-sm input-factor" value="1">
+            </div>
                 <div class="col-md-2">
                     <button type="button" class="btn btn-outline-secondary btn-sm w-100 btn-abrir-dist">Repartir Real</button>
                 </div>
@@ -96,24 +108,33 @@ function agregarFila() {
         if (row.length) calcularSubfila(row);
         calcularTotal();
     });
+function calcularSubfila(row) {
+    let cantFact = parseFloat(row.find('.cant').val()) || 0;
+    let precioFac = parseFloat(row.find('.precio_u').val()) || 0;
+    let factor = parseFloat(row.find('.input-factor').val()) || 1; // Aquí tomamos tu nuevo input
+    let faltante = parseFloat(row.find('.input-faltante').val()) || 0;
 
-    function calcularSubfila(row) {
-        let cantFact = parseFloat(row.find('.cant').val()) || 0;
-        let faltante = parseFloat(row.find('.input-faltante').val()) || 0;
-        let precio = parseFloat(row.find('.precio_u').val()) || 0;
+    // 1. DINERO: Lo que pagas según la factura (Cantidad x Precio de la unidad comprada)
+    let sub = cantFact * precioFac;
+    row.find('.subtotal').val(sub.toFixed(2));
 
-        let cantReal = cantFact - faltante;
-        row.find('.cant_real_entrada').val(cantReal);
+    // 2. STOCK: La conversión a unidades individuales para el inventario
+    // (10 Toneladas * 20 Pzas) - 5 Faltantes = 195 Pzas reales
+    let cantReal = (cantFact * factor) - faltante;
+    
+    // Guardamos el resultado en el campo oculto que procesa el almacén
+    row.find('.cant_real_entrada').val(cantReal);
 
-        // El subtotal siempre es Precio x Cantidad Facturada (lo que se paga)
-        let sub = cantFact * precio;
-        row.find('.subtotal').val(sub.toFixed(2));
-
-        if (cantReal > 0) {
-            row.find('.btn-abrir-dist').text('Repartir ' + cantReal);
-        }
+    // Actualizamos el botón de reparto para que sea claro
+    let btnDist = row.find('.btn-abrir-dist');
+    if (cantReal > 0) {
+        btnDist.text('Repartir ' + cantReal + ' Pzas');
+        btnDist.removeClass('btn-outline-secondary').addClass('btn-outline-primary');
+    } else {
+        btnDist.text('Repartir Real');
+        btnDist.addClass('btn-outline-secondary').removeClass('btn-outline-primary');
     }
-
+}
     function calcularTotal() {
         let totalFactura = parseFloat($('#total_factura').val()) || 0;
         let sumaDesglose = 0;
@@ -177,3 +198,26 @@ function agregarFila() {
             '<i class="bi bi-check"></i> Listo');
         modalDist.hide();
     });
+window.actualizarInterfazConversion = function(select) {
+    let row = select.closest('.row');
+    let unidad = select.val();
+    let divFactor = row.find('.div-factor');
+    let inputFactor = row.find('.input-factor');
+
+    if (unidad === 'PZA') {
+        divFactor.hide(); // Oculta el input azul
+        inputFactor.val(1); // Resetea a 1 para que no afecte el cálculo
+    } else {
+        divFactor.show(); // Muestra el input azul "Pzas x Unid"
+        inputFactor.val(''); // Lo deja vacío para obligar al usuario a escribir
+        inputFactor.focus();
+    }
+    
+    calcularSubfila(row);
+    calcularTotal();
+};
+$(document).on('input', '.cant, .input-faltante, .precio_u, .input-factor, #total_factura', function() {
+    let row = $(this).closest('.row');
+    if (row.length) calcularSubfila(row);
+    calcularTotal();
+});

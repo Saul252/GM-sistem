@@ -389,7 +389,21 @@ if (isset($_GET['detalle_id'])) {
                     <td><div class="small fw-bold">${v.cliente}</div></td>
                     <td>${badgeCobro}</td>
                     <td class="text-center"><span class="badge ${v.estado_entrega=='entregado'?'bg-success':(v.estado_entrega=='parcial'?'bg-warning text-dark':'bg-danger')}">${v.estado_entrega.toUpperCase()}</span></td>
-                    <td class="text-end pe-3"><button class="btn btn-sm btn-outline-secondary" onclick="verDetalle(${v.id})">Gestionar</button></td>
+                    <td class="text-end pe-3">
+    <div class="btn-group" role="group" aria-label="Acciones de venta">
+        <button class="btn btn-sm btn-dark shadow-sm" onclick="verDetalle(${v.id})" title="Ver Detalles">
+            <i class="bi bi-gear-fill"></i> Gestionar
+        </button>
+
+        <a class="btn btn-sm btn-primary shadow-sm" href="/cfsistem/app/backend/ventas/ticket_venta.php?id=${v.id}" target="_blank" title="Imprimir Ticket con Precios">
+            <i class="bi bi-currency-dollar"></i> Ticket
+        </a>
+
+        <a class="btn btn-sm btn-info text-white shadow-sm" href="/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=${v.id}" target="_blank" title="Imprimir Remisión sin Precios">
+            <i class="bi bi-file-earmark-text"></i> Remisión
+        </a>
+    </div>
+</td>
                 </tr>`;
             }).join(''));
         } catch (e) { console.error(e); }

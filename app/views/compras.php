@@ -39,7 +39,7 @@ $productos_res = $conexion->query("SELECT id, nombre, sku FROM productos WHERE a
     <main class="main-content">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h2 class="fw-bold mb-0">Egresos</h2>
+                <h2 class="fw-bold mb-0">Compras y gastos</h2>
                 <p class="text-muted">Gestión de Compras (Inventario) y Gastos Operativos</p>
             </div>
             <div class="gap-2 d-flex">
