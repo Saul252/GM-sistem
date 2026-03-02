@@ -28,6 +28,17 @@ $almacenesQuery = $conexion->query($sqlAlm);
 $almacenes = [];
 while ($row = $almacenesQuery->fetch_assoc()) { $almacenes[] = $row; }
 
+/* ================= TODOS LOS ALMACENES (Para Traspasos) ================= */
+// Consulta independiente para que el origen/destino de traspasos siempre tenga opciones
+$sqlGlobal = "SELECT id, nombre FROM almacenes WHERE activo = 1 ORDER BY nombre ASC";
+$queryGlobal = $conexion->query($sqlGlobal);
+$todosLosAlmacenes = [];
+while ($row = $queryGlobal->fetch_assoc()) { 
+    $todosLosAlmacenes[] = $row; 
+}
+// 1. Siempre obtenemos TODOS los almacenes activos para Traspasos y Filtros de Admin
+
+
 /* ================= PRODUCTOS (Filtrado por Permiso) ================= */
 $sql = "SELECT 
     p.id, p.sku, p.nombre, p.categoria_id,
@@ -49,6 +60,10 @@ $sql .= " ORDER BY p.nombre ASC";
 $result = $conexion->query($sql);
 $productos = [];
 while($row = $result->fetch_assoc()){ $productos[] = $row; }
+
+
+
+
 ?>
 
 <!DOCTYPE html>
@@ -83,19 +98,19 @@ while($row = $result->fetch_assoc()){ $productos[] = $row; }
                     </select>
                 </div>
 
-               <div class="col-md-2">
-    <select id="filtroAlmacen" class="form-select" <?= ($almacen_usuario > 0) ? 'disabled' : '' ?>>
-        <?php if($almacen_usuario == 0): ?>
-            <option value="">Todos los Almacenes</option>
-        <?php endif; ?>
-        
-        <?php foreach($almacenes as $alm): ?>
-            <option value="<?= $alm['id'] ?>" <?= ($almacen_usuario == $alm['id']) ? 'selected' : '' ?>>
-                <?= htmlspecialchars($alm['nombre']) ?>
-            </option>
-        <?php endforeach; ?>
-    </select>
-</div>
+                <div class="col-md-2">
+                    <select id="filtroAlmacen" class="form-select" <?= ($almacen_usuario > 0) ? 'disabled' : '' ?>>
+                        <?php if($almacen_usuario == 0): ?>
+                        <option value="">Todos los Almacenes</option>
+                        <?php endif; ?>
+
+                        <?php foreach($almacenes as $alm): ?>
+                        <option value="<?= $alm['id'] ?>" <?= ($almacen_usuario == $alm['id']) ? 'selected' : '' ?>>
+                            <?= htmlspecialchars($alm['nombre']) ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
                 <div class="col-md-3">
                     <input type="text" id="buscador" class="form-control" placeholder="🔎 Buscar...">
                 </div>
@@ -148,10 +163,10 @@ while($row = $result->fetch_assoc()){ $productos[] = $row; }
                             </td>
                             <td><?= htmlspecialchars($p['almacen_nombre'] ?? 'N/A') ?></td>
                             <td class="text-center">
-                                <button class="btn btn-outline-warning btn-sm" 
-        onclick="editarProducto(<?= $p['id'] ?>, <?= $p['almacen_id'] ?>)">
-    <i class="bi bi-pencil"></i>
-</button>
+                                <button class="btn btn-outline-warning btn-sm"
+                                    onclick="editarProducto(<?= $p['id'] ?>, <?= $p['almacen_id'] ?>)">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -161,37 +176,79 @@ while($row = $result->fetch_assoc()){ $productos[] = $row; }
         </div>
     </div>
 
- 
 
- <div class="modal fade" id="modalCategoria" tabindex="-1" aria-labelledby="modalCategoriaLabel" aria-hidden="true" style="z-index: 1060;">
-    <div class="modal-dialog modal-dialog-centered"> <div class="modal-content shadow-lg"> <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="modalCategoriaLabel">Nueva Categoría</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="formNuevaCategoria">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Nombre de la categoría</label>
-                        <input type="text" name="nombre" class="form-control" placeholder="Escribe el nombre..." required>
+
+    <div class="modal fade" id="modalCategoria" tabindex="-1" aria-labelledby="modalCategoriaLabel" aria-hidden="true"
+        style="z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalCategoriaLabel">Nueva Categoría</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <form id="formNuevaCategoria">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nombre de la categoría</label>
+                            <input type="text" name="nombre" class="form-control" placeholder="Escribe el nombre..."
+                                required>
+                        </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Guardar Categoría</button>
-                </div>
-            </form>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar Categoría</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 
-<style>
+    <style>
     /* Si abres este modal sobre otro, el backdrop debe estar un nivel abajo de este modal */
     .modal-backdrop:nth-of-type(even) {
         z-index: 1055 !important;
     }
-</style>
+    </style>
+    <script>
+    document.getElementById('formNuevaCategoria').addEventListener('submit', function(e) {
+        e.preventDefault();
 
-</script>
+        const formData = new FormData(this);
+        const datos = Object.fromEntries(formData.entries());
+
+        Swal.fire({
+            title: 'Guardando...',
+            didOpen: () => {
+                Swal.showLoading();
+            }
+        });
+
+        fetch('/cfsistem/app/backend/almacen/guardar_categoria.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(datos)
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.status === 'success') {
+                    Swal.fire('¡Éxito!', 'Categoría guardada correctamente', 'success').then(() => {
+                        // Si tienes un selector de categorías en la pantalla de productos, 
+                        // aquí podrías recargarlo o simplemente refrescar la página
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Error', res.message, 'error');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
+            });
+    });
+    </script>
     <div class="modal fade" id="modalTraspaso" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -226,9 +283,15 @@ while($row = $result->fetch_assoc()){ $productos[] = $row; }
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-bold">3. Almacén Destino</label>
                                 <select name="almacen_destino_id" id="destino_id" class="form-select" required>
-                                    <option value="">¿A dónde va?</option>
-                                    <?php foreach($almacenes as $alm): ?>
-                                    <option value="<?= $alm['id'] ?>"><?= htmlspecialchars($alm['nombre']) ?></option>
+                                    <option value="">¿A dónde va la mercancía?</option>
+                                    <?php foreach($todosLosAlmacenes as $alm_dest): ?>
+                                    <?php 
+        // Si el usuario es operativo, ocultamos su propio almacén del destino
+        // Si es Admin ($almacen_usuario == 0), se muestran todos (el JS se encarga de validar)
+        if ($almacen_usuario > 0 && $alm_dest['id'] == $almacen_usuario) continue; 
+        ?>
+                                    <option value="<?= $alm_dest['id'] ?>"><?= htmlspecialchars($alm_dest['nombre']) ?>
+                                    </option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -411,7 +474,7 @@ while($row = $result->fetch_assoc()){ $productos[] = $row; }
                                     <div class="col-md-6">
                                         <label class="form-label small">Stock Actual</label>
                                         <input type="number" step="0.01" name="stock" id="edit_stock"
-                                            class="form-control"  bg-light>
+                                            class="form-control" bg-light>
                                         <div class="form-text text-muted">Para mover stock use el módulo de Traspasos.
                                         </div>
                                     </div>
@@ -432,192 +495,202 @@ while($row = $result->fetch_assoc()){ $productos[] = $row; }
             </div>
         </div>
     </div>
-      <div class="modal fade" id="modalAgregarProducto" tabindex="-1">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content shadow-lg border-0">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title"><i class="bi bi-box-seam me-2"></i> Nuevo Producto y Entrada de Almacén</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
+    <div class="modal fade" id="modalAgregarProducto" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="bi bi-box-seam me-2"></i> Nuevo Producto y Entrada de Almacén</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
 
-            <form id="formAgregarProducto" action="/cfsistem/app/backend/almacen/guardar_producto.php" method="POST" onsubmit="confirmarEnvio(event)">
-                <div class="modal-body p-4">
-                    
-                    <h6 class="fw-bold mb-3 text-success border-bottom pb-2">Información General</h6>
-                    <div class="row mb-3 g-3">
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold">SKU</label>
-                            <input type="text" name="sku" class="form-control" required>
+                <form id="formAgregarProducto" action="/cfsistem/app/backend/almacen/guardar_producto.php" method="POST"
+                    onsubmit="confirmarEnvio(event)">
+                    <div class="modal-body p-4">
+
+                        <h6 class="fw-bold mb-3 text-success border-bottom pb-2">Información General</h6>
+                        <div class="row mb-3 g-3">
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">SKU</label>
+                                <input type="text" name="sku" class="form-control" required>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label small fw-bold">Nombre del Producto</label>
+                                <input type="text" name="nombre" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Categoría</label>
+                                <div class="input-group">
+                                    <select name="categoria_id" class="form-select" required>
+                                        <option value="">Seleccionar...</option>
+                                        <?php foreach($categorias as $cat): ?>
+                                        <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['nombre']) ?>
+                                        </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <button type="button" class="btn btn-outline-primary"
+                                        onclick="abrirModalCategoria()">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Unidad de Medida (Base)</label>
+                                <input type="text" name="unidad_medida" class="form-control" placeholder="Ej: PZA, KG">
+                            </div>
+                            <div class="col-md-8">
+                                <label class="form-label small fw-bold">Descripción Corta</label>
+                                <input type="text" name="description" class="form-control">
+                            </div>
                         </div>
-                        <div class="col-md-5">
-                            <label class="form-label small fw-bold">Nombre del Producto</label>
-                            <input type="text" name="nombre" class="form-control" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Categoría</label>
-                            <div class="input-group">
-                                <select name="categoria_id" class="form-select" required>
-                                    <option value="">Seleccionar...</option>
-                                    <?php foreach($categorias as $cat): ?>
-                                    <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['nombre']) ?></option>
-                                    <?php endforeach; ?>
+
+                        <h6 class="fw-bold mb-3 text-primary border-bottom pb-2">Información Fiscal (SAT)</h6>
+                        <div class="row mb-4 g-3">
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">Clave SAT (Prod/Serv)</label>
+                                <input type="text" name="fiscal_clave_prod" class="form-control"
+                                    placeholder="Ej: 43231500">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">Clave Unidad SAT</label>
+                                <input type="text" name="fiscal_clave_unit" class="form-control" placeholder="Ej: H87">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">IVA %</label>
+                                <select name="impuesto_iva" class="form-select">
+                                    <option value="16.00">16%</option>
+                                    <option value="8.00">8%</option>
+                                    <option value="0.00">0%</option>
+                                    <option value="exento">Exento</option>
                                 </select>
-                                <button type="button" class="btn btn-outline-primary" onclick="abrirModalCategoria()">
-                                    <i class="bi bi-plus"></i>
-                                </button>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold text-danger">Costo de Adquisición</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" step="0.01" name="precio_adquisicion"
+                                        class="form-control border-danger" required>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold">Unidad de Medida (Base)</label>
-                            <input type="text" name="unidad_medida" class="form-control" placeholder="Ej: PZA, KG">
-                        </div>
-                        <div class="col-md-8">
-                            <label class="form-label small fw-bold">Descripción Corta</label>
-                            <input type="text" name="description" class="form-control">
-                        </div>
-                    </div>
 
-                    <h6 class="fw-bold mb-3 text-primary border-bottom pb-2">Información Fiscal (SAT)</h6>
-                    <div class="row mb-4 g-3">
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold">Clave SAT (Prod/Serv)</label>
-                            <input type="text" name="fiscal_clave_prod" class="form-control" placeholder="Ej: 43231500">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold">Clave Unidad SAT</label>
-                            <input type="text" name="fiscal_clave_unit" class="form-control" placeholder="Ej: H87">
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold">IVA %</label>
-                            <select name="impuesto_iva" class="form-select">
-                                <option value="16.00">16%</option>
-                                <option value="8.00">8%</option>
-                                <option value="0.00">0%</option>
-                                <option value="exento">Exento</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold text-danger">Costo de Adquisición</label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="number" step="0.01" name="precio_adquisicion" class="form-control border-danger" required>
-                            </div>
-                        </div>
-                    </div>
+                        <div class="card bg-light border-warning mb-4 shadow-sm">
+                            <div class="card-body">
+                                <h6 class="fw-bold text-dark mb-3"><i class="bi bi-calculator-fill text-warning"></i>
+                                    Control de Entrada Física y Conversión</h6>
 
-                    <div class="card bg-light border-warning mb-4 shadow-sm">
-                        <div class="card-body">
-                            <h6 class="fw-bold text-dark mb-3"><i class="bi bi-calculator-fill text-warning"></i> Control de Entrada Física y Conversión</h6>
-                            
-                            <div class="row g-3 align-items-end">
-                                <div class="col-md-3">
-                                    <label class="small fw-bold text-danger">Cantidad Recibida:</label>
-                                    <div class="input-group">
-                                        <input type="number" id="inputLlegadaMaestra" class="form-control border-danger fw-bold" step="0.01" placeholder="0.00" oninput="actualizarLimiteMaestro()">
-                                        <select id="unidadMaestra" class="form-select border-danger" onchange="gestionarFactor()">
-                                            <option value="1">PZA / Bultos</option>
-                                            <option value="ton">Toneladas</option>
-                                            <option value="kg">Kilos</option>
-                                        </select>
+                                <div class="row g-3 align-items-end">
+                                    <div class="col-md-3">
+                                        <label class="small fw-bold text-danger">Cantidad Recibida:</label>
+                                        <div class="input-group">
+                                            <input type="number" id="inputLlegadaMaestra"
+                                                class="form-control border-danger fw-bold" step="0.01"
+                                                placeholder="0.00" oninput="actualizarLimiteMaestro()">
+                                            <select id="unidadMaestra" class="form-select border-danger"
+                                                onchange="gestionarFactor()">
+                                                <option value="1">PZA / Bultos</option>
+                                                <option value="ton">Toneladas</option>
+                                                <option value="kg">Kilos</option>
+                                            </select>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div class="col-md-3" id="columnaFactor" style="display: none;">
-                                    <label class="small fw-bold text-primary" id="labelFactor">Factor de Conversión:</label>
-                                    <div class="input-group">
-                                        <input type="number" id="inputFactor" class="form-control border-primary fw-bold" value="20" oninput="actualizarLimiteMaestro()">
-                                        <span class="input-group-text bg-primary text-white"><i class="bi bi-arrow-repeat"></i></span>
+                                    <div class="col-md-3" id="columnaFactor" style="display: none;">
+                                        <label class="small fw-bold text-primary" id="labelFactor">Factor de
+                                            Conversión:</label>
+                                        <div class="input-group">
+                                            <input type="number" id="inputFactor"
+                                                class="form-control border-primary fw-bold" value="20"
+                                                oninput="actualizarLimiteMaestro()">
+                                            <span class="input-group-text bg-primary text-white"><i
+                                                    class="bi bi-arrow-repeat"></i></span>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div class="col-md-3 text-center">
-                                    <div class="p-2 border rounded bg-white shadow-sm">
-                                        <span class="small text-muted d-block text-uppercase fw-bold" style="font-size: 0.6rem;">Máximo a Ingresar (Piezas)</span>
-                                        <span id="displayLimiteBultos" class="fw-bold fs-5 text-dark">0.00</span>
+                                    <div class="col-md-3 text-center">
+                                        <div class="p-2 border rounded bg-white shadow-sm">
+                                            <span class="small text-muted d-block text-uppercase fw-bold"
+                                                style="font-size: 0.6rem;">Máximo a Ingresar (Piezas)</span>
+                                            <span id="displayLimiteBultos" class="fw-bold fs-5 text-dark">0.00</span>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div class="col-md-3 text-center">
-                                    <div class="p-2 border rounded bg-white shadow-sm">
-                                        <span class="small text-muted d-block text-uppercase fw-bold" style="font-size: 0.6rem;">Asignado / Restante</span>
-                                        <div class="d-flex justify-content-center gap-1">
-                                            <span id="displayAsignado" class="fw-bold fs-5 text-primary">0.00</span>
-                                            <span class="fs-5 text-muted">/</span>
-                                            <span id="displayRestante" class="fw-bold fs-5 text-secondary">0.00</span>
+                                    <div class="col-md-3 text-center">
+                                        <div class="p-2 border rounded bg-white shadow-sm">
+                                            <span class="small text-muted d-block text-uppercase fw-bold"
+                                                style="font-size: 0.6rem;">Asignado / Restante</span>
+                                            <div class="d-flex justify-content-center gap-1">
+                                                <span id="displayAsignado" class="fw-bold fs-5 text-primary">0.00</span>
+                                                <span class="fs-5 text-muted">/</span>
+                                                <span id="displayRestante"
+                                                    class="fw-bold fs-5 text-secondary">0.00</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <h6 class="fw-bold mb-3 text-success border-bottom pb-2">Distribución por Almacén y Precios de Venta</h6>
-                    <div class="table-responsive">
-                        <table class="table table-sm table-bordered align-middle">
-                            <thead class="table-dark">
-                                <tr class="text-center small">
-                                    <th width="40">Act.</th>
-                                    <th>Almacén</th>
-                                    <th width="140">Stock (Pzas)</th>
-                                    <th width="100">Mínimo</th>
-                                    <th>P. Minorista</th>
-                                    <th>P. Mayorista</th>
-                                    <th>P. Distribuidor</th>
-                                </tr>
-                            </thead>
-                            
-                        </table>
+                        <h6 class="fw-bold mb-3 text-success border-bottom pb-2">Distribución por Almacén y Precios de
+                            Venta</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered align-middle">
+                                <thead class="table-dark">
+                                    <tr class="text-center small">
+                                        <th width="40">Act.</th>
+                                        <th>Almacén</th>
+                                        <th width="140">Stock (Pzas)</th>
+                                        <th width="100">Mínimo</th>
+                                        <th>P. Minorista</th>
+                                        <th>P. Mayorista</th>
+                                        <th>P. Distribuidor</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach($almacenes as $a): ?>
+                                    <tr>
+                                        <td class="text-center">
+                                            <input type="checkbox" name="almacenes[<?= $a['id'] ?>][activo]" value="1"
+                                                class="form-check-input" checked>
+                                        </td>
+                                        <td class="small fw-bold"><?= htmlspecialchars($a['nombre']) ?></td>
+                                        <td>
+                                            <input type="number" step="0.01" name="almacenes[<?= $a['id'] ?>][stock]"
+                                                class="form-control form-control-sm input-calculo border-primary fw-bold"
+                                                oninput="validarReparto()">
+                                        </td>
+                                        <td><input type="number" step="0.01"
+                                                name="almacenes[<?= $a['id'] ?>][stock_minimo]"
+                                                class="form-control form-control-sm"></td>
+                                        <td><input type="number" step="0.01"
+                                                name="almacenes[<?= $a['id'] ?>][precio_minorista]"
+                                                class="form-control form-control-sm" placeholder="$"></td>
+                                        <td><input type="number" step="0.01"
+                                                name="almacenes[<?= $a['id'] ?>][precio_mayorista]"
+                                                class="form-control form-control-sm" placeholder="$"></td>
+                                        <td><input type="number" step="0.01"
+                                                name="almacenes[<?= $a['id'] ?>][precio_distribuidor]"
+                                                class="form-control form-control-sm" placeholder="$"></td>
+                                    </tr>
+                                    <?php endforeach?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="submit" id="btnGuardarProducto" class="btn btn-success px-5 fw-bold shadow">
-                        <i class="bi bi-save me-2"></i> GUARDAR PRODUCTO
-                    </button>
-                </div>
-            </form>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="submit" id="btnGuardarProducto" class="btn btn-success px-5 fw-bold shadow">
+                            <i class="bi bi-save me-2"></i> GUARDAR PRODUCTO
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
-<script>
-document.getElementById('formNuevaCategoria').addEventListener('submit', function(e) {
-    e.preventDefault();
-    
-    const formData = new FormData(this);
-    const datos = Object.fromEntries(formData.entries());
-
-    Swal.fire({
-        title: 'Guardando...',
-        didOpen: () => { Swal.showLoading(); }
-    });
-
-    fetch('/cfsistem/app/backend/almacen/guardar_categoria.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(datos)
-    })
-    .then(res => res.json())
-    .then(res => {
-        if(res.status === 'success') {
-            Swal.fire('¡Éxito!', 'Categoría guardada correctamente', 'success').then(() => {
-                // Si tienes un selector de categorías en la pantalla de productos, 
-                // aquí podrías recargarlo o simplemente refrescar la página
-                location.reload(); 
-            });
-        } else {
-            Swal.fire('Error', res.message, 'error');
-        }
-    })
-    .catch(err => {
-        console.error(err);
-        Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
-    });
-});
-// --- Lógica de Control de Conversión ---
-<script src="/cfsistem/app/backend/js/calcular_unidades.js"></script>
+    // --- Lógica de Control de Conversión ---
+    <script src="/cfsistem/app/backend/js/calcular_unidades.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/cfsistem/app/backend/js/filtros_almacen.js"></script>
-       <script src="/cfsistem/app/backend/js/guardar_producto.js"></script>
+    <script src="/cfsistem/app/backend/js/guardar_producto.js"></script>
     <script>
     // Variable que guarda los datos de stock que ya tenemos en la tabla
     // Pasamos los datos de PHP a JS
@@ -626,7 +699,7 @@ document.getElementById('formNuevaCategoria').addEventListener('submit', functio
     <script src="/cfsistem/app/backend/js/informacion_productos_envio.js"></script>
     <script src="/cfsistem/app/backend/js/cargar_traspasos.js"></script>
     <script src="/cfsistem/app/backend/js/aceptar_arribo.js"></script>
- <script src="/cfsistem/app/backend/js/editar_producto.js">
+    <script src="/cfsistem/app/backend/js/editar_producto.js">
     // Abrir modal y cargar datos
     </script>
 

@@ -154,6 +154,7 @@ $productos_res = $conexion->query("SELECT id, nombre, sku FROM productos WHERE a
                     </div>
 
                     <div id="contenedorItems"></div>
+                
 
                     <div id="alertaMonto" class="alert alert-warning mt-3 d-none">
                         <i class="bi bi-exclamation-triangle me-2"></i>

@@ -18,7 +18,7 @@ function puedeVerModulo(string $modulo): bool
         'mermas'
     ],
 
-    'almacen' => [
+    'gestor_almacen' => [
         'inicio',
         'ventashistorial',
         
