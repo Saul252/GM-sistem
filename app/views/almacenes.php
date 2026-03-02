@@ -8,7 +8,7 @@ protegerPagina();
 require_once __DIR__ . '/../../includes/sidebar.php';
 require_once __DIR__ . '/../../config/conexion.php';
 
-$paginaActual = 'Almacenes';
+$paginaActual = 'almacenes';
 // Capturamos el almacén de la sesión (0 = Admin)
 $almacen_usuario = $_SESSION['almacen_id'] ?? 0;
 
@@ -686,7 +686,7 @@ while($row = $result->fetch_assoc()){ $productos[] = $row; }
             </div>
         </div>
     </div>
-    // --- Lógica de Control de Conversión ---
+    <!-- --- Lógica de Control de Conversión --- -->
     <script src="/cfsistem/app/backend/js/calcular_unidades.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/cfsistem/app/backend/js/filtros_almacen.js"></script>

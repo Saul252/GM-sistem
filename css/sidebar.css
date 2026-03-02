@@ -33,3 +33,16 @@
     font-weight: 700;
     color: #333;
 }
+.navbar-premium .nav-link i {
+        color: white !important; /* Asegura que la campana se vea en el fondo oscuro */
+    }
+    
+    #sidebar {
+        z-index: 1040; /* Para que esté por debajo de la navbar fija pero sobre el contenido */
+    }
+
+    #notif-badge {
+        font-size: 0.65rem;
+        padding: 0.35em 0.5em;
+        border: 2px solid #111827; /* Crea un borde para que resalte sobre la campana */
+    }

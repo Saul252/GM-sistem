@@ -130,6 +130,23 @@ $paginaActual = 'Inicio';
     </a>
 </div>
 <?php endif; ?>
+<?php if (puedeVerModulo('finanzas')): ?>
+<div class="col-md-4 col-lg-3">
+    <a href="finanzas.php" class="text-decoration-none text-dark">
+        <div class="card card-modulo text-center shadow-sm h-100">
+            <i class="bi bi-graph-up-arrow icono-modulo text-primary" style="font-size: 2.5rem; margin-bottom: 10px;"></i>
+            <h6 class="fw-bold">Finanzas</h6>
+            <small class="text-muted">Estadísticas, Utilidades y Gastos</small>
+            
+            <div class="mt-2">
+                <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle" style="font-size: 0.7rem;">
+                    <i class="bi bi-lightning-charge-fill me-1"></i>En tiempo real
+                </span>
+            </div>
+        </div>
+    </a>
+</div>
+<?php endif; ?>
 
 </div>
 </div>

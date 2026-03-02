@@ -25,6 +25,29 @@ while($c = $categorias_res->fetch_assoc()) { $categorias[] = $c; }
 
 // Obtener Productos actuales
 $productos_res = $conexion->query("SELECT id, nombre, sku FROM productos WHERE activo = 1 ORDER BY nombre ASC");
+// --- CÁLCULO DE TOTALES FILTRADOS ---
+// Reutilizamos las condiciones que ya tienes definidas abajo para la tabla
+$cond_sum_c = "WHERE c.fecha_compra BETWEEN '$fecha_desde' AND '$fecha_hasta'";
+$cond_sum_g = "WHERE g.fecha_gasto BETWEEN '$fecha_desde' AND '$fecha_hasta'";
+
+if($filtro_folio != '') {
+    $cond_sum_c .= " AND c.folio LIKE '%$filtro_folio%'";
+    $cond_sum_g .= " AND g.folio LIKE '%$filtro_folio%'";
+}
+if($filtro_usuario != '') {
+    $cond_sum_c .= " AND c.usuario_registra_id = '$filtro_usuario'";
+    $cond_sum_g .= " AND g.usuario_registra_id = '$filtro_usuario'";
+}
+
+// Suma de Compras
+$resSumaCompras = $conexion->query("SELECT SUM(c.total) as total FROM compras c $cond_sum_c");
+$totalSumCompras = $resSumaCompras->fetch_assoc()['total'] ?? 0;
+
+// Suma de Gastos
+$resSumaGastos = $conexion->query("SELECT SUM(g.total) as total FROM gastos g $cond_sum_g");
+$totalSumGastos = $resSumaGastos->fetch_assoc()['total'] ?? 0;
+
+$granTotalEgresos = $totalSumCompras + $totalSumGastos;
 ?>
 
  <!DOCTYPE html>
@@ -41,6 +64,14 @@ $productos_res = $conexion->query("SELECT id, nombre, sku FROM productos WHERE a
  </head>
 
  <body>
+    <style>
+    /* Permite que el modal de categoría (z-index 1060) se vea sobre el de productos (1050) */
+    #modalCategoria {
+        background: rgba(0, 0, 0, 0.5); /* Sombra manual si el backdrop falla */
+    }
+    /* Fix para scroll en modales anidados */
+    .modal { overflow-y: auto !important; }
+</style>
      <?php renderSidebar($paginaActual); ?>
 
      <main class="main-content">
@@ -94,6 +125,55 @@ $productos_res = $conexion->query("SELECT id, nombre, sku FROM productos WHERE a
                  </form>
              </div>
          </div>
+         <div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm bg-white h-100 border-start border-primary border-4 rounded-4">
+            <div class="card-body py-3 px-4">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <p class="text-muted small fw-bold mb-0 text-uppercase tracking-wider" style="font-size: 0.7rem; letter-spacing: 1px;">Compras</p>
+                        <h4 class="fw-bold mb-0 text-dark">$ <?= number_format($totalSumCompras, 2) ?></h4>
+                    </div>
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-2">
+                        <i class="bi bi-cart-check text-primary fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm bg-white h-100 border-start border-warning border-4 rounded-4">
+            <div class="card-body py-3 px-4">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <p class="text-muted small fw-bold mb-0 text-uppercase tracking-wider" style="font-size: 0.7rem; letter-spacing: 1px;">Gastos Operativos</p>
+                        <h4 class="fw-bold mb-0 text-dark">$ <?= number_format($totalSumGastos, 2) ?></h4>
+                    </div>
+                    <div class="rounded-circle bg-warning bg-opacity-10 p-2">
+                        <i class="bi bi-cash-stack text-warning fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm bg-white h-100 border-start border-danger border-4 rounded-4">
+            <div class="card-body py-3 px-4">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <p class="text-danger small fw-bold mb-0 text-uppercase tracking-wider" style="font-size: 0.7rem; letter-spacing: 1px;">Total Egresos</p>
+                        <h4 class="fw-bold mb-0 text-dark">$ <?= number_format($granTotalEgresos, 2) ?></h4>
+                    </div>
+                    <div class="rounded-circle bg-danger bg-opacity-10 p-2">
+                        <i class="bi bi-calculator text-danger fs-5"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
          <div class="card card-custom p-4">
              <div class="table-responsive">
                  <table class="table table-hover align-middle">
@@ -231,63 +311,72 @@ $productos_res = $conexion->query("SELECT id, nombre, sku FROM productos WHERE a
          </div>
      </div>
 
-     <div class="modal fade" id="modalNuevoProducto" tabindex="-1" data-bs-backdrop="static">
-         <div class="modal-dialog modal-lg">
-             <form id="formNuevoProducto" class="modal-content border-0 shadow-lg">
-                 <div class="modal-header bg-success text-white py-2">
-                     <h5 class="modal-title fs-6">Nuevo Producto en Catálogo</h5>
-                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                 </div>
-                 <div class="modal-body">
-                     <div class="row g-2">
-                         <div class="col-md-4">
-                             <label class="form-label small mb-1">SKU</label>
-                             <input type="text" name="sku" class="form-control form-control-sm" required>
-                         </div>
-                         <div class="col-md-8">
-                             <label class="form-label small mb-1">Nombre</label>
-                             <input type="text" name="nombre" class="form-control form-control-sm" required>
-                         </div>
-                         <div class="col-md-6">
-                             <label class="form-label small mb-1">Categoría</label>
-                             <select name="categoria_id" class="form-select form-select-sm">
-                                 <?php foreach($categorias as $c): ?>
-                                 <option value="<?= $c['id'] ?>"><?= $c['nombre'] ?></option>
-                                 <?php endforeach; ?>
-                             </select>
-                         </div>
-                         <div class="col-md-6">
-                             <label class="form-label small mb-1">Unidad Medida</label>
-                             <input type="text" name="unidad_medida" class="form-control form-control-sm" value="PZA">
-                         </div>
-                         <div class="col-12 mt-3"><small class="fw-bold text-success">DATOS FISCALES (SAT)</small>
-                             <hr class="my-1">
-                         </div>
-                         <div class="col-md-4">
-                             <label class="form-label small mb-1">Clave Prod/Serv</label>
-                             <input type="text" name="fiscal_clave_prod" class="form-control form-control-sm">
-                         </div>
-                         <div class="col-md-4">
-                             <label class="form-label small mb-1">Clave Unidad</label>
-                             <input type="text" name="fiscal_clave_unit" class="form-control form-control-sm">
-                         </div>
-                         <div class="col-md-4">
-                             <label class="form-label small mb-1">IVA %</label>
-                             <select name="impuesto_iva" class="form-select form-select-sm">
-                                 <option value="16.00">16%</option>
-                                 <option value="8.00">8%</option>
-                                 <option value="0.00">0%</option>
-                             </select>
-                         </div>
-                         <input type="hidden" name="precio_adquisicion" value="0.00">
-                     </div>
-                 </div>
-                 <div class="modal-footer p-2">
-                     <button type="submit" class="btn btn-success btn-sm w-100">Registrar en Catálogo</button>
-                 </div>
-             </form>
-         </div>
-     </div>
+  <div class="modal fade" id="modalNuevoProducto" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <form id="formNuevoProducto" class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-success text-white py-2">
+                <h5 class="modal-title fs-6">Nuevo Producto en Catálogo</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row g-2">
+                    <div class="col-md-4">
+                        <label class="form-label small mb-1">SKU</label>
+                        <input type="text" name="sku" class="form-control form-control-sm" required>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label small mb-1">Nombre</label>
+                        <input type="text" name="nombre" class="form-control form-control-sm" required>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label small mb-1">Categoría</label>
+                        <div class="input-group input-group-sm">
+                            <select name="categoria_id" class="form-select">
+                                <option value="">Seleccionar...</option>
+                                <?php foreach($categorias as $c): ?>
+                                <option value="<?= $c['id'] ?>"><?= $c['nombre'] ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <button type="button" class="btn btn-outline-primary" onclick="abrirModalCategoria()">
+                                <i class="bi bi-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label small mb-1">Unidad Medida</label>
+                        <input type="text" name="unidad_medida" class="form-control form-control-sm" value="PZA">
+                    </div>
+                    
+                    <div class="col-12 mt-3"><small class="fw-bold text-success">DATOS FISCALES (SAT)</small>
+                        <hr class="my-1">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small mb-1">Clave Prod/Serv</label>
+                        <input type="text" name="fiscal_clave_prod" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small mb-1">Clave Unidad</label>
+                        <input type="text" name="fiscal_clave_unit" class="form-control form-control-sm">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small mb-1">IVA %</label>
+                        <select name="impuesto_iva" class="form-select form-select-sm">
+                            <option value="16.00">16%</option>
+                            <option value="8.00">8%</option>
+                            <option value="0.00">0%</option>
+                        </select>
+                    </div>
+                    <input type="hidden" name="precio_adquisicion" value="0.00">
+                </div>
+            </div>
+            <div class="modal-footer p-2">
+                <button type="submit" class="btn btn-success btn-sm w-100">Registrar en Catálogo</button>
+            </div>
+        </form>
+    </div>
+</div>
 
      <div class="modal fade" id="modalDistribucion" tabindex="-1" data-bs-backdrop="static">
          <div class="modal-dialog modal-dialog-centered">
@@ -353,6 +442,32 @@ $productos_res = $conexion->query("SELECT id, nombre, sku FROM productos WHERE a
              </form>
          </div>
      </div>
+      <div class="modal fade" id="modalCategoria" tabindex="-1" aria-labelledby="modalCategoriaLabel" aria-hidden="true"
+        style="z-index: 1060;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalCategoriaLabel">Nueva Categoría</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <form id="formNuevaCategoria">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nombre de la categoría</label>
+                            <input type="text" name="nombre" class="form-control" placeholder="Escribe el nombre..."
+                                required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar Categoría</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
      <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -395,6 +510,65 @@ $productos_res = $conexion->query("SELECT id, nombre, sku FROM productos WHERE a
      <script src="/cfsistem/app/backend/compras_js/abrirmodal.js"></script>
      <script src="/cfsistem/app/backend/compras_js/elementos_modal_compra.js"></script>
      <!-- <script src="/cfsistem/app/backend/compras_js/guardando_prodcuto_nuevo.js"></script> -->
+      <script>
+// Función para abrir el modal de categoría (necesaria para el botón que agregamos)
+function abrirModalCategoria() {
+    const modalCat = new bootstrap.Modal(document.getElementById('modalCategoria'));
+    modalCat.show();
+}
+document.getElementById('formNuevaCategoria').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const form = this;
+    const formData = new FormData(form);
+    const nombreCategoria = formData.get('nombre'); // Guardamos el nombre para usarlo luego
+
+    Swal.fire({
+        title: 'Guardando...',
+        didOpen: () => { Swal.showLoading(); }
+    });
+
+    fetch('/cfsistem/app/backend/almacen/guardar_categoria.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(Object.fromEntries(formData))
+    })
+    .then(res => res.json())
+    .then(res => {
+        if (res.status === 'success') {
+            // 1. Ocultar el modal de categoría solamente
+            const modalCatElement = document.getElementById('modalCategoria');
+            const modalCatInstance = bootstrap.Modal.getInstance(modalCatElement);
+            modalCatInstance.hide();
+
+            // 2. Insertar la nueva categoría en los SELECTS de ambos modales (Compras y Almacén)
+            const idNueva = res.id; // Asumiendo que tu PHP devuelve el ID insertado
+            const selects = document.querySelectorAll('select[name="categoria_id"]');
+            
+            selects.forEach(select => {
+                const option = new Option(nombreCategoria, idNueva, true, true);
+                select.add(option);
+            });
+
+            // 3. Limpiar el formulario de categoría
+            form.reset();
+
+            Swal.fire({
+                icon: 'success',
+                title: '¡Listo!',
+                text: 'Categoría agregada al listado',
+                timer: 1500,
+                showConfirmButton: false
+            });
+            
+        } else {
+            Swal.fire('Error', res.message, 'error');
+        }
+    })
+    .catch(err => {
+        Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
+    });
+});</script>
      <script>
      // GUARDADO PRODUCTO NUEVO (MANTENIDO)
      $('#formNuevoProducto').on('submit', function(e) {
