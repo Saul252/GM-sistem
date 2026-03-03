@@ -1,0 +1,142 @@
+/* ===== RESET Y BASES ===== */
+body {
+    transition: all 0.3s ease;
+}
+
+/* ===== NAVBAR PREMIUM (Superior) ===== */
+.navbar-premium {
+    background: #111827 !important; /* El color oscuro original */
+    height: 65px;
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+    z-index: 1050;
+    padding: 0 1.5rem;
+}
+
+.btn-toggle { 
+    background: transparent; 
+    border: none; 
+    color: white;
+    padding: 5px;
+}
+
+.user-badge {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, .1);
+    padding: 6px 16px;
+    border-radius: 50px;
+    color: #ffffff;
+    font-weight: 500;
+    font-size: 14px;
+    border: 1px solid rgba(255, 255, 255, .1);
+}
+
+.btn-logout {
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    font-size: 20px;
+    transition: all .2s ease;
+}
+
+.btn-logout:hover { 
+    color: #ef4444; 
+    transform: scale(1.1); 
+}
+
+/* ===== SIDEBAR (Lateral) ===== */
+#sidebar {
+    width: 260px;
+    height: 100vh;
+    position: fixed;
+    top: 65px;
+    left: 0;
+    background: #f9fafb;
+    border-right: 1px solid #e5e7eb;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, .03);
+    transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1040;
+    overflow-y: auto;
+    padding-top: 10px;
+}
+
+/* Estado oculto */
+#sidebar.hidden { 
+    transform: translateX(-100%); 
+}
+
+/* Ajuste del contenido principal cuando el sidebar está */
+.main-content {
+    margin-left: 260px;
+    padding: 30px;
+    padding-top: 95px; /* 65px navbar + 30px respiro */
+    transition: all .3s ease;
+}
+
+body.sidebar-hidden .main-content {
+    margin-left: 0;
+}
+
+/* Títulos del Sidebar */
+#sidebar h5 { 
+    font-weight: 700; 
+    color: #111827; 
+    letter-spacing: -0.5px;
+}
+
+/* Links del Menú */
+#sidebar .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #4b5563 !important;
+    border-radius: 12px;
+    padding: 12px 18px;
+    margin: 2px 15px;
+    font-weight: 500;
+    transition: all .2s ease;
+}
+
+#sidebar .nav-link i {
+    font-size: 1.2rem;
+    width: 25px;
+    text-align: center;
+}
+
+#sidebar .nav-link:hover { 
+    background: #f3f4f6; 
+    color: #111827 !important; 
+    transform: translateX(5px);
+}
+
+/* Estado Activo (Donde estás parado) */
+#sidebar .nav-link.active {
+    background: linear-gradient(90deg, #eef2ff, #e0e7ff);
+    color: #4f46e5 !important;
+    font-weight: 600;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* ===== NOTIFICACIONES Y BADGES ===== */
+#notif-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.35em 0.55em;
+    border: 2px solid #111827;
+    transform: translate(25%, -25%);
+}
+
+#menuNotif {
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+.notif-item {
+    transition: background 0.2s;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.notif-item:hover { 
+    background: #f9fafb; 
+}

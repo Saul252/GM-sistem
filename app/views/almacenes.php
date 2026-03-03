@@ -563,14 +563,13 @@ while($row = $result->fetch_assoc()){ $productos[] = $row; }
                                     <option value="exento">Exento</option>
                                 </select>
                             </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold text-danger">Costo de Adquisición</label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    <input type="number" step="0.01" name="precio_adquisicion"
-                                        class="form-control border-danger" required>
-                                </div>
-                            </div>
+                          <div class="col-md-3" style="display: none;">
+    <label class="form-label small fw-bold text-danger" style="display: none;">Costo de Adquisición</label>
+    <div class="input-group">
+        <span class="input-group-text">$</span>
+        <input type="number" name="precio_adquisicion" value="0" readonly>
+    </div>
+</div>
                         </div>
 
                         <div class="card bg-light border-warning mb-4 shadow-sm">

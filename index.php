@@ -5,11 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>G-M SISTEM | Acceso</title>
+    <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
+
+<link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 
     <style>
         :root {
@@ -66,17 +70,33 @@
 
         /* INPUTS */
         .input-group-text { background: #f9fafb; border-right: none; color: #9ca3af; border-radius: 12px 0 0 12px; }
+        
+        /* Ajuste para el input del medio (usuario y password) */
         .form-control { 
             background: #f9fafb; 
             border-left: none; 
-            border-radius: 0 12px 12px 0; 
             padding: 12px; 
             font-size: 15px;
         }
+        
+        /* El input de usuario mantiene su radio derecho */
+        .user-input { border-radius: 0 12px 12px 0; }
+        
+        /* El botón de ver contraseña */
+        .btn-show-pass {
+            background: #f9fafb;
+            border: 1px solid #dee2e6;
+            border-left: none;
+            color: #9ca3af;
+            border-radius: 0 12px 12px 0;
+            transition: color 0.2s;
+        }
+        .btn-show-pass:hover { color: var(--primary-color); }
+
         .form-control:focus { background: #fff; box-shadow: none; border-color: #dee2e6; }
         .input-group:focus-within { box-shadow: 0 0 0 4px rgba(2, 170, 2, 0.1); border-radius: 12px; }
 
-        /* BOTÓN */
+        /* BOTÓN LOGIN */
         .btn-login {
             border-radius: 12px;
             padding: 14px;
@@ -125,7 +145,7 @@
                     <label class="form-label fw-semibold small">Usuario</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-person"></i></span>
-                        <input type="text" name="usuario" class="form-control" placeholder="Ej: admin" required>
+                        <input type="text" name="usuario" class="form-control user-input" placeholder="Ej: admin" required>
                     </div>
                 </div>
 
@@ -133,7 +153,10 @@
                     <label class="form-label fw-semibold small">Contraseña</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                        <input type="password" name="password" class="form-control" placeholder="••••••••" required>
+                        <input type="password" name="password" id="passwordField" class="form-control" placeholder="••••••••" required style="border-right: none;">
+                        <button type="button" class="btn btn-show-pass" id="togglePassword">
+                            <i class="bi bi-eye" id="eyeIcon"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -153,13 +176,29 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
+// --- LÓGICA PARA VER/OCULTAR CONTRASEÑA ---
+const togglePassword = document.querySelector('#togglePassword');
+const passwordField = document.querySelector('#passwordField');
+const eyeIcon = document.querySelector('#eyeIcon');
+
+togglePassword.addEventListener('click', function() {
+    // Cambiamos el tipo de input
+    const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+    passwordField.setAttribute('type', type);
+    
+    // Cambiamos el icono
+    eyeIcon.classList.toggle('bi-eye');
+    eyeIcon.classList.toggle('bi-eye-slash');
+});
+
+
+// --- LÓGICA DE LOGIN ---
 document.getElementById('formLogin').addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const btn = document.getElementById('btnIngresar');
     const originalText = btn.innerHTML;
     
-    // Estado de carga
     btn.disabled = true;
     btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Validando...`;
 
@@ -171,7 +210,6 @@ document.getElementById('formLogin').addEventListener('submit', async (e) => {
             body: formData
         });
 
-        // Verificamos si la respuesta es JSON válido
         const res = await response.json();
 
         if (res.status === 'success') {
@@ -187,7 +225,7 @@ document.getElementById('formLogin').addEventListener('submit', async (e) => {
             });
         } else {
             Swal.fire({
-                icon: res.status, // error o warning
+                icon: res.status, 
                 title: 'Atención',
                 text: res.message,
                 confirmButtonColor: '#a80909'

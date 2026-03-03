@@ -104,6 +104,16 @@ body.sidebar-hidden #sidebar { transform: translateX(-100%); }
     padding: 0.25em 0.45em;
     transform: translate(20%, -20%);
 }
+.notif-item {
+    transition: background 0.2s;
+    border-bottom: 1px solid #f0f0f0;
+}
+.notif-item:hover { background: #f8f9fa; }
+.btn-recibir-fast {
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    border-radius: 6px;
+}
 </style>
 
 <nav class="navbar fixed-top navbar-expand-lg navbar-dark navbar-premium">
@@ -116,12 +126,22 @@ body.sidebar-hidden #sidebar { transform: translateX(-100%); }
         </div>
 
         <div class="d-flex align-items-center gap-3">
-            <div class="position-relative me-2">
-                <a href="/cfsistem/vistas/almacen/traspasos.php" class="text-white">
-                    <i class="bi bi-bell fs-4"></i>
-                    <span id="notif-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
-                </a>
-            </div>
+           <div class="dropdown me-2">
+    <a href="javascript:void(0);" class="text-white position-relative" id="btnNotif">
+        <i class="bi bi-bell fs-4"></i>
+        <span id="notif-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0" id="menuNotif" style="width: 320px; max-height: 400px; overflow-y: auto; display: none; position: absolute; right: 0;">
+        <li class="p-3 border-bottom bg-light">
+            <h6 class="mb-0 fw-bold text-dark">Traspasos Pendientes</h6>
+        </li>
+        <div id="lista-notificaciones">
+            <li class="p-3 text-center text-muted small">Cargando...</li>
+        </div>
+        <li><hr class="dropdown-divider m-0"></li>
+        <li><a class="dropdown-item text-center py-2 small text-primary fw-bold" href="/cfsistem/app/views/almacenes.php">Ver todos</a></li>
+    </ul>
+</div>
 
             <div class="user-badge">
                 <i class="bi bi-person-circle me-2"></i>
@@ -232,48 +252,101 @@ body.sidebar-hidden #sidebar { transform: translateX(-100%); }
 <script>
 let ultimoConteoTraspasos = 0;
 
-// Permisos de notificación
+// --- NUEVO: Solicitar permisos de notificación apenas cargue la página ---
 if (Notification.permission !== "granted" && Notification.permission !== "denied") {
     Notification.requestPermission();
 }
 
-function verificarNotificaciones() {
-    const url = '/cfsistem/app/backend/movimientos/get_notificaciones_traspaso.php?t=' + Date.now();
+// 1. Lógica para abrir/cerrar el menú manualmente
+document.addEventListener('click', function(e) {
+    const btn = document.getElementById('btnNotif');
+    const menu = document.getElementById('menuNotif');
     
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            console.log("--- Reporte de Movimientos ---");
-            console.log("Almacén consultado:", data.debug.almacen_id);
-            console.log("Arribos pendientes:", data.cantidad);
+    if (!btn || !menu) return;
 
-            const badge = document.getElementById('notif-badge');
-            const cantidadActual = parseInt(data.cantidad) || 0;
+    if (btn.contains(e.target)) {
+        menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+        e.preventDefault();
+    } 
+    else if (!menu.contains(e.target)) {
+        menu.style.display = 'none';
+    }
+});
 
-            if (badge) {
-                if (cantidadActual > 0) {
-                    badge.innerText = cantidadActual;
-                    badge.classList.remove('d-none');
+// 2. Función para aceptar traspaso
+function aceptarTraspasoRapido(idMovimiento) {
+    if (!confirm("¿Confirmas la recepción? El stock se actualizará y la página se recargará.")) return;
 
-                    // Notificación de escritorio si hay algo nuevo
-                    if (cantidadActual > ultimoConteoTraspasos && Notification.permission === "granted") {
-                        new Notification("📦 Mercancía en Camino", {
-                            body: `Tienes ${cantidadActual} traspaso(s) por recibir en tu almacén.`,
-                            tag: 'traspaso-alerta'
-                        });
-                    }
-                } else {
-                    badge.classList.add('d-none');
-                }
-            }
-            ultimoConteoTraspasos = cantidadActual;
-        })
-        .catch(err => console.error("Error en el sistema de alertas:", err));
+    const formData = new FormData();
+    formData.append('id', idMovimiento);
+
+    fetch('/cfsistem/app/backend/movimientos/procesar_transaccion_rapida.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success || data.status === 'success') {
+            location.reload(); 
+        } else {
+            alert("❌ Error: " + (data.error || data.message));
+        }
+    })
+    .catch(err => {
+        console.error("Error:", err);
+        alert("Error de conexión.");
+    });
 }
 
+// 3. Consulta de datos y Disparo de Notificación
+function verificarNotificaciones() {
+    fetch('/cfsistem/app/backend/movimientos/get_notificaciones_traspaso.php?t=' + Date.now())
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.getElementById('notif-badge');
+            const lista = document.getElementById('lista-notificaciones');
+            const cantidadActual = parseInt(data.cantidad) || 0;
+            
+            if (badge) {
+                badge.innerText = cantidadActual;
+                cantidadActual > 0 ? badge.classList.remove('d-none') : badge.classList.add('d-none');
+            }
+
+            // --- NUEVO: Disparar notificación de escritorio si el número subió ---
+            if (cantidadActual > ultimoConteoTraspasos) {
+                if (Notification.permission === "granted") {
+                    new Notification("📦 Nuevo Traspaso", {
+                        body: `Tienes ${cantidadActual} producto(s) pendientes de recibir en tu almacén.`,
+                        icon: '/cfsistem/assets/img/logo.png' // Verifica que esta ruta exista
+                    });
+                }
+            }
+            // Actualizamos el contador para la siguiente revisión
+            ultimoConteoTraspasos = cantidadActual;
+
+            if (lista && data.items) {
+                if (cantidadActual === 0) {
+                    lista.innerHTML = '<li class="p-3 text-center text-muted small">Sin pendientes</li>';
+                } else {
+                    lista.innerHTML = data.items.map(item => `
+                        <li class="p-2 border-bottom d-flex justify-content-between align-items-center mx-2">
+                            <div style="font-size: 0.8rem; max-width: 80%">
+                                <b>${item.producto}</b><br>
+                                <span class="text-muted">Cant: ${item.cantidad}</span>
+                            </div>
+                            <button onclick="aceptarTraspasoRapido(${item.id})" class="btn btn-sm btn-success p-1">
+                                <i class="bi bi-check2"></i>
+                            </button>
+                        </li>
+                    `).join('');
+                }
+            }
+        });
+}
+
+// Iniciar
 document.addEventListener('DOMContentLoaded', () => {
     verificarNotificaciones();
-    // Revisar cada 30 segundos
     setInterval(verificarNotificaciones, 30000);
 });
 </script>
