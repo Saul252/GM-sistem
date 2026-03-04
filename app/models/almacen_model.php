@@ -1,0 +1,34 @@
+<?php
+class AlmacenModel {
+    private $db;
+
+    public function __construct($conexion) {
+        $this->db = $conexion;
+    }
+
+    public function getCategorias() {
+        return $this->db->query("SELECT id, nombre FROM categorias ORDER BY nombre ASC")->fetch_all(MYSQLI_ASSOC);
+    }
+
+    public function getAlmacenes($almacen_id = 0) {
+        $sql = "SELECT * FROM almacenes WHERE activo = 1";
+        if ($almacen_id > 0) $sql .= " AND id = " . intval($almacen_id);
+        $sql .= " ORDER BY nombre ASC";
+        return $this->db->query($sql)->fetch_all(MYSQLI_ASSOC);
+    }
+
+    public function getInventario($almacen_id = 0) {
+        $sql = "SELECT p.id, p.sku, p.nombre, p.categoria_id, c.nombre AS categoria_nombre,
+                       i.stock, i.almacen_id, a.nombre AS almacen_nombre
+                FROM inventario i
+                INNER JOIN productos p ON i.producto_id = p.id
+                INNER JOIN almacenes a ON i.almacen_id = a.id
+                LEFT JOIN categorias c ON p.categoria_id = c.id
+                WHERE p.activo = 1";
+        
+        if ($almacen_id > 0) $sql .= " AND i.almacen_id = " . intval($almacen_id);
+        $sql .= " ORDER BY p.nombre ASC";
+        
+        return $this->db->query($sql)->fetch_all(MYSQLI_ASSOC);
+    }
+}

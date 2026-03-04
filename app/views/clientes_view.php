@@ -1,22 +1,3 @@
-<?php
-require_once __DIR__ . '/../../includes/auth.php';
-protegerPagina(); 
-
-require_once __DIR__ . '/../../includes/sidebar.php';
-require_once __DIR__ . '/../../config/conexion.php';
-
-$paginaActual = 'Clientes';
-
-// Configuración de Usos de CFDI
-$usosCFDI = [
-    'G01' => 'Adquisición de mercancías',
-    'G03' => 'Gastos en general',
-    'I01' => 'Construcciones',
-    'P01' => 'Por definir',
-    'S01' => 'Sin efectos fiscales'
-];
-?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -26,47 +7,41 @@ $usosCFDI = [
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
     <style>
-        :root { --sidebar-width: 260px; --navbar-height: 20px; }
-        body { background-color: #f4f7f6; font-family: 'Inter', sans-serif; }
-        
+    :root { 
+        --sidebar-width: 260px; 
+        --navbar-height: 65px; /* Altura exacta de tu navbar-premium */
+    }
+    
+    body { background-color: #f4f7f6; }
+
+    .main-content { 
+        margin-left: var(--sidebar-width); 
+        padding: 40px; 
+        padding-top: calc(var(--navbar-height) + 20px); /* Esto empuja el contenido hacia abajo */
+        transition: all 0.3s ease; 
+    }
+
+    /* Cuando el sidebar se oculta, quitamos el margen izquierdo */
+    body.sidebar-hidden .main-content { 
+        margin-left: 0; 
+    }
+
+    .card-table { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); background: white; }
+    .fila-inactiva { background-color: #fdfdfe !important; color: #9ca3af !important; }
+    
+    /* Aseguramos que el texto del navbar sea blanco */
+    .navbar-premium * { color: white !important; }
+
+    /* Ajuste para móviles */
+    @media (max-width: 768px) {
         .main-content {
-            margin-left: var(--sidebar-width);
-            padding: 40px;
-            margin-top: var(--navbar-height);
-            transition: all 0.3s;
+            margin-left: 0;
+            padding: 20px;
+            padding-top: calc(var(--navbar-height) + 20px);
         }
-
-        .card-table { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); background: white; }
-
-        .avatar-client { 
-            font-weight: bold; 
-            text-transform: uppercase; 
-            flex-shrink: 0; 
-            background: #e0e7ff; 
-            color: #4338ca; 
-        }
-        
-        /* Estilo visual para identificar rápidamente la fila desactivada */
-        .fila-inactiva {
-            background-color: #fdfdfe !important;
-            color: #9ca3af !important;
-        }
-
-        .table thead th { 
-            border-bottom: none; 
-            background: #f8f9fa; 
-            color: #4b5563; 
-            font-size: 0.85rem; 
-            text-transform: uppercase; 
-        }
-
-        .dataTables_wrapper .dataTables_filter { display: none; }
-
-        @media (max-width: 768px) { .main-content { margin-left: 0; padding: 20px; } }
-    </style>
+    }
+</style>
 </head>
 <body>
 
@@ -86,9 +61,9 @@ $usosCFDI = [
         <div class="card card-table p-4">
             <div class="row mb-4">
                 <div class="col-md-4">
-                    <div class="input-group shadow-sm rounded">
-                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                        <input type="text" id="busquedaCliente" class="form-control border-start-0" placeholder="Buscar por nombre, RFC o correo...">
+                    <div class="input-group shadow-sm">
+                        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" id="busquedaCliente" class="form-control border-start-0" placeholder="Buscar cliente...">
                     </div>
                 </div>
             </div>
@@ -121,7 +96,6 @@ $usosCFDI = [
                 <div class="modal-body p-4">
                     <input type="hidden" name="id" id="clienteId">
                     <input type="hidden" name="accion" id="accionInput" value="guardar">
-                    
                     <div class="row g-3">
                         <div class="col-md-8">
                             <label class="form-label small fw-bold">Nombre Comercial</label>
@@ -177,6 +151,7 @@ $usosCFDI = [
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
         const modalCl = new bootstrap.Modal('#modalCliente');
@@ -185,70 +160,39 @@ $usosCFDI = [
         $(document).ready(function() {
             tabla = $('#tablaClientes').DataTable({
                 "ajax": "/cfsistem/app/backend/clientes/operaciones.php?accion=listar",
-                "createdRow": function(row, data, dataIndex) {
-                    // Si el cliente está inactivo, añadimos una clase CSS a toda la fila
-                    if (data.activo == 0) {
-                        $(row).addClass('fila-inactiva');
-                    }
-                },
+                "createdRow": (row, data) => { if (data.activo == 0) $(row).addClass('fila-inactiva'); },
                 "columns": [
-                    { "data": "nombre_comercial", "render": function(data, type, row) {
-                        const opacity = row.activo == 0 ? 'opacity: 0.5;' : '';
-                        const avatarClass = row.activo == 0 ? 'bg-secondary text-white' : 'avatar-client';
-                        
-                        return `<div class="d-flex align-items-center" style="${opacity}">
-                                    <div class="${avatarClass} me-3 d-flex align-items-center justify-content-center rounded-circle" style="width: 35px; height: 35px; font-size: 0.8rem;">
-                                        ${data.substring(0, 2)}
-                                    </div>
-                                    <div>
-                                        <span class="fw-bold">${data}</span><br>
-                                        <small class="text-muted">${row.razon_social || ''}</small>
-                                    </div>
-                                </div>`;
-                    }},
-                    { "data": "rfc", "render": (data, type, row) => `<span class="badge bg-light text-dark border ${row.activo == 0 ? 'opacity-50' : ''}">${data}</span><br><small class="text-muted">CP: ${row.codigo_postal}</small>` },
-                    { "data": "correo", "render": (data, type, row) => `<small class="${row.activo == 0 ? 'opacity-50' : ''}"><i class="bi bi-envelope me-1"></i>${data || 'N/A'}<br><i class="bi bi-telephone me-1"></i>${row.telefono || 'N/A'}</small>` },
+                    { "data": "nombre_comercial", "render": (data, type, row) => `<b>${data}</b><br><small class="text-muted">${row.razon_social || ''}</small>` },
+                    { "data": "rfc", "render": (data, type, row) => `<span class="badge bg-light text-dark border">${data}</span><br><small>CP: ${row.codigo_postal}</small>` },
+                    { "data": "correo", "render": (data, type, row) => `<small><i class="bi bi-envelope me-1"></i>${data || 'N/A'}<br><i class="bi bi-telephone me-1"></i>${row.telefono || 'N/A'}</small>` },
                     { "data": "uso_cfdi", "render": data => `<span class="badge bg-info-subtle text-info border-info">${data}</span>` },
                     { "data": "activo", "className": "text-center", "render": (data, type, row) => `
                         <div class="form-check form-switch d-inline-block">
-                            <input class="form-check-input" type="checkbox" role="switch" 
-                                ${data == 1 ? 'checked' : ''} 
-                                onchange="cambiarEstadoCliente(${row.id})">
+                            <input class="form-check-input" type="checkbox" ${data == 1 ? 'checked' : ''} onchange="cambiarEstadoCliente(${row.id})">
                         </div>` 
                     },
                     { "data": null, "className": "text-end", "render": (data, type, row) => `
-                        <button class="btn btn-sm btn-light border shadow-sm" onclick='editarCliente(${JSON.stringify(row)})'>
+                        <button class="btn btn-sm btn-light border" onclick='editarCliente(${JSON.stringify(row)})'>
                             <i class="bi bi-pencil-square text-primary"></i>
                         </button>` 
                     }
                 ],
                 "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
-                "dom": 'rtp',
-                "order": [[4, "desc"], [0, "asc"]] // Los activos siempre aparecen arriba
+                "dom": 'rtp'
             });
 
-            $('#busquedaCliente').on('keyup', function() {
-                tabla.search(this.value).draw();
-            });
+            $('#busquedaCliente').on('keyup', function() { tabla.search(this.value).draw(); });
         });
 
-        // IMPORTANTE: Esta función hace el toggle (activar/desactivar)
         function cambiarEstadoCliente(id) {
-            $.post('/cfsistem/app/backend/clientes/operaciones.php', { accion: 'eliminar', id: id }, function(res) {
-                if(res.status === 'success') {
-                    // Recargamos solo los datos de la tabla sin mover la posición del scroll
-                    tabla.ajax.reload(null, false);
-                } else {
-                    Swal.fire('Error', res.message, 'error').then(() => tabla.ajax.reload());
-                }
-            });
+            $.post('/cfsistem/app/backend/clientes/operaciones.php', { accion: 'eliminar', id: id }, () => tabla.ajax.reload(null, false));
         }
 
         function nuevoCliente() {
             $('#formCliente')[0].reset();
             $('#clienteId').val(0);
             $('#accionInput').val('guardar');
-            $('#modalTitle').text('Registrar Nuevo Cliente');
+            $('#modalTitle').text('Nuevo Cliente');
             modalCl.show();
         }
 
@@ -264,24 +208,17 @@ $usosCFDI = [
             $('#telInput').val(c.telefono);
             $('#dirInput').val(c.direccion);
             $('#accionInput').val('editar');
-            $('#modalTitle').text('Actualizar Datos del Cliente');
+            $('#modalTitle').text('Editar Cliente');
             modalCl.show();
         }
 
         $('#formCliente').on('submit', function(e) {
             e.preventDefault();
-            $.ajax({
-                url: '/cfsistem/app/backend/clientes/operaciones.php',
-                type: 'POST',
-                data: $(this).serialize(),
-                success: function(res) {
-                    if(res.status === 'success') {
-                        Swal.fire({ icon: 'success', title: 'Completado', showConfirmButton: false, timer: 1000 });
-                        modalCl.hide();
-                        tabla.ajax.reload(null, false);
-                    } else {
-                        Swal.fire('Error', res.message, 'error');
-                    }
+            $.post('/cfsistem/app/backend/clientes/operaciones.php', $(this).serialize(), function(res) {
+                if(res.status === 'success') {
+                    modalCl.hide();
+                    tabla.ajax.reload(null, false);
+                    Swal.fire({ icon: 'success', title: 'Éxito', timer: 1000, showConfirmButton: false });
                 }
             });
         });

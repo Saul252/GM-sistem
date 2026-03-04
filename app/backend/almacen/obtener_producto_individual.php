@@ -1,25 +1,19 @@
 <?php
-// Limpiar cualquier salida previa
 ob_start();
-
-// Configuración de errores para desarrollo (No mostrar a pantalla)
-ini_set('display_errors', 0);
-error_reporting(E_ALL);
-
 header('Content-Type: application/json');
 require_once $_SERVER['DOCUMENT_ROOT'] . '/cfsistem/config/conexion.php';
 
 $id = $_GET['id'] ?? null;
 $alm_id = $_GET['almacen_id'] ?? null;
 
-$response = ['status' => 'error', 'message' => 'Error desconocido'];
+$response = ['status' => 'error', 'message' => 'Faltan parámetros'];
 
-if (!$id || !$alm_id) {
-    $response['message'] = 'Faltan parámetros (ID: ' . $id . ', Almacén: ' . $alm_id . ')';
-} else {
+if ($id && $alm_id) {
     try {
         $sql = "SELECT 
-                    p.id, p.sku, p.nombre, p.categoria_id, 
+                    p.id, p.sku, p.nombre, p.descripcion, p.categoria_id, 
+                    p.unidad_medida, p.unidad_reporte, p.factor_conversion,
+                    p.fiscal_clave_prod, p.fiscal_clave_unidad, p.impuesto_iva,
                     i.stock, i.stock_minimo, 
                     a.nombre as almacen_nombre,
                     pp.precio_minorista, pp.precio_mayorista, pp.precio_distribuidor
@@ -31,27 +25,18 @@ if (!$id || !$alm_id) {
                 LIMIT 1";
 
         $stmt = $conexion->prepare($sql);
-        if (!$stmt) throw new Exception("Error en la consulta: " . $conexion->error);
-
         $stmt->bind_param("ii", $id, $alm_id);
         $stmt->execute();
-        $resultado = $stmt->get_result();
-        $producto = $resultado->fetch_assoc();
+        $producto = $stmt->get_result()->fetch_assoc();
 
         if ($producto) {
-            $response = [
-                'status' => 'success',
-                'producto' => $producto
-            ];
+            $response = ['status' => 'success', 'producto' => $producto];
         } else {
-            $response['message'] = 'No se encontró el producto en el almacén especificado.';
+            $response['message'] = 'Producto no encontrado en este almacén';
         }
     } catch (Exception $e) {
         $response['message'] = $e->getMessage();
     }
 }
-
-// Limpiar buffer y enviar JSON
 ob_end_clean();
 echo json_encode($response);
-exit;

@@ -139,7 +139,7 @@ body.sidebar-hidden #sidebar { transform: translateX(-100%); }
             <li class="p-3 text-center text-muted small">Cargando...</li>
         </div>
         <li><hr class="dropdown-divider m-0"></li>
-        <li><a class="dropdown-item text-center py-2 small text-primary fw-bold" href="/cfsistem/app/views/almacenes.php">Ver todos</a></li>
+        <li><a class="dropdown-item text-center py-2 small text-primary fw-bold" href="/cfsistem/vistas/almacen/traspasos.php">Ver todos</a></li>
     </ul>
 </div>
 
@@ -169,7 +169,7 @@ body.sidebar-hidden #sidebar { transform: translateX(-100%); }
 
             <?php if (puedeVerModulo('ventas')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/views/ventas.php" class="nav-link <?= $archivoActual == 'ventas.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/ventas.php" class="nav-link <?= $archivoActual == 'ventas.php' ? 'active' : '' ?>">
                     <i class="bi bi-cart-check"></i><span>Ventas</span>
                 </a>
             </li>

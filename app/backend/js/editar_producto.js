@@ -1,59 +1,63 @@
 function editarProducto(productoId, almacenId) {
-        // Primero obtenemos los datos del producto y sus precios en ese almacén
-        fetch(`/cfsistem/app/backend/almacen/obtener_producto_individual.php?id=${productoId}&almacen_id=${almacenId}`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    const p = data.producto;
-                    // Llenar campos
-                    document.getElementById('edit_id').value = p.id;
-                    document.getElementById('edit_almacen_id').value = almacenId;
-                    document.getElementById('edit_nombre_titulo').innerText = p.nombre;
-                    document.getElementById('edit_nombre').value = p.nombre;
-                    document.getElementById('edit_sku').value = p.sku;
-                    document.getElementById('edit_categoria').value = p.categoria_id;
-                    document.getElementById('edit_almacen_nombre').innerText = p.almacen_nombre;
+    // 1. Limpiamos cualquier rastro anterior
+    console.log("Editando ID:", productoId, "Almacén:", almacenId);
 
-                    document.getElementById('edit_p_min').value = p.precio_minorista;
-                    document.getElementById('edit_p_may').value = p.precio_mayorista;
-                    document.getElementById('edit_p_dist').value = p.precio_distribuidor;
-                    document.getElementById('edit_stock').value = p.stock;
-                    document.getElementById('edit_s_min').value = p.stock_minimo;
+    fetch(`/cfsistem/app/backend/almacen/obtener_producto_individual.php?id=${productoId}&almacen_id=${almacenId}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const p = data.producto;
+                console.log("Datos recibidos del servidor:", p); // Revisa esto en F12
 
-                    new bootstrap.Modal(document.getElementById('modalEditarProducto')).show();
-                }
-            });
-    }
+                // Función segura para evitar errores de 'null'
+                const setVal = (id, val) => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        if (el.tagName === 'SPAN') el.innerText = val || '';
+                        else el.value = val || '';
+                    } else {
+                        console.warn("No se encontró el ID en el HTML:", id);
+                    }
+                };
 
-    // Guardar cambios
-    document.getElementById('formEditarProducto').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
+                // Llenado de IDs y Títulos
+                setVal('edit_id', p.id);
+                setVal('edit_almacen_id', almacenId);
+                setVal('edit_nombre_titulo', p.nombre);
+                setVal('edit_almacen_nombre', p.almacen_nombre);
 
-        Swal.fire({
-            title: '¿Confirmar cambios?',
-            text: formData.get('aplicar_global') ?
-                "¡OJO! Los precios se cambiarán en TODOS los almacenes." :
-                "Se actualizará solo este registro.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Sí, actualizar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                fetch('/cfsistem/app/backend/almacen/actualizar_producto.php', {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.status === 'success') {
-                            Swal.fire('¡Actualizado!', data.message, 'success').then(() => location
-                                .reload());
-                        } else {
-                            Swal.fire('Error', data.message, 'error');
-                        }
-                    });
+                // Datos Generales
+                setVal('edit_sku', p.sku);
+                setVal('edit_nombre', p.nombre);
+                setVal('edit_categoria', p.categoria_id);
+                setVal('edit_descripcion', p.descripcion);
+                
+                // SAT
+                setVal('edit_fiscal_clave_prod', p.fiscal_clave_prod);
+                setVal('edit_fiscal_clave_unidad', p.fiscal_clave_unidad);
+                setVal('edit_impuesto_iva', p.impuesto_iva);
+
+                // Precios
+                setVal('edit_p_min', p.precio_minorista);
+                setVal('edit_p_may', p.precio_mayorista);
+                setVal('edit_p_dist', p.precio_distribuidor);
+                
+                // --- UNIDADES Y FACTOR (Los que te fallan) ---
+                setVal('edit_unidad_reporte', p.unidad_reporte);
+                setVal('edit_factor_conversion', p.factor_conversion);
+                setVal('edit_unidad_medida', p.unidad_medida);
+
+                // Stock
+                setVal('edit_stock', p.stock);
+                setVal('edit_s_min', p.stock_minimo);
+
+                // Mostrar Modal
+                const modalEl = document.getElementById('modalEditarProducto');
+                const myModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                myModal.show();
+            } else {
+                alert("Error: " + data.message);
             }
-        });
-    });
-    
+        })
+        .catch(err => console.error("Error crítico:", err));
+}
