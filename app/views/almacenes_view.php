@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="es">
 
@@ -7,12 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Almacenes | Sistema</title>
-    
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    
-    <link href="/cfsistem/css/style.css" rel="stylesheet"> 
-    
+
+    <link href="/cfsistem/css/style.css" rel="stylesheet">
+
     <link href="/cfsistem/css/almacenes.css" rel="stylesheet">
     <?php 
     // Llamamos a la función que imprime Bootstrap y layout.css
@@ -20,13 +18,33 @@
         cargarEstilos(); 
     }
     ?>
-    
+
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
+
 <body>
 
     <?php renderizarLayout($paginaActual); ?>
+    <script>
+    // Asegúrate de que el JSON incluya factor_conversion y unidad_reporte
+    const productosInventario = <?= json_encode($productos) ?>;
+</script>
+    <style>
+    /* El modal de categoría debe estar por encima de todo (Bootstrap usa 1055 por defecto) */
+    #modalNuevaCategoria {
+        z-index: 1070 !important;
+    }
 
+    /* El fondo oscuro (backdrop) del segundo modal también debe subir de nivel */
+    #modalNuevaCategoria.modal.show~.modal-backdrop {
+        z-index: 1065 !important;
+    }
+
+    /* Evitar que el primer modal pierda el scroll si el segundo es muy largo */
+    .modal {
+        overflow-y: auto !important;
+    }
+    </style>
     <div class="main-content">
         <h2 class="mb-4 fw-bold">
             <i class="bi bi-box-seam text-primary"></i> Módulo de Almacén
@@ -121,149 +139,85 @@
         </div>
     </div>
 
-
-
-    <div class="modal fade" id="modalCategoria" tabindex="-1" aria-labelledby="modalCategoriaLabel" aria-hidden="true"
-        style="z-index: 1060;">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content shadow-lg">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="modalCategoriaLabel">Nueva Categoría</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
+    <div class="modal fade" id="modalTraspaso" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title"><i class="bi bi-arrow-left-right"></i> Nuevo Traspaso</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <form id="formNuevaCategoria">
+                <form id="formTraspaso" action="/cfsistem/app/backend/almacen/procesar_traspaso.php" method="POST">
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Nombre de la categoría</label>
-                            <input type="text" name="nombre" class="form-control" placeholder="Escribe el nombre..."
-                                required>
+                            <label class="form-label fw-bold">1. Almacén de Origen</label>
+                            <select name="almacen_origen_id" id="origen_id" class="form-select border-primary" required
+                                onchange="filtrarProductosPorOrigen()">
+                                <option value="">Seleccione donde sale la mercancía...</option>
+                                <?php foreach($almacenes as $alm): ?>
+                                <option value="<?= $alm['id'] ?>"><?= htmlspecialchars($alm['nombre']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">2. Producto a mover</label>
+                            <select name="producto_id" id="traspaso_producto" class="form-select" required disabled
+                                onchange="actualizarMaximo()">
+                                <option value="">Primero seleccione un origen...</option>
+                            </select>
+                            <div id="info_stock" class="form-text text-primary fw-bold"></div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label fw-bold">3. Almacén Destino</label>
+                                <select name="almacen_destino_id" id="destino_id" class="form-select" required>
+                                    <option value="">¿A dónde va la mercancía?</option>
+                                    <?php foreach($todosLosAlmacenes as $alm_dest): ?>
+                                    <?php if ($almacen_usuario > 0 && $alm_dest['id'] == $almacen_usuario) continue; ?>
+                                    <option value="<?= $alm_dest['id'] ?>"><?= htmlspecialchars($alm_dest['nombre']) ?>
+                                    </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label fw-bold">4. Cantidad a Traspasar</label>
+                                <div class="input-group">
+                                    <input type="number" id="traspaso_factor_input" class="form-control text-center"
+                                        placeholder="0" min="0">
+                                    <span class="input-group-text" id="label_unidad_reporte"
+                                        style="min-width: 80px;">Unid.</span>
+
+                                    <input type="number" id="traspaso_piezas_input" class="form-control text-center"
+                                        placeholder="0" min="0" step="any">
+                                    <span class="input-group-text">Pzas.</span>
+                                </div>
+
+                                <input type="hidden" name="cantidad" id="cantidad_traspaso_final" required>
+
+                                <div id="resumen_conversion"
+                                    class="mt-2 p-2 rounded bg-light border-start border-4 border-primary"
+                                    style="display:none; font-size: 0.9rem;">
+                                    <strong>Movimiento total:</strong> <span id="txt_total_pzas">0</span> piezas.
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Observaciones</label>
+                            <textarea name="observaciones" class="form-control" rows="2"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Guardar Categoría</button>
+                        <button type="submit" class="btn btn-primary" id="btnGuardarTraspaso">Solicitar
+                            Movimiento</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
-
-    <style>
-    /* Si abres este modal sobre otro, el backdrop debe estar un nivel abajo de este modal */
-    .modal-backdrop:nth-of-type(even) {
-        z-index: 1055 !important;
-    }
-    </style>
-    <script>
-    document.getElementById('formNuevaCategoria').addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        const formData = new FormData(this);
-        const datos = Object.fromEntries(formData.entries());
-
-        Swal.fire({
-            title: 'Guardando...',
-            didOpen: () => {
-                Swal.showLoading();
-            }
-        });
-
-        fetch('/cfsistem/app/backend/almacen/guardar_categoria.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(datos)
-            })
-            .then(res => res.json())
-            .then(res => {
-                if (res.status === 'success') {
-                    Swal.fire('¡Éxito!', 'Categoría guardada correctamente', 'success').then(() => {
-                        // Si tienes un selector de categorías en la pantalla de productos, 
-                        // aquí podrías recargarlo o simplemente refrescar la página
-                        location.reload();
-                    });
-                } else {
-                    Swal.fire('Error', res.message, 'error');
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
-            });
-    });
-    </script>
-   <div class="modal fade" id="modalTraspaso" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title"><i class="bi bi-arrow-left-right"></i> Nuevo Traspaso</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <form id="formTraspaso" action="/cfsistem/app/backend/almacen/procesar_traspaso.php" method="POST">
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">1. Almacén de Origen</label>
-                        <select name="almacen_origen_id" id="origen_id" class="form-select border-primary" required onchange="filtrarProductosPorOrigen()">
-                            <option value="">Seleccione donde sale la mercancía...</option>
-                            <?php foreach($almacenes as $alm): ?>
-                                <option value="<?= $alm['id'] ?>"><?= htmlspecialchars($alm['nombre']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">2. Producto a mover</label>
-                        <select name="producto_id" id="traspaso_producto" class="form-select" required disabled onchange="actualizarMaximo()">
-                            <option value="">Primero seleccione un origen...</option>
-                        </select>
-                        <div id="info_stock" class="form-text text-primary fw-bold"></div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-12 mb-3">
-                            <label class="form-label fw-bold">3. Almacén Destino</label>
-                            <select name="almacen_destino_id" id="destino_id" class="form-select" required>
-                                <option value="">¿A dónde va la mercancía?</option>
-                                <?php foreach($todosLosAlmacenes as $alm_dest): ?>
-                                    <?php if ($almacen_usuario > 0 && $alm_dest['id'] == $almacen_usuario) continue; ?>
-                                    <option value="<?= $alm_dest['id'] ?>"><?= htmlspecialchars($alm_dest['nombre']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <div class="col-md-12 mb-3">
-                            <label class="form-label fw-bold">4. Cantidad a Traspasar</label>
-                            <div class="input-group">
-                                <input type="number" id="traspaso_factor_input" class="form-control text-center" placeholder="0" min="0">
-                                <span class="input-group-text" id="label_unidad_reporte" style="min-width: 80px;">Unid.</span>
-                                
-                                <input type="number" id="traspaso_piezas_input" class="form-control text-center" placeholder="0" min="0" step="any">
-                                <span class="input-group-text">Pzas.</span>
-                            </div>
-                            
-                            <input type="hidden" name="cantidad" id="cantidad_traspaso_final" required>
-
-                            <div id="resumen_conversion" class="mt-2 p-2 rounded bg-light border-start border-4 border-primary" style="display:none; font-size: 0.9rem;">
-                                <strong>Movimiento total:</strong> <span id="txt_total_pzas">0</span> piezas.
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Observaciones</label>
-                        <textarea name="observaciones" class="form-control" rows="2"></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" id="btnGuardarTraspaso">Solicitar Movimiento</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
 
 
     <div class="modal fade" id="modalTraspasosGestion" tabindex="-1">
@@ -342,7 +296,7 @@
             </div>
         </div>
     </div>
- 
+
     <div class="modal fade" id="modalAgregarProducto" tabindex="-1">
         <div class="modal-dialog modal-xl">
             <div class="modal-content shadow-lg border-0">
@@ -366,13 +320,17 @@
                                 <input type="text" name="nombre" class="form-control" required>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label small fw-bold">Categoría</label>
-                                <select name="categoria_id" class="form-select" required>
-                                    <option value="">Seleccionar...</option>
-                                    <?php foreach($categorias as $cat): ?>
-                                    <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['nombre']) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
+                                <div class="input-group">
+                                    <select name="categoria_id" id="edit_categoria" class="form-select">
+                                        <?php foreach($categorias as $cat): ?>
+                                        <option value="<?= $cat['id'] ?>"><?= $cat['nombre'] ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <button class="btn btn-outline-success" type="button"
+                                        onclick="abrirSubModalCategoria()">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label small fw-bold">Unidad de Medida (Venta/Base)</label>
@@ -514,144 +472,268 @@
         </div>
     </div>
 
-<div class="modal fade" id="modalEditarProducto" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square"></i> Editar Producto: <span id="edit_nombre_titulo"></span></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form id="formEditarProducto">
-                <input type="hidden" name="producto_id" id="edit_id">
-                <input type="hidden" name="almacen_actual_id" id="edit_almacen_id">
+    <div class="modal fade" id="modalEditarProducto" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square"></i> Editar Producto: <span
+                            id="edit_nombre_titulo"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="formEditarProducto">
+                    <input type="hidden" name="producto_id" id="edit_id">
+                    <input type="hidden" name="almacen_actual_id" id="edit_almacen_id">
 
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-md-4 border-end">
-                            <h6 class="fw-bold text-primary mb-3">Datos Generales</h6>
-                            <div class="mb-2">
-                                <label class="small fw-bold">SKU</label>
-                                <input type="text" name="sku" id="edit_sku" class="form-control" required>
-                            </div>
-                            <div class="mb-2">
-                                <label class="small fw-bold">Nombre</label>
-                                <input type="text" name="nombre" id="edit_nombre" class="form-control" required>
-                            </div>
-                            <div class="mb-2">
-                                <label class="small fw-bold">Categoría</label>
-                                <select name="categoria_id" id="edit_categoria" class="form-select">
-                                    <?php foreach($categorias as $cat): ?>
-                                    <option value="<?= $cat['id'] ?>"><?= $cat['nombre'] ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="mb-2">
-                                <label class="small fw-bold">Descripción</label>
-                                <textarea name="descripcion" id="edit_descripcion" class="form-control" rows="2"></textarea>
-                            </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-4 border-end">
+                                <h6 class="fw-bold text-primary mb-3">Datos Generales</h6>
+                                <div class="mb-2">
+                                    <label class="small fw-bold">SKU</label>
+                                    <input type="text" name="sku" id="edit_sku" class="form-control" required>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="small fw-bold">Nombre</label>
+                                    <input type="text" name="nombre" id="edit_nombre" class="form-control" required>
+                                </div>
+                                <div class="mb-2">
+                                    <label class="small fw-bold">Categoría</label>
 
-                            <h6 class="fw-bold text-info mt-3 mb-2">Datos SAT</h6>
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <label class="small">Clave Prod.</label>
-                                    <input type="text" name="fiscal_clave_prod" id="edit_fiscal_clave_prod" class="form-control form-control-sm">
+                                    <div class="input-group">
+                                        <select name="categoria_id" id="edit_categoria" class="form-select">
+                                            <?php foreach($categorias as $cat): ?>
+                                            <option value="<?= $cat['id'] ?>"><?= $cat['nombre'] ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <button class="btn btn-outline-success" type="button"
+                                            onclick="abrirSubModalCategoria()">
+                                            <i class="bi bi-plus-lg"></i>
+                                        </button>
+                                    </div>
                                 </div>
-                                <div class="col-6">
-                                    <label class="small">Clave Unidad</label>
-                                    <input type="text" name="fiscal_clave_unidad" id="edit_fiscal_clave_unidad" class="form-control form-control-sm">
+                                <div class="mb-2">
+                                    <label class="small fw-bold">Descripción</label>
+                                    <textarea name="descripcion" id="edit_descripcion" class="form-control"
+                                        rows="2"></textarea>
                                 </div>
-                                <div class="col-12">
-                                    <label class="small">IVA (%)</label>
-                                    <input type="number" step="0.01" name="impuesto_iva" id="edit_impuesto_iva" class="form-control form-control-sm">
-                                </div>
-                            </div>
-                        </div>
 
-                        <div class="col-md-8">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h6 class="fw-bold text-success m-0">Precios en: <span id="edit_almacen_nombre" class="badge bg-light text-dark"></span></h6>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="check_todos_almacenes" name="aplicar_global">
-                                    <label class="form-check-label fw-bold text-danger small" for="check_todos_almacenes">¿Actualizar precios en TODOS los almacenes?</label>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-4 mb-3"><label class="small fw-bold">Minorista</label><input type="number" step="0.01" name="precio_minorista" id="edit_p_min" class="form-control"></div>
-                                <div class="col-md-4 mb-3"><label class="small fw-bold">Mayorista</label><input type="number" step="0.01" name="precio_mayorista" id="edit_p_may" class="form-control"></div>
-                                <div class="col-md-4 mb-3"><label class="small fw-bold text-truncate">Distribuidor</label><input type="number" step="0.01" name="precio_distribuidor" id="edit_p_dist" class="form-control"></div>
-                            </div>
-
-                            <hr>
-                            <h6 class="fw-bold text-dark">Unidades y Conversión</h6>
-                            <div class="row">
-                                <div class="col-md-4">
-                                    <label class="small fw-bold">Unidad Compra</label>
-                                    <input type="text" name="unidad_reporte" id="edit_unidad_reporte" class="form-control" placeholder="Ej: CAJA">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="small fw-bold">Factor (Contenido)</label>
-                                    <input type="number" step="0.01" name="factor_conversion" id="edit_factor_conversion" class="form-control border-primary fw-bold">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="small fw-bold">Unidad Base</label>
-                                    <input type="text" name="unidad_medida" id="edit_unidad_medida" class="form-control" placeholder="Ej: PIEZA">
+                                <h6 class="fw-bold text-info mt-3 mb-2">Datos SAT</h6>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <label class="small">Clave Prod.</label>
+                                        <input type="text" name="fiscal_clave_prod" id="edit_fiscal_clave_prod"
+                                            class="form-control form-control-sm">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="small">Clave Unidad</label>
+                                        <input type="text" name="fiscal_clave_unidad" id="edit_fiscal_clave_unidad"
+                                            class="form-control form-control-sm">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="small">IVA (%)</label>
+                                        <input type="number" step="0.01" name="impuesto_iva" id="edit_impuesto_iva"
+                                            class="form-control form-control-sm">
+                                    </div>
                                 </div>
                             </div>
 
-                            <hr>
-                            <h6 class="fw-bold text-secondary">Ajuste de Inventario (Este Almacén)</h6>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label class="small fw-bold">Stock Actual</label>
-                                    <input type="number" step="0.01" name="stock" id="edit_stock" class="form-control">
+                            <div class="col-md-8">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="fw-bold text-success m-0">Precios en: <span id="edit_almacen_nombre"
+                                            class="badge bg-light text-dark"></span></h6>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="check_todos_almacenes"
+                                            name="aplicar_global">
+                                        <label class="form-check-label fw-bold text-danger small"
+                                            for="check_todos_almacenes">¿Actualizar precios en TODOS los
+                                            almacenes?</label>
+                                    </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <label class="small fw-bold">Stock Mínimo</label>
-                                    <input type="number" step="0.01" name="stock_minimo" id="edit_s_min" class="form-control">
+
+                                <div class="row">
+                                    <div class="col-md-4 mb-3"><label class="small fw-bold">Minorista</label><input
+                                            type="number" step="0.01" name="precio_minorista" id="edit_p_min"
+                                            class="form-control"></div>
+                                    <div class="col-md-4 mb-3"><label class="small fw-bold">Mayorista</label><input
+                                            type="number" step="0.01" name="precio_mayorista" id="edit_p_may"
+                                            class="form-control"></div>
+                                    <div class="col-md-4 mb-3"><label
+                                            class="small fw-bold text-truncate">Distribuidor</label><input type="number"
+                                            step="0.01" name="precio_distribuidor" id="edit_p_dist"
+                                            class="form-control"></div>
+                                </div>
+
+                                <hr>
+                                <h6 class="fw-bold text-dark">Unidades y Conversión</h6>
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <label class="small fw-bold">Unidad Compra</label>
+                                        <input type="text" name="unidad_reporte" id="edit_unidad_reporte"
+                                            class="form-control" placeholder="Ej: CAJA">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="small fw-bold">Factor (Contenido)</label>
+                                        <input type="number" step="0.01" name="factor_conversion"
+                                            id="edit_factor_conversion" class="form-control border-primary fw-bold">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="small fw-bold">Unidad Base</label>
+                                        <input type="text" name="unidad_medida" id="edit_unidad_medida"
+                                            class="form-control" placeholder="Ej: PIEZA">
+                                    </div>
+                                </div>
+
+                                <hr>
+                                <h6 class="fw-bold text-secondary">Ajuste de Inventario (Este Almacén)</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <label class="small fw-bold">Stock Actual</label>
+                                        <input type="number" step="0.01" name="stock" id="edit_stock"
+                                            class="form-control">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="small fw-bold">Stock Mínimo</label>
+                                        <input type="number" step="0.01" name="stock_minimo" id="edit_s_min"
+                                            class="form-control">
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer bg-light">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-warning fw-bold">Guardar Cambios</button>
-                </div>
-            </form>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-warning fw-bold">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
-   
-   
+    <div class="modal fade" id="modalNuevaCategoria" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-sm modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h6 class="modal-title">Nueva Categoría</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formRapidoCategoria">
+                        <div class="mb-3">
+                            <label class="form-label small">Nombre de la Categoría</label>
+                            <input type="text" id="nombre_cat_rapida" class="form-control"
+                                placeholder="Ej: Herramientas" required>
+                        </div>
+                        <button type="button" onclick="guardarCategoriaRapida()" class="btn btn-success w-100">
+                            <i class="bi bi-save"></i> Guardar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+    function abrirSubModalCategoria() {
+        // Simplemente abrimos el modal de categoría sin cerrar el anterior
+        const myModal = new bootstrap.Modal(document.getElementById('modalNuevaCategoria'), {
+            backdrop: 'static', // Evita que se cierre el de atrás si haces clic fuera
+            keyboard: false
+        });
+        myModal.show();
+    }
+
+    function guardarCategoriaRapida() {
+        const input = document.getElementById('nombre_cat_rapida');
+        const nombre = input.value.trim();
+
+        if (!nombre) return Swal.fire('Error', 'Escribe un nombre', 'error');
+
+        fetch('/cfsistem/app/controllers/almacenes.php?action=guardarCategoria', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    nombre: nombre
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+
+                    // --- SOLUCIÓN 2: ACTUALIZAR EL SELECT ---
+                    // Buscamos el select de categoría. 
+                    // Como tienes dos modales (Nuevo y Editar), lo ideal es actualizar ambos si existen
+                    const selects = document.querySelectorAll('select[name="categoria_id"]');
+
+                    selects.forEach(select => {
+                        // Creamos la nueva opción: new Option(texto, valor, defaultSelected, selected)
+                        const nuevaOpcion = new Option(data.nombre, data.id_categoria, true, true);
+                        select.add(nuevaOpcion);
+                        // Forzamos a que el select se mueva a la nueva categoría
+                        select.value = data.id_categoria;
+                    });
+
+                    // --- SOLUCIÓN 1: CERRAR EL MODAL ---
+                    const modalElement = document.getElementById('modalNuevaCategoria');
+                    const modalInstance = bootstrap.Modal.getInstance(modalElement);
+
+                    if (modalInstance) {
+                        modalInstance.hide();
+                    }
+
+                    // TRUCO: Asegurar que el modal de atrás no pierda el scroll
+                    setTimeout(() => {
+                        if (document.querySelectorAll('.modal.show').length > 0) {
+                            document.body.classList.add('modal-open');
+                        }
+                    }, 300);
+
+                    // Limpiar el input para la próxima vez
+                    input.value = '';
+
+                    Swal.fire({
+                        title: '¡Éxito!',
+                        text: 'Categoría guardada y seleccionada.',
+                        icon: 'success',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+
+                } else {
+                    Swal.fire('Error', data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire('Error', 'No se pudo procesar la categoría', 'error');
+            });
+    }
+    </script>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/cfsistem/app/backend/js/filtros_almacen.js"></script>
     <script src="/cfsistem/app/backend/js/guardar_producto.js"></script>
-    <script>
-    // Variable que guarda los datos de stock que ya tenemos en la tabla
-    // Pasamos los datos de PHP a JS
-    const productosInventario = <?php echo json_encode($productos); ?>;
-    </script>
+   
     <script src="/cfsistem/app/backend/js/informacion_productos_envio.js"></script>
     <script src="/cfsistem/app/backend/js/cargar_traspasos.js"></script>
     <script src="/cfsistem/app/backend/js/aceptar_arribo.js"></script>
-     <!-- --- Lógica de Control de Conversión --- -->
+    <!-- --- Lógica de Control de Conversión --- -->
     <script src="/cfsistem/app/backend/js/calculo_de_conversion.js"></script>
     <script src="/cfsistem/app/backend/js/editar_producto.js"></script>
 
- <script src="/cfsistem/app/backend/js/actualizar_producto.js"></script>
-<script>// --- MÓDULO DE COMPRA DISTRIBUIDA ---
+    <script src="/cfsistem/app/backend/js/actualizar_producto.js"></script>
+    <script>
+    // --- MÓDULO DE COMPRA DISTRIBUIDA ---
 
-function abrirModalCompra() {
-    $('#formNuevaCompra')[0].reset();
-    $('#cuerpoTablaCompra').empty();
-    agregarFilaCompraPrincipal();
-    $('#modalAgregarCompra').modal('show');
-}
+    function abrirModalCompra() {
+        $('#formNuevaCompra')[0].reset();
+        $('#cuerpoTablaCompra').empty();
+        agregarFilaCompraPrincipal();
+        $('#modalAgregarCompra').modal('show');
+    }
 
-function agregarFilaCompraPrincipal(prod = null) {
-    const idFila = Date.now();
-    let filaHtml = `
+    function agregarFilaCompraPrincipal(prod = null) {
+        const idFila = Date.now();
+        let filaHtml = `
     <tr class="table-light">
         <td colspan="8" class="p-0">
             <div class="card m-2 border-primary">
@@ -712,20 +794,21 @@ function agregarFilaCompraPrincipal(prod = null) {
             </div>
         </td>
     </tr>`;
-    $('#cuerpoTablaCompra').append(filaHtml);
-}
+        $('#cuerpoTablaCompra').append(filaHtml);
+    }
 
-function calcularDistribucion(id) {
-    let card = $(`input[name="items[${id}][producto_id]"]`).closest('.card');
-    let cant = parseFloat(card.find('.cant-factura').val()) || 0;
-    let usaConversion = card.find('.select-unidad').val();
-    let factor = parseFloat(card.find('.val-factor').val()) || 1;
+    function calcularDistribucion(id) {
+        let card = $(`input[name="items[${id}][producto_id]"]`).closest('.card');
+        let cant = parseFloat(card.find('.cant-factura').val()) || 0;
+        let usaConversion = card.find('.select-unidad').val();
+        let factor = parseFloat(card.find('.val-factor').val()) || 1;
 
-    let totalPiezas = (usaConversion == "1") ? (cant * factor) : cant;
-    card.find('.total-piezas-h').val(totalPiezas.toFixed(2));
-}</script>
+        let totalPiezas = (usaConversion == "1") ? (cant * factor) : cant;
+        card.find('.total-piezas-h').val(totalPiezas.toFixed(2));
+    }
+    </script>
 
-    
+
 </body>
 
 </html>

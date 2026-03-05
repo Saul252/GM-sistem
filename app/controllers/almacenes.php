@@ -12,6 +12,7 @@ protegerPagina();
 require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../models/almacen_model.php';
 
+
 // 4. Carga del Layout (Asegúrate que la ruta sea correcta)
 // Si LayoutController.php no define 'renderizarLayout', 
 // revisa si es una clase o una función simple.

@@ -4,47 +4,101 @@ function filtrarProductosPorOrigen() {
     const selectProd = document.getElementById('traspaso_producto');
     const infoStock = document.getElementById('info_stock');
     
-    // Resetear select de productos
     selectProd.innerHTML = '<option value="">Seleccione producto...</option>';
-    infoStock.innerText = '';
+    if (infoStock) infoStock.innerText = '';
     
     if (!origenId) {
         selectProd.disabled = true;
         return;
     }
 
-    // Filtrar productos que pertenecen a ese almacén y tienen stock > 0
+    // Buscamos en el array global que viene del PHP
     const productosDisponibles = productosInventario.filter(p => p.almacen_id == origenId && p.stock > 0);
 
     if (productosDisponibles.length > 0) {
         productosDisponibles.forEach(p => {
             const option = document.createElement('option');
             option.value = p.id;
-            option.text = `${p.sku} - ${p.nombre} (Disponibles: ${p.stock})`;
-            option.dataset.max = p.stock; // Guardamos el stock máximo en un atributo data
+            option.text = `${p.sku} - ${p.nombre}`;
+            
+            // ATRIBUTOS CRUCIALES PARA LA CONVERSIÓN
+            option.dataset.stock = p.stock;
+            option.dataset.factor = p.factor_conversion || 1;
+            option.dataset.unidad = p.unidad_reporte || 'Unid.';
+            
             selectProd.appendChild(option);
         });
         selectProd.disabled = false;
     } else {
-        selectProd.innerHTML = '<option value="">No hay productos con stock aquí</option>';
+        selectProd.innerHTML = '<option value="">No hay productos disponibles</option>';
         selectProd.disabled = true;
     }
 }
 
+// Variables globales para controlar el límite en este traspaso
+let factorTraspasoActual = 1;
+let stockMaximoTraspaso = 0;
+
 function actualizarMaximo() {
     const selectProd = document.getElementById('traspaso_producto');
-    const inputCant = document.getElementById('cantidad_traspaso');
     const infoStock = document.getElementById('info_stock');
+    const labelUnidad = document.getElementById('label_unidad_reporte');
     
     const selectedOption = selectProd.options[selectProd.selectedIndex];
-    const maxStock = selectedOption.dataset.max;
+    
+    if (selectedOption && selectedOption.value !== "") {
+        stockMaximoTraspaso = parseFloat(selectedOption.dataset.stock) || 0;
+        factorTraspasoActual = parseFloat(selectedOption.dataset.factor) || 1;
+        const unidadNombre = selectedOption.dataset.unidad;
 
-    if (maxStock) {
-        infoStock.innerText = `Límite máximo de envío: ${maxStock}`;
-        inputCant.max = maxStock;
-        inputCant.placeholder = `Máx ${maxStock}`;
+        if (infoStock) infoStock.innerText = `Stock disponible: ${stockMaximoTraspaso} piezas`;
+        if (labelUnidad) labelUnidad.innerText = unidadNombre;
+        
+        // Limpiar inputs al cambiar de producto
+        document.getElementById('traspaso_factor_input').value = '';
+        document.getElementById('traspaso_piezas_input').value = '';
+        calcularTotalTraspaso();
     }
 }
+
+function calcularTotalTraspaso() {
+    const cantMayor = parseFloat(document.getElementById('traspaso_factor_input').value) || 0;
+    const cantSueltas = parseFloat(document.getElementById('traspaso_piezas_input').value) || 0;
+    
+    // LA FÓRMULA: (Toneladas * Factor) + Piezas
+    const totalPiezas = (cantMayor * factorTraspasoActual) + cantSueltas;
+
+    // Actualizamos el input oculto que se va al PHP
+    document.getElementById('cantidad_traspaso_final').value = totalPiezas;
+
+    // UI: Mostrar resumen y validar
+    const txtTotal = document.getElementById('txt_total_pzas');
+    const resumen = document.getElementById('resumen_conversion');
+    const btn = document.getElementById('btnGuardarTraspaso');
+
+    if (totalPiezas > 0) {
+        resumen.style.display = 'block';
+        txtTotal.innerText = totalPiezas.toFixed(2);
+
+        // Validar contra el stock real
+        if (totalPiezas > stockMaximoTraspaso) {
+            txtTotal.classList.add('text-danger');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-x-circle"></i> Stock Insuficiente';
+        } else {
+            txtTotal.classList.remove('text-danger');
+            btn.disabled = false;
+            btn.innerHTML = 'Solicitar Movimiento';
+        }
+    } else {
+        resumen.style.display = 'none';
+        btn.disabled = true;
+    }
+}
+
+// Vincular los eventos de escritura
+document.getElementById('traspaso_factor_input').addEventListener('input', calcularTotalTraspaso);
+document.getElementById('traspaso_piezas_input').addEventListener('input', calcularTotalTraspaso);
 
 // Validación final antes de enviar
 document.getElementById('formTraspaso').addEventListener('submit', function(e) {
