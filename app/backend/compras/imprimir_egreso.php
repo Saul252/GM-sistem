@@ -118,49 +118,27 @@ try {
             </tr>
         </thead>
         <tbody>
-        <?php while($item = $detalle->fetch_assoc()): ?>
-    <tr>
-        <td>
-            <b><?= htmlspecialchars($item['producto_nombre'] ?? $item['descripcion']) ?></b>
-            <?php if(isset($item['sku'])): ?><br><small>SKU: <?= $item['sku'] ?></small><?php endif; ?>
-        </td>
-        
-        <td class="text-center">
-            <?= number_format($item['cantidad'], 2) ?> 
-            <small class="text-muted"><?= $item['unidad_compra'] ?? 'PZ' ?></small>
-        </td>
-
-        <?php if($tipo === 'compra'): 
-            // 1. Obtenemos el factor de conversión guardado
-            $factor = $item['factor_conversion'] ?? 1;
-
-            // 2. Consultamos la suma REAL que entró a los almacenes (Ya está en piezas en la DB)
-            $sqlS = "SELECT SUM(cantidad) as total_movimiento FROM movimientos 
-                     WHERE referencia_id = ? AND producto_id = ? AND tipo = 'entrada'";
-            $stS = $conexion->prepare($sqlS);
-            $stS->bind_param("ii", $id, $item['producto_id']);
-            $stS->execute();
-            $rS = $stS->get_result()->fetch_assoc();
-            
-            // Esta es la cantidad física real en piezas
-            $cantidad_real_piezas = $rS['total_movimiento'] ?? 0;
-
-            // 3. Calculamos cuánto DEBERÍA haber en piezas según la factura
-            // (Cantidad factura - Faltante factura) * Factor
-            $cantidad_esperada_piezas = ($item['cantidad'] - $item['cantidad_faltante']) * $factor;
-        ?>
-            <td class="text-center fw-bold text-primary">
-                <?= number_format($cantidad_real_piezas, 2) ?> PZ
-                <?php if($cantidad_real_piezas < $cantidad_esperada_piezas): ?>
-                    <br><small class="text-danger" style="font-size: 0.7rem;">Faltan: <?= number_format($cantidad_esperada_piezas - $cantidad_real_piezas, 2) ?> PZ</small>
+            <?php while($item = $detalle->fetch_assoc()): ?>
+            <tr>
+                <td>
+                    <b><?= htmlspecialchars($item['producto_nombre'] ?? $item['descripcion']) ?></b>
+                    <?php if(isset($item['sku'])): ?><br><small>SKU: <?= $item['sku'] ?></small><?php endif; ?>
+                </td>
+                <td class="text-center"><?= number_format($item['cantidad'], 2) ?></td>
+                <?php if($tipo === 'compra'): 
+                    // Suma real igual que en tu ver detalle
+                    $sqlS = "SELECT SUM(cantidad) as t FROM movimientos WHERE referencia_id = ? AND producto_id = ? AND tipo = 'entrada'";
+                    $stS = $conexion->prepare($sqlS);
+                    $stS->bind_param("ii", $id, $item['producto_id']);
+                    $stS->execute();
+                    $rS = $stS->get_result()->fetch_assoc();
+                ?>
+                <td class="text-center"><?= number_format($rS['t'] ?? 0, 2) ?> PZ</td>
                 <?php endif; ?>
-            </td>
-        <?php endif; ?>
-
-        <td class="text-end">$<?= number_format($item['precio_unitario'], 2) ?></td>
-        <td class="text-end">$<?= number_format($item['subtotal'], 2) ?></td>
-    </tr>
-<?php endwhile; ?>
+                <td class="text-end">$<?= number_format($item['precio_unitario'], 2) ?></td>
+                <td class="text-end">$<?= number_format($item['subtotal'], 2) ?></td>
+            </tr>
+            <?php endwhile; ?>
         </tbody>
         <tfoot>
             <tr>

@@ -161,7 +161,7 @@ require_once $ruta;
                                 <td class="fw-bold text-end">$<?= number_format($e['total'], 2) ?></td>
                                 <td class="text-center">
                                     <?php if(!empty($e['documento_url'])): ?>
-                                    <a href="../../uploads/evidencias/<?= $e['documento_url'] ?>" target="_blank"
+                                    <a href="../../<?= $e['documento_url'] ?>" target="_blank"
                                         class="text-primary h5">
                                         <i class="bi bi-file-earmark-pdf"></i>
                                     </a>
