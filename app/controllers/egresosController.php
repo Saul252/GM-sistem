@@ -53,18 +53,45 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardarGasto') {
         }
 
         // 2. PROCESAR ARCHIVO (Asegurar que la variable exista siempre)
-        $urlDocumento = null;
-        if (isset($_FILES['documento']) && $_FILES['documento']['error'] === UPLOAD_ERR_OK) {
-            $rutaCarpeta = $_SERVER['DOCUMENT_ROOT'] . "/cfsistem/uploads/evidencias/";
-            if (!is_dir($rutaCarpeta)) mkdir($rutaCarpeta, 0777, true);
-            
-            $ext = pathinfo($_FILES['documento']['name'], PATHINFO_EXTENSION);
-            $nuevoNombre = "GASTO_" . time() . "_" . uniqid() . "." . $ext;
-            
-            if (move_uploaded_file($_FILES['documento']['tmp_name'], $rutaCarpeta . $nuevoNombre)) {
-                $urlDocumento = $nuevoNombre;
-            }
-        }
+   $urlDocumento = null;
+
+// DEBUG: Vamos a verificar si PHP siquiera recibió el archivo
+if (!isset($_FILES['documento'])) {
+    // Si llegas aquí, el formulario no tiene el enctype="multipart/form-data"
+} else if ($_FILES['documento']['error'] !== UPLOAD_ERR_OK) {
+    // Si el error es 4, es que no seleccionaste archivo. Si es otro, es un problema de PHP.
+    if ($_FILES['documento']['error'] !== 4) {
+        throw new Exception("Error de PHP al subir: " . $_FILES['documento']['error']);
+    }
+} else {
+    // Si hay archivo y no hay error de PHP, procedemos
+    $nombreOriginal = $_FILES['documento']['name'];
+    $rutaTemporal = $_FILES['documento']['tmp_name'];
+    
+    // USAMOS RUTA RELATIVA para evitar errores de DOCUMENT_ROOT
+    // Ajusta los "../" según qué tan profundo esté tu controlador
+  // Esto construye la ruta completa desde la raíz del sistema (/opt/lampp/htdocs/...)
+$rutaCarpeta = $_SERVER['DOCUMENT_ROOT'] . "/cfsistem/uploads/evidencias/";
+
+if (!is_dir($rutaCarpeta)) {
+    mkdir($rutaCarpeta, 0777, true);
+    // Si se crea la carpeta por código, hay que asegurar el permiso de nuevo
+    chmod($rutaCarpeta, 0777); 
+}
+   
+
+    $ext = pathinfo($nombreOriginal, PATHINFO_EXTENSION);
+    $nuevoNombre = "GASTO_" . time() . "_" . uniqid() . "." . $ext;
+    $destino = $rutaCarpeta . $nuevoNombre;
+
+    if (move_uploaded_file($rutaTemporal, $destino)) {
+        $urlDocumento = $nuevoNombre;
+    } else {
+        // ESTO TE DIRÁ SI ES UN PROBLEMA DE PERMISOS
+        $error_fisico = error_get_last();
+        throw new Exception("No se pudo mover a la carpeta. ¿Tiene permisos de escritura? Detalle: " . $error_fisico['message']);
+    }
+}
 
         // 3. ARMAR CABECERA
         $cabecera = [
