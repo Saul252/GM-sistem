@@ -15,16 +15,15 @@ public function obtenerAlmacenesActivos() {
      * Usa un UNION para juntar ambas tablas en una sola lista para la tabla principal
      */
     public function obtenerTodosLosEgresos($desde, $hasta, $usuario_id = null) {
-        $sql = "
-            (SELECT id, folio, fecha_compra AS fecha, proveedor AS entidad, total, 'compra' AS tipo, tiene_faltantes, documento_url 
-             FROM compras 
-             WHERE fecha_compra BETWEEN ? AND ?)
-            UNION ALL
-            (SELECT id, folio, fecha_gasto AS fecha, beneficiario AS entidad, total, 'gasto' AS tipo, 0 AS tiene_faltantes, documento_url 
-             FROM gastos 
-             WHERE fecha_gasto BETWEEN ? AND ?)
-            ORDER BY fecha DESC";
-        
+     $sql = "
+    (SELECT id, folio, fecha_compra AS fecha, proveedor AS entidad, total, 'compra' AS tipo, tiene_faltantes, documento_url 
+     FROM compras 
+     WHERE fecha_compra BETWEEN ? AND ?)
+    UNION ALL
+    (SELECT id, folio, fecha_gasto AS fecha, beneficiario AS entidad, total, 'gasto' AS tipo, 0 AS tiene_faltantes, documento_url 
+     FROM gastos 
+     WHERE fecha_gasto BETWEEN ? AND ?)
+    ORDER BY fecha DESC, id DESC"; // <--- Agregamos id DESC para desempatar el mismo día
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param("ssss", $desde, $hasta, $desde, $hasta);
         $stmt->execute();

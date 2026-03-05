@@ -119,62 +119,62 @@
                 </div>
             </div>
 
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-light">
-                            <tr>
-                                <th>Fecha</th>
-                                <th>Folio</th>
-                                <th>Tipo</th>
-                                <th>Entidad</th>
-                                <th class="text-end">Total</th>
-                                <th class="text-center">Evidencia</th>
-                                <th class="text-end">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if(!empty($egresos)): ?>
-                            <?php foreach($egresos as $e): ?>
-                            <tr>
-                                <td class="text-muted small"><?= date('d/m/Y', strtotime($e['fecha'])) ?></td>
-                                <td class="fw-bold text-dark"><?= $e['folio'] ?></td>
-                                <td>
-                                    <span
-                                        class="badge rounded-pill <?= $e['tipo'] == 'compra' ? 'bg-primary' : 'bg-warning text-dark' ?>">
-                                        <?= strtoupper($e['tipo']) ?>
-                                    </span>
-                                </td>
-                                <td><?= htmlspecialchars($e['entidad']) ?></td>
-                                <td class="fw-bold text-end">$<?= number_format($e['total'], 2) ?></td>
-                                <td class="text-center">
-                                    <?php if(!empty($e['documento_url'])): ?>
-                                    <a href="../../uploads/evidencias/<?= $e['documento_url'] ?>" target="_blank"
-                                        class="text-primary h5">
-                                        <i class="bi bi-file-earmark-pdf"></i>
-                                    </a>
-                                    <?php else: ?>
-                                    <span class="text-muted small">-</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td class="text-end">
-                                    <button class="btn btn-sm btn-light border"
-                                        onclick="verDetalle('<?= $e['tipo'] ?>', <?= $e['id'] ?>)">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                            <?php else: ?>
-                            <tr>
-                                <td colspan="7" class="text-center py-4 text-muted">No se encontraron movimientos en
-                                    este rango.</td>
-                            </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+          <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th class="ps-3">ID</th> <th>Fecha</th>
+                    <th>Folio</th>
+                    <th>Tipo</th>
+                    <th>Entidad</th>
+                    <th class="text-end">Total</th>
+                    <th class="text-center">Evidencia</th>
+                    <th class="text-end pe-3">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if(!empty($egresos)): ?>
+                <?php foreach($egresos as $e): ?>
+                <tr>
+                    <td class="ps-3"><span class="text-muted small">#</span><?= $e['id'] ?></td>
+                    
+                    <td class="text-muted small"><?= date('d/m/Y', strtotime($e['fecha'])) ?></td>
+                    <td class="fw-bold text-dark"><?= $e['folio'] ?></td>
+                    <td>
+                        <span class="badge rounded-pill <?= $e['tipo'] == 'compra' ? 'bg-primary' : 'bg-warning text-dark' ?>">
+                            <?= strtoupper($e['tipo']) ?>
+                        </span>
+                    </td>
+                    <td><?= htmlspecialchars($e['entidad']) ?></td>
+                    <td class="fw-bold text-end">$<?= number_format($e['total'], 2) ?></td>
+                    <td class="text-center">
+                        <?php if(!empty($e['documento_url'])): ?>
+                        <a href="../../uploads/evidencias/<?= $e['documento_url'] ?>" target="_blank"
+                            class="text-primary h5">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                        </a>
+                        <?php else: ?>
+                        <span class="text-muted small">-</span>
+                        <?php endif; ?>
+                    </td>
+                    <td class="text-end pe-3">
+                        <button class="btn btn-sm btn-light border"
+                            onclick="verDetalle('<?= $e['tipo'] ?>', <?= $e['id'] ?>)">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+                <?php else: ?>
+                <tr>
+                    <td colspan="8" class="text-center py-4 text-muted">No se encontraron movimientos en este rango.</td>
+                </tr>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
         </div>
     </main>
     <div class="modal fade" id="modalGasto" tabindex="-1" aria-hidden="true">
