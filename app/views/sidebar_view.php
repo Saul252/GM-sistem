@@ -64,7 +64,7 @@
 
             <?php if (puedeVerModulo('almacenes')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/views/almacenes.php" class="nav-link <?= ($archivoActual == 'almacenes.php' || $archivoActual == 'almacen.php') ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/almacenes.php" class="nav-link <?= ($archivoActual == 'almacenes.php' || $archivoActual == 'almacen.php') ? 'active' : '' ?>">
                     <i class="bi bi-box-seam"></i><span>Almacén</span>
                 </a>
             </li>

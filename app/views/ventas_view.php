@@ -1,20 +1,33 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>Ventas | Sistema</title>
     <?php cargarEstilos(); ?>
     <link href="/cfsistem/css/ventas.css" rel="stylesheet">
     <style>
-        .tabla-scroll { max-height: 60vh; overflow-y: auto; }
-        .carrito { position: sticky; top: 85px; }
-        .badge-stock { font-size: 0.8rem; padding: 5px 10px; }
+    .tabla-scroll {
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+
+    .carrito {
+        position: sticky;
+        top: 85px;
+    }
+
+    .badge-stock {
+        font-size: 0.8rem;
+        padding: 5px 10px;
+    }
     </style>
 </head>
+
 <body>
 
     <?php renderizarLayout($paginaActual); ?>
-    
+
     <div class="main-content">
 
         <h2 class="mb-4 fw-bold">
@@ -74,18 +87,28 @@
                                     <th>Stock</th>
                                     <th>Almacén</th>
                                     <th>Precio</th>
+                                    <th width="120">Venta por</th>
                                     <th width="90">Cant</th>
                                     <th width="60"></th>
                                 </tr>
                             </thead>
                             <tbody>
-
-                                <?php foreach($productos as $p): ?>
-                                <tr data-categoria="<?= $p['categoria_id'] ?>" data-almacen="<?= $p['almacen_id'] ?>">
+                                <?php foreach($productos as $p): 
+                // Verificamos si tiene unidad de reporte válida (ej. Tonelada)
+                $tieneReporte = (!empty($p['unidad_reporte']) && $p['factor_conversion'] > 1);
+            ?>
+                                <tr data-categoria="<?= $p['categoria_id'] ?>" data-almacen="<?= $p['almacen_id'] ?>"
+                                    data-factor="<?= $p['factor_conversion'] ?>"
+                                    data-reporte-nom="<?= htmlspecialchars($p['unidad_reporte']) ?>">
 
                                     <td><?= $p['sku'] ?></td>
                                     <td><?= htmlspecialchars($p['nombre']) ?></td>
-                                    <td><span class="badge bg-success"><?= $p['stock'] ?></span></td>
+                                    <td>
+                                        <span class="badge bg-success"><?= $p['stock'] ?></span>
+                                        <small class="d-block text-muted" style="font-size: 0.65rem;">
+                                            <?= htmlspecialchars($p['unidad_medida'] ?? 'unid.') ?>
+                                        </small>
+                                    </td>
                                     <td><?= htmlspecialchars($p['almacen_nombre']) ?></td>
 
                                     <td>
@@ -103,6 +126,19 @@
                                     </td>
 
                                     <td>
+                                        <?php if($tieneReporte): ?>
+                                        <select class="form-select form-select-sm select-modo-venta">
+                                            <option value="individual">
+                                                <?= htmlspecialchars($p['unidad_medida'] ?? 'Individual') ?></option>
+                                            <option value="referencia"><?= htmlspecialchars($p['unidad_reporte']) ?>
+                                            </option>
+                                        </select>
+                                        <?php else: ?>
+                                        <span class="text-muted small">Individual</span>
+                                        <?php endif; ?>
+                                    </td>
+
+                                    <td>
                                         <input type="number" class="form-control form-control-sm cantidad" min="1"
                                             max="<?= $p['stock'] ?>" value="1">
                                     </td>
@@ -111,17 +147,57 @@
                                         <button type="button" class="btn btn-success btn-sm"
                                             data-producto-id="<?= $p['id'] ?>" data-almacen-id="<?= $p['almacen_id'] ?>"
                                             data-almacen="<?= htmlspecialchars($p['almacen_nombre']) ?>"
-                                            onclick="agregarProducto(this)">
+                                            onclick="validarYAgregar(this)">
                                             <i class="bi bi-plus"></i>
                                         </button>
                                     </td>
 
                                 </tr>
                                 <?php endforeach; ?>
-
                             </tbody>
                         </table>
                     </div>
+
+                    <script>
+                    function validarYAgregar(btn) {
+                        const fila = btn.closest('tr');
+                        const modo = fila.querySelector('.select-modo-venta')?.value || 'individual';
+                        const inputCant = fila.querySelector('.cantidad');
+                        const factor = parseFloat(fila.dataset.factor) || 1;
+                        const stockDisponible = parseFloat(fila.querySelector('.badge').innerText);
+
+                        let cantidadOriginal = parseFloat(inputCant.value);
+                        let cantidadAProcesar = cantidadOriginal;
+
+                        // Si seleccionó Unidad de Reporte (ej. Tonelada), multiplicamos
+                        if (modo === 'referencia') {
+                            cantidadAProcesar = cantidadOriginal * factor;
+                        }
+
+                        // Validar stock antes de mandar al carrito
+                        if (cantidadAProcesar > stockDisponible) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Stock insuficiente',
+                                text: `Estás intentando agregar ${cantidadAProcesar} unidades, pero solo hay ${stockDisponible} en stock.`
+                            });
+                            return;
+                        }
+
+                        // Temporalmente cambiamos el valor del input para que tu función original agregarProducto(btn) 
+                        // tome la cantidad ya multiplicada
+                        const valorOriginalInput = inputCant.value;
+                        inputCant.value = cantidadAProcesar;
+
+                        // Llamamos a tu función original que ya tienes en carrito.js
+                        if (typeof agregarProducto === "function") {
+                            agregarProducto(btn);
+                        }
+
+                        // Restauramos el input a 1 para la siguiente venta
+                        inputCant.value = 1;
+                    }
+                    </script>
                 </div>
             </div>
 
@@ -138,7 +214,8 @@
                                 <tr>
                                     <th>Almacén</th>
                                     <th>Producto</th>
-                                    <th>Cant</th>
+                                    <th>Cant. Fact</th>
+                                    <th>Cant. Pza</th>
                                     <th>Sub</th>
                                     <th></th>
                                 </tr>
@@ -197,8 +274,10 @@
                                 <div class="card-body p-3">
                                     <div class="text-end">
                                         <input type="hidden" id="descuentoGeneral" value="0">
-                                        <span class="text-muted small d-block fw-bold text-uppercase">Total a Cobrar</span>
-                                        <h2 class="fw-bold mb-0 text-primary">$<span id="totalFinalModal">0.00</span></h2>
+                                        <span class="text-muted small d-block fw-bold text-uppercase">Total a
+                                            Cobrar</span>
+                                        <h2 class="fw-bold mb-0 text-primary">$<span id="totalFinalModal">0.00</span>
+                                        </h2>
                                     </div>
                                 </div>
                             </div>
@@ -212,32 +291,44 @@
                                         $clientes->data_seek(0); 
                                         while($c = $clientes->fetch_assoc()): 
                                     ?>
-                                    <option value="<?= $c['id'] ?>" data-rfc="<?= $c['rfc'] ?>" data-rs="<?= $c['razon_social'] ?>" data-cp="<?= $c['codigo_postal'] ?>" data-regimen="<?= $c['regimen_fiscal'] ?>">
+                                    <option value="<?= $c['id'] ?>" data-rfc="<?= $c['rfc'] ?>"
+                                        data-rs="<?= $c['razon_social'] ?>" data-cp="<?= $c['codigo_postal'] ?>"
+                                        data-regimen="<?= $c['regimen_fiscal'] ?>">
                                         <?= htmlspecialchars($c['nombre_comercial']) ?>
                                     </option>
                                     <?php endwhile; ?>
                                 </select>
-                                <button class="btn btn-outline-primary" type="button" onclick="abrirModalNuevoCliente()">
+                                <button class="btn btn-outline-primary" type="button"
+                                    onclick="abrirModalNuevoCliente()">
                                     <i class="bi bi-person-plus"></i>
                                 </button>
                             </div>
 
                             <div class="p-3 border rounded mb-3 bg-white shadow-sm">
                                 <div class="row g-2">
-                                    <div class="col-12"><small class="text-muted d-block text-uppercase" style="font-size: 0.7rem;">Razón Social:</small><span id="f_razon_social" class="fw-bold small text-truncate d-block">---</span></div>
-                                    <div class="col-6"><small class="text-muted d-block text-uppercase" style="font-size: 0.7rem;">RFC:</small><span id="f_rfc" class="fw-bold">---</span></div>
-                                    <div class="col-6"><small class="text-muted d-block text-uppercase" style="font-size: 0.7rem;">Régimen:</small><span id="f_regimen" class="badge bg-info">---</span></div>
+                                    <div class="col-12"><small class="text-muted d-block text-uppercase"
+                                            style="font-size: 0.7rem;">Razón Social:</small><span id="f_razon_social"
+                                            class="fw-bold small text-truncate d-block">---</span></div>
+                                    <div class="col-6"><small class="text-muted d-block text-uppercase"
+                                            style="font-size: 0.7rem;">RFC:</small><span id="f_rfc"
+                                            class="fw-bold">---</span></div>
+                                    <div class="col-6"><small class="text-muted d-block text-uppercase"
+                                            style="font-size: 0.7rem;">Régimen:</small><span id="f_regimen"
+                                            class="badge bg-info">---</span></div>
                                 </div>
                             </div>
 
                             <div class="p-3 border rounded mb-3 bg-light border-success border-opacity-25">
-                                <h6 class="text-uppercase fw-bold mb-3 small text-success"><i class="bi bi-cash-coin"></i> Registro de Pago</h6>
+                                <h6 class="text-uppercase fw-bold mb-3 small text-success"><i
+                                        class="bi bi-cash-coin"></i> Registro de Pago</h6>
                                 <div class="row g-2">
                                     <div class="col-md-6">
                                         <label class="form-label small fw-bold">Monto Recibido</label>
                                         <div class="input-group">
                                             <span class="input-group-text bg-success text-white border-success">$</span>
-                                            <input type="number" id="monto_pagar" class="form-control border-success fw-bold text-success" value="0" step="0.01" min="0">
+                                            <input type="number" id="monto_pagar"
+                                                class="form-control border-success fw-bold text-success" value="0"
+                                                step="0.01" min="0">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -253,8 +344,10 @@
                             </div>
 
                             <div class="mb-0">
-                                <label class="form-label small fw-bold text-muted"><i class="bi bi-pencil"></i> Observaciones de Venta</label>
-                                <textarea id="obsVenta" class="form-control" rows="2" placeholder="Notas adicionales..."></textarea>
+                                <label class="form-label small fw-bold text-muted"><i class="bi bi-pencil"></i>
+                                    Observaciones de Venta</label>
+                                <textarea id="obsVenta" class="form-control" rows="2"
+                                    placeholder="Notas adicionales..."></textarea>
                             </div>
                         </div>
                     </div>
@@ -362,9 +455,11 @@
         if (valor === totalFinal && totalFinal > 0) {
             aviso.innerHTML = '<span class="text-success"><i class="bi bi-check-all"></i> PAGO COMPLETO</span>';
         } else if (valor > 0 && valor < totalFinal) {
-            aviso.innerHTML = '<span class="text-warning"><i class="bi bi-pie-chart"></i> PAGO PARCIAL (CRÉDITO)</span>';
+            aviso.innerHTML =
+                '<span class="text-warning"><i class="bi bi-pie-chart"></i> PAGO PARCIAL (CRÉDITO)</span>';
         } else if (valor === 0 && totalFinal > 0) {
-            aviso.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> VENTA A CRÉDITO</span>';
+            aviso.innerHTML =
+                '<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> VENTA A CRÉDITO</span>';
         } else {
             aviso.innerHTML = '';
         }
@@ -372,18 +467,19 @@
 
     document.getElementById('selectCliente').addEventListener('change', function() {
         const selected = this.options[this.selectedIndex];
-        if(document.getElementById('f_rfc')) 
+        if (document.getElementById('f_rfc'))
             document.getElementById('f_rfc').textContent = selected.dataset.rfc || '---';
-        if(document.getElementById('f_razon_social')) 
+        if (document.getElementById('f_razon_social'))
             document.getElementById('f_razon_social').textContent = selected.dataset.rs || '---';
-        if(document.getElementById('f_regimen')) 
+        if (document.getElementById('f_regimen'))
             document.getElementById('f_regimen').textContent = selected.dataset.regimen || '---';
     });
 
     document.addEventListener('DOMContentLoaded', function() {
         const select = document.getElementById('selectCliente');
-        if(select) select.dispatchEvent(new Event('change'));
+        if (select) select.dispatchEvent(new Event('change'));
     });
     </script>
 </body>
+
 </html>

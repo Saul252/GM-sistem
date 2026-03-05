@@ -54,7 +54,7 @@ if ($almacen_usuario > 0) {
     $where .= " AND (m.almacen_origen_id = $almacen_usuario OR m.almacen_destino_id = $almacen_usuario)";
 }
 
-$sql = "SELECT m.*, p.nombre as prod, p.sku, 
+$sql = "SELECT m.*, p.nombre as prod, p.sku, p.factor_conversion, p.unidad_reporte,
                a1.nombre as ori_nom, a2.nombre as des_nom, 
                u1.nombre as reg_user, u2.nombre as env_user, u3.nombre as rec_user
         FROM movimientos m 
@@ -76,6 +76,7 @@ $badges = [
     'traspaso' => 'primary',
     'ajuste' => 'warning text-dark'
 ];
+// ... (todo tu código anterior igual hasta el while)
 
 while ($row = $res->fetch_assoc()) {
     $data[] = [
@@ -85,7 +86,11 @@ while ($row = $res->fetch_assoc()) {
         'sku' => $row['sku'],
         'tipo' => $row['tipo'],
         'color' => $badges[$row['tipo']] ?? 'secondary',
-        'cantidad' => number_format($row['cantidad'], 2),
+        // ENVIAR EL NÚMERO PURO PARA CÁLCULOS
+        'cantidad' => $row['cantidad'], 
+        'factor_conversion' => $row['factor_conversion'],
+        'unidad_reporte' => $row['unidad_reporte'],
+        // ------------------------------------------
         'origen' => $row['ori_nom'] ?? '---',
         'destino' => $row['des_nom'] ?? '---',
         'u_reg' => $row['reg_user'],
@@ -94,5 +99,6 @@ while ($row = $res->fetch_assoc()) {
         'obs' => $row['observaciones']
     ];
 }
+
 
 echo json_encode(['data' => $data]);

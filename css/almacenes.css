@@ -27,3 +27,27 @@
     z-index: 10;
     background: #212529; /* mismo color que table-dark */
 }
+/* Ajuste para que el contenido no se meta debajo del sidebar */
+.main-content {
+    margin-left: 260px; /* Ajusta este valor al ancho real de tu sidebar */
+    padding: 25px;
+    min-height: 100vh;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa; /* Un gris muy claro para diferenciar el fondo */
+}
+
+/* Ajuste para pantallas pequeñas (Celulares) */
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+        padding: 15px;
+    }
+}
+/* El Sidebar suele tener z-index alto, vamos a superarlo */
+/* MODALES: Forzamos a que estén por encima de Navbar y Sidebar */
+.modal { 
+    z-index: 1060 !important; 
+}
+.modal-backdrop { 
+    z-index: 1050 !important; 
+}

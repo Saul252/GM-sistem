@@ -1,77 +1,94 @@
-   :root { --nav-height: 65px; --sidebar-width: 260px; }
+:root { 
+    --nav-height: 65px; 
+    --sidebar-width: 260px;
+    /* Nuevos colores elegantes */
+    --negro-delicado: #334155; 
+    --azul-clarito-bg: #eff6ff; 
+    --azul-enlace-active: #2563eb;
+    --borde-suave: #e2e8f0;
+}
 
-        /* NAVBAR */
-        .navbar-premium { 
-            background: #0f172a !important; 
-            height: var(--nav-height); 
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 1060; 
-        }
-        
-        /* SIDEBAR */
-        #sidebar { 
-            width: var(--sidebar-width); 
-            height: 100vh; 
-            position: fixed; 
-            top: var(--nav-height); 
-            left: 0; 
-            background: #f8fafc; 
-            border-right: 1px solid #e2e8f0; 
-            transition: all .3s ease; 
-            z-index: 1050; 
-        }
+/* NAVBAR */
+.navbar-premium { 
+    background: #0f172a !important; 
+    height: var(--nav-height); 
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1040;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
 
-        /* CUANDO EL SIDEBAR ESTÁ OCULTO */
-        #sidebar.hidden { transform: translateX(-var(--sidebar-width)); }
+/* Forzamos letras blancas en Navbar */
+.navbar-premium span, 
+.navbar-premium a, 
+.navbar-premium i,
+.navbar-premium .user-badge {
+    color: #ffffff !important;
+}
 
-        /* CONTENIDO PRINCIPAL */
-        .main-content { 
-            margin-left: var(--sidebar-width); 
-            padding-top: calc(var(--nav-height) + 20px); /* Empuja el contenido hacia abajo */
-            transition: all .3s ease; 
-        }
+/* SIDEBAR */
+#sidebar { 
+    width: var(--sidebar-width); 
+    height: calc(100vh - var(--nav-height)); 
+    position: fixed; 
+    top: var(--nav-height); 
+    left: 0; 
+    background: #ffffff; /* Blanco puro para elegancia */
+    border-right: 1px solid var(--borde-suave); 
+    transition: all .3s ease; 
+    z-index: 1030; 
+    overflow-y: auto;
+}
 
-        /* Ajuste cuando el sidebar desaparece */
-        body.sidebar-hidden .main-content { margin-left: 0; }
-
-        /* Estilos de links (como en tu imagen) */
-        #sidebar .nav-link { color: #475569 !important; margin: 4px 15px; border-radius: 8px; }
-        #sidebar .nav-link.active { background: #eff6ff !important; color: #2563eb !important; }
-        .user-badge {
+/* LINKS DEL SIDEBAR (Estilo Elegante) */
+#sidebar .nav-link {
+    color: var(--negro-delicado) !important;
+    font-weight: 500;
+    font-size: 0.92rem;
+    padding: 10px 16px;
+    margin: 4px 12px;
+    border-radius: 8px;
     display: flex;
     align-items: center;
-    background: rgba(255, 255, 255, .08);
-    padding: 6px 14px;
-    border-radius: 50px;
-    color: #ffffff;
-    font-weight: 500;
-    font-size: 14px;
+    gap: 12px;
+    transition: all 0.2s ease;
 }
-.btn-logout:hover {
-    color: #dc3545 !important;
-    transform: scale(1.1);
+
+/* Iconos dentro de los links */
+#sidebar .nav-link i {
+    font-size: 1.1rem;
+    color: #64748b; /* Gris suave para iconos no activos */
+    transition: color 0.2s;
 }
-/* 1. El contenido principal debe tener este margen por defecto (sidebar visible) */
+
+/* EFECTO HOVER (Pasar el ratón) */
+#sidebar .nav-link:hover {
+    background-color: #f1f5f9;
+    color: #0f172a !important;
+}
+
+/* SELECTOR / LINK ACTIVO (Azul Clarito) */
+#sidebar .nav-link.active {
+    background-color: var(--azul-clarito-bg) !important;
+    color: var(--azul-enlace-active) !important;
+}
+
+#sidebar .nav-link.active i {
+    color: var(--azul-enlace-active) !important;
+}
+
+/* CONTENIDO PRINCIPAL */
 .main-content { 
-    margin-left: 260px; 
-    transition: margin-left .3s ease, width .3s ease; 
-    padding: 20px;
+    margin-left: var(--sidebar-width); 
+    padding-top: calc(var(--nav-height) + 20px); 
+    padding-left: 20px;
+    padding-right: 20px;
+    transition: all .3s ease;
+    min-height: 100vh;
+    background-color: #f8fafc; /* Fondo de página ligeramente gris para que resalte el contenido blanco */
 }
 
-/* 2. Cuando el sidebar tiene la clase 'hidden', el margen desaparece */
-#sidebar.hidden ~ .main-content, 
-body.sidebar-hidden .main-content { 
-    margin-left: 0 !important; 
-}
-
-/* 3. Asegura que el Sidebar no deje espacios raros */
-#sidebar { 
-    transition: transform .3s ease; 
-    z-index: 1040; 
-}
-
-#sidebar.hidden { 
-    transform: translateX(-100%); 
-}
+/* Ocultar sidebar */
+#sidebar.hidden { transform: translateX(-100%); }
+body.sidebar-hidden .main-content { margin-left: 0 !important; }

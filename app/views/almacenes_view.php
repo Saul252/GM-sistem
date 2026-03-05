@@ -1,19 +1,31 @@
 
+
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Almacenes | Sistema</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <link href="/cfsistem/css/style.css" rel="stylesheet"> 
+    
     <link href="/cfsistem/css/almacenes.css" rel="stylesheet">
+    <?php 
+    // Llamamos a la función que imprime Bootstrap y layout.css
+    if (function_exists('cargarEstilos')) {
+        cargarEstilos(); 
+    }
+    ?>
+    
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
-
 <body>
 
-    <?php renderSidebar($paginaActual); ?>
+    <?php renderizarLayout($paginaActual); ?>
 
     <div class="main-content">
         <h2 class="mb-4 fw-bold">
@@ -182,73 +194,76 @@
             });
     });
     </script>
-    <div class="modal fade" id="modalTraspaso" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title"><i class="bi bi-arrow-left-right"></i> Nuevo Traspaso</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="formTraspaso" action="/cfsistem/app/backend/almacen/procesar_traspaso.php" method="POST">
-                    <div class="modal-body">
-
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">1. Almacén de Origen</label>
-                            <select name="almacen_origen_id" id="origen_id" class="form-select border-primary" required
-                                onchange="filtrarProductosPorOrigen()">
-                                <option value="">Seleccione donde sale la mercancía...</option>
-                                <?php foreach($almacenes as $alm): ?>
+   <div class="modal fade" id="modalTraspaso" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title"><i class="bi bi-arrow-left-right"></i> Nuevo Traspaso</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="formTraspaso" action="/cfsistem/app/backend/almacen/procesar_traspaso.php" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">1. Almacén de Origen</label>
+                        <select name="almacen_origen_id" id="origen_id" class="form-select border-primary" required onchange="filtrarProductosPorOrigen()">
+                            <option value="">Seleccione donde sale la mercancía...</option>
+                            <?php foreach($almacenes as $alm): ?>
                                 <option value="<?= $alm['id'] ?>"><?= htmlspecialchars($alm['nombre']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">2. Producto a mover</label>
+                        <select name="producto_id" id="traspaso_producto" class="form-select" required disabled onchange="actualizarMaximo()">
+                            <option value="">Primero seleccione un origen...</option>
+                        </select>
+                        <div id="info_stock" class="form-text text-primary fw-bold"></div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">3. Almacén Destino</label>
+                            <select name="almacen_destino_id" id="destino_id" class="form-select" required>
+                                <option value="">¿A dónde va la mercancía?</option>
+                                <?php foreach($todosLosAlmacenes as $alm_dest): ?>
+                                    <?php if ($almacen_usuario > 0 && $alm_dest['id'] == $almacen_usuario) continue; ?>
+                                    <option value="<?= $alm_dest['id'] ?>"><?= htmlspecialchars($alm_dest['nombre']) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">2. Producto a mover</label>
-                            <select name="producto_id" id="traspaso_producto" class="form-select" required disabled
-                                onchange="actualizarMaximo()">
-                                <option value="">Primero seleccione un origen...</option>
-                            </select>
-                            <div id="info_stock" class="form-text text-primary fw-bold"></div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">3. Almacén Destino</label>
-                                <select name="almacen_destino_id" id="destino_id" class="form-select" required>
-                                    <option value="">¿A dónde va la mercancía?</option>
-                                    <?php foreach($todosLosAlmacenes as $alm_dest): ?>
-                                    <?php 
-        // Si el usuario es operativo, ocultamos su propio almacén del destino
-        // Si es Admin ($almacen_usuario == 0), se muestran todos (el JS se encarga de validar)
-        if ($almacen_usuario > 0 && $alm_dest['id'] == $almacen_usuario) continue; 
-        ?>
-                                    <option value="<?= $alm_dest['id'] ?>"><?= htmlspecialchars($alm_dest['nombre']) ?>
-                                    </option>
-                                    <?php endforeach; ?>
-                                </select>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">4. Cantidad a Traspasar</label>
+                            <div class="input-group">
+                                <input type="number" id="traspaso_factor_input" class="form-control text-center" placeholder="0" min="0">
+                                <span class="input-group-text" id="label_unidad_reporte" style="min-width: 80px;">Unid.</span>
+                                
+                                <input type="number" id="traspaso_piezas_input" class="form-control text-center" placeholder="0" min="0" step="any">
+                                <span class="input-group-text">Pzas.</span>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-bold">4. Cantidad</label>
-                                <input type="number" step="0.01" name="cantidad" id="cantidad_traspaso"
-                                    class="form-control" required min="0.01">
+                            
+                            <input type="hidden" name="cantidad" id="cantidad_traspaso_final" required>
+
+                            <div id="resumen_conversion" class="mt-2 p-2 rounded bg-light border-start border-4 border-primary" style="display:none; font-size: 0.9rem;">
+                                <strong>Movimiento total:</strong> <span id="txt_total_pzas">0</span> piezas.
                             </div>
                         </div>
+                    </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Observaciones</label>
-                            <textarea name="observaciones" class="form-control" rows="2"></textarea>
-                        </div>
+                    <div class="mb-3">
+                        <label class="form-label">Observaciones</label>
+                        <textarea name="observaciones" class="form-control" rows="2"></textarea>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary" id="btnGuardarTraspaso">Solicitar
-                            Movimiento</button>
-                    </div>
-                </form>
-            </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" id="btnGuardarTraspaso">Solicitar Movimiento</button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 
 
     <div class="modal fade" id="modalTraspasosGestion" tabindex="-1">
@@ -499,35 +514,6 @@
         </div>
     </div>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 <div class="modal fade" id="modalEditarProducto" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
@@ -636,50 +622,7 @@
         </div>
     </div>
 </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
+   
    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/cfsistem/app/backend/js/filtros_almacen.js"></script>
@@ -693,8 +636,111 @@
     <script src="/cfsistem/app/backend/js/cargar_traspasos.js"></script>
     <script src="/cfsistem/app/backend/js/aceptar_arribo.js"></script>
      <!-- --- Lógica de Control de Conversión --- -->
-    <script src="/cfsistem/app/backend/js/calculo_de_conversion.js"></script>">
-    <script src="/cfsistem/app/backend/js/editar_producto.js"></script>">
+    <script src="/cfsistem/app/backend/js/calculo_de_conversion.js"></script>
+    <script src="/cfsistem/app/backend/js/editar_producto.js"></script>
+
+ <script src="/cfsistem/app/backend/js/actualizar_producto.js"></script>
+<script>
+    let factorGlobal = 1;
+let unidadGlobal = 'Unid.';
+
+function filtrarProductosPorOrigen() {
+    const origenId = document.getElementById('origen_id').value;
+    const selectProd = document.getElementById('traspaso_producto');
+    
+    selectProd.innerHTML = '<option value="">Seleccione producto...</option>';
+    
+    if (!origenId) {
+        selectProd.disabled = true;
+        return;
+    }
+
+    // Filtramos los productos del array que viene de tu consulta PHP
+    const disponibles = productosInventario.filter(p => p.almacen_id == origenId && p.stock > 0);
+
+    if (disponibles.length > 0) {
+        disponibles.forEach(p => {
+            const option = document.createElement('option');
+            option.value = p.id;
+            option.text = `${p.sku} - ${p.nombre} (Stock: ${p.stock})`;
+            
+            // Guardamos los datos del modelo en el dataset del option
+            option.dataset.max = p.stock;
+            option.dataset.factor = p.factor_conversion;
+            option.dataset.unidad = p.unidad_reporte || 'Unid.';
+            
+            selectProd.appendChild(option);
+        });
+        selectProd.disabled = false;
+    } else {
+        selectProd.innerHTML = '<option value="">Sin stock en este almacén</option>';
+        selectProd.disabled = true;
+    }
+}
+
+function actualizarMaximo() {
+    const selectProd = document.getElementById('traspaso_producto');
+    const selected = selectProd.options[selectProd.selectedIndex];
+    
+    if(selected.value !== "") {
+        // Actualizamos variables de conversión
+        factorGlobal = parseFloat(selected.dataset.factor) || 1;
+        unidadGlobal = selected.dataset.unidad;
+        const maxStock = parseFloat(selected.dataset.max);
+
+        // Actualizamos interfaz
+        document.getElementById('label_unidad_reporte').innerText = unidadGlobal;
+        document.getElementById('info_stock').innerText = `Stock disponible: ${maxStock} piezas`;
+        document.getElementById('resumen_conversion').style.display = 'block';
+        
+        // Limpiamos inputs
+        document.getElementById('traspaso_factor_input').value = '';
+        document.getElementById('traspaso_piezas_input').value = '';
+        calcularConversionTraspaso();
+    }
+}
+
+function calcularConversionTraspaso() {
+    const fVal = parseFloat(document.getElementById('traspaso_factor_input').value) || 0;
+    const pVal = parseFloat(document.getElementById('traspaso_piezas_input').value) || 0;
+    
+    // El cálculo que va a la BD: (Factor * Valor Unidad) + Piezas
+    const totalPiezas = (fVal * factorGlobal) + pVal;
+    
+    document.getElementById('cantidad_traspaso_final').value = totalPiezas;
+    document.getElementById('txt_total_pzas').innerText = totalPiezas.toFixed(2);
+
+    // Validación visual de stock
+    const max = parseFloat(document.getElementById('traspaso_producto').options[document.getElementById('traspaso_producto').selectedIndex].dataset.max);
+    const info = document.getElementById('info_stock');
+    if(totalPiezas > max) {
+        info.className = "form-text text-danger fw-bold";
+        info.innerText = `⚠️ ¡Exceso! Solo hay ${max} piezas disponibles.`;
+    } else {
+        info.className = "form-text text-primary fw-bold";
+        info.innerText = `Stock disponible: ${max} piezas`;
+    }
+}
+
+// Lógica de "Brinco": Si pone 20 bultos y el factor es 20, se vuelve 1 Tonelada automáticamente
+document.getElementById('traspaso_piezas_input').addEventListener('change', function() {
+    let pzas = parseFloat(this.value) || 0;
+    if (pzas >= factorGlobal && factorGlobal > 1) {
+        let unidadesMas = Math.floor(pzas / factorGlobal);
+        let restoPzas = pzas % factorGlobal;
+        
+        let inputFactor = document.getElementById('traspaso_factor_input');
+        inputFactor.value = (parseFloat(inputFactor.value) || 0) + unidadesMas;
+        this.value = restoPzas;
+    }
+    calcularConversionTraspaso();
+});
+
+document.getElementById('traspaso_factor_input').addEventListener('input', calcularConversionTraspaso);
+document.getElementById('traspaso_piezas_input').addEventListener('input', calcularConversionTraspaso);
+</script>
+
+    
 </body>
 
 </html>

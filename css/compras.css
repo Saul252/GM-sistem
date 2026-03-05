@@ -50,6 +50,7 @@
         color: #dc3545;
         font-weight: bold;
     }
+    
 
     @media (max-width: 768px) {
         .main-content {

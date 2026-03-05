@@ -138,7 +138,7 @@ $almacen_usuario = $_SESSION['almacen_id'] ?? 0;
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
 
-    <script>
+ <script>
     $(document).ready(function() {
         const almacenUsuario = <?= $almacen_usuario ?>;
 
@@ -152,7 +152,10 @@ $almacen_usuario = $_SESSION['almacen_id'] ?? 0;
                     className: 'btn btn-danger btn-sm px-3 rounded-pill shadow-sm me-2',
                     title: 'Reporte de Movimientos de Inventario',
                     orientation: 'landscape',
-                    exportOptions: { columns: [0, 1, 2, 3, 4, 5, 6] }
+                    exportOptions: { 
+                        columns: [0, 1, 2, 3, 4, 5, 6],
+                        stripHtml: true // Para que en el PDF no salgan etiquetas HTML
+                    }
                 },
                 {
                     extend: 'print',
@@ -164,6 +167,28 @@ $almacen_usuario = $_SESSION['almacen_id'] ?? 0;
             order: [[0, 'desc']],
             pageLength: 25
         });
+
+        // --- FUNCIÓN DE CONVERSIÓN PARA EL HISTORIAL ---
+        function formatearCantidadHistorial(cantidad, factor, unidad) {
+            const cant = parseFloat(cantidad) || 0;
+            const fact = parseFloat(factor) || 1;
+            const unid = unidad || 'Unid.';
+
+            // Si hay factor y la cantidad alcanza para formar al menos una unidad mayor
+            if (fact > 1 && cant >= fact) {
+                const unidadesMayores = Math.floor(cant / fact);
+                const restoPiezas = Math.round((cant % fact) * 100) / 100;
+                
+                let html = `<div class="fw-bold text-dark">${unidadesMayores} ${unid}</div>`;
+                if (restoPiezas > 0) {
+                    html += `<small class="text-muted text-nowrap">+ ${restoPiezas} pzas</small>`;
+                }
+                return html;
+            }
+            
+            // Si es menor al factor, mostrar piezas normales
+            return `<div class="fw-bold text-dark">${cant} <small class="fw-normal text-muted">pzas</small></div>`;
+        }
 
         function cargarHistorial() {
             const params = {
@@ -185,11 +210,14 @@ $almacen_usuario = $_SESSION['almacen_id'] ?? 0;
                     tabla.clear();
                     if(response.data && response.data.length > 0) {
                         response.data.forEach(m => {
+                            // Aplicamos la conversión antes de añadir la fila
+                            const cantidadCelda = formatearCantidadHistorial(m.cantidad, m.factor_conversion, m.unidad_reporte);
+                            
                             tabla.row.add([
                                 `<span class="ps-3 text-dark fw-bold">${m.fecha_format}</span>`,
                                 `<div>${m.producto}</div><small class="text-primary fw-medium">${m.sku}</small>`,
                                 `<div class="text-center"><span class="badge badge-mov bg-${m.color}">${m.tipo}</span></div>`,
-                                `<div class="text-center fw-bold text-dark">${m.cantidad}</div>`,
+                                `<div class="text-center">${cantidadCelda}</div>`,
                                 `<div class="small"><b>De:</b> ${m.origen || '-'}<br><b>A:</b> ${m.destino || '-'}</div>`,
                                 `<div class="small text-muted"><i class="bi bi-person"></i> ${m.u_reg}</div>`,
                                 `<small class="text-muted fst-italic">${m.obs || '-'}</small>`,
@@ -198,6 +226,9 @@ $almacen_usuario = $_SESSION['almacen_id'] ?? 0;
                         });
                     }
                     tabla.draw();
+                },
+                error: function(e) {
+                    console.error("Error al cargar historial", e);
                 },
                 complete: () => $('#loader').addClass('d-none')
             });
