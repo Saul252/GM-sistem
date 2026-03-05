@@ -43,7 +43,11 @@ function calcularGasto() {
         var formData = new FormData(this);
 
         $.ajax({
-            url: 'egresosController.php?action=guardarGasto',
+            // Opción A: Ruta absoluta (la más segura)
+url: '/cfsistem/app/controllers/egresosController.php?action=guardarCompraInventario',
+
+// Opción B: Ruta relativa (subiendo niveles)
+// url: '../../controllers/egresosController.php?action=guardarCompraInventario',
             type: 'POST',
             data: formData, // <--- Enviamos el objeto FormData
             contentType: false, // <--- IMPORTANTE: No dejar que jQuery ponga el content-type

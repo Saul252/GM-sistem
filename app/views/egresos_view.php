@@ -1,3 +1,11 @@
+<?php 
+$ruta = __DIR__ . '/egresosComponets/modalCompra.php';
+if (!file_exists($ruta)) {
+    echo "<script>console.error('ERROR: El archivo del modal no existe en: $ruta');</script>";
+}
+require_once $ruta;
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -285,81 +293,28 @@
             </form>
         </div>
     </div>
-    <div class="modal fade" id="modalAgregarCompra" tabindex="-1">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content shadow-lg border-0">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title"><i class="bi bi-cart-plus-fill me-2"></i> Registrar Compra / Entrada de
-                        Mercancía</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <form id="formNuevaCompra" enctype="multipart/form-data">
-                    <div class="modal-body">
-                        <div class="row g-3 mb-4">
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold">Folio / Factura</label>
-                                <input type="text" name="folio" class="form-control" placeholder="Ej: FAC-123">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold">Proveedor / Entidad</label>
-                                <input type="text" name="beneficiario" class="form-control" required>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold">Evidencia (PDF/XML)</label>
-                                <input type="file" name="documento" class="form-control">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold">Método de Pago</label>
-                                <select name="metodo_pago" class="form-select">
-                                    <option value="Efectivo">Efectivo</option>
-                                    <option value="Transferencia">Transferencia</option>
-                                    <option value="Crédito">Crédito</option>
-                                </select>
-                            </div>
-                        </div>
 
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="fw-bold mb-0 text-primary">Detalle de Productos</h6>
-                            <button type="button" class="btn btn-outline-success btn-sm"
-                                onclick="abrirNuevoProductoDesdeCompra()">
-                                <i class="bi bi-plus-circle"></i> ¿Producto no existe? Crear Nuevo
-                            </button>
-                        </div>
-
-                        <div class="table-responsive">
-                            <table class="table table-sm table-hover align-middle border" id="tablaDetalleCompra">
-                                <thead class="table-light small">
-                                    <tr>
-                                        <th width="30%">Producto (Buscador)</th>
-                                        <th class="text-center">U. Compra</th>
-                                        <th class="text-center">Factor</th>
-                                        <th class="text-center" width="100">Cant. Compra</th>
-                                        <th class="text-center" width="120">Stock Base (Entrada)</th>
-                                        <th width="150">Almacén Destino</th>
-                                        <th width="120">Costo Unit.</th>
-                                        <th class="text-end" width="120">Subtotal</th>
-                                        <th width="40"></th>
-                                    </tr>
-                                </thead>
-                                <tbody id="contenedorDetallesCompra">
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="modal-footer bg-light">
-                        <div class="me-auto h5 mb-0">Total Compra: <span id="txtTotalCompra"
-                                class="fw-bold text-primary">$0.00</span></div>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary px-4 fw-bold shadow">GUARDAR COMPRA</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="/cfsistem/app/backend/compras_js/modalGastoslogica.js"></script>
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script src="/cfsistem/app/backend/compras_js/modalGastoslogica.js"></script>
+<script>
+    // Forzamos que sea global con window.
+    window.DATA_COMPRAS = {
+        productos: <?php echo json_encode($productos); ?>,
+        almacenes: <?php echo json_encode($almacenes); ?>
+    };
+    // Imprime esto en la consola para que verifiques si hay datos
+    console.log("Productos cargados:", window.DATA_COMPRAS.productos);
+</script>
+
+<?php require_once __DIR__ . '/egresosComponets/modalCompra.php'; ?>
 </body>
 
 </html>

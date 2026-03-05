@@ -209,7 +209,7 @@ body.sidebar-hidden #sidebar { transform: translateX(-100%); }
 
             <?php if (puedeVerModulo('usuarios')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/views/usuarios.php" class="nav-link <?= $archivoActual == 'usuarios.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/usuarios.php" class="nav-link <?= $archivoActual == 'usuarios.php' ? 'active' : '' ?>">
                     <i class="bi bi-people"></i><span>Usuarios</span>
                 </a>
             </li>
@@ -217,7 +217,7 @@ body.sidebar-hidden #sidebar { transform: translateX(-100%); }
 
             <?php if (puedeVerModulo('compras')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/views/compras.php" class="nav-link <?= ($archivoActual == 'compras.php' || $archivoActual == 'gastos.php') ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/egresosController.php" class="nav-link <?= ($archivoActual == 'compras.php' || $archivoActual == 'gastos.php') ? 'active' : '' ?>">
                     <i class="bi bi-bag-check"></i><span>Compras</span>
                 </a>
             </li>
@@ -225,7 +225,7 @@ body.sidebar-hidden #sidebar { transform: translateX(-100%); }
 
             <?php if (puedeVerModulo('clientes')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/views/clientes.php" class="nav-link <?= $archivoActual == 'clientes.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/clientes.php" class="nav-link <?= $archivoActual == 'clientes.php' ? 'active' : '' ?>">
                     <i class="bi bi-person-lines-fill"></i><span>Clientes</span>
                 </a>
             </li>

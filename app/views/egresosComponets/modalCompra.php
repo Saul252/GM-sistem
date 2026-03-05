@@ -1,0 +1,327 @@
+<div class="modal fade" id="modalNuevaCompra" tabindex="-1" aria-labelledby="modalNuevaCompraLabel" aria-hidden="true"
+    data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="modalNuevaCompraLabel">
+                    <i class="bi bi-box-seam-fill me-2"></i> Registrar Compra / Entrada de Inventario
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+
+            <form id="formNuevaCompra" enctype="multipart/form-data" autocomplete="off">
+                <div class="modal-body bg-light">
+                    <div class="card mb-4 border-0 shadow-sm">
+                        <div class="card-body row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Proveedor</label>
+                                <input type="text" name="proveedor" class="form-control"
+                                    placeholder="Nombre del proveedor" required>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold">Folio de Factura</label>
+                                <input type="text" name="folio" class="form-control" placeholder="Ej: F-123" required>
+                            </div>
+                            <div class="col-md-4">
+    <label>Almacén de Cargo:</label>
+    <?php if ($_SESSION['rol_nombre'] === 'Administrador' || $_SESSION['rol_id'] == 1): ?>
+        <select name="almacen_id_cabecera" class="form-select" required>
+            <?php foreach($almacenes as $a): ?>
+                <option value="<?= $a['id'] ?>"><?= $a['nombre'] ?></option>
+            <?php endforeach; ?>
+        </select>
+    <?php else: ?>
+        <input type="text" class="form-control" value="<?= $_SESSION['almacen_nombre'] ?>" readonly>
+        <input type="hidden" name="almacen_id_cabecera" value="<?= $_SESSION['almacen_id'] ?>">
+    <?php endif; ?>
+</div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold">Evidencia (PDF/IMG)</label>
+                                <input type="file" name="evidencia_compra" class="form-control" accept="image/*,.pdf">
+                            </div>
+                            <div class="col-md-3 text-end">
+                                <label class="form-label small fw-bold text-muted">TOTAL FACTURA</label>
+                                <div class="h3 text-success fw-bold" id="granTotalCompra">$ 0.00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold mb-3 d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-list-check me-2"></i>Detalle de Productos</span>
+                        <span class="badge bg-dark" id="conteoItems">0 Productos</span>
+                    </h6>
+
+                    <div id="contenedorItemsCompra"></div>
+
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-4"
+                            onclick="agregarFilaCompra()">
+                            <i class="bi bi-plus-circle me-1"></i> Agregar Producto a la Lista
+                        </button>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-white shadow-sm">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success px-5" id="btnGuardarCompra"
+                        onclick="procesarGuardadoCompra(); return false;">
+                        <i class="bi bi-save me-2"></i> Guardar Compra e Inventario
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * LÓGICA DE COMPRAS - CF SISTEM
+ */
+
+function abrirModalCompra() {
+    if (typeof DATA_COMPRAS === 'undefined') {
+        Swal.fire('Error', 'No se cargaron los catálogos de productos/almacenes.', 'error');
+        return;
+    }
+    $('#formNuevaCompra')[0].reset();
+    $('#contenedorItemsCompra').empty();
+    $('#granTotalCompra').text('$ 0.00');
+    agregarFilaCompra();
+    $('#modalNuevaCompra').modal('show');
+}
+
+function agregarFilaCompra() {
+    const idUnico = Date.now();
+
+    let opcionesProd = '<option value="">-- Buscar Producto --</option>';
+    DATA_COMPRAS.productos.forEach(p => {
+        opcionesProd +=
+            `<option value="${p.id}" data-factor="${p.factor_conversion}" data-ubase="${p.unidad_medida}" data-urep="${p.unidad_reporte}">${p.nombre} (${p.sku})</option>`;
+    });
+
+    let filasAlmacenes = '';
+    DATA_COMPRAS.almacenes.forEach(alm => {
+        filasAlmacenes += `
+        <tr>
+            <td class="text-center align-middle">
+                <input type="checkbox" name="items[${idUnico}][almacenes][${alm.id}][activo]" class="form-check-input check-activo" checked onchange="recalcularTotales(${idUnico})">
+            </td>
+            <td class="small align-middle">${alm.nombre}</td>
+            <td>
+                <input type="number" name="items[${idUnico}][almacenes][${alm.id}][cantidad]" class="form-control form-control-sm input-reparto" value="0" min="0" step="0.01" oninput="validarReparto(${idUnico})">
+            </td>
+        </tr>`;
+    });
+
+    const html = `
+    <div class="card mb-4 border-start border-4 border-success shadow-sm item-compra" id="card_item_${idUnico}">
+        <div class="card-body">
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label class="small fw-bold">Producto</label>
+                    <select name="items[${idUnico}][producto_id]" class="form-select select2-compra" onchange="actualizarLabelsUnidad(${idUnico}, this)" required>
+                        ${opcionesProd}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="small fw-bold label-urep">Cantidad Mayoreo</label>
+                    <input type="number" class="form-control input-mayoreo" value="0" min="0" step="0.01" oninput="recalcularTotales(${idUnico})">
+                </div>
+                <div class="col-md-2">
+                    <label class="small fw-bold label-ubase">Cant. Piezas</label>
+                    <input type="number" class="form-control input-sueltas" value="0" min="0" step="0.01" oninput="recalcularTotales(${idUnico})">
+                </div>
+                <div class="col-md-3">
+                    <label class="small fw-bold">Costo Total Renglón</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light fw-bold">$</span>
+                        <input type="number" name="items[${idUnico}][total_item]" class="form-control input-costo-total" value="0" step="0.01" oninput="actualizarGranTotal()" required>
+                    </div>
+                </div>
+                <div class="col-md-1 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="$('#card_item_${idUnico}').remove(); actualizarGranTotal();">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="p-2 bg-dark text-white rounded text-center">
+                        <small class="d-block opacity-75">STOCK TOTAL A INGRESAR:</small>
+                        <span class="h5 mb-0 fw-bold span-total-base">0</span> <small class="label-ubase-text">pzas</small>
+                        <input type="hidden" class="hidden-factor" value="1">
+                        <input type="hidden" class="hidden-total-piezas" name="items[${idUnico}][cantidad_total_piezas]" value="0">
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="alert alert-info py-2 px-3 m-0 small d-flex justify-content-between align-items-center h-100 border-0 shadow-sm rounded">
+                        <span><i class="bi bi-info-circle-fill me-2"></i>Reparte las piezas entre los almacenes destino:</span>
+                        <span class="badge bg-danger" id="error_reparto_${idUnico}" style="display:none;">Suma no coincide</span>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-3">
+            <table class="table table-sm table-borderless align-middle mb-0">
+                <thead class="text-muted" style="font-size: 0.75rem;">
+                    <tr><th width="10%" class="text-center">¿USAR?</th><th width="50%">ALMACÉN</th><th width="40%">PIEZAS FÍSICAS</th></tr>
+                </thead>
+                <tbody>${filasAlmacenes}</tbody>
+            </table>
+        </div>
+    </div>`;
+
+    $('#contenedorItemsCompra').append(html);
+    setTimeout(() => {
+        $(`#card_item_${idUnico} .select2-compra`).select2({
+            theme: 'bootstrap-5',
+            dropdownParent: $('#modalNuevaCompra')
+        });
+    }, 50);
+    actualizarConteo();
+}
+
+function actualizarLabelsUnidad(id, select) {
+    const opt = $(select).find(':selected');
+    const factor = opt.data('factor') || 1;
+    const uBase = opt.data('ubase') || 'Piezas';
+    const uRep = opt.data('urep') || 'Mayoreo';
+    const card = $(`#card_item_${id}`);
+    card.find('.hidden-factor').val(factor);
+    card.find('.label-urep').text(uRep);
+    card.find('.label-ubase').text(uBase);
+    card.find('.label-ubase-text').text(uBase);
+    recalcularTotales(id);
+}
+
+function recalcularTotales(id) {
+    const card = $(`#card_item_${id}`);
+    const factor = parseFloat(card.find('.hidden-factor').val()) || 0;
+    const total = (parseFloat(card.find('.input-mayoreo').val()) || 0) * factor + (parseFloat(card.find(
+        '.input-sueltas').val()) || 0);
+    card.find('.span-total-base').text(total.toLocaleString());
+    card.find('.hidden-total-piezas').val(total);
+    validarReparto(id);
+    actualizarGranTotal();
+}
+
+function validarReparto(id) {
+    const card = $(`#card_item_${id}`);
+    const total = parseFloat(card.find('.hidden-total-piezas').val()) || 0;
+    let suma = 0;
+    card.find('.input-reparto').each(function() {
+        if ($(this).closest('tr').find('.check-activo').is(':checked')) suma += parseFloat($(this).val()) || 0;
+    });
+    const error = $(`#error_reparto_${id}`);
+    if (Math.abs(suma - total) > 0.001 && total > 0) {
+        card.find('.alert').addClass('alert-danger text-danger').removeClass('alert-info text-dark');
+        error.show().text(`Diferencia: ${(total - suma).toFixed(2)}`);
+    } else {
+        card.find('.alert').addClass('alert-info text-dark').removeClass('alert-danger text-danger');
+        error.hide();
+    }
+}
+
+function actualizarGranTotal() {
+    let granTotal = 0;
+    $('.input-costo-total').each(function() {
+        granTotal += parseFloat($(this).val()) || 0;
+    });
+    $('#granTotalCompra').text('$ ' + granTotal.toLocaleString(undefined, {
+        minimumFractionDigits: 2
+    }));
+    actualizarConteo();
+}
+
+function actualizarConteo() {
+    const n = $('.item-compra').length;
+    $('#conteoItems').text(`${n} Producto${n !== 1 ? 's' : ''}`);
+}
+
+/**
+ * MANEJO DEL SUBMIT (BLINDADO)
+ */
+function procesarGuardadoCompra(event) {
+    if (event) {
+        event.preventDefault(); // DETIENE EL ENVÍO TRADICIONAL
+        event.stopPropagation();
+    }
+    // Evita que el formulario se envíe por la vía tradicional (GET)
+   // if(event) event.preventDefault(); 
+    
+    console.log("Iniciando proceso de guardado manual...");
+
+    // 1. Validar Repartos
+    let inconsistencias = 0;
+    $('.item-compra').each(function() {
+        const totalCalculado = parseFloat($(this).find('.hidden-total-piezas').val()) || 0;
+        let sumaAlmacenes = 0;
+        $(this).find('.input-reparto').each(function() {
+            if ($(this).closest('tr').find('.check-activo').is(':checked')) {
+                sumaAlmacenes += parseFloat($(this).val()) || 0;
+            }
+        });
+        if (Math.abs(totalCalculado - sumaAlmacenes) > 0.01) inconsistencias++;
+    });
+
+    if (inconsistencias > 0) {
+        Swal.fire('Atención', 'La distribución en almacenes no coincide con el total físico calculado.', 'warning');
+        return false; // Importante para detener ejecuciones accidentales
+    }
+
+    Swal.fire({
+        title: '¿Confirmar Registro?',
+        text: "Se actualizará el stock y se registrará el gasto.",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#198754',
+        confirmButtonText: 'Sí, guardar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const formElement = document.getElementById('formNuevaCompra');
+            const formData = new FormData(formElement);
+
+            $.ajax({
+                // Asegúrate de que esta ruta sea correcta según tu estructura de carpetas
+                url: '/cfsistem/app/controllers/egresosController.php?action=guardarCompraInventario',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                cache: false, // Evita problemas con archivos temporales
+                beforeSend: function() {
+                    $('#btnGuardarCompra').prop('disabled', true).html(
+                        '<span class="spinner-border spinner-border-sm"></span> Guardando...');
+                },
+                success: function(res) {
+                    // Si el controlador hace echo de un error antes del JSON, esto fallará.
+                    // Por eso en el error log aparecía el Error 500.
+                    try {
+                        const data = typeof res === 'string' ? JSON.parse(res) : res;
+                        if (data.success) {
+                            Swal.fire('¡Éxito!', data.message, 'success').then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('Error', data.message, 'error');
+                            $('#btnGuardarCompra').prop('disabled', false).html(
+                                '<i class="bi bi-save me-2"></i> Guardar Compra e Inventario');
+                        }
+                    } catch (err) {
+                        console.error("Respuesta no válida del servidor:", res);
+                        Swal.fire('Error Crítico', 'El servidor devolvió una respuesta ilegible. Revisa la consola.', 'error');
+                        $('#btnGuardarCompra').prop('disabled', false).html('Guardar');
+                    }
+                },
+                error: function(xhr) {
+                    // Aquí es donde capturamos el Error 500 real
+                    console.error("Error 500 - Detalle:", xhr.responseText);
+                    Swal.fire('Error de Servidor', 'El controlador falló (Código 500). Verifica los logs de PHP.', 'error');
+                    $('#btnGuardarCompra').prop('disabled', false).html('Guardar');
+                }
+            });
+        }
+    });
+}
+</script>

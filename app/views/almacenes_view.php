@@ -640,105 +640,90 @@
     <script src="/cfsistem/app/backend/js/editar_producto.js"></script>
 
  <script src="/cfsistem/app/backend/js/actualizar_producto.js"></script>
-<script>
-    let factorGlobal = 1;
-let unidadGlobal = 'Unid.';
+<script>// --- MÓDULO DE COMPRA DISTRIBUIDA ---
 
-function filtrarProductosPorOrigen() {
-    const origenId = document.getElementById('origen_id').value;
-    const selectProd = document.getElementById('traspaso_producto');
-    
-    selectProd.innerHTML = '<option value="">Seleccione producto...</option>';
-    
-    if (!origenId) {
-        selectProd.disabled = true;
-        return;
-    }
-
-    // Filtramos los productos del array que viene de tu consulta PHP
-    const disponibles = productosInventario.filter(p => p.almacen_id == origenId && p.stock > 0);
-
-    if (disponibles.length > 0) {
-        disponibles.forEach(p => {
-            const option = document.createElement('option');
-            option.value = p.id;
-            option.text = `${p.sku} - ${p.nombre} (Stock: ${p.stock})`;
-            
-            // Guardamos los datos del modelo en el dataset del option
-            option.dataset.max = p.stock;
-            option.dataset.factor = p.factor_conversion;
-            option.dataset.unidad = p.unidad_reporte || 'Unid.';
-            
-            selectProd.appendChild(option);
-        });
-        selectProd.disabled = false;
-    } else {
-        selectProd.innerHTML = '<option value="">Sin stock en este almacén</option>';
-        selectProd.disabled = true;
-    }
+function abrirModalCompra() {
+    $('#formNuevaCompra')[0].reset();
+    $('#cuerpoTablaCompra').empty();
+    agregarFilaCompraPrincipal();
+    $('#modalAgregarCompra').modal('show');
 }
 
-function actualizarMaximo() {
-    const selectProd = document.getElementById('traspaso_producto');
-    const selected = selectProd.options[selectProd.selectedIndex];
-    
-    if(selected.value !== "") {
-        // Actualizamos variables de conversión
-        factorGlobal = parseFloat(selected.dataset.factor) || 1;
-        unidadGlobal = selected.dataset.unidad;
-        const maxStock = parseFloat(selected.dataset.max);
+function agregarFilaCompraPrincipal(prod = null) {
+    const idFila = Date.now();
+    let filaHtml = `
+    <tr class="table-light">
+        <td colspan="8" class="p-0">
+            <div class="card m-2 border-primary">
+                <div class="card-body">
+                    <div class="row g-2 align-items-center mb-3">
+                        <div class="col-md-5">
+                            <label class="small fw-bold">Producto</label>
+                            <input type="text" class="form-control form-control-sm" placeholder="Buscar..." oninput="buscarEnCompra(this)" value="${prod ? prod.nombre : ''}">
+                            <input type="hidden" name="items[${idFila}][producto_id]" class="p-id" value="${prod ? prod.id : ''}">
+                            <div class="res-ajax shadow" style="display:none; position:absolute; z-index:1000; background:white; width:300px;"></div>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="small fw-bold">Unidad Entrada</label>
+                            <select name="items[${idFila}][usa_conversion]" class="form-select form-select-sm select-unidad" onchange="calcularDistribucion('${idFila}')">
+                                <option value="0">Piezas (Base)</option>
+                                <option value="1">Unidad Reporte</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="small fw-bold">Cant. Facturada</label>
+                            <input type="number" name="items[${idFila}][cantidad_factura]" class="form-control form-control-sm cant-factura" value="0" oninput="calcularDistribucion('${idFila}')">
+                            <input type="hidden" class="val-factor" value="${prod ? prod.factor_conversion : '1'}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="small fw-bold text-primary">Total Piezas</label>
+                            <input type="text" class="form-control form-control-sm fw-bold total-piezas-h" readonly value="0">
+                        </div>
+                        <div class="col-md-1">
+                            <button type="button" class="btn btn-danger btn-sm mt-3" onclick="$(this).closest('tr').remove()"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </div>
 
-        // Actualizamos interfaz
-        document.getElementById('label_unidad_reporte').innerText = unidadGlobal;
-        document.getElementById('info_stock').innerText = `Stock disponible: ${maxStock} piezas`;
-        document.getElementById('resumen_conversion').style.display = 'block';
-        
-        // Limpiamos inputs
-        document.getElementById('traspaso_factor_input').value = '';
-        document.getElementById('traspaso_piezas_input').value = '';
-        calcularConversionTraspaso();
-    }
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered bg-white small">
+                            <thead class="table-secondary">
+                                <tr>
+                                    <th>Act.</th>
+                                    <th>Almacén</th>
+                                    <th>Ingresar Stock</th>
+                                    <th>P. Minorista</th>
+                                    <th>P. Mayorista</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach($almacenes as $a): ?>
+                                <tr>
+                                    <td class="text-center"><input type="checkbox" name="items[${idFila}][almacenes][<?= $a['id'] ?>][activo]" value="1" checked></td>
+                                    <td><?= $a['nombre'] ?></td>
+                                    <td><input type="number" name="items[${idFila}][almacenes][<?= $a['id'] ?>][stock]" class="form-control form-control-sm input-stock-dist" value="0"></td>
+                                    <td><input type="number" name="items[${idFila}][almacenes][<?= $a['id'] ?>][p_min]" class="form-control form-control-sm" placeholder="$"></td>
+                                    <td><input type="number" name="items[${idFila}][almacenes][<?= $a['id'] ?>][p_may]" class="form-control form-control-sm" placeholder="$"></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </td>
+    </tr>`;
+    $('#cuerpoTablaCompra').append(filaHtml);
 }
 
-function calcularConversionTraspaso() {
-    const fVal = parseFloat(document.getElementById('traspaso_factor_input').value) || 0;
-    const pVal = parseFloat(document.getElementById('traspaso_piezas_input').value) || 0;
-    
-    // El cálculo que va a la BD: (Factor * Valor Unidad) + Piezas
-    const totalPiezas = (fVal * factorGlobal) + pVal;
-    
-    document.getElementById('cantidad_traspaso_final').value = totalPiezas;
-    document.getElementById('txt_total_pzas').innerText = totalPiezas.toFixed(2);
+function calcularDistribucion(id) {
+    let card = $(`input[name="items[${id}][producto_id]"]`).closest('.card');
+    let cant = parseFloat(card.find('.cant-factura').val()) || 0;
+    let usaConversion = card.find('.select-unidad').val();
+    let factor = parseFloat(card.find('.val-factor').val()) || 1;
 
-    // Validación visual de stock
-    const max = parseFloat(document.getElementById('traspaso_producto').options[document.getElementById('traspaso_producto').selectedIndex].dataset.max);
-    const info = document.getElementById('info_stock');
-    if(totalPiezas > max) {
-        info.className = "form-text text-danger fw-bold";
-        info.innerText = `⚠️ ¡Exceso! Solo hay ${max} piezas disponibles.`;
-    } else {
-        info.className = "form-text text-primary fw-bold";
-        info.innerText = `Stock disponible: ${max} piezas`;
-    }
-}
-
-// Lógica de "Brinco": Si pone 20 bultos y el factor es 20, se vuelve 1 Tonelada automáticamente
-document.getElementById('traspaso_piezas_input').addEventListener('change', function() {
-    let pzas = parseFloat(this.value) || 0;
-    if (pzas >= factorGlobal && factorGlobal > 1) {
-        let unidadesMas = Math.floor(pzas / factorGlobal);
-        let restoPzas = pzas % factorGlobal;
-        
-        let inputFactor = document.getElementById('traspaso_factor_input');
-        inputFactor.value = (parseFloat(inputFactor.value) || 0) + unidadesMas;
-        this.value = restoPzas;
-    }
-    calcularConversionTraspaso();
-});
-
-document.getElementById('traspaso_factor_input').addEventListener('input', calcularConversionTraspaso);
-document.getElementById('traspaso_piezas_input').addEventListener('input', calcularConversionTraspaso);
-</script>
+    let totalPiezas = (usaConversion == "1") ? (cant * factor) : cant;
+    card.find('.total-piezas-h').val(totalPiezas.toFixed(2));
+}</script>
 
     
 </body>

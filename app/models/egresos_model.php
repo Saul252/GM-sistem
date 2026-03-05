@@ -34,7 +34,46 @@ public function obtenerAlmacenesActivos() {
      * 2. REGISTRA UN GASTO (CON EVIDENCIA Y DESCRIPCIÓN)
      * Según tu tabla 'gastos' y 'detalle_gasto'
      */
-public function registrarGasto($cabecera, $descripciones, $cantidades, $precios) {
+// CONSULTA 1: Obtener productos para el buscador
+    public function buscarProductos($termino) {
+        $query = "SELECT 
+                    id, 
+                    nombre, 
+                    sku, 
+                    unidad_medida,    -- Ej: 'Pieza'
+                    unidad_reporte,   -- Ej: 'Millar'
+                    factor_conversion -- Ej: 1000
+                  FROM productos 
+                  WHERE (nombre LIKE ? OR sku LIKE ?) 
+                  AND estado = 1 
+                  ";
+                  
+        $stmt = $this->db->prepare($query);
+        $likeTerm = "%$termino%";
+        $stmt->bind_param("ss", $likeTerm, $likeTerm);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+    /**
+ * Obtiene todos los productos activos para llenar el selector del modal
+ */
+public function listarProductos() {
+    $query = "SELECT 
+                id, 
+                nombre, 
+                sku, 
+                unidad_medida, 
+                unidad_reporte, 
+                factor_conversion 
+              FROM productos 
+              WHERE estado = 1 
+              ORDER BY nombre ASC";
+              
+    $res = $this->db->query($query);
+    if (!$res) return [];
+    return $res->fetch_all(MYSQLI_ASSOC);
+}
+    public function registrarGasto($cabecera, $descripciones, $cantidades, $precios) {
     // 1. Iniciar transacción
     $this->db->begin_transaction();
     
