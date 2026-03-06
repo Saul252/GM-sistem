@@ -3,6 +3,136 @@
 const USER_ALMACEN_ID = <?= json_encode($_SESSION['almacen_id']) ?>;
 const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
 </script>
+<style>
+:root {
+    --mac-border: #d1d1d6;
+    --mac-accent: #007aff; /* Azul clásico de Apple */
+    --mac-bg: #ffffff;
+}
+
+/* Contenedor Principal */
+.mac-select-container {
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px); /* Efecto cristal de Mac */
+    border-radius: 12px;
+    border: 1px solid var(--mac-border);
+    transition: all 0.3s ease;
+}
+
+/* Etiqueta */
+.mac-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #8e8e93;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* El Selector */
+.select-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.mac-select {
+    width: 100%;
+    appearance: none; /* Quitamos la flecha fea por defecto */
+    background: var(--mac-bg);
+    border: 1px solid var(--mac-border);
+    border-radius: 8px;
+    padding: 8px 30px 8px 12px;
+    font-size: 14px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #1d1d1f;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+/* Borde de color elegante al hacer foco */
+.mac-select.admin-active:focus {
+    outline: none;
+    border-color: var(--mac-accent);
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
+}
+
+/* Estado bloqueado para usuarios */
+.mac-select.user-locked:disabled {
+    background-color: #f5f5f7;
+    border-color: #d1d1d6;
+    color: #86868b;
+    cursor: default;
+    border-left: 4px solid var(--mac-accent); /* Acento de color lateral */
+}
+
+/* Flecha personalizada */
+.custom-arrow {
+    position: absolute;
+    right: 12px;
+    font-size: 10px;
+    color: #8e8e93;
+    pointer-events: none;
+}
+
+/* Badge inferior */
+.mac-badge-locked {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--mac-accent);
+    background: rgba(0, 122, 255, 0.08);
+    padding: 2px 8px;
+    border-radius: 10px;
+}
+
+</style>
+<style>
+/* Contenedor con el borde inicial sutil */
+.mac-select-container {
+    padding: 10px 14px;
+    background: #ffffff;
+    border: 1px solid #d1d1d6; /* Borde gris clásico de Mac */
+    border-radius: 12px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+/* El "Borde de Color Elegante" cuando el usuario entra al campo */
+.mac-select-container:focus-within {
+    border-color: #007aff; /* Azul Apple */
+    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15); /* Brillo exterior */
+    background: #fff;
+}
+
+/* Estilo de la etiqueta superior */
+.mac-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #8e8e93;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    display: block;
+}
+
+/* Limpieza del select nativo */
+.mac-select {
+    width: 100%;
+    border: none !important;
+    outline: none !important;
+    background: transparent;
+    font-size: 15px;
+    font-family: -apple-system, sans-serif;
+    color: #1d1d1f;
+    cursor: pointer;
+    appearance: none;
+}
+
+</style>
 <div class="modal fade" id="modalNuevaCompra" tabindex="-1" aria-labelledby="modalNuevaCompraLabel" aria-hidden="true"
     data-bs-backdrop="static">
     <div class="modal-dialog modal-xl">
@@ -28,29 +158,41 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
                                 <label class="form-label small fw-bold">Folio de Factura</label>
                                 <input type="text" name="folio" class="form-control" placeholder="Ej: F-123" required>
                             </div>
-                            <div class="col-md-4">
-                                <label class="form-label small fw-bold">Almacén de Cargo:</label>
-                                <?php  $es_admin = ($_SESSION['rol_id'] == 1);  ?>
-                                <select id="almacen_id_cabecera_visual"
-                                    class="form-select <?= $es_admin ? 'select2-cabecera' : 'bg-light' ?>"
-                                    <?= !$es_admin ? 'disabled' : 'name="almacen_id_cabecera"' ?> required>
-                                    <?php if ($es_admin): ?>
-                                    <option value="">-- Seleccionar Almacén --</option>
-                                    <?php endif; ?>
-                                    <?php foreach($almacenes as $a): ?>
-                                    <option value="<?= $a['id'] ?>"
-                                        <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
-                                        <?= $a['nombre'] ?>
-                                        <?= ($a['id'] == $_SESSION['almacen_id'] && !$es_admin) ? '(Asignado)' : '' ?>
-                                    </option>
-                                    <?php endforeach; ?>
-                                </select>
+                          <div class="col-md-4">
+    <div class="mac-select-container">
+        <label class="mac-label">
+            <i class="bi bi-box-seam"></i> Almacén de Cargo
+        </label>
+        
+        <?php $es_admin = ($_SESSION['rol_id'] == 1); ?>
+        
+        <div class="select-wrapper">
+            <select id="almacen_id_cabecera_visual"
+                class="mac-select <?= $es_admin ? 'admin-active' : 'user-locked' ?>"
+                <?= !$es_admin ? 'disabled' : 'name="almacen_id_cabecera"' ?> required>
+                
+                <?php if ($es_admin): ?>
+                    <option value="">Seleccionar ubicación...</option>
+                <?php endif; ?>
 
-                                <?php if (!$es_admin): ?>
-                                <input type="hidden" name="almacen_id_cabecera" value="<?= $_SESSION['almacen_id'] ?>">
-                                <?php endif; ?>
-                            </div>
+                <?php foreach($almacenes as $a): ?>
+                    <option value="<?= $a['id'] ?>"
+                        <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
+                        <?= $a['nombre'] ?> <?= ($a['id'] == $_SESSION['almacen_id'] && !$es_admin) ? ' •' : '' ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <i class="bi bi-chevron-down custom-arrow"></i>
+        </div>
 
+        <?php if (!$es_admin): ?>
+            <input type="hidden" name="almacen_id_cabecera" value="<?= $_SESSION['almacen_id'] ?>">
+            <span class="mac-badge-locked">
+                <i class="bi bi-lock-fill"></i> Privilegios de sede actual
+            </span>
+        <?php endif; ?>
+    </div>
+</div>
                             <div class="col-md-3">
                                 <label class="form-label small fw-bold">Evidencia (PDF/IMG)</label>
                                 <input type="file" name="evidencia_compra" class="form-control" accept="image/*,.pdf">
@@ -88,6 +230,7 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
         </div>
     </div>
 </div>
+<?php require_once __DIR__ . '/agregarPoductoModal.php'; ?>
 
 <script>
 /**
@@ -161,12 +304,31 @@ function agregarFilaCompra() {
     <div class="card mb-4 border-start border-4 border-success shadow-sm item-compra" id="card_item_${idUnico}">
         <div class="card-body">
             <div class="row g-3 mb-3">
-                <div class="col-md-3">
-                    <label class="small fw-bold">Producto</label>
-                    <select name="items[${idUnico}][producto_id]" class="form-select select2-compra" onchange="actualizarLabelsUnidad(${idUnico}, this)" required>
-                        ${opcionesProd}
-                    </select>
-                </div>
+           <div class="col-md-3">
+    <div class="mac-select-container h-100">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <label class="mac-label m-0">
+                <i class="bi bi-search"></i> Producto
+            </label>
+            <button type="button" 
+                    class="btn btn-outline-primary btn-sm rounded-circle border-0 p-0" 
+                    style="width: 20px; height: 20px; font-size: 14px; background: rgba(0, 122, 255, 0.1);"
+                    onclick="$('#modalAgregarProducto').modal('show')"
+                    data-bs-toggle="tooltip" 
+                    title="Registrar nuevo producto">
+                <i class="bi bi-plus-lg"></i>
+            </button>
+        </div>
+        
+        <div class="select-wrapper">
+            <select name="items[${idUnico}][producto_id]" 
+                class="mac-select admin-active select2-compra" 
+                onchange="actualizarLabelsUnidad(${idUnico}, this)" required>
+                ${opcionesProd}
+            </select>
+            </div>
+    </div>
+</div>
                 <div class="col-md-2">
                     <label class="small fw-bold label-urep">Cant. Mayoreo</label>
                     <input type="number" class="form-control input-mayoreo" value="0" min="0" step="0.01" oninput="recalcularTotales(${idUnico})">
@@ -317,7 +479,32 @@ function actualizarConteo() {
     const n = $('.item-compra').length;
     $('#conteoItems').text(`${n} Producto${n !== 1 ? 's' : ''}`);
 }
-
+function refrescarListaProductosCompra(nuevoIdSeleccionar = null) {
+    // 1. Volvemos a pedir los productos al servidor o actualizamos el DATA_COMPRAS
+    // Por simplicidad, si ya tienes el objeto res.id, puedes añadirlo manualmente al array DATA_COMPRAS.productos
+    // O hacer una petición rápida:
+    $.get('/cfsistem/app/controllers/AlmacenController.php?action=getListaProductosJson', function(data) {
+        DATA_COMPRAS.productos = data; // Actualizamos la base de datos local
+        
+        // 2. Refrescamos todos los select2 que ya existen en las filas de compra
+        $('.select2-compra').each(function() {
+            const select = $(this);
+            const valorActual = select.val();
+            
+            let html = '<option value="">-- Buscar Producto --</option>';
+            DATA_COMPRAS.productos.forEach(p => {
+                html += `<option value="${p.id}" data-factor="${p.factor_conversion}" data-ubase="${p.unidad_medida}" data-urep="${p.unidad_reporte}">${p.nombre} (${p.sku})</option>`;
+            });
+            
+            select.html(html).val(valorActual).trigger('change');
+        });
+        
+        // Si acabamos de crear uno, lo seleccionamos en la última fila vacía
+        if(nuevoIdSeleccionar) {
+             console.log("Nuevo producto listo para seleccionar:", nuevoIdSeleccionar);
+        }
+    }, 'json');
+}
 /**
  * MANEJO DEL SUBMIT (BLINDADO)
  */
@@ -420,4 +607,5 @@ function procesarGuardadoCompra(event) {
         }
     });
 }
+
 </script>

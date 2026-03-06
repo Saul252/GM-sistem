@@ -10,8 +10,11 @@ require_once __DIR__ . '/../controllers/LayoutController.php';
 require_once __DIR__ . '/../models/egresos_model.php';
 require_once __DIR__ . '/../models/egresos/comprasModel.php';
 
+require_once __DIR__ . '/../models/almacen/categoriasModel.php';
+
 $egresoModel = new EgresoModel($conexion);
 $comprasModel = new CompraModel($conexion);
+$categoriasModel= new CategoriaModel($conexion);
 $paginaActual = 'compras';
 if (isset($_GET['action']) && $_GET['action'] === 'guardarCompraInventario') {
     if (ob_get_length()) ob_clean(); 
