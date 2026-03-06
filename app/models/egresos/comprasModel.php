@@ -144,4 +144,90 @@ public function guardarCompraCompleta($items, $folio, $proveedor, $evidencia, $a
         }
         return $productos;
     }
+
+    public function obtenerDetalleFaltantes($compra_id) {
+    $sql = "SELECT 
+                f.producto_id, 
+                f.cantidad_pendiente, 
+                p.nombre 
+            FROM faltantes_ingreso f
+            INNER JOIN productos p ON f.producto_id = p.id
+            WHERE f.compra_id = ?";
+            
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param("i", $compra_id);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+/**
+ * Procesa el ingreso físico de productos que estaban marcados como faltantes.
+ * Realiza la afectación triple: Inventario, Pendientes y Auditoría de Compra.
+ */
+public function procesarAjusteFaltante($compra_id, $distribucion, $user_id) {
+    $this->db->begin_transaction();
+    try {
+        // 1. Obtener Folio para el historial (Kardex)
+        $sqlC = "SELECT folio FROM compras WHERE id = ?";
+        $stmtC = $this->db->prepare($sqlC);
+        $stmtC->bind_param("i", $compra_id);
+        $stmtC->execute();
+        $resC = $stmtC->get_result()->fetch_assoc();
+        $folio = $resC['folio'] ?? 'S/F';
+
+        foreach ($distribucion as $p_id => $almacenes) {
+            $total_recibido_producto = 0;
+
+            foreach ($almacenes as $alm_id => $cantidad) {
+                $cantidad = floatval($cantidad);
+                if ($cantidad <= 0) continue; // Si el switch estaba ON pero la cantidad es 0, ignoramos
+
+                $total_recibido_producto += $cantidad;
+
+                // A. Actualizar Inventario (Suma en el almacén destino seleccionado)
+                $sqlInv = "INSERT INTO inventario (almacen_id, producto_id, stock) 
+                           VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE stock = stock + VALUES(stock)";
+                $stmtInv = $this->db->prepare($sqlInv);
+                $stmtInv->bind_param("iid", $alm_id, $p_id, $cantidad);
+                $stmtInv->execute();
+
+                // B. Registrar Movimiento (Kardex)
+                $obs = "Entrada Faltante (Compra: $folio)";
+                $sqlK = "INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_destino_id, usuario_registra_id, referencia_id, observaciones) 
+                         VALUES (?, 'entrada', ?, ?, ?, ?, ?)";
+                $stmtK = $this->db->prepare($sqlK);
+                $stmtK->bind_param("idiiis", $p_id, $cantidad, $alm_id, $user_id, $compra_id, $obs);
+                $stmtK->execute();
+            }
+
+            // C. Si hubo ingresos para este producto, descontamos de los saldos pendientes
+            if ($total_recibido_producto > 0) {
+                // Descontar de la tabla operativa de faltantes
+                $this->db->query("UPDATE faltantes_ingreso 
+                                  SET cantidad_pendiente = cantidad_pendiente - $total_recibido_producto 
+                                  WHERE compra_id = $compra_id AND producto_id = $p_id");
+
+                // Descontar del detalle histórico de la compra
+                $this->db->query("UPDATE detalle_compra 
+                                  SET cantidad_faltante = cantidad_faltante - $total_recibido_producto 
+                                  WHERE compra_id = $compra_id AND producto_id = $p_id");
+            }
+        }
+
+        // 3. LIMPIEZA: Eliminar registros de pendientes que ya llegaron a 0
+        $this->db->query("DELETE FROM faltantes_ingreso WHERE cantidad_pendiente <= 0");
+
+        // 4. ACTUALIZAR CABECERA: Si ya no queda NADA pendiente de esta compra, marcar como finalizada
+        $check = $this->db->query("SELECT COUNT(*) as total FROM faltantes_ingreso WHERE compra_id = $compra_id");
+        if ($check->fetch_assoc()['total'] == 0) {
+            $this->db->query("UPDATE compras SET tiene_faltantes = 0 WHERE id = $compra_id");
+        }
+
+        $this->db->commit();
+        return ['success' => true, 'message' => 'Distribución de faltantes procesada con éxito.'];
+
+    } catch (Exception $e) {
+        $this->db->rollback();
+        return ['success' => false, 'message' => 'Error en base de datos: ' . $e->getMessage()];
+    }
+}
 }

@@ -14,21 +14,44 @@ public function obtenerAlmacenesActivos() {
      * 1. OBTIENE TODO EL FLUJO (COMPRAS + GASTOS)
      * Usa un UNION para juntar ambas tablas en una sola lista para la tabla principal
      */
-    public function obtenerTodosLosEgresos($desde, $hasta, $usuario_id = null) {
-     $sql = "
-    (SELECT id, folio, fecha_compra AS fecha, proveedor AS entidad, total, 'compra' AS tipo, tiene_faltantes, documento_url 
-     FROM compras 
-     WHERE fecha_compra BETWEEN ? AND ?)
+  public function obtenerTodosLosEgresos($desde, $hasta, $usuario_id = null) {
+    $sql = "
+    (SELECT 
+        c.id, 
+        c.folio, 
+        c.fecha_compra AS fecha, 
+        c.proveedor AS entidad, 
+        c.total, 
+        'compra' AS tipo, 
+        c.tiene_faltantes, 
+        c.documento_url,
+        /* Calculamos el total de piezas pendientes desde la tabla de faltantes */
+        IFNULL((SELECT SUM(cantidad_pendiente) FROM faltantes_ingreso WHERE compra_id = c.id), 0) AS piezas_faltantes
+     FROM compras c
+     WHERE c.fecha_compra BETWEEN ? AND ?)
+    
     UNION ALL
-    (SELECT id, folio, fecha_gasto AS fecha, beneficiario AS entidad, total, 'gasto' AS tipo, 0 AS tiene_faltantes, documento_url 
+    
+    (SELECT 
+        id, 
+        folio, 
+        fecha_gasto AS fecha, 
+        beneficiario AS entidad, 
+        total, 
+        'gasto' AS tipo, 
+        0 AS tiene_faltantes, 
+        documento_url,
+        0 AS piezas_faltantes /* Los gastos no tienen inventario, por lo tanto 0 faltantes */
      FROM gastos 
      WHERE fecha_gasto BETWEEN ? AND ?)
-    ORDER BY fecha DESC, id DESC"; // <--- Agregamos id DESC para desempatar el mismo día
-        $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("ssss", $desde, $hasta, $desde, $hasta);
-        $stmt->execute();
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    }
+    
+    ORDER BY fecha DESC, id DESC";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param("ssss", $desde, $hasta, $desde, $hasta);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
 
     /**
      * 2. REGISTRA UN GASTO (CON EVIDENCIA Y DESCRIPCIÓN)

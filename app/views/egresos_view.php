@@ -139,6 +139,7 @@ require_once $ruta;
                                 <th>Tipo</th>
                                 <th>Entidad</th>
                                 <th class="text-end">Total</th>
+                                <th class="text-center">Faltantes</th>
                                 <th class="text-center">Evidencia</th>
                                 <th class="text-end pe-3">Acciones</th>
                             </tr>
@@ -159,10 +160,31 @@ require_once $ruta;
                                 </td>
                                 <td><?= htmlspecialchars($e['entidad']) ?></td>
                                 <td class="fw-bold text-end">$<?= number_format($e['total'], 2) ?></td>
+
+                                <td class="text-center">
+                                    <?php if($e['tipo'] == 'compra'): ?>
+                                    <?php if($e['piezas_faltantes'] > 0): ?>
+                                    <div class="d-flex flex-column align-items-center">
+                                        <span class="badge bg-danger mb-1" style="font-size: 0.7rem;">
+                                            FALTAN: <?= number_format($e['piezas_faltantes'], 2) ?>
+                                        </span>
+
+                                    </div>
+                                    <?php elseif($e['tiene_faltantes'] == 1 && $e['piezas_faltantes'] <= 0): ?>
+                                    <span class="badge bg-success" style="font-size: 0.7rem;">
+                                        <i class="bi bi-check-circle"></i> COMPLETADO
+                                    </span>
+                                    <?php else: ?>
+                                    <span class="text-muted small">-</span>
+                                    <?php endif; ?>
+                                    <?php else: ?>
+                                    <span class="text-muted small">-</span>
+                                    <?php endif; ?>
+                                </td>
+
                                 <td class="text-center">
                                     <?php if(!empty($e['documento_url'])): ?>
-                                    <a href="../../<?= $e['documento_url'] ?>" target="_blank"
-                                        class="text-primary h5">
+                                    <a href="../../<?= $e['documento_url'] ?>" target="_blank" class="text-primary h5">
                                         <i class="bi bi-file-earmark-pdf"></i>
                                     </a>
                                     <?php else: ?>
@@ -170,6 +192,10 @@ require_once $ruta;
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-end pe-3">
+                                    <button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size: 0.65rem;"
+                                        onclick="abrirModalAjuste(<?= $e['id'] ?>, '<?= $e['folio'] ?>')">
+                                        <i class="bi bi-wrench-adjustable"></i> Ajustar
+                                    </button>
                                     <button class="btn btn-sm btn-light border"
                                         onclick="verDetalle('<?= $e['tipo'] ?>', <?= $e['id'] ?>)">
                                         <i class="bi bi-eye"></i>
@@ -179,7 +205,7 @@ require_once $ruta;
                             <?php endforeach; ?>
                             <?php else: ?>
                             <tr>
-                                <td colspan="8" class="text-center py-4 text-muted">No se encontraron movimientos en
+                                <td colspan="9" class="text-center py-4 text-muted">No se encontraron movimientos en
                                     este rango.</td>
                             </tr>
                             <?php endif; ?>
@@ -295,16 +321,12 @@ require_once $ruta;
     </div>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-<script src="/cfsistem/app/backend/compras_js/modalGastoslogica.js"></script>
-<script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="/cfsistem/app/backend/compras_js/modalGastoslogica.js"></script>
+    <script>
     // Forzamos que sea global con window.
     window.DATA_COMPRAS = {
         productos: <?php echo json_encode($productos); ?>,
@@ -312,9 +334,11 @@ require_once $ruta;
     };
     // Imprime esto en la consola para que verifiques si hay datos
     console.log("Productos cargados:", window.DATA_COMPRAS.productos);
-</script>
+    </script>
 
-<?php require_once __DIR__ . '/egresosComponets/modalCompra.php'; ?>
+    <?php require_once __DIR__ . '/egresosComponets/modalCompra.php'; ?>
+    <?php require_once __DIR__ . '/egresosComponets/modalAjuste.php'; ?> 
+    
 </body>
 
 </html>

@@ -142,3 +142,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     $tituloPagina = "Gestión de Egresos";
     require_once __DIR__ . '/../views/egresos_view.php';
 }
+// --- ACCIÓN: OBTENER FALTANTES PARA EL MODAL (AJAX) ---
+if (isset($_GET['action']) && $_GET['action'] === 'obtenerFaltantes') {
+    header('Content-Type: application/json');
+    $compra_id = intval($_GET['compra_id'] ?? 0);
+    // Llamamos al modelo (asegúrate de agregar esta función en comprasModel.php)
+    $faltantes = $comprasModel->obtenerDetalleFaltantes($compra_id);
+    echo json_encode($faltantes);
+    exit;
+}
+
+// --- ACCIÓN: PROCESAR AJUSTE DE FALTANTES (AJAX) ---
+if (isset($_GET['action']) && $_GET['action'] === 'procesarAjusteFaltante') {
+    header('Content-Type: application/json');
+    try {
+        $compra_id    = intval($_POST['compra_id'] ?? 0);
+        $distribucion = $_POST['distribucion'] ?? []; // Array [prod_id][alm_id] => cant
+        $user_id      = $_SESSION['user_id'] ?? 1;
+
+        if ($compra_id <= 0 || empty($distribucion)) {
+            throw new Exception("No se recibieron datos de distribución válidos.");
+        }
+
+        // Llamamos al modelo pasando la matriz de distribución
+        $res = $comprasModel->procesarAjusteFaltante($compra_id, $distribucion, $user_id);
+        echo json_encode($res);
+
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit;
+}
