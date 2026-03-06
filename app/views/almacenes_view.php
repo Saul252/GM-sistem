@@ -9,8 +9,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
-    <link href="/cfsistem/css/style.css" rel="stylesheet">
-
     <link href="/cfsistem/css/almacenes.css" rel="stylesheet">
     <?php 
     // Llamamos a la función que imprime Bootstrap y layout.css

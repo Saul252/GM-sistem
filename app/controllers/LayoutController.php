@@ -29,9 +29,7 @@ function cargarScripts() {
     echo '<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>';
     echo '<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>';
     // Tu lógica de notificaciones
-    echo '<script src="/cfsistem/app/backend/notificaciones/notificaciones.js"></script>';
-    echo '<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>';
-    echo '<script src="/cfsistem/app/backend/notificaciones/notificaciones.js"></script>';
-     echo '<script src="/cfsistem/app/backend/sidebar/sidebar.js"></script>';
+ 
+
 
 }

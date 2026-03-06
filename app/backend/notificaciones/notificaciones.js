@@ -1,43 +1,49 @@
+console.log("✅ notificaciones.js cargado correctamente");
+
 let ultimoConteoTraspasos = 0;
 
 function verificarNotificaciones() {
-    fetch('/cfsistem/app/backend/movimientos/get_notificaciones_traspaso.php?t=' + Date.now())
-        .then(response => response.json())
+    const url = '/cfsistem/app/backend/movimientos/get_notificaciones_traspaso.php?t=' + Date.now();
+    console.log("🔍 Intentando consultar:", url);
+
+    fetch(url)
+        .then(response => {
+            console.log("📡 Respuesta del servidor recibida. Status:", response.status);
+            if (!response.ok) throw new Error("Error en la red: " + response.status);
+            return response.json();
+        })
         .then(data => {
+            console.log("📦 Datos recibidos:", data);
+            
             const badge = document.getElementById('notif-badge');
             const lista = document.getElementById('lista-notificaciones');
             const cantidadActual = parseInt(data.cantidad) || 0;
             
-            // 1. Actualizar Badge de la campana
             if (badge) {
+                console.log("🔴 Actualizando badge a:", cantidadActual);
                 badge.innerText = cantidadActual;
                 cantidadActual > 0 ? badge.classList.remove('d-none') : badge.classList.add('d-none');
+            } else {
+                console.error("❌ No se encontró el elemento 'notif-badge' en el HTML");
             }
 
-            // 2. Disparar Toastify si hay nuevos traspasos
             if (cantidadActual > ultimoConteoTraspasos) {
-                Toastify({
-                    text: `📦 NUEVO TRASPASO: Tienes ${cantidadActual} pendientes de recibir.`,
-                    duration: 7000,
-                    destination: "/cfsistem/app/views/almacenes.php",
-                    newWindow: false,
-                    close: true,
-                    gravity: "top", // top o bottom
-                    position: "right", // left, center o right
-                    stopOnFocus: true, // Evita que se cierre al pasar el mouse
-                    style: {
-                        background: "linear-gradient(to right, #00b09b, #96c93d)",
-                        borderRadius: "10px",
-                        fontWeight: "bold"
-                    },
-                    onClick: function(){} // Callback después de hacer click
-                }).showToast();
+                console.log("🔔 ¡Nuevas notificaciones detectadas! Disparando Toastify...");
+                if (typeof Toastify === "function") {
+                    Toastify({
+                        text: `📦 NUEVO TRASPASO: Tienes ${cantidadActual} pendientes.`,
+                        duration: 7000,
+                        style: { background: "linear-gradient(to right, #00b09b, #96c93d)" }
+                    }).showToast();
+                } else {
+                    console.error("❌ Librería Toastify no detectada. Revisa el orden de carga en el layout.");
+                }
             }
 
             ultimoConteoTraspasos = cantidadActual;
 
-            // 3. Renderizar lista en el dropdown
             if (lista && data.items) {
+                console.log("📝 Llenando lista de notificaciones...");
                 if (cantidadActual === 0) {
                     lista.innerHTML = '<li class="p-3 text-center text-muted small">Sin pendientes</li>';
                 } else {
@@ -54,43 +60,26 @@ function verificarNotificaciones() {
                     `).join('');
                 }
             }
+        })
+        .catch(err => {
+            console.error("❌ Error en verificarNotificaciones:", err);
         });
 }
 
-// Función para procesar el click del botón verde
-function procesarRecepcion(id) {
-    // Usamos el confirm nativo o podrías usar un modal de Bootstrap
-    if (!confirm("¿Deseas confirmar la recepción de este producto?")) return;
-
-    const formData = new FormData();
-    formData.append('id', id);
-
-    fetch('/cfsistem/app/backend/movimientos/procesar_transaccion_rapida.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success || data.status === 'success') {
-            Toastify({
-                text: "✅ Producto recibido correctamente",
-                backgroundColor: "#28a745"
-            }).showToast();
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            alert("Error: " + data.message);
-        }
-    });
-}
-
-// Lógica del Dropdown (Abrir/Cerrar)
+// Lógica del Clic del Menú
 document.addEventListener('click', function(e) {
     const btn = document.getElementById('btnNotif');
     const menu = document.getElementById('menuNotif');
-    if (!btn || !menu) return;
+    
+    if (!btn || !menu) {
+        console.warn("⚠️ Advertencia: No se encontró 'btnNotif' o 'menuNotif' en esta página.");
+        return;
+    }
 
     if (btn.contains(e.target)) {
+        console.log("🖱️ Clic en campana. Estado actual menu:", menu.style.display);
         menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+        console.log("🖱️ Nuevo estado menu:", menu.style.display);
         e.preventDefault();
     } else if (!menu.contains(e.target)) {
         menu.style.display = 'none';
@@ -98,6 +87,7 @@ document.addEventListener('click', function(e) {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("🚀 DOM cargado. Iniciando verificación cada 30s...");
     verificarNotificaciones();
     setInterval(verificarNotificaciones, 30000);
 });
