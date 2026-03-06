@@ -44,7 +44,7 @@ function calcularGasto() {
 
         $.ajax({
             // Opción A: Ruta absoluta (la más segura)
-url: '/cfsistem/app/controllers/egresosController.php?action=guardarCompraInventario',
+url: '/cfsistem/app/controllers/egresosController.php?action=guardarGasto',
 
 // Opción B: Ruta relativa (subiendo niveles)
 // url: '../../controllers/egresosController.php?action=guardarCompraInventario',

@@ -36,6 +36,7 @@ class AlmacenController {
         try {
             $categorias = $this->model->getCategorias();
             $almacenes = $this->model->getAlmacenes($almacen_usuario);
+            $todosLosAlmacenes = $this->model->getAlmacenesDestino($almacen_usuario);
             $productos = $this->model->getInventario($almacen_usuario);
 
             if ($categorias === null) $categorias = [];

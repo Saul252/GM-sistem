@@ -16,6 +16,20 @@ class AlmacenModel {
         $sql .= " ORDER BY nombre ASC";
         return $this->db->query($sql)->fetch_all(MYSQLI_ASSOC);
     }
+     public function getAlmacenesDestino($almacen_id = 0) {
+    // Iniciamos la consulta básica
+    $sql = "SELECT id, nombre FROM almacenes WHERE activo = 1";
+    
+    // Si el almacén es mayor a cero, agregamos la exclusión
+    if ($almacen_id > 0) {
+        $sql .= " AND id != " . intval($almacen_id);
+    }
+    
+    $sql .= " ORDER BY nombre ASC";
+    
+    $res = $this->db->query($sql);
+    return ($res) ? $res->fetch_all(MYSQLI_ASSOC) : [];
+}
 
     public function getInventario($almacen_id = 0) {
         $sql = "SELECT p.id, p.sku, p.nombre, p.categoria_id, p.factor_conversion, p.unidad_reporte,c.nombre AS categoria_nombre,

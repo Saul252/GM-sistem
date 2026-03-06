@@ -183,14 +183,20 @@ require_once $ruta;
                                 </td>
 
                                 <td class="text-center">
-                                    <?php if(!empty($e['documento_url'])): ?>
-                                    <a href="../../<?= $e['documento_url'] ?>" target="_blank" class="text-primary h5">
-                                        <i class="bi bi-file-earmark-pdf"></i>
-                                    </a>
-                                    <?php else: ?>
-                                    <span class="text-muted small">-</span>
-                                    <?php endif; ?>
-                                </td>
+    <?php if(!empty($e['documento_url'])): ?>
+        <?php 
+            // Determinamos el prefijo de la ruta según el tipo
+            // Si es gasto, añadimos la carpeta intermedia
+            $ruta_base = ($e['tipo'] == 'gasto') ? 'uploads/evidencias/' : '';
+        ?>
+        
+        <a href="../../<?= $ruta_base . $e['documento_url'] ?>" target="_blank" class="text-primary h5">
+            <i class="bi bi-file-earmark-pdf"></i>
+        </a>
+    <?php else: ?>
+        <span class="text-muted small">-</span>
+    <?php endif; ?>
+</td>
                                 <td class="text-end pe-3">
                                     <?php 
 // 1. Verificamos que exista la llave y que NO sea NULL
