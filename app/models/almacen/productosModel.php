@@ -77,4 +77,48 @@ class ProductoModel {
         $stmt->execute();
         return $stmt->get_result()->num_rows > 0;
     }
+    /**
+ * Obtiene todos los productos con los campos necesarios para el modal de compras
+ */
+/**
+ * Obtiene los productos optimizados para el catálogo de compras
+ */
+/**
+     * Obtiene los productos optimizados para el catálogo de compras (Versión MySQLi)
+     */
+    public function getProductos() {
+        try {
+            $sql = "SELECT 
+                        p.id, 
+                        p.sku, 
+                        p.nombre, 
+                        p.unidad_medida, 
+                        p.unidad_reporte, 
+                        p.factor_conversion,
+                        c.nombre as nombre_categoria
+                    FROM productos p
+                    LEFT JOIN categorias c ON p.categoria_id = c.id
+                    WHERE p.activo = 1 
+                    ORDER BY p.nombre ASC";
+            
+            $result = $this->db->query($sql);
+            
+            if (!$result) {
+                return [];
+            }
+
+            $productos = [];
+            while ($row = $result->fetch_assoc()) {
+                // Forzamos que los valores numéricos sean tratados como tales
+                $row['id'] = (int)$row['id'];
+                $row['factor_conversion'] = (float)$row['factor_conversion'];
+                $productos[] = $row;
+            }
+            
+            return $productos;
+        } catch (Exception $e) {
+            error_log("Error en ProductoModel::getProductos -> " . $e->getMessage());
+            return [];
+        }
+    }
 }

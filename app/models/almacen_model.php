@@ -32,4 +32,6 @@ class AlmacenModel {
         
         return $this->db->query($sql)->fetch_all(MYSQLI_ASSOC);
     }
+    
+    
 }

@@ -96,7 +96,7 @@
 
             <?php if (puedeVerModulo('usuarios')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/controllers/usuarios.php" class="nav-link <?= $archivoActual == 'usuarios.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/app/views/usuarios.php" class="nav-link <?= $archivoActual == 'usuarios.php' ? 'active' : '' ?>">
                     <i class="bi bi-people"></i><span>Usuarios</span>
                 </a>
             </li>

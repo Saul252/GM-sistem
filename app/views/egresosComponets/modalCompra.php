@@ -310,14 +310,13 @@ function agregarFilaCompra() {
             <label class="mac-label m-0">
                 <i class="bi bi-search"></i> Producto
             </label>
-            <button type="button" 
-                    class="btn btn-outline-primary btn-sm rounded-circle border-0 p-0" 
-                    style="width: 20px; height: 20px; font-size: 14px; background: rgba(0, 122, 255, 0.1);"
-                    onclick="$('#modalAgregarProducto').modal('show')"
-                    data-bs-toggle="tooltip" 
-                    title="Registrar nuevo producto">
-                <i class="bi bi-plus-lg"></i>
-            </button>
+           
+<button type="button" 
+        class="btn btn-outline-primary btn-sm rounded-circle border-0 p-0" 
+        onclick="window.ultimaFilaEditada = ${idUnico}; $('#modalAgregarProducto').modal('show')"
+        title="Registrar nuevo producto">
+    <i class="bi bi-plus-lg"></i>
+</button>
         </div>
         
         <div class="select-wrapper">
@@ -479,32 +478,54 @@ function actualizarConteo() {
     const n = $('.item-compra').length;
     $('#conteoItems').text(`${n} Producto${n !== 1 ? 's' : ''}`);
 }
+
 function refrescarListaProductosCompra(nuevoIdSeleccionar = null) {
-    // 1. Volvemos a pedir los productos al servidor o actualizamos el DATA_COMPRAS
-    // Por simplicidad, si ya tienes el objeto res.id, puedes añadirlo manualmente al array DATA_COMPRAS.productos
-    // O hacer una petición rápida:
-    $.get('/cfsistem/app/controllers/AlmacenController.php?action=getListaProductosJson', function(data) {
-        DATA_COMPRAS.productos = data; // Actualizamos la base de datos local
+    $.get('almacenes.php?action=getListaProductosJson', function(data) {
+        // VALIDACIÓN CRÍTICA: Asegurarnos de que 'data' sea un array
+        let productos = [];
+        if (Array.isArray(data)) {
+            productos = data;
+        } else if (data && typeof data === 'object' && data.status === 'success') {
+            // Por si tu controlador devuelve {status: success, data: [...]}
+            productos = data.data;
+        }
+
+        if (productos.length === 0) {
+            console.warn("No se recibieron productos o el formato es incorrecto", data);
+            return;
+        }
+
+        // Actualizamos DATA_COMPRAS
+        if (typeof DATA_COMPRAS !== 'undefined') {
+            DATA_COMPRAS.productos = productos;
+        }
         
-        // 2. Refrescamos todos los select2 que ya existen en las filas de compra
         $('.select2-compra').each(function() {
             const select = $(this);
             const valorActual = select.val();
             
             let html = '<option value="">-- Buscar Producto --</option>';
-            DATA_COMPRAS.productos.forEach(p => {
-                html += `<option value="${p.id}" data-factor="${p.factor_conversion}" data-ubase="${p.unidad_medida}" data-urep="${p.unidad_reporte}">${p.nombre} (${p.sku})</option>`;
+            productos.forEach(p => {
+                html += `<option value="${p.id}" 
+                            data-factor="${p.factor_conversion}" 
+                            data-ubase="${p.unidad_medida}" 
+                            data-urep="${p.unidad_reporte}">${p.nombre} (${p.sku})</option>`;
             });
             
-            select.html(html).val(valorActual).trigger('change');
+            select.html(html).val(valorActual).trigger('change.select2');
         });
         
-        // Si acabamos de crear uno, lo seleccionamos en la última fila vacía
-        if(nuevoIdSeleccionar) {
-             console.log("Nuevo producto listo para seleccionar:", nuevoIdSeleccionar);
+        if(nuevoIdSeleccionar && window.ultimaFilaEditada) {
+             const filaSelect = $(`#card_item_${window.ultimaFilaEditada} .select2-compra`);
+             filaSelect.val(nuevoIdSeleccionar).trigger('change');
+             window.ultimaFilaEditada = null;
         }
-    }, 'json');
+    }, 'json').fail(function(e) {
+        console.error("Error al obtener productos:", e.responseText);
+    });
 }
+
+
 /**
  * MANEJO DEL SUBMIT (BLINDADO)
  */
