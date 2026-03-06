@@ -1,3 +1,8 @@
+<script>
+// PHP le pasa estos valores a JS una sola vez al cargar la página
+const USER_ALMACEN_ID = <?= json_encode($_SESSION['almacen_id']) ?>;
+const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
+</script>
 <div class="modal fade" id="modalNuevaCompra" tabindex="-1" aria-labelledby="modalNuevaCompraLabel" aria-hidden="true"
     data-bs-backdrop="static">
     <div class="modal-dialog modal-xl">
@@ -24,19 +29,28 @@
                                 <input type="text" name="folio" class="form-control" placeholder="Ej: F-123" required>
                             </div>
                             <div class="col-md-4">
-                                <label>Almacén de Cargo:</label>
-                                <?php if ($_SESSION['rol_nombre'] === 'Administrador' || $_SESSION['rol_id'] == 1): ?>
-                                <select name="almacen_id_cabecera" class="form-select" required>
+                                <label class="form-label small fw-bold">Almacén de Cargo:</label>
+                                <?php  $es_admin = ($_SESSION['rol_id'] == 1);  ?>
+                                <select id="almacen_id_cabecera_visual"
+                                    class="form-select <?= $es_admin ? 'select2-cabecera' : 'bg-light' ?>"
+                                    <?= !$es_admin ? 'disabled' : 'name="almacen_id_cabecera"' ?> required>
+                                    <?php if ($es_admin): ?>
+                                    <option value="">-- Seleccionar Almacén --</option>
+                                    <?php endif; ?>
                                     <?php foreach($almacenes as $a): ?>
-                                    <option value="<?= $a['id'] ?>"><?= $a['nombre'] ?></option>
+                                    <option value="<?= $a['id'] ?>"
+                                        <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
+                                        <?= $a['nombre'] ?>
+                                        <?= ($a['id'] == $_SESSION['almacen_id'] && !$es_admin) ? '(Asignado)' : '' ?>
+                                    </option>
                                     <?php endforeach; ?>
                                 </select>
-                                <?php else: ?>
-                                <input type="text" class="form-control" value="<?= $_SESSION['almacen_nombre'] ?>"
-                                    readonly>
+
+                                <?php if (!$es_admin): ?>
                                 <input type="hidden" name="almacen_id_cabecera" value="<?= $_SESSION['almacen_id'] ?>">
                                 <?php endif; ?>
                             </div>
+
                             <div class="col-md-3">
                                 <label class="form-label small fw-bold">Evidencia (PDF/IMG)</label>
                                 <input type="file" name="evidencia_compra" class="form-control" accept="image/*,.pdf">
@@ -79,15 +93,24 @@
 /**
  * LÓGICA DE COMPRAS - CF SISTEM
  */
-
 function abrirModalCompra() {
-    if (typeof DATA_COMPRAS === 'undefined') {
-        Swal.fire('Error', 'No se cargaron los catálogos de productos/almacenes.', 'error');
-        return;
-    }
+    // Resetear el formulario pero mantener el almacén seleccionado por PHP
+    const almacenPreseleccionado = $('#almacen_id_cabecera').val();
     $('#formNuevaCompra')[0].reset();
+    $('#almacen_id_cabecera').val(almacenPreseleccionado); // Restauramos lo que PHP eligió
+
     $('#contenedorItemsCompra').empty();
     $('#granTotalCompra').text('$ 0.00');
+
+    if (ES_ADMIN) {
+        setTimeout(() => {
+            $('.select2-cabecera').select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#modalNuevaCompra .modal-content')
+            });
+        }, 100);
+    }
+
     agregarFilaCompra();
     $('#modalNuevaCompra').modal('show');
 }
@@ -102,19 +125,39 @@ function agregarFilaCompra() {
     });
 
     let filasAlmacenes = '';
-    DATA_COMPRAS.almacenes.forEach(alm => {
+    
+    // LÓGICA DE FILTRADO: 
+    // Si es Admin, ve todos. Si no, solo ve el que coincida con USER_ALMACEN_ID
+    const almacenesAMostrar = ES_ADMIN 
+        ? DATA_COMPRAS.almacenes 
+        : DATA_COMPRAS.almacenes.filter(alm => alm.id == USER_ALMACEN_ID);
+
+    almacenesAMostrar.forEach(alm => {
+        // Si no es admin, bloqueamos el checkbox para que no pueda desmarcar su propio almacén
+        const inputBloqueado = !ES_ADMIN ? 'onclick="return false;" style="opacity: 0.7;"' : '';
+        const filaResaltada = alm.id == USER_ALMACEN_ID ? 'table-info' : '';
+
         filasAlmacenes += `
-        <tr>
+        <tr class="${filaResaltada}">
             <td class="text-center align-middle">
-                <input type="checkbox" name="items[${idUnico}][almacenes][${alm.id}][activo]" class="form-check-input check-activo" checked onchange="recalcularTotales(${idUnico})">
+                <input type="checkbox" name="items[${idUnico}][almacenes][${alm.id}][activo]" 
+                       class="form-check-input check-activo" checked ${inputBloqueado} 
+                       onchange="recalcularTotales(${idUnico})">
             </td>
-            <td class="small align-middle">${alm.nombre}</td>
+            <td class="small align-middle fw-bold">
+                ${alm.nombre} 
+                ${alm.id == USER_ALMACEN_ID ? '<br><small class="text-primary">(Tu almacén)</small>' : ''}
+            </td>
             <td>
-                <input type="number" name="items[${idUnico}][almacenes][${alm.id}][cantidad]" class="form-control form-control-sm input-reparto" value="0" min="0" step="0.01" oninput="validarReparto(${idUnico})">
+                <input type="number" name="items[${idUnico}][almacenes][${alm.id}][cantidad]" 
+                       class="form-control form-control-sm input-reparto border-primary" 
+                       placeholder="Confirmar cantidad" min="0" step="0.01" 
+                       oninput="validarReparto(${idUnico})">
             </td>
         </tr>`;
     });
-const html = `
+
+    const html = `
     <div class="card mb-4 border-start border-4 border-success shadow-sm item-compra" id="card_item_${idUnico}">
         <div class="card-body">
             <div class="row g-3 mb-3">
@@ -139,12 +182,7 @@ const html = `
                         ¿Faltante?
                     </label>
                     <div class="input-group input-group-sm">
-                        <input type="number" 
-                               class="form-control input-faltante border-danger" 
-                               value="0" min="0" step="0.01" 
-                               id="faltante_${idUnico}" 
-                               disabled 
-                               oninput="recalcularTotales(${idUnico})">
+                        <input type="number" class="form-control input-faltante border-danger" value="0" min="0" step="0.01" id="faltante_${idUnico}" disabled oninput="recalcularTotales(${idUnico})">
                         <input type="hidden" name="items[${idUnico}][cantidad_faltante]" class="hidden-faltante" value="0">
                     </div>
                 </div>
@@ -175,7 +213,7 @@ const html = `
                 </div>
                 <div class="col-md-8">
                     <div class="alert alert-info py-2 px-3 m-0 small d-flex justify-content-between align-items-center h-100 border-0 shadow-sm rounded">
-                        <span><i class="bi bi-info-circle-fill me-2"></i>Reparte las piezas entre los almacenes destino:</span>
+                        <span><i class="bi bi-info-circle-fill me-2"></i>Confirma las piezas recibidas en tu almacén:</span>
                         <span class="badge bg-danger" id="error_reparto_${idUnico}" style="display:none;">Suma no coincide</span>
                     </div>
                 </div>
@@ -183,22 +221,22 @@ const html = `
             <hr class="my-3">
             <table class="table table-sm table-borderless align-middle mb-0">
                 <thead class="text-muted" style="font-size: 0.75rem;">
-                    <tr><th width="10%" class="text-center">¿USAR?</th><th width="50%">ALMACÉN</th><th width="40%">PIEZAS FÍSICAS</th></tr>
+                    <tr><th width="10%" class="text-center">¿USAR?</th><th width="50%">ALMACÉN DESTINO</th><th width="40%">PIEZAS FÍSICAS</th></tr>
                 </thead>
                 <tbody>${filasAlmacenes}</tbody>
             </table>
         </div>
     </div>`;
-  $('#contenedorItemsCompra').append(html);
+
+    $('#contenedorItemsCompra').append(html);
     setTimeout(() => {
         $(`#card_item_${idUnico} .select2-compra`).select2({
             theme: 'bootstrap-5',
-            dropdownParent: $('#modalNuevaCompra')
+            dropdownParent: $('#modalNuevaCompra .modal-content')
         });
     }, 50);
     actualizarConteo();
 }
-
 function actualizarLabelsUnidad(id, select) {
     const opt = $(select).find(':selected');
     const factor = opt.data('factor') || 1;
@@ -216,25 +254,26 @@ function recalcularTotales(id) {
     const card = $(`#card_item_${id}`);
     const factor = parseFloat(card.find('.hidden-factor').val()) || 0;
     const inputFaltante = card.find('.input-faltante');
-    
+
     // 1. Cantidad según lo que dice la factura (Mayoreo * Factor + Sueltas)
-    const cantidadFacturada = (parseFloat(card.find('.input-mayoreo').val()) || 0) * factor + 
-                             (parseFloat(card.find('.input-sueltas').val()) || 0);
-    
+    const cantidadFacturada = (parseFloat(card.find('.input-mayoreo').val()) || 0) * factor +
+        (parseFloat(card.find('.input-sueltas').val()) || 0);
+
     // 2. Si el input está deshabilitado, el faltante es 0. Si no, tomamos su valor.
     const faltante = inputFaltante.is(':disabled') ? 0 : (parseFloat(inputFaltante.val()) || 0);
-    
+
     // 3. Lo que realmente llegó
     const totalReal = cantidadFacturada - faltante;
 
     // Actualizar labels y campos ocultos
     card.find('.span-total-base').text(totalReal.toLocaleString());
-    card.find('.hidden-total-piezas').val(totalReal); 
-    card.find('.hidden-faltante').val(faltante);      
-    
+    card.find('.hidden-total-piezas').val(totalReal);
+    card.find('.hidden-faltante').val(faltante);
+
     validarReparto(id);
     actualizarGranTotal();
 }
+
 function validarReparto(id) {
     const card = $(`#card_item_${id}`);
     const total = parseFloat(card.find('.hidden-total-piezas').val()) || 0;
@@ -251,9 +290,10 @@ function validarReparto(id) {
         error.hide();
     }
 }
+
 function toggleFaltante(id, checkbox) {
     const inputFaltante = $(`#faltante_${id}`);
-    
+
     if (checkbox.checked) {
         inputFaltante.prop('disabled', false).focus();
     } else {
@@ -261,6 +301,7 @@ function toggleFaltante(id, checkbox) {
         recalcularTotales(id); // Recalculamos para que el stock vuelva a la normalidad
     }
 }
+
 function actualizarGranTotal() {
     let granTotal = 0;
     $('.input-costo-total').each(function() {
@@ -296,7 +337,7 @@ function procesarGuardadoCompra(event) {
         // 'hidden-total-piezas' ya tiene restado el faltante por la función recalcularTotales
         const totalFisicoReal = parseFloat($(this).find('.hidden-total-piezas').val()) || 0;
         const nombreProd = $(this).find('.select2-compra option:selected').text() || "Producto " + (index + 1);
-        
+
         let sumaAlmacenes = 0;
         $(this).find('.input-reparto').each(function() {
             if ($(this).closest('tr').find('.check-activo').is(':checked')) {
@@ -311,8 +352,9 @@ function procesarGuardadoCompra(event) {
     });
 
     if (inconsistencias > 0) {
-        Swal.fire('Atención', 'La distribución en almacenes no coincide con lo recibido físicamente:' + mensajeDetalle, 'warning');
-        return false; 
+        Swal.fire('Atención', 'La distribución en almacenes no coincide con lo recibido físicamente:' + mensajeDetalle,
+            'warning');
+        return false;
     }
 
     // 2. DETECTAR SI HAY FALTANTES PARA EL CONFIRM
@@ -324,9 +366,9 @@ function procesarGuardadoCompra(event) {
     // 3. CONFIRMACIÓN Y ENVÍO AJAX (Tu bloque original)
     Swal.fire({
         title: hayFaltantes ? '¿Registrar con Faltantes?' : '¿Confirmar Registro?',
-        text: hayFaltantes 
-            ? "La mercancía incompleta se guardará como pendiente." 
-            : "Se actualizará el stock y se registrará el gasto.",
+        text: hayFaltantes ?
+            "La mercancía incompleta se guardará como pendiente." :
+            "Se actualizará el stock y se registrará el gasto.",
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#198754',
@@ -377,4 +419,5 @@ function procesarGuardadoCompra(event) {
             });
         }
     });
-}</script>
+}
+</script>

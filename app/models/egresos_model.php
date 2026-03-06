@@ -190,5 +190,93 @@ public function listarProductos() {
             return false;
         }
     }
+public function obtenerDetalleMovimientosFisicos($compra_id) {
+    $sql = "SELECT 
+                dc.producto_id,
+                p.sku,
+                p.nombre as producto_nombre,
+                p.unidad_reporte, -- Ejemplo: Tonelada
+                p.unidad_medida, -- Ejemplo: Bultos/Pzas
+                dc.factor_conversion, -- Ejemplo: 20
+                dc.cantidad as total_pedido,
+                /* Traemos el desglose de movimientos: Almacén y cuánto entró ahí */
+                (SELECT GROUP_CONCAT(CONCAT(a.nombre, ': ', m.cantidad) SEPARATOR ' | ')
+                 FROM movimientos m 
+                 JOIN almacenes a ON m.almacen_destino_id = a.id
+                 WHERE m.referencia_id = dc.compra_id 
+                 AND m.producto_id = dc.producto_id 
+                 AND m.tipo = 'entrada') as desglose_entradas,
+                /* Suma total recibida */
+                (SELECT IFNULL(SUM(m.cantidad), 0) 
+                 FROM movimientos m 
+                 WHERE m.referencia_id = dc.compra_id 
+                 AND m.producto_id = dc.producto_id 
+                 AND m.tipo = 'entrada') as total_recibido,
+                /* Faltante */
+                IFNULL((SELECT f.cantidad_pendiente FROM faltantes_ingreso f 
+                        WHERE f.compra_id = dc.compra_id 
+                        AND f.producto_id = dc.producto_id), 0) as faltante
+            FROM detalle_compra dc
+            JOIN productos p ON dc.producto_id = p.id
+            WHERE dc.compra_id = ?";
+    
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param("i", $compra_id);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+public function obtenerDetalleCompleto($tipo, $id) {
+    $response = ['tipo_documento' => $tipo];
+
+    if ($tipo === 'compra') {
+        // CABECERA COMPRAS
+        $sql = "SELECT c.*, a.nombre as almacen_nombre, u.nombre as usuario_nombre 
+                FROM compras c 
+                JOIN almacenes a ON c.almacen_id = a.id 
+                JOIN usuarios u ON c.usuario_registra_id = u.id 
+                WHERE c.id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $response['cabecera'] = $stmt->get_result()->fetch_assoc();
+
+        // DETALLE COMPRAS CON TRAZABILIDAD (9 y 9 en Rancho...)
+        $sqlDet = "SELECT dc.*, p.sku, p.nombre as producto_nombre, p.unidad_medida, p.unidad_reporte, p.factor_conversion as factor_prod,
+                    (SELECT GROUP_CONCAT(CONCAT(a.nombre, ' [', m.cantidad, ']') SEPARATOR '||')
+                     FROM movimientos m 
+                     JOIN almacenes a ON m.almacen_destino_id = a.id
+                     WHERE m.referencia_id = dc.compra_id AND m.producto_id = dc.producto_id AND m.tipo = 'entrada') as desglose_movimientos,
+                    (SELECT IFNULL(SUM(m.cantidad), 0) FROM movimientos m 
+                     WHERE m.referencia_id = dc.compra_id AND m.producto_id = dc.producto_id AND m.tipo = 'entrada') as cantidad_recibida
+                   FROM detalle_compra dc
+                   JOIN productos p ON dc.producto_id = p.id
+                   WHERE dc.compra_id = ?";
+        $stmtDet = $this->db->prepare($sqlDet);
+        $stmtDet->bind_param("i", $id);
+        $stmtDet->execute();
+        $response['items'] = $stmtDet->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    } else {
+        // CABECERA GASTOS
+        $sql = "SELECT g.*, a.nombre as almacen_nombre, u.nombre as usuario_nombre 
+                FROM gastos g 
+                JOIN almacenes a ON g.almacen_id = a.id 
+                JOIN usuarios u ON g.usuario_registra_id = u.id 
+                WHERE g.id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $response['cabecera'] = $stmt->get_result()->fetch_assoc();
+
+        // DETALLE GASTOS (Simple descripción)
+        $sqlDet = "SELECT * FROM detalle_gasto WHERE gasto_id = ?";
+        $stmtDet = $this->db->prepare($sqlDet);
+        $stmtDet->bind_param("i", $id);
+        $stmtDet->execute();
+        $response['items'] = $stmtDet->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+
+    return $response;
+}
     
 }

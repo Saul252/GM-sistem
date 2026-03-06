@@ -170,7 +170,7 @@ require_once $ruta;
                                         </span>
 
                                     </div>
-                                    <?php elseif($e['tiene_faltantes'] == 1 && $e['piezas_faltantes'] <= 0): ?>
+                                    <?php elseif( $e['piezas_faltantes'] <= 0): ?>
                                     <span class="badge bg-success" style="font-size: 0.7rem;">
                                         <i class="bi bi-check-circle"></i> COMPLETADO
                                     </span>
@@ -192,10 +192,22 @@ require_once $ruta;
                                     <?php endif; ?>
                                 </td>
                                 <td class="text-end pe-3">
+                                    <?php 
+// 1. Verificamos que exista la llave y que NO sea NULL
+// 2. Verificamos que sea mayor a 0 para mostrar el botón
+if (isset($e['piezas_faltantes']) && $e['piezas_faltantes'] !== null): ?>
+
+                                    <?php if ($e['piezas_faltantes'] <= 0): ?>
+
+                                    <?php else: ?>
                                     <button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size: 0.65rem;"
                                         onclick="abrirModalAjuste(<?= $e['id'] ?>, '<?= $e['folio'] ?>')">
                                         <i class="bi bi-wrench-adjustable"></i> Ajustar
                                     </button>
+                                    <?php endif; ?>
+
+                                    <?php endif; ?>
+
                                     <button class="btn btn-sm btn-light border"
                                         onclick="verDetalle('<?= $e['tipo'] ?>', <?= $e['id'] ?>)">
                                         <i class="bi bi-eye"></i>
@@ -320,6 +332,17 @@ require_once $ruta;
         </div>
     </div>
 
+
+
+
+
+
+
+
+
+
+
+
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -336,9 +359,11 @@ require_once $ruta;
     console.log("Productos cargados:", window.DATA_COMPRAS.productos);
     </script>
 
+
     <?php require_once __DIR__ . '/egresosComponets/modalCompra.php'; ?>
-    <?php require_once __DIR__ . '/egresosComponets/modalAjuste.php'; ?> 
-    
+    <?php require_once __DIR__ . '/egresosComponets/modalAjuste.php'; ?>
+    <?php require_once __DIR__ . '/egresosComponets/modalDetalles.php'; ?>
+
 </body>
 
 </html>

@@ -173,3 +173,35 @@ if (isset($_GET['action']) && $_GET['action'] === 'procesarAjusteFaltante') {
     }
     exit;
 }
+// --- ACCIÓN: OBTENER DETALLE PARA TICKET (AJAX) ---
+if (isset($_GET['action']) && $_GET['action'] === 'obtenerDetalleMovimiento') {
+    while (ob_get_level()) ob_end_clean(); 
+    header('Content-Type: application/json');
+    
+    $tipo = $_GET['tipo'] ?? '';
+    $id = intval($_GET['id'] ?? 0);
+
+    try {
+        // Llamamos a la nueva función del modelo
+        $resultado = $egresoModel->obtenerDetalleCompleto($tipo, $id);
+
+        if ($resultado && $resultado['cabecera']) {
+            echo json_encode([
+                'success' => true, 
+                'cabecera' => $resultado['cabecera'], 
+                'items' => $resultado['items']
+            ]);
+        } else {
+            echo json_encode([
+                'success' => false, 
+                'message' => 'No se encontró el registro en la base de datos.'
+            ]);
+        }
+    } catch (Exception $e) {
+        echo json_encode([
+            'success' => false, 
+            'message' => $e->getMessage()
+        ]);
+    }
+    exit;
+}
