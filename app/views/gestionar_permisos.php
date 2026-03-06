@@ -11,7 +11,7 @@ $resRoles = $conexion->query("SELECT * FROM roles ORDER BY id ASC");
 $roles = $resRoles->fetch_all(MYSQLI_ASSOC);
 
 // Módulos definidos
-$modulos = ['inicio', 'ventas', 'compras', 'almacenes', 'clientes', 'movimientos', 'ventashistorial', 'usuarios', 'finanzas', 'mermas'];
+$modulos = ['inicio', 'ventas', 'compras', 'almacenes', 'clientes', 'movimientos', 'ventashistorial', 'usuarios', 'finanzas', 'mermas','proveedores'];
 ?>
 
 <!DOCTYPE html>
