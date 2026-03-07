@@ -92,7 +92,7 @@
 
             <?php if (puedeVerModulo('usuarios')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/views/usuarios.php" class="nav-link <?= $archivoActual == 'usuarios.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/usuariosController.php" class="nav-link <?= $archivoActual == 'usuarios.php' ? 'active' : '' ?>">
                     <i class="bi bi-people"></i><span>Usuarios</span>
                 </a>
             </li>
@@ -108,7 +108,7 @@
 
             <?php if (puedeVerModulo('clientes')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/views/clientes.php" class="nav-link <?= $archivoActual == 'clientes.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/clientesController.php" class="nav-link <?= $archivoActual == 'clientes.php' ? 'active' : '' ?>">
                     <i class="bi bi-person-lines-fill"></i><span>Clientes</span>
                 </a>
             </li>
