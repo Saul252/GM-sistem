@@ -146,11 +146,20 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// --- 2. VARIABLES GLOBALES ---
+</script>
+<script>
+/**
+ * SISTEMA DE NOTIFICACIONES DE TRASPASOS - VERSIÓN FINAL
+ * - Manejo de unidades inteligentes (Millares + Piezas)
+ * - Forzado de visibilidad para evitar errores de "no pintado"
+ * - Actualización en tiempo real cada 30 segundos
+ */
+
 let ultimoConteoTraspasos = 0;
-let primeraCarga = true; // Nueva bandera para controlar el primer aviso
+let primeraCarga = true; 
 
 function verificarNotificaciones() {
+    // Agregamos timestamp para evitar caché del navegador
     const url = '/cfsistem/app/backend/movimientos/get_notificaciones_traspaso.php?t=' + Date.now();
     
     fetch(url)
@@ -160,64 +169,90 @@ function verificarNotificaciones() {
             const lista = document.getElementById('lista-notificaciones');
             const cantidadActual = parseInt(data.cantidad) || 0;
             
-            // Actualizar Badge
+            // 1. ACTUALIZAR BADGE DE LA CAMPANA
             if (badge) {
-                badge.innerText = cantidadActual;
-                cantidadActual > 0 ? badge.classList.remove('d-none') : badge.classList.add('d-none');
+                if (cantidadActual > 0) {
+                    badge.innerText = cantidadActual;
+                    badge.classList.remove('d-none');
+                    badge.style.display = 'inline-block';
+                } else {
+                    badge.classList.add('d-none');
+                    badge.style.display = 'none';
+                }
             }
 
-            // LÓGICA DE TOASTIFY:
-            // Se dispara si es la primera vez que carga y hay algo, O si llega algo nuevo después
+            // 2. ALERTA FLOTANTE (TOASTIFY)
             if (cantidadActual > 0 && (primeraCarga || cantidadActual > ultimoConteoTraspasos)) {
                 if (typeof Toastify === "function") {
+                    const u = data.items[0] || {};
+                    const textoCant = u.cantidad_texto || (u.cantidad + ' PZA');
+                    
                     Toastify({
-                        text: `📦 ¡NOTIFICACIÓN!\nTienes ${cantidadActual} traspaso(s) pendiente(s).`,
-                        duration: 5000,
+                        text: `📦 ¡SOLICITUD DE TRASPASO RECIBIDA!\n${u.emisor} envió ${textoCant} de ${u.producto}`,
+                        duration: 6000,
                         close: true,
                         gravity: "top", 
                         position: "right", 
-                        stopOnFocus: true, 
                         style: {
                             background: "linear-gradient(to right, #1e3c72, #2a5298)", 
                             borderRadius: "12px",
-                            fontSize: "1rem",
-                            boxShadow: "0 5px 15px rgba(0,0,0,0.3)",
-                            padding: "15px"
+                            boxShadow: "0 5px 15px rgba(0,0,0,0.3)"
                         },
-                        onClick: function(){ window.location.href = "/cfsistem/app/views/almacenes.php"; }
+                        onClick: function(){ window.location.href = "/cfsistem/app/controllers/almacenes.php"; }
                     }).showToast();
                 }
-                primeraCarga = false; // Ya avisamos la primera vez
+                primeraCarga = false; 
             }
 
             ultimoConteoTraspasos = cantidadActual;
 
-            // Llenar Lista
+            // 3. RENDERIZADO DEL MENÚ DESPLEGABLE (TARJETAS)
             if (lista && data.items) {
                 if (cantidadActual === 0) {
-                    lista.innerHTML = '<li class="p-3 text-center text-muted small">Sin pendientes</li>';
+                    lista.innerHTML = '<div style="padding: 20px; text-align: center; color: #999; font-size: 0.8rem;">Sin traspasos pendientes</div>';
                 } else {
-                    lista.innerHTML = data.items.map(item => `
-                        <li class="p-2 border-bottom d-flex justify-content-between align-items-center mx-2">
-                            <div style="font-size: 0.8rem; max-width: 75%">
-                                <b>${item.producto}</b><br>
-                                <span class="text-muted">Cant: ${item.cantidad}</span>
+                    lista.innerHTML = data.items.map(item => {
+                        // Aseguramos que mostrarCantidad tenga el valor procesado del PHP
+                        const mostrarCantidad = item.cantidad_texto ? item.cantidad_texto : (item.cantidad + ' PZA');
+
+                        return `
+                        <div style="padding: 12px 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #ffffff !important; color: #333 !important; min-height: 80px;">
+                            <div style="flex: 1; padding-right: 10px; line-height: 1.3;">
+                                <b style="color: #1e3c72; font-size: 0.85rem; display: block; text-transform: uppercase; margin-bottom: 2px;">${item.producto}</b>
+                                <div style="font-size: 0.75rem; color: #555;">De: <strong>${item.emisor}</strong></div>
+                                
+                                <div style="margin-top: 6px; background: #f8f9fa; padding: 3px 8px; border-radius: 5px; display: inline-block; border: 1px solid #ddd;">
+                                    <span style="color: #000000 !important; font-weight: 900 !important; font-size: 0.9rem !important; display: inline-block !important; visibility: visible !important;">
+                                        CANT: ${mostrarCantidad}
+                                    </span>
+                                </div>
+
+                                <div style="font-size: 0.65rem; color: #999; margin-top: 6px;">
+                                    <i class="bi bi-clock"></i> ${item.hora} • ${item.origen}
+                                </div>
                             </div>
-                            <button onclick="procesarRecepcion(${item.id})" class="btn btn-sm btn-success p-1">
-                                <i class="bi bi-check-lg"></i>
+                            <button onclick="procesarRecepcion(${item.id})" 
+                                    title="Confirmar Recepción"
+                                    style="background: #198754; color: white; border: none; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); flex-shrink: 0;">
+                                <i class="bi bi-check-lg" style="font-size: 1.2rem;"></i>
                             </button>
-                        </li>
-                    `).join('');
+                        </div>`;
+                    }).join('');
                 }
             }
         })
-        .catch(err => console.error("❌ Error:", err));
+        .catch(err => console.error("❌ Error en Notificaciones:", err));
 }
 
+/**
+ * Función para procesar la recepción rápida mediante AJAX
+ */
 function procesarRecepcion(id) {
-    if (!confirm("¿Deseas confirmar la recepción de este producto?")) return;
+    if (!confirm("¿Deseas confirmar la recepción de este producto? El stock se actualizará de inmediato.")) return;
+    
     const formData = new FormData();
     formData.append('id', id);
+    
     fetch('/cfsistem/app/backend/movimientos/procesar_transaccion_rapida.php', {
         method: 'POST',
         body: formData
@@ -225,19 +260,29 @@ function procesarRecepcion(id) {
     .then(res => res.json())
     .then(data => {
         if (data.success || data.status === 'success') {
+            // Recarga la página para actualizar inventarios visibles
             location.reload();
         } else {
-            alert("Error: " + (data.message || "No se pudo procesar"));
+            alert("Error: " + (data.message || "No se pudo procesar la recepción"));
         }
+    })
+    .catch(err => {
+        console.error("Error en fetch:", err);
+        alert("Error de conexión al servidor.");
     });
 }
 
+/**
+ * CONTROL MANUAL DEL MENÚ DESPLEGABLE (Dropdown)
+ */
 document.addEventListener('click', function(e) {
     const btn = document.getElementById('btnNotif');
     const menu = document.getElementById('menuNotif');
     if (!btn || !menu) return;
+
     if (btn.contains(e.target)) {
-        menu.style.display = (menu.style.display === 'none' || menu.style.display === '') ? 'block' : 'none';
+        const isVisible = (menu.style.display === 'block');
+        menu.style.display = isVisible ? 'none' : 'block';
         e.preventDefault();
         e.stopPropagation(); 
     } else if (!menu.contains(e.target)) {
@@ -245,8 +290,13 @@ document.addEventListener('click', function(e) {
     }
 });
 
+/**
+ * INICIALIZACIÓN AL CARGAR LA PÁGINA
+ */
 document.addEventListener('DOMContentLoaded', () => {
+    // Ejecución inmediata al cargar
     verificarNotificaciones();
+    // Ciclo de autorefresco cada 30 segundos
     setInterval(verificarNotificaciones, 30000);
 });
 </script>

@@ -2,7 +2,7 @@
 // 1. INCLUSIONES Y SEGURIDAD
 require_once __DIR__ . '/../../includes/auth.php';
 protegerPagina();
-require_once __DIR__ . '/../../includes/sidebar.php';
+require_once __DIR__ . '/../controllers/LayoutController.php';
 require_once __DIR__ . '/../../config/conexion.php';
 
 session_start();
@@ -178,6 +178,9 @@ if (isset($_GET['detalle_id'])) {
     <title>Entregas | Sistema</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
+
+    
     <style>
         :root {
             --sidebar-width: 250px;
@@ -198,8 +201,9 @@ if (isset($_GET['detalle_id'])) {
     </style>
 </head>
 <body>
-    <?php renderSidebar($paginaActual); ?>
-
+     <?php if (function_exists('renderizarLayout')) {
+        renderizarLayout($paginaActual); 
+    } ?>
     <div class="main-content">
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center mb-4">

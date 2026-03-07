@@ -2,7 +2,7 @@
 require_once __DIR__ . '/../../includes/auth.php';
 protegerPagina();
 
-require_once __DIR__ . '/../../includes/sidebar.php';
+require_once __DIR__ . '/../controllers/LayoutController.php';
 require_once __DIR__ . '/../../includes/permisos.php';
 
 $paginaActual = 'Inicio';
@@ -18,12 +18,14 @@ $paginaActual = 'Inicio';
 <link href="/cfsistem/css/inicio.css" rel="stylesheet">
 
 
+    <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
+
 </head>
 
 <body>
-
-<?php renderSidebar($paginaActual); ?>
-
+ <?php if (function_exists('renderizarLayout')) {
+        renderizarLayout($paginaActual); 
+    } ?>
 <div class="main">
 
 <h3 class="titulo-panel mb-4">
@@ -35,7 +37,7 @@ $paginaActual = 'Inicio';
 <!-- VENTAS -->
 <?php if (puedeVerModulo('ventas')): ?>
 <div class="col-md-4 col-lg-3">
-    <a href="/cfsistem/app/controllers/ventas.php|" class="text-decoration-none text-dark">
+    <a href="/cfsistem/app/controllers/ventas.php" class="text-decoration-none text-dark">
         <div class="card card-modulo text-center">
             <i class="bi bi-cart-check icono-modulo icon-ventas"></i>
             <h6>Ventas</h6>

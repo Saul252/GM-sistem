@@ -7,6 +7,9 @@
     <?php cargarEstilos(); ?>
     <link href="/cfsistem/css/ventas.css" rel="stylesheet">
     <style>
+        body{
+            padding-top: 20px;
+        }
     .tabla-scroll {
         max-height: 60vh;
         overflow-y: auto;
