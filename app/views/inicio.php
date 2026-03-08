@@ -50,7 +50,7 @@ $paginaActual = 'Inicio';
 <!-- COMPRAS -->
 <?php if (puedeVerModulo('compras')): ?>
 <div class="col-md-4 col-lg-3">
-    <a href="compras.php" class="text-decoration-none text-dark">
+    <a href="/cfsistem/app/controllers/egresosController.php" class="text-decoration-none text-dark">
         <div class="card card-modulo text-center">
             <i class="bi bi-bag-check icono-modulo icon-compras"></i>
             <h6>Compras</h6>
@@ -63,7 +63,7 @@ $paginaActual = 'Inicio';
 <!-- ALMACENES -->
 <?php if (puedeVerModulo('almacenes')): ?>
 <div class="col-md-4 col-lg-3">
-    <a href="almacenes.php" class="text-decoration-none text-dark">
+    <a href="/cfsistem/app/controllers/almacenes.php" class="text-decoration-none text-dark">
         <div class="card card-modulo text-center">
             <i class="bi bi-box-seam icono-modulo icon-almacen"></i>
             <h6>Almacenes</h6>
@@ -75,7 +75,7 @@ $paginaActual = 'Inicio';
 <!-- Movimientos -->
 <?php if (puedeVerModulo('movimientos')): ?>
 <div class="col-md-4 col-lg-3">
-    <a href="movimientos.php" class="text-decoration-none text-dark">
+    <a href="/cfsistem/app/controllers/movimientosController.php" class="text-decoration-none text-dark">
         <div class="card card-modulo text-center p-3">
             <i class="bi bi-arrow-left-right icono-modulo icon-movimientos"></i>
             <h6 class="mt-2">Movimientos</h6>
@@ -99,7 +99,7 @@ $paginaActual = 'Inicio';
 <!-- USUARIOS -->
 <?php if (puedeVerModulo('usuarios')): ?>
 <div class="col-md-4 col-lg-3">
-    <a href="usuarios.php" class="text-decoration-none text-dark">
+    <a href="/cfsistem/app/controllers/usuariosController.php" class="text-decoration-none text-dark">
         <div class="card card-modulo text-center">
             <i class="bi bi-people icono-modulo icon-usuarios"></i>
             <h6>Usuarios</h6>
@@ -112,7 +112,7 @@ $paginaActual = 'Inicio';
 <!-- MERMAS -->
 <?php if (puedeVerModulo('mermas')): ?>
 <div class="col-md-4 col-lg-3">
-    <a href="mermas.php" class="text-decoration-none text-dark">
+    <a href="/cfsistem/app/controllers/mermasController.php" class="text-decoration-none text-dark">
         <div class="card card-modulo text-center">
             <i class="bi bi-exclamation-triangle icono-modulo icon-mermas"></i>
             <h6>Mermas</h6>
@@ -123,7 +123,7 @@ $paginaActual = 'Inicio';
 <?php endif; ?>
 <?php if (puedeVerModulo('clientes')): ?>
 <div class="col-md-4 col-lg-3">
-    <a href="clientes.php" class="text-decoration-none text-dark">
+    <a href="/cfsistem/app/controllers/clientesController.php" class="text-decoration-none text-dark">
         <div class="card card-modulo text-center">
             <i class="bi bi-person-lines-fill icono-modulo icon-clientes"></i>
             <h6>Clientes</h6>
@@ -132,7 +132,32 @@ $paginaActual = 'Inicio';
     </a>
 </div>
 <?php endif; ?>
+
+
+
+<?php if (puedeVerModulo('corteCaja')): ?>
+<div class="col-md-4 col-lg-3">
+    <a href="/cfsistem/app/controllers/corteCajaController.php" class="text-decoration-none text-dark">
+        <div class="card card-modulo text-center">
+            <div class="icono-modulo">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="#27ae60" viewBox="0 0 16 16">
+                    <path d="M1 4a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v1H1V4z"/>
+                    <path d="M15 5v10h1V5h-1zM1 5v10h1V5H1zM3 5v10h10V5H3zM2 14h12v1H2v-1z"/>
+                    <path d="M6 1h4v1H6V1z"/>
+                    <path d="M3 6h10v1H3V6zm0 2h10v1H3V8zm0 2h10v1H3v-1zm0 2h10v1H3v-1z"/>
+                </svg>
+            </div>
+            <h6>Corte de Caja</h6>
+            <small class="text-muted">Cierres, ingresos y egresos</small>
+        </div>
+    </a>
+</div>
+<?php endif; ?>
+
 <?php if (puedeVerModulo('finanzas')): ?>
+
+
+
 <div class="col-md-4 col-lg-3">
     <a href="finanzas.php" class="text-decoration-none text-dark">
         <div class="card card-modulo text-center shadow-sm h-100">
@@ -140,11 +165,7 @@ $paginaActual = 'Inicio';
             <h6 class="fw-bold">Finanzas</h6>
             <small class="text-muted">Estadísticas, Utilidades y Gastos</small>
             
-            <div class="mt-2">
-                <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle" style="font-size: 0.7rem;">
-                    <i class="bi bi-lightning-charge-fill me-1"></i>En tiempo real
-                </span>
-            </div>
+           
         </div>
     </a>
 </div>

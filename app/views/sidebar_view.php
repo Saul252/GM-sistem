@@ -129,6 +129,20 @@
                 </a>
             </li>
             <?php endif; ?>
+            <?php if (puedeVerModulo('corteCaja')): ?>
+<li class="nav-item">
+    <a href="/cfsistem/app/controllers/corteCajaController.php" class="nav-link <?= $archivoActual == 'corte_caja.php' ? 'active' : '' ?>">
+        <i class="bi bi-calculator"></i><span>Corte de Caja</span>
+    </a>
+</li>
+<?php endif; ?>
+<!-- 
+<li class="nav-item">
+    <a href="/cfsistem/app/views/gestionar_permisos.php" class="nav-link <?= $archivoActual == 'gestion_permisos.php' ? 'active' : '' ?>">
+        <i class="bi bi-key"></i><span>Gestión de Permisos</span>
+    </a>
+</li> -->
+
         </ul>
     </div>
 </aside>
