@@ -250,6 +250,10 @@
                     <td class="text-center"><span class="badge ${v.estado_entrega=='entregado'?'bg-success':(v.estado_entrega=='parcial'?'bg-warning text-dark':'bg-danger')}">${v.estado_entrega.toUpperCase()}</span></td>
                     <td class="text-end pe-3">
                         <div class="btn-group">
+                        <a href="../controllers/editarVentaController.php?id=${v.id}" 
+   class="btn btn-warning btn-sm shadow-sm">
+   <i class="fas fa-edit"></i> Editar Venta
+</a>
                             <button class="btn btn-sm btn-dark shadow-sm" onclick="verDetalle(${v.id})">
                                 <i class="bi bi-gear-fill"></i> Gestionar
                             </button>
