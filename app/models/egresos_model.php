@@ -14,38 +14,34 @@ public function obtenerAlmacenesActivos() {
      * 1. OBTIENE TODO EL FLUJO (COMPRAS + GASTOS)
      * Usa un UNION para juntar ambas tablas en una sola lista para la tabla principal
      */
-  public function obtenerTodosLosEgresos($desde, $hasta, $usuario_id = null) {
+public function obtenerTodosLosEgresos($desde, $hasta, $almacen_id = 0) {
+    $whereAlmacenC = ($almacen_id > 0) ? " AND c.almacen_id = $almacen_id" : "";
+    $whereAlmacenG = ($almacen_id > 0) ? " AND g.almacen_id = $almacen_id" : "";
+
     $sql = "
     (SELECT 
-        c.id, 
-        c.folio, 
-        c.fecha_compra AS fecha, 
-        c.proveedor AS entidad, 
-        c.total, 
-        'compra' AS tipo, 
-        c.tiene_faltantes, 
-        c.documento_url,
-        /* Calculamos el total de piezas pendientes desde la tabla de faltantes */
-        IFNULL((SELECT SUM(cantidad_pendiente) FROM faltantes_ingreso WHERE compra_id = c.id), 0) AS piezas_faltantes
+        c.id, c.folio, c.fecha_compra AS fecha, c.proveedor AS entidad, 
+        c.total, 'compra' AS tipo, c.tiene_faltantes, c.documento_url,
+        IFNULL((SELECT SUM(cantidad_pendiente) FROM faltantes_ingreso WHERE compra_id = c.id), 0) AS piezas_faltantes,
+        a.nombre AS almacen_nombre -- <--- AGREGADO
      FROM compras c
-     WHERE c.fecha_compra BETWEEN ? AND ?)
+     JOIN almacenes a ON c.almacen_id = a.id
+     WHERE (c.fecha_compra BETWEEN ? AND ?) $whereAlmacenC)
     
     UNION ALL
     
     (SELECT 
-        id, 
-        folio, 
-        fecha_gasto AS fecha, 
-        beneficiario AS entidad, 
-        total, 
-        'gasto' AS tipo, 
-        0 AS tiene_faltantes, 
-        documento_url,
-        0 AS piezas_faltantes /* Los gastos no tienen inventario, por lo tanto 0 faltantes */
-     FROM gastos 
-     WHERE fecha_gasto BETWEEN ? AND ?)
+        g.id, g.folio, g.fecha_gasto AS fecha, g.beneficiario AS entidad, 
+        g.total, 'gasto' AS tipo, 0 AS tiene_faltantes, g.documento_url, 0 AS piezas_faltantes,
+        a.nombre AS almacen_nombre -- <--- AGREGADO
+     FROM gastos g
+     JOIN almacenes a ON g.almacen_id = a.id
+     WHERE (g.fecha_gasto BETWEEN ? AND ?) $whereAlmacenG)
     
     ORDER BY fecha DESC, id DESC";
+    
+    // ... resto del código del prepare y bind_param igual ...
+
 
     $stmt = $this->db->prepare($sql);
     $stmt->bind_param("ssss", $desde, $hasta, $desde, $hasta);

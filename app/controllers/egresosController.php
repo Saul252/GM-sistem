@@ -121,11 +121,26 @@ if (isset($_GET['action']) && $_GET['action'] === 'buscarProductos') {
     exit;
 }
 // --- CARGA DE VISTA (GET) ---
+// --- CARGA DE VISTA (GET) ---
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     $fecha_desde = $_GET['desde'] ?? date('Y-m-01');
     $fecha_hasta = $_GET['hasta'] ?? date('Y-m-d');
 
-    $egresos = $egresoModel->obtenerTodosLosEgresos($fecha_desde, $fecha_hasta);
+    // 1. OBTENEMOS DATOS DE SESIÓN (Basado en tu validar.php)
+    $rol_id = $_SESSION['rol_id'] ?? 0;
+    $mi_almacen_id = $_SESSION['almacen_id'] ?? 0;
+
+    // 2. LÓGICA DE SEGURIDAD PARA EL FILTRO
+    // Si es Administrador (Rol 1), puede usar el filtro del select.
+    // Si no es Admin, ignoramos lo que venga por URL y le clavamos su almacén de sesión.
+    if ($rol_id == 1) {
+        $almacen_a_consultar = isset($_GET['almacen_filtro']) ? intval($_GET['almacen_filtro']) : 0;
+    } else {
+        $almacen_a_consultar = $mi_almacen_id;
+    }
+
+    // 3. PASAMOS EL FILTRO AL MODELO (Debes actualizar el modelo para recibir este 3er parámetro)
+    $egresos = $egresoModel->obtenerTodosLosEgresos($fecha_desde, $fecha_hasta, $almacen_a_consultar);
 
     $totalSumCompras = 0;
     $totalSumGastos = 0;
@@ -136,10 +151,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     
     $granTotalEgresos = $totalSumCompras + $totalSumGastos;
     
-    // 1. Cargamos Almacenes
+    // 1. Cargamos Almacenes para el select (El Admin los verá todos)
     $almacenes = $egresoModel->obtenerAlmacenesActivos();
 
-    // 2. AGREGAR ESTA LÍNEA: Cargamos los productos para que la vista los reconozca
+    // 2. Cargamos los productos
     $productos = $comprasModel->obtenerProductos(); 
 
     $tituloPagina = "Gestión de Egresos";

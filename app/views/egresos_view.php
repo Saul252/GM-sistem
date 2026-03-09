@@ -80,26 +80,54 @@ require_once $ruta;
                 </div>
             </div>
 
-            <div class="card shadow-sm mb-4 border-0 rounded-3">
-                <div class="card-body p-3">
-                    <form method="GET" class="row g-3 align-items-end">
-                        <div class="col-6 col-md-3">
-                            <label class="form-label small fw-bold text-secondary">DESDE</label>
-                            <input type="date" name="desde" class="form-control form-control-sm"
-                                value="<?= $fecha_desde ?>">
-                        </div>
-                        <div class="col-6 col-md-3">
-                            <label class="form-label small fw-bold text-secondary">HASTA</label>
-                            <input type="date" name="hasta" class="form-control form-control-sm"
-                                value="<?= $fecha_hasta ?>">
-                        </div>
-                        <div class="col-12 col-md-6 d-flex gap-2">
-                            <button type="submit" class="btn btn-dark btn-sm w-100 fw-bold">Filtrar Movimientos</button>
-                            <a href="egresos.php" class="btn btn-outline-secondary btn-sm w-100">Limpiar</a>
-                        </div>
-                    </form>
-                </div>
-            </div>
+            <div class="card mb-4 shadow-sm border-0">
+    <div class="card-body bg-light rounded">
+        <?php 
+// Capturamos el periodo de la URL. Si no hay nada, por defecto es 'mes'.
+$periodo_sel = $_GET['periodo_filtro'] ?? 'mes'; 
+?>
+
+<form id="formFiltros" method="GET" action="" class="row g-3 align-items-end">
+    
+    <div class="col-md-2">
+        <label class="form-label fw-bold small text-uppercase text-primary">Periodo:</label>
+        <select id="filtro_rapido" name="periodo_filtro" class="form-select border-primary fw-bold">
+            <option value="hoy" <?= ($periodo_sel == 'hoy') ? 'selected' : '' ?>>Hoy</option>
+            <option value="ayer" <?= ($periodo_sel == 'ayer') ? 'selected' : '' ?>>Ayer</option>
+            <option value="semana" <?= ($periodo_sel == 'semana') ? 'selected' : '' ?>>Esta Semana</option>
+            <option value="mes" <?= ($periodo_sel == 'mes') ? 'selected' : '' ?>>Este Mes</option>
+            <option value="personalizado" <?= ($periodo_sel == 'personalizado') ? 'selected' : '' ?>>📅 Personalizado</option>
+        </select>
+    </div>
+
+    <div class="col-md-2">
+        <label class="form-label fw-bold small text-uppercase">Desde:</label>
+        <input type="date" name="desde" id="fecha_desde" class="form-control" 
+               value="<?= $fecha_desde ?>" <?= ($periodo_sel !== 'personalizado') ? 'disabled' : '' ?>>
+    </div>
+
+    <div class="col-md-2">
+        <label class="form-label fw-bold small text-uppercase">Hasta:</label>
+        <input type="date" name="hasta" id="fecha_hasta" class="form-control" 
+               value="<?= $fecha_hasta ?>" <?= ($periodo_sel !== 'personalizado') ? 'disabled' : '' ?>>
+    </div>
+
+    <?php if ($_SESSION['rol_id'] == 1): ?>
+    <div class="col-md-3">
+        <label class="form-label fw-bold small text-uppercase">Almacén:</label>
+        <select id="almacen_filtro" name="almacen_filtro" class="form-select">
+            <option value="0">🌐 Todos los Almacenes</option>
+            <?php foreach ($almacenes as $alm): ?>
+            <option value="<?= $alm['id'] ?>" <?= (isset($_GET['almacen_filtro']) && $_GET['almacen_filtro'] == $alm['id']) ? 'selected' : '' ?>>
+                📍 <?= $alm['nombre'] ?>
+            </option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <?php endif; ?>
+</form>
+    </div>
+</div>
 
             <div class="row g-3 mb-4">
                 <div class="col-md-4">
@@ -134,6 +162,7 @@ require_once $ruta;
                         <thead class="bg-light">
                             <tr>
                                 <th class="ps-3">ID</th>
+                                <th>Almacen</th>
                                 <th>Fecha</th>
                                 <th>Folio</th>
                                 <th>Tipo</th>
@@ -149,15 +178,23 @@ require_once $ruta;
                             <?php foreach($egresos as $e): ?>
                             <tr>
                                 <td class="ps-3"><span class="text-muted small">#</span><?= $e['id'] ?></td>
+                                <td>
+                                    <span class="text-secondary small fw-semibold">
+                                        <i class="bi bi-geo-alt-fill text-danger" style="font-size: 0.7rem;"></i>
+                                        <?= htmlspecialchars($e['almacen_nombre']) ?>
+                                    </span>
+                                </td>
 
                                 <td class="text-muted small"><?= date('d/m/Y', strtotime($e['fecha'])) ?></td>
                                 <td class="fw-bold text-dark"><?= $e['folio'] ?></td>
+
                                 <td>
                                     <span
                                         class="badge rounded-pill <?= $e['tipo'] == 'compra' ? 'bg-primary' : 'bg-warning text-dark' ?>">
                                         <?= strtoupper($e['tipo']) ?>
                                     </span>
                                 </td>
+
                                 <td><?= htmlspecialchars($e['entidad']) ?></td>
                                 <td class="fw-bold text-end">$<?= number_format($e['total'], 2) ?></td>
 
@@ -183,20 +220,21 @@ require_once $ruta;
                                 </td>
 
                                 <td class="text-center">
-    <?php if(!empty($e['documento_url'])): ?>
-        <?php 
+                                    <?php if(!empty($e['documento_url'])): ?>
+                                    <?php 
             // Determinamos el prefijo de la ruta según el tipo
             // Si es gasto, añadimos la carpeta intermedia
             $ruta_base = ($e['tipo'] == 'gasto') ? 'uploads/evidencias/' : '';
         ?>
-        
-        <a href="../../<?= $ruta_base . $e['documento_url'] ?>" target="_blank" class="text-primary h5">
-            <i class="bi bi-file-earmark-pdf"></i>
-        </a>
-    <?php else: ?>
-        <span class="text-muted small">-</span>
-    <?php endif; ?>
-</td>
+
+                                    <a href="../../<?= $ruta_base . $e['documento_url'] ?>" target="_blank"
+                                        class="text-primary h5">
+                                        <i class="bi bi-file-earmark-pdf"></i>
+                                    </a>
+                                    <?php else: ?>
+                                    <span class="text-muted small">-</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="text-end pe-3">
                                     <?php 
 // 1. Verificamos que exista la llave y que NO sea NULL
@@ -364,7 +402,79 @@ if (isset($e['piezas_faltantes']) && $e['piezas_faltantes'] !== null): ?>
     // Imprime esto en la consola para que verifiques si hay datos
     console.log("Productos cargados:", window.DATA_COMPRAS.productos);
     </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('formFiltros');
+    const filtroRapido = document.getElementById('filtro_rapido');
+    const inputDesde = document.getElementById('fecha_desde');
+    const inputHasta = document.getElementById('fecha_hasta');
+    const selectAlmacen = document.getElementById('almacen_filtro');
 
+    const formatLocal = (date) => {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, '0');
+        const d = String(date.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    };
+
+    // Al cambiar Periodo Rápido
+    filtroRapido.addEventListener('change', function() {
+        if (this.value === 'personalizado') {
+            inputDesde.disabled = false;
+            inputHasta.disabled = false;
+            return; 
+        }
+
+        let hoy = new Date();
+        let desde = new Date();
+        let hasta = new Date();
+
+        switch (this.value) {
+            case 'ayer':
+                desde.setDate(hoy.getDate() - 1);
+                hasta.setDate(hoy.getDate() - 1);
+                break;
+            case 'semana':
+                const day = hoy.getDay();
+                const diff = hoy.getDate() - day + (day === 0 ? -6 : 1);
+                desde.setDate(diff);
+                break;
+            case 'mes':
+                desde = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+                break;
+        }
+
+        inputDesde.value = formatLocal(desde);
+        inputHasta.value = formatLocal(hasta);
+        
+        enviarFormulario();
+    });
+
+    // ¡ESTA ES LA CLAVE! 
+    // Si el usuario cambia manualmente una fecha, el select de periodo 
+    // debe cambiar a 'personalizado' automáticamente.
+    [inputDesde, inputHasta].forEach(input => {
+        input.addEventListener('change', () => {
+            filtroRapido.value = 'personalizado';
+            enviarFormulario();
+        });
+    });
+
+    // Al cambiar almacén
+    if(selectAlmacen) {
+        selectAlmacen.addEventListener('change', () => {
+            enviarFormulario();
+        });
+    }
+
+    function enviarFormulario() {
+        // Siempre habilitar antes de enviar para que PHP reciba los datos
+        inputDesde.disabled = false;
+        inputHasta.disabled = false;
+        form.submit();
+    }
+});
+</script>
 
     <?php require_once __DIR__ . '/egresosComponets/modalCompra.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/modalAjuste.php'; ?>
