@@ -229,6 +229,10 @@ public function obtenerDetalleCompleto($id) {
      * Incluye la eliminación de productos que el usuario quitó de la tabla
      * y la inserción de productos nuevos (detalle_id = 0).
      */
+    /**
+     * Versión Final Blindada: Recalcula, Edita, Elimina y Procesa Entregas hoy.
+     * Basado estrictamente en el esquema SQL de cfsistem.
+     */
     public function recalcularYEditarVenta($data) {
         $this->db->begin_transaction();
         try {
@@ -236,47 +240,88 @@ public function obtenerDetalleCompleto($id) {
             $u_id = intval($data['usuario_id']);
             $almacen_id = intval($data['almacen_id']);
 
-            // 1. ELIMINACIÓN FÍSICA de productos removidos en el front
-            // Solo borra si NO han sido entregados (cantidad_entregada = 0)
+            // 0. Obtener info previa para el Kardex
+            $v_prev = $this->db->query("SELECT folio FROM ventas WHERE id = $v_id")->fetch_assoc();
+
+            // 1. ELIMINACIÓN de productos quitados (Solo si no tienen entregas previas)
             $ids_enviados = array_filter(array_column($data['productos'], 'detalle_id'));
             if (!empty($ids_enviados)) {
                 $ids_string = implode(',', $ids_enviados);
                 $this->db->query("DELETE FROM detalle_venta 
                                  WHERE venta_id = $v_id 
-                                 AND cantidad_entregada = 0 
-                                 AND id NOT IN ($ids_string)");
+                                 AND id NOT IN ($ids_string)
+                                 AND id NOT IN (SELECT detalle_venta_id FROM detalle_entrega)");
             }
 
-            // 2. ACTUALIZAR CABECERA
+            // 2. ACTUALIZAR CABECERA (Ventas)
             $stmtV = $this->db->prepare("UPDATE ventas SET id_cliente = ?, subtotal = ?, total = ? WHERE id = ?");
-            $stmtV->bind_param("iddi", $data['id_cliente'], $data['nuevo_subtotal'], $data['nuevo_total'], $v_id);
+            $stmtV->bind_param("iddi", $data['id_cliente'], $data['nuevo_total'], $data['nuevo_total'], $v_id);
             $stmtV->execute();
 
-            // 3. PROCESAR PRODUCTOS (NUEVOS Y EXISTENTES)
+            // 3. REGISTRO GLOBAL DE ENTREGA (Si hay algo en la columna verde)
+            $entrega_id = 0;
+            $tiene_entregas_hoy = array_sum(array_column($data['productos'], 'entrega_hoy')) > 0;
+
+            if ($tiene_entregas_hoy) {
+                $stmtE = $this->db->prepare("INSERT INTO entregas_venta (venta_id, usuario_id, fecha, observaciones) VALUES (?, ?, NOW(), 'Entrega desde edición')");
+                $stmtE->bind_param("ii", $v_id, $u_id);
+                $stmtE->execute();
+                $entrega_id = $this->db->insert_id;
+            }
+
+            // 4. PROCESAR PRODUCTOS
             foreach ($data['productos'] as $prod) {
                 $dv_id = intval($prod['detalle_id']);
                 $p_id = intval($prod['producto_id']);
                 $n_cant = floatval($prod['nueva_cantidad']);
+                $ent_hoy = floatval($prod['entrega_hoy']);
                 $precio = floatval($prod['precio_unitario']);
                 $subtotal_fila = $n_cant * $precio;
 
                 if ($dv_id == 0) {
-                    // INSERTAR NUEVO PRODUCTO
+                    // Nuevo Producto
                     $tipo_p = $prod['tipo_precio'] ?? 'minorista';
-                    $stmtIns = $this->db->prepare("INSERT INTO detalle_venta (venta_id, producto_id, cantidad, precio_unitario, subtotal, tipo_precio) VALUES (?, ?, ?, ?, ?, ?)");
+                    $stmtIns = $this->db->prepare("INSERT INTO detalle_venta (venta_id, producto_id, cantidad, precio_unitario, subtotal, tipo_precio, estado_entrega) VALUES (?, ?, ?, ?, ?, ?, 'pendiente')");
                     $stmtIns->bind_param("iiddss", $v_id, $p_id, $n_cant, $precio, $subtotal_fila, $tipo_p);
                     $stmtIns->execute();
+                    $dv_id = $this->db->insert_id;
                 } else {
-                    // ACTUALIZAR EXISTENTE
+                    // Actualizar Existente
                     $actual = $this->db->query("SELECT cantidad_entregada FROM detalle_venta WHERE id = $dv_id")->fetch_assoc();
                     if ($n_cant < $actual['cantidad_entregada']) {
-                        throw new Exception("No puedes reducir por debajo de lo ya entregado.");
+                        throw new Exception("Error: No puedes reducir la cantidad total por debajo de lo ya entregado.");
                     }
                     $this->db->query("UPDATE detalle_venta SET cantidad = $n_cant, precio_unitario = $precio, subtotal = $subtotal_fila WHERE id = $dv_id");
                 }
+
+                // 5. LOGICA DE STOCK Y ENTREGAS (Si capturó en verde)
+                if ($ent_hoy > 0) {
+                    // Detalle de entrega física
+                    $stmtDE = $this->db->prepare("INSERT INTO detalle_entrega (entrega_id, detalle_venta_id, cantidad) VALUES (?, ?, ?)");
+                    $stmtDE->bind_param("iid", $entrega_id, $dv_id, $ent_hoy);
+                    $stmtDE->execute();
+
+                    // Sumar al acumulado del detalle
+                    $this->db->query("UPDATE detalle_venta SET cantidad_entregada = cantidad_entregada + $ent_hoy WHERE id = $dv_id");
+
+                    // Restar de Inventario
+                    $this->db->query("UPDATE inventario SET stock = stock - $ent_hoy WHERE producto_id = $p_id AND almacen_id = $almacen_id");
+
+                    // Kardex (Movimientos)
+                    $obs = "Entrega parcial - Folio: " . $v_prev['folio'];
+                    $this->registrarMovimiento($p_id, 'salida', $ent_hoy, $almacen_id, $u_id, $v_id, $obs);
+                }
             }
 
+            // 6. RECALCULAR ESTADO DE PAGO (Por si el nuevo total es menor a lo ya pagado)
+            $resPagos = $this->db->query("SELECT SUM(monto) as pagado FROM historial_pagos WHERE venta_id = $v_id");
+            $pagado = $resPagos->fetch_assoc()['pagado'] ?? 0;
+            $nuevo_st_pago = ($pagado >= $data['nuevo_total']) ? 'pagado' : ($pagado > 0 ? 'parcial' : 'pendiente');
+            $this->db->query("UPDATE ventas SET estado_pago = '$nuevo_st_pago' WHERE id = $v_id");
+
+            // 7. SINCRONIZAR ESTADOS DE ENTREGA
             $this->sincronizarEstadosEntrega($v_id);
+
             $this->db->commit();
             return ["status" => "success"];
         } catch (Exception $e) {
