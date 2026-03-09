@@ -1,0 +1,101 @@
+<?php
+/**
+ * ventasHistorialController.php
+ * Controlador para la gestión de Entregas y Abonos (Historial de Ventas)
+ */
+
+require_once __DIR__ . '/../../includes/auth.php';
+protegerPagina(); // Tu función de seguridad
+require_once __DIR__ . '/../../config/conexion.php';
+require_once __DIR__ . '/../controllers/LayoutController.php';
+require_once __DIR__ . '/../models/ventasHistorialModel.php';
+
+$ventasModel = new VentaHistorialModel($conexion);
+$paginaActual = 'Entregas';
+
+// --- ACCIÓN: LISTADO AJAX (Con filtros) ---
+if (isset($_GET['action']) && $_GET['action'] === 'listar') {
+    if (ob_get_level()) ob_clean(); 
+    header('Content-Type: application/json');
+    
+    try {
+        $filtros = [
+            'search'   => $_GET['f_search'] ?? '',
+            'status'   => $_GET['f_status'] ?? '',
+            'pago'     => $_GET['f_pago'] ?? '',
+            'rango'    => $_GET['f_rango'] ?? 'todos',
+            'inicio'   => $_GET['f_inicio'] ?? '',
+            'fin'      => $_GET['f_fin'] ?? '',
+            'almacen'  => $_GET['f_almacen'] ?? 0
+        ];
+
+        $rol_id = $_SESSION['rol_id'] ?? 2;
+        $id_almacen_usuario = $_SESSION['almacen_id'] ?? 0;
+
+        $data = $ventasModel->obtenerVentasFiltradas($filtros, $rol_id, $id_almacen_usuario);
+        echo json_encode($data);
+
+    } catch (Throwable $e) {
+        echo json_encode(['error' => true, 'message' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// --- ACCIÓN: GUARDAR ENTREGA ---
+if (isset($_GET['action']) && $_GET['action'] === 'guardarEntrega') {
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+
+    try {
+        $venta_id = intval($_POST['venta_id']);
+        $productos = $_POST['productos'] ?? [];
+        $usuario_id = $_SESSION['usuario_id'] ?? 1;
+
+        $resultado = $ventasModel->procesarEntrega($venta_id, $productos, $usuario_id);
+        echo json_encode(['status' => 'success']);
+
+    } catch (Throwable $e) {
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// --- ACCIÓN: GUARDAR ABONO ---
+if (isset($_GET['action']) && $_GET['action'] === 'guardarAbono') {
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+
+    try {
+        $venta_id = intval($_POST['venta_id']);
+        $monto = floatval($_POST['monto']);
+        $usuario_id = $_SESSION['usuario_id'] ?? 1;
+
+        $resultado = $ventasModel->registrarAbono($venta_id, $monto, $usuario_id);
+        echo json_encode(['status' => 'success']);
+
+    } catch (Throwable $e) {
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// --- ACCIÓN: OBTENER DETALLE ---
+if (isset($_GET['action']) && $_GET['action'] === 'obtenerDetalle') {
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+
+    try {
+        $id = intval($_GET['id'] ?? 0);
+        $detalle = $ventasModel->obtenerDetalleCompleto($id);
+        echo json_encode($detalle);
+    } catch (Throwable $e) {
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// --- CARGA DE VISTA ---
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
+    $tituloPagina = "Control de Entregas";
+    require_once __DIR__ . '/../views/ventasHistorial_view.php';
+}
