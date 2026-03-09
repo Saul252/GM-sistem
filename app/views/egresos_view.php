@@ -81,52 +81,70 @@ require_once $ruta;
             </div>
 
             <div class="card mb-4 shadow-sm border-0">
+   <div class="card mb-4 shadow-sm border-0">
     <div class="card-body bg-light rounded">
         <?php 
-// Capturamos el periodo de la URL. Si no hay nada, por defecto es 'mes'.
-$periodo_sel = $_GET['periodo_filtro'] ?? 'mes'; 
-?>
+        $periodo_sel = $_GET['periodo_filtro'] ?? 'mes'; 
+        $tipo_sel    = $_GET['tipo_filtro'] ?? 'todos';
+        ?>
+        <form id="formFiltros" method="GET" action="">
+            <div class="row g-3 align-items-end">
+                
+                <div class="col-md-2">
+                    <label class="form-label fw-bold small text-uppercase text-primary">Periodo:</label>
+                    <select id="filtro_rapido" name="periodo_filtro" class="form-select border-primary fw-bold">
+                        <option value="hoy" <?= ($periodo_sel == 'hoy') ? 'selected' : '' ?>>Hoy</option>
+                        <option value="ayer" <?= ($periodo_sel == 'ayer') ? 'selected' : '' ?>>Ayer</option>
+                        <option value="semana" <?= ($periodo_sel == 'semana') ? 'selected' : '' ?>>Esta Semana</option>
+                        <option value="mes" <?= ($periodo_sel == 'mes') ? 'selected' : '' ?>>Este Mes</option>
+                        <option value="personalizado" <?= ($periodo_sel == 'personalizado') ? 'selected' : '' ?>>📅 Personalizado</option>
+                    </select>
+                </div>
 
-<form id="formFiltros" method="GET" action="" class="row g-3 align-items-end">
-    
-    <div class="col-md-2">
-        <label class="form-label fw-bold small text-uppercase text-primary">Periodo:</label>
-        <select id="filtro_rapido" name="periodo_filtro" class="form-select border-primary fw-bold">
-            <option value="hoy" <?= ($periodo_sel == 'hoy') ? 'selected' : '' ?>>Hoy</option>
-            <option value="ayer" <?= ($periodo_sel == 'ayer') ? 'selected' : '' ?>>Ayer</option>
-            <option value="semana" <?= ($periodo_sel == 'semana') ? 'selected' : '' ?>>Esta Semana</option>
-            <option value="mes" <?= ($periodo_sel == 'mes') ? 'selected' : '' ?>>Este Mes</option>
-            <option value="personalizado" <?= ($periodo_sel == 'personalizado') ? 'selected' : '' ?>>📅 Personalizado</option>
-        </select>
-    </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold small text-uppercase">Desde:</label>
+                    <input type="date" name="desde" id="fecha_desde" class="form-control" 
+                           value="<?= $fecha_desde ?>" <?= ($periodo_sel !== 'personalizado') ? 'disabled' : '' ?>>
+                </div>
 
-    <div class="col-md-2">
-        <label class="form-label fw-bold small text-uppercase">Desde:</label>
-        <input type="date" name="desde" id="fecha_desde" class="form-control" 
-               value="<?= $fecha_desde ?>" <?= ($periodo_sel !== 'personalizado') ? 'disabled' : '' ?>>
-    </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold small text-uppercase">Hasta:</label>
+                    <input type="date" name="hasta" id="fecha_hasta" class="form-control" 
+                           value="<?= $fecha_hasta ?>" <?= ($periodo_sel !== 'personalizado') ? 'disabled' : '' ?>>
+                </div>
 
-    <div class="col-md-2">
-        <label class="form-label fw-bold small text-uppercase">Hasta:</label>
-        <input type="date" name="hasta" id="fecha_hasta" class="form-control" 
-               value="<?= $fecha_hasta ?>" <?= ($periodo_sel !== 'personalizado') ? 'disabled' : '' ?>>
-    </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold small text-uppercase text-primary">Mostrar:</label>
+                    <select name="tipo_filtro" id="tipo_filtro" class="form-select fw-bold border-primary shadow-sm">
+                        <option value="todos" <?= ($tipo_sel == 'todos') ? 'selected' : '' ?>>📁 Todos</option>
+                        <option value="compra" <?= ($tipo_sel == 'compra') ? 'selected' : '' ?>>🛒 Compras</option>
+                        <option value="gasto" <?= ($tipo_sel == 'gasto') ? 'selected' : '' ?>>💸 Gastos</option>
+                    </select>
+                </div>
 
-    <?php if ($_SESSION['rol_id'] == 1): ?>
-    <div class="col-md-3">
-        <label class="form-label fw-bold small text-uppercase">Almacén:</label>
-        <select id="almacen_filtro" name="almacen_filtro" class="form-select">
-            <option value="0">🌐 Todos los Almacenes</option>
-            <?php foreach ($almacenes as $alm): ?>
-            <option value="<?= $alm['id'] ?>" <?= (isset($_GET['almacen_filtro']) && $_GET['almacen_filtro'] == $alm['id']) ? 'selected' : '' ?>>
-                📍 <?= $alm['nombre'] ?>
-            </option>
-            <?php endforeach; ?>
-        </select>
+                <?php if ($_SESSION['rol_id'] == 1): ?>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold small text-uppercase">Almacén:</label>
+                    <select id="almacen_filtro" name="almacen_filtro" class="form-select">
+                        <option value="0">🌐 Todos</option>
+                        <?php foreach ($almacenes as $alm): ?>
+                        <option value="<?= $alm['id'] ?>" <?= (isset($_GET['almacen_filtro']) && $_GET['almacen_filtro'] == $alm['id']) ? 'selected' : '' ?>>
+                            📍 <?= $alm['nombre'] ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <?php endif; ?>
+
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">
+                        <i class="bi bi-funnel"></i> FILTRAR
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
-    <?php endif; ?>
-</form>
-    </div>
+</div>
 </div>
 
             <div class="row g-3 mb-4">
@@ -403,77 +421,87 @@ if (isset($e['piezas_faltantes']) && $e['piezas_faltantes'] !== null): ?>
     console.log("Productos cargados:", window.DATA_COMPRAS.productos);
     </script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const form = document.getElementById('formFiltros');
-    const filtroRapido = document.getElementById('filtro_rapido');
-    const inputDesde = document.getElementById('fecha_desde');
-    const inputHasta = document.getElementById('fecha_hasta');
-    const selectAlmacen = document.getElementById('almacen_filtro');
+(function() {
+    document.addEventListener('DOMContentLoaded', function() {
+        const f = {
+            form: document.getElementById('formFiltros'),
+            periodo: document.getElementById('filtro_rapido'),
+            desde: document.getElementById('fecha_desde'),
+            hasta: document.getElementById('fecha_hasta'),
+            almacen: document.getElementById('almacen_filtro'),
+            tipo: document.getElementById('tipo_filtro')
+        };
 
-    const formatLocal = (date) => {
-        const y = date.getFullYear();
-        const m = String(date.getMonth() + 1).padStart(2, '0');
-        const d = String(date.getDate()).padStart(2, '0');
-        return `${y}-${m}-${d}`;
-    };
+        const formatearFecha = (date) => {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        };
 
-    // Al cambiar Periodo Rápido
-    filtroRapido.addEventListener('change', function() {
-        if (this.value === 'personalizado') {
-            inputDesde.disabled = false;
-            inputHasta.disabled = false;
-            return; 
-        }
+        const procesarEnvio = () => {
+            // Habilitar campos para que viajen en la URL
+            f.desde.disabled = false;
+            f.hasta.disabled = false;
+            f.form.submit();
+        };
 
-        let hoy = new Date();
-        let desde = new Date();
-        let hasta = new Date();
+        // Evento Periodo Rápido
+        f.periodo.addEventListener('change', function() {
+            if (this.value === 'personalizado') {
+                f.desde.disabled = false;
+                f.hasta.disabled = false;
+                f.desde.focus();
+                return;
+            }
 
-        switch (this.value) {
-            case 'ayer':
-                desde.setDate(hoy.getDate() - 1);
-                hasta.setDate(hoy.getDate() - 1);
-                break;
-            case 'semana':
-                const day = hoy.getDay();
-                const diff = hoy.getDate() - day + (day === 0 ? -6 : 1);
-                desde.setDate(diff);
-                break;
-            case 'mes':
-                desde = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-                break;
-        }
+            let hoy = new Date();
+            let d = new Date();
+            let h = new Date();
 
-        inputDesde.value = formatLocal(desde);
-        inputHasta.value = formatLocal(hasta);
-        
-        enviarFormulario();
-    });
+            switch (this.value) {
+                case 'ayer':
+                    d.setDate(hoy.getDate() - 1);
+                    h.setDate(hoy.getDate() - 1);
+                    break;
+                case 'semana':
+                    const day = hoy.getDay();
+                    const diff = hoy.getDate() - day + (day === 0 ? -6 : 1);
+                    d.setDate(diff);
+                    break;
+                case 'mes':
+                    d = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+                    break;
+            }
 
-    // ¡ESTA ES LA CLAVE! 
-    // Si el usuario cambia manualmente una fecha, el select de periodo 
-    // debe cambiar a 'personalizado' automáticamente.
-    [inputDesde, inputHasta].forEach(input => {
-        input.addEventListener('change', () => {
-            filtroRapido.value = 'personalizado';
-            enviarFormulario();
+            f.desde.value = formatearFecha(d);
+            f.hasta.value = formatearFecha(h);
+            procesarEnvio();
+        });
+
+        // Evento Cambios Manuales en Fechas
+        [f.desde, f.hasta].forEach(el => {
+            el.addEventListener('change', () => {
+                if (f.periodo.value !== 'personalizado') {
+                    f.periodo.value = 'personalizado';
+                }
+                if (f.desde.value && f.hasta.value) {
+                    procesarEnvio();
+                }
+            });
+        });
+
+        // Evento Almacén y Tipo
+        if (f.almacen) f.almacen.addEventListener('change', procesarEnvio);
+        if (f.tipo) f.tipo.addEventListener('change', procesarEnvio);
+
+        // Asegurar envío manual por botón
+        f.form.addEventListener('submit', function(e) {
+            f.desde.disabled = false;
+            f.hasta.disabled = false;
         });
     });
-
-    // Al cambiar almacén
-    if(selectAlmacen) {
-        selectAlmacen.addEventListener('change', () => {
-            enviarFormulario();
-        });
-    }
-
-    function enviarFormulario() {
-        // Siempre habilitar antes de enviar para que PHP reciba los datos
-        inputDesde.disabled = false;
-        inputHasta.disabled = false;
-        form.submit();
-    }
-});
+})();
 </script>
 
     <?php require_once __DIR__ . '/egresosComponets/modalCompra.php'; ?>

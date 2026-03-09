@@ -14,41 +14,63 @@ public function obtenerAlmacenesActivos() {
      * 1. OBTIENE TODO EL FLUJO (COMPRAS + GASTOS)
      * Usa un UNION para juntar ambas tablas en una sola lista para la tabla principal
      */
-public function obtenerTodosLosEgresos($desde, $hasta, $almacen_id = 0) {
-    $whereAlmacenC = ($almacen_id > 0) ? " AND c.almacen_id = $almacen_id" : "";
-    $whereAlmacenG = ($almacen_id > 0) ? " AND g.almacen_id = $almacen_id" : "";
+public function obtenerTodosLosEgresos($desde, $hasta, $almacen_id = 0, $tipo_filtro = 'todos') {
+    $whereAlmacenC = ($almacen_id > 0) ? " AND c.almacen_id = ?" : ""; // Usamos ? para el almacén también por seguridad
+    $whereAlmacenG = ($almacen_id > 0) ? " AND g.almacen_id = ?" : "";
 
-    $sql = "
-    (SELECT 
-        c.id, c.folio, c.fecha_compra AS fecha, c.proveedor AS entidad, 
-        c.total, 'compra' AS tipo, c.tiene_faltantes, c.documento_url,
-        IFNULL((SELECT SUM(cantidad_pendiente) FROM faltantes_ingreso WHERE compra_id = c.id), 0) AS piezas_faltantes,
-        a.nombre AS almacen_nombre -- <--- AGREGADO
-     FROM compras c
-     JOIN almacenes a ON c.almacen_id = a.id
-     WHERE (c.fecha_compra BETWEEN ? AND ?) $whereAlmacenC)
-    
-    UNION ALL
-    
-    (SELECT 
-        g.id, g.folio, g.fecha_gasto AS fecha, g.beneficiario AS entidad, 
-        g.total, 'gasto' AS tipo, 0 AS tiene_faltantes, g.documento_url, 0 AS piezas_faltantes,
-        a.nombre AS almacen_nombre -- <--- AGREGADO
-     FROM gastos g
-     JOIN almacenes a ON g.almacen_id = a.id
-     WHERE (g.fecha_gasto BETWEEN ? AND ?) $whereAlmacenG)
-    
-    ORDER BY fecha DESC, id DESC";
-    
-    // ... resto del código del prepare y bind_param igual ...
+    $queryCompra = "
+        SELECT 
+            c.id, c.folio, c.fecha_compra AS fecha, c.proveedor AS entidad, 
+            c.total, 'compra' AS tipo, c.tiene_faltantes, c.documento_url,
+            IFNULL((SELECT SUM(cantidad_pendiente) FROM faltantes_ingreso WHERE compra_id = c.id), 0) AS piezas_faltantes,
+            a.nombre AS almacen_nombre
+        FROM compras c
+        JOIN almacenes a ON c.almacen_id = a.id
+        WHERE (c.fecha_compra BETWEEN ? AND ?) $whereAlmacenC";
 
+    $queryGasto = "
+        SELECT 
+            g.id, g.folio, g.fecha_gasto AS fecha, g.beneficiario AS entidad, 
+            g.total, 'gasto' AS tipo, 0 AS tiene_faltantes, g.documento_url, 0 AS piezas_faltantes,
+            a.nombre AS almacen_nombre
+        FROM gastos g
+        JOIN almacenes a ON g.almacen_id = a.id
+        WHERE (g.fecha_gasto BETWEEN ? AND ?) $whereAlmacenG";
+
+    // Construcción de la SQL final
+    if ($tipo_filtro === 'compra') {
+        $sql = $queryCompra . " ORDER BY fecha DESC, id DESC";
+    } elseif ($tipo_filtro === 'gasto') {
+        $sql = $queryGasto . " ORDER BY fecha DESC, id DESC";
+    } else {
+        // Para UNION, el ORDER BY va al final de todo
+        $sql = "($queryCompra) UNION ALL ($queryGasto) ORDER BY fecha DESC, id DESC";
+    }
 
     $stmt = $this->db->prepare($sql);
-    $stmt->bind_param("ssss", $desde, $hasta, $desde, $hasta);
+
+    // Manejo dinámico de parámetros para bind_param
+    if ($tipo_filtro === 'todos') {
+        if ($almacen_id > 0) {
+            // 6 parámetros: desde, hasta, almacen, desde, hasta, almacen
+            $stmt->bind_param("ssisssi", $desde, $hasta, $almacen_id, $desde, $hasta, $almacen_id);
+        } else {
+            // 4 parámetros: desde, hasta, desde, hasta
+            $stmt->bind_param("ssss", $desde, $hasta, $desde, $hasta);
+        }
+    } else {
+        if ($almacen_id > 0) {
+            // 3 parámetros: desde, hasta, almacen
+            $stmt->bind_param("ssi", $desde, $hasta, $almacen_id);
+        } else {
+            // 2 parámetros: desde, hasta
+            $stmt->bind_param("ss", $desde, $hasta);
+        }
+    }
+    
     $stmt->execute();
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
-
     /**
      * 2. REGISTRA UN GASTO (CON EVIDENCIA Y DESCRIPCIÓN)
      * Según tu tabla 'gastos' y 'detalle_gasto'
