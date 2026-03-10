@@ -71,10 +71,10 @@ class VentaHistorialModel {
         }
     }
 
-   public function obtenerDetalleCompleto($id) {
+  public function obtenerDetalleCompleto($id) {
     $id = intval($id);
     
-    // 1. Info de la venta
+    // 1. Info de la venta (Cabecera)
     $sqlI = "SELECT v.*, c.nombre_comercial, a.nombre as almacen, 
                 (SELECT IFNULL(SUM(monto), 0) FROM historial_pagos WHERE venta_id = v.id) as total_pagado 
              FROM ventas v 
@@ -83,7 +83,7 @@ class VentaHistorialModel {
              WHERE v.id = $id";
     $info = $this->db->query($sqlI)->fetch_assoc();
     
-    // 2. Productos con FACTOR DE CONVERSIÓN (Aquí está el cambio)
+    // 2. Productos con FACTOR DE CONVERSIÓN
     $prods = [];
     $sqlP = "SELECT dv.*, p.nombre as producto, 
                     p.unidad_medida, p.unidad_reporte, p.factor_conversion 
@@ -96,7 +96,7 @@ class VentaHistorialModel {
     }
     
     // 3. Historial de entregas
-    $historial = [];
+    $historialEntregas = [];
     $sqlH = "SELECT ev.fecha, p.nombre as producto, de.cantidad, u.nombre as usuario_nombre 
              FROM entregas_venta ev 
              JOIN detalle_entrega de ON ev.id = de.entrega_id 
@@ -105,9 +105,28 @@ class VentaHistorialModel {
              JOIN usuarios u ON ev.usuario_id = u.id 
              WHERE ev.venta_id = $id ORDER BY ev.fecha DESC";
     $resH = $this->db->query($sqlH);
-    while($h = $resH->fetch_assoc()){ $historial[] = $h; }
+    while($h = $resH->fetch_assoc()){ 
+        $historialEntregas[] = $h; 
+    }
+
+    // 4. NUEVO: Historial de Pagos
+    $historialPagos = [];
+    $sqlPagos = "SELECT hp.fecha, hp.monto, hp.metodo_pago, hp.referencia, u.nombre as usuario_nombre 
+                 FROM historial_pagos hp
+                 JOIN usuarios u ON hp.usuario_id = u.id 
+                 WHERE hp.venta_id = $id 
+                 ORDER BY hp.fecha DESC";
+    $resPagos = $this->db->query($sqlPagos);
+    while($pago = $resPagos->fetch_assoc()){ 
+        $historialPagos[] = $pago; 
+    }
     
-    return ['info' => $info, 'productos' => $prods, 'historial' => $historial];
+    return [
+        'info' => $info, 
+        'productos' => $prods, 
+        'historial' => $historialEntregas,
+        'pagos' => $historialPagos // Enviamos los pagos al frontend
+    ];
 }
 
     public function procesarEntrega($venta_id, $productos, $usuario_id) {
@@ -156,9 +175,17 @@ class VentaHistorialModel {
         }
     }
 
-    public function registrarAbono($venta_id, $monto, $usuario_id) {
-        $stmt = $this->db->prepare("INSERT INTO historial_pagos (venta_id, monto, fecha, usuario_id) VALUES (?, ?, NOW(), ?)");
-        $stmt->bind_param("idi", $venta_id, $monto, $usuario_id);
-        return $stmt->execute();
-    }
+    public function registrarAbono($venta_id, $monto, $usuario_id, $metodo_pago) {
+    // 1. Agregamos la columna metodo_pago a la consulta
+    $stmt = $this->db->prepare("INSERT INTO historial_pagos (venta_id, monto, fecha, usuario_id, metodo_pago) VALUES (?, ?, NOW(), ?, ?)");
+    
+    // 2. Ajustamos los parámetros: 
+    // "i" (integer) para venta_id
+    // "d" (double/decimal) para monto
+    // "i" (integer) para usuario_id
+    // "s" (string) para metodo_pago
+    $stmt->bind_param("idis", $venta_id, $monto, $usuario_id, $metodo_pago);
+    
+    return $stmt->execute();
+}
 }

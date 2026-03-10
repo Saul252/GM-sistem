@@ -60,7 +60,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardarEntrega') {
     exit;
 }
 
-// --- ACCIÓN: GUARDAR ABONO ---
+/// --- ACCIÓN: GUARDAR ABONO ---
 if (isset($_GET['action']) && $_GET['action'] === 'guardarAbono') {
     if (ob_get_level()) ob_clean();
     header('Content-Type: application/json');
@@ -68,10 +68,17 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardarAbono') {
     try {
         $venta_id = intval($_POST['venta_id']);
         $monto = floatval($_POST['monto']);
+        $metodo = $_POST['metodo_pago']; // Aquí lo guardas como $metodo
         $usuario_id = $_SESSION['usuario_id'] ?? 1;
 
-        $resultado = $ventasModel->registrarAbono($venta_id, $monto, $usuario_id);
-        echo json_encode(['status' => 'success']);
+        // USA $metodo AQUÍ ABAJO:
+        $resultado = $ventasModel->registrarAbono($venta_id, $monto, $usuario_id, $metodo);
+        
+        if ($resultado) {
+            echo json_encode(['status' => 'success']);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'No se pudo insertar el registro']);
+        }
 
     } catch (Throwable $e) {
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
