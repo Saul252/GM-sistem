@@ -12,6 +12,7 @@ $id_venta = intval($_GET['id'] ?? 0);
     .card-edit { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); background: white; }
     .resumen-cabecera { background: #4e73df; color: white; border-radius: 12px 12px 0 0; padding: 20px; }
     .input-group-text { min-width: 85px; font-size: 0.75rem; justify-content: center; background-color: #f8f9fc; }
+    .select-precio { font-size: 0.8rem; padding: 2px 5px; border-radius: 5px; border: 1px solid #d1d3e2; }
     @media (max-width: 768px) { .main-content { margin-left: 0; padding: 20px; padding-top: 90px; } }
 </style>
 
@@ -19,7 +20,7 @@ $id_venta = intval($_GET['id'] ?? 0);
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold m-0 text-dark">Edición de Venta</h2>
-            <p class="text-muted">Ajuste de unidades compuestas para Folio: <span id="folio_titulo" class="fw-bold text-primary">...</span></p>
+            <p class="text-muted">Ajuste de precios y unidades para Folio: <span id="folio_titulo" class="fw-bold text-primary">...</span></p>
         </div>
         <button class="btn btn-light rounded-pill shadow-sm" onclick="history.back()">
             <i class="bi bi-arrow-left"></i> Volver
@@ -45,33 +46,33 @@ $id_venta = intval($_GET['id'] ?? 0);
         </div>
 
         <div class="card-body p-4">
-
             <form id="formEditarVenta">
                 <div class="row mb-4">
-    <div class="col-md-6">
-        <div class="input-group">
-            <span class="input-group-text bg-primary text-white"><i class="bi bi-search"></i></span>
-            <input type="text" id="buscarProducto" class="form-control" placeholder="Buscar producto para agregar a esta venta...">
-            <div id="resultadosBusqueda" class="list-group position-absolute w-100" style="top: 40px; z-index: 1000; display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.1);"></div>
-        </div>
-    </div>
-</div>
+                    <div class="col-md-6">
+                        <div class="input-group">
+                            <span class="input-group-text bg-primary text-white"><i class="bi bi-search"></i></span>
+                            <input type="text" id="buscarProducto" class="form-control" placeholder="Buscar producto para agregar...">
+                            <div id="resultadosBusqueda" class="list-group position-absolute w-100" style="top: 40px; z-index: 1000; display: none;"></div>
+                        </div>
+                    </div>
+                </div>
+                
                 <input type="hidden" id="edit_venta_id" value="<?= $id_venta ?>">
                 <input type="hidden" id="edit_cliente_id"> 
+                
                 <div class="table-responsive">
                     <table class="table align-middle">
                         <thead class="text-muted small fw-bold text-uppercase">
                             <tr>
-                                <th style="width: 30%;">Producto / Conversión</th>
-                                <th class="text-center">Precio Unit.</th>
+                                <th style="width: 25%;">Producto</th>
+                                <th class="text-center">Tarifa / Precio</th>
                                 <th class="text-center">Cant. Original</th>
-                                <th class="text-center text-success">Cantidad total solicitada</th>
-                                <th class="text-center" style="width: 250px;">Agregar a entregar hoy</th>
+                                <th class="text-center text-success">Cantidad total</th>
+                                <th class="text-center" style="width: 200px;">Entregar hoy</th>
                                 <th class="text-end">Subtotal</th>
                             </tr>
                         </thead>
-                        <tbody id="detallesEdicion">
-                            </tbody>
+                        <tbody id="detallesEdicion"></tbody>
                     </table>
                 </div>
 
@@ -102,38 +103,19 @@ $id_venta = intval($_GET['id'] ?? 0);
 
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
-/**
- * LÓGICA DE EDICIÓN DE VENTAS - "cfsistem"
- * - Validación de Stock para entregas.
- * - Manejo de unidades compuestas (Mayor/Menor).
- * - Sincronización de cálculos en tiempo real.
- */
-
 const VENTA_ID = <?= $id_venta ?>;
 const URL_API = 'editarVentaController.php';
 let catalogoProductos = [];
 
 $(document).ready(() => { 
     if(VENTA_ID > 0) cargarDatosVenta(); 
-
-    // Cerrar buscador al hacer clic fuera
     $(document).on('click', (e) => {
         if (!$(e.target).closest('.input-group').length) $('#resultadosBusqueda').hide();
     });
-
-    // Validar mínimos y stock al cambiar cualquier número
-    $(document).on('change', 'input[type="number"]', function() {
-        corregirAlMinimo(this);
-    });
 });
 
-/**
- * 1. CARGA DE DATOS (PRODUCTOS GUARDADOS)
- */
 function cargarDatosVenta() {
     $.get(URL_API, { action: 'obtenerDetalle', id: VENTA_ID }, function(res) {
         if(res.status === 'error') return Swal.fire('Error', res.message, 'error');
@@ -148,24 +130,23 @@ function cargarDatosVenta() {
         
         let html = '';
         res.productos.forEach(p => {
-            let factor = parseFloat(p.factor_conversion) || 1;
-            let m_vta = Math.floor(p.cantidad / factor);
-            let s_vta = (p.cantidad % factor).toFixed(2).replace(/\.00$/, '');
-            let entregado = parseFloat(p.cantidad_entregada) || 0;
-
             html += crearFilaProducto({
                 id: p.id,
                 prod_id: p.producto_id,
                 nombre: p.producto,
-                precio: p.precio_unitario,
-                factor: factor,
-                u_mayor: p.u_menor, // Normalización de tu BD
+                precio_actual: p.precio_unitario,
+                tipo_actual: p.tipo_precio,
+                factor: parseFloat(p.factor_conversion),
+                u_mayor: p.u_menor, // Siguiendo tu lógica de normalización
                 u_menor: p.u_mayor, 
-                entregado_prev: entregado, 
+                entregado_prev: parseFloat(p.cantidad_entregada) || 0, 
                 cantidad_ref: p.cantidad,   
-                m_vta: m_vta,
-                s_vta: s_vta,
-                stock: parseFloat(p.stock_actual) || 0, // Viene del JOIN con 'inventario'
+                stock: parseFloat(p.stock_actual) || 0,
+                precios: {
+                    minorista: p.precio_minorista,
+                    mayorista: p.precio_mayorista,
+                    distribuidor: p.precio_distribuidor
+                },
                 nuevo: false
             });
         });
@@ -174,148 +155,101 @@ function cargarDatosVenta() {
     }, 'json');
 }
 
-/**
- * 2. FUNCIÓN DE LA FILA (EL HTML)
- */
 function crearFilaProducto(d) {
-    let cantTotalActual = (parseInt(d.m_vta) * parseFloat(d.factor)) + parseFloat(d.s_vta || 0);
-    const sinStock = d.stock <= 0;
+    let factor = d.factor || 1;
+    let m_vta = Math.floor(d.cantidad_ref / factor);
+    let s_vta = (d.cantidad_ref % factor).toFixed(2).replace(/\.00$/, '');
     
     return `
-        <tr data-id="${d.id}" data-prod-id="${d.prod_id}" data-precio="${d.precio}" 
-            data-factor="${d.factor}" data-entregado="${d.entregado_prev}" 
-            data-stock="${d.stock}" class="${d.nuevo ? 'table-info' : ''}">
+        <tr data-id="${d.id}" data-prod-id="${d.prod_id}" 
+            data-factor="${factor}" data-entregado="${d.entregado_prev}" 
+            data-stock="${d.stock}" 
+            data-p-minorista="${d.precios.minorista}" 
+            data-p-mayorista="${d.precios.mayorista}" 
+            data-p-distribuidor="${d.precios.distribuidor}"
+            class="${d.nuevo ? 'table-info' : ''}">
             <td>
                 <div class="fw-bold text-dark">${d.nombre}</div>
-                <div class="d-flex justify-content-between align-items-center">
-                    <small class="text-primary">1 ${d.u_mayor} = ${d.factor} ${d.u_menor}</small>
-                    <span class="badge ${sinStock ? 'bg-danger' : 'bg-light text-dark'} border">
-                        Stock: ${d.stock} ${d.u_menor}
-                    </span>
-                </div>
+                <small class="text-primary">1 ${d.u_mayor} = ${factor} ${d.u_menor}</small>
             </td>
-            <td class="text-center text-secondary">
-                <div class="fw-bold">$${parseFloat(d.precio).toFixed(2)}</div>
+            <td class="text-center">
+                <select class="select-precio w-100 mb-1" onchange="cambiarTarifa(this)">
+                    <option value="minorista" data-p="${d.precios.minorista}" ${d.tipo_actual=='minorista'?'selected':''}>Minorista</option>
+                    <option value="mayorista" data-p="${d.precios.mayorista}" ${d.tipo_actual=='mayorista'?'selected':''}>Mayorista</option>
+                    <option value="distribuidor" data-p="${d.precios.distribuidor}" ${d.tipo_actual=='distribuidor'?'selected':''}>Distribuidor</option>
+                </select>
+                <input type="number" class="form-control form-control-sm text-center input-precio-unitario" value="${d.precio_actual}" step="0.01" oninput="recalculateAll()">
             </td>
-
-            <td class="text-center bg-light border-end">
-                <span class="badge bg-secondary mb-1">${d.nuevo ? 'NUEVO' : d.cantidad_ref + ' ' + d.u_menor}</span>
-                <div class="small text-success">Prev. Entregado: <b>${d.entregado_prev}</b></div>
+            <td class="text-center bg-light">
+                <span class="badge bg-secondary">${d.nuevo ? 'NUEVO' : d.cantidad_ref + ' ' + d.u_menor}</span>
+                <div class="small text-success">Entregado: ${d.entregado_prev}</div>
             </td>
-            
             <td>
                 <div class="d-flex flex-column gap-1">
                     <div class="input-group input-group-sm">
-                        <input type="number" class="form-control text-center input-vta-mayor" value="${d.m_vta}" min="0" oninput="sincronizar(this, 'vta')">
-                        <span class="input-group-text" style="width:55px; font-size:0.65rem">${d.u_mayor}</span>
+                        <input type="number" class="form-control text-center input-vta-mayor" value="${m_vta}" min="0" oninput="sincronizar(this, 'vta')">
+                        <span class="input-group-text">${d.u_mayor}</span>
                     </div>
                     <div class="input-group input-group-sm">
-                        <input type="number" class="form-control text-center input-vta-sueltas" value="${d.s_vta}" min="0" step="0.01" oninput="sincronizar(this, 'vta')">
-                        <span class="input-group-text" style="width:55px; font-size:0.65rem">${d.u_menor}</span>
+                        <input type="number" class="form-control text-center input-vta-sueltas" value="${s_vta}" min="0" step="0.01" oninput="sincronizar(this, 'vta')">
+                        <span class="input-group-text">${d.u_menor}</span>
                     </div>
                 </div>
-                <input type="hidden" class="input-cantidad-total" value="${cantTotalActual.toFixed(2)}">
+                <input type="hidden" class="input-cantidad-total" value="${d.cantidad_ref}">
             </td>
-
             <td style="background-color: #f0fdf4;">
                 <div class="d-flex flex-column gap-1">
-                    <div class="input-group input-group-sm">
-                        <input type="number" class="form-control border-success text-center input-ent-mayor" 
-                               value="0" min="0" oninput="sincronizar(this, 'ent')" ${sinStock ? 'disabled' : ''}>
-                        <span class="input-group-text bg-success text-white border-success" style="width:55px; font-size:0.65rem">${d.u_mayor}</span>
-                    </div>
-                    <div class="input-group input-group-sm">
-                        <input type="number" class="form-control border-success text-center input-ent-sueltas" 
-                               value="0" min="0" step="0.01" oninput="sincronizar(this, 'ent')" ${sinStock ? 'disabled' : ''}>
-                        <span class="input-group-text bg-success text-white border-success" style="width:55px; font-size:0.65rem">${d.u_menor}</span>
-                    </div>
+                    <input type="number" class="form-control form-control-sm border-success text-center input-entrega-hoy-total" value="0" min="0" oninput="corregirAlMinimo(this)">
                 </div>
-                <input type="hidden" class="input-entrega-hoy-total" value="0">
-                ${sinStock ? '<div class="text-center text-danger fw-bold mt-1" style="font-size:0.6rem;">BAJO STOCK - NO ENTREGABLE</div>' : ''}
+                <small class="text-muted d-block text-center" style="font-size:0.6rem">Stock disp: ${d.stock}</small>
             </td>
-
             <td class="text-end fw-bold subtotal-fila">$0.00</td>
             <td class="text-center">
-                ${d.entregado_prev <= 0 ? 
-                    `<button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="eliminarFila(this)"><i class="bi bi-trash"></i></button>` : 
-                    `<i class="bi bi-lock-fill text-muted" title="Historial protegido"></i>`}
+                ${d.entregado_prev <= 0 ? `<button type="button" class="btn btn-sm text-danger" onclick="eliminarFila(this)"><i class="bi bi-trash"></i></button>` : `<i class="bi bi-lock-fill text-muted"></i>`}
             </td>
         </tr>`;
 }
 
-/**
- * 3. LÓGICA DE SINCRONIZACIÓN Y VALIDACIÓN
- */
+function cambiarTarifa(select) {
+    let precio = $(select).find(':selected').data('p');
+    $(select).closest('tr').find('.input-precio-unitario').val(precio);
+    recalculateAll();
+}
+
 function sincronizar(el, tipo) {
     let tr = $(el).closest('tr');
     let factor = parseFloat(tr.data('factor')) || 1;
-    let inMayor = tr.find(`.input-${tipo}-mayor`);
-    let inSueltas = tr.find(`.input-${tipo}-sueltas`);
-    let m = parseInt(inMayor.val()) || 0;
-    let s = parseFloat(inSueltas.val()) || 0;
+    let m = parseInt(tr.find(`.input-${tipo}-mayor`).val()) || 0;
+    let s = parseFloat(tr.find(`.input-${tipo}-sueltas`).val()) || 0;
 
-    // Normalizar sueltas a unidades mayores si exceden el factor
     if (s >= factor) {
         m += Math.floor(s / factor);
         s = s % factor;
-        inMayor.val(m);
-        inSueltas.val(s.toFixed(2).replace(/\.00$/, ''));
+        tr.find(`.input-${tipo}-mayor`).val(m);
+        tr.find(`.input-${tipo}-sueltas`).val(s.toFixed(2).replace(/\.00$/, ''));
     }
     
-    let totalCalculado = (m * factor) + s;
-    if (tipo === 'vta') tr.find('.input-cantidad-total').val(totalCalculado.toFixed(2));
-    else tr.find('.input-entrega-hoy-total').val(totalCalculado.toFixed(2));
-    
+    tr.find('.input-cantidad-total').val(((m * factor) + s).toFixed(2));
     corregirAlMinimo(el);
 }
 
 function corregirAlMinimo(el) {
     let tr = $(el).closest('tr');
-    let factor = parseFloat(tr.data('factor')) || 1;
     let stock = parseFloat(tr.data('stock')) || 0;
     let entregadoPrev = parseFloat(tr.data('entregado')) || 0;
-    
     let vtaTotal = parseFloat(tr.find('.input-cantidad-total').val()) || 0;
-    let entHoyTotal = parseFloat(tr.find('.input-entrega-hoy-total').val()) || 0;
+    let entHoy = parseFloat(tr.find('.input-entrega-hoy-total').val()) || 0;
 
-    // VALIDACIÓN 1: No vender menos de lo que ya salió del almacén físicamente
     if (vtaTotal < entregadoPrev) {
         vtaTotal = entregadoPrev;
-        actualizarInputs(tr, 'vta', vtaTotal, factor);
+        // Aquí podrías disparar actualizarInputs si quieres reflejar el cambio en mayor/menor
     }
 
-    // VALIDACIÓN 2: BLOQUEO DE STOCK (Lo que pides para hoy no puede superar lo que hay en inventario)
-    if (entHoyTotal > stock) {
-        entHoyTotal = stock;
-        actualizarInputs(tr, 'ent', entHoyTotal, factor);
-        Swal.fire({
-            icon: 'warning',
-            title: 'Inventario insuficiente',
-            text: `Solo hay ${stock} disponibles en stock. La venta se registrará, pero no se puede entregar el excedente hoy.`,
-            toast: true,
-            position: 'top-end',
-            timer: 3500,
-            showConfirmButton: false
-        });
-    }
+    if (entHoy > stock) entHoy = stock;
+    if (entHoy > (vtaTotal - entregadoPrev)) entHoy = Math.max(0, vtaTotal - entregadoPrev);
 
-    // VALIDACIÓN 3: No puedes entregar hoy más de lo que falta por completar de la venta
-    let pendientePorEntregar = vtaTotal - entregadoPrev;
-    if (entHoyTotal > pendientePorEntregar) {
-        entHoyTotal = pendientePorEntregar;
-        actualizarInputs(tr, 'ent', entHoyTotal, factor);
-    }
-
+    tr.find('.input-entrega-hoy-total').val(entHoy);
     recalculateAll();
-}
-
-function actualizarInputs(tr, tipo, cantidad, factor) {
-    let m = Math.floor(cantidad / factor);
-    let s = (cantidad % factor).toFixed(2).replace(/\.00$/, '');
-    tr.find(`.input-${tipo}-mayor`).val(m);
-    tr.find(`.input-${tipo}-sueltas`).val(s);
-    if (tipo === 'vta') tr.find('.input-cantidad-total').val(cantidad.toFixed(2));
-    else tr.find('.input-entrega-hoy-total').val(cantidad.toFixed(2));
 }
 
 function recalculateAll() {
@@ -323,7 +257,7 @@ function recalculateAll() {
     $('#detallesEdicion tr').each(function() {
         let tr = $(this);
         let vtaTotal = parseFloat(tr.find('.input-cantidad-total').val()) || 0;
-        let precio = parseFloat(tr.data('precio')) || 0;
+        let precio = parseFloat(tr.find('.input-precio-unitario').val()) || 0;
         let sub = precio * vtaTotal;
         tr.find('.subtotal-fila').text('$' + sub.toLocaleString('es-MX', {minimumFractionDigits: 2}));
         granTotal += sub;
@@ -331,9 +265,6 @@ function recalculateAll() {
     $('#txt_subtotal, #txt_total').text('$' + granTotal.toLocaleString('es-MX', {minimumFractionDigits: 2}));
 }
 
-/**
- * 4. BUSCADOR Y CATÁLOGO
- */
 function cargarCatalogo(almacenId) {
     $.get(URL_API, { action: 'obtenerProductos', almacen_id: almacenId }, function(res) {
         if(res.status === 'success') catalogoProductos = res.data;
@@ -345,42 +276,23 @@ $('#buscarProducto').on('input', function() {
     let resultados = $('#resultadosBusqueda');
     if (busqueda.length < 2) return resultados.hide();
     
-    let filtrados = catalogoProductos.filter(p => 
-        p.nombre.toLowerCase().includes(busqueda) || p.sku.toLowerCase().includes(busqueda)
-    ).slice(0, 5);
-    
+    let filtrados = catalogoProductos.filter(p => p.nombre.toLowerCase().includes(busqueda)).slice(0, 5);
     let html = '';
     filtrados.forEach(p => {
         html += `<a href="javascript:void(0)" class="list-group-item list-group-item-action" onclick='agregarFilaNueva(${JSON.stringify(p)})'>
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <strong>${p.nombre}</strong><br>
-                    <small class="text-muted">Disponibilidad: ${p.stock}</small>
-                </div>
-                <span class="badge bg-primary">$${parseFloat(p.precio_minorista).toFixed(2)}</span>
-            </div></a>`;
+            <strong>${p.nombre}</strong> <span class="badge bg-primary float-end">$${p.precio_minorista}</span>
+        </a>`;
     });
     resultados.html(html).show();
 });
 
 function agregarFilaNueva(p) {
-    $('#resultadosBusqueda').hide();
-    $('#buscarProducto').val('');
-    if ($(`#detallesEdicion tr[data-prod-id="${p.id}"]`).length > 0) return Swal.fire('Aviso', 'El producto ya está en la lista', 'info');
-
+    $('#resultadosBusqueda').hide(); $('#buscarProducto').val('');
     let html = crearFilaProducto({
-        id: 0,
-        prod_id: p.id,
-        nombre: p.nombre,
-        precio: p.precio_minorista,
-        factor: p.factor_conversion,
-        u_mayor: p.unidad_reporte,
-        u_menor: p.unidad_medida,
-        entregado_prev: 0,
-        cantidad_ref: 0,
-        m_vta: 0,
-        s_vta: 0,
-        stock: p.stock, // Stock actual del catálogo
+        id: 0, prod_id: p.id, nombre: p.nombre, precio_actual: p.precio_minorista, tipo_actual: 'minorista',
+        factor: p.factor_conversion, u_mayor: p.unidad_reporte, u_menor: p.unidad_medida,
+        entregado_prev: 0, cantidad_ref: 0, stock: p.stock,
+        precios: { minorista: p.precio_minorista, mayorista: p.precio_mayorista, distribuidor: p.precio_distribuidor },
         nuevo: true
     });
     $('#detallesEdicion').append(html);
@@ -388,18 +300,14 @@ function agregarFilaNueva(p) {
 }
 
 function eliminarFila(btn) {
-    $(btn).closest('tr').fadeOut(200, function() { $(this).remove(); recalculateAll(); });
+    $(btn).closest('tr').remove(); recalculateAll();
 }
 
-/**
- * 5. GUARDADO FINAL
- */
 function enviarEdicion() {
-    const total = parseFloat($('#txt_total').text().replace(/[^0-9.-]+/g,""));
     const data = {
         venta_id: VENTA_ID,
         id_cliente: $('#edit_cliente_id').val(),
-        nuevo_total: total,
+        nuevo_total: parseFloat($('#txt_total').text().replace(/[^0-9.-]+/g,"")),
         almacen_id: $('#formEditarVenta').data('almacen-id'),
         productos: []
     };
@@ -410,17 +318,16 @@ function enviarEdicion() {
             producto_id: $(this).data('prod-id'),
             nueva_cantidad: $(this).find('.input-cantidad-total').val(),
             entrega_hoy: $(this).find('.input-entrega-hoy-total').val(),
-            precio_unitario: $(this).data('precio')
+            precio_unitario: $(this).find('.input-precio-unitario').val(),
+            tipo_precio: $(this).find('.select-precio').val()
         });
     });
 
     Swal.fire({
-        title: '¿Guardar cambios?',
-        text: "Se actualizará la venta y se generará la salida de stock correspondiente.",
+        title: '¿Confirmar cambios?',
         icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#4e73df',
-        confirmButtonText: 'Confirmar'
+        confirmButtonText: 'Actualizar'
     }).then((result) => {
         if (result.isConfirmed) {
             $.ajax({
@@ -429,11 +336,8 @@ function enviarEdicion() {
                 data: JSON.stringify(data),
                 contentType: 'application/json',
                 success: (res) => {
-                    if (res.status === 'success') {
-                        Swal.fire('Éxito', 'Venta e inventario actualizados.', 'success').then(() => location.reload());
-                    } else {
-                        Swal.fire('Error', res.message, 'error');
-                    }
+                    if (res.status === 'success') Swal.fire('Éxito', 'Venta actualizada', 'success').then(() => location.reload());
+                    else Swal.fire('Error', res.message, 'error');
                 }
             });
         }

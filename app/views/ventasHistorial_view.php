@@ -104,19 +104,19 @@
 
             <div class="scroll-table shadow-sm">
                 <div class="table-responsive" style="max-height: 60vh;">
-                    <table class="table table-hover align-middle mb-0" id="tablaVentas">
-                        <thead>
-                            <tr>
-                                <th class="ps-3">Fecha</th>
-                                <th>Folio</th>
-                                <th>Cliente</th>
-                                <th>Saldo Cobro</th>
-                                <th class="text-center">Estado Entrega</th>
-                                <th class="text-end pe-3">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+                   <table class="table table-hover align-middle mb-0" id="tablaVentas">
+    <thead>
+        <tr>
+            <th class="ps-3">Fecha</th>
+            <th>Folio</th>
+            <th>Almacén</th> <th>Cliente</th>
+            <th>Total</th> <th>Saldo Cobro</th>
+            <th class="text-center">Estado Entrega</th>
+            <th class="text-end pe-3">Acciones</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
                 </div>
             </div>
         </div>
@@ -135,10 +135,17 @@
                         <p id="detCliente" class="fw-bold small mb-1"></p>
                         <p id="detAlmacen" class="fw-bold small mb-3"></p>
                         
-                        <div class="mb-4 p-2 bg-white border rounded shadow-sm text-center">
-                            <span class="d-block small text-muted text-uppercase fw-bold">Saldo Pendiente</span>
-                            <span id="detSaldoLabel" class="h5 fw-bold text-danger">$0.00</span>
-                        </div>
+                       <div class="mb-4 p-2 bg-white border rounded shadow-sm text-center">
+    <div class="mb-2 pb-2 border-bottom">
+        <span class="d-block small text-muted text-uppercase fw-bold">Total de Venta</span>
+        <span id="detTotalLabel" class="h6 fw-bold text-dark">$0.00</span>
+    </div>
+    
+    <div>
+        <span class="d-block small text-muted text-uppercase fw-bold">Saldo Pendiente</span>
+        <span id="detSaldoLabel" class="h5 fw-bold text-danger">$0.00</span>
+    </div>
+</div>
 
                         <div id="contenedorBoton">
                             <button id="btnHabilitar" class="btn btn-action w-100 mb-2 py-2 fw-bold" onclick="alternarModo(true)">Nueva Entrega</button>
@@ -215,111 +222,151 @@
     // La ruta al controlador (ajusta si el nombre del archivo varía)
     const URL_CONTROLLER = '../controllers/ventasHistorialController.php';
 
-    async function getVentas() {
-        $('#loader').removeClass('d-none');
+  async function getVentas() {
+    $('#loader').removeClass('d-none');
+    
+    const params = new URLSearchParams({
+        action: 'listar',
+        f_search: $('#f_search').val(),
+        f_rango: $('#f_rango').val(),
+        f_inicio: $('#f_ini').val(),
+        f_fin: $('#f_fin').val(),
+        f_almacen: $('#f_almacen').val(),
+        f_status: $('#f_status').val(),
+        f_pago: $('#f_pago').val()
+    });
+
+    try {
+        const res = await fetch(`${URL_CONTROLLER}?${params.toString()}`);
+        const data = await res.json();  
         
-        // Agrupamos parámetros para el GET
-        const params = new URLSearchParams({
-            action: 'listar',
-            f_search: $('#f_search').val(),
-            f_rango: $('#f_rango').val(),
-            f_inicio: $('#f_ini').val(),
-            f_fin: $('#f_fin').val(),
-            f_almacen: $('#f_almacen').val(),
-            f_status: $('#f_status').val(),
-            f_pago: $('#f_pago').val()
-        });
+        $('#tablaVentas tbody').html(data.map(v => {
+            let total = parseFloat(v.total) || 0;
+            let pagado = parseFloat(v.pagado) || 0;
+            let saldo = total - pagado;
+            let badgeCobro = (saldo <= 0) 
+                ? '<span class="text-success small fw-bold"><i class="bi bi-check-circle"></i> Pagado</span>' 
+                : `<span class="text-danger small fw-bold">Debe: $${saldo.toFixed(2)}</span>`;
 
-        try {
-            const res = await fetch(`${URL_CONTROLLER}?${params.toString()}`);
-            const data = await res.json();  
-            
-            $('#tablaVentas tbody').html(data.map(v => {
-                let total = parseFloat(v.total);
-                let pagado = parseFloat(v.pagado);
-                let saldo = total - pagado;
-                let badgeCobro = (saldo <= 0) 
-                    ? '<span class="text-success small fw-bold"><i class="bi bi-check-circle"></i> Pagado</span>' 
-                    : `<span class="text-danger small fw-bold">Debe: $${saldo.toFixed(2)}</span>`;
-
-                return `<tr>
-                    <td class="ps-3 small">${v.fecha}</td>
-                    <td class="fw-bold">${v.folio}</td>
-                    <td><div class="small fw-bold">${v.cliente}</div></td>
-                    <td>${badgeCobro}</td>
-                    <td class="text-center"><span class="badge ${v.estado_entrega=='entregado'?'bg-success':(v.estado_entrega=='parcial'?'bg-warning text-dark':'bg-danger')}">${v.estado_entrega.toUpperCase()}</span></td>
-                    <td class="text-end pe-3">
-                        <div class="btn-group">
-                        <a href="../controllers/editarVentaController.php?id=${v.id}" 
-   class="btn btn-warning btn-sm shadow-sm">
-   <i class="fas fa-edit"></i> Editar Venta
-</a>
-                            <button class="btn btn-sm btn-dark shadow-sm" onclick="verDetalle(${v.id})">
-                                <i class="bi bi-gear-fill"></i> Gestionar
-                            </button>
-                            <a class="btn btn-sm btn-primary shadow-sm" href="/cfsistem/app/backend/ventas/ticket_venta.php?id=${v.id}" target="_blank">
-                                <i class="bi bi-currency-dollar"></i> Ticket
-                            </a>
-                             <a class="btn btn-sm btn-info text-white shadow-sm" href="/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=${v.id}" target="_blank" title="Imprimir Remisión sin Precios">
-            <i class="bi bi-file-earmark-text"></i> Remisión
-        </a>
-                        </div>
-                    </td>
-                </tr>`;
-            }).join(''));
-        } catch (e) { 
-            console.error("Error al cargar ventas:", e); 
-        } finally {
-            $('#loader').addClass('d-none');
-        }
+            return `<tr>
+                <td class="ps-3 small">${v.fecha}</td>
+                <td class="fw-bold">${v.folio}</td>
+                <td><span class="badge bg-light text-dark border fw-normal">${v.almacen_nombre}</span></td>
+                <td><div class="small fw-bold">${v.cliente}</div></td>
+                <td class="fw-bold text-dark">$${total.toFixed(2)}</td>
+                <td>${badgeCobro}</td>
+                <td class="text-center">
+                    <span class="badge ${v.estado_entrega=='entregado'?'bg-success':(v.estado_entrega=='parcial'?'bg-warning text-dark':'bg-danger')}">
+                        ${v.estado_entrega.toUpperCase()}
+                    </span>
+                </td>
+                <td class="text-end pe-3">
+                    <div class="btn-group">
+                        <a href="../controllers/editarVentaController.php?id=${v.id}" class="btn btn-warning btn-sm shadow-sm">
+                            <i class="fas fa-edit"></i> Editar Venta
+                        </a>
+                        <button class="btn btn-sm btn-dark shadow-sm" onclick="verDetalle(${v.id})">
+                            <i class="bi bi-gear-fill"></i> Gestionar
+                        </button>
+                        <a class="btn btn-sm btn-primary shadow-sm" href="/cfsistem/app/backend/ventas/ticket_venta.php?id=${v.id}" target="_blank">
+                            <i class="bi bi-currency-dollar"></i> Ticket
+                        </a>
+                        <a class="btn btn-sm btn-info text-white shadow-sm" href="/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=${v.id}" target="_blank" title="Imprimir Remisión sin Precios">
+                            <i class="bi bi-file-earmark-text"></i> Remisión
+                        </a>
+                    </div>
+                </td>
+            </tr>`;
+        }).join(''));
+    } catch (e) { 
+        console.error("Error al cargar ventas:", e); 
+    } finally {
+        $('#loader').addClass('d-none');
     }
-
+}
     async function verDetalle(id) {
-        try {
-            const res = await fetch(`${URL_CONTROLLER}?action=obtenerDetalle&id=${id}`);
-            const data = await res.json();
-            ventaActual = data; 
+    try {
+        const res = await fetch(`${URL_CONTROLLER}?action=obtenerDetalle&id=${id}`);
+        const data = await res.json();
+        ventaActual = data; 
 
-            $('#spanFolio').text(data.info.folio);
-            $('#detCliente').text(data.info.nombre_comercial);
-            $('#detAlmacen').text(data.info.almacen);
-            
-            const total = parseFloat(data.info.total) || 0;
-            const pagado = parseFloat(data.info.total_pagado) || 0;
-            const deuda = total - pagado;
+        $('#spanFolio').text(data.info.folio);
+        $('#detCliente').text(data.info.nombre_comercial);
+        $('#detAlmacen').text(data.info.almacen);
+        
+        const total = parseFloat(data.info.total) || 0;
+        const pagado = parseFloat(data.info.total_pagado) || 0;
+        const deuda = total - pagado;
+        $('#detTotalLabel').text('$' + total.toFixed(2));
 
-            if (deuda <= 0) {
-                $('#detSaldoLabel').text('LIQUIDADO').removeClass('text-danger').addClass('text-success');
-                $('#btnAbonar').addClass('d-none');
-            } else {
-                $('#detSaldoLabel').text('$' + deuda.toFixed(2)).removeClass('text-success').addClass('text-danger');
-                $('#btnAbonar').removeClass('d-none');
-            }
-
-            $('#tbodyDetalle').html(data.productos.map(p => {
-                let pen = parseFloat(p.cantidad) - parseFloat(p.cantidad_entregada);
-                return `<tr>
-                    <td>${p.producto}</td>
-                    <td class="text-center">${p.cantidad}</td>
-                    <td class="text-center">${p.cantidad_entregada}</td>
-                    <td class="text-center text-danger fw-bold">${pen}</td>
-                    <td class="text-center col-input d-none">
-                        ${pen > 0 ? `<input type="number" class="form-control form-control-sm input-entrega mx-auto" max="${pen}" min="0" value="0" data-id="${p.id}" style="width:70px">` : '<span class="badge bg-success">Completo</span>'}
-                    </td>
-                </tr>`;
-            }).join(''));
-
-            $('#tbodyHistorial').html(data.historial.length > 0 ? data.historial.map(h => `
-                <tr><td>${h.fecha}</td><td>${h.usuario_nombre}</td><td>${h.producto}</td><td class="text-center fw-bold">${h.cantidad}</td></tr>
-            `).join('') : '<tr><td colspan="4" class="text-center text-muted">No hay entregas registradas</td></tr>');
-
-            alternarModo(false);
-            modalObj.show();
-        } catch (error) {
-            console.error("Error al obtener detalle:", error);
+        if (deuda <= 0) {
+            $('#detSaldoLabel').text('LIQUIDADO').removeClass('text-danger').addClass('text-success');
+            $('#btnAbonar').addClass('d-none');
+        } else {
+            $('#detSaldoLabel').text('$' + deuda.toFixed(2)).removeClass('text-success').addClass('text-danger');
+            $('#btnAbonar').removeClass('d-none');
         }
+
+      // --- RENDERIZADO DE PRODUCTOS CON CONVERSIÓN ---
+      // --- RENDERIZADO DE PRODUCTOS CON CONVERSIÓN ---
+$('#tbodyDetalle').html(data.productos.map(p => {
+    let cant = parseFloat(p.cantidad) || 0;
+    let pen = cant - (parseFloat(p.cantidad_entregada) || 0);
+    let factor = parseFloat(p.factor_conversion) || 1;
+    
+    // 1. Definimos qué se verá en la columna "Venta"
+    let visualizacionVenta = "";
+    let infoEquivalenciaSub = "";
+
+    if (factor > 1 && cant >= factor) {
+        // Si alcanza el factor (Ej: 20 bultos >= 20 factor)
+        let unidadesMayores = (cant / factor);
+        // Formateamos para que si es entero no muestre .00 (Ej: 1 en vez de 1.00)
+        let totalUnidadesStr = Number.isInteger(unidadesMayores) ? unidadesMayores : unidadesMayores.toFixed(2);
+        
+        // Lo que se verá grande en la celda
+        visualizacionVenta = `<span class="fw-bold">${totalUnidadesStr} ${p.unidad_reporte}</span> <br> <small class="text-muted">(${cant} ${p.unidad_medida})</small>`;
+        
+        // Leyenda pequeña debajo del nombre del producto (opcional, para referencia)
+        infoEquivalenciaSub = `<div class="text-muted small" style="font-size: 0.65rem;">1 ${p.unidad_reporte} = ${factor} ${p.unidad_medida}</div>`;
+    } else {
+        // Si no llega al factor (Ej: 10 bultos) mostramos la unidad normal
+        visualizacionVenta = `<span>${cant} ${p.unidad_medida}</span>`;
     }
 
+    return `<tr>
+        <td>
+            <div class="fw-bold text-dark">${p.producto}</div>
+            ${infoEquivalenciaSub}
+        </td>
+        <td class="text-center">
+            ${visualizacionVenta}
+        </td>
+        <td class="text-center">${p.cantidad_entregada}</td>
+        <td class="text-center text-danger fw-bold">${pen}</td>
+        <td class="text-center col-input d-none">
+            ${pen > 0 ? 
+                `<input type="number" class="form-control form-control-sm input-entrega mx-auto" 
+                    max="${pen}" min="0" value="0" data-id="${p.id}" style="width:70px">` 
+                : '<span class="badge bg-success">Completo</span>'}
+        </td>
+    </tr>`;
+}).join(''));
+     $('#tbodyHistorial').html(data.historial.length > 0 ? data.historial.map(h => `
+            <tr>
+                <td>${h.fecha}</td>
+                <td>${h.usuario_nombre}</td>
+                <td>${h.producto}</td>
+                <td class="text-center fw-bold">${h.cantidad}</td>
+            </tr>
+        `).join('') : '<tr><td colspan="4" class="text-center text-muted">No hay entregas registradas</td></tr>');
+
+        alternarModo(false);
+        modalObj.show();
+    } catch (error) {
+        console.error("Error al obtener detalle:", error);
+    }
+}
     async function procesarEntrega() {
         const fd = new FormData();
         let ok = false;

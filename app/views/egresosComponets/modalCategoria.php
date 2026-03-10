@@ -103,10 +103,23 @@ function ejecutarGuardarCategoria() {
 }
 
 // Permitir guardar al presionar "Enter" en el input
-$('#inputNombreCategoria').on('keypress', function(e) {
-    if(e.which === 13) {
-        e.preventDefault();
-        ejecutarGuardarCategoria();
-    }
+
+</script>
+<script>
+// Usamos JavaScript puro (document) para esperar a que la página cargue
+document.addEventListener("DOMContentLoaded", function() {
+    
+    // Una vez que el DOM está listo, jQuery ($) ya existe
+    $(document).on('keypress', '#inputNombreCategoria', function(e) {
+        if(e.which === 13) {
+            e.preventDefault();
+            
+            // Verificamos que la función exista antes de ejecutarla
+            if (typeof ejecutarGuardarCategoria === "function") {
+                ejecutarGuardarCategoria();
+            }
+        }
+    });
+
 });
 </script>

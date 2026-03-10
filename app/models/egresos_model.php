@@ -15,9 +15,11 @@ public function obtenerAlmacenesActivos() {
      * Usa un UNION para juntar ambas tablas en una sola lista para la tabla principal
      */
 public function obtenerTodosLosEgresos($desde, $hasta, $almacen_id = 0, $tipo_filtro = 'todos') {
-    $whereAlmacenC = ($almacen_id > 0) ? " AND c.almacen_id = ?" : ""; // Usamos ? para el almacén también por seguridad
+    // 1. Definimos los fragmentos de WHERE para el almacén
+    $whereAlmacenC = ($almacen_id > 0) ? " AND c.almacen_id = ?" : "";
     $whereAlmacenG = ($almacen_id > 0) ? " AND g.almacen_id = ?" : "";
 
+    // 2. Query de Compras
     $queryCompra = "
         SELECT 
             c.id, c.folio, c.fecha_compra AS fecha, c.proveedor AS entidad, 
@@ -28,6 +30,7 @@ public function obtenerTodosLosEgresos($desde, $hasta, $almacen_id = 0, $tipo_fi
         JOIN almacenes a ON c.almacen_id = a.id
         WHERE (c.fecha_compra BETWEEN ? AND ?) $whereAlmacenC";
 
+    // 3. Query de Gastos
     $queryGasto = "
         SELECT 
             g.id, g.folio, g.fecha_gasto AS fecha, g.beneficiario AS entidad, 
@@ -37,23 +40,25 @@ public function obtenerTodosLosEgresos($desde, $hasta, $almacen_id = 0, $tipo_fi
         JOIN almacenes a ON g.almacen_id = a.id
         WHERE (g.fecha_gasto BETWEEN ? AND ?) $whereAlmacenG";
 
-    // Construcción de la SQL final
+    // 4. Construcción de la SQL final
     if ($tipo_filtro === 'compra') {
         $sql = $queryCompra . " ORDER BY fecha DESC, id DESC";
     } elseif ($tipo_filtro === 'gasto') {
         $sql = $queryGasto . " ORDER BY fecha DESC, id DESC";
     } else {
-        // Para UNION, el ORDER BY va al final de todo
+        // En UNION, cada consulta debe estar entre paréntesis
         $sql = "($queryCompra) UNION ALL ($queryGasto) ORDER BY fecha DESC, id DESC";
     }
 
     $stmt = $this->db->prepare($sql);
 
-    // Manejo dinámico de parámetros para bind_param
+    // 5. Manejo dinámico de bind_param (Corregido)
     if ($tipo_filtro === 'todos') {
         if ($almacen_id > 0) {
-            // 6 parámetros: desde, hasta, almacen, desde, hasta, almacen
-            $stmt->bind_param("ssisssi", $desde, $hasta, $almacen_id, $desde, $hasta, $almacen_id);
+            // CORRECCIÓN: 6 parámetros (ssi ssi)
+            // 1. $desde (s), 2. $hasta (s), 3. $almacen_id (i) -> para Compras
+            // 4. $desde (s), 5. $hasta (s), 6. $almacen_id (i) -> para Gastos
+            $stmt->bind_param("ssissi", $desde, $hasta, $almacen_id, $desde, $hasta, $almacen_id);
         } else {
             // 4 parámetros: desde, hasta, desde, hasta
             $stmt->bind_param("ssss", $desde, $hasta, $desde, $hasta);

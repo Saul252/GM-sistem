@@ -71,35 +71,44 @@ class VentaHistorialModel {
         }
     }
 
-    public function obtenerDetalleCompleto($id) {
-        $id = intval($id);
-        
-        // Info principal y saldo
-        $sqlI = "SELECT v.*, c.nombre_comercial, a.nombre as almacen, 
+   public function obtenerDetalleCompleto($id) {
+    $id = intval($id);
+    
+    // 1. Info de la venta
+    $sqlI = "SELECT v.*, c.nombre_comercial, a.nombre as almacen, 
                 (SELECT IFNULL(SUM(monto), 0) FROM historial_pagos WHERE venta_id = v.id) as total_pagado 
-                FROM ventas v JOIN clientes c ON v.id_cliente = c.id 
-                JOIN almacenes a ON v.almacen_id = a.id WHERE v.id = $id";
-        $info = $this->db->query($sqlI)->fetch_assoc();
-        
-        // Productos del detalle
-        $prods = [];
-        $resP = $this->db->query("SELECT dv.*, p.nombre as producto FROM detalle_venta dv JOIN productos p ON dv.producto_id = p.id WHERE dv.venta_id = $id");
-        while($p = $resP->fetch_assoc()){ $prods[] = $p; }
-        
-        // Historial de entregas parciales
-        $historial = [];
-        $sqlH = "SELECT ev.fecha, p.nombre as producto, de.cantidad, u.nombre as usuario_nombre 
-                 FROM entregas_venta ev 
-                 JOIN detalle_entrega de ON ev.id = de.entrega_id 
-                 JOIN detalle_venta dv ON de.detalle_venta_id = dv.id 
-                 JOIN productos p ON dv.producto_id = p.id 
-                 JOIN usuarios u ON ev.usuario_id = u.id 
-                 WHERE ev.venta_id = $id ORDER BY ev.fecha DESC";
-        $resH = $this->db->query($sqlH);
-        while($h = $resH->fetch_assoc()){ $historial[] = $h; }
-        
-        return ['info' => $info, 'productos' => $prods, 'historial' => $historial];
+             FROM ventas v 
+             JOIN clientes c ON v.id_cliente = c.id 
+             JOIN almacenes a ON v.almacen_id = a.id 
+             WHERE v.id = $id";
+    $info = $this->db->query($sqlI)->fetch_assoc();
+    
+    // 2. Productos con FACTOR DE CONVERSIÓN (Aquí está el cambio)
+    $prods = [];
+    $sqlP = "SELECT dv.*, p.nombre as producto, 
+                    p.unidad_medida, p.unidad_reporte, p.factor_conversion 
+             FROM detalle_venta dv 
+             JOIN productos p ON dv.producto_id = p.id 
+             WHERE dv.venta_id = $id";
+    $resP = $this->db->query($sqlP);
+    while($p = $resP->fetch_assoc()){ 
+        $prods[] = $p; 
     }
+    
+    // 3. Historial de entregas
+    $historial = [];
+    $sqlH = "SELECT ev.fecha, p.nombre as producto, de.cantidad, u.nombre as usuario_nombre 
+             FROM entregas_venta ev 
+             JOIN detalle_entrega de ON ev.id = de.entrega_id 
+             JOIN detalle_venta dv ON de.detalle_venta_id = dv.id 
+             JOIN productos p ON dv.producto_id = p.id 
+             JOIN usuarios u ON ev.usuario_id = u.id 
+             WHERE ev.venta_id = $id ORDER BY ev.fecha DESC";
+    $resH = $this->db->query($sqlH);
+    while($h = $resH->fetch_assoc()){ $historial[] = $h; }
+    
+    return ['info' => $info, 'productos' => $prods, 'historial' => $historial];
+}
 
     public function procesarEntrega($venta_id, $productos, $usuario_id) {
         $this->db->begin_transaction();

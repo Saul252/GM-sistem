@@ -410,8 +410,7 @@ if (isset($e['piezas_faltantes']) && $e['piezas_faltantes'] !== null): ?>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="/cfsistem/app/backend/compras_js/modalGastoslogica.js"></script>
-    <script>
+      <script>
     // Forzamos que sea global con window.
     window.DATA_COMPRAS = {
         productos: <?php echo json_encode($productos); ?>,
@@ -420,6 +419,8 @@ if (isset($e['piezas_faltantes']) && $e['piezas_faltantes'] !== null): ?>
     // Imprime esto en la consola para que verifiques si hay datos
     console.log("Productos cargados:", window.DATA_COMPRAS.productos);
     </script>
+    <script src="/cfsistem/app/backend/compras_js/modalGastoslogica.js"></script>
+  
 <script>
 (function() {
     document.addEventListener('DOMContentLoaded', function() {
