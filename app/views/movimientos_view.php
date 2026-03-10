@@ -1,95 +1,56 @@
-<?php
-// El controlador ya definió $almacen_usuario y $conexion
-?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial de Movimientos | Sistema</title>
     
     <?php cargarEstilos(); ?>
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     
     <style>
         :root { --glass-bg: rgba(255, 255, 255, 0.9); }
-       body { 
-    background-color: #f4f7fa; 
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    /* Ajusta este valor según la altura de tu navbar. 
-       Si tu navbar es alto, prueba con 80px o 100px 
-    */
-    padding-top: 75px; 
-}
-
-/* Si usas un sidebar y un main-content, asegúrate de que el padding 
-   esté en el contenedor correcto */
-.main-content { 
-    padding: 1.5rem; 
-    min-height: calc(100-vh - 75px);
-}
-
-/* Mejora opcional: que el header de la página tenga un margen superior extra */
-.page-header {
-    margin-top: 10px;
-    margin-bottom: 25px;
-}
+        body { 
+            background-color: #f4f7fa; 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            padding-top: 75px; 
+        }
+        .main-content { padding: 1.5rem; min-height: calc(100vh - 75px); }
         .card-custom { 
-            border: none; 
-            border-radius: 16px; 
+            border: none; border-radius: 16px; 
             box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
+            background: var(--glass-bg); backdrop-filter: blur(10px);
         }
-
-        /* Tabla Estilizada */
         .table thead th { 
-            background-color: #fcfcfd; 
-            color: #64748b; 
-            font-weight: 700;
-            text-transform: uppercase; 
-            font-size: 0.7rem; 
-            letter-spacing: 0.05em;
-            padding: 1.25rem;
-            border-bottom: 2px solid #f1f5f9;
+            background-color: #fcfcfd; color: #64748b; font-weight: 700;
+            text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em;
+            padding: 1.25rem; border-bottom: 2px solid #f1f5f9;
         }
-        .table tbody td { padding: 1rem 1.25rem; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-        
-        /* Badges Modernos (Glassmorphism light) */
         .badge-mov { 
-            min-width: 90px; 
-            padding: 6px 12px; 
-            border-radius: 8px; 
-            font-weight: 700; 
-            font-size: 0.65rem; 
-            letter-spacing: 0.03em;
-            text-transform: uppercase;
+            min-width: 90px; padding: 6px 12px; border-radius: 8px; 
+            font-weight: 700; font-size: 0.65rem; text-transform: uppercase;
         }
-        .bg-opacity-10 { background-color: rgba(var(--bs-primary-rgb), 0.1) !important; }
-
-        /* Rutas Origen -> Destino */
         .ruta-pill {
-            display: inline-flex;
-            align-items: center;
-            background: #fff;
-            border: 1px solid #e2e8f0;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            color: #475569;
+            display: inline-flex; align-items: center; background: #fff;
+            border: 1px solid #e2e8f0; padding: 4px 12px; border-radius: 20px;
+            font-size: 0.8rem; color: #475569;
         }
         .ruta-arrow { color: #94a3b8; margin: 0 8px; font-size: 0.9rem; }
-
-        /* Form Controls */
-        .form-select, .form-control { 
-            border: 1px solid #e2e8f0; 
-            border-radius: 10px; 
-            padding: 0.6rem 0.8rem;
-            font-size: 0.85rem;
+        .input-disabled { background-color: #f8fafc !important; color: #94a3b8; cursor: not-allowed; }
+        
+        .btn-recibir {
+            background: #10b981;
+            color: white;
+            border: none;
+            font-weight: 700;
+            font-size: 0.75rem;
+            padding: 5px 15px;
             transition: all 0.2s;
         }
-        .form-select:focus { border-color: #3b82f6; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
-        .input-disabled { background-color: #f8fafc !important; color: #cbd5e1; cursor: not-allowed; }
+        .btn-recibir:hover { background: #059669; transform: translateY(-1px); box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2); }
     </style>
 </head>
 <body>
@@ -101,13 +62,8 @@
             
             <div class="d-flex justify-content-between align-items-end mb-4">
                 <div>
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb mb-1">
-                            <li class="breadcrumb-item small"><a href="#">Inventario</a></li>
-                            <li class="breadcrumb-item small active">Historial</li>
-                        </ol>
-                    </nav>
                     <h2 class="fw-bold m-0 text-dark">Movimientos de Stock</h2>
+                    <p class="text-muted small">Consulta de entradas, salidas y traspasos</p>
                 </div>
                 <div id="loader" class="spinner-border text-primary d-none" role="status"></div>
             </div>
@@ -140,14 +96,17 @@
                             <label class="form-label small fw-bold text-muted">ALMACÉN</label>
                             <select id="filtroAlmacen" class="form-select border-0 bg-light" <?= ($almacen_usuario > 0) ? 'disabled' : '' ?>>
                                 <?php if($almacen_usuario == 0): ?>
-                                    <option value="0">-- Todos --</option>
+                                    <option value="0">-- Ver Todos --</option>
                                     <?php 
                                     $q_alm = $conexion->query("SELECT id, nombre FROM almacenes WHERE activo = 1 ORDER BY nombre");
                                     while($a = $q_alm->fetch_assoc()): ?>
                                         <option value="<?= $a['id'] ?>"><?= $a['nombre'] ?></option>
                                     <?php endwhile; ?>
                                 <?php else: ?>
-                                    <option value="<?= $almacen_usuario ?>">Mi Almacén</option>
+                                    <?php 
+                                    $res_mio = $conexion->query("SELECT nombre FROM almacenes WHERE id = $almacen_usuario LIMIT 1")->fetch_assoc();
+                                    ?>
+                                    <option value="<?= $almacen_usuario ?>" selected>📍 <?= $res_mio['nombre'] ?></option>
                                 <?php endif; ?>
                             </select>
                         </div>
@@ -182,9 +141,9 @@
                                     <th>Producto</th>
                                     <th class="text-center">Operación</th>
                                     <th class="text-center">Cant.</th>
-                                    <th>Trayectoria (Origen ➔ Destino)</th>
-                                    <th>Usuario</th>
-                                    <th class="no-export pe-4 text-end">PDF</th>
+                                    <th>Trayectoria</th>
+                                    <th>Usuarios (Reg/Rec)</th>
+                                    <th class="no-export pe-4 text-end">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody class="text-secondary" style="font-size: 0.85rem;"></tbody>
@@ -200,17 +159,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
     <script>
     $(document).ready(function() {
-        const almacenUsuarioSesion = <?= $almacen_usuario ?>;
+        const almacenUsuarioSesion = <?= intval($almacen_usuario) ?>;
 
         const tabla = $('#tablaHistorial').DataTable({
             language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
             dom: '<"d-flex justify-content-between p-3 border-bottom"Bf>rt<"p-3"ip>',
             buttons: [{
                 extend: 'pdfHtml5',
-                text: '<i class="bi bi-file-pdf"></i> Reporte PDF',
+                text: '<i class="bi bi-file-pdf"></i> PDF',
                 className: 'btn btn-outline-danger btn-sm px-4 rounded-pill',
                 orientation: 'landscape',
                 exportOptions: { columns: [0, 1, 2, 3, 4, 5] }
@@ -232,13 +192,11 @@
         }
 
         function cargarHistorial() {
-            // Si el select de almacén está habilitado, lo usamos, si no (es usuario normal) usamos el valor de sesión
             const idAlmacenBusqueda = (almacenUsuarioSesion > 0) ? almacenUsuarioSesion : $('#filtroAlmacen').val();
-
             $('#loader').removeClass('d-none');
 
             $.ajax({
-                url: 'movimientosController.php', // Cambia a la ruta de tu controlador
+                url: 'movimientosController.php',
                 data: {
                     ajax: 1,
                     periodo: $('#selectorPeriodo').val(),
@@ -252,9 +210,20 @@
                     tabla.clear();
                     if(res.data) {
                         res.data.forEach(m => {
-                            // Resaltamos el nombre del almacén si es el filtrado
                             const labelOri = (m.almacen_origen_id == idAlmacenBusqueda) ? `<strong>${m.origen}</strong>` : m.origen;
                             const labelDes = (m.almacen_destino_id == idAlmacenBusqueda) ? `<strong>${m.destino}</strong>` : m.destino;
+
+                            let btnAccion = '';
+                            // Usamos la bandera es_pendiente calculada por el modelo
+                            if (m.es_pendiente && m.almacen_destino_id == almacenUsuarioSesion) {
+                                btnAccion = `<button onclick="aceptarTraspaso(${m.id})" class="btn btn-recibir rounded-pill shadow-sm">
+                                                <i class="bi bi-box-seam me-1"></i> Recibir
+                                             </button>`;
+                            } else {
+                                btnAccion = `<a href="/cfsistem/app/backend/movimientos/imprimir_movimiento.php?id=${m.id}" target="_blank" class="btn btn-sm btn-white border shadow-xs">
+                                                <i class="bi bi-printer text-danger"></i>
+                                             </a>`;
+                            }
 
                             tabla.row.add([
                                 `<span class="ps-3 text-dark fw-bold">${m.fecha_format}</span>`,
@@ -262,18 +231,46 @@
                                 `<div class="text-center"><span class="badge badge-mov bg-${m.color} bg-opacity-10 text-${m.color} border border-${m.color} border-opacity-25">${m.tipo}</span></div>`,
                                 `<div class="text-center">${formatQty(m)}</div>`,
                                 `<div><div class="ruta-pill">${labelOri} <i class="bi bi-arrow-right ruta-arrow"></i> ${labelDes}</div></div>`,
-                                `<div><i class="bi bi-person-circle me-1 text-muted"></i> ${m.u_reg}</div>`,
-                                `<div class="pe-3 text-end"><a href="imprimir.php?id=${m.id}" target="_blank" class="btn btn-sm btn-white border shadow-xs"><i class="bi bi-printer text-danger"></i></a></div>`
+                                `<div><small class="d-block"><b>R:</b> ${m.u_reg}</small><small class="text-muted"><b>A:</b> ${m.u_rec}</small></div>`,
+                                `<div class="pe-3 text-end">${btnAccion}</div>`
                             ]);
                         });
                     }
                     tabla.draw();
                 },
+                error: (e) => console.error("Error cargando historial", e),
                 complete: () => $('#loader').addClass('d-none')
             });
         }
 
-        // Eventos
+        window.aceptarTraspaso = function(id) {
+            if(!confirm('¿Confirmas que has recibido físicamente esta mercancía? El stock se sumará a este almacén.')) return;
+
+            $.ajax({
+                url: 'movimientosController.php',
+                method: 'POST',
+                data: { accion: 'aceptar_traspaso', id: id },
+                dataType: 'json',
+                success: function(res) {
+                    if(res.success) {
+                        Toastify({
+                            text: "📦 Inventario recibido y actualizado",
+                            duration: 3000,
+                            gravity: "top",
+                            position: "right",
+                            style: { background: "linear-gradient(to right, #10b981, #059669)" }
+                        }).showToast();
+                        cargarHistorial();
+                    } else {
+                        alert("Error: " + res.message);
+                    }
+                },
+                error: function() {
+                    alert("Error crítico en el servidor al procesar la recepción.");
+                }
+            });
+        };
+
         $('#selectorPeriodo').on('change', function() {
             const isPerso = $(this).val() === 'personalizado';
             $('#f_inicio, #f_fin').prop('disabled', !isPerso).toggleClass('input-disabled', !isPerso);
@@ -288,7 +285,6 @@
             cargarHistorial(); 
         });
 
-        // Carga inicial
         cargarHistorial();
     });
     </script>

@@ -68,7 +68,7 @@
 
             <?php if (puedeVerModulo('movimientos')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/views/movimientos.php" class="nav-link <?= $archivoActual == 'movimientos.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/movimientosController.php" class="nav-link <?= $archivoActual == 'movimientos.php' ? 'active' : '' ?>">
                     <i class="bi bi-arrow-left-right"></i><span>Movimientos</span>
                 </a>
             </li>
@@ -76,7 +76,7 @@
 
             <?php if (puedeVerModulo('ventashistorial')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/views/ventashistorial.php" class="nav-link <?= $archivoActual == 'ventashistorial.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/ventasHistorialController.php" class="nav-link <?= $archivoActual == 'ventashistorial.php' ? 'active' : '' ?>">
                     <i class="bi bi-receipt"></i><span>Historial</span>
                 </a>
             </li>
