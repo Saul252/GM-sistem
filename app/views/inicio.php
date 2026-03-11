@@ -171,6 +171,17 @@ $paginaActual = 'Inicio';
 </div>
 <?php endif; ?>
 
+<?php if (puedeVerModulo(modulo: 'entregas')): ?>
+<div class="col-md-4 col-lg-3">
+    <a href="entregasController.php" class="text-decoration-none text-dark">
+        <div class="card card-modulo text-center shadow-sm h-100">
+            <i class="bi bi-truck icono-modulo text-warning" style="font-size: 2.5rem; margin-bottom: 10px;"></i>
+            <h6 class="fw-bold">Despachos</h6>
+            <small class="text-muted">Logística, Envíos y Entregas</small>
+        </div>
+    </a>
+</div>
+<?php endif; ?>
 </div>
 </div>
 

@@ -136,6 +136,13 @@
     </a>
 </li>
 <?php endif; ?>
+<?php if (puedeVerModulo('entregas')): ?>
+<li class="nav-item">
+    <a href="/cfsistem/app/controllers/entregasController.php" class="nav-link <?= $archivoActual == 'despachos.php' ? 'active' : '' ?>">
+        <i class="bi bi-truck"></i><span>Despachos</span>
+    </a>
+</li>
+<?php endif; ?>
 <!-- 
 <li class="nav-item">
     <a href="/cfsistem/app/views/gestionar_permisos.php" class="nav-link <?= $archivoActual == 'gestion_permisos.php' ? 'active' : '' ?>">
