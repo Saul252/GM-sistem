@@ -369,3 +369,18 @@ CREATE TABLE `transporte_tripulantes_detalle` (
   CONSTRAINT `fk_trip_reparto_cab` FOREIGN KEY (`reparto_id`) REFERENCES `transporte_repartos_maestro` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_trip_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- --------------------------------------------------------
+-- TABLA: registro_salida_lotes
+-- --------------------------------------------------------
+CREATE TABLE `registro_salida_lotes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `movimiento_id` int(11) NOT NULL,
+  `usuario_patio_id` int(11) NOT NULL,
+  `fecha_despacho` timestamp NOT NULL DEFAULT current_timestamp(),
+  `usuario_despacho_id` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_movimiento_unico` (`movimiento_id`),
+  KEY `fk_reg_salida_user` (`usuario_patio_id`),
+  CONSTRAINT `fk_reg_salida_mov` FOREIGN KEY (`movimiento_id`) REFERENCES `movimientos` (`id`),
+  CONSTRAINT `fk_reg_salida_user` FOREIGN KEY (`usuario_patio_id`) REFERENCES `usuarios` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

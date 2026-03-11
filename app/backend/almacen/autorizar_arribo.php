@@ -42,6 +42,49 @@ try {
     $orig_id = $mov['almacen_origen_id'];
     $cantidad = $mov['cantidad'];
 
+    // --- BLOQUE PEPS: DESCUENTO EN ORIGEN ---
+    // Usamos 'fecha_ingreso' y 'estado_lote' según tu SQL
+    $sqlLotesOrig = "SELECT id, cantidad_actual, precio_compra_unitario FROM lotes_stock 
+                     WHERE producto_id = ? AND almacen_id = ? AND estado_lote = 'activo' 
+                     ORDER BY fecha_ingreso ASC FOR UPDATE";
+    $stmtLO = $conexion->prepare($sqlLotesOrig);
+    $stmtLO->bind_param("ii", $p_id, $orig_id);
+    $stmtLO->execute();
+    $resLotes = $stmtLO->get_result();
+
+    $porRestar = $cantidad;
+    $precio_historico = 0; // Para arrastrar el costo al nuevo lote
+
+    while ($lote = $resLotes->fetch_assoc()) {
+        if ($porRestar <= 0) break;
+        
+        $idLote = $lote['id'];
+        $actual = $lote['cantidad_actual'];
+        $precio_historico = $lote['precio_compra_unitario']; // Tomamos el precio del último lote afectado
+        
+        $aQuitar = ($actual <= $porRestar) ? $actual : $porRestar;
+        $nuevoStock = $actual - $aQuitar;
+        $nuevoEstado = ($nuevoStock <= 0) ? 'agotado' : 'activo';
+
+        $upL = $conexion->prepare("UPDATE lotes_stock SET cantidad_actual = ?, estado_lote = ? WHERE id = ?");
+        $upL->bind_param("dsi", $nuevoStock, $nuevoEstado, $idLote);
+        $upL->execute();
+        
+        $porRestar -= $aQuitar;
+    }
+
+    if ($porRestar > 0) throw new Exception("No hay suficiente stock en los lotes del almacén de origen.");
+
+    // --- BLOQUE: CREAR NUEVO LOTE EN DESTINO ---
+    $nomLote = "L-TR-" . $movimiento_id . "-" . date('His');
+    // Si no encontró lotes previos (por algún error de datos), usamos 0 en precio
+    $precio_final = ($precio_historico > 0) ? $precio_historico : 0;
+
+    $insLote = $conexion->prepare("INSERT INTO lotes_stock (producto_id, almacen_id, codigo_lote, cantidad_inicial, cantidad_actual, precio_compra_unitario, estado_lote) 
+                                   VALUES (?, ?, ?, ?, ?, ?, 'activo')");
+    $insLote->bind_param("iisddd", $p_id, $dest_id, $nomLote, $cantidad, $cantidad, $precio_final);
+    $insLote->execute();
+
     // 2. Lógica de Inventario
     $stmtInv = $conexion->prepare("INSERT INTO inventario (almacen_id, producto_id, stock, stock_minimo, stock_maximo) 
                                    VALUES (?, ?, ?, 0, 0) 
@@ -76,12 +119,11 @@ try {
 
     $conexion->commit();
     
-    // Limpiar cualquier buffer y enviar éxito
     ob_end_clean();
-    echo json_encode(['status' => 'success', 'message' => 'Traspaso recibido y stock actualizado']);
+    echo json_encode(['status' => 'success', 'message' => "Material agregado a nuevo lote: $nomLote"]);
 
 } catch (Exception $e) {
-    $conexion->rollback();
+    if ($conexion->connect_errno === 0) { $conexion->rollback(); }
     ob_end_clean();
     echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
 }
