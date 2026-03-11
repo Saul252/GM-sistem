@@ -3,136 +3,7 @@
 const USER_ALMACEN_ID = <?= json_encode($_SESSION['almacen_id']) ?>;
 const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
 </script>
-<style>
-:root {
-    --mac-border: #d1d1d6;
-    --mac-accent: #007aff; /* Azul clásico de Apple */
-    --mac-bg: #ffffff;
-}
-
-/* Contenedor Principal */
-.mac-select-container {
-    padding: 12px;
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(10px); /* Efecto cristal de Mac */
-    border-radius: 12px;
-    border: 1px solid var(--mac-border);
-    transition: all 0.3s ease;
-}
-
-/* Etiqueta */
-.mac-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: #8e8e93;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-bottom: 8px;
-    display: block;
-}
-
-/* El Selector */
-.select-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-}
-
-.mac-select {
-    width: 100%;
-    appearance: none; /* Quitamos la flecha fea por defecto */
-    background: var(--mac-bg);
-    border: 1px solid var(--mac-border);
-    border-radius: 8px;
-    padding: 8px 30px 8px 12px;
-    font-size: 14px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    color: #1d1d1f;
-    cursor: pointer;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-/* Borde de color elegante al hacer foco */
-.mac-select.admin-active:focus {
-    outline: none;
-    border-color: var(--mac-accent);
-    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
-}
-
-/* Estado bloqueado para usuarios */
-.mac-select.user-locked:disabled {
-    background-color: #f5f5f7;
-    border-color: #d1d1d6;
-    color: #86868b;
-    cursor: default;
-    border-left: 4px solid var(--mac-accent); /* Acento de color lateral */
-}
-
-/* Flecha personalizada */
-.custom-arrow {
-    position: absolute;
-    right: 12px;
-    font-size: 10px;
-    color: #8e8e93;
-    pointer-events: none;
-}
-
-/* Badge inferior */
-.mac-badge-locked {
-    display: inline-block;
-    margin-top: 8px;
-    font-size: 10px;
-    font-weight: 500;
-    color: var(--mac-accent);
-    background: rgba(0, 122, 255, 0.08);
-    padding: 2px 8px;
-    border-radius: 10px;
-}
-
-</style>
-<style>
-/* Contenedor con el borde inicial sutil */
-.mac-select-container {
-    padding: 10px 14px;
-    background: #ffffff;
-    border: 1px solid #d1d1d6; /* Borde gris clásico de Mac */
-    border-radius: 12px;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-}
-
-/* El "Borde de Color Elegante" cuando el usuario entra al campo */
-.mac-select-container:focus-within {
-    border-color: #007aff; /* Azul Apple */
-    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15); /* Brillo exterior */
-    background: #fff;
-}
-
-/* Estilo de la etiqueta superior */
-.mac-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: #8e8e93;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 4px;
-    display: block;
-}
-
-/* Limpieza del select nativo */
-.mac-select {
-    width: 100%;
-    border: none !important;
-    outline: none !important;
-    background: transparent;
-    font-size: 15px;
-    font-family: -apple-system, sans-serif;
-    color: #1d1d1f;
-    cursor: pointer;
-    appearance: none;
-}
-
-</style>
+   <link href="/cfsistem/css/modalCompras.css" rel="stylesheet">
 <div class="modal fade" id="modalNuevaCompra" tabindex="-1" aria-labelledby="modalNuevaCompraLabel" aria-hidden="true"
     data-bs-backdrop="static">
     <div class="modal-dialog modal-xl">
@@ -208,6 +79,7 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
                         <span><i class="bi bi-list-check me-2"></i>Detalle de Productos</span>
                         <span class="badge bg-dark" id="conteoItems">0 Productos</span>
                     </h6>
+        
 
                     <div id="contenedorItemsCompra"></div>
 
@@ -348,13 +220,22 @@ function agregarFilaCompra() {
                     </div>
                 </div>
 
-                <div class="col-md-3">
-                    <label class="small fw-bold">Costo Total Renglón</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-light fw-bold">$</span>
-                        <input type="number" name="items[${idUnico}][total_item]" class="form-control input-costo-total" value="0" step="0.01" oninput="actualizarGranTotal()" required>
-                    </div>
-                </div>
+                                       
+<div class="col-md-3">
+    <label class="small fw-bold">Costo Total Renglón</label>
+    <div class="input-group">
+        <span class="input-group-text bg-light fw-bold">$</span>
+        <input type="number" name="items[${idUnico}][total_item]" 
+               class="form-control input-costo-total" 
+               value="0" step="0.01" 
+               oninput="calcularPrecioUnitarioLote(${idUnico})" required>
+    </div>
+    <input type="hidden" name="items[${idUnico}][precio_lote]" class="hidden-precio-lote" value="0">
+    <small class="text-muted" style="font-size: 0.7rem;">
+        Costo u. lote: <span class="span-precio-lote">$ 0.00</span>
+    </small>
+</div>
+
 
                 <div class="col-md-1 d-flex align-items-end">
                     <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="$('#card_item_${idUnico}').remove(); actualizarGranTotal();">
@@ -430,7 +311,9 @@ function recalcularTotales(id) {
     card.find('.span-total-base').text(totalReal.toLocaleString());
     card.find('.hidden-total-piezas').val(totalReal);
     card.find('.hidden-faltante').val(faltante);
-
+// --- AGREGAR ESTA LÍNEA ---
+    calcularPrecioUnitarioLote(id); 
+    // --------------------------
     validarReparto(id);
     actualizarGranTotal();
 }
@@ -525,7 +408,31 @@ function refrescarListaProductosCompra(nuevoIdSeleccionar = null) {
     });
 }
 
+function calcularPrecioUnitarioLote(id) {
+    const card = $(`#card_item_${id}`);
+    
+    // Obtenemos el costo total que el usuario escribió para ese renglón
+    const costoTotalRenglon = parseFloat(card.find('.input-costo-total').val()) || 0;
+    
+    // Obtenemos el total de piezas físicas que SI llegaron (ya restado el faltante)
+    const piezasReales = parseFloat(card.find('.hidden-total-piezas').val()) || 0;
+    
+    let precioUnitario = 0;
+    if (piezasReales > 0) {
+        precioUnitario = costoTotalRenglon / piezasReales;
+    }
 
+    // Guardamos en el input oculto que se enviará al PHP
+    card.find('.hidden-precio-lote').val(precioUnitario.toFixed(4));
+    
+    // Mostramos visualmente al usuario para confirmación
+    card.find('.span-precio-lote').text('$ ' + precioUnitario.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 4
+    }));
+
+    actualizarGranTotal();
+}
 /**
  * MANEJO DEL SUBMIT (BLINDADO)
  */

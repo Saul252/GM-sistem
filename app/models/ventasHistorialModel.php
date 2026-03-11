@@ -71,7 +71,7 @@ class VentaHistorialModel {
         }
     }
 
-  public function obtenerDetalleCompleto($id) {
+public function obtenerDetalleCompleto($id) {
     $id = intval($id);
     
     // 1. Info de la venta (Cabecera)
@@ -83,9 +83,9 @@ class VentaHistorialModel {
              WHERE v.id = $id";
     $info = $this->db->query($sqlI)->fetch_assoc();
     
-    // 2. Productos con FACTOR DE CONVERSIÓN
+    // 2. Productos con FACTOR DE CONVERSIÓN (Esta estaba bien)
     $prods = [];
-    $sqlP = "SELECT dv.*, p.nombre as producto, 
+    $sqlP = "SELECT dv.*, p.nombre as producto, p.sku, 
                     p.unidad_medida, p.unidad_reporte, p.factor_conversion 
              FROM detalle_venta dv 
              JOIN productos p ON dv.producto_id = p.id 
@@ -95,9 +95,10 @@ class VentaHistorialModel {
         $prods[] = $p; 
     }
     
-    // 3. Historial de entregas
+    // 3. Historial de entregas (AQUÍ AGREGAMOS LAS COLUMNAS QUE FALTABAN)
     $historialEntregas = [];
-    $sqlH = "SELECT ev.fecha, p.nombre as producto, de.cantidad, u.nombre as usuario_nombre 
+    $sqlH = "SELECT ev.fecha, p.nombre as producto, de.cantidad, u.nombre as usuario_nombre,
+                    p.unidad_medida, p.unidad_reporte, p.factor_conversion 
              FROM entregas_venta ev 
              JOIN detalle_entrega de ON ev.id = de.entrega_id 
              JOIN detalle_venta dv ON de.detalle_venta_id = dv.id 
@@ -109,7 +110,7 @@ class VentaHistorialModel {
         $historialEntregas[] = $h; 
     }
 
-    // 4. NUEVO: Historial de Pagos
+    // 4. Historial de Pagos
     $historialPagos = [];
     $sqlPagos = "SELECT hp.fecha, hp.monto, hp.metodo_pago, hp.referencia, u.nombre as usuario_nombre 
                  FROM historial_pagos hp
@@ -125,7 +126,7 @@ class VentaHistorialModel {
         'info' => $info, 
         'productos' => $prods, 
         'historial' => $historialEntregas,
-        'pagos' => $historialPagos // Enviamos los pagos al frontend
+        'pagos' => $historialPagos
     ];
 }
 

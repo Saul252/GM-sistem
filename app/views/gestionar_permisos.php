@@ -6,12 +6,14 @@ require_once __DIR__ . '/../../config/conexion.php';
 
 $paginaActual = 'Configuracion';
 
-// Obtener roles de la BD
+// 1. Obtener roles de la BD
 $resRoles = $conexion->query("SELECT * FROM roles ORDER BY id ASC");
 $roles = $resRoles->fetch_all(MYSQLI_ASSOC);
 
-// Módulos definidos
-$modulos = ['inicio', 'ventas', 'compras', 'almacenes', 'clientes', 'movimientos', 'ventashistorial', 'usuarios', 'finanzas', 'mermas','proveedores','corteCaja'];
+// 2. CARGAR MÓDULOS DESDE LA BASE DE DATOS
+// Consultamos la tabla que creamos para llenar el array dinámicamente
+$resModulos = $conexion->query("SELECT * FROM modulos WHERE activo = 1 ORDER BY orden ASC");
+$modulosData = $resModulos->fetch_all(MYSQLI_ASSOC);
 ?>
 
 <!DOCTYPE html>
@@ -26,52 +28,13 @@ $modulos = ['inicio', 'ventas', 'compras', 'almacenes', 'clientes', 'movimientos
     <style>
         :root { --sidebar-width: 260px; --navbar-height: 20px; }
         body { background-color: #f4f7f6; font-family: 'Inter', sans-serif; }
-        
-        .main-content {
-            margin-left: var(--sidebar-width);
-            padding: 40px;
-            margin-top: var(--navbar-height);
-            transition: all 0.3s;
-        }
-
-        .card-custom { 
-            border: none; 
-            border-radius: 15px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
-            background: white; 
-            overflow: hidden;
-        }
-
-        .table thead th {
-            background-color: #f8fafc;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.05em;
-            color: #64748b;
-            padding: 15px 20px;
-            border-bottom: 2px solid #edf2f7;
-        }
-
-        .module-name {
-            font-weight: 700;
-            color: #1e293b;
-            font-size: 0.9rem;
-        }
-
-        .role-header {
-            font-weight: 800;
-            color: #4338ca;
-        }
-
-        .form-check-input:checked {
-            background-color: #4338ca;
-            border-color: #4338ca;
-        }
-
-        .permiso-row:hover {
-            background-color: #f1f5f9 !important;
-        }
-
+        .main-content { margin-left: var(--sidebar-width); padding: 40px; margin-top: var(--navbar-height); transition: all 0.3s; }
+        .card-custom { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); background: white; overflow: hidden; }
+        .table thead th { background-color: #f8fafc; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: #64748b; padding: 15px 20px; border-bottom: 2px solid #edf2f7; }
+        .module-name { font-weight: 700; color: #1e293b; font-size: 0.9rem; }
+        .role-header { font-weight: 800; color: #4338ca; }
+        .form-check-input:checked { background-color: #4338ca; border-color: #4338ca; }
+        .permiso-row:hover { background-color: #f1f5f9 !important; }
         @media (max-width: 768px) { .main-content { margin-left: 0; padding: 20px; } }
     </style>
 </head>
@@ -104,20 +67,21 @@ $modulos = ['inicio', 'ventas', 'compras', 'almacenes', 'clientes', 'movimientos
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php foreach($modulos as $m): ?>
+                                <?php foreach($modulosData as $m): ?>
                                 <tr class="permiso-row">
                                     <td class="ps-4">
                                         <div class="d-flex align-items-center">
                                             <div class="bg-light p-2 rounded-3 me-3 text-primary">
-                                                <i class="bi bi-app-indicator"></i>
+                                                <i class="<?= $m['icono'] ?>"></i>
                                             </div>
-                                            <span class="module-name"><?= ucfirst($m) ?></span>
+                                            <span class="module-name"><?= $m['nombre'] ?></span>
                                         </div>
                                     </td>
                                     <?php foreach($roles as $r): 
+                                        // Comparamos contra el identificador (ej: 'corteCaja')
                                         $sqlCheck = "SELECT id FROM permisos_roles WHERE rol_id = ? AND modulo = ?";
                                         $stmt = $conexion->prepare($sqlCheck);
-                                        $stmt->bind_param("is", $r['id'], $m);
+                                        $stmt->bind_param("is", $r['id'], $m['identificador']);
                                         $stmt->execute();
                                         $hasPerm = ($stmt->get_result()->num_rows > 0) ? 'checked' : '';
                                     ?>
@@ -125,7 +89,7 @@ $modulos = ['inicio', 'ventas', 'compras', 'almacenes', 'clientes', 'movimientos
                                             <div class="form-check form-switch d-inline-block">
                                                 <input class="form-check-input" type="checkbox" role="switch"
                                                        name="permisos[<?= $r['id'] ?>][]" 
-                                                       value="<?= $m ?>" <?= $hasPerm ?>>
+                                                       value="<?= $m['identificador'] ?>" <?= $hasPerm ?>>
                                             </div>
                                         </td>
                                     <?php endforeach; ?>
@@ -137,19 +101,19 @@ $modulos = ['inicio', 'ventas', 'compras', 'almacenes', 'clientes', 'movimientos
                 </form>
             </div>
         </div>
-
-        <div class="mt-4 p-3 rounded-4 bg-white shadow-sm d-flex align-items-center border-start border-primary border-4">
-            <i class="bi bi-info-circle-fill text-primary fs-4 me-3"></i>
-            <p class="m-0 text-muted small">
-                <strong>Importante:</strong> Al guardar, los cambios se aplicarán a todos los usuarios del rol correspondiente. Los usuarios deberán recargar la página para ver los cambios en su menú.
-            </p>
-        </div>
-    </main>
+        </main>
 
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
+        // ... (el JS que ya tienes funciona perfectamente aquí)
+    </script>
+</body>
+</html>
+
+
+ <script>
     $(document).ready(function() {
         $('#btnGuardarPermisos').on('click', function() {
             
@@ -208,5 +172,8 @@ $modulos = ['inicio', 'ventas', 'compras', 'almacenes', 'clientes', 'movimientos
         });
     });
     </script>
-</body>
-</html>
+
+
+
+
+

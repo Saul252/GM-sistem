@@ -5,8 +5,8 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/cfsistem/config/conexion.php';
 $id = $_GET['id'] ?? null;
 if (!$id) die("ID de movimiento no proporcionado.");
 
-// Consulta detallada del movimiento
-$sql = "SELECT m.*, p.nombre as prod, p.sku, p.unidad_medida,
+// Consulta actualizada con factor de conversión y unidad de reporte
+$sql = "SELECT m.*, p.nombre as prod, p.sku, p.unidad_medida, p.unidad_reporte, p.factor_conversion,
                a1.nombre as origen, a2.nombre as destino,
                u1.nombre as usuario_reg, u2.nombre as usuario_env, u3.nombre as usuario_rec
         FROM movimientos m
@@ -22,120 +22,198 @@ $res = $conexion->query($sql);
 $m = $res->fetch_assoc();
 
 if (!$m) die("Movimiento no encontrado.");
+
+// Lógica de desglosado por factor de conversión
+$cantidad = floatval($m['cantidad']);
+$factor = floatval($m['factor_conversion'] ?: 1);
+$unidad_base = $m['unidad_medida'] ?: 'Pza';
+$unidad_mayor = $m['unidad_reporte'] ?: 'Bulto';
+
+$visual_detalle = "";
+if ($factor > 1 && $cantidad >= $factor) {
+    $bultos = floor($cantidad / $factor);
+    $piezas = $cantidad % $factor;
+    $visual_detalle = "<strong>$bultos $unidad_mayor</strong>";
+    if ($piezas > 0) {
+        $visual_detalle .= " con <strong>" . number_format($piezas, 2) . " $unidad_base</strong>";
+    }
+} else {
+    $visual_detalle = "<strong>" . number_format($cantidad, 2) . " $unidad_base</strong>";
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Comprobante_Movimiento_#<?= $id ?></title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movimiento_#<?= $id ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
-        body { background: #f0f0f0; font-family: 'Segoe UI', sans-serif; }
-        .ticket { background: white; width: 21cm; min-height: 14cm; margin: 1cm auto; padding: 2cm; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        .header-table { width: 100%; border-bottom: 2px solid #333; margin-bottom: 1rem; }
-        .info-box { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-        .label-sm { font-size: 0.75rem; text-transform: uppercase; color: #6c757d; font-weight: bold; }
+        body { background: #e9ecef; font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #333; }
+        .ticket { 
+            background: white; 
+            width: 21cm; 
+            min-height: 27cm; 
+            margin: 1.5cm auto; 
+            padding: 1.5cm; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 4px;
+            position: relative;
+        }
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 8rem;
+            color: rgba(0,0,0,0.03);
+            font-weight: 900;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .header-title { border-left: 5px solid #0d6efd; padding-left: 15px; }
+        .info-box { background: #fdfdfd; border: 1px solid #eee; padding: 15px; border-radius: 6px; }
+        .label-sm { font-size: 0.7rem; text-transform: uppercase; color: #888; font-weight: 700; letter-spacing: 0.5px; }
+        .table-custom thead { background: #f8f9fa; }
+        .table-custom th { font-size: 0.8rem; text-transform: uppercase; color: #555; }
+        .badge-type { font-size: 1rem; padding: 8px 15px; border-radius: 50px; }
+        
         @media print {
             body { background: white; margin: 0; }
-            .ticket { box-shadow: none; margin: 0; width: 100%; }
-            .no-print { display: none; }
+            .ticket { box-shadow: none; margin: 0; width: 100%; padding: 1cm; }
+            .no-print { display: none !important; }
+            .watermark { display: block; }
         }
     </style>
 </head>
 <body>
-    <div class="container no-print mt-3 text-center">
-        <button onclick="window.print();" class="btn btn-primary btn-lg"><i class="bi bi-printer"></i> Imprimir Comprobante</button>
+
+    <div class="container no-print mt-4 mb-4 text-center">
+        <div class="btn-group shadow-sm">
+            <button onclick="window.print();" class="btn btn-dark btn-lg px-4">
+                <i class="bi bi-printer-fill me-2"></i> Imprimir Comprobante
+            </button>
+            <a href="javascript:window.close();" class="btn btn-outline-dark btn-lg px-4">Cerrar</a>
+        </div>
     </div>
 
     <div class="ticket">
-        <table class="header-table">
-            <tr>
-                <td>
-                    <h2 class="fw-bold mb-0">CF SISTEM</h2>
-                    <p class="text-muted small">Control de Inventarios y Almacenes</p>
-                </td>
-                <td class="text-end">
-                    <h4 class="mb-0 text-uppercase text-primary"><?= $m['tipo'] ?></h4>
-                    <p class="mb-0">Folio: <b>#<?= str_pad($m['id'], 6, "0", STR_PAD_LEFT) ?></b></p>
-                    <p class="small text-muted">Generado: <?= date('d/m/Y H:i:s') ?></p>
-                </td>
-            </tr>
-        </table>
+        <div class="watermark"><?= strtoupper($m['tipo']) ?></div>
 
-        <div class="row info-box">
-            <div class="col-6">
-                <div class="label-sm">Fecha del Movimiento</div>
-                <div><?= date('d/m/Y h:i A', strtotime($m['fecha'])) ?></div>
+        <div class="row align-items-center mb-4" style="z-index: 1; position: relative;">
+            <div class="col-7 header-title">
+                <h2 class="fw-black mb-0 text-dark">CF <span class="text-primary">SISTEM</span></h2>
+                <p class="text-muted small mb-0">Comprobante Interno de Control de Inventarios</p>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle mt-2 badge-type">
+                    <?= strtoupper($m['tipo']) ?>
+                </span>
             </div>
-            <div class="col-6 text-end">
-                <div class="label-sm">Responsable del Registro</div>
-                <div><?= $m['usuario_reg'] ?></div>
+            <div class="col-5 text-end">
+                <div class="mb-1 label-sm text-dark">Folio del Movimiento</div>
+                <h3 class="fw-bold mb-0">#<?= str_pad($m['id'], 6, "0", STR_PAD_LEFT) ?></h3>
+                <p class="small text-muted mb-0">Impreso: <?= date('d/m/Y H:i') ?></p>
             </div>
         </div>
 
-        <table class="table table-bordered mt-4">
-            <thead class="table-light">
-                <tr>
-                    <th>SKU / Código</th>
-                    <th>Descripción del Producto</th>
-                    <th class="text-center">Cantidad</th>
-                    <th class="text-center">U. Medida</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr style="height: 80px;">
-                    <td><b><?= $m['sku'] ?></b></td>
-                    <td><?= $m['prod'] ?></td>
-                    <td class="text-center h4 fw-bold"><?= number_format($m['cantidad'], 2) ?></td>
-                    <td class="text-center"><?= $m['unidad_medida'] ?? 'Pza' ?></td>
-                </tr>
-            </tbody>
-        </table>
+        <hr>
 
-        <div class="row mt-4">
+        <div class="row info-box g-3 mb-4">
+            <div class="col-4 border-end">
+                <div class="label-sm"><i class="bi bi-calendar-event me-1"></i> Fecha de Registro</div>
+                <div class="fw-bold"><?= date('d/m/Y h:i A', strtotime($m['fecha'])) ?></div>
+            </div>
+            <div class="col-4 border-end">
+                <div class="label-sm"><i class="bi bi-person-badge me-1"></i> Responsable</div>
+                <div class="fw-bold"><?= $m['usuario_reg'] ?></div>
+            </div>
+            <div class="col-4">
+                <div class="label-sm"><i class="bi bi-info-circle me-1"></i> Referencia</div>
+                <div class="fw-bold text-truncate"><?= $m['referencia_id'] ? 'REF-'.$m['referencia_id'] : 'Sin Referencia' ?></div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-bordered align-middle table-custom">
+                <thead>
+                    <tr>
+                        <th width="150">Código / SKU</th>
+                        <th>Descripción del Producto</th>
+                        <th class="text-center" width="250">Cantidad Desglosada</th>
+                        <th class="text-center">Total Unidades</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="height: 100px;">
+                        <td class="fw-bold text-primary"><?= $m['sku'] ?></td>
+                        <td>
+                            <div class="fw-bold"><?= $m['prod'] ?></div>
+                            <small class="text-muted">Unidad Base: <?= $unidad_base ?></small>
+                        </td>
+                        <td class="text-center text-dark">
+                            <span class="fs-5"><?= $visual_detalle ?></span>
+                        </td>
+                        <td class="text-center">
+                            <span class="fw-bold fs-5"><?= number_format($cantidad, 2) ?></span><br>
+                            <small class="text-muted"><?= strtoupper($unidad_base) ?></small>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="row mt-4 g-4">
             <div class="col-6">
-                <div class="card card-body h-100">
-                    <div class="label-sm">Origen</div>
-                    <div class="fw-bold text-danger"><?= $m['origen'] ?? '---' ?></div>
+                <div class="p-3 border rounded shadow-sm bg-light-subtle h-100">
+                    <div class="label-sm mb-2 text-danger"><i class="bi bi-box-arrow-left"></i> Almacén Origen</div>
+                    <div class="h5 fw-bold mb-0"><?= $m['origen'] ?? '<span class="text-muted fw-normal">N/A</span>' ?></div>
                 </div>
             </div>
             <div class="col-6">
-                <div class="card card-body h-100">
-                    <div class="label-sm">Destino</div>
-                    <div class="fw-bold text-success"><?= $m['destino'] ?? '---' ?></div>
+                <div class="p-3 border rounded shadow-sm bg-light-subtle h-100">
+                    <div class="label-sm mb-2 text-success"><i class="bi bi-box-arrow-in-right"></i> Almacén Destino</div>
+                    <div class="h5 fw-bold mb-0"><?= $m['destino'] ?? '<span class="text-muted fw-normal">N/A</span>' ?></div>
                 </div>
             </div>
         </div>
 
         <div class="mt-4">
-            <div class="label-sm">Observaciones / Motivo</div>
-            <p class="border-bottom pb-2"><?= $m['observaciones'] ?: 'Sin observaciones adicionales.' ?></p>
-        </div>
-
-        <div class="row mt-5 pt-5 text-center">
-            <div class="col-4">
-                <div style="border-top: 1px solid #000; padding-top: 5px;">
-                    <small class="label-sm">Registró</small><br>
-                    <small><?= $m['usuario_reg'] ?></small>
-                </div>
-            </div>
-            <div class="col-4">
-                <div style="border-top: 1px solid #000; padding-top: 5px;">
-                    <small class="label-sm">Envió</small><br>
-                    <small><?= $m['usuario_env'] ?: 'N/A' ?></small>
-                </div>
-            </div>
-            <div class="col-4">
-                <div style="border-top: 1px solid #000; padding-top: 5px;">
-                    <small class="label-sm">Recibió</small><br>
-                    <small><?= $m['usuario_rec'] ?: 'N/A' ?></small>
+            <div class="p-3 border rounded bg-light" style="min-height: 80px;">
+                <div class="label-sm mb-1">Observaciones / Motivo del Movimiento</div>
+                <div class="small italic text-secondary">
+                    <?= $m['observaciones'] ?: 'El usuario no registró observaciones para este movimiento.' ?>
                 </div>
             </div>
         </div>
 
-        <footer class="mt-5 pt-5 text-center text-muted small">
-            Este documento es un comprobante interno de almacén generado por CF SISTEM.
+        <div class="row mt-5 pt-4 text-center">
+            <div class="col-4">
+                <div class="mx-3" style="border-top: 1.5px solid #333; padding-top: 10px;">
+                    <div class="label-sm">Registró / Autorizó</div>
+                    <div class="fw-bold small"><?= $m['usuario_reg'] ?></div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="mx-3" style="border-top: 1.5px solid #333; padding-top: 10px;">
+                    <div class="label-sm">Envió (Firma)</div>
+                    <div class="fw-bold small"><?= $m['usuario_env'] ?: '---' ?></div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="mx-3" style="border-top: 1.5px solid #333; padding-top: 10px;">
+                    <div class="label-sm">Recibió (Firma)</div>
+                    <div class="fw-bold small"><?= $m['usuario_rec'] ?: '---' ?></div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-5 pt-5 text-center">
+            <div class="label-sm border-top pt-3">
+                CF SISTEM - Software de Gestión de Almacén <br>
+                <span class="fw-normal lowercase text-lowercase">Generado automáticamente por el módulo de logística</span>
+            </div>
         </footer>
     </div>
+
 </body>
 </html>

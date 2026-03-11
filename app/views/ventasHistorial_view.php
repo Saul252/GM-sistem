@@ -463,15 +463,46 @@
         </td>
     </tr>`;
             }).join(''));
-            $('#tbodyHistorial').html(data.historial.length > 0 ? data.historial.map(h => `
-            <tr>
-                <td>${h.fecha}</td>
-                <td>${h.usuario_nombre}</td>
-                <td>${h.producto}</td>
-                <td class="text-center fw-bold">${h.cantidad}</td>
-            </tr>
-        `).join('') : '<tr><td colspan="4" class="text-center text-muted">No hay entregas registradas</td></tr>');
-            // ... (dentro de verDetalle, después de renderizar historial de entregas)
+             // ... (dentro de verDetalle, después de renderizar historial de entregas)
+$('#tbodyHistorial').html(data.historial.length > 0 ? data.historial.map(h => {
+    // 1. Extraemos los valores del historial
+    // Si salen vacíos o undefined, es que el PHP no los está mandando en el JSON de historial
+    let cantH = parseFloat(h.cantidad) || 0;
+    let factorH = parseFloat(h.factor_conversion) || 1;
+    let uReporteH = h.unidad_reporte || ''; 
+    let uMedidaH = h.unidad_medida || '';
+
+    let visualizacionHistorial = "";
+
+    // 2. Aplicamos la misma lógica que usas arriba
+    if (factorH > 1 && cantH >= factorH) {
+        let unidadesMayoresH = (cantH / factorH);
+        let totalUnidadesStrH = Number.isInteger(unidadesMayoresH) ? 
+            unidadesMayoresH : 
+            unidadesMayoresH.toFixed(2);
+
+        visualizacionHistorial = `
+            <span class="fw-bold text-primary">${totalUnidadesStrH} ${uReporteH}</span> 
+            <br> <small class="text-muted">(${cantH} ${uMedidaH})</small>
+        `;
+    } else {
+        // Aquí verás si unidad_medida viene vacío desde la base de datos
+        visualizacionHistorial = `<span>${cantH} ${uMedidaH}</span>`;
+    }
+
+    return `
+    <tr>
+        <td class="small">${h.fecha}</td>
+        <td class="small">${h.usuario_nombre}</td>
+        <td>
+            <div class="fw-bold" style="font-size:0.85rem;">${h.producto}</div>
+        </td>
+        <td class="text-center">
+            ${visualizacionHistorial}
+        </td>
+    </tr>`;
+}).join('') : '<tr><td colspan="4" class="text-center text-muted p-3">No hay entregas registradas</td></tr>');
+
 
             // --- RENDERIZADO DE HISTORIAL DE PAGOS ---
             if (data.pagos && data.pagos.length > 0) {
