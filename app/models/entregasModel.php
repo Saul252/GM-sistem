@@ -9,75 +9,78 @@ class EntregaModel {
     }
 
     // MANTIENE TU FUNCIÓN ORIGINAL DE LISTADO
-    public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_admin) {
-        $periodo = $filtros['periodo'] ?? 'semana';
-        $f_inicio_user = $filtros['f_inicio'] ?? '';
-        $f_fin_user = $filtros['f_fin'] ?? '';
-        $hoy = date('Y-m-d');
-        
-        $inicio = $hoy; 
-        $fin = $hoy;
+  public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_admin) {
+    $periodo = $filtros['periodo'] ?? 'semana';
+    $f_inicio_user = $filtros['f_inicio'] ?? '';
+    $f_fin_user = $filtros['f_fin'] ?? '';
+    $hoy = date('Y-m-d');
+    
+    $inicio = $hoy; 
+    $fin = $hoy;
 
-        if ($periodo !== 'personalizado') {
-            switch ($periodo) {
-                case 'ayer':   $inicio = date('Y-m-d', strtotime('-1 day')); $fin = $inicio; break;
-                case 'semana': $inicio = date('Y-m-d', strtotime('-7 days')); break;
-                case 'mes':    $inicio = date('Y-m-01'); break;
-                case 'hoy':    $inicio = $hoy; $fin = $hoy; break;
-            }
-        } else {
-            $inicio = !empty($f_inicio_user) ? $f_inicio_user : $hoy;
-            $fin = !empty($f_fin_user) ? $f_fin_user : $hoy;
+    if ($periodo !== 'personalizado') {
+        switch ($periodo) {
+            case 'ayer':   $inicio = date('Y-m-d', strtotime('-1 day')); $fin = $inicio; break;
+            case 'semana': $inicio = date('Y-m-d', strtotime('-7 days')); break;
+            case 'mes':    $inicio = date('Y-m-01'); break;
+            case 'hoy':    $inicio = $hoy; $fin = $hoy; break;
         }
-
-        $almacen_filtro = intval($filtros['almacen_id'] ?? 0);
-        $target_almacen = ($almacen_usuario_sesion > 0) ? $almacen_usuario_sesion : $almacen_filtro;
-
-        $where = "WHERE m.tipo = 'salida' 
-                  AND (m.usuario_recibe_id IS NULL OR m.usuario_recibe_id = 0)
-                  AND DATE(m.fecha) BETWEEN '$inicio' AND '$fin'";
-        
-        if ($target_almacen > 0) { 
-            $where .= " AND m.almacen_origen_id = $target_almacen"; 
-        }
-
-        $sql = "SELECT 
-                    m.*, 
-                    p.nombre as prod_nombre, p.sku, p.factor_conversion, p.unidad_reporte,
-                    a1.nombre as origen_nombre,
-                    u1.nombre as usuario_nombre,
-                    IF(rsl.id IS NOT NULL, 1, 0) as ya_despachado
-                FROM movimientos m 
-                INNER JOIN productos p ON m.producto_id = p.id
-                LEFT JOIN almacenes a1 ON m.almacen_origen_id = a1.id
-                LEFT JOIN usuarios u1 ON m.usuario_registra_id = u1.id
-                LEFT JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
-                $where 
-                GROUP BY m.id 
-                ORDER BY m.fecha ASC";
-
-        $resultado = $this->db->query($sql);
-        $data = [];
-
-        if ($resultado) {
-            while ($row = $resultado->fetch_assoc()) {
-                $data[] = [
-                    'id'                => $row['id'],
-                    'fecha_format'      => date('d/m/Y H:i', strtotime($row['fecha'])),
-                    'producto'          => $row['prod_nombre'],
-                    'sku'               => $row['sku'],
-                    'cantidad'          => $row['cantidad'],
-                    'factor_conversion' => $row['factor_conversion'], // Agregado para el JS
-                    'unidad_reporte'    => $row['unidad_reporte'] ?? 'PZA',
-                    'origen'            => $row['origen_nombre'] ?? '---',
-                    'u_reg'             => $row['usuario_nombre'] ?? 'Sist.',
-                    'ya_despachado'     => intval($row['ya_despachado'])
-                ];
-            }
-        }
-        return $data;
+    } else {
+        $inicio = !empty($f_inicio_user) ? $f_inicio_user : $hoy;
+        $fin = !empty($f_fin_user) ? $f_fin_user : $hoy;
     }
 
+    $almacen_filtro = intval($filtros['almacen_id'] ?? 0);
+    $target_almacen = ($almacen_usuario_sesion > 0) ? $almacen_usuario_sesion : $almacen_filtro;
+
+    $where = "WHERE m.tipo = 'salida' 
+              AND (m.usuario_recibe_id IS NULL OR m.usuario_recibe_id = 0)
+              AND DATE(m.fecha) BETWEEN '$inicio' AND '$fin'";
+    
+    if ($target_almacen > 0) { 
+        $where .= " AND m.almacen_origen_id = $target_almacen"; 
+    }
+
+    // Consulta con Folio de Venta y Orden Descendente
+    $sql = "SELECT 
+                m.*, 
+                v.folio as folio_venta,
+                p.nombre as prod_nombre, p.sku, p.factor_conversion, p.unidad_reporte,
+                a1.nombre as origen_nombre,
+                u1.nombre as usuario_nombre,
+                IF(rsl.id IS NOT NULL, 1, 0) as ya_despachado
+            FROM movimientos m 
+            INNER JOIN productos p ON m.producto_id = p.id
+            LEFT JOIN ventas v ON m.referencia_id = v.id
+            LEFT JOIN almacenes a1 ON m.almacen_origen_id = a1.id
+            LEFT JOIN usuarios u1 ON m.usuario_registra_id = u1.id
+            LEFT JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
+            $where 
+            GROUP BY m.id 
+            ORDER BY m.fecha DESC";
+
+    $resultado = $this->db->query($sql);
+    $data = [];
+
+    if ($resultado) {
+        while ($row = $resultado->fetch_assoc()) {
+            $data[] = [
+                'id'                => $row['id'], // Número de Operación
+                'folio_venta'       => $row['folio_venta'] ?? '---',
+                'fecha_format'      => date('d/m/Y H:i', strtotime($row['fecha'])),
+                'producto'          => $row['prod_nombre'],
+                'sku'               => $row['sku'],
+                'cantidad'          => $row['cantidad'],
+                'factor_conversion' => $row['factor_conversion'],
+                'unidad_reporte'    => $row['unidad_reporte'] ?? 'PZA',
+                'origen'            => $row['origen_nombre'] ?? '---',
+                'u_reg'             => $row['usuario_nombre'] ?? 'Sist.',
+                'ya_despachado'     => intval($row['ya_despachado'])
+            ];
+        }
+    }
+    return $data;
+}
     // MANTIENE TU FUNCIÓN ORIGINAL DE PROCESO DE STOCK
     public function procesarDespachoFisico($idMovimiento) {
         $this->db->begin_transaction();
@@ -252,4 +255,92 @@ class EntregaModel {
         }
         return $data;
     }
+
+    public function obtenerDatosVentaImpresion($idMovimiento) {
+    // Sanitizamos el ID
+    $idMovimiento = intval($idMovimiento);
+
+    $sql = "SELECT 
+                m.id as movimiento_id,
+                m.fecha as fecha_solicitud,
+                m.cantidad as cantidad_total,
+                p.nombre as producto,
+                p.sku,
+                p.unidad_reporte,
+                p.factor_conversion,
+                a_orig.nombre as almacen_origen,
+                u_patio.nombre as usuario_despacho,
+                rsl.fecha_despacho,
+                
+                /* Detalle de lotes delimitado para el JS */
+                (SELECT GROUP_CONCAT(
+                    CONCAT(
+                        ls.codigo_lote, '|', 
+                        lms.cantidad_salida, '|', 
+                        lms.costo_compra_historico, '|', 
+                        lms.precio_venta_pactado
+                    ) SEPARATOR '___'
+                )
+                 FROM lotes_movimientos_salida lms
+                 INNER JOIN lotes_stock ls ON lms.lote_id = ls.id
+                 WHERE lms.id IN (
+                    SELECT lms2.id 
+                    FROM lotes_movimientos_salida lms2
+                    INNER JOIN registro_salida_lotes rsl2 ON rsl2.movimiento_id = $idMovimiento
+                    WHERE lms2.entrega_venta_id = (SELECT ev.id FROM entregas_venta ev WHERE ev.venta_id = m.referencia_id LIMIT 1)
+                    OR (m.tipo = 'salida' AND lms2.detalle_venta_id = 0 AND ls.producto_id = m.producto_id)
+                 )
+                ) as detalle_financiero,
+
+                /* Totales basados EXACTAMENTE en los mismos lotes del detalle anterior */
+                (SELECT SUM(lms3.costo_compra_historico * lms3.cantidad_salida) 
+                 FROM lotes_movimientos_salida lms3 
+                 WHERE lms3.id IN (
+                    SELECT lms4.id FROM lotes_movimientos_salida lms4
+                    INNER JOIN registro_salida_lotes rsl4 ON rsl4.movimiento_id = $idMovimiento
+                    WHERE lms4.entrega_venta_id = (SELECT ev4.id FROM entregas_venta ev4 WHERE ev4.venta_id = m.referencia_id LIMIT 1)
+                    OR (m.tipo = 'salida' AND lms4.detalle_venta_id = 0)
+                 )
+                ) as total_costo,
+
+                (SELECT SUM(lms5.precio_venta_pactado * lms5.cantidad_salida) 
+                 FROM lotes_movimientos_salida lms5 
+                 WHERE lms5.id IN (
+                    SELECT lms6.id FROM lotes_movimientos_salida lms6
+                    INNER JOIN registro_salida_lotes rsl6 ON rsl6.movimiento_id = $idMovimiento
+                    WHERE lms6.entrega_venta_id = (SELECT ev5.id FROM entregas_venta ev5 WHERE ev5.venta_id = m.referencia_id LIMIT 1)
+                    OR (m.tipo = 'salida' AND lms6.detalle_venta_id = 0)
+                 )
+                ) as total_venta
+
+            FROM movimientos m
+            INNER JOIN productos p ON m.producto_id = p.id
+            LEFT JOIN almacenes a_orig ON m.almacen_origen_id = a_orig.id
+            INNER JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
+            LEFT JOIN usuarios u_patio ON rsl.usuario_patio_id = u_patio.id
+            WHERE m.id = $idMovimiento";
+
+    $res = $this->db->query($sql);
+    $data = $res->fetch_assoc();
+
+    if ($data) {
+        $cant = floatval($data['cantidad_total']);
+        $factor = floatval($data['factor_conversion'] ?: 1);
+        
+        // Formateo de cantidad convertida
+        if ($factor > 1 && $cant >= $factor) {
+            $unidades = floor($cant / $factor);
+            $resto = round($cant % $factor, 2);
+            $data['cantidad_convertida'] = "$unidades " . $data['unidad_reporte'] . ($resto > 0 ? " + $resto pzas" : "");
+        } else {
+            $data['cantidad_convertida'] = "$cant pzas";
+        }
+
+        // Cálculos finales
+        $total_c = floatval($data['total_costo'] ?? 0);
+        $total_v = floatval($data['total_venta'] ?? 0);
+        $data['ganancia_neta'] = round($total_v - $total_c, 2);
+    }
+    return $data;
+}
 }

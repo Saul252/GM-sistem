@@ -42,6 +42,7 @@ if (isset($_GET['ajax'])) {
                 $datos = $modelo->obtenerDatosImpresion($id);
                 if (!$datos) throw new Exception("No se encontraron datos para la impresión.");
                 
+                // Enviamos los datos. El campo 'detalle_json' ya vendrá estructurado desde el modelo.
                 echo json_encode(['success' => true, 'data' => $datos]);
                 break;
                 

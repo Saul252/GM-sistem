@@ -114,11 +114,12 @@
                         <table id="tablaEntregas" class="table table-hover align-middle mb-0">
                             <thead>
                                 <tr>
-                                    <th class="ps-4">Fecha Venta</th>
+                                    <th class="ps-4">Operación</th>
+                                    <th>Folio Venta</th>
+                                    <th>Fecha</th>
                                     <th>Producto / SKU</th>
                                     <th class="text-center">Cant. Solicitada</th>
                                     <th>Almacén</th>
-                                    <th>Vendedor</th>
                                     <th class="text-end pe-4">Acciones</th>
                                 </tr>
                             </thead>
@@ -220,12 +221,14 @@ $(document).ready(function() {
                                 </div>`;
                         }
 
+// AGREGADO: Folio de Venta y Número de Operación (ID del movimiento)
                         tabla.row.add([
-                            `<span class="ps-3 text-dark fw-bold">${m.fecha_format}</span>`,
+                            `<span class="ps-3 fw-bold text-secondary">#${m.id}</span>`, // ID Movimiento
+                            `<span class="fw-bold text-primary">${m.folio_venta || '---'}</span>`, // Folio Venta
+                            `<span class="text-dark">${m.fecha_format}</span>`, // Fecha formateada
                             `<b>${m.producto}</b><br><small class="text-primary font-monospace">${m.sku}</small>`,
                             `<div class="text-center">${formatQty(m.cantidad, m.factor_conversion, m.unidad_reporte)}</div>`,
                             `<div><span class="badge bg-light text-dark border"><i class="bi bi-geo-alt me-1"></i>${m.origen}</span></div>`,
-                            `<div><small class="text-muted">${m.u_reg}</small></div>`,
                             accionHtml
                         ]);
                     });
@@ -409,6 +412,9 @@ $(document).ready(function() {
         }
     }).always(() => $('#loader').addClass('d-none'));
 };
+
+
+
 
     cargarEntregas();
 });
