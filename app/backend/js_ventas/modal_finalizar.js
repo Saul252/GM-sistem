@@ -91,12 +91,15 @@ window.recalcularTotalModal = function() {
 
 /**
  * 6. LISTENER PARA ACTUALIZAR DESGLOSE Y ENTREGA EN TIEMPO REAL
- */
-document.addEventListener('input', function(e) {
+ */document.addEventListener('input', function(e) {
     if (e.target.classList.contains('input-entrega-modal')) {
         const index = e.target.dataset.index;
         const item = window.carrito[index];
-        let valor = parseFloat(e.target.value) || 0;
+        
+        // CORRECCIÓN: Usa parseFloat para permitir decimales o cantidades enteras mayores a 1
+        let valor = parseFloat(e.target.value);
+        
+        if (isNaN(valor)) valor = 0;
 
         // Validar que no entregue más de lo vendido
         if (valor > item.cantidad) {
@@ -104,9 +107,10 @@ document.addEventListener('input', function(e) {
             e.target.value = valor;
         }
         
+        // Guardamos el valor real (ej. 2, 5, 10...)
         item.entrega_hoy = valor;
 
-        // Actualizar el texto de desglose específico
+        // Actualizar el texto informativo (Aquí sí usamos floor solo para mostrar el texto de "bultos")
         const f = Math.floor(valor / item.factor);
         const p = Math.round((valor % item.factor) * 100) / 100;
         

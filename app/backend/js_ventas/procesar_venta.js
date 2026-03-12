@@ -48,8 +48,8 @@ window.procesarVenta = function() {
             // 5. MAPEO DEL CARRITO CON DATOS DE ENTREGA
             const carritoFinal = window.carrito.map((item, index) => {
                 // Intentamos capturar el valor del input físico en el modal por si el listener falló
-                const inputEntrega = document.querySelector(`.input-entrega[data-index="${index}"]`);
-                
+               // CÁMBIALA POR ESTA (para que coincida con tu modal):
+const inputEntrega = document.querySelector(`.input-entrega-modal[data-index="${index}"]`);
                 // Prioridad: 1. Valor del input en el modal, 2. Valor guardado en el objeto, 3. Total vendido
                 let entregado = item.entrega_hoy; 
                 if (inputEntrega) {

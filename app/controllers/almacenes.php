@@ -134,6 +134,29 @@ class AlmacenController {
         }
         exit;
     }
+    // Añade este método antes del final de la llave de la clase }
+public function obtenerListaAlmacenes() {
+    // 1. Limpiamos cualquier salida previa (espacios, warnings, etc)
+    while (ob_get_level()) ob_end_clean(); 
+    
+    // 2. Cabeceras obligatorias
+    header('Content-Type: application/json; charset=utf-8');
+    
+    try {
+        // Llamamos a tu modelo con 0 para traer todos
+        $almacenes = $this->model->getAlmacenes(0); 
+        
+        if (!$almacenes) {
+            echo json_encode([]);
+        } else {
+            echo json_encode($almacenes);
+        }
+    } catch (Exception $e) {
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
+    // 3. Terminamos la ejecución para que no se pegue el HTML del Layout
+    exit; 
+}
 }
 
 /**
@@ -156,6 +179,10 @@ if (isset($conexion)) {
         case 'getListaProductosJson': // <--- SECCIÓN PARA ACTUALIZAR SELECTS
             $controller->getListaProductosJson();
             break;
+            case 'getAlmacenesJSON': // <--- AÑADE ESTO
+        $controller->obtenerListaAlmacenes();
+        break;
+   
         default:
             $controller->index();
             break;

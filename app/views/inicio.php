@@ -182,6 +182,17 @@ $paginaActual = 'Inicio';
     </a>
 </div>
 <?php endif; ?>
+<?php if (puedeVerModulo(modulo: 'clientesEstatus')): ?>
+<div class="col-md-4 col-lg-3">
+    <a href="/cfsistem/app/controllers/clientesEstatusController.php" class="text-decoration-none text-dark">
+        <div class="card card-modulo text-center shadow-sm h-100 border-0" style="transition: transform 0.2s;">
+            <i class="bi bi-person-check icono-modulo text-success" style="font-size: 2.5rem; margin-bottom: 10px;"></i>
+            <h6 class="fw-bold">Estatus de Clientes</h6>
+            <small class="text-muted">Deudas, Lotes y Rentabilidad</small>
+        </div>
+    </a>
+</div>
+<?php endif; ?>
 </div>
 </div>
 

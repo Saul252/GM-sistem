@@ -143,6 +143,22 @@
     </a>
 </li>
 <?php endif; ?>
+<?php if (puedeVerModulo(modulo: 'clientesEstatus')): ?>
+<li class="nav-item">
+    <a href="/cfsistem/app/controllers/clientesEstatusController.php" 
+       class="nav-link <?= $paginaActual == 'clientesEstatus' ? 'active' : '' ?>">
+        <i class="bi bi-person-badge"></i><span>Estatus Clientes</span>
+    </a>
+</li>
+<?php endif; ?>
+<?php if (puedeVerModulo(modulo: 'Configuracion')): ?>
+<li class="nav-item">
+    <a href="/cfsistem/app/controllers/configuracionController.php" 
+       class="nav-link <?= $paginaActual == 'configuracion' ? 'active' : '' ?>">
+        <i class="bi bi-gear-fill"></i><span>Configuración</span>
+    </a>
+</li>
+<?php endif; ?>
 <!-- 
 <li class="nav-item">
     <a href="/cfsistem/app/views/gestionar_permisos.php" class="nav-link <?= $archivoActual == 'gestion_permisos.php' ? 'active' : '' ?>">

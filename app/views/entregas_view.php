@@ -204,14 +204,27 @@ $(document).ready(function() {
                         let accionHtml = '';
                         if (parseInt(m.ya_despachado) === 1) {
                             accionHtml = `
-                                <div class="text-end pe-3">
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-2 me-2">
-                                        <i class="bi bi-check-circle-fill me-1"></i> Entregado
-                                    </span>
-                                    <button onclick="imprimirComprobante(${m.id})" class="btn btn-sm btn-outline-dark rounded-circle" title="Imprimir Vale">
-                                        <i class="bi bi-printer"></i>
-                                    </button>
-                                </div>`;
+                               <div class="d-flex align-items-center justify-content-end pe-3">
+        <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3 py-2 me-3" style="font-size: 0.75rem;">
+            <i class="bi bi-check-circle-fill me-1"></i> ENTREGADO
+        </span>
+
+        <div class="btn-group shadow-sm" role="group" style="border-radius: 20px; overflow: hidden;">
+            <button onclick="imprimirComprobante(${m.id})" 
+                    class="btn btn-sm btn-white border-end" 
+                    title="Imprimir Vale de Patio"
+                    style="padding: 8px 12px; transition: all 0.2s;">
+                <i class="bi bi-printer text-secondary"></i>
+            </button>
+            
+            <button onclick="verDetalleGanancia(${m.id})" 
+                    class="btn btn-sm btn-white" 
+                    title="Ver Análisis Financiero"
+                    style="padding: 8px 12px; transition: all 0.2s;">
+                <i class="bi bi-graph-up-arrow text-success"></i>
+            </button>
+        </div>
+    </div>`;
                         } else {
                             accionHtml = `
                                 <div class="pe-3 text-end">
@@ -413,8 +426,88 @@ $(document).ready(function() {
     }).always(() => $('#loader').addClass('d-none'));
 };
 
+window.verDetalleGanancia = function(id) {
+    // Ajuste de UI para el modal de auditoría
+    $('#btnConfirmarFinal').addClass('d-none'); 
+    $('#btnImprimirModal').removeClass('d-none'); 
+    $('#loader').removeClass('d-none');
+    
+    $.getJSON('entregasController.php', { ajax: 'imprimirGanancia', id: id }, function(res) {
+        if(res.success) {
+            const d = res.data;
+            const colorGanancia = parseFloat(d.ganancia_neta) < 0 ? 'text-danger' : 'text-success';
+            
+            let filasLotes = '';
+            if (d.detalle_financiero) {
+                const registros = d.detalle_financiero.split('___');
+                registros.forEach(reg => {
+                    const c = reg.split('|'); 
+                    if (c.length === 4) {
+                        const subC = parseFloat(c[1]) * parseFloat(c[2]);
+                        const subV = parseFloat(c[1]) * parseFloat(c[3]);
+                        const util = subV - subC;
 
+                        filasLotes += `
+                            <tr>
+                                <td class="font-monospace text-start ps-2">${c[0]}</td>
+                                <td>${c[1]}</td>
+                                <td class="text-end text-muted">$ ${parseFloat(c[2]).toFixed(2)}</td>
+                                <td class="text-end">$ ${parseFloat(c[3]).toFixed(2)}</td>
+                                <td class="text-end text-muted">$ ${subC.toFixed(2)}</td>
+                                <td class="text-end fw-bold">$ ${subV.toFixed(2)}</td>
+                                <td class="text-end fw-bold ${util < 0 ? 'text-danger' : 'text-success'}">$ ${util.toFixed(2)}</td>
+                            </tr>`;
+                    }
+                });
+            }
 
+           // Dentro de tu función window.verDetalleGanancia:
+
+// 1. Cambiamos el color del encabezado de la tabla a oscuro para denotar "Auditoría"
+let html = `
+    <div class="text-center mb-4">
+        <div class="badge bg-success mb-2">Reporte Financiero</div>
+        <h4 class="mb-1 text-uppercase fw-bold text-dark">Rentabilidad de Venta</h4>
+        <p class="text-muted small">ID Movimiento: #<b>${d.movimiento_id}</b> | Folio: <b>${d.folio_venta || 'N/A'}</b></p>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table table-sm table-hover table-bordered align-middle text-center">
+            <thead class="table-dark small"> <tr>
+                    <th>Lote Origen</th>
+                    <th>Cant.</th>
+                    <th>Costo Adq.</th>
+                    <th>Precio Venta</th>
+                    <th>Inversión</th>
+                    <th>Ingreso Bruto</th>
+                    <th>Utilidad</th>
+                </tr>
+            </thead>
+            <tbody style="font-size: 0.75rem;">
+                ${filasLotes}
+            </tbody>
+            <tfoot class="table-info fw-bold"> <tr>
+                    <td colspan="4" class="text-end small">RESUMEN DE OPERACIÓN:</td>
+                    <td class="text-end">$ ${parseFloat(d.total_costo).toFixed(2)}</td>
+                    <td class="text-end">$ ${parseFloat(d.total_venta).toFixed(2)}</td>
+                    <td class="text-end ${colorGanancia}" style="font-size: 0.95rem;">
+                        $ ${parseFloat(d.ganancia_neta).toFixed(2)}
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    ...
+`;
+            // Recuerda que si clonas el modal, el ID del contenedor debe ser distinto
+            // o puedes reusar el mismo si no se abren al mismo tiempo.
+            $('#documentoPatio').html(html); 
+            $('#modalSimulacion').modal('show');
+        } else {
+            Swal.fire('Error de Consulta', res.message, 'error');
+        }
+    }).always(() => $('#loader').addClass('d-none'));
+};
 
     cargarEntregas();
 });

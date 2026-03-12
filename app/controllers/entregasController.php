@@ -45,6 +45,16 @@ if (isset($_GET['ajax'])) {
                 // Enviamos los datos. El campo 'detalle_json' ya vendrá estructurado desde el modelo.
                 echo json_encode(['success' => true, 'data' => $datos]);
                 break;
+            case 'imprimirGanancia':
+                $id = intval($_GET['id'] ?? 0);
+                if ($id <= 0) throw new Exception("ID de movimiento no válido.");
+                
+                $datos = $modelo->obtenerDatosVentaGananciaImpresion($id);
+                if (!$datos) throw new Exception("No se encontraron datos para la impresión.");
+                
+                // Enviamos los datos. El campo 'detalle_json' ya vendrá estructurado desde el modelo.
+                echo json_encode(['success' => true, 'data' => $datos]);
+                break;
                 
             default:
                 throw new Exception("Acción AJAX no reconocida.");

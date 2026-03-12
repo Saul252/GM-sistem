@@ -289,18 +289,21 @@
                         <div class="col-lg-5">
                             <h6 class="text-uppercase fw-bold mb-3 text-primary">Información del Cliente</h6>
                             <div class="input-group mb-3">
-                                <select id="selectCliente" class="form-select border-primary">
-                                    <?php 
-                                        $clientes->data_seek(0); 
-                                        while($c = $clientes->fetch_assoc()): 
-                                    ?>
-                                    <option value="<?= $c['id'] ?>" data-rfc="<?= $c['rfc'] ?>"
-                                        data-rs="<?= $c['razon_social'] ?>" data-cp="<?= $c['codigo_postal'] ?>"
-                                        data-regimen="<?= $c['regimen_fiscal'] ?>">
-                                        <?= htmlspecialchars($c['nombre_comercial']) ?>
-                                    </option>
-                                    <?php endwhile; ?>
-                                </select>
+                            <select id="selectCliente" class="form-select border-primary">
+    <?php if (empty($clientes)): ?>
+        <option value="">No hay clientes registrados</option>
+    <?php else: ?>
+        <?php foreach($clientes as $c): ?>
+        <option value="<?= $c['id'] ?>" 
+                data-rfc="<?= $c['rfc'] ?>"
+                data-rs="<?= $c['razon_social'] ?>" 
+                data-cp="<?= $c['codigo_postal'] ?>"
+                data-regimen="<?= $c['regimen_fiscal'] ?>">
+            <?= htmlspecialchars($c['nombre_comercial']) ?>
+        </option>
+        <?php endforeach; ?>
+    <?php endif; ?>
+</select>
                                 <button class="btn btn-outline-primary" type="button"
                                     onclick="abrirModalNuevoCliente()">
                                     <i class="bi bi-person-plus"></i>

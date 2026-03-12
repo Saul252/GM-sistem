@@ -256,7 +256,7 @@ class EntregaModel {
         return $data;
     }
 
-    public function obtenerDatosVentaImpresion($idMovimiento) {
+    public function obtenerDatosVentaGananciaImpresion($idMovimiento) {
     // Sanitizamos el ID
     $idMovimiento = intval($idMovimiento);
 

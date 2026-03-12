@@ -1,7 +1,7 @@
 <?php
 /**
- * clientesController.php
- * Controlador para la gestión de Clientes (CRUD y Estado)
+ * clientesController.php 
+ * Ajustado solo con lo necesario para el almacén
  */
 
 require_once __DIR__ . '/../../includes/auth.php';
@@ -11,6 +11,8 @@ require_once __DIR__ . '/../models/clientesModel.php';
 
 $clientesModel = new ClientesModel($conexion);
 $paginaActual = 'clientes';
+// Capturamos el almacén de la sesión para las consultas
+$almacen_id = $_SESSION['almacen_id'] ?? 0; 
 
 // --- ACCIÓN: GUARDAR / ACTUALIZAR CLIENTE (AJAX) ---
 if (isset($_GET['action']) && $_GET['action'] === 'guardar') {
@@ -19,7 +21,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardar') {
     
     try {
         $id = intval($_POST['cliente_id'] ?? 0);
-        $user_id = $_SESSION['user_id'] ?? 1;
 
         $datos = [
             'nombre_comercial' => trim($_POST['nombre_comercial'] ?? ''),
@@ -41,6 +42,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardar') {
             $resultado = $clientesModel->actualizar($id, $datos);
             $mensaje = "Cliente actualizado correctamente.";
         } else {
+            // El modelo ya usa $_SESSION['almacen_id'] internamente
             $resultado = $clientesModel->guardar($datos);
             $mensaje = "Cliente registrado correctamente.";
         }
@@ -61,16 +63,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'cambiarEstado') {
     try {
         $id = intval($_POST['id'] ?? 0);
         $estado = intval($_POST['estado'] ?? 0);
-
         if ($id <= 0) throw new Exception("ID de cliente no válido.");
 
         $resultado = $clientesModel->cambiarEstado($id, $estado);
-        
-        if ($resultado) {
-            echo json_encode(['success' => true, 'message' => 'Estado actualizado con éxito.']);
-        } else {
-            throw new Exception("No se pudo actualizar el estado.");
-        }
+        echo json_encode(['success' => true, 'message' => 'Estado actualizado.']);
     } catch (Throwable $e) {
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
@@ -86,10 +82,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerPorId') {
         $id = intval($_GET['id'] ?? 0);
         $cliente = $clientesModel->obtenerPorId($id);
         
-        if ($cliente) {
+        // Verificamos que el cliente pertenezca al almacén antes de enviarlo
+        if ($cliente && $cliente['almacen_id'] == $almacen_id) {
             echo json_encode(['success' => true, 'data' => $cliente]);
         } else {
-            throw new Exception('Cliente no encontrado.');
+            throw new Exception('Cliente no encontrado en este almacén.');
         }
     } catch (Throwable $e) {
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
@@ -100,10 +97,16 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerPorId') {
 // --- CARGA DE VISTA (GET) ---
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     try {
-        $clientes = $clientesModel->listarTodos();
+        // 1. Capturamos el almacén del usuario logueado (0 si es Admin)
+        $almacen_sesion = $_SESSION['almacen_id'] ?? 0;
+
+        // 2. Pasamos el ID a la función para que filtre automáticamente
+        $clientes = $clientesModel->listarTodos($almacen_sesion);
+        
         $tituloPagina = "Administración de Clientes";
         require_once __DIR__ . '/../views/clientes_view.php';
     } catch (Exception $e) {
         die("Error al cargar la vista: " . $e->getMessage());
     }
+
 }

@@ -97,13 +97,18 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerPorId') {
     exit;
 }
 
-// --- CARGA DE VISTA (GET) ---
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     try {
-        $clientes = $clientesModel->listarTodos();
+        // 1. Capturamos el almacén del usuario logueado (0 si es Admin)
+        $almacen_sesion = $_SESSION['almacen_id'] ?? 0;
+
+        // 2. Pasamos el ID a la función para que filtre automáticamente
+        $clientes = $clientesModel->listarTodos($almacen_sesion);
+        
         $tituloPagina = "Administración de Clientes";
         require_once __DIR__ . '/../views/clientes_view.php';
     } catch (Exception $e) {
         die("Error al cargar la vista: " . $e->getMessage());
     }
+
 }
