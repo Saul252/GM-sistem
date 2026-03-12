@@ -74,6 +74,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmtInv->bind_param("iidd", $almacen_id, $producto_id, $stock, $min);
                     $stmtInv->execute();
 
+                    // --- INICIO CÓDIGO AGREGADO: CREACIÓN DE LOTE ---
+                    $codigo_lote = "L-" . $sku . "-" . date('His');
+                    $stmtLote = $conexion->prepare("INSERT INTO lotes_stock (producto_id, almacen_id, codigo_lote, cantidad_inicial, cantidad_actual, precio_compra_unitario, estado_lote) VALUES (?, ?, ?, ?, ?, ?, 'activo')");
+                    $stmtLote->bind_param("iisddd", $producto_id, $almacen_id, $codigo_lote, $stock, $stock, $precio_adquisicion);
+                    $stmtLote->execute();
+                    // --- FIN CÓDIGO AGREGADO ---
+
                     // Insertar Precios
                     $stmtPre = $conexion->prepare("INSERT INTO precios_producto (producto_id, almacen_id, precio_minorista, precio_mayorista, precio_distribuidor) VALUES (?, ?, ?, ?, ?)");
                     $stmtPre->bind_param("iiddd", $producto_id, $almacen_id, $p_minorista, $p_mayorista, $p_distribuidor);
@@ -81,7 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     // Registrar Movimiento de entrada
                     $usuario_id = $_SESSION['usuario_id'] ?? 1;
-                    $obs = "Carga inicial mediante nuevo producto (Conversión factor: $factor_conversion)";
+                    $obs = "Carga inicial mediante nuevo producto (Lote: $codigo_lote)";
                     $stmtMov = $conexion->prepare("INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_destino_id, usuario_registra_id, observaciones) VALUES (?, 'entrada', ?, ?, ?, ?)");
                     $stmtMov->bind_param("idiis", $producto_id, $stock, $almacen_id, $usuario_id, $obs);
                     $stmtMov->execute();

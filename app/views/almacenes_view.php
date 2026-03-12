@@ -335,12 +335,23 @@
                                 <input type="text" name="unidad_medida" class="form-control"
                                     placeholder="Ej: Bulto, PZA" required>
                             </div>
-                            <div class="col-md-12">
+                            <div class="col-md-8">
                                 <label class="form-label small fw-bold">Descripción Corta</label>
                                 <input type="text" name="description" class="form-control"
                                     placeholder="Detalles adicionales del producto...">
                             </div>
+                              
+    <div class="col-md-4">
+        <label class="form-label small fw-bold text-danger">Precio de Compra de el lote</label>
+        <div class="input-group">
+            <span class="input-group-text bg-danger text-white border-danger">$</span>
+            <input type="number" name="precio_adquisicion" class="form-control border-danger fw-bold" step="0.01" placeholder="0.00" required>
+        </div>
+        <small class="text-muted" style="font-size: 0.7rem;">Este valor define el costo real del lote para tus ganancias.</small>
+    </div>
                         </div>
+                     
+
 
                         <h6 class="fw-bold mb-3 text-primary border-bottom pb-2">Información Fiscal (SAT)</h6>
                         <div class="row mb-4 g-3">
@@ -458,6 +469,7 @@
                             </table>
                         </div>
                     </div>
+                    
 
                     <div class="modal-footer bg-light">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>

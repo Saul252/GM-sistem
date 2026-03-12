@@ -100,7 +100,7 @@
 
                 <div class="modal-footer bg-white border-0 px-4 pb-4">
                     <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-dark rounded-pill px-4" id="btnGuardarProducto">
+                    <button type="submit" class="btn btn-dark rounded-pill px-4" id="">
                         <i class="bi bi-save me-2"></i> Guardar e Integrar
                     </button>
                 </div>
