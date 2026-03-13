@@ -71,7 +71,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardar') {
     }
     exit;
 }
-
 // --- ACCIÓN: CAMBIAR ESTADO ---
 if (isset($_GET['action']) && $_GET['action'] === 'cambiarEstado') {
     if (ob_get_level()) ob_clean();
@@ -80,10 +79,19 @@ if (isset($_GET['action']) && $_GET['action'] === 'cambiarEstado') {
     try {
         $id = intval($_POST['id'] ?? 0);
         $estado = intval($_POST['estado'] ?? 0);
+        // Usamos el $almacen_id que viene de tu sesión/layout
+        $almacen_sesion = $almacen_usuario ?? 0; 
+
         if ($id <= 0) throw new Exception("ID de cliente no válido.");
 
-        $resultado = $clientesModel->cambiarEstado($id, $estado);
-        echo json_encode(['success' => true, 'message' => 'Estado actualizado.']);
+        // Pasamos el almacén para que el modelo valide si tiene permiso
+        $resultado = $clientesModel->cambiarEstado($id, $estado, $almacen_sesion);
+        
+        if ($resultado) {
+            echo json_encode(['success' => true, 'message' => 'Estado actualizado.']);
+        } else {
+            throw new Exception("No se pudo actualizar el estado o no tiene permisos.");
+        }
     } catch (Throwable $e) {
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
@@ -97,13 +105,18 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerPorId') {
     
     try {
         $id = intval($_GET['id'] ?? 0);
-        $cliente = $clientesModel->obtenerPorId($id);
+        $almacen_sesion = $almacen_usuario ?? 0;
+
+        // El modelo ya debería filtrar por almacén internamente con lo que hablamos antes
+        $cliente = $clientesModel->obtenerPorId($id, $almacen_sesion);
         
-        // Verificamos que el cliente pertenezca al almacén antes de enviarlo
-        if ($cliente && $cliente['almacen_id'] == $almacen_id) {
+        if ($cliente) {
+            // Lógica de validación: 
+            // Si soy admin ($almacen_sesion == 0) pasa siempre.
+            // Si soy sucursal, el modelo ya filtró que sea de mi ID.
             echo json_encode(['success' => true, 'data' => $cliente]);
         } else {
-            throw new Exception('Cliente no encontrado en este almacén.');
+            throw new Exception('Cliente no encontrado o acceso denegado.');
         }
     } catch (Throwable $e) {
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);

@@ -1,7 +1,7 @@
 <?php
 /**
  * clientes_view.php
- * Vista de administración de clientes con filtro de almacén optimizado
+ * Vista de administración de clientes completa: Filtros, CRUD por Modales y AJAX.
  */
 $usosCFDI = ['G01' => 'Adquisición', 'G03' => 'Gastos', 'P01' => 'Por definir', 'S01' => 'Sin efectos'];
 ?>
@@ -142,9 +142,89 @@ $usosCFDI = ['G01' => 'Adquisición', 'G03' => 'Gastos', 'P01' => 'Por definir',
         </div>
     </main>
 
+    <div class="modal fade" id="modalCliente" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow-lg">
+                <form id="formCliente">
+                    <div class="modal-header bg-dark text-white">
+                        <h5 class="modal-title" id="modalTitulo">Nuevo Cliente</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" name="cliente_id" id="cliente_id" value="0">
+                        
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Nombre Comercial *</label>
+                                <input type="text" name="nombre_comercial" id="nombre_comercial" class="form-control" required>
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Razón Social</label>
+                                <input type="text" name="razon_social" id="razon_social" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">RFC *</label>
+                                <input type="text" name="rfc" id="rfc" class="form-control text-uppercase" maxlength="13" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Régimen Fiscal</label>
+                                <input type="text" name="regimen_fiscal" id="regimen_fiscal" class="form-control" placeholder="Ej. 601">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Código Postal</label>
+                                <input type="text" name="codigo_postal" id="codigo_postal" class="form-control" maxlength="5">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Uso CFDI</label>
+                                <select name="uso_cfdi" id="uso_cfdi" class="form-select">
+                                    <?php foreach($usosCFDI as $key => $val): ?>
+                                        <option value="<?= $key ?>"><?= $key ?> - <?= $val ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Correo</label>
+                                <input type="email" name="correo" id="correo" class="form-control">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Teléfono</label>
+                                <input type="tel" name="telefono" id="telefono" class="form-control">
+                            </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Dirección</label>
+                                <textarea name="direccion" id="direccion" class="form-control" rows="2"></textarea>
+                            </div>
+
+                            <?php if ($almacen_usuario == 0): ?>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold text-primary">Asignar a Almacén *</label>
+                                <select name="almacen_id" id="almacen_id_modal" class="form-select border-primary" required>
+                                    <option value="">-- Seleccionar --</option>
+                                    <?php foreach ($almacenes as $alm): ?>
+                                        <option value="<?= $alm['id'] ?>"><?= htmlspecialchars($alm['nombre']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <?php else: ?>
+                                <input type="hidden" name="almacen_id" value="<?= $almacen_usuario ?>">
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="bi bi-save me-2"></i>Guardar Cliente
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
@@ -174,28 +254,22 @@ $usosCFDI = ['G01' => 'Adquisición', 'G03' => 'Gastos', 'P01' => 'Por definir',
             tabla.search(this.value).draw();
         });
 
-        // FILTRO DE ALMACÉN (Lógica mejorada basada en IDs)
+        // FILTRO DE ALMACÉN
         $('#filtroAlmacenVista').on('change', function() {
             const almacenId = $(this).val();
-            
-            // Limpiamos filtros personalizados anteriores
             $.fn.dataTable.ext.search.pop();
 
             if (almacenId !== "") {
                 $(this).addClass('filtros-activos');
-                
-                // Agregamos nueva regla de filtrado
                 $.fn.dataTable.ext.search.push(
                     function(settings, data, dataIndex) {
                         const row = tabla.row(dataIndex).node();
-                        const idEnFila = $(row).attr('data-almacen-id');
-                        return idEnFila == almacenId;
+                        return $(row).attr('data-almacen-id') == almacenId;
                     }
                 );
             } else {
                 $(this).removeClass('filtros-activos');
             }
-            
             tabla.draw();
         });
     });
@@ -207,49 +281,96 @@ $usosCFDI = ['G01' => 'Adquisición', 'G03' => 'Gastos', 'P01' => 'Por definir',
         tabla.search('').draw();
     }
 
+    // --- CRUD ACTIONS ---
+
+    function nuevoCliente() {
+        $('#formCliente')[0].reset();
+        $('#cliente_id').val('0');
+        $('#modalTitulo').text('Nuevo Cliente');
+        
+        // Si hay un almacén seleccionado en el filtro, ponerlo por defecto
+        const filtroActual = $('#filtroAlmacenVista').val();
+        if(filtroActual) $('#almacen_id_modal').val(filtroActual);
+        
+        $('#modalCliente').modal('show');
+    }
+
+    async function editarCliente(id) {
+        try {
+            const resp = await fetch(`clientesController.php?action=obtenerPorId&id=${id}`);
+            const res = await resp.json();
+            
+            if (res.success) {
+                const c = res.data;
+                $('#modalTitulo').text('Editar Cliente');
+                $('#cliente_id').val(c.id);
+                $('#nombre_comercial').val(c.nombre_comercial);
+                $('#razon_social').val(c.razon_social);
+                $('#rfc').val(c.rfc);
+                $('#regimen_fiscal').val(c.regimen_fiscal);
+                $('#codigo_postal').val(c.codigo_postal);
+                $('#correo').val(c.correo);
+                $('#telefono').val(c.telefono);
+                $('#direccion').val(c.direccion);
+                $('#uso_cfdi').val(c.uso_cfdi);
+                $('#almacen_id_modal').val(c.almacen_id);
+                
+                $('#modalCliente').modal('show');
+            } else {
+                Swal.fire('Error', res.message, 'error');
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    $('#formCliente').on('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        try {
+            const resp = await fetch('clientesController.php?action=guardar', {
+                method: 'POST',
+                body: formData
+            });
+            const res = await resp.json();
+            
+            if (res.success) {
+                Swal.fire({ icon: 'success', title: '¡Guardado!', text: res.message, timer: 1500, showConfirmButton: false })
+                .then(() => location.reload());
+            } else {
+                Swal.fire('Atención', res.message, 'warning');
+            }
+        } catch (e) { Swal.fire('Error', 'No se pudo procesar la solicitud', 'error'); }
+    });
+
     async function cambiarEstado(id, estado) {
         const formData = new FormData();
         formData.append('id', id);
         formData.append('estado', estado);
         
         try {
-            const response = await fetch('clientesController.php?action=cambiarEstado', { 
-                method: 'POST', 
-                body: formData 
-            });
+            const response = await fetch('clientesController.php?action=cambiarEstado', { method: 'POST', body: formData });
             const res = await response.json();
-            
             if (res.success) {
-                Swal.fire({ 
-                    icon: 'success', 
-                    title: '¡Actualizado!', 
-                    timer: 1000, 
-                    showConfirmButton: false 
-                });
+                Swal.fire({ icon: 'success', title: '¡Estado actualizado!', timer: 1000, showConfirmButton: false });
                 $(`#switch_${id}`).next('label').text(estado ? 'Activo' : 'Inactivo');
             }
-        } catch (e) {
-            console.error('Error:', e);
-        }
-    }
-
-    function nuevoCliente() {
-        window.location.href = 'clientesController.php?action=nuevo';
-    }
-
-    function editarCliente(id) {
-        window.location.href = `clientesController.php?action=editar&id=${id}`;
+        } catch (e) { console.error(e); }
     }
 
     function verDetalles(id) {
+        // Redirigir o abrir otro modal de solo lectura si lo deseas
         Swal.fire({
-            title: 'Detalles del Cliente',
-            text: 'Cargando información...',
-            icon: 'info',
-            timer: 800,
-            showConfirmButton: false
+            title: 'Cargando detalles...',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
+                setTimeout(() => { 
+                    Swal.close();
+                    window.location.href = `clientesController.php?action=detalles&id=${id}`;
+                }, 500);
+            }
         });
     }
     </script>
-</body>
+</body>/
 </html>

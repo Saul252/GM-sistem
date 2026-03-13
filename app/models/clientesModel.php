@@ -152,17 +152,32 @@ public function listarTodos($almacen_id) {
 
     return $stmt->execute();
 }
+public function cambiarEstado($id, $estado, $almacen_id = 0) {
+        // SQL con candado de seguridad por almacén
+        $sql = "UPDATE clientes SET activo = ? WHERE id = ?";
+        if ($almacen_id > 0) {
+            $sql .= " AND almacen_id = " . intval($almacen_id);
+        }
 
-    public function obtenerPorId($id) {
-        $stmt = $this->db->prepare("SELECT * FROM clientes WHERE id = ?");
+        // Aquí es donde fallaba: $this->db debe ser el objeto de conexión
+        $stmt = $this->db->prepare($sql); 
+        $stmt->bind_param("ii", $estado, $id);
+        
+        if ($stmt->execute()) {
+            return $stmt->affected_rows > 0;
+        }
+        return false;
+    }
+
+    public function obtenerPorId($id, $almacen_id = 0) {
+        $sql = "SELECT * FROM clientes WHERE id = ?";
+        if ($almacen_id > 0) {
+            $sql .= " AND (almacen_id = " . intval($almacen_id) . " OR rfc = 'XAXX010101000')";
+        }
+
+        $stmt = $this->db->prepare($sql);
         $stmt->bind_param("i", $id);
         $stmt->execute();
         return $stmt->get_result()->fetch_assoc();
-    }
-
-    public function cambiarEstado($id, $estado) {
-        $stmt = $this->db->prepare("UPDATE clientes SET activo = ? WHERE id = ?");
-        $stmt->bind_param("ii", $estado, $id);
-        return $stmt->execute();
     }
     }
