@@ -102,13 +102,13 @@
 
                 <!-- TAB TRANSMUTACIÓN (placeholder) -->
                 <div class="tab-pane fade" id="transmutacion">
-                    <div class="card card-table">
-                        <div class="card-body text-center p-5">
-                            <i class="fas fa-tools fa-3x text-muted mb-3"></i>
-                            <h4>Transmutación en Desarrollo</h4>
-                            <p class="text-muted">Funcionalidad próximamente disponible</p>
-                        </div>
-                    </div>
+                   <div class="tab-pane fade" id="transmutacion">
+    <?php 
+        // Importamos el archivo parcial
+        // Si el archivo está en la misma carpeta:
+        include 'transmutaciones.php'; 
+    ?>
+</div>
                 </div>
             </div>
         </div>

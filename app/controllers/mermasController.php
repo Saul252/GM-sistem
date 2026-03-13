@@ -10,7 +10,7 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../models/mermasModel.php';
 require_once __DIR__ . '/../models/almacen_model.php';
-
+protegerPagina(); 
 // ❌ QUITAR: LayoutController no se necesita aquí
  require_once __DIR__ . '/../controllers/LayoutController.php';
 
@@ -25,7 +25,7 @@ if (!isset($_SESSION['id']) && !isset($_SESSION['usuario_id'])) {
     header('Location: /cfsistem/login.php');
     exit;
 }
-
+$paginaActual = 'Mermas';
 $mermasModel = new MermasModel($conexion);
 $almacenModel = new AlmacenModel($conexion);
 

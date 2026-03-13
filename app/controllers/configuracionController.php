@@ -7,7 +7,7 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../controllers/LayoutController.php';
 require_once __DIR__ . '/../models/configuracionModel.php';
-
+protegerPagina(); 
 class ConfiguracionController {
     private $model;
     private $conexion;

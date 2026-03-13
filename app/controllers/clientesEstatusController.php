@@ -16,7 +16,7 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../config/conexion.php'; 
 require_once __DIR__ . '/../controllers/LayoutController.php';
 require_once __DIR__ . '/../models/clientesEstatusModel.php';
-
+protegerPagina(); 
 $db = $conexion; 
 $clientesEstatusModel = new ClientesEstatusModel($db);
 $paginaActual = 'clientesEstatus';

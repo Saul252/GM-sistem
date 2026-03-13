@@ -390,7 +390,16 @@ ALTER TABLE `mermas`
 ADD COLUMN `lote_id` INT(11) NOT NULL AFTER `producto_id`,
 ADD CONSTRAINT `fk_merma_lote` FOREIGN KEY (`lote_id`) REFERENCES `lotes_stock`(`id`);
 
--- 2. Tabla para Transmutaciones (Conversión de unidades/productos)
+CREATE TABLE `config_transmutaciones` (
+  `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `producto_origen_id` int(11) NOT NULL,
+  `producto_destino_id` int(11) NOT NULL,
+  `rendimiento_teorico` decimal(10,4) NOT NULL COMMENT 'Ej: 1 bulto -> 50.00 kg',
+  `notas` varchar(255) DEFAULT NULL,
+  CONSTRAINT `fk_config_trans_origen` FOREIGN KEY (`producto_origen_id`) REFERENCES `productos` (`id`),
+  CONSTRAINT `fk_config_trans_destino` FOREIGN KEY (`producto_destino_id`) REFERENCES `productos` (`id`),
+  UNIQUE KEY `idx_origen_destino` (`producto_origen_id`, `producto_destino_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 CREATE TABLE `transmutaciones` (
   `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `usuario_id` int(11) NOT NULL,
@@ -400,16 +409,17 @@ CREATE TABLE `transmutaciones` (
   CONSTRAINT `fk_trans_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`),
   CONSTRAINT `fk_trans_almacen` FOREIGN KEY (`almacen_id`) REFERENCES `almacenes` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 3. Detalle de Transmutación (Origen y Destino)
 CREATE TABLE `transmutacion_detalle` (
   `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
   `transmutacion_id` int(11) NOT NULL,
-  `tipo` enum('salida', 'entrada') NOT NULL, -- 'salida' es el bulto, 'entrada' es el suelto
+  `movimiento_id` int(11) NOT NULL, -- Conexión con la tabla movimientos (Kardex)
+  `tipo` enum('salida','entrada') NOT NULL, 
   `producto_id` int(11) NOT NULL,
-  `lote_id` int(11) NOT NULL, -- De qué lote salió o a qué lote entró
-  `cantidad` decimal(10,2) NOT NULL,
+  `lote_id` int(11) NOT NULL,
+  `cantidad` decimal(10,2) NOT NULL, -- Aquí guardas lo REAL (ej: 24kg en lugar de 25kg)
+  `costo_unitario_historico` decimal(10,2) NOT NULL, -- Valor al momento de la conversión
   CONSTRAINT `fk_det_trans_cabecera` FOREIGN KEY (`transmutacion_id`) REFERENCES `transmutaciones` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_det_trans_mov` FOREIGN KEY (`movimiento_id`) REFERENCES `movimientos` (`id`),
   CONSTRAINT `fk_det_trans_prod` FOREIGN KEY (`producto_id`) REFERENCES `productos` (`id`),
   CONSTRAINT `fk_det_trans_lote` FOREIGN KEY (`lote_id`) REFERENCES `lotes_stock` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

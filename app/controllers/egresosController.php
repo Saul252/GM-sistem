@@ -13,7 +13,7 @@ require_once __DIR__ . '/../models/egresos_model.php';
 require_once __DIR__ . '/../models/egresos/comprasModel.php';
 
 require_once __DIR__ . '/../models/almacen/categoriasModel.php';
-
+protegerPagina(); 
 $egresoModel = new EgresoModel($conexion);
 $comprasModel = new CompraModel($conexion);
 $categoriasModel= new CategoriaModel($conexion);

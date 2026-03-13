@@ -9,7 +9,7 @@ require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../controllers/LayoutController.php';
 require_once __DIR__ . '/../models/clientesModel.php';
 require_once __DIR__ . '/../models/almacen_model.php';
-
+protegerPagina(); 
 $clientesModel = new ClientesModel($conexion);
 $paginaActual = 'clientes';
 // Capturamos el almacén de la sesión para las consultas
