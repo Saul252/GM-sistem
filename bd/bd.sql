@@ -384,3 +384,32 @@ CREATE TABLE `registro_salida_lotes` (
   CONSTRAINT `fk_reg_salida_mov` FOREIGN KEY (`movimiento_id`) REFERENCES `movimientos` (`id`),
   CONSTRAINT `fk_reg_salida_user` FOREIGN KEY (`usuario_patio_id`) REFERENCES `usuarios` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- 1. Ampliamos la tabla de mermas para incluir el lote afectado directamente
+ALTER TABLE `mermas` 
+ADD COLUMN `lote_id` INT(11) NOT NULL AFTER `producto_id`,
+ADD CONSTRAINT `fk_merma_lote` FOREIGN KEY (`lote_id`) REFERENCES `lotes_stock`(`id`);
+
+-- 2. Tabla para Transmutaciones (Conversión de unidades/productos)
+CREATE TABLE `transmutaciones` (
+  `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `usuario_id` int(11) NOT NULL,
+  `almacen_id` int(11) NOT NULL,
+  `fecha` timestamp NOT NULL DEFAULT current_timestamp(),
+  `observaciones` text DEFAULT NULL,
+  CONSTRAINT `fk_trans_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`),
+  CONSTRAINT `fk_trans_almacen` FOREIGN KEY (`almacen_id`) REFERENCES `almacenes` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 3. Detalle de Transmutación (Origen y Destino)
+CREATE TABLE `transmutacion_detalle` (
+  `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `transmutacion_id` int(11) NOT NULL,
+  `tipo` enum('salida', 'entrada') NOT NULL, -- 'salida' es el bulto, 'entrada' es el suelto
+  `producto_id` int(11) NOT NULL,
+  `lote_id` int(11) NOT NULL, -- De qué lote salió o a qué lote entró
+  `cantidad` decimal(10,2) NOT NULL,
+  CONSTRAINT `fk_det_trans_cabecera` FOREIGN KEY (`transmutacion_id`) REFERENCES `transmutaciones` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_det_trans_prod` FOREIGN KEY (`producto_id`) REFERENCES `productos` (`id`),
+  CONSTRAINT `fk_det_trans_lote` FOREIGN KEY (`lote_id`) REFERENCES `lotes_stock` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

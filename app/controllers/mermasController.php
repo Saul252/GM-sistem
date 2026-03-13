@@ -1,157 +1,140 @@
 <?php
-
-require_once __DIR__ . '/../../config/conexion.php';
-require_once __DIR__ . '/../../includes/auth.php';
-
-require_once __DIR__ . '/../controllers/LayoutController.php';
-require_once __DIR__ . '/../models/mermasModel.php';
-
-protegerPagina();
-
-$paginaActual = 'Mermas';
-class MermaController {
-
-    private $model;
-    private $conn;
-
-    public function __construct($conexion)
-    {
-        $this->conn = $conexion;
-        $this->model = new MermaModel($conexion);
-    }
-
-
-    /* ===============================
-    MOSTRAR PAGINA MERMAS
-    =============================== */
-    public function index()
-    {
-
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-
-        $usuario_id = $_SESSION['usuario_id'];
-        $rol_id = $_SESSION['rol_id'];
-        $almacen_usuario = $_SESSION['almacen_id'];
-
-        /* ADMIN puede ver todo */
-        if($rol_id == 1){
-
-            $almacen_id = $_GET['almacen_id'] ?? null;
-
-        }else{
-
-            $almacen_id = $almacen_usuario;
-
-        }
-
-        $productos = null;
-
-        if($almacen_id){
-
-            $productos = $this->model->obtenerProductosPorAlmacen($almacen_id);
-
-        }
-
-        $mermas = $this->model->listarMermas($almacen_id);
-
-        require_once __DIR__ . '/../views/mermas/index.php';
-    }
-
-
-
-    /* ===============================
-    REGISTRAR MERMA
-    =============================== */
-    public function guardarMerma()
-    {
-
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-
-        $data = [
-
-            "producto_id" => $_POST['producto_id'],
-            "almacen_id" => $_POST['almacen_id'],
-            "cantidad" => $_POST['cantidad'],
-            "tipo_merma" => $_POST['tipo_merma'],
-            "responsable" => $_POST['responsable'],
-            "descripcion" => $_POST['descripcion'],
-            "usuario_id" => $_SESSION['usuario_id']
-
-        ];
-
-        $result = $this->model->registrarMerma($data);
-
-        echo json_encode($result);
-
-    }
-
-
-
-    /* ===============================
-    CONVERSION DE PRODUCTO
-    =============================== */
-    public function convertir()
-    {
-
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-
-        $data = [
-
-            "producto_origen" => $_POST['producto_origen'],
-            "producto_destino" => $_POST['producto_destino'],
-            "cantidad_origen" => $_POST['cantidad_origen'],
-            "cantidad_destino" => $_POST['cantidad_destino'],
-            "almacen_id" => $_POST['almacen_id'],
-            "descripcion" => $_POST['descripcion'],
-            "responsable" => $_POST['responsable'],
-            "usuario_id" => $_SESSION['usuario_id']
-
-        ];
-
-        $result = $this->model->convertirProducto($data);
-
-        echo json_encode($result);
-
-    }
-
-
-
-    /* ===============================
-    OBTENER STOCK (AJAX)
-    =============================== */
-    public function obtenerStock()
-    {
-
-        $producto_id = $_GET['producto_id'];
-        $almacen_id = $_GET['almacen_id'];
-
-        $stock = $this->model->obtenerStock($producto_id,$almacen_id);
-
-        echo json_encode($stock);
-
-    }
-
-
-
-    /* ===============================
-    OBTENER FACTOR CONVERSION
-    =============================== */
-    public function obtenerFactor()
-    {
-
-        $producto_id = $_GET['producto_id'];
-
-        $factor = $this->model->obtenerFactorConversion($producto_id);
-
-        echo json_encode($factor);
-
-    }
-
+// 🔧 SESSION_START SIEMPRE PRIMERO
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
 }
-require_once __DIR__ . '/../views/mermas_view.php';
+
+ob_start();
+
+require_once __DIR__ . '/../../includes/auth.php';
+require_once __DIR__ . '/../../config/conexion.php';
+require_once __DIR__ . '/../models/mermasModel.php';
+require_once __DIR__ . '/../models/almacen_model.php';
+
+// ❌ QUITAR: LayoutController no se necesita aquí
+ require_once __DIR__ . '/../controllers/LayoutController.php';
+
+// Verificar sesión ANTES de instanciar modelos
+if (!isset($_SESSION['id']) && !isset($_SESSION['usuario_id'])) {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'error', 'message' => '❌ Sesión requerida']);
+        exit;
+    }
+    // Para GET redirigir
+    header('Location: /cfsistem/login.php');
+    exit;
+}
+
+$mermasModel = new MermasModel($conexion);
+$almacenModel = new AlmacenModel($conexion);
+
+// ============================
+// 🔍 AJAX: OBTENER PRODUCTOS
+// ============================
+if (isset($_GET['action']) && $_GET['action'] === 'obtenerProductosAlmacen') {
+    ob_clean();
+    header('Content-Type: application/json');
+    $almacen_id = intval($_GET['almacen_id'] ?? 0);
+    $productos = $almacenModel->getInventarioConId($almacen_id);
+    echo json_encode($productos ?: []);
+    exit;
+}
+
+// ============================
+// 🔍 AJAX: OBTENER LOTES
+// ============================
+if (isset($_GET['action']) && $_GET['action'] === 'obtenerLotes') {
+    ob_clean();
+    header('Content-Type: application/json');
+    $producto_id = intval($_GET['producto_id'] ?? 0);
+    $almacen_id = intval($_GET['almacen_id'] ?? 0);
+    $lotes = ($producto_id > 0 && $almacen_id > 0) 
+        ? $mermasModel->getLotesPorProducto($almacen_id, $producto_id) 
+        : [];
+    echo json_encode($lotes);
+    exit;
+}
+
+// ============================
+// 💾 POST: GUARDAR MERMA (MEJORADO)
+// ============================
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['action'] === 'guardarMerma') {
+    ob_clean();
+    header('Content-Type: application/json');
+    
+    try {
+        $usuario_id = $_SESSION['id'] ?? $_SESSION['usuario_id'];
+        $responsable = $_SESSION['nombre'] ?? 'Usuario #' . $usuario_id;
+
+        // 🔍 VALIDACIÓN DETALLADA
+        $producto_id = intval($_POST['producto_id'] ?? 0);
+        $almacen_id = intval($_POST['almacen_id'] ?? 0);
+        $lote_id = intval($_POST['lote_id'] ?? 0);
+        $cantidad = floatval($_POST['cantidad'] ?? 0);
+        $tipo_merma = trim($_POST['tipo_merma'] ?? 'otro');
+        $motivo = trim($_POST['observaciones'] ?? '');
+
+        // Validaciones específicas
+        if ($producto_id <= 0) throw new Exception("Producto inválido (ID: $producto_id)");
+        if ($almacen_id <= 0) throw new Exception("Almacén inválido (ID: $almacen_id)");
+        if ($lote_id <= 0) throw new Exception("Lote inválido (ID: $lote_id)");
+        if ($cantidad <= 0) throw new Exception("Cantidad inválida ($cantidad)");
+        if (!in_array($tipo_merma, ['daño','robo','caducidad','otro'])) {
+            throw new Exception("Tipo de merma inválido: $tipo_merma");
+        }
+
+        // 🔍 VERIFICAR STOCK SUFICIENTE
+        $stmt = $conexion->prepare("SELECT cantidad_actual FROM lotes_stock WHERE id = ?");
+        $stmt->bind_param("i", $lote_id);
+        $stmt->execute();
+        $resultado = $stmt->get_result()->fetch_assoc();
+        
+        if (!$resultado) throw new Exception("Lote no encontrado (ID: $lote_id)");
+        if ($cantidad > $resultado['cantidad_actual']) {
+            throw new Exception("Stock insuficiente. Disponible: " . $resultado['cantidad_actual']);
+        }
+
+        $datos = [
+            'producto_id' => $producto_id,
+            'almacen_id' => $almacen_id,
+            'lote_id' => $lote_id,
+            'cantidad' => $cantidad,
+            'tipo_merma' => $tipo_merma,
+            'motivo' => $motivo,
+            'usuario_id' => $usuario_id,
+            'responsable' => $responsable
+        ];
+
+        $resultado = $mermasModel->registrarMerma($datos);
+
+        if ($resultado === true) {
+            echo json_encode([
+                'status' => 'success', 
+                'message' => '✅ Merma registrada correctamente'
+            ]);
+        } else {
+            throw new Exception("Error en modelo: " . $resultado);
+        }
+        
+    } catch (Exception $e) {
+        http_response_code(400);
+        echo json_encode([
+            'status' => 'error', 
+            'message' => $e->getMessage()
+        ]);
+    }
+    exit;
+}
+
+// ============================
+// 📄 VISTA PRINCIPAL (GET)
+// ============================
+try {
+    $almacen_sesion = $_SESSION['almacen_id'] ?? 0;
+    $almacenes = $almacenModel->getAlmacenes($almacen_sesion);
+    include __DIR__ . '/../views/mermas_view.php';
+} catch (Exception $e) {
+    die("Error vista: " . $e->getMessage());
+}
+?>

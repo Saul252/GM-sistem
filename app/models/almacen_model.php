@@ -47,5 +47,27 @@ class AlmacenModel {
         return $this->db->query($sql)->fetch_all(MYSQLI_ASSOC);
     }
     
+    public function getInventarioConId($almacen_id = 0) {
+    $sql = "SELECT 
+                p.id, 
+                p.sku, 
+                p.nombre, 
+                i.stock, 
+                i.almacen_id, 
+                a.nombre AS almacen_nombre
+            FROM inventario i
+            INNER JOIN productos p ON i.producto_id = p.id
+            INNER JOIN almacenes a ON i.almacen_id = a.id
+            WHERE p.activo = 1";
     
+    // Si se pasa un almacén específico, filtramos
+    if ($almacen_id > 0) {
+        $sql .= " AND i.almacen_id = " . intval($almacen_id);
+    }
+    
+    $sql .= " AND i.stock > 0"; // Opcional: solo mostrar lo que tiene existencias
+    $sql .= " ORDER BY p.nombre ASC";
+    
+  return $this->db->query($sql)->fetch_all(MYSQLI_ASSOC);
+}
 }
