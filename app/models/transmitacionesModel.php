@@ -7,44 +7,69 @@ class TransmutacionesModel {
         $this->db = $db;
     }
 
-    /**
-     * Motor principal de la transmutación
-     */
-    public function registrarTransmutacion($datos) {
+
+    // --- MÉTODOS DE APOYO (REVISADOS) ---
+
+public function registrarTransmutacion($datos) {
         $this->db->begin_transaction();
         try {
-            // 1. CABECERA
-            $sqlTrans = "INSERT INTO transmutaciones (usuario_id, almacen_id, observaciones) VALUES (?, ?, ?)";
-            $stmtTrans = $this->db->prepare($sqlTrans);
-            $stmtTrans->bind_param("iis", $datos['usuario_id'], $datos['almacen_id'], $datos['observaciones']);
-            $stmtTrans->execute();
-            $transmutacion_id = $this->db->insert_id;
-
-            // Obtener costo del producto origen para prorratear
+            // 0. Obtener costo base del lote de origen
             $costo_origen = $this->obtenerCostoLote($datos['lote_origen_id']);
 
-            // --- PARTE A: SALIDA (ORIGEN) ---
-            $obsSalida = "Salida por transmutación #" . $transmutacion_id;
-            $mov_salida_id = $this->registrarMovimientoKardex($datos['producto_origen_id'], 'salida', $datos['cant_origen'], $datos['almacen_id'], $datos['usuario_id'], $datos['responsable'], $obsSalida);
+            // 1. INSERTAR CABECERA
+            $sqlC = "INSERT INTO `transmutaciones` (`usuario_id`, `almacen_id`, `observaciones`) VALUES (?, ?, ?)";
+            $stmtC = $this->db->prepare($sqlC);
+            $stmtC->bind_param("iis", $datos['usuario_id'], $datos['almacen_id'], $datos['observaciones']);
+            $stmtC->execute();
+            $t_id = $this->db->insert_id;
 
-            $this->insertarDetalle($transmutacion_id, $mov_salida_id, 'salida', $datos['producto_origen_id'], $datos['lote_origen_id'], $datos['cant_origen'], $costo_origen);
+            // 2. PROCESAR SALIDA (Materia Prima)
+            $m_salida = $this->registrarMovimientoKardex(
+                $datos['producto_origen_id'], 
+                'salida', 
+                $datos['cant_origen'], 
+                $datos['almacen_id'], 
+                $datos['usuario_id'], 
+                $datos['responsable'], 
+                "Salida Transmutación #$t_id"
+            );
+            
+            $this->insertarDetalle($t_id, $m_salida, 'salida', $datos['producto_origen_id'], $datos['lote_origen_id'], $datos['cant_origen'], $costo_origen);
             $this->actualizarStockSustractivo($datos['producto_origen_id'], $datos['almacen_id'], $datos['lote_origen_id'], $datos['cant_origen']);
 
-            // --- PARTE B: ENTRADA (DESTINO) ---
-            // Calcular costo prorrateado: (Costo Total Origen) / (Cantidad Real Destino)
-            $costo_destino = ($costo_origen * $datos['cant_origen']) / $datos['cant_destino'];
+            // 3. DETERMINAR COSTO Y LOTE DE ENTRADA (Producto Terminado)
+            if (!empty($datos['lote_destino_id']) && $datos['lote_destino_id'] > 0) {
+                $costo_destino = $this->obtenerCostoLote($datos['lote_destino_id']);
+                $l_dest_id = $datos['lote_destino_id'];
+            } else {
+                // Prorrateo de costo: (Cantidad Origen * Costo Origen) / Cantidad Destino
+                $costo_destino = ($datos['cant_destino'] > 0) ? (($datos['cant_origen'] * $costo_origen) / $datos['cant_destino']) : 0;
+                $l_dest_id = $this->obtenerOCrearLoteDestino($datos, $costo_destino);
+            }
 
-            // Decidir si crear lote nuevo o usar uno existente
-            $lote_destino_id = $this->obtenerOCrearLoteDestino($datos, $costo_destino);
+            // 4. PROCESAR ENTRADA
+            $m_entrada = $this->registrarMovimientoKardex(
+                $datos['producto_destino_id'], 
+                'entrada', 
+                $datos['cant_destino'], 
+                $datos['almacen_id'], 
+                $datos['usuario_id'], 
+                $datos['responsable'], 
+                "Entrada Transmutación #$t_id"
+            );
 
-            $obsEntrada = "Entrada por transmutación #" . $transmutacion_id . " (Ex-" . $datos['lote_origen_id'] . ")";
-            $mov_entrada_id = $this->registrarMovimientoKardex($datos['producto_destino_id'], 'entrada', $datos['cant_destino'], $datos['almacen_id'], $datos['usuario_id'], $datos['responsable'], $obsEntrada);
-
-            $this->insertarDetalle($transmutacion_id, $mov_entrada_id, 'entrada', $datos['producto_destino_id'], $lote_destino_id, $datos['cant_destino'], $costo_destino);
-            $this->actualizarStockAditivo($datos['producto_destino_id'], $datos['almacen_id'], $lote_destino_id, $datos['cant_destino']);
+            $this->insertarDetalle($t_id, $m_entrada, 'entrada', $datos['producto_destino_id'], $l_dest_id, $datos['cant_destino'], $costo_destino);
+            
+            // Si el lote ya existía, sumamos. Si fue nuevo, el método crearLote ya puso el stock inicial.
+            if (!empty($datos['lote_destino_id']) && $datos['lote_destino_id'] > 0) {
+                $this->actualizarStockAditivo($datos['producto_destino_id'], $datos['almacen_id'], $l_dest_id, $datos['cant_destino']);
+            } else {
+                // Solo sumamos al inventario general porque el lote nuevo nace con su stock
+                $this->actualizarInventarioGeneral($datos['producto_destino_id'], $datos['almacen_id'], $datos['cant_destino'], 'suma');
+            }
 
             $this->db->commit();
-            return ['status' => 'success', 'message' => 'Transmutación procesada correctamente', 'id' => $transmutacion_id];
+            return ['status' => 'success', 't_id' => $t_id];
 
         } catch (Exception $e) {
             $this->db->rollback();
@@ -52,9 +77,78 @@ class TransmutacionesModel {
         }
     }
 
-    /**
-     * Busca destinos permitidos según la tabla de configuración
-     */
+    // --- MÉTODOS DE ESCRITURA ---
+
+    private function registrarMovimientoKardex($p_id, $tipo, $cant, $a_id, $u_id, $resp, $obs) {
+        $colAlmacen = ($tipo === 'salida') ? 'almacen_origen_id' : 'almacen_destino_id';
+        $sql = "INSERT INTO `movimientos` 
+                (`producto_id`, `tipo`, `cantidad`, `$colAlmacen`, `usuario_registra_id`, `responsable_movimiento`, `observaciones`) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("isdiiss", $p_id, $tipo, $cant, $a_id, $u_id, $resp, $obs);
+        if(!$stmt->execute()) throw new Exception("Error en Kardex: " . $stmt->error);
+        return $this->db->insert_id;
+    }
+
+    private function insertarDetalle($t_id, $m_id, $tipo, $p_id, $l_id, $cant, $costo) {
+        // Se inserta en ambas columnas de costo para evitar errores de restricción NOT NULL
+        $sql = "INSERT INTO `transmutacion_detalle` 
+                (`transmutacion_id`, `movimiento_id`, `tipo`, `producto_id`, `lote_id`, `cantidad`, `costo_unitario`, `costo_unitario_historico`) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("iisiiddd", $t_id, $m_id, $tipo, $p_id, $l_id, $cant, $costo, $costo);
+        if(!$stmt->execute()) throw new Exception("Error en Detalle: " . $stmt->error);
+    }
+
+    private function actualizarStockSustractivo($p_id, $a_id, $l_id, $cant) {
+        $stmt = $this->db->prepare("UPDATE lotes_stock SET cantidad_actual = cantidad_actual - ? WHERE id = ?");
+        $stmt->bind_param("di", $cant, $l_id);
+        $stmt->execute();
+
+        $this->actualizarInventarioGeneral($p_id, $a_id, $cant, 'resta');
+        $this->db->query("UPDATE lotes_stock SET estado_lote = 'agotado' WHERE id = $l_id AND cantidad_actual <= 0.001");
+    }
+
+    private function actualizarStockAditivo($p_id, $a_id, $l_id, $cant) {
+        $stmt = $this->db->prepare("UPDATE lotes_stock SET cantidad_actual = cantidad_actual + ?, estado_lote = 'activo' WHERE id = ?");
+        $stmt->bind_param("di", $cant, $l_id);
+        $stmt->execute();
+
+        $this->actualizarInventarioGeneral($p_id, $a_id, $cant, 'suma');
+    }
+
+    private function actualizarInventarioGeneral($p_id, $a_id, $cant, $operacion) {
+        $signo = ($operacion === 'suma') ? "+" : "-";
+        $sql = "UPDATE inventario SET stock = stock $signo ? WHERE almacen_id = ? AND producto_id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("dii", $cant, $a_id, $p_id);
+        if(!$stmt->execute()) throw new Exception("Error al actualizar inventario global");
+    }
+
+    private function obtenerOCrearLoteDestino($datos, $costo) {
+        $nuevoCod = "TR-" . date('ymd') . "-" . strtoupper(substr(uniqid(), -4));
+        $sql = "INSERT INTO lotes_stock (producto_id, almacen_id, codigo_lote, cantidad_inicial, cantidad_actual, precio_compra_unitario, estado_lote) 
+                VALUES (?, ?, ?, ?, ?, ?, 'activo')";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("iisddd", $datos['producto_destino_id'], $datos['almacen_id'], $nuevoCod, $datos['cant_destino'], $datos['cant_destino'], $costo);
+        if(!$stmt->execute()) throw new Exception("Error al crear Lote: " . $stmt->error);
+        return $this->db->insert_id;
+    }
+
+    // --- MÉTODOS DE CONSULTA ---
+
+  
+    public function obtenerCostoLote($l_id) {
+    $sql = "SELECT `precio_compra_unitario` FROM `lotes_stock` WHERE `id` = ?";
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param("i", $l_id);
+    $stmt->execute();
+    $res = $stmt->get_result()->fetch_assoc();
+    
+    return (float)($res['precio_compra_unitario'] ?? 0);
+}
     public function obtenerDestinosCompatibles($producto_origen_id) {
         $sql = "SELECT p.id, p.nombre, p.sku, c.rendimiento_teorico 
                 FROM config_transmutaciones c
@@ -65,54 +159,58 @@ class TransmutacionesModel {
         $stmt->execute();
         return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
+    public function agregarConfiguracion($almacen_id, $origen, $destino, $factor, $usuario_id, $notas) {
+    // IMPORTANTE: Asegúrate de que tu tabla tenga el campo usuario_id y almacen_id
+    $sql = "INSERT INTO config_transmutaciones 
+            (almacen_id, producto_origen_id, producto_destino_id, rendimiento_teorico, usuario_id, notas) 
+            VALUES (?, ?, ?, ?, ?, ?) 
+            ON DUPLICATE KEY UPDATE 
+            rendimiento_teorico = ?, 
+            usuario_id = ?, 
+            notas = ?";
+    
+    $stmt = $this->db->prepare($sql);
+    
+    // Tipos de datos: i (int), i (int), i (int), d (decimal), i (int), s (string)
+    // Luego para el Update: d, i, s
+    $stmt->bind_param("iiididsis", 
+        $almacen_id, $origen, $destino, $factor, $usuario_id, $notas,
+        $factor, $usuario_id, $notas
+    );
+    
+    return $stmt->execute();
 
-    // --- MÉTODOS PRIVADOS DE APOYO ---
-
-    private function registrarMovimientoKardex($p_id, $tipo, $cant, $a_id, $u_id, $resp, $obs) {
-        $colAlmacen = ($tipo == 'salida') ? 'almacen_origen_id' : 'almacen_destino_id';
-        $sql = "INSERT INTO movimientos (producto_id, tipo, cantidad, $colAlmacen, usuario_registra_id, responsable_movimiento, observaciones) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)";
+}
+/**
+     * Obtiene el historial de transmutaciones con nombres de productos
+     */
+    public function listarTransmutaciones($almacen_id) {
+        $sql = "SELECT 
+                    t.id, 
+                    t.fecha_registro, 
+                    t.observaciones,
+                    u.nombre as usuario_nombre,
+                    -- Subconsulta o JOIN para el producto de salida (origen)
+                    (SELECT p1.nombre FROM transmutacion_detalle td1 
+                     JOIN productos p1 ON td1.producto_id = p1.id 
+                     WHERE td1.transmutacion_id = t.id AND td1.tipo = 'salida' LIMIT 1) as producto_origen,
+                    (SELECT td1.cantidad FROM transmutacion_detalle td1 
+                     WHERE td1.transmutacion_id = t.id AND td1.tipo = 'salida' LIMIT 1) as cant_origen,
+                    -- Subconsulta o JOIN para el producto de entrada (destino)
+                    (SELECT p2.nombre FROM transmutacion_detalle td2 
+                     JOIN productos p2 ON td2.producto_id = p2.id 
+                     WHERE td2.transmutacion_id = t.id AND td2.tipo = 'entrada' LIMIT 1) as producto_destino,
+                    (SELECT td2.cantidad FROM transmutacion_detalle td2 
+                     WHERE td2.transmutacion_id = t.id AND td2.tipo = 'entrada' LIMIT 1) as cant_destino
+                FROM transmutaciones t
+                LEFT JOIN usuarios u ON t.usuario_id = u.id
+                WHERE t.almacen_id = ?
+                ORDER BY t.fecha_registro DESC";
+        
         $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("idiisss", $p_id, $tipo, $cant, $a_id, $u_id, $resp, $obs);
+        $stmt->bind_param("i", $almacen_id);
         $stmt->execute();
-        return $this->db->insert_id;
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
 
-    private function insertarDetalle($t_id, $m_id, $tipo, $p_id, $l_id, $cant, $costo) {
-        $sql = "INSERT INTO transmutacion_detalle (transmutacion_id, movimiento_id, tipo, producto_id, lote_id, cantidad, costo_unitario_historico) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("iiididd", $t_id, $m_id, $tipo, $p_id, $l_id, $cant, $costo);
-        $stmt->execute();
-    }
-
-    private function obtenerOCrearLoteDestino($datos, $costo_destino) {
-        if (!empty($datos['lote_destino_id']) && $datos['lote_destino_id'] > 0) {
-            return $datos['lote_destino_id'];
-        }
-
-        $nuevoCodigo = "TR-" . date('Ymd-His');
-        $sql = "INSERT INTO lotes_stock (producto_id, almacen_id, codigo_lote, cantidad_inicial, cantidad_actual, precio_compra_unitario, estado_lote) 
-                VALUES (?, ?, ?, ?, ?, ?, 'activo')";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("iisddd", $datos['producto_destino_id'], $datos['almacen_id'], $nuevoCodigo, $datos['cant_destino'], $datos['cant_destino'], $costo_destino);
-        $stmt->execute();
-        return $this->db->insert_id;
-    }
-
-    private function actualizarStockSustractivo($p_id, $a_id, $l_id, $cant) {
-        $this->db->query("UPDATE lotes_stock SET cantidad_actual = cantidad_actual - $cant, estado_lote = IF(cantidad_actual - $cant <= 0, 'agotado', estado_lote) WHERE id = $l_id");
-        $this->db->query("UPDATE inventario SET stock = stock - $cant WHERE almacen_id = $a_id AND producto_id = $p_id");
-    }
-
-    private function actualizarStockAditivo($p_id, $a_id, $l_id, $cant) {
-        $this->db->query("UPDATE lotes_stock SET cantidad_actual = cantidad_actual + $cant, estado_lote = 'activo' WHERE id = $l_id");
-        $this->db->query("UPDATE inventario SET stock = stock + $cant WHERE almacen_id = $a_id AND producto_id = $p_id");
-    }
-
-    public function obtenerCostoLote($l_id) {
-        $res = $this->db->query("SELECT precio_compra_unitario FROM lotes_stock WHERE id = $l_id");
-        $row = $res->fetch_assoc();
-        return $row['precio_compra_unitario'] ?? 0;
-    }
 }

@@ -121,6 +121,13 @@
                 </a>
             </li>
             <?php endif; ?>
+            <?php if (puedeVerModulo('transmutaciones')): ?>
+<li class="nav-item">
+    <a href="/cfsistem/app/controllers/transmutacionesController.php" class="nav-link <?= $archivoActual == 'transmutaciones_view.php' ? 'active' : '' ?>">
+        <i class="bi bi-arrow-repeat"></i><span>Transmutaciones</span>
+    </a>
+</li>
+<?php endif; ?>
 
             <?php if (puedeVerModulo('finanzas')): ?>
             <li class="nav-item">

@@ -101,15 +101,7 @@
                 </div>
 
                 <!-- TAB TRANSMUTACIÓN (placeholder) -->
-                <div class="tab-pane fade" id="transmutacion">
-                   <div class="tab-pane fade" id="transmutacion">
-    <?php 
-        // Importamos el archivo parcial
-        // Si el archivo está en la misma carpeta:
-        include 'transmutaciones.php'; 
-    ?>
-</div>
-                </div>
+                
             </div>
         </div>
     </div>

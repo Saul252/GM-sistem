@@ -390,15 +390,24 @@ ALTER TABLE `mermas`
 ADD COLUMN `lote_id` INT(11) NOT NULL AFTER `producto_id`,
 ADD CONSTRAINT `fk_merma_lote` FOREIGN KEY (`lote_id`) REFERENCES `lotes_stock`(`id`);
 
+-- Creamos la nueva versión profesional
 CREATE TABLE `config_transmutaciones` (
   `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  `almacen_id` int(11) NOT NULL,
   `producto_origen_id` int(11) NOT NULL,
   `producto_destino_id` int(11) NOT NULL,
   `rendimiento_teorico` decimal(10,4) NOT NULL COMMENT 'Ej: 1 bulto -> 50.00 kg',
+  `usuario_id` int(11) NOT NULL,
   `notas` varchar(255) DEFAULT NULL,
+  `fecha_registro` datetime DEFAULT CURRENT_TIMESTAMP,
+  
+  -- Relaciones
+  CONSTRAINT `fk_config_trans_almacen` FOREIGN KEY (`almacen_id`) REFERENCES `almacenes` (`id`),
   CONSTRAINT `fk_config_trans_origen` FOREIGN KEY (`producto_origen_id`) REFERENCES `productos` (`id`),
   CONSTRAINT `fk_config_trans_destino` FOREIGN KEY (`producto_destino_id`) REFERENCES `productos` (`id`),
-  UNIQUE KEY `idx_origen_destino` (`producto_origen_id`, `producto_destino_id`)
+  
+  -- Evitar que en un mismo almacén se repita la misma conversión
+  UNIQUE KEY `idx_almacen_origen_destino` (`almacen_id`, `producto_origen_id`, `producto_destino_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 CREATE TABLE `transmutaciones` (
   `id` int(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -418,6 +427,7 @@ CREATE TABLE `transmutacion_detalle` (
   `lote_id` int(11) NOT NULL,
   `cantidad` decimal(10,2) NOT NULL, -- Aquí guardas lo REAL (ej: 24kg en lugar de 25kg)
   `costo_unitario_historico` decimal(10,2) NOT NULL, -- Valor al momento de la conversión
+  
   CONSTRAINT `fk_det_trans_cabecera` FOREIGN KEY (`transmutacion_id`) REFERENCES `transmutaciones` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_det_trans_mov` FOREIGN KEY (`movimiento_id`) REFERENCES `movimientos` (`id`),
   CONSTRAINT `fk_det_trans_prod` FOREIGN KEY (`producto_id`) REFERENCES `productos` (`id`),
