@@ -104,12 +104,21 @@ $usosCFDI = ['G01' => 'Adquisición', 'G03' => 'Gastos', 'P01' => 'Por definir',
                                     <?= htmlspecialchars($c['rfc']) ?>
                                 </span>
                             </td>
-                            <td>
-                                <span class="badge badge-ubicacion">
-                                    <i class="bi bi-house-door me-1"></i>
-                                    <?= htmlspecialchars($c['nombre_almacen'] ?? 'Principal') ?>
-                                </span>
-                            </td>
+                           <td>
+    <span class="badge badge-ubicacion">
+        <i class="bi bi-house-door me-1"></i>
+        <?php 
+            $nombreAlmacen = 'Principal / Global'; // Valor por defecto
+            foreach ($almacenes as $alm) {
+                if ($alm['id'] == $c['almacen_id']) {
+                    $nombreAlmacen = $alm['nombre'];
+                    break;
+                }
+            }
+            echo htmlspecialchars($nombreAlmacen);
+        ?>
+    </span>
+</td>
                             <td>
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" 

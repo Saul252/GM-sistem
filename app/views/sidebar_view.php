@@ -116,7 +116,7 @@
 
             <?php if (puedeVerModulo('mermas')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/pantallas/mermas.php" class="nav-link <?= $archivoActual == 'mermas.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/mermasController.php" class="nav-link <?= $archivoActual == 'mermas.php' ? 'active' : '' ?>">
                     <i class="bi bi-exclamation-triangle"></i><span>Mermas</span>
                 </a>
             </li>

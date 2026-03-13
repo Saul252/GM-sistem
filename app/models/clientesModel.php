@@ -28,6 +28,28 @@ public function listarTodos($almacen_id) {
     $stmt->execute();
     return $stmt->get_result();
 }
+public function listarTodosViewClientes($almacen_id) {
+    if ($almacen_id == 0) {
+        // ADMIN: Trae todos, pero agrupados por RFC para no ver 4 veces "Público General"
+        // O simplemente todos si quieres ver el detalle de a qué almacén pertenecen.
+        $sql = "SELECT * FROM clientes 
+              
+                ORDER BY (rfc = 'XAXX010101000') DESC, nombre_comercial ASC";
+        return $this->db->query($sql);
+    } 
+    
+    // VENDEDOR: Filtro ESTRICTO.
+    // Solo trae los clientes cuyo almacen_id coincida EXACTAMENTE con el del usuario.
+    $sql = "SELECT * FROM clientes 
+           
+            WHERE almacen_id = ?
+            ORDER BY (rfc = 'XAXX010101000') DESC, nombre_comercial ASC";
+            
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param("i", $almacen_id);
+    $stmt->execute();
+    return $stmt->get_result();
+}
 
  public function guardar($datos) {
     // 1. Lógica de asignación de Almacén
@@ -98,57 +120,64 @@ public function listarTodos($almacen_id) {
     
     return false;
 }
- public function actualizar($id, $datos) {
-    // 1. Obtenemos el ID de la sesión (0 si es Admin)
+public function actualizar($id, $datos) {
     $almacen_id_sesion = $_SESSION['almacen_id'] ?? 0;
 
-    // 2. Validación de RFC (Aislamiento de seguridad)
-    // El Admin (0) valida contra toda la tabla, el Usuario solo contra su almacén
+    // 1. Validación de RFC duplicado
+    // Buscamos si el RFC ya existe en OTRO registro que no sea este ($id)
     $checkSql = "SELECT id FROM clientes 
-                 WHERE rfc = ? AND (? = 0 OR almacen_id = ?) AND id != ? AND activo = 1";
+                 WHERE rfc = ? AND id != ? AND activo = 1";
+    
+    // Si no es admin, limitamos la búsqueda de duplicados a su propio almacén
+    if ($almacen_id_sesion > 0) {
+        $checkSql .= " AND almacen_id = " . intval($almacen_id_sesion);
+    }
+
     $stmtCheck = $this->db->prepare($checkSql);
-    $stmtCheck->bind_param("siii", $datos['rfc'], $almacen_id_sesion, $almacen_id_sesion, $id);
+    $stmtCheck->bind_param("si", $datos['rfc'], $id);
     $stmtCheck->execute();
     
     if ($stmtCheck->get_result()->num_rows > 0) {
         throw new Exception("El RFC ingresado ya está registrado con otro cliente.");
     }
 
-    // 3. Ejecutar la actualización de datos personales
-    // NOTA: No incluimos 'almacen_id' en el SET para que se respete el original
-    $sql = "UPDATE clientes SET 
-                nombre_comercial = ?, 
-                razon_social = ?, 
-                rfc = ?, 
-                regimen_fiscal = ?, 
-                codigo_postal = ?, 
-                correo = ?, 
-                telefono = ?, 
-                direccion = ?, 
-                uso_cfdi = ?
-            WHERE id = ?";
+    // 2. Construcción dinámica del SQL
+    // Empezamos con los campos básicos
+    $campos = [
+        "nombre_comercial = ?", "razon_social = ?", "rfc = ?", 
+        "regimen_fiscal = ?", "codigo_postal = ?", "correo = ?", 
+        "telefono = ?", "direccion = ?", "uso_cfdi = ?"
+    ];
+    $params = [
+        $datos['nombre_comercial'], $datos['razon_social'], $datos['rfc'],
+        $datos['regimen_fiscal'], $datos['codigo_postal'], $datos['correo'],
+        $datos['telefono'], $datos['direccion'], $datos['uso_cfdi']
+    ];
+    $tipos = "sssssssss";
+
+    // --- EL CAMBIO CLAVE ---
+    // Si el usuario es ADMIN y envió un nuevo almacen_id, lo agregamos al UPDATE
+    if ($almacen_id_sesion == 0 && isset($datos['almacen_id'])) {
+        $campos[] = "almacen_id = ?";
+        $params[] = intval($datos['almacen_id']);
+        $tipos .= "i";
+    }
+
+    $sql = "UPDATE clientes SET " . implode(", ", $campos) . " WHERE id = ?";
     
-    // Si NO es administrador, añadimos el candado de seguridad
-    // para que un vendedor no pueda editar clientes de otro almacén vía URL
+    // Seguridad para no-admins
     if ($almacen_id_sesion > 0) {
         $sql .= " AND almacen_id = " . intval($almacen_id_sesion);
     }
 
-    $stmt = $this->db->prepare($sql);
+    // Agregamos el ID al final de los parámetros
+    $params[] = $id;
+    $tipos .= "i";
 
-    // Contamos: 9 campos de datos + 1 ID = 10 parámetros
-    $stmt->bind_param("sssssssssi", 
-        $datos['nombre_comercial'], 
-        $datos['razon_social'], 
-        $datos['rfc'],
-        $datos['regimen_fiscal'], 
-        $datos['codigo_postal'], 
-        $datos['correo'],
-        $datos['telefono'], 
-        $datos['direccion'], 
-        $datos['uso_cfdi'], 
-        $id
-    );
+    $stmt = $this->db->prepare($sql);
+    
+    // Usamos call_user_func_array porque el número de parámetros es dinámico (si cambió almacén o no)
+    $stmt->bind_param($tipos, ...$params);
 
     return $stmt->execute();
 }
