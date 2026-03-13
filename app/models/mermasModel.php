@@ -78,5 +78,47 @@ public function registrarMerma($datos) {
         $stmt->execute();
         return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
+  public function obtenerMermasPaginadas($almacen_id, $limit = 10, $offset = 0) {
+    // Si el almacen_id es 0, no filtramos (Admin)
+    $filtroAlmacen = ($almacen_id > 0) ? "WHERE m.almacen_id = ?" : "";
     
+    $sql = "SELECT 
+                m.id,
+                m.fecha_reporte, -- <--- Nombre corregido según tu DB
+                m.cantidad,
+                m.tipo_merma,
+                mov.responsable_movimiento as responsable, -- Tomamos el responsable del movimiento
+                a.nombre as almacen_nombre,
+                p.nombre as producto_nombre,
+                l.codigo_lote
+            FROM mermas m
+            JOIN movimientos mov ON m.movimiento_id = mov.id
+            JOIN almacenes a ON m.almacen_id = a.id
+            JOIN productos p ON m.producto_id = p.id
+            LEFT JOIN lotes_stock l ON m.lote_id = l.id
+            $filtroAlmacen
+            ORDER BY m.fecha_reporte DESC
+            LIMIT ? OFFSET ?";
+            
+    $stmt = $this->db->prepare($sql);
+
+    if ($almacen_id > 0) {
+        $stmt->bind_param("iii", $almacen_id, $limit, $offset);
+    } else {
+        $stmt->bind_param("ii", $limit, $offset);
+    }
+
+    $stmt->execute();
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+
+// Método auxiliar para contar el total y saber cuántas páginas hay
+public function contarTotalMermas($almacen_id) {
+    $sql = "SELECT COUNT(*) as total FROM mermas";
+    if ($almacen_id > 0) {
+        $sql .= " WHERE almacen_id = " . intval($almacen_id);
+    }
+    $result = $this->db->query($sql);
+    return $result->fetch_assoc()['total'];
+}
 }

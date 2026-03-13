@@ -128,7 +128,27 @@ if ($action === 'listar') {
     echo json_encode($data);
     exit;
 }
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'guardarEquivalencia') {
+    ob_clean();
+    header('Content-Type: application/json');
+    try {
+        $almacen_sesion = intval($_SESSION['almacen_id'] ?? 0);
+        $almacen_id = ($almacen_sesion === 0) ? intval($_POST['almacen_id'] ?? 0) : $almacen_sesion;
 
+        if ($almacen_id === 0) throw new Exception("Almacén obligatorio.");
+
+        $p_origen  = intval($_POST['p_origen'] ?? 0);
+        $p_destino = intval($_POST['p_destino'] ?? 0);
+        $factor    = floatval($_POST['factor'] ?? 0);
+        $notas     = trim($_POST['notas'] ?? '');
+
+        $res = $transModel->agregarConfiguracion($almacen_id, $p_origen, $p_destino, $factor, $usuario_id, $notas);
+        echo json_encode(['status' => 'success', 'message' => '✅ Regla guardada correctamente']);
+    } catch (Exception $e) {
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
+    exit;
+}
 // ... (otros bloques) ...
 
 // ============================================

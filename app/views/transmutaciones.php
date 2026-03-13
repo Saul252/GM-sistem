@@ -323,22 +323,54 @@
                         <div class="row g-3">
                             <div class="col-md-12">
                                 <label class="form-label">Almacén de Aplicación</label>
-                                <?php if ($esAdmin = (isset($_SESSION['almacen_id']) && (int)$_SESSION['almacen_id'] === 0)): ?>
-                                    <select name="almacen_id" class="form-select shadow-sm border-primary" required>
-                                        <option value="">-- Seleccione Almacén --</option>
-                                        <?php foreach ($almacenes as $a): ?>
-                                            <?php if($a['id'] > 0): ?>
-                                                <option value="<?= $a['id'] ?>"><?= htmlspecialchars($a['nombre']) ?></option>
-                                            <?php endif; ?>
-                                        <?php endforeach; ?>
-                                    </select>
-                                <?php else: ?>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-light border-0"><i class="fas fa-lock text-muted"></i></span>
-                                        <input type="text" class="form-control bg-light border-0" value="<?= htmlspecialchars($_SESSION['almacen_nombre'] ?? 'Mi Almacén') ?>" readonly>
-                                    </div>
-                                    <input type="hidden" name="almacen_id" value="<?= $_SESSION['almacen_id'] ?>">
-                                <?php endif; ?>
+                               
+
+
+
+    <?php 
+    $idSesion = (int)($_SESSION['almacen_id'] ?? 0);
+    $esAdmin = ($idSesion === 0);
+    ?>
+
+    <?php if ($esAdmin): ?>
+        <select name="almacen_id" class="form-select shadow-sm border-primary" required>
+            <option value="">-- Seleccione Almacén --</option>
+            <?php foreach ($almacenes as $a): ?>
+                <?php if($a['id'] > 0): ?>
+                    <option value="<?= $a['id'] ?>"><?= htmlspecialchars($a['nombre']) ?></option>
+                <?php endif; ?>
+            <?php endforeach; ?>
+        </select>
+    <?php else: ?>
+        <?php 
+        // Buscamos el nombre real en el array de almacenes si no está en la sesión
+        $nombreAlmacen = $_SESSION['almacen_nombre'] ?? 'Almacén Asignado';
+        
+        foreach ($almacenes as $a) {
+            if ((int)$a['id'] === $idSesion) {
+                $nombreAlmacen = $a['nombre'];
+                break;
+            }
+        }
+        ?>
+        <div class="input-group shadow-sm">
+            <span class="input-group-text bg-light border-0"><i class="fas fa-lock text-muted"></i></span>
+            <input type="text" class="form-control bg-light border-0 fw-bold" value="<?= htmlspecialchars($nombreAlmacen) ?>" readonly>
+        </div>
+        <input type="hidden" name="almacen_id" value="<?= $idSesion ?>">
+    <?php endif; ?>
+
+
+
+
+
+
+
+
+
+
+
+
                             </div>
 
                             <div class="col-md-6">

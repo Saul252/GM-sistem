@@ -131,10 +131,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['ac
 // 📄 VISTA PRINCIPAL (GET)
 // ============================
 try {
+    // 1. Identificar Almacén (0 si es admin)
     $almacen_sesion = $_SESSION['almacen_id'] ?? 0;
+    
+    // 2. Lógica de Paginación
+    $limit = 15; 
+    $pagina = isset($_GET['p']) ? max(1, intval($_GET['p'])) : 1;
+    $offset = ($pagina - 1) * $limit;
+
+    // 3. Obtener Datos
     $almacenes = $almacenModel->getAlmacenes($almacen_sesion);
+    
+    // Para la tabla, usamos el almacen_sesion para filtrar (Admin ve todo si es 0)
+    $mermas = $mermasModel->obtenerMermasPaginadas($almacen_sesion, $limit, $offset);
+    $totalMermas = $mermasModel->contarTotalMermas($almacen_sesion);
+    $totalPaginas = ceil($totalMermas / $limit);
+
     include __DIR__ . '/../views/mermas_view.php';
 } catch (Exception $e) {
-    die("Error vista: " . $e->getMessage());
+    die("Error crítico en el sistema de mermas: " . $e->getMessage());
 }
 ?>
