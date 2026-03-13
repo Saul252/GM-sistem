@@ -184,33 +184,37 @@ public function registrarTransmutacion($datos) {
 /**
      * Obtiene el historial de transmutaciones con nombres de productos
      */
-    public function listarTransmutaciones($almacen_id) {
-        $sql = "SELECT 
-                    t.id, 
-                    t.fecha_registro, 
-                    t.observaciones,
-                    u.nombre as usuario_nombre,
-                    -- Subconsulta o JOIN para el producto de salida (origen)
-                    (SELECT p1.nombre FROM transmutacion_detalle td1 
-                     JOIN productos p1 ON td1.producto_id = p1.id 
-                     WHERE td1.transmutacion_id = t.id AND td1.tipo = 'salida' LIMIT 1) as producto_origen,
-                    (SELECT td1.cantidad FROM transmutacion_detalle td1 
-                     WHERE td1.transmutacion_id = t.id AND td1.tipo = 'salida' LIMIT 1) as cant_origen,
-                    -- Subconsulta o JOIN para el producto de entrada (destino)
-                    (SELECT p2.nombre FROM transmutacion_detalle td2 
-                     JOIN productos p2 ON td2.producto_id = p2.id 
-                     WHERE td2.transmutacion_id = t.id AND td2.tipo = 'entrada' LIMIT 1) as producto_destino,
-                    (SELECT td2.cantidad FROM transmutacion_detalle td2 
-                     WHERE td2.transmutacion_id = t.id AND td2.tipo = 'entrada' LIMIT 1) as cant_destino
-                FROM transmutaciones t
-                LEFT JOIN usuarios u ON t.usuario_id = u.id
-                WHERE t.almacen_id = ?
-                ORDER BY t.fecha_registro DESC";
-        
-        $stmt = $this->db->prepare($sql);
+public function listarTransmutaciones($almacen_id) {
+    // Si el almacen_id es 0, es admin y ve todo (1=1)
+    $where = ($almacen_id > 0) ? "WHERE t.almacen_id = ?" : "WHERE 1=1";
+    
+    $sql = "SELECT 
+                t.id, 
+                t.fecha as fecha_registro, -- <-- CAMBIADO t.fecha
+                t.observaciones,
+                u.nombre as usuario_nombre,
+                -- Producto de salida (origen)
+                (SELECT p1.nombre FROM transmutacion_detalle td1 
+                 JOIN productos p1 ON td1.producto_id = p1.id 
+                 WHERE td1.transmutacion_id = t.id AND td1.tipo = 'salida' LIMIT 1) as producto_origen,
+                (SELECT td1.cantidad FROM transmutacion_detalle td1 
+                 WHERE td1.transmutacion_id = t.id AND td1.tipo = 'salida' LIMIT 1) as cant_origen,
+                -- Producto de entrada (destino)
+                (SELECT p2.nombre FROM transmutacion_detalle td2 
+                 JOIN productos p2 ON td2.producto_id = p2.id 
+                 WHERE td2.transmutacion_id = t.id AND td2.tipo = 'entrada' LIMIT 1) as producto_destino,
+                (SELECT td2.cantidad FROM transmutacion_detalle td2 
+                 WHERE td2.transmutacion_id = t.id AND td2.tipo = 'entrada' LIMIT 1) as cant_destino
+            FROM transmutaciones t
+            LEFT JOIN usuarios u ON t.usuario_id = u.id
+            $where
+            ORDER BY t.fecha DESC LIMIT 100";
+    
+    $stmt = $this->db->prepare($sql);
+    if ($almacen_id > 0) {
         $stmt->bind_param("i", $almacen_id);
-        $stmt->execute();
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
-
+    $stmt->execute();
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
 }

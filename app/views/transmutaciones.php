@@ -251,31 +251,58 @@
                 </div>
             </div>
 
-            <div class="card card-custom">
-                <div class="card-header-custom d-flex justify-content-between align-items-center">
-                    <h6 class="m-0 font-weight-bold text-dark"><i class="fas fa-history me-2"></i>Historial Reciente</h6>
-                    <button class="btn btn-sm btn-outline-primary border-0" onclick="location.reload()"><i class="fas fa-sync-alt"></i></button>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle" id="tablaHistorial">
-                            <thead>
-                                <tr>
-                                    <th>Fecha</th>
-                                    <th>Almacén</th>
-                                    <th>Origen (Sale)</th>
-                                    <th>Destino (Entra)</th>
-                                    <th>Responsable</th>
-                                    <th class="text-center">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
+     <div class="card card-custom">
+    <div class="card-header-custom d-flex justify-content-between align-middle">
+        <h6 class="m-0 font-weight-bold text-dark"><i class="fas fa-history me-2"></i>Historial de Movimientos</h6>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle" id="tablaHistorial">
+                <thead class="table-light">
+                    <tr>
+                        <th width="50px">ID</th>
+                        <th>Fecha</th>
+                        <th>Origen (Sale)</th>
+                        <th>Cant.</th>
+                        <th>Destino (Entra)</th>
+                        <th>Cant.</th>
+                        <th>Responsable</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($historial)): ?>
+                        <?php foreach ($historial as $t): ?>
+                        <tr>
+                            <td><span class="badge bg-light text-dark border">#<?= $t['id'] ?></span></td>
+                            <td><small><?= date('d/m/Y H:i', strtotime($t['fecha_registro'])) ?></small></td>
+                            <td>
+                                <i class="fas fa-minus-circle text-danger me-1"></i>
+                                <?= htmlspecialchars($t['producto_origen'] ?? 'N/A') ?>
+                            </td>
+                            <td class="fw-bold"><?= number_format($t['cant_origen'], 2) ?></td>
+                            <td>
+                                <i class="fas fa-plus-circle text-success me-1"></i>
+                                <?= htmlspecialchars($t['producto_destino'] ?? 'N/A') ?>
+                            </td>
+                            <td class="fw-bold"><?= number_format($t['cant_destino'], 2) ?></td>
+                            <td>
+                                <i class="fas fa-user-circle me-1 text-muted"></i>
+                                <small><?= htmlspecialchars($t['usuario_nombre'] ?? 'Sistema') ?></small>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <tr>
+                            <td colspan="7" class="text-center text-muted p-4">
+                                <i class="fas fa-info-circle me-1"></i> No se encontraron registros de transmutación.
+                            </td>
+                        </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
         </div>
     </div>
 
@@ -376,13 +403,7 @@
         const stockSpan = document.getElementById('trans_stock_disp');
 
         // Inicializar DataTable con diseño Bootstrap 5
-        $('#tablaHistorial').DataTable({
-            language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
-            order: [[0, 'desc']],
-            pageLength: 5,
-            lengthMenu: [5, 10, 25]
-        });
-
+   
         // 1. Al cambiar Almacén -> Cargar Productos Origen
         transAlmacen.addEventListener('change', async function() {
             const id = this.value;
@@ -513,6 +534,23 @@
             } finally { btn.disabled = false; }
         });
     });
+    </script>
+    <script>
+        $(document).ready(function() {
+    $('#tablaHistorial').DataTable({
+        "language": {
+            "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
+        },
+        "order": [[ 0, "desc" ]], // Ordenar por la primera columna (ID) de forma descendente
+        "pageLength": 10,
+        "responsive": true,
+        "dom": '<"d-flex justify-content-between"f>rt<"d-flex justify-content-between"ip>',
+        "drawCallback": function() {
+            // Esto quita clases feas que a veces pone DataTables por defecto
+            $('.dataTables_paginate > .pagination').addClass('pagination-sm');
+        }
+    });
+});
     </script>
 </body>
 </html>
