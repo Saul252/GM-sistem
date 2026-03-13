@@ -37,7 +37,7 @@ $paginaActual = 'Inicio';
 <!-- VENTAS -->
 <?php if (puedeVerModulo('ventas')): ?>
 <div class="col-md-4 col-lg-3">
-    <a href="/cfsistem/app/controllers/ventas.php" class="text-decoration-none text-dark">
+    <a href="/cfsistem/app/controllers/ventasController.php" class="text-decoration-none text-dark">
         <div class="card card-modulo text-center">
             <i class="bi bi-cart-check icono-modulo icon-ventas"></i>
             <h6>Ventas</h6>

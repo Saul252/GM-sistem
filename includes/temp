@@ -22,7 +22,7 @@
             <?php if (puedeVerModulo('ventas')): ?>
             <li class="nav-item">
                 <a href="/cfsistem/app/controllers/ventasControllers.php"
-                    class="nav-link <?= $archivoActual == 'ventas.php' ? 'active' : '' ?>">
+                    class="nav-link <?= $archivoActual == 'ventasController.php' ? 'active' : '' ?>">
                     <i class="bi bi-cart-check"></i>
                     <span>Ventas</span>
                 </a>

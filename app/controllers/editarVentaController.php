@@ -171,4 +171,4 @@ if (isset($_GET['action'])) {
 }
 
 // Si no hay 'action', cargamos la interfaz visual
-require_once __DIR__ . '/../views/editarVentas.php';
+require_once __DIR__ . '/../views/editarventasController.php';

@@ -8,11 +8,14 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../controllers/LayoutController.php';
 require_once __DIR__ . '/../models/clientesModel.php';
+require_once __DIR__ . '/../models/almacen_model.php';
 
 $clientesModel = new ClientesModel($conexion);
 $paginaActual = 'clientes';
 // Capturamos el almacén de la sesión para las consultas
 $almacen_id = $_SESSION['almacen_id'] ?? 0; 
+$almacenModel = new AlmacenModel($conexion);
+$almacenes = $almacenModel->getAlmacenes($almacen_usuario);
 
 // --- ACCIÓN: GUARDAR / ACTUALIZAR CLIENTE (AJAX) ---
 if (isset($_GET['action']) && $_GET['action'] === 'guardar') {
@@ -31,7 +34,9 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardar') {
             'correo'           => $_POST['correo'] ?? '',
             'telefono'         => $_POST['telefono'] ?? '',
             'direccion'        => $_POST['direccion'] ?? '',
-            'uso_cfdi'         => $_POST['uso_cfdi'] ?? 'G03'
+            'uso_cfdi'         => $_POST['uso_cfdi'] ?? 'G03',
+            // AGREGAMOS ESTA LÍNEA: Captura el almacen_id del select (Admin) o del hidden (Vendedor)
+            'almacen_id'       => $_POST['almacen_id'] ?? null 
         ];
 
         if (empty($datos['nombre_comercial']) || empty($datos['rfc'])) {
@@ -40,17 +45,29 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardar') {
 
         if ($id > 0) {
             $resultado = $clientesModel->actualizar($id, $datos);
-            $mensaje = "Cliente actualizado correctamente.";
+            // Si es actualización, devolvemos el mismo ID que recibimos
+            echo json_encode([
+                'success' => true, 
+                'message' => "Cliente actualizado correctamente.",
+                'id' => $id 
+            ]);
         } else {
-            // El modelo ya usa $_SESSION['almacen_id'] internamente
+            // Guardar devuelve un array: ['success' => true, 'id' => ..., 'api_token' => ...]
             $resultado = $clientesModel->guardar($datos);
-            $mensaje = "Cliente registrado correctamente.";
+            
+            if ($resultado && isset($resultado['id'])) {
+                echo json_encode([
+                    'success' => true, 
+                    'message' => "Cliente registrado correctamente.",
+                    'id' => $resultado['id'] // ESTO ES LO QUE NECESITA TU JS
+                ]);
+            } else {
+                throw new Exception("No se pudo obtener el ID del cliente registrado.");
+            }
         }
 
-        echo json_encode(['success' => true, 'message' => $mensaje]);
-
     } catch (Throwable $e) {
-        echo json_encode(['success' => false, 'message' => 'Error: ' . $e->getMessage()]);
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
     exit;
 }
@@ -95,18 +112,18 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerPorId') {
 }
 
 // --- CARGA DE VISTA (GET) ---
+// --- CARGA DE VISTA (GET) ---
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     try {
-        // 1. Capturamos el almacén del usuario logueado (0 si es Admin)
-        $almacen_sesion = $_SESSION['almacen_id'] ?? 0;
+        // Cambiamos el nombre de la variable para que coincida con la vista
+        $almacen_usuario = $_SESSION['almacen_id'] ?? 0; 
 
-        // 2. Pasamos el ID a la función para que filtre automáticamente
-        $clientes = $clientesModel->listarTodos($almacen_sesion);
+        // Pasamos el ID a la función para que filtre automáticamente
+        $clientes = $clientesModel->listarTodos($almacen_usuario);
         
         $tituloPagina = "Administración de Clientes";
         require_once __DIR__ . '/../views/clientes_view.php';
     } catch (Exception $e) {
         die("Error al cargar la vista: " . $e->getMessage());
     }
-
 }

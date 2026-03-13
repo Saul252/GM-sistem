@@ -5,7 +5,6 @@ function abrirModalNuevoCliente() {
 document.getElementById('formNuevoCliente').addEventListener('submit', function(e) {
     e.preventDefault();
     
-    // Usamos FormData directamente para que PHP lo reciba en $_POST correctamente
     const formData = new FormData(this);
 
     Swal.fire({
@@ -14,37 +13,58 @@ document.getElementById('formNuevoCliente').addEventListener('submit', function(
         didOpen: () => { Swal.showLoading(); }
     });
 
-    // Apuntamos a la ruta del nuevo controlador con la acción 'guardar'
     fetch('/cfsistem/app/controllers/clientesController.php?action=guardar', {
         method: 'POST',
-        body: formData // Enviamos formData directamente
+        body: formData
     })
     .then(res => res.json())
     .then(res => {
-        // Ajustamos a 'success' que es lo que devuelve tu nuevo controlador
         if(res.success === true) {
             Swal.fire('¡Éxito!', res.message, 'success');
             
-            // 1. Agregar el nuevo cliente al select y seleccionarlo
-            // Nota: Si tu controlador no devuelve el ID, podrías necesitar recargar el select o devolverlo en el JSON
             const selectCliente = document.getElementById('selectCliente');
+            
+            // --- LÓGICA DE ACTUALIZACIÓN DINÁMICA ---
             if (selectCliente) {
-                const nombre = formData.get('nombre_comercial');
-                const option = new Option(nombre, res.id || '', true, true);
-                selectCliente.add(option);
+                // Obtenemos el almacén que se está visualizando actualmente en la pantalla de ventas
+                // Si tienes un input que guarda el ID del almacén actual, úsalo aquí.
+                // Si no, usamos el que se acaba de enviar en el formulario.
+                const idAlmacenDestino = formData.get('almacen_id');
+                const idAlmacenActualVentas = document.getElementById('almacen_id_actual')?.value || idAlmacenDestino;
+
+                // Solo agregamos al select si el cliente pertenece al almacén que estamos operando
+                if (idAlmacenDestino == idAlmacenActualVentas) {
+                    const nombre = formData.get('nombre_comercial');
+                    const option = new Option(nombre, res.id, true, true);
+                    
+                    // Inyectar metadatos (VITAL para facturación)
+                    option.setAttribute('data-rfc', formData.get('rfc'));
+                    option.setAttribute('data-rs', formData.get('razon_social'));
+                    option.setAttribute('data-cp', formData.get('codigo_postal'));
+                    option.setAttribute('data-regimen', formData.get('regimen_fiscal'));
+                    
+                    selectCliente.add(option);
+                    selectCliente.dispatchEvent(new Event('change'));
+                } else {
+                    console.log("Cliente guardado en otro almacén. No se agrega al select actual.");
+                }
             }
             
-            // 2. Cerrar modal y limpiar form
+            // --- CERRAR Y LIMPIAR ---
             const modalElement = document.getElementById('modalNuevoCliente');
-            const modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
-            modal.hide();
+            const modal = bootstrap.Modal.getInstance(modalElement);
+            if(modal) modal.hide();
+            
             this.reset();
             
-            // Si tienes una tabla de clientes, podrías llamar a fetchData() aquí
-            if (typeof fetchData === 'function') fetchData($('#filtroAlmacen').val() || 0);
+            // Si el usuario es admin y tiene la tabla general de clientes abierta, se refresca
+            if (typeof fetchData === 'function') {
+                const filtro = document.getElementById('filtroAlmacen')?.value || 0;
+                fetchData(filtro);
+            }
 
         } else {
-            Swal.fire('Error', res.message, 'error');
+            Swal.fire('Error', res.message || 'Error desconocido', 'error');
         }
     })
     .catch(err => {

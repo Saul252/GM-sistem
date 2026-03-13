@@ -169,7 +169,7 @@ body.sidebar-hidden #sidebar { transform: translateX(-100%); }
 
             <?php if (puedeVerModulo('ventas')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/controllers/ventas.php" class="nav-link <?= $archivoActual == 'ventas.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/ventasController.php" class="nav-link <?= $archivoActual == 'ventasController.php' ? 'active' : '' ?>">
                     <i class="bi bi-cart-check"></i><span>Ventas</span>
                 </a>
             </li>

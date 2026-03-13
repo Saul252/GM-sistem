@@ -4,7 +4,7 @@ class SidebarModel {
         // Definimos todos los módulos posibles
         $modulos = [
             'inicio'   => ['label' => 'Inicio', 'icon' => 'bi-house-door', 'url' => 'inicio.php'],
-            'ventas'   => ['label' => 'Ventas', 'icon' => 'bi-cart-check', 'url' => 'ventas.php'],
+            'ventas'   => ['label' => 'Ventas', 'icon' => 'bi-cart-check', 'url' => 'ventasController.php'],
             'almacenes'=> ['label' => 'Almacén', 'icon' => 'bi-box-seam', 'url' => 'almacenes.php'],
             'movimientos'=> ['label' => 'Movimientos', 'icon' => 'bi-arrow-left-right', 'url' => 'movimientos.php'],
             'usuarios' => ['label' => 'Usuarios', 'icon' => 'bi-people', 'url' => 'usuarios.php'],
