@@ -6,7 +6,7 @@ require_once __DIR__ . '/../models/ventas_model.php';
 require_once __DIR__ . '/../models/clientesModel.php';
 require_once __DIR__ . '/../models/almacen_model.php';
 require_once __DIR__ . '/../models/categoriasModel.php';
-protegerPagina(); 
+protegerPagina('ventas'); 
 $paginaActual = 'ventas';
 
 // 1. Identificar al usuario (Admin = 0, Vendedor = ID Almacén)

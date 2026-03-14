@@ -9,7 +9,8 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../config/conexion.php'; 
 require_once __DIR__ . '/../models/ventasEditarModel.php'; 
 require_once __DIR__ . '/../controllers/LayoutController.php';
-protegerPagina(); 
+protegerPagina('ventas'); 
+$paginaActual = 'ventas';
 class VentaHistorialController {
     private $model;
 
@@ -171,4 +172,4 @@ if (isset($_GET['action'])) {
 }
 
 // Si no hay 'action', cargamos la interfaz visual
-require_once __DIR__ . '/../views/editarventasController.php';
+require_once __DIR__ . '/../views/editarVentas.php';

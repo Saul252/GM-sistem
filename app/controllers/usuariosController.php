@@ -4,7 +4,7 @@ require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../controllers/LayoutController.php';
 require_once __DIR__ . '/../models/usuariosModel.php';
 
-protegerPagina(); 
+protegerPagina('usuarios'); 
 $modelo = new UsuarioModel($conexion);
 
 // Variables para la vista

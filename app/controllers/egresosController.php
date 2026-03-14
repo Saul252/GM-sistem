@@ -10,10 +10,10 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../controllers/LayoutController.php';
 require_once __DIR__ . '/../models/egresos_model.php';
-require_once __DIR__ . '/../models/egresos/comprasModel.php';
+require_once __DIR__ . '/../models/egresos/comprasModel.php';require_once __DIR__ . '/../models/egresos/comprasModel.php';
 
 require_once __DIR__ . '/../models/almacen/categoriasModel.php';
-protegerPagina(); 
+protegerPagina('compras'); 
 $egresoModel = new EgresoModel($conexion);
 $comprasModel = new CompraModel($conexion);
 $categoriasModel= new CategoriaModel($conexion);
@@ -191,6 +191,13 @@ if (isset($_GET['action']) && $_GET['action'] === 'procesarAjusteFaltante') {
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
+    exit;
+}
+// --- ACCIÓN: OBTENER SIGUIENTE FOLIO (AJAX) ---
+if (isset($_GET['action']) && $_GET['action'] === 'getSiguienteFolio') {
+    header('Content-Type: application/json');
+    $siguiente = $comprasModel->generarSiguienteFolio();
+    echo json_encode(['success' => true, 'folio' => $siguiente]);
     exit;
 }
 // --- ACCIÓN: OBTENER DETALLE PARA TICKET (AJAX) ---

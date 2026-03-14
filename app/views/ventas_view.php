@@ -448,11 +448,11 @@
         let cantidadUsuario = parseFloat(inputCant.value) || 0;
         let cantidadReal = (modo === 'referencia') ? (cantidadUsuario * factor) : cantidadUsuario;
 
-        if (cantidadReal > stockDisponible) {
-            Swal.fire('Stock insuficiente', `No puedes agregar ${cantidadReal} unidades. Stock: ${stockDisponible}`,
-                'error');
-            return;
-        }
+        // if (cantidadReal > stockDisponible) {
+        //     Swal.fire('Stock insuficiente', `No puedes agregar ${cantidadReal} unidades. Stock: ${stockDisponible}`,
+        //         'error');
+        //     return;
+        // }
 
         inputCant.value = cantidadReal; // Ajuste temporal para agregarProducto
         if (typeof agregarProducto === "function") agregarProducto(btn);

@@ -1,11 +1,11 @@
 <?php
 require_once __DIR__ . '/../../includes/auth.php';
-protegerPagina(); 
+
 
 require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../models/movimientosModel.php';
 require_once __DIR__ . '/../controllers/LayoutController.php';
-
+protegerPagina('movimientos'); 
 $modelo = new MovimientoModel($conexion);
 $almacen_usuario = $_SESSION['almacen_id'] ?? 0;
 
@@ -22,5 +22,6 @@ if (isset($_GET['ajax'])) {
 }
 
 // Carga normal
-$paginaActual = 'Historial';
+
+$paginaActual = 'movimientos';
 require_once __DIR__ . '/../views/movimientos_view.php';

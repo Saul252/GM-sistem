@@ -599,12 +599,12 @@
                                     <div class="col-md-6">
                                         <label class="small fw-bold">Stock Actual</label>
                                         <input type="number" step="0.01" name="stock" id="edit_stock"
-                                            class="form-control">
+                                            class="form-control"readonly>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="small fw-bold">Stock Mínimo</label>
                                         <input type="number" step="0.01" name="stock_minimo" id="edit_s_min"
-                                            class="form-control">
+                                            class="form-control" readonly>
                                     </div>
                                 </div>
                             </div>

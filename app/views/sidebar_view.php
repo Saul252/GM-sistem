@@ -68,7 +68,7 @@
 
             <?php if (puedeVerModulo('movimientos')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/controllers/movimientosController.php" class="nav-link <?= $archivoActual == 'movimientos.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/movimientosController.php" class="nav-link <?= $archivoActual == 'movimientosController.php' ? 'active' : '' ?>">
                     <i class="bi bi-arrow-left-right"></i><span>Movimientos</span>
                 </a>
             </li>
@@ -76,7 +76,7 @@
 
             <?php if (puedeVerModulo('ventashistorial')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/controllers/ventasHistorialController.php" class="nav-link <?= $archivoActual == 'ventashistorial.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/ventasHistorialController.php" class="nav-link <?= $archivoActual == 'ventasHistorialController.php' ? 'active' : '' ?>">
                     <i class="bi bi-receipt"></i><span>Historial</span>
                 </a>
             </li>
@@ -84,7 +84,7 @@
 
             <?php if (puedeVerModulo('caja')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/pantallas/caja.php" class="nav-link <?= $archivoActual == 'caja.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/pantallas/caja.php" class="nav-link <?= $archivoActual == 'cajaController.php' ? 'active' : '' ?>">
                     <i class="bi bi-cash-stack"></i><span>Caja</span>
                 </a>
             </li>
@@ -92,7 +92,7 @@
 
             <?php if (puedeVerModulo('usuarios')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/controllers/usuariosController.php" class="nav-link <?= $archivoActual == 'usuarios.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/usuariosController.php" class="nav-link <?= $archivoActual == 'usuariosController.php' ? 'active' : '' ?>">
                     <i class="bi bi-people"></i><span>Usuarios</span>
                 </a>
             </li>
@@ -100,7 +100,7 @@
 
             <?php if (puedeVerModulo('compras')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/controllers/egresosController.php" class="nav-link <?= ($archivoActual == 'compras.php' || $archivoActual == 'gastos.php') ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/egresosController.php" class="nav-link <?= ($archivoActual == 'egresosController.php' || $archivoActual == 'gastos.php') ? 'active' : '' ?>">
                     <i class="bi bi-bag-check"></i><span>Compras</span>
                 </a>
             </li>
@@ -108,22 +108,22 @@
 
             <?php if (puedeVerModulo('clientes')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/controllers/clientesController.php" class="nav-link <?= $archivoActual == 'clientes.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/clientesController.php" class="nav-link <?= $archivoActual == 'clientesController.php' ? 'active' : '' ?>">
                     <i class="bi bi-person-lines-fill"></i><span>Clientes</span>
                 </a>
             </li>
             <?php endif; ?>
 
-            <?php if (puedeVerModulo('mermas')): ?>
+            <?php if (puedeVerModulo('Mermas')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/controllers/mermasController.php" class="nav-link <?= $archivoActual == 'mermas.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/mermasController.php" class="nav-link <?= $archivoActual == 'mermasController.php' ? 'active' : '' ?>">
                     <i class="bi bi-exclamation-triangle"></i><span>Mermas</span>
                 </a>
             </li>
             <?php endif; ?>
             <?php if (puedeVerModulo('transmutaciones')): ?>
 <li class="nav-item">
-    <a href="/cfsistem/app/controllers/transmutacionesController.php" class="nav-link <?= $archivoActual == 'transmutaciones_view.php' ? 'active' : '' ?>">
+    <a href="/cfsistem/app/controllers/transmutacionesController.php" class="nav-link <?= $archivoActual == 'transmutacionesController.php' ? 'active' : '' ?>">
         <i class="bi bi-arrow-repeat"></i><span>Transmutaciones</span>
     </a>
 </li>
@@ -131,21 +131,21 @@
 
             <?php if (puedeVerModulo('finanzas')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/views/finanzas.php" class="nav-link <?= $archivoActual == 'finanzas.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/finanzasController.php" class="nav-link <?= $archivoActual == 'finanzasController.php' ? 'active' : '' ?>">
                     <i class="bi bi-graph-up-arrow"></i><span>Finanzas</span>
                 </a>
             </li>
             <?php endif; ?>
             <?php if (puedeVerModulo('corteCaja')): ?>
 <li class="nav-item">
-    <a href="/cfsistem/app/controllers/corteCajaController.php" class="nav-link <?= $archivoActual == 'corte_caja.php' ? 'active' : '' ?>">
+    <a href="/cfsistem/app/controllers/corteCajaController.php" class="nav-link <?= $archivoActual == 'corteCajaController.php' ? 'active' : '' ?>">
         <i class="bi bi-calculator"></i><span>Corte de Caja</span>
     </a>
 </li>
 <?php endif; ?>
 <?php if (puedeVerModulo('entregas')): ?>
 <li class="nav-item">
-    <a href="/cfsistem/app/controllers/entregasController.php" class="nav-link <?= $archivoActual == 'despachos.php' ? 'active' : '' ?>">
+    <a href="/cfsistem/app/controllers/entregasController.php" class="nav-link <?= $archivoActual == 'entregasController.php' ? 'active' : '' ?>">
         <i class="bi bi-truck"></i><span>Despachos</span>
     </a>
 </li>
@@ -161,14 +161,14 @@
 <?php if (puedeVerModulo(modulo: 'Configuracion')): ?>
 <li class="nav-item">
     <a href="/cfsistem/app/controllers/configuracionController.php" 
-       class="nav-link <?= $paginaActual == 'configuracion' ? 'active' : '' ?>">
+       class="nav-link <?= $paginaActual == 'configuracionController' ? 'active' : '' ?>">
         <i class="bi bi-gear-fill"></i><span>Configuración</span>
     </a>
 </li>
 <?php endif; ?>
 <!-- 
 <li class="nav-item">
-    <a href="/cfsistem/app/views/gestionar_permisos.php" class="nav-link <?= $archivoActual == 'gestion_permisos.php' ? 'active' : '' ?>">
+    <a href="/cfsistem/app/views/gestionar_permisos.php" class="nav-link <?= $archivoActual == 'cofiguracionController.php' ? 'active' : '' ?>">
         <i class="bi bi-key"></i><span>Gestión de Permisos</span>
     </a>
 </li> -->

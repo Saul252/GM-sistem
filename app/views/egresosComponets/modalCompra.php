@@ -26,9 +26,9 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
                                     placeholder="Nombre del proveedor" required>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label small fw-bold">Folio de Factura</label>
-                                <input type="text" name="folio" class="form-control" placeholder="Ej: F-123" required>
-                            </div>
+    <label class="form-label small fw-bold">Folio de Factura</label>
+    <input type="text" id="folio_compra" name="folio" class="form-control" placeholder="Cargando..." readonly required>
+</div>
                           <div class="col-md-4">
     <div class="mac-select-container">
         <label class="mac-label">
@@ -129,7 +129,51 @@ function abrirModalCompra() {
     agregarFilaCompra();
     $('#modalNuevaCompra').modal('show');
 }
+// --- PEGA ESTO DENTRO DE TU ETIQUETA <script> ---
 
+/**
+ * Función para obtener el folio desde el servidor
+ */
+function asignarSiguienteFolioCompra() {
+    const inputFolio = document.getElementById('folio_compra');
+    if (!inputFolio) return;
+
+    inputFolio.value = "Cargando...";
+
+    fetch('egresosController.php?action=getSiguienteFolio')
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                inputFolio.value = data.folio;
+            } else {
+                inputFolio.value = "";
+                inputFolio.readOnly = false; // Si falla, dejamos que el usuario escriba
+            }
+        })
+        .catch(err => {
+            console.error("Error al obtener folio:", err);
+            inputFolio.readOnly = false;
+        });
+}
+
+// MODIFICACIÓN: Agregamos la carga del folio a tu función de abrir modal
+// Busca tu función abrirModalCompra() y asegúrate de que llame a asignarSiguienteFolioCompra()
+const originalAbrirModal = window.abrirModalCompra;
+window.abrirModalCompra = function() {
+    // Llamamos a la lógica original que ya tenías
+    originalAbrirModal();
+    
+    // Disparamos la carga del folio automático
+    asignarSiguienteFolioCompra();
+};
+
+/**
+ * Listener para asegurar que si abres el modal por otros medios (como data-bs-toggle), 
+ * también se cargue el folio.
+ */
+$(document).on('show.bs.modal', '#modalNuevaCompra', function () {
+    asignarSiguienteFolioCompra();
+});
 function agregarFilaCompra() {
     const idUnico = Date.now();
 

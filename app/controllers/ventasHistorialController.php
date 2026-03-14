@@ -5,13 +5,13 @@
  */
 
 require_once __DIR__ . '/../../includes/auth.php';
-protegerPagina(); // Tu función de seguridad
+ // Tu función de seguridad
 require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../controllers/LayoutController.php';
 require_once __DIR__ . '/../models/ventasHistorialModel.php';
-
+protegerPagina('ventashistorial');
 $ventasModel = new VentaHistorialModel($conexion);
-$paginaActual = 'Entregas';
+$paginaActual = 'ventashistorial';
 
 // --- ACCIÓN: LISTADO AJAX (Con filtros) ---
 if (isset($_GET['action']) && $_GET['action'] === 'listar') {

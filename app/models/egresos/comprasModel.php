@@ -238,4 +238,21 @@ public function procesarAjusteFaltante($compra_id, $distribucion, $user_id) {
         return ['success' => false, 'message' => 'Error en base de datos: ' . $e->getMessage()];
     }
 }
+public function generarSiguienteFolio() {
+    // 1. Buscamos el valor máximo convirtiendo el texto a número
+    // Usamos COALESCE para que si la tabla está vacía, nos devuelva 0
+    $sql = "SELECT COALESCE(MAX(CAST(folio AS UNSIGNED)), 0) AS ultimo_folio FROM compras";
+    
+    $resultado = $this->db->query($sql);
+    
+    if ($resultado) {
+        $fila = $resultado->fetch_assoc();
+        $ultimoId = intval($fila['ultimo_folio']);
+        
+        // 2. Retornamos el siguiente número
+        return $ultimoId + 1;
+    }
+    
+    return 1; // Por si ocurre un error de conexión, empezamos en 1
+}
 }

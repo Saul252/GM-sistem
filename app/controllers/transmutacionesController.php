@@ -18,8 +18,8 @@ require_once __DIR__ . '/../models/mermasModel.php';
 require_once __DIR__ . '/../models/almacen/productosModel.php';
 require_once __DIR__ . '/../controllers/LayoutController.php';
 
-protegerPagina(); 
-
+protegerPagina('transmutaciones'); 
+$paginaActual='transmutaciones';
 $usuario_id = $_SESSION['id'] ?? $_SESSION['usuario_id'] ?? null;
 if (!$usuario_id) {
     if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['action'])) {

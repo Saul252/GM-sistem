@@ -3,7 +3,7 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../controllers/LayoutController.php';
 require_once __DIR__ . '/../models/proveedoresModel.php';
-protegerPagina(); 
+protegerPagina('proveedores'); 
 $model = new ProveedoresModel($conexion);
 $paginaActual = 'proveedores';
 

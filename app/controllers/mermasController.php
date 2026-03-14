@@ -10,7 +10,7 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../models/mermasModel.php';
 require_once __DIR__ . '/../models/almacen_model.php';
-protegerPagina(); 
+protegerPagina('Mermas'); 
 // ❌ QUITAR: LayoutController no se necesita aquí
  require_once __DIR__ . '/../controllers/LayoutController.php';
 

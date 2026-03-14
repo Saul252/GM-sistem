@@ -7,7 +7,7 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../controllers/LayoutController.php';
 require_once __DIR__ . '/../models/configuracionModel.php';
-protegerPagina(); 
+protegerPagina('Configuracion'); 
 class ConfiguracionController {
     private $model;
     private $conexion;
@@ -25,13 +25,14 @@ class ConfiguracionController {
      */
     public function index() {
         try {
-            $paginaActual = 'Configuracion';
-            
+           
             // Obtenemos datos desde el modelo
             $roles = $this->model->obtenerRoles();
             $modulosData = $this->model->obtenerModulos();
 
             // Cargamos la vista
+             $paginaActual = 'configuracionController';
+            
             $rutaVista = __DIR__ . '/../views/configuracion_view.php';
             
             if (!file_exists($rutaVista)) {

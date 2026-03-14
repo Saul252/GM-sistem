@@ -13,7 +13,6 @@ window.procesarVenta = function() {
     }
 
     // 3. Capturar valores de pago y totales del modal
-    // Limpiamos el texto del total por si tiene símbolos o comas
     const totalTexto = document.getElementById('totalFinalModal').innerText.replace(/[$,]/g, '');
     const totalVenta = parseFloat(totalTexto) || 0;
     const montoPagado = parseFloat(document.getElementById('monto_pagar').value) || 0;
@@ -33,8 +32,6 @@ window.procesarVenta = function() {
     }).then((result) => {
         if (result.isConfirmed) {
             
-            // Bloqueo del botón para evitar duplicados
-            // Buscamos el botón de finalizar venta dentro del modal
             const btnFinalizar = document.querySelector('#modalFinalizarVenta .btn-primary');
             if(btnFinalizar) btnFinalizar.disabled = true;
             
@@ -47,10 +44,7 @@ window.procesarVenta = function() {
 
             // 5. MAPEO DEL CARRITO CON DATOS DE ENTREGA
             const carritoFinal = window.carrito.map((item, index) => {
-                // Intentamos capturar el valor del input físico en el modal por si el listener falló
-               // CÁMBIALA POR ESTA (para que coincida con tu modal):
-const inputEntrega = document.querySelector(`.input-entrega-modal[data-index="${index}"]`);
-                // Prioridad: 1. Valor del input en el modal, 2. Valor guardado en el objeto, 3. Total vendido
+                const inputEntrega = document.querySelector(`.input-entrega-modal[data-index="${index}"]`);
                 let entregado = item.entrega_hoy; 
                 if (inputEntrega) {
                     entregado = parseFloat(inputEntrega.value);
@@ -78,9 +72,6 @@ const inputEntrega = document.querySelector(`.input-entrega-modal[data-index="${
                 carrito: carritoFinal
             };
 
-            // Debug en consola para que verifiques antes de que se cierre el proceso
-            console.log("Datos a enviar:", datos);
-
             // 7. Envío al servidor
             fetch('/cfsistem/app/backend/ventas/procesar_venta.php', {
                 method: 'POST',
@@ -91,47 +82,56 @@ const inputEntrega = document.querySelector(`.input-entrega-modal[data-index="${
                 if (!res.ok) throw new Error('Error en la respuesta del servidor');
                 return res.json();
             })
-           .then(res => {
-    if (res.status === 'success') {
-        Swal.fire({
-            title: '¡Venta Exitosa!',
-            html: `Se ha generado el folio: <b>${res.folio}</b><br><br>Seleccione el tipo de impresión:`,
-            icon: 'success',
-            showDenyButton: true,
-            showCancelButton: true,
-            confirmButtonText: '<i class="bi bi-currency-dollar"></i> Con Precios',
-            denyButtonText: '<i class="bi bi-hash"></i> Sin Precios',
-            cancelButtonText: 'Cerrar',
-            confirmButtonColor: '#198754', // Verde
-            denyButtonColor: '#0dcaf0',    // Azul info
-        }).then((result) => {
-            let url = '';
-            
-            if (result.isConfirmed) {
-                // Ticket Con Precio
-                url = `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`;
-            } else if (result.isDenied) {
-                // Ticket Sin Precio
-                url = `/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=${res.id_venta}`;
-            }
+            .then(res => {
+              if (res.status === 'success') {
+                    // 1. Determinar si es éxito total o parcial para el icono
+                    const iconoFinal = res.entregado_total ? 'success' : 'warning';
+                    const tituloFinal = res.entregado_total ? '¡Venta Exitosa!' : 'Atención: Entrega Incompleta';
 
-            if (url !== '') {
-                window.open(url, '_blank');
-                // Opcional: Recargar página o limpiar formulario tras imprimir
-                location.reload(); 
-            } else if (result.isDismissed) {
-                location.reload();
-            }
-        });
-    } else {
-        Swal.fire('Error', res.message || 'Error desconocido', 'error');
-        if(typeof btnFinalizar !== 'undefined') btnFinalizar.disabled = false;
-    }
-})
+                    Swal.fire({
+                        title: tituloFinal,
+                        // 2. USAR EL MENSAJE DETALLADO DEL PHP (res.message)
+                        html: `
+                            <div class="alert ${res.entregado_total ? 'alert-success' : 'alert-warning'} border-0 small shadow-sm text-start">
+                                ${res.message}
+                            </div>
+                            <p class="mb-1">Folio generado: <b>${res.folio}</b></p>
+                            <p class="text-muted small">¿Deseas imprimir el ticket ahora?</p>
+                        `,
+                        icon: iconoFinal,
+                        showDenyButton: true,
+                        showCancelButton: true,
+                        confirmButtonText: '<i class="bi bi-currency-dollar"></i> Con Precios',
+                        denyButtonText: '<i class="bi bi-hash"></i> Sin Precios',
+                        cancelButtonText: 'Cerrar',
+                        confirmButtonColor: '#198754',
+                        denyButtonColor: '#0dcaf0',
+                    }).then((result) => {
+                        let url = '';
+                        if (result.isConfirmed) {
+                            url = `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`;
+                        } else if (result.isDenied) {
+                            url = `/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=${res.id_venta}`;
+                        }
+
+                        if (url !== '') {
+                            window.open(url, '_blank');
+                            location.reload(); 
+                        } else {
+                            location.reload();
+                        }
+                    });
+                } else {
+                    // Error crítico (ej: stock 0 absoluto o error de SQL)
+                    Swal.fire('Error al procesar', res.message || 'Error desconocido', 'error');
+                    if(btnFinalizar) btnFinalizar.disabled = false;
+                }
+            })
             .catch(err => {
                 console.error("Error en Fetch:", err);
                 Swal.fire('Error Crítico', 'No se pudo conectar con el servidor.', 'error');
-                if(btnFinalizar) btnFinalizar.disabled = false;
+                const btnFinalizarBtn = document.querySelector('#modalFinalizarVenta .btn-primary');
+                if(btnFinalizarBtn) btnFinalizarBtn.disabled = false;
             });
         }
     });

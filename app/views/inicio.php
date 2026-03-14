@@ -110,7 +110,7 @@ $paginaActual = 'Inicio';
 <?php endif; ?>
 
 <!-- MERMAS -->
-<?php if (puedeVerModulo('mermas')): ?>
+<?php if (puedeVerModulo('Mermas')): ?>
 <div class="col-md-4 col-lg-3">
     <a href="/cfsistem/app/controllers/mermasController.php" class="text-decoration-none text-dark">
         <div class="card card-modulo text-center">

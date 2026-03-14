@@ -1,7 +1,7 @@
 <?php
 // 1. INCLUSIONES Y SEGURIDAD
 require_once __DIR__ . '/../../includes/auth.php';
-protegerPagina();
+protegerPagina('Entregas');
 require_once __DIR__ . '/../controllers/LayoutController.php';
 require_once __DIR__ . '/../../config/conexion.php';
 

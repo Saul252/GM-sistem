@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../../includes/auth.php';
-protegerPagina();
+protegerPagina('Configuracion');
 require_once __DIR__ . '/../../includes/sidebar.php';
 require_once __DIR__ . '/../../config/conexion.php';
 

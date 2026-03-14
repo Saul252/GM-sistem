@@ -6,7 +6,7 @@ error_reporting(E_ALL);
 
 // 2. Seguridad y Sesión
 require_once __DIR__ . '/../../includes/auth.php';
-protegerPagina(); 
+
 
 // 3. Carga de dependencias
 require_once __DIR__ . '/../../config/conexion.php';
@@ -15,7 +15,7 @@ require_once __DIR__ . '/../models/almacen/productosModel.php';
 require_once __DIR__ . '/../models/almacen/categoriasModel.php'; 
 
 require_once __DIR__ . '/../controllers/LayoutController.php';
-
+protegerPagina('almacenes'); 
 class AlmacenController {
     private $model;
     private $productoModel;

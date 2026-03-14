@@ -204,8 +204,15 @@ require_once $ruta;
                                 </td>
 
                                 <td class="text-muted small"><?= date('d/m/Y', strtotime($e['fecha'])) ?></td>
-                                <td class="fw-bold text-dark"><?= $e['folio'] ?></td>
-
+                               <td class="fw-bold text-dark">
+    <?php 
+        // Determinamos el prefijo según el tipo
+        $prefijo = ($e['tipo'] == 'compra') ? 'FC-' : 'FG-'; 
+        
+        // Imprimimos el prefijo unido al folio
+        echo $prefijo . $e['folio']; 
+    ?>
+</td>
                                 <td>
                                     <span
                                         class="badge rounded-pill <?= $e['tipo'] == 'compra' ? 'bg-primary' : 'bg-warning text-dark' ?>">

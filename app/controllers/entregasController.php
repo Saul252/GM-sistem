@@ -1,11 +1,12 @@
 <?php
 require_once __DIR__ . '/../../includes/auth.php';
-protegerPagina(); 
+
 
 require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../models/entregasModel.php'; 
 require_once __DIR__ . '/../controllers/LayoutController.php';
-
+protegerPagina('entregas'); 
+$paginaActual='entregas';
 $modelo = new EntregaModel($conexion);
 
 // Datos de sesión
