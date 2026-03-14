@@ -10,13 +10,15 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../controllers/LayoutController.php';
 require_once __DIR__ . '/../models/egresos_model.php';
-require_once __DIR__ . '/../models/egresos/comprasModel.php';require_once __DIR__ . '/../models/egresos/comprasModel.php';
-
+require_once __DIR__ . '/../models/egresos/comprasModel.php';
+require_once __DIR__ . '/../models/proveedoresModel.php';
 require_once __DIR__ . '/../models/almacen/categoriasModel.php';
 protegerPagina('compras'); 
 $egresoModel = new EgresoModel($conexion);
 $comprasModel = new CompraModel($conexion);
-$categoriasModel= new CategoriaModel($conexion);
+$categoriasModel = new CategoriaModel($conexion);
+$proveedorModel = new ProveedoresModel($conexion); // Usa una variable distinta
+
 $paginaActual = 'compras';
 if (isset($_GET['action']) && $_GET['action'] === 'guardarCompraInventario') {
     if (ob_get_length()) ob_clean(); 
@@ -158,6 +160,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     
     $almacenes = $egresoModel->obtenerAlmacenesActivos();
     $productos = $comprasModel->obtenerProductos(); 
+    // ... dentro del bloque GET ...
+
+$proveedores = $proveedorModel->listarTodos(); // <-- AÑADE ESTA LÍNEA
+
+$tituloPagina = "Gestión de Egresos";
+require_once __DIR__ . '/../views/egresos_view.php';
 
     $tituloPagina = "Gestión de Egresos";
     require_once __DIR__ . '/../views/egresos_view.php';
@@ -229,6 +237,46 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerDetalleMovimiento') {
             'success' => false, 
             'message' => $e->getMessage()
         ]);
+    }
+    exit;
+}
+// --- ACCIÓN: LISTAR PROVEEDORES (AJAX) ---
+if (isset($_GET['action']) && $_GET['action'] === 'getProveedoresJSON') {
+    while (ob_get_level()) ob_end_clean(); 
+    header('Content-Type: application/json; charset=utf-8');
+    try {
+        $lista = $proveedorModel->listarTodos();
+        echo json_encode($lista ?: []);
+    } catch (Exception $e) {
+        echo json_encode(['error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// --- ACCIÓN: GUARDAR PROVEEDOR RÁPIDO (AJAX) ---
+if (isset($_GET['action']) && $_GET['action'] === 'guardarProveedor') {
+    while (ob_get_level()) ob_end_clean(); 
+    header('Content-Type: application/json; charset=utf-8');
+    try {
+        $datos = [
+            'nombre_comercial' => trim($_POST['nombre_comercial'] ?? ''),
+            'razon_social'     => trim($_POST['razon_social'] ?? ''),
+            'rfc'              => trim($_POST['rfc'] ?? 'XAXX010101000'),
+            'correo'           => trim($_POST['correo'] ?? ''),
+            'telefono'         => trim($_POST['telefono'] ?? '')
+        ];
+
+        if (empty($datos['nombre_comercial'])) {
+            throw new Exception("El nombre comercial es obligatorio.");
+        }
+
+        if ($proveedorModel->guardar($datos)) {
+            echo json_encode(['success' => true, 'message' => 'Proveedor guardado']);
+        } else {
+            throw new Exception("No se pudo guardar en la base de datos.");
+        }
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
     exit;
 }

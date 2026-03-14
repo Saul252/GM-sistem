@@ -20,11 +20,20 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
                 <div class="modal-body bg-light">
                     <div class="card mb-4 border-0 shadow-sm">
                         <div class="card-body row g-3">
-                            <div class="col-md-4">
-                                <label class="form-label small fw-bold">Proveedor</label>
-                                <input type="text" name="proveedor" class="form-control"
-                                    placeholder="Nombre del proveedor" required>
-                            </div>
+                           <div class="col-md-4">
+    <label class="form-label small fw-bold">Proveedor</label>
+    <div class="input-group">
+        <select name="proveedor" id="select_proveedor" class="form-select" required>
+            <option value="">Seleccione o busque un proveedor...</option>
+            <?php foreach($proveedores as $p): ?>
+                <option value="<?= $p['nombre_comercial'] ?>"><?= $p['nombre_comercial'] ?></option>
+            <?php endforeach; ?>
+        </select>
+        <button class="btn btn-outline-success" type="button" onclick="abrirModalNuevoProveedor()">
+            <i class="bi bi-plus-lg"></i>
+        </button>
+    </div>
+</div>
                             <div class="col-md-2">
     <label class="form-label small fw-bold">Folio de Factura</label>
     <input type="text" id="folio_compra" name="folio" class="form-control" placeholder="Cargando..." readonly required>
@@ -103,6 +112,7 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
     </div>
 </div>
 <?php require_once __DIR__ . '/agregarPoductoModal.php'; ?>
+<?php require_once __DIR__ . '/modalProveedoresCompra.php'; ?>
 
 <script>
 /**
@@ -580,4 +590,32 @@ function procesarGuardadoCompra(event) {
     });
 }
 
+
+</script>
+<script>
+    $(document).ready(function() {
+    // Inicializar buscador inteligente en el modal de compra
+    $('#select_proveedor').select2({
+        theme: 'bootstrap-5', // Si usas el adaptador de bootstrap 5
+        dropdownParent: $('#modalNuevaCompra'), // CRÍTICO: Para que funcione dentro de un modal
+        width: '100%',
+        placeholder: 'Escribe para buscar proveedor...'
+    });
+});
+
+// Función para refrescar la lista de proveedores sin recargar página
+function actualizarListaProveedores() {
+    fetch('egresosController.php?action=getProveedoresJSON')
+        .then(res => res.json())
+        .then(data => {
+            let $select = $('#select_proveedor');
+            $select.empty().append('<option value="">Seleccione o busque un proveedor...</option>');
+            
+            data.forEach(p => {
+                $select.append(new Option(p.nombre_comercial, p.nombre_comercial));
+            });
+            
+            $select.trigger('change');
+        });
+}
 </script>
