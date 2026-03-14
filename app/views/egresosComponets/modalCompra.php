@@ -3,7 +3,7 @@
 const USER_ALMACEN_ID = <?= json_encode($_SESSION['almacen_id']) ?>;
 const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
 </script>
-   <link href="/cfsistem/css/modalCompras.css" rel="stylesheet">
+<link href="/cfsistem/css/modalCompras.css" rel="stylesheet">
 <div class="modal fade" id="modalNuevaCompra" tabindex="-1" aria-labelledby="modalNuevaCompraLabel" aria-hidden="true"
     data-bs-backdrop="static">
     <div class="modal-dialog modal-xl">
@@ -20,59 +20,64 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
                 <div class="modal-body bg-light">
                     <div class="card mb-4 border-0 shadow-sm">
                         <div class="card-body row g-3">
-                           <div class="col-md-4">
-    <label class="form-label small fw-bold">Proveedor</label>
-    <div class="input-group">
-        <select name="proveedor" id="select_proveedor" class="form-select" required>
-            <option value="">Seleccione o busque un proveedor...</option>
-            <?php foreach($proveedores as $p): ?>
-                <option value="<?= $p['nombre_comercial'] ?>"><?= $p['nombre_comercial'] ?></option>
-            <?php endforeach; ?>
-        </select>
-        <button class="btn btn-outline-success" type="button" onclick="abrirModalNuevoProveedor()">
-            <i class="bi bi-plus-lg"></i>
-        </button>
-    </div>
-</div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold">Proveedor</label>
+                                <div class="input-group">
+                                    <select name="proveedor" id="select_proveedor" class="form-select" required>
+                                        <option value="">Seleccione o busque un proveedor...</option>
+                                        <?php foreach($proveedores as $p): ?>
+                                        <option value="<?= $p['nombre_comercial'] ?>"><?= $p['nombre_comercial'] ?>
+                                        </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <button class="btn btn-outline-success" type="button"
+                                        onclick="abrirModalNuevoProveedor()">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
+                            </div>
                             <div class="col-md-2">
-    <label class="form-label small fw-bold">Folio de Factura</label>
-    <input type="text" id="folio_compra" name="folio" class="form-control" placeholder="Cargando..." readonly required>
-</div>
-                          <div class="col-md-4">
-    <div class="mac-select-container">
-        <label class="mac-label">
-            <i class="bi bi-box-seam"></i> Almacén de Cargo
-        </label>
-        
-        <?php $es_admin = ($_SESSION['rol_id'] == 1); ?>
-        
-        <div class="select-wrapper">
-            <select id="almacen_id_cabecera_visual"
-                class="mac-select <?= $es_admin ? 'admin-active' : 'user-locked' ?>"
-                <?= !$es_admin ? 'disabled' : 'name="almacen_id_cabecera"' ?> required>
-                
-                <?php if ($es_admin): ?>
-                    <option value="">Seleccionar ubicación...</option>
-                <?php endif; ?>
+                                <label class="form-label small fw-bold">Folio de Factura</label>
+                                <input type="text" id="folio_compra" name="folio" class="form-control"
+                                    placeholder="Cargando..." readonly required>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mac-select-container">
+                                    <label class="mac-label">
+                                        <i class="bi bi-box-seam"></i> Almacén de Cargo
+                                    </label>
 
-                <?php foreach($almacenes as $a): ?>
-                    <option value="<?= $a['id'] ?>"
-                        <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
-                        <?= $a['nombre'] ?> <?= ($a['id'] == $_SESSION['almacen_id'] && !$es_admin) ? ' •' : '' ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-            <i class="bi bi-chevron-down custom-arrow"></i>
-        </div>
+                                    <?php $es_admin = ($_SESSION['rol_id'] == 1); ?>
 
-        <?php if (!$es_admin): ?>
-            <input type="hidden" name="almacen_id_cabecera" value="<?= $_SESSION['almacen_id'] ?>">
-            <span class="mac-badge-locked">
-                <i class="bi bi-lock-fill"></i> Privilegios de sede actual
-            </span>
-        <?php endif; ?>
-    </div>
-</div>
+                                    <div class="select-wrapper">
+                                        <select id="almacen_id_cabecera_visual"
+                                            class="mac-select <?= $es_admin ? 'admin-active' : 'user-locked' ?>"
+                                            <?= !$es_admin ? 'disabled' : 'name="almacen_id_cabecera"' ?> required>
+
+                                            <?php if ($es_admin): ?>
+                                            <option value="">Seleccionar ubicación...</option>
+                                            <?php endif; ?>
+
+                                            <?php foreach($almacenes as $a): ?>
+                                            <option value="<?= $a['id'] ?>"
+                                                <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
+                                                <?= $a['nombre'] ?>
+                                                <?= ($a['id'] == $_SESSION['almacen_id'] && !$es_admin) ? ' •' : '' ?>
+                                            </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <i class="bi bi-chevron-down custom-arrow"></i>
+                                    </div>
+
+                                    <?php if (!$es_admin): ?>
+                                    <input type="hidden" name="almacen_id_cabecera"
+                                        value="<?= $_SESSION['almacen_id'] ?>">
+                                    <span class="mac-badge-locked">
+                                        <i class="bi bi-lock-fill"></i> Privilegios de sede actual
+                                    </span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
                             <div class="col-md-3">
                                 <label class="form-label small fw-bold">Evidencia (PDF/IMG)</label>
                                 <input type="file" name="evidencia_compra" class="form-control" accept="image/*,.pdf">
@@ -88,7 +93,7 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
                         <span><i class="bi bi-list-check me-2"></i>Detalle de Productos</span>
                         <span class="badge bg-dark" id="conteoItems">0 Productos</span>
                     </h6>
-        
+
 
                     <div id="contenedorItemsCompra"></div>
 
@@ -172,7 +177,7 @@ const originalAbrirModal = window.abrirModalCompra;
 window.abrirModalCompra = function() {
     // Llamamos a la lógica original que ya tenías
     originalAbrirModal();
-    
+
     // Disparamos la carga del folio automático
     asignarSiguienteFolioCompra();
 };
@@ -181,8 +186,12 @@ window.abrirModalCompra = function() {
  * Listener para asegurar que si abres el modal por otros medios (como data-bs-toggle), 
  * también se cargue el folio.
  */
-$(document).on('show.bs.modal', '#modalNuevaCompra', function () {
-    asignarSiguienteFolioCompra();
+window.addEventListener('load', function() {
+    if (window.jQuery) {
+        $(document).on('show.bs.modal', '#modalNuevaCompra', function() {
+            asignarSiguienteFolioCompra();
+        });
+    }
 });
 function agregarFilaCompra() {
     const idUnico = Date.now();
@@ -194,12 +203,12 @@ function agregarFilaCompra() {
     });
 
     let filasAlmacenes = '';
-    
+
     // LÓGICA DE FILTRADO: 
     // Si es Admin, ve todos. Si no, solo ve el que coincida con USER_ALMACEN_ID
-    const almacenesAMostrar = ES_ADMIN 
-        ? DATA_COMPRAS.almacenes 
-        : DATA_COMPRAS.almacenes.filter(alm => alm.id == USER_ALMACEN_ID);
+    const almacenesAMostrar = ES_ADMIN ?
+        DATA_COMPRAS.almacenes :
+        DATA_COMPRAS.almacenes.filter(alm => alm.id == USER_ALMACEN_ID);
 
     almacenesAMostrar.forEach(alm => {
         // Si no es admin, bloqueamos el checkbox para que no pueda desmarcar su propio almacén
@@ -333,6 +342,7 @@ function agregarFilaCompra() {
     }, 50);
     actualizarConteo();
 }
+
 function actualizarLabelsUnidad(id, select) {
     const opt = $(select).find(':selected');
     const factor = opt.data('factor') || 1;
@@ -365,8 +375,8 @@ function recalcularTotales(id) {
     card.find('.span-total-base').text(totalReal.toLocaleString());
     card.find('.hidden-total-piezas').val(totalReal);
     card.find('.hidden-faltante').val(faltante);
-// --- AGREGAR ESTA LÍNEA ---
-    calcularPrecioUnitarioLote(id); 
+    // --- AGREGAR ESTA LÍNEA ---
+    calcularPrecioUnitarioLote(id);
     // --------------------------
     validarReparto(id);
     actualizarGranTotal();
@@ -436,11 +446,11 @@ function refrescarListaProductosCompra(nuevoIdSeleccionar = null) {
         if (typeof DATA_COMPRAS !== 'undefined') {
             DATA_COMPRAS.productos = productos;
         }
-        
+
         $('.select2-compra').each(function() {
             const select = $(this);
             const valorActual = select.val();
-            
+
             let html = '<option value="">-- Buscar Producto --</option>';
             productos.forEach(p => {
                 html += `<option value="${p.id}" 
@@ -448,14 +458,14 @@ function refrescarListaProductosCompra(nuevoIdSeleccionar = null) {
                             data-ubase="${p.unidad_medida}" 
                             data-urep="${p.unidad_reporte}">${p.nombre} (${p.sku})</option>`;
             });
-            
+
             select.html(html).val(valorActual).trigger('change.select2');
         });
-        
-        if(nuevoIdSeleccionar && window.ultimaFilaEditada) {
-             const filaSelect = $(`#card_item_${window.ultimaFilaEditada} .select2-compra`);
-             filaSelect.val(nuevoIdSeleccionar).trigger('change');
-             window.ultimaFilaEditada = null;
+
+        if (nuevoIdSeleccionar && window.ultimaFilaEditada) {
+            const filaSelect = $(`#card_item_${window.ultimaFilaEditada} .select2-compra`);
+            filaSelect.val(nuevoIdSeleccionar).trigger('change');
+            window.ultimaFilaEditada = null;
         }
     }, 'json').fail(function(e) {
         console.error("Error al obtener productos:", e.responseText);
@@ -464,13 +474,13 @@ function refrescarListaProductosCompra(nuevoIdSeleccionar = null) {
 
 function calcularPrecioUnitarioLote(id) {
     const card = $(`#card_item_${id}`);
-    
+
     // Obtenemos el costo total que el usuario escribió para ese renglón
     const costoTotalRenglon = parseFloat(card.find('.input-costo-total').val()) || 0;
-    
+
     // Obtenemos el total de piezas físicas que SI llegaron (ya restado el faltante)
     const piezasReales = parseFloat(card.find('.hidden-total-piezas').val()) || 0;
-    
+
     let precioUnitario = 0;
     if (piezasReales > 0) {
         precioUnitario = costoTotalRenglon / piezasReales;
@@ -478,7 +488,7 @@ function calcularPrecioUnitarioLote(id) {
 
     // Guardamos en el input oculto que se enviará al PHP
     card.find('.hidden-precio-lote').val(precioUnitario.toFixed(4));
-    
+
     // Mostramos visualmente al usuario para confirmación
     card.find('.span-precio-lote').text('$ ' + precioUnitario.toLocaleString(undefined, {
         minimumFractionDigits: 2,
@@ -589,18 +599,24 @@ function procesarGuardadoCompra(event) {
         }
     });
 }
-
-
 </script>
 <script>
-    $(document).ready(function() {
-    // Inicializar buscador inteligente en el modal de compra
-    $('#select_proveedor').select2({
-        theme: 'bootstrap-5', // Si usas el adaptador de bootstrap 5
-        dropdownParent: $('#modalNuevaCompra'), // CRÍTICO: Para que funcione dentro de un modal
-        width: '100%',
-        placeholder: 'Escribe para buscar proveedor...'
-    });
+window.addEventListener('load', function() {
+    // Verificamos que jQuery y Select2 existan antes de ejecutar
+    if (window.jQuery && $.fn.select2) {
+        
+        // Inicializar buscador inteligente en el modal de compra
+        $('#select_proveedor').select2({
+            theme: 'bootstrap-5',
+            dropdownParent: $('#modalNuevaCompra'), // Mantiene el foco dentro del modal
+            width: '100%',
+            placeholder: 'Escribe para buscar proveedor...'
+        });
+
+        console.log("Select2 de proveedores inicializado correctamente.");
+    } else {
+        console.error("Error: jQuery o Select2 no se cargaron a tiempo.");
+    }
 });
 
 // Función para refrescar la lista de proveedores sin recargar página
@@ -610,11 +626,11 @@ function actualizarListaProveedores() {
         .then(data => {
             let $select = $('#select_proveedor');
             $select.empty().append('<option value="">Seleccione o busque un proveedor...</option>');
-            
+
             data.forEach(p => {
                 $select.append(new Option(p.nombre_comercial, p.nombre_comercial));
             });
-            
+
             $select.trigger('change');
         });
 }

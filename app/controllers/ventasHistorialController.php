@@ -9,8 +9,10 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../controllers/LayoutController.php';
 require_once __DIR__ . '/../models/ventasHistorialModel.php';
+require_once __DIR__ . '/../models/ventas_model.php';
 protegerPagina('ventashistorial');
 $ventasModel = new VentaHistorialModel($conexion);
+
 $paginaActual = 'ventashistorial';
 
 // --- ACCIÓN: LISTADO AJAX (Con filtros) ---
@@ -97,6 +99,36 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerDetalle') {
         echo json_encode($detalle);
     } catch (Throwable $e) {
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
+    exit;
+}
+// --- ACCIÓN: CANCELAR VENTA (POST) ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['action'] === 'cancelarVenta') {
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+
+    try {
+        // Leemos el cuerpo de la petición (JSON)
+        $input = json_decode(file_get_contents("php://input"), true);
+        
+        $venta_id   = intval($input['id_venta'] ?? 0);
+        $motivo     = trim($input['motivo'] ?? 'Cancelación desde historial');
+        $usuario_id = $_SESSION['usuario_id'] ?? 1;
+
+        if ($venta_id <= 0) {
+            throw new Exception("ID de venta no proporcionado o inválido.");
+        }
+
+        // Ejecutamos la lógica en el modelo
+        $resultado = VentasModel::cancelarVenta($conexion, $venta_id, $usuario_id, $motivo);
+        
+        echo json_encode($resultado);
+
+    } catch (Throwable $e) {
+        echo json_encode([
+            'status'  => 'error', 
+            'message' => $e->getMessage()
+        ]);
     }
     exit;
 }

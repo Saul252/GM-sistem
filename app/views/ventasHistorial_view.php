@@ -381,6 +381,9 @@
                         <a class="btn btn-sm btn-info text-white shadow-sm" href="/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=${v.id}" target="_blank" title="Imprimir Remisión sin Precios">
                             <i class="bi bi-file-earmark-text"></i> Remisión
                         </a>
+                        <button class="btn btn-sm btn-danger shadow-sm" onclick="confirmarCancelacion(${v.id}, '${v.folio}')" title="Cancelar Venta">
+                <i class="bi bi-x-circle-fill"></i> Cancelar
+            </button>
                     </div>
                 </td>
             </tr>`;
@@ -655,8 +658,81 @@ $('#tbodyHistorial').html(data.historial.length > 0 ? data.historial.map(h => {
         $('#controlesGuardar').toggleClass('d-none', !e);
     }
 
-    $(document).ready(getVentas);
+   $(document).ready(function() {
+    // 1. Carga inicial de datos
+    getVentas();
+
+    // 2. Escuchadores para filtros (opcional, pero recomendado para centralizar)
+    $('#f_rango').on('change', togglePerso);
+    // getVentas ya se llama mediante onchange/onkeyup en tu HTML, lo cual está bien.
+    
+    console.log("Sistema de historial listo.");
+});
     </script>
+<script>
+    async function confirmarCancelacion(idVenta, folio) {
+    // 1. Pedimos confirmación y motivo
+    const { value: motivo } = await Swal.fire({
+        title: `¿Cancelar Venta ${folio}?`,
+        text: "Esta acción devolverá el stock al almacén y anulará los pagos realizados. No se puede deshacer.",
+        icon: 'warning',
+        input: 'text',
+        inputLabel: 'Motivo de la cancelación',
+        inputPlaceholder: 'Escriba por qué se cancela...',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, cancelar venta',
+        cancelButtonText: 'Regresar',
+        inputValidator: (value) => {
+            if (!value) {
+                return '¡Debes escribir un motivo para la cancelación!'
+            }
+        }
+    });
+
+    // 2. Si el usuario confirmó y escribió un motivo
+    if (motivo) {
+        // Mostramos loader mientras procesa
+        Swal.fire({
+            title: 'Procesando...',
+            didOpen: () => { Swal.showLoading() },
+            allowOutsideClick: false
+        });
+
+        try {
+            // Petición POST al controlador
+            const response = await fetch(`${URL_CONTROLLER}?action=cancelarVenta`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id_venta: idVenta,
+                    motivo: motivo
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                await Swal.fire({
+                    title: '¡Venta Cancelada!',
+                    text: result.message,
+                    icon: 'success',
+                    timer: 2000
+                });
+                
+                // Recargamos la tabla (la venta desaparecerá por el filtro del modelo)
+                getVentas(); 
+            } else {
+                Swal.fire('Error', result.message, 'error');
+            }
+        } catch (error) {
+            console.error("Error en la cancelación:", error);
+            Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
+        }
+    }
+}
+</script>
 </body>
 
 </html>

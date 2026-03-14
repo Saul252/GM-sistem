@@ -9,7 +9,7 @@ class EntregaModel {
     }
 
     // MANTIENE TU FUNCIÓN ORIGINAL DE LISTADO
-  public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_admin) {
+public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_admin) {
     $periodo = $filtros['periodo'] ?? 'semana';
     $f_inicio_user = $filtros['f_inicio'] ?? '';
     $f_fin_user = $filtros['f_fin'] ?? '';
@@ -33,15 +33,21 @@ class EntregaModel {
     $almacen_filtro = intval($filtros['almacen_id'] ?? 0);
     $target_almacen = ($almacen_usuario_sesion > 0) ? $almacen_usuario_sesion : $almacen_filtro;
 
+    // --- FILTRO ACTUALIZADO ---
+    // 1. Debe ser tipo 'salida'
+    // 2. No debe estar despachado (usuario_recibe_id NULL/0)
+    // 3. Si tiene venta, la venta debe estar 'activa'
+    // 4. NO debe existir en transmutacion_detalle (para ignorar conversiones de producto)
     $where = "WHERE m.tipo = 'salida' 
               AND (m.usuario_recibe_id IS NULL OR m.usuario_recibe_id = 0)
-              AND DATE(m.fecha) BETWEEN '$inicio' AND '$fin'";
+              AND DATE(m.fecha) BETWEEN '$inicio' AND '$fin'
+              AND (v.id IS NULL OR v.estado_general = 'activa')
+              AND td.id IS NULL"; 
     
     if ($target_almacen > 0) { 
         $where .= " AND m.almacen_origen_id = $target_almacen"; 
     }
 
-    // Consulta con Folio de Venta y Orden Descendente
     $sql = "SELECT 
                 m.*, 
                 v.folio as folio_venta,
@@ -55,9 +61,10 @@ class EntregaModel {
             LEFT JOIN almacenes a1 ON m.almacen_origen_id = a1.id
             LEFT JOIN usuarios u1 ON m.usuario_registra_id = u1.id
             LEFT JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
+            LEFT JOIN transmutacion_detalle td ON m.id = td.movimiento_id -- Unión para identificar transmutaciones
             $where 
             GROUP BY m.id 
-            ORDER BY m.fecha DESC";
+            ORDER BY m.id DESC"; // Orden estricto 89, 88, 87...
 
     $resultado = $this->db->query($sql);
     $data = [];
@@ -65,7 +72,7 @@ class EntregaModel {
     if ($resultado) {
         while ($row = $resultado->fetch_assoc()) {
             $data[] = [
-                'id'                => $row['id'], // Número de Operación
+                'id'                => $row['id'], 
                 'folio_venta'       => $row['folio_venta'] ?? '---',
                 'fecha_format'      => date('d/m/Y H:i', strtotime($row['fecha'])),
                 'producto'          => $row['prod_nombre'],

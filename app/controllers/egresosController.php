@@ -13,9 +13,12 @@ require_once __DIR__ . '/../models/egresos_model.php';
 require_once __DIR__ . '/../models/egresos/comprasModel.php';
 require_once __DIR__ . '/../models/proveedoresModel.php';
 require_once __DIR__ . '/../models/almacen/categoriasModel.php';
+require_once __DIR__ . '/../models/egresos/gastosModel.php';
+
 protegerPagina('compras'); 
 $egresoModel = new EgresoModel($conexion);
 $comprasModel = new CompraModel($conexion);
+$gastosModel = new GastoModel($conexion);
 $categoriasModel = new CategoriaModel($conexion);
 $proveedorModel = new ProveedoresModel($conexion); // Usa una variable distinta
 
@@ -201,6 +204,21 @@ if (isset($_GET['action']) && $_GET['action'] === 'procesarAjusteFaltante') {
     }
     exit;
 }
+// --- ACCIÓN: OBTENER SIGUIENTE FOLIO DE GASTO (AJAX) ---
+if (isset($_GET['action']) && $_GET['action'] === 'getSiguienteFolioGasto') {
+    if (ob_get_length()) ob_clean();
+    header('Content-Type: application/json');
+    
+    // Asumiendo que egresoModel tiene la lógica de folios para gastos generales
+    // Si creaste un GastoModel aparte, asegúrate de instanciarlo arriba y usarlo aquí
+    try {
+        $siguiente = $gastosModel->generarSiguienteFolioGasto();
+        echo json_encode(['success' => true, 'folio' => $siguiente]);
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit;
+}
 // --- ACCIÓN: OBTENER SIGUIENTE FOLIO (AJAX) ---
 if (isset($_GET['action']) && $_GET['action'] === 'getSiguienteFolio') {
     header('Content-Type: application/json');
@@ -255,8 +273,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'getProveedoresJSON') {
 
 // --- ACCIÓN: GUARDAR PROVEEDOR RÁPIDO (AJAX) ---
 if (isset($_GET['action']) && $_GET['action'] === 'guardarProveedor') {
+    // Limpiamos cualquier salida previa para evitar errores de JSON
     while (ob_get_level()) ob_end_clean(); 
     header('Content-Type: application/json; charset=utf-8');
+    
     try {
         $datos = [
             'nombre_comercial' => trim($_POST['nombre_comercial'] ?? ''),
@@ -266,17 +286,27 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardarProveedor') {
             'telefono'         => trim($_POST['telefono'] ?? '')
         ];
 
+        // 1. Validación básica de servidor
         if (empty($datos['nombre_comercial'])) {
             throw new Exception("El nombre comercial es obligatorio.");
         }
 
+        // 2. Intentar guardar en la BD
         if ($proveedorModel->guardar($datos)) {
-            echo json_encode(['success' => true, 'message' => 'Proveedor guardado']);
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Proveedor guardado exitosamente',
+                'nuevo_nombre' => $datos['nombre_comercial'] // <--- CLAVE PARA LA SELECCIÓN AUTOMÁTICA
+            ]);
         } else {
-            throw new Exception("No se pudo guardar en la base de datos.");
+            throw new Exception("Error interno: No se pudo registrar en la base de datos.");
         }
+        
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        echo json_encode([
+            'success' => false, 
+            'message' => $e->getMessage()
+        ]);
     }
     exit;
 }

@@ -38,18 +38,7 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar Select2 con el estilo de Bootstrap 5
-    // El dropdownParent es vital para que el buscador funcione dentro del modal de compra
-    if (typeof $.fn.select2 !== 'undefined') {
-        $('#select_proveedor').select2({
-            theme: 'bootstrap-5',
-            width: '100%',
-            dropdownParent: $('#modalNuevaCompra'), 
-            placeholder: 'Buscar proveedor existente...'
-        });
-    }
-});
+
 
 /**
  * Abre el modal de creación rápida asegurando el orden de capas (z-index)
@@ -121,23 +110,36 @@ function actualizarListaProveedores(seleccionarNombre = null) {
         .then(res => res.json())
         .then(data => {
             const $select = $('#select_proveedor');
-            
-            // Limpiar y reconstruir
             $select.empty().append('<option value="">Seleccione o busque un proveedor...</option>');
             
             data.forEach(p => {
-                const option = new Option(p.nombre_comercial, p.nombre_comercial, false, false);
+                // Usamos trim() para evitar espacios fantasma
+                const option = new Option(p.nombre_comercial.trim(), p.nombre_comercial.trim(), false, false);
                 $select.append(option);
             });
 
-            // Si acabamos de crear uno, lo seleccionamos
             if (seleccionarNombre) {
-                $select.val(seleccionarNombre).trigger('change');
-            } else {
-                $select.trigger('change');
+                console.log("Intentando seleccionar:", seleccionarNombre.trim());
+                $select.val(seleccionarNombre.trim()).trigger('change');
             }
         });
 }
+window.addEventListener('load', function() {
+    // Verificamos que tanto jQuery como el plugin Select2 estén disponibles
+    if (window.jQuery && $.fn.select2) {
+        
+        $('#select_proveedor').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: 'Escribe para buscar...',
+            dropdownParent: $('#modalNuevaCompra') // Mantiene el buscador funcional dentro del modal
+        });
+
+        console.log("Select2 inicializado correctamente.");
+    } else {
+        console.warn("Select2 no se pudo inicializar: jQuery o el plugin no están cargados.");
+    }
+});
 </script>
 
 <style>
