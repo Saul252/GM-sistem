@@ -255,4 +255,69 @@ public function generarSiguienteFolio() {
     
     return 1; // Por si ocurre un error de conexión, empezamos en 1
 }
+public function cancelarCompra($id_compra, $id_usuario) {
+    $this->db->begin_transaction();
+    try {
+        // 1. Obtener datos básicos de la compra para el Kardex
+        $q = $this->db->prepare("SELECT folio, almacen_id FROM compras WHERE id = ? FOR UPDATE");
+        $q->bind_param("i", $id_compra);
+        $q->execute();
+        $compra = $q->get_result()->fetch_assoc();
+        
+        if (!$compra) throw new Exception("Compra no encontrada.");
+
+        // 2. OBTENER INFORMACIÓN DE LOS LOTES ANTES DE ELIMINARLOS
+        // Buscamos cuánto stock real hay en los lotes que generó esta compra
+        $sqlLotes = "SELECT ls.producto_id, ls.almacen_id, ls.cantidad_actual 
+                     FROM lotes_stock ls
+                     INNER JOIN lotes_ingresos_detalle lid ON ls.id = lid.lote_id
+                     INNER JOIN detalle_compra dc ON lid.detalle_compra_id = dc.id
+                     WHERE dc.compra_id = ?";
+        
+        $stmtLotes = $this->db->prepare($sqlLotes);
+        $stmtLotes->bind_param("i", $id_compra);
+        $stmtLotes->execute();
+        $resLotes = $stmtLotes->get_result();
+
+        // 3. PROCESAR EL DESCUENTO BASADO EN LOS DATOS EXTRAÍDOS
+        while ($lote = $resLotes->fetch_assoc()) {
+            $p_id = $lote['producto_id'];
+            $a_id = $lote['almacen_id'];
+            $cantidad_revertir = $lote['cantidad_actual'];
+
+            // A. Descontar del inventario usando los IDs exactos que venían en el lote
+            $upd = $this->db->prepare("UPDATE inventario SET stock = stock - ? WHERE producto_id = ? AND almacen_id = ?");
+            $upd->bind_param("dii", $cantidad_revertir, $p_id, $a_id);
+            $upd->execute();
+
+            // B. Registrar Movimiento en Kardex
+            $sqlMov = "INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_origen_id, usuario_registra_id, referencia_id, observaciones) 
+                       VALUES (?, 'ajuste', ?, ?, ?, ?, ?)";
+            $stmtMov = $this->db->prepare($sqlMov);
+            $obs = "REVERSIÓN POR CANCELACIÓN - COMPRA: " . $compra['folio'];
+            $stmtMov->bind_param("idiiis", $p_id, $cantidad_revertir, $a_id, $id_usuario, $id_compra, $obs);
+            $stmtMov->execute();
+        }
+
+        // 4. LIMPIEZA FINAL: Ahora sí borramos los lotes y cambiamos el estado
+        // Borramos los lotes asociados
+        $this->db->query("DELETE FROM lotes_stock WHERE id IN (
+            SELECT lote_id FROM lotes_ingresos_detalle lid 
+            JOIN detalle_compra dc ON lid.detalle_compra_id = dc.id 
+            WHERE dc.compra_id = $id_compra
+        )");
+
+        // Cambiamos el estado de la compra
+        $updEstado = $this->db->prepare("UPDATE compras SET estado = 'cancelada' WHERE id = ?");
+        $updEstado->bind_param("i", $id_compra);
+        $updEstado->execute();
+
+        $this->db->commit();
+        return ['success' => true, 'message' => "Stock sincronizado y compra anulada correctamente."];
+
+    } catch (Exception $e) {
+        $this->db->rollback();
+        return ['success' => false, 'message' => "Error al cancelar: " . $e->getMessage()];
+    }
+}
 }

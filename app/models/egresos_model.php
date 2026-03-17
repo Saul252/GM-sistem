@@ -15,30 +15,37 @@ public function obtenerAlmacenesActivos() {
      * Usa un UNION para juntar ambas tablas en una sola lista para la tabla principal
      */
 public function obtenerTodosLosEgresos($desde, $hasta, $almacen_id = 0, $tipo_filtro = 'todos') {
-    // 1. Definimos los fragmentos de WHERE para el almacén
+    // 1. Fragmentos de WHERE para el almacén
     $whereAlmacenC = ($almacen_id > 0) ? " AND c.almacen_id = ?" : "";
     $whereAlmacenG = ($almacen_id > 0) ? " AND g.almacen_id = ?" : "";
 
-    // 2. Query de Compras
+    // 2. Query de Compras: Solo listamos las que NO están canceladas
     $queryCompra = "
         SELECT 
             c.id, c.folio, c.fecha_compra AS fecha, c.proveedor AS entidad, 
             c.total, 'compra' AS tipo, c.tiene_faltantes, c.documento_url,
             IFNULL((SELECT SUM(cantidad_pendiente) FROM faltantes_ingreso WHERE compra_id = c.id), 0) AS piezas_faltantes,
-            a.nombre AS almacen_nombre
+            a.nombre AS almacen_nombre,
+            c.estado
         FROM compras c
         JOIN almacenes a ON c.almacen_id = a.id
-        WHERE (c.fecha_compra BETWEEN ? AND ?) $whereAlmacenC";
+        WHERE (c.fecha_compra BETWEEN ? AND ?) 
+        AND c.estado != 'cancelada' 
+        $whereAlmacenC";
 
-    // 3. Query de Gastos
+    // 3. Query de Gastos: Generalmente los gastos nacen 'pagados'
+    // Si llegas a implementar cancelación de gastos, añade aquí: AND g.estado != 'cancelado'
     $queryGasto = "
         SELECT 
             g.id, g.folio, g.fecha_gasto AS fecha, g.beneficiario AS entidad, 
             g.total, 'gasto' AS tipo, 0 AS tiene_faltantes, g.documento_url, 0 AS piezas_faltantes,
-            a.nombre AS almacen_nombre
+            a.nombre AS almacen_nombre,
+            g.estado
         FROM gastos g
         JOIN almacenes a ON g.almacen_id = a.id
-        WHERE (g.fecha_gasto BETWEEN ? AND ?) $whereAlmacenG";
+        WHERE (g.fecha_gasto BETWEEN ? AND ?) 
+        AND g.estado != 'cancelado'
+        $whereAlmacenG";
 
     // 4. Construcción de la SQL final
     if ($tipo_filtro === 'compra') {
@@ -46,29 +53,22 @@ public function obtenerTodosLosEgresos($desde, $hasta, $almacen_id = 0, $tipo_fi
     } elseif ($tipo_filtro === 'gasto') {
         $sql = $queryGasto . " ORDER BY fecha DESC, id DESC";
     } else {
-        // En UNION, cada consulta debe estar entre paréntesis
         $sql = "($queryCompra) UNION ALL ($queryGasto) ORDER BY fecha DESC, id DESC";
     }
 
     $stmt = $this->db->prepare($sql);
 
-    // 5. Manejo dinámico de bind_param (Corregido)
+    // 5. Bindeo de parámetros (Mantenemos tu lógica de 6, 4, 3 o 2 parámetros)
     if ($tipo_filtro === 'todos') {
         if ($almacen_id > 0) {
-            // CORRECCIÓN: 6 parámetros (ssi ssi)
-            // 1. $desde (s), 2. $hasta (s), 3. $almacen_id (i) -> para Compras
-            // 4. $desde (s), 5. $hasta (s), 6. $almacen_id (i) -> para Gastos
             $stmt->bind_param("ssissi", $desde, $hasta, $almacen_id, $desde, $hasta, $almacen_id);
         } else {
-            // 4 parámetros: desde, hasta, desde, hasta
             $stmt->bind_param("ssss", $desde, $hasta, $desde, $hasta);
         }
     } else {
         if ($almacen_id > 0) {
-            // 3 parámetros: desde, hasta, almacen
             $stmt->bind_param("ssi", $desde, $hasta, $almacen_id);
         } else {
-            // 2 parámetros: desde, hasta
             $stmt->bind_param("ss", $desde, $hasta);
         }
     }

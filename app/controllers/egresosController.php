@@ -29,7 +29,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardarCompraInventario') {
     
     try {
         // 1. Identificar al usuario y su almacén
-        $user_id = $_SESSION['user_id'] ?? 1;
+        $user_id =  $_SESSION['usuario_id'] ?? 1;
         $rol_id  = $_SESSION['rol_id'] ?? 0; // Asumiendo que 1 es Administrador
 
         // 2. Lógica de Almacén de Cargo (Cabecera)
@@ -309,4 +309,42 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardarProveedor') {
         ]);
     }
     exit;
+}
+// --- ACCIÓN: CANCELAR/ELIMINAR COMPRA ---
+if (isset($_GET['action']) && $_GET['action'] === 'cancelarCompra') {
+    // 1. Limpiamos cualquier salida previa (espacios o warnings) para no romper el JSON
+    if (ob_get_level()) ob_end_clean(); 
+    header('Content-Type: application/json; charset=utf-8');
+
+    try {
+        // 2. Verificación de sesión (Seguridad: ID de usuario 1)
+        if (!isset( $_SESSION['usuario_id'])) {
+            throw new Exception("Sesión expirada. Por favor, reingresa al sistema.");
+        }
+
+        // 3. Obtención de datos del POST
+        // El 'id' de la compra (ej. 6) viene del AJAX
+        $id_compra = intval($_POST['id'] ?? 0);
+        $id_usuario =  $_SESSION['usuario_id']; // Tu ID de usuario (ej. 1)
+
+        // 4. Validaciones iniciales
+        if ($id_compra <= 0) {
+            throw new Exception("ID de compra inválido.");
+        }
+
+        // 5. Llamada al método del modelo
+        // IMPORTANTE: Asegúrate que tu modelo reciba ($id_compra, $id_usuario) en ese orden
+        $resultado = $comprasModel->cancelarCompra($id_compra, $id_usuario);
+
+        // 6. Retornamos la respuesta del modelo (success true/false)
+        echo json_encode($resultado);
+
+    } catch (Exception $e) {
+        // En caso de error, enviamos el mensaje al JS
+        echo json_encode([
+            'success' => false,
+            'message' => 'Error en el controlador: ' . $e->getMessage()
+        ]);
+    }
+    exit; // Detenemos la ejecución para que no se imprima nada más
 }

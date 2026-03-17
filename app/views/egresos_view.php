@@ -290,7 +290,12 @@ if (isset($e['piezas_faltantes']) && $e['piezas_faltantes'] !== null): ?>
                                     <button class="btn btn-sm btn-light border"
                                         onclick="verDetalle('<?= $e['tipo'] ?>', <?= $e['id'] ?>)">
                                         <i class="bi bi-eye"></i>
-                                    </button>
+                                    </button>  
+                                    <button class="btn btn-sm btn-light border"
+    onclick="confirmarCancelacionCompra('<?= $e['id'] ?>', '<?= $e['folio'] ?>')">
+    <i class="fas fa-ban"></i> Anular
+</button>
+                                    
                                 </td>
                             </tr>
                             <?php endforeach; ?>
@@ -317,10 +322,10 @@ if (isset($e['piezas_faltantes']) && $e['piezas_faltantes'] !== null): ?>
                     <div class="modal-body">
                         <div class="row g-3 mb-3">
                             <div class="col-md-4">
-    <label class="form-label small fw-bold">Folio/Factura</label>
-    <input type="text" id="folio_gasto" name="folio" class="form-control" 
-           placeholder="Cargando..." readonly required>
-</div>
+                                <label class="form-label small fw-bold">Folio/Factura</label>
+                                <input type="text" id="folio_gasto" name="folio" class="form-control"
+                                    placeholder="Cargando..." readonly required>
+                            </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold">Almacén Destino</label>
                                 <select name="almacen_id" class="form-select bg-light"
@@ -522,44 +527,92 @@ if (isset($e['piezas_faltantes']) && $e['piezas_faltantes'] !== null): ?>
         });
     })();
     </script>
-  
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Escuchamos la apertura del modal usando JS Nativo (Vanilla JS)
-    document.addEventListener('show.bs.modal', function (event) {
-        // Obtenemos el ID del modal que se está abriendo
-        const modalId = event.target.id;
-        
-        // AHORA COINCIDE: modalGasto
-        if (modalId === 'modalGasto') {
-            console.log("Modal de Gasto detectado. Solicitando folio...");
-            
-            const inputFolio = document.getElementById('folio_gasto');
-            if (!inputFolio) return;
 
-            // Petición al controlador
-           fetch('egresosController.php?action=getSiguienteFolioGasto')
-    .then(res => {
-        // Si el servidor falla (404, 500), lo veremos aquí
-        if (!res.ok) throw new Error("Código de error servidor: " + res.status);
-        return res.json();
-    })
-    .then(data => {
-        console.log("Respuesta del servidor para el folio:", data); // Mira esto en la consola
-        if (data.success) {
-            document.getElementById('folio_gasto').value = data.folio;
-        } else {
-            console.error("El modelo falló:", data.message);
-        }
-    })
-    .catch(err => {
-        console.error("Error al procesar el JSON. Es posible que el PHP esté enviando errores de texto antes del JSON.", err);
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Escuchamos la apertura del modal usando JS Nativo (Vanilla JS)
+        document.addEventListener('show.bs.modal', function(event) {
+            // Obtenemos el ID del modal que se está abriendo
+            const modalId = event.target.id;
+
+            // AHORA COINCIDE: modalGasto
+            if (modalId === 'modalGasto') {
+                console.log("Modal de Gasto detectado. Solicitando folio...");
+
+                const inputFolio = document.getElementById('folio_gasto');
+                if (!inputFolio) return;
+
+                // Petición al controlador
+                fetch('egresosController.php?action=getSiguienteFolioGasto')
+                    .then(res => {
+                        // Si el servidor falla (404, 500), lo veremos aquí
+                        if (!res.ok) throw new Error("Código de error servidor: " + res.status);
+                        return res.json();
+                    })
+                    .then(data => {
+                        console.log("Respuesta del servidor para el folio:",
+                        data); // Mira esto en la consola
+                        if (data.success) {
+                            document.getElementById('folio_gasto').value = data.folio;
+                        } else {
+                            console.error("El modelo falló:", data.message);
+                        }
+                    })
+                    .catch(err => {
+                        console.error(
+                            "Error al procesar el JSON. Es posible que el PHP esté enviando errores de texto antes del JSON.",
+                            err);
+                    });
+            }
+        });
     });
+    </script>
+ <script>
+function confirmarCancelacionCompra(id, folio) {
+    Swal.fire({
+        title: '¿Anular Compra ' + folio + '?',
+        text: "Se restará el stock y se eliminarán los lotes. Esta acción no se puede deshacer.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, anular compra',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Mostramos un cargando manual para evitar clics dobles
+            Swal.fire({
+                title: 'Procesando...',
+                text: 'Por favor espera',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            $.ajax({
+                // AJUSTA ESTA RUTA: Asegúrate que apunte a tu controlador
+                url: '../controllers/egresosController.php?action=cancelarCompra', 
+                type: 'POST',
+                data: { id: id },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire('¡Anulada!', response.message, 'success').then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire('Atención', response.message, 'error');
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error("Error del servidor:", jqXHR.responseText);
+                    Swal.fire('Error de Sistema', 'No se pudo procesar la cancelación. Revisa la consola (F12).', 'error');
+                }
+            });
         }
     });
-});
+}
 </script>
- 
+
     <?php require_once __DIR__ . '/egresosComponets/modalCompra.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/modalAjuste.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/modalDetalles.php'; ?>
