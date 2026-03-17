@@ -291,10 +291,20 @@ if (isset($e['piezas_faltantes']) && $e['piezas_faltantes'] !== null): ?>
                                         onclick="verDetalle('<?= $e['tipo'] ?>', <?= $e['id'] ?>)">
                                         <i class="bi bi-eye"></i>
                                     </button>  
-                                    <button class="btn btn-sm btn-light border"
-    onclick="confirmarCancelacionCompra('<?= $e['id'] ?>', '<?= $e['folio'] ?>')">
-    <i class="fas fa-ban"></i> Anular
-</button>
+                                   <?php if ($e['tipo'] == 'compra'): ?>
+                <span class="badge bg-success">Compra</span>
+                <button class="btn btn-sm btn-light border" 
+                        onclick="confirmarCancelacionCompra('<?= $e['id'] ?>', '<?= $e['folio'] ?>')">
+                    <i class="fas fa-ban"></i> Anular
+                </button>
+                
+            <?php else: ?>
+                <span class="badge bg-info">Gasto</span>
+                <button class="btn btn-sm btn-light border" 
+                        onclick="confirmarCancelacionGasto('<?= $e['id'] ?>', '<?= $e['folio'] ?>')">
+                    <i class="fas fa-ban"></i> Anular
+                </button>
+            <?php endif; ?>
                                     
                                 </td>
                             </tr>
@@ -433,6 +443,13 @@ if (isset($e['piezas_faltantes']) && $e['piezas_faltantes'] !== null): ?>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>$(document).on('show.bs.modal', '.modal', function () {
+    const zIndex = 1050 + (10 * $('.modal:visible').length);
+    $(this).css('z-index', zIndex);
+    setTimeout(function() {
+        $('.modal-backdrop').not('.modal-stack').css('z-index', zIndex - 1).addClass('modal-stack');
+    }, 0);
+});</script>
     <script>
     // Forzamos que sea global con window.
     window.DATA_COMPRAS = {
@@ -612,6 +629,48 @@ function confirmarCancelacionCompra(id, folio) {
     });
 }
 </script>
+<script>
+    function confirmarCancelacionGasto(id, folio) {
+    Swal.fire({
+        title: `¿Anular Gasto: ${folio}?`,
+        text: "El registro se marcará como cancelado.",
+        icon: 'warning',
+        input: 'textarea',
+        inputPlaceholder: 'Escribe la razón...',
+        showCancelButton: true,
+        confirmButtonText: 'Confirmar',
+        cancelButtonText: 'Regresar',
+        inputValidator: (value) => {
+            if (!value) return '¡Es obligatorio escribir una razón!';
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                // Verifica que esta ruta sea correcta desde donde llamas al JS
+                url: '../controllers/egresosController.php?action=cancelarGasto',
+                method: 'POST',
+                data: { id: id, razon: result.value },
+                dataType: 'json',
+                beforeSend: function() {
+                    Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => { Swal.showLoading(); } });
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire('¡Anulado!', response.message, 'success').then(() => { location.reload(); });
+                    } else {
+                        Swal.fire('Error', response.message, 'error');
+                    }
+                },
+                error: function(xhr) {
+                    // ESTO DESBLOQUEA EL LIMBO: Si hay un error de PHP, aquí lo verás
+                    console.error(xhr.responseText);
+                    Swal.fire('Error Crítico', 'El servidor devolvió un error. Revisa la consola (F12).', 'error');
+                }
+            });
+        }
+    });
+}
+    </script>
 
     <?php require_once __DIR__ . '/egresosComponets/modalCompra.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/modalAjuste.php'; ?>

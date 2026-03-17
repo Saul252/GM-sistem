@@ -16,12 +16,32 @@
     
     <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
     
-    <style>
-        .card-table { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); background: white; }
-        .fila-inactiva { opacity: 0.5; filter: grayscale(1); background-color: #f8f9fa; }
-        .main-content { padding: 20px; transition: all 0.3s; }
-        @media (min-width: 768px) { .main-content { margin-left: 260px; } }
-    </style>
+   <style>
+    .card-table { 
+        border: none; 
+        border-radius: 15px; 
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
+        background: white; 
+    }
+    .fila-inactiva { 
+        opacity: 0.5; 
+        filter: grayscale(1); 
+        background-color: #f8f9fa; 
+    }
+    .main-content { 
+        padding: 20px; 
+        transition: all 0.3s; 
+        /* AJUSTE AQUÍ: Margen superior para librar el Navbar */
+        margin-top: 70px; 
+    }
+    @media (min-width: 768px) { 
+        .main-content { 
+            margin-left: 260px; 
+            /* Mantenemos el margen arriba en escritorio */
+            margin-top: 70px; 
+        } 
+    }
+</style>
 </head>
 
 <body>

@@ -243,34 +243,39 @@
             });
         }
 
-        window.aceptarTraspaso = function(id) {
-            if(!confirm('¿Confirmas que has recibido físicamente esta mercancía? El stock se sumará a este almacén.')) return;
-
-            $.ajax({
-                url: 'movimientosController.php',
-                method: 'POST',
-                data: { accion: 'aceptar_traspaso', id: id },
-                dataType: 'json',
-                success: function(res) {
-                    if(res.success) {
-                        Toastify({
-                            text: "📦 Inventario recibido y actualizado",
-                            duration: 3000,
-                            gravity: "top",
-                            position: "right",
-                            style: { background: "linear-gradient(to right, #10b981, #059669)" }
-                        }).showToast();
-                        cargarHistorial();
-                    } else {
-                        alert("Error: " + res.message);
-                    }
-                },
-                error: function() {
-                    alert("Error crítico en el servidor al procesar la recepción.");
-                }
-            });
-        };
-
+       window.aceptarTraspaso = function(id) {
+    // 1. Confirmación con el mensaje específico para traspasos
+    if (!confirm("¿Confirmas que has recibido físicamente esta mercancía? El stock se sumará a este almacén de inmediato.")) return;
+    
+    // 2. Preparación de FormData (id y acción)
+    const formData = new FormData();
+    formData.append('id', id);
+    formData.append('accion', 'aceptar_traspaso'); // Enviamos la acción para que el archivo sepa qué hacer
+    
+    // 3. Fetch a la URL exacta que solicitaste
+    fetch('/cfsistem/app/backend/movimientos/procesar_transaccion_rapida.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => {
+        if (!res.ok) throw new Error('Error en la respuesta del servidor');
+        return res.json();
+    })
+    .then(data => {
+        // 4. Lógica de éxito idéntica
+        if (data.success || data.status === 'success') {
+            // Recarga la página para actualizar inventarios visibles
+            location.reload();
+        } else {
+            // Error con mensaje dinámico
+            alert("Error: " + (data.message || "No se pudo procesar la recepción"));
+        }
+    })
+    .catch(err => {
+        console.error("Error en fetch:", err);
+        alert("Error de conexión al servidor.");
+    });
+}
         $('#selectorPeriodo').on('change', function() {
             const isPerso = $(this).val() === 'personalizado';
             $('#f_inicio, #f_fin').prop('disabled', !isPerso).toggleClass('input-disabled', !isPerso);

@@ -157,6 +157,8 @@ public function obtenerListaAlmacenes() {
     // 3. Terminamos la ejecución para que no se pegue el HTML del Layout
     exit; 
 }
+
+
 }
 
 /**

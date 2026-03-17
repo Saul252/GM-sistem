@@ -348,3 +348,38 @@ if (isset($_GET['action']) && $_GET['action'] === 'cancelarCompra') {
     }
     exit; // Detenemos la ejecución para que no se imprima nada más
 }
+// egresosController.php
+
+// --- ACCIÓN: CANCELAR GASTO (AJAX) ---
+if (isset($_GET['action']) && $_GET['action'] === 'cancelarGasto') {
+    if (ob_get_level()) ob_end_clean(); 
+    header('Content-Type: application/json; charset=utf-8');
+
+    try {
+        // Verificación de sesión
+        if (!isset($_SESSION['usuario_id'])) {
+            throw new Exception("Sesión expirada. Por favor, reingresa al sistema.");
+        }
+
+        $id_gasto = intval($_POST['id'] ?? 0);
+        $id_usuario = $_SESSION['usuario_id'];
+        $razon = trim($_POST['razon'] ?? '');
+
+        if ($id_gasto <= 0) throw new Exception("ID de gasto inválido.");
+        if (empty($razon)) throw new Exception("Es obligatorio proporcionar una razón.");
+
+        /** * USAMOS $gastosModel (con S) que es como la definiste en la línea 24:
+         * $gastosModel = new GastoModel($conexion);
+         */
+        $resultado = $gastosModel->cancelarGastoConRazon($id_gasto, $id_usuario, $razon);
+        
+        echo json_encode($resultado);
+
+    } catch (Exception $e) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Error en el controlador: ' . $e->getMessage()
+        ]);
+    }
+    exit;
+}

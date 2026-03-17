@@ -69,4 +69,42 @@ class GastoModel {
             throw $e;
         }
     }
+    public function cancelarGastoConRazon($id_gasto, $id_usuario, $razon) {
+    try {
+        // 1. Obtener nombre del usuario y observaciones actuales
+        $sqlInfo = "SELECT g.observaciones, u.nombre as nombre_usuario 
+                    FROM gastos g 
+                    JOIN usuarios u ON u.id = ? 
+                    WHERE g.id = ?";
+        $stmtInfo = $this->db->prepare($sqlInfo);
+        $stmtInfo->bind_param("ii", $id_usuario, $id_gasto);
+        $stmtInfo->execute();
+        $info = $stmtInfo->get_result()->fetch_assoc();
+
+        if (!$info) throw new Exception("Gasto o Usuario no encontrado.");
+
+        $obsAnterior = $info['observaciones'] ?? "";
+        $nombreUser = $info['nombre_usuario'];
+        $fechaHoy = date('Y-m-d H:i');
+
+        // 2. Construir nueva leyenda de observaciones
+        $nuevaLeyenda = trim($obsAnterior) . "\n" . 
+                        "*** CANCELADO por $nombreUser el $fechaHoy ***\n" . 
+                        "RAZÓN: " . $razon;
+
+        // 3. Actualizar el registro
+        $sqlUpd = "UPDATE gastos SET 
+                   estado = 'cancelado', 
+                   observaciones = ? 
+                   WHERE id = ?";
+        $stmtUpd = $this->db->prepare($sqlUpd);
+        $stmtUpd->bind_param("si", $nuevaLeyenda, $id_gasto);
+        $stmtUpd->execute();
+
+        return ['success' => true, 'message' => "Gasto cancelado y documentado correctamente."];
+
+    } catch (Exception $e) {
+        return ['success' => false, 'message' => $e->getMessage()];
+    }
+}
 }

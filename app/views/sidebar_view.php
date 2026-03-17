@@ -1,5 +1,3 @@
-
-
 <nav class="navbar fixed-top navbar-expand-lg navbar-dark navbar-premium">
     <div class="container-fluid px-4">
         <div class="d-flex align-items-center gap-3">
@@ -9,23 +7,27 @@
         </div>
         <div class="d-flex align-items-center gap-3">
             <div class="dropdown me-2">
-    <a href="javascript:void(0);" class="text-white position-relative" id="btnNotif">
-        <i class="bi bi-bell fs-4"></i>
-        <span id="notif-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
-    </a>
-    <ul class="shadow-lg border-0 p-0" id="menuNotif"
-        style="width: 320px; max-height: 400px; overflow-y: auto; display: none; position: absolute; right: 0; background: white; z-index: 1060; list-style: none; border-radius: 8px;">
-        <li class="p-3 border-bottom bg-light">
-            <h6 class="mb-0 fw-bold text-dark">Traspasos Pendientes</h6>
-        </li>
-        <div id="lista-notificaciones">
-            <li class="p-3 text-center text-muted small">Cargando...</li>
-        </div>
-        <li><hr class="dropdown-divider m-0"></li>
-        <li><a class="dropdown-item text-center py-2 small text-primary fw-bold" href="/cfsistem/app/views/almacenes.php">Ver todos</a></li>
-    </ul>
-</div>
-              <div class="user-badge">
+                <a href="javascript:void(0);" class="text-white position-relative" id="btnNotif">
+                    <i class="bi bi-bell fs-4"></i>
+                    <span id="notif-badge"
+                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
+                </a>
+                <ul class="shadow-lg border-0 p-0" id="menuNotif"
+                    style="width: 320px; max-height: 400px; overflow-y: auto; display: none; position: absolute; right: 0; background: white; z-index: 1060; list-style: none; border-radius: 8px;">
+                    <li class="p-3 border-bottom bg-light">
+                        <h6 class="mb-0 fw-bold text-dark">Traspasos Pendientes</h6>
+                    </li>
+                    <div id="lista-notificaciones">
+                        <li class="p-3 text-center text-muted small">Cargando...</li>
+                    </div>
+                    <li>
+                        <hr class="dropdown-divider m-0">
+                    </li>
+                    <li><a class="dropdown-item text-center py-2 small text-primary fw-bold"
+                            href="/cfsistem/app/views/almacenes.php">Ver todos</a></li>
+                </ul>
+            </div>
+            <div class="user-badge">
                 <i class="bi bi-person-circle me-2"></i>
                 <span><?= $_SESSION['nombre'] ?? 'Usuario' ?></span>
             </div>
@@ -38,13 +40,14 @@
     <div class="p-3">
         <h5 class="text-center mb-4">Menú</h5>
         <?php if (!empty($_SESSION['rol'])): ?>
-            <div class="text-center small text-secondary mb-3">Rol: <?= ucfirst($_SESSION['rol']) ?></div>
+        <div class="text-center small text-secondary mb-3">Rol: <?= ucfirst($_SESSION['rol']) ?></div>
         <?php endif; ?>
 
         <ul class="nav nav-pills flex-column gap-1">
             <?php if (puedeVerModulo('inicio')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/views/inicio.php" class="nav-link <?= $archivoActual == 'inicio.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/app/views/inicio.php"
+                    class="nav-link <?= $archivoActual == 'inicio.php' ? 'active' : '' ?>">
                     <i class="bi bi-house-door"></i><span>Inicio</span>
                 </a>
             </li>
@@ -52,7 +55,8 @@
 
             <?php if (puedeVerModulo('ventas')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/controllers/ventasController.php" class="nav-link <?= $archivoActual == 'ventasController.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/ventasController.php"
+                    class="nav-link <?= $archivoActual == 'ventasController.php' ? 'active' : '' ?>">
                     <i class="bi bi-cart-check"></i><span>Ventas</span>
                 </a>
             </li>
@@ -60,7 +64,8 @@
 
             <?php if (puedeVerModulo('almacenes')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/controllers/almacenes.php" class="nav-link <?= ($archivoActual == 'almacenes.php' || $archivoActual == 'almacen.php') ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/almacenes.php"
+                    class="nav-link <?= ($archivoActual == 'almacenes.php' || $archivoActual == 'almacen.php') ? 'active' : '' ?>">
                     <i class="bi bi-box-seam"></i><span>Almacén</span>
                 </a>
             </li>
@@ -68,7 +73,8 @@
 
             <?php if (puedeVerModulo('movimientos')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/controllers/movimientosController.php" class="nav-link <?= $archivoActual == 'movimientosController.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/movimientosController.php"
+                    class="nav-link <?= $archivoActual == 'movimientosController.php' ? 'active' : '' ?>">
                     <i class="bi bi-arrow-left-right"></i><span>Movimientos</span>
                 </a>
             </li>
@@ -76,7 +82,8 @@
 
             <?php if (puedeVerModulo('ventashistorial')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/controllers/ventasHistorialController.php" class="nav-link <?= $archivoActual == 'ventasHistorialController.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/ventasHistorialController.php"
+                    class="nav-link <?= $archivoActual == 'ventasHistorialController.php' ? 'active' : '' ?>">
                     <i class="bi bi-receipt"></i><span>Historial</span>
                 </a>
             </li>
@@ -84,7 +91,8 @@
 
             <?php if (puedeVerModulo('caja')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/pantallas/caja.php" class="nav-link <?= $archivoActual == 'cajaController.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/pantallas/caja.php"
+                    class="nav-link <?= $archivoActual == 'cajaController.php' ? 'active' : '' ?>">
                     <i class="bi bi-cash-stack"></i><span>Caja</span>
                 </a>
             </li>
@@ -92,7 +100,8 @@
 
             <?php if (puedeVerModulo('usuarios')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/controllers/usuariosController.php" class="nav-link <?= $archivoActual == 'usuariosController.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/usuariosController.php"
+                    class="nav-link <?= $archivoActual == 'usuariosController.php' ? 'active' : '' ?>">
                     <i class="bi bi-people"></i><span>Usuarios</span>
                 </a>
             </li>
@@ -100,15 +109,25 @@
 
             <?php if (puedeVerModulo('compras')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/controllers/egresosController.php" class="nav-link <?= ($archivoActual == 'egresosController.php' || $archivoActual == 'gastos.php') ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/egresosController.php"
+                    class="nav-link <?= ($archivoActual == 'egresosController.php' || $archivoActual == 'gastos.php') ? 'active' : '' ?>">
                     <i class="bi bi-bag-check"></i><span>Compras</span>
+                </a>
+            </li>
+            <?php endif; ?>
+            <?php if (puedeVerModulo('proveedores')): ?>
+            <li class="nav-item">
+                <a href="/cfsistem/app/controllers/proveedoresController.php"
+                    class="nav-link <?= ($archivoActual == 'proveedoresController.php') ? 'active' : '' ?>">
+                   <i class="bi bi-person-badge"></i><span>Proveedores</span>
                 </a>
             </li>
             <?php endif; ?>
 
             <?php if (puedeVerModulo('clientes')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/controllers/clientesController.php" class="nav-link <?= $archivoActual == 'clientesController.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/clientesController.php"
+                    class="nav-link <?= $archivoActual == 'clientesController.php' ? 'active' : '' ?>">
                     <i class="bi bi-person-lines-fill"></i><span>Clientes</span>
                 </a>
             </li>
@@ -116,49 +135,54 @@
 
             <?php if (puedeVerModulo('Mermas')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/controllers/mermasController.php" class="nav-link <?= $archivoActual == 'mermasController.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/mermasController.php"
+                    class="nav-link <?= $archivoActual == 'mermasController.php' ? 'active' : '' ?>">
                     <i class="bi bi-exclamation-triangle"></i><span>Mermas</span>
                 </a>
             </li>
             <?php endif; ?>
             <?php if (puedeVerModulo('transmutaciones')): ?>
-<li class="nav-item">
-    <a href="/cfsistem/app/controllers/transmutacionesController.php" class="nav-link <?= $archivoActual == 'transmutacionesController.php' ? 'active' : '' ?>">
-        <i class="bi bi-arrow-repeat"></i><span>Transmutaciones</span>
-    </a>
-</li>
-<?php endif; ?>
+            <li class="nav-item">
+                <a href="/cfsistem/app/controllers/transmutacionesController.php"
+                    class="nav-link <?= $archivoActual == 'transmutacionesController.php' ? 'active' : '' ?>">
+                    <i class="bi bi-arrow-repeat"></i><span>Conversiones</span>
+                </a>
+            </li>
+            <?php endif; ?>
 
             <?php if (puedeVerModulo('finanzas')): ?>
             <li class="nav-item">
-                <a href="/cfsistem/app/controllers/finanzasController.php" class="nav-link <?= $archivoActual == 'finanzasController.php' ? 'active' : '' ?>">
+                <a href="/cfsistem/app/controllers/finanzasController.php"
+                    class="nav-link <?= $archivoActual == 'finanzasController.php' ? 'active' : '' ?>">
                     <i class="bi bi-graph-up-arrow"></i><span>Finanzas</span>
                 </a>
             </li>
             <?php endif; ?>
             <?php if (puedeVerModulo('corteCaja')): ?>
-<li class="nav-item">
-    <a href="/cfsistem/app/controllers/corteCajaController.php" class="nav-link <?= $archivoActual == 'corteCajaController.php' ? 'active' : '' ?>">
-        <i class="bi bi-calculator"></i><span>Corte de Caja</span>
-    </a>
-</li>
-<?php endif; ?>
-<?php if (puedeVerModulo('entregas')): ?>
-<li class="nav-item">
-    <a href="/cfsistem/app/controllers/entregasController.php" class="nav-link <?= $archivoActual == 'entregasController.php' ? 'active' : '' ?>">
-        <i class="bi bi-truck"></i><span>Despachos</span>
-    </a>
-</li>
-<?php endif; ?>
-<?php if (puedeVerModulo(modulo: 'clientesEstatus')): ?>
-<li class="nav-item">
-    <a href="/cfsistem/app/controllers/clientesEstatusController.php" 
-       class="nav-link <?= $paginaActual == 'clientesEstatus' ? 'active' : '' ?>">
-        <i class="bi bi-person-badge"></i><span>Estatus Clientes</span>
-    </a>
-</li>
-<?php endif; ?>
-<?php if (puedeVerModulo(modulo: 'Configuracion')): ?>
+            <li class="nav-item">
+                <a href="/cfsistem/app/controllers/corteCajaController.php"
+                    class="nav-link <?= $archivoActual == 'corteCajaController.php' ? 'active' : '' ?>">
+                    <i class="bi bi-calculator"></i><span>Corte de Caja</span>
+                </a>
+            </li>
+            <?php endif; ?>
+            <?php if (puedeVerModulo('entregas')): ?>
+            <li class="nav-item">
+                <a href="/cfsistem/app/controllers/entregasController.php"
+                    class="nav-link <?= $archivoActual == 'entregasController.php' ? 'active' : '' ?>">
+                    <i class="bi bi-truck"></i><span>Despachos</span>
+                </a>
+            </li>
+            <?php endif; ?>
+            <?php if (puedeVerModulo(modulo: 'clientesEstatus')): ?>
+            <li class="nav-item">
+                <a href="/cfsistem/app/controllers/clientesEstatusController.php"
+                    class="nav-link <?= $paginaActual == 'clientesEstatus' ? 'active' : '' ?>">
+                    <i class="bi bi-person-badge"></i><span>Estatus Clientes</span>
+                </a>
+            </li>
+            <?php endif; ?>
+               <?php if (puedeVerModulo(modulo: '')): ?>
 <li class="nav-item">
     <a href="/cfsistem/app/controllers/configuracionController.php" 
        class="nav-link <?= $paginaActual == 'configuracionController' ? 'active' : '' ?>">
@@ -166,7 +190,16 @@
     </a>
 </li>
 <?php endif; ?>
-<!-- 
+             <?php if (puedeVerModulo(modulo: 'Configuracion')): ?>
+<li class="nav-item">
+    <a href="/cfsistem/app/controllers/configuracionController.php" 
+       class="nav-link <?= $paginaActual == 'configuracionController' ? 'active' : '' ?>">
+        <i class="bi bi-gear-fill"></i><span>Configuración</span>
+    </a>
+</li>
+<?php endif; ?>
+        
+            <!-- 
 <li class="nav-item">
     <a href="/cfsistem/app/views/gestionar_permisos.php" class="nav-link <?= $archivoActual == 'cofiguracionController.php' ? 'active' : '' ?>">
         <i class="bi bi-key"></i><span>Gestión de Permisos</span>
@@ -176,8 +209,8 @@
         </ul>
     </div>
 </aside>
-   
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>';
+
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>';
 <script>
 // --- 1. LÓGICA DEL SIDEBAR ---
 document.addEventListener('click', function(e) {
@@ -189,7 +222,6 @@ document.addEventListener('click', function(e) {
         }
     }
 });
-
 </script>
 <script>
 /**
@@ -200,19 +232,19 @@ document.addEventListener('click', function(e) {
  */
 
 let ultimoConteoTraspasos = 0;
-let primeraCarga = true; 
+let primeraCarga = true;
 
 function verificarNotificaciones() {
     // Agregamos timestamp para evitar caché del navegador
     const url = '/cfsistem/app/backend/movimientos/get_notificaciones_traspaso.php?t=' + Date.now();
-    
+
     fetch(url)
         .then(response => response.json())
         .then(data => {
             const badge = document.getElementById('notif-badge');
             const lista = document.getElementById('lista-notificaciones');
             const cantidadActual = parseInt(data.cantidad) || 0;
-            
+
             // 1. ACTUALIZAR BADGE DE LA CAMPANA
             if (badge) {
                 if (cantidadActual > 0) {
@@ -230,22 +262,24 @@ function verificarNotificaciones() {
                 if (typeof Toastify === "function") {
                     const u = data.items[0] || {};
                     const textoCant = u.cantidad_texto || (u.cantidad + ' PZA');
-                    
+
                     Toastify({
                         text: `📦 ¡SOLICITUD DE TRASPASO RECIBIDA!\n${u.emisor} envió ${textoCant} de ${u.producto}`,
                         duration: 6000,
                         close: true,
-                        gravity: "top", 
-                        position: "right", 
+                        gravity: "top",
+                        position: "right",
                         style: {
-                            background: "linear-gradient(to right, #1e3c72, #2a5298)", 
+                            background: "linear-gradient(to right, #1e3c72, #2a5298)",
                             borderRadius: "12px",
                             boxShadow: "0 5px 15px rgba(0,0,0,0.3)"
                         },
-                        onClick: function(){ window.location.href = "/cfsistem/app/controllers/almacenes.php"; }
+                        onClick: function() {
+                            window.location.href = "/cfsistem/app/controllers/almacenes.php";
+                        }
                     }).showToast();
                 }
-                primeraCarga = false; 
+                primeraCarga = false;
             }
 
             ultimoConteoTraspasos = cantidadActual;
@@ -253,11 +287,13 @@ function verificarNotificaciones() {
             // 3. RENDERIZADO DEL MENÚ DESPLEGABLE (TARJETAS)
             if (lista && data.items) {
                 if (cantidadActual === 0) {
-                    lista.innerHTML = '<div style="padding: 20px; text-align: center; color: #999; font-size: 0.8rem;">Sin traspasos pendientes</div>';
+                    lista.innerHTML =
+                        '<div style="padding: 20px; text-align: center; color: #999; font-size: 0.8rem;">Sin traspasos pendientes</div>';
                 } else {
                     lista.innerHTML = data.items.map(item => {
                         // Aseguramos que mostrarCantidad tenga el valor procesado del PHP
-                        const mostrarCantidad = item.cantidad_texto ? item.cantidad_texto : (item.cantidad + ' PZA');
+                        const mostrarCantidad = item.cantidad_texto ? item.cantidad_texto : (item.cantidad +
+                            ' PZA');
 
                         return `
                         <div style="padding: 12px 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #ffffff !important; color: #333 !important; min-height: 80px;">
@@ -293,27 +329,27 @@ function verificarNotificaciones() {
  */
 function procesarRecepcion(id) {
     if (!confirm("¿Deseas confirmar la recepción de este producto? El stock se actualizará de inmediato.")) return;
-    
+
     const formData = new FormData();
     formData.append('id', id);
-    
+
     fetch('/cfsistem/app/backend/movimientos/procesar_transaccion_rapida.php', {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success || data.status === 'success') {
-            // Recarga la página para actualizar inventarios visibles
-            location.reload();
-        } else {
-            alert("Error: " + (data.message || "No se pudo procesar la recepción"));
-        }
-    })
-    .catch(err => {
-        console.error("Error en fetch:", err);
-        alert("Error de conexión al servidor.");
-    });
+            method: 'POST',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success || data.status === 'success') {
+                // Recarga la página para actualizar inventarios visibles
+                location.reload();
+            } else {
+                alert("Error: " + (data.message || "No se pudo procesar la recepción"));
+            }
+        })
+        .catch(err => {
+            console.error("Error en fetch:", err);
+            alert("Error de conexión al servidor.");
+        });
 }
 
 /**
@@ -328,7 +364,7 @@ document.addEventListener('click', function(e) {
         const isVisible = (menu.style.display === 'block');
         menu.style.display = isVisible ? 'none' : 'block';
         e.preventDefault();
-        e.stopPropagation(); 
+        e.stopPropagation();
     } else if (!menu.contains(e.target)) {
         menu.style.display = 'none';
     }

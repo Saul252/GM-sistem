@@ -125,3 +125,20 @@
     cursor: pointer;
     appearance: none;
 }
+/* Permite que el scroll funcione en el modal de abajo cuando cierras el de arriba */
+.modal {
+    overflow-y: auto;
+}
+
+/* Ajuste dinámico para modales apilados */
+.modal.show {
+    background-color: rgba(0, 0, 0, 0.5); /* Oscurece un poco el fondo */
+}
+
+/* Asegura que el segundo backdrop no bloquee al segundo modal */
+.modal-backdrop.show:nth-of-type(even) {
+    z-index: 1051 !important;
+}
+.modal.show:nth-of-type(even) {
+    z-index: 1052 !important;
+}

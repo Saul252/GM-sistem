@@ -59,7 +59,17 @@ $paginaActual = 'Inicio';
     </a>
 </div>
 <?php endif; ?>
-
+<?php if (puedeVerModulo('proveedores')): ?>
+<div class="col-md-4 col-lg-3">
+    <a href="/cfsistem/app/controllers/proveedoresController.php" class="text-decoration-none text-dark">
+        <div class="card card-modulo text-center">
+            <i class="bi bi-person-vcard icono-modulo icon-proveedores"></i>
+            <h6>Proveedores</h6>
+            <small class="text-muted">Gestión de proveedores</small>
+        </div>
+    </a>
+</div>
+<?php endif; ?>
 <!-- ALMACENES -->
 <?php if (puedeVerModulo('almacenes')): ?>
 <div class="col-md-4 col-lg-3">
@@ -117,6 +127,17 @@ $paginaActual = 'Inicio';
             <i class="bi bi-exclamation-triangle icono-modulo icon-mermas"></i>
             <h6>Mermas</h6>
             <small class="text-muted">Control de pérdidas</small>
+        </div>
+    </a>
+</div>
+<?php endif; ?>
+<?php if (puedeVerModulo('transmutaciones')): ?>
+<div class="col-md-4 col-lg-3">
+    <a href="/cfsistem/app/controllers/transmutacionesController.php" class="text-decoration-none text-dark">
+        <div class="card card-modulo text-center">
+            <i class="bi bi-arrow-repeat icono-modulo icon-transmutaciones"></i>
+            <h6>Conversiones</h6>
+            <small class="text-muted">Transformación de productos</small>
         </div>
     </a>
 </div>
