@@ -95,10 +95,16 @@ public function obtenerDetalle($id) {
         }
     }
 
-    public function actualizarEstado($id, $nuevoEstado, $compra_id = null) {
-        $sql = "UPDATE solicitudes_compra SET estado = ?, compra_id_final = ? WHERE id = ?";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("sii", $nuevoEstado, $compra_id, $id);
-        return $stmt->execute();
-    }
+ public function actualizarEstado($id, $nuevoEstado, $compra_id = null) {
+    // Forzamos minúsculas para que coincida con el ENUM('pendiente', 'recibido'...)
+    $nuevoEstado = strtolower($nuevoEstado); 
+    
+    $sql = "UPDATE solicitudes_compra SET estado = ?, compra_id_final = ? WHERE id = ?";
+    $stmt = $this->db->prepare($sql);
+    
+    // "sii" -> string (estado), int (compra_id), int (id_solicitud)
+    $stmt->bind_param("sii", $nuevoEstado, $compra_id, $id);
+    
+    return $stmt->execute();
+}
 }

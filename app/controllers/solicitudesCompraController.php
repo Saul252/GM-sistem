@@ -147,42 +147,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     exit;
 }
 if (isset($_POST['action']) && $_POST['action'] === 'guardarCompraCompleta') {
-    // 1. Decodificar los items (vienen como string JSON desde el JS)
-    $items = json_decode($_POST['items'], true);
-    
-    // Validar que el JSON sea válido
-    if (json_last_error() !== JSON_ERROR_NONE) {
-        echo json_encode(['success' => false, 'message' => 'Error al procesar el detalle de productos.']);
-        exit;
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json; charset=utf-8');
+
+    try {
+        $items = json_decode($_POST['items'], true);
+        $almacen_id = intval($_POST['almacen_id'] ?? 0);
+        $solicitud_id = intval($_POST['solicitud_id'] ?? 0);
+
+        if ($almacen_id <= 0) throw new Exception("ID de almacén no válido.");
+        if (empty($items)) throw new Exception("No hay productos para procesar.");
+
+        // 1. Guardar la compra
+        $resultado = $comprasModel->guardarCompraCompleta(
+            $items, 
+            $_POST['folio'] ?? '', 
+            $_POST['proveedor'] ?? 'Sin Proveedor', 
+            $_FILES['evidencia_compra'] ?? null, 
+            $almacen_id, 
+            $_SESSION['usuario_id'] ?? 0
+        );
+
+        // 2. Si hay éxito y tenemos solicitud, actualizamos
+        if ($resultado['success'] === true && $solicitud_id > 0) {
+            $id_generado = $resultado['compra_id'] ?? null;
+            
+            // IMPORTANTE: 'recibido' en minúsculas para que el ENUM no dé error
+            $solicitudModel->actualizarEstado($solicitud_id, 'recibido', $id_generado);
+            
+            $resultado['message'] .= " (Solicitud #$solicitud_id finalizada)";
+        }
+
+        echo json_encode($resultado);
+
+    } catch (Throwable $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
-
-    // 2. Sanitizar datos de cabecera
-    // Nota: 'folio' viene del input name="folio" del formulario capturado por FormData
-    $folio      = $_POST['folio'] ?? ''; 
-    $proveedor  = $_POST['proveedor'] ?? 'Sin Proveedor';
-    $almacen_id = intval($_POST['almacen_id'] ?? 0);
-    
-    // Asegúrate de que esta sea la variable exacta que usas en tu sistema de Login
-    $user_id    = $_SESSION['usuario_id'] ?? $_SESSION['id'] ?? 0; 
-    
-    // 3. Obtener el archivo (FormData lo envía con el name del input file)
-    $evidencia = $_FILES['evidencia_compra'] ?? null;
-
-    // 4. Ejecutar el modelo
-    // Asumo que $compraModel ya está instanciado arriba en tu controlador
-    $resultado = $comprasModel->guardarCompraCompleta(
-        $items, 
-        $folio, 
-        $proveedor, 
-        $evidencia, 
-        $almacen_id, 
-        $user_id
-    );
-
-    // 5. RESPUESTA CRÍTICA: El AJAX espera un JSON
-    header('Content-Type: application/json');
-    echo json_encode($resultado);
-    exit; // Importante para detener cualquier salida extra de HTML
+    exit;
 }
-
-    
