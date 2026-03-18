@@ -128,6 +128,9 @@ error_reporting(E_ALL);
                                     <i class="bi bi-trash text-danger"></i>
                                 </button>
                                 <?php endif; ?>
+                                <button class="btn btn-sm btn-white border shadow-sm" onclick="prepararImpresion(<?= $s['id'] ?>)">
+    <i class="bi bi-printer text-dark"></i>
+</button>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -137,68 +140,109 @@ error_reporting(E_ALL);
         </div>
     </main>
 
-    <div class="modal fade" id="modalGestionSolicitud" tabindex="-1" data-bs-backdrop="static">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
-                <div class="modal-header bg-success text-white pt-4 px-4 border-0">
-                    <h5 class="fw-bold"><i class="bi bi-box-arrow-in-down me-2"></i>Convertir Solicitud <span
-                            id="uni-folio"></span> a Compra</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+<div class="modal fade" id="modalSolicitud" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 20px; border: none; overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.2);">
+            <form id="formSolicitud">
+                <div class="modal-header bg-white border-0 pt-4 px-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary text-white rounded-3 p-2 me-3 shadow-sm">
+                            <i class="bi bi-file-earmark-plus fs-4"></i>
+                        </div>
+                        <div>
+                            <h4 class="fw-bold mb-0">Nueva Solicitud de Compra</h4>
+                            <p class="text-muted small mb-0">Complete los datos para requerir materiales al almacén</p>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
-                <form id="formConvertirCompra" enctype="multipart/form-data">
-                    <input type="hidden" name="solicitud_id" id="uni-solicitud-id">
-                    <div class="modal-body px-4 bg-light">
-
-                        <div class="row g-3 mb-4 p-3 rounded-4 bg-white shadow-sm align-items-end">
-                            <div class="col-md-3">
-                                <label class="small text-muted d-block fw-bold">Proveedor</label>
-                                <input type="text" id="uni-proveedor" class="form-control border-0 bg-light fw-bold"
-                                    readonly>
-                                <input type="hidden" name="proveedor" id="uni-proveedor-nombre">
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label small fw-bold">Folio de Factura</label>
-                                <input type="text" id="folio_compra" name="folio" class="form-control"
-                                    placeholder="Cargando..." readonly required>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="small text-muted d-block fw-bold">Evidencia (PDF/IMG)</label>
-                                <input type="file" name="evidencia_compra" class="form-control" accept="image/*,.pdf">
-                            </div>
-                            <div class="col-md-4 text-end">
-                                <label class="small text-muted d-block fw-bold text-uppercase">Total Factura</label>
-                                <span class="h2 fw-bold text-success" id="uni-gran-total">$ 0.00</span>
-                            </div>
+                <div class="modal-body px-4">
+                    <div class="row g-3 mb-4 p-3 rounded-4 bg-light shadow-sm align-items-end">
+                        
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Almacén de Destino</label>
+                            <?php if (isset($es_admin) && $es_admin): ?>
+                                <select name="almacen_id" class="form-select select2-modal" required>
+                                    <option value="">-- Seleccionar --</option>
+                                    <?php foreach ($almacenes as $alm): ?>
+                                        <option value="<?= $alm['id'] ?>"><?= htmlspecialchars($alm['nombre']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            <?php else: ?>
+                                <input type="text" class="form-control border-0 bg-white fw-bold" 
+                                       value="<?= htmlspecialchars($almacenes[0]['nombre'] ?? 'Almacén Asignado') ?>" readonly>
+                                <input type="hidden" name="almacen_id" value="<?= $almacen_usuario ?? ($almacenes[0]['id'] ?? '') ?>">
+                            <?php endif; ?>
                         </div>
 
-                        <div class="table-responsive bg-white rounded-4 shadow-sm p-3">
-                            <table class="table align-middle" id="tablaConversion">
-                                <thead>
-                                    <tr class="text-muted small">
-                                        <th>Producto</th>
-                                        <th width="120">Cant. Mayoreo</th>
-                                        <th width="100">Sueltas</th>
-                                        <th width="180">Costo Total Renglón</th>
-                                        <th width="150">Almacén</th>
-                                        <th width="150" class="text-end">Stock a Ingresar</th>
-                                    </tr>
-                                </thead>
-                                <tbody></tbody>
-                            </table>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Proveedor Sugerido</label>
+                            <select name="proveedor_id" class="form-select select2-modal" required>
+                                <option value="">Seleccionar proveedor...</option>
+                                <?php foreach($proveedores as $p): ?>
+                                    <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-muted text-uppercase">Añadir Producto (SKU o Nombre)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                                <select id="buscadorProductos" class="form-select select2-modal border-start-0">
+                                    <option value="">Escribe para buscar...</option>
+                                    <?php foreach($productos as $pr): ?>
+                                        <option value="<?= $pr['producto_id'] ?>" 
+                                                data-nombre="<?= htmlspecialchars($pr['nombre']) ?>"
+                                                data-sku="<?= htmlspecialchars($pr['sku']) ?>"
+                                                data-um="<?= htmlspecialchars($pr['unidad_medida']) ?>"
+                                                data-ur="<?= htmlspecialchars($pr['unidad_reporte']) ?>"
+                                                data-factor="<?= $pr['factor_conversion'] ?? 1 ?>">
+                                            [<?= $pr['sku'] ?>] <?= $pr['nombre'] ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="modal-footer border-0 px-4 pb-4 bg-light">
-                        <button type="button" class="btn btn-link text-muted" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-success rounded-pill px-5 shadow">
-                            <i class="bi bi-save me-2"></i> Guardar Compra e Inventario
-                        </button>
+                    <div class="table-responsive border rounded-4 bg-white">
+                        <table class="table align-middle mb-0" id="tablaDetalle">
+                            <thead class="bg-light">
+                                <tr class="text-muted small uppercase">
+                                    <th class="ps-4" style="width: 45%;">Producto</th>
+                                    <th style="width: 20%;">Cantidad</th>
+                                    <th style="width: 25%;">Presentación / Unidad</th>
+                                    <th style="width: 10%;" class="text-end pe-4">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                </tbody>
+                        </table>
+                        
+                        <div id="emptyState" class="text-center py-5 text-muted">
+                            <div class="mb-3">
+                                <i class="bi bi-cart-plus opacity-25" style="font-size: 3.5rem;"></i>
+                            </div>
+                            <p class="fw-medium">La lista está vacía</p>
+                            <small>Utiliza el buscador de arriba para añadir artículos</small>
+                        </div>
                     </div>
-                </form>
-            </div>
+                </div>
+
+                <div class="modal-footer border-0 p-4">
+                    <button type="button" class="btn btn-link text-decoration-none text-muted fw-bold" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow">
+                        <i class="bi bi-check2-circle me-2"></i> Confirmar Solicitud
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
+</div> 
     <div class="modal fade" id="modalGestionSolicitud" tabindex="-1" data-bs-backdrop="static"
         aria-labelledby="labelModal" aria-hidden="false">
         <div class="modal-dialog modal-xl">
@@ -264,7 +308,78 @@ error_reporting(E_ALL);
             </div>
         </div>
     </div>
+<div class="modal fade" id="modalImprimirSolicitud" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+            <div class="modal-header bg-dark text-white border-0">
+                <h5 class="fw-bold mb-0"><i class="bi bi-printer me-2"></i>Vista de Impresión</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="areaImpresion" class="p-5 bg-white">
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div>
+                            <h2 class="fw-bold text-uppercase mb-0">Solicitud de Compra</h2>
+                            <p class="text-muted mb-0" id="print-folio">FOLIO: #00000</p>
+                        </div>
+                        <div class="text-end">
+                            <h5 class="fw-bold mb-0">cfsistem</h5>
+                            <p class="small text-muted mb-0" id="print-fecha">Fecha: --/--/----</p>
+                        </div>
+                    </div>
 
+                    <hr>
+
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <label class="small text-muted d-block">ALMACÉN DESTINO:</label>
+                            <span class="fw-bold" id="print-almacen">---</span>
+                        </div>
+                        <div class="col-6">
+                            <label class="small text-muted d-block">PROVEEDOR SUGERIDO:</label>
+                            <span class="fw-bold" id="print-proveedor">---</span>
+                        </div>
+                    </div>
+
+                    <table class="table table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Descripción del Material</th>
+                                <th width="120" class="text-center">Cantidad</th>
+                                <th width="150">Unidad</th>
+                            </tr>
+                        </thead>
+                        <tbody id="print-tabla-cuerpo">
+                            </tbody>
+                    </table>
+
+                    <div class="mt-5 pt-4">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div style="border-top: 1px solid #000; margin: 0 20px;"></div>
+                                <small>Solicita</small>
+                            </div>
+                            <div class="col-4">
+                                <div style="border-top: 1px solid #000; margin: 0 20px;"></div>
+                                <small>Autoriza</small>
+                            </div>
+                            <div class="col-4">
+                                <div style="border-top: 1px solid #000; margin: 0 20px;"></div>
+                                <small>Recibe (Compras)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 bg-light">
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary rounded-pill px-4" onclick="ejecutarImpresion()">
+                    <i class="bi bi-printer-fill me-2"></i> Imprimir Ahora
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -674,6 +789,90 @@ function asignarSiguienteFolioCompra() {
         });
     });
 });
+</script>
+<script>
+    /**
+ * Llena el modal de impresión con la data de la solicitud
+ */
+function prepararImpresion(id) {
+    // Reutilizamos la lógica que ya tienes para obtener el detalle
+    fetch(`${URL_CONTROLADOR}?action=obtenerDetalle&id=${id}`)
+        .then(res => res.json())
+        .then(res => {
+            if (res.status === 'success') {
+                const data = res.data;
+                const infoBase = data[0];
+
+                // Llenar cabecera
+                $('#print-folio').text(`FOLIO: #${id.toString().padStart(5, '0')}`);
+                $('#print-fecha').text(`Fecha: ${new Date().toLocaleDateString()}`);
+                $('#print-almacen').text(infoBase.almacen_nombre);
+                $('#print-proveedor').text(infoBase.proveedor_nombre || 'No especificado');
+
+                // Llenar tabla
+                let html = '';
+                data.forEach(i => {
+                    html += `
+                        <tr>
+                            <td>
+                                <div class="fw-bold">${i.producto_nombre}</div>
+                                <small class="text-muted">SKU: ${i.sku}</small>
+                            </td>
+                            <td class="text-center fw-bold fs-5">${i.cantidad}</td>
+                            <td>${i.unidad_medida}</td>
+                        </tr>`;
+                });
+                $('#print-tabla-cuerpo').html(html);
+
+                // Mostrar modal
+                new bootstrap.Modal(document.getElementById('modalImprimirSolicitud')).show();
+            }
+        });
+}
+
+/**
+ * Llama al comando de impresión del navegador
+ */
+function ejecutarImpresion() {
+    // 1. Obtener el contenido del área de impresión
+    const contenido = document.getElementById('areaImpresion').innerHTML;
+    const folio = $('#print-folio').text();
+
+    // 2. Crear una ventana nueva
+    const ventana = window.open('', '_blank', 'height=600,width=800');
+
+    // 3. Escribir el HTML necesario para que se vea bien
+    ventana.document.write(`
+        <html>
+            <head>
+                <title>Imprimir ${folio}</title>
+                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+                <style>
+                    body { font-family: 'Inter', sans-serif; padding: 30px; }
+                    .table-bordered th, .table-bordered td { border: 1px solid #000 !important; }
+                    .fw-bold { font-weight: bold !important; }
+                    @media print {
+                        .no-print { display: none; }
+                        @page { margin: 1cm; }
+                    }
+                    .firma-linea { border-top: 1px solid #000; margin-top: 50px; text-align: center; padding-top: 5px; font-size: 12px; }
+                </style>
+            </head>
+            <body>
+                ${contenido}
+                <script>
+                    // Esperar a que cargue el CSS y luego imprimir
+                    window.onload = function() {
+                        window.print();
+                        window.onafterprint = function() { window.close(); };
+                    };
+                <\/script>
+            </body>
+        </html>
+    `);
+
+    ventana.document.close();
+}
 </script>
 </body>
 

@@ -71,4 +71,16 @@
             padding: 1.5rem;
         }
     }
-   
+   @media print {
+    body * { visibility: hidden; }
+    #areaImpresion, #areaImpresion * { visibility: visible; }
+    #areaImpresion {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+    }
+    .modal-header, .modal-footer, .btn-close { display: none !important; }
+}
