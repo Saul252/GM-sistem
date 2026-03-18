@@ -1,10 +1,4 @@
-<?php 
-$ruta = __DIR__ . '/egresosComponets/modalCompra.php';
-if (!file_exists($ruta)) {
-    echo "<script>console.error('ERROR: El archivo del modal no existe en: $ruta');</script>";
-}
-require_once $ruta;
-?>
+
 
 <!DOCTYPE html>
 <html lang="es">
@@ -430,9 +424,18 @@ if (isset($e['piezas_faltantes']) && $e['piezas_faltantes'] !== null): ?>
 
 
 
+<?php 
+$ruta = __DIR__ . '/egresosComponets/modalCompra.php';
+if (!file_exists($ruta)) {
+    echo "<script>console.error('ERROR: El archivo del modal no existe en: $ruta');</script>";
+}
+require_once $ruta;
+?>
 
 
-
+   <?php require_once __DIR__ . '/egresosComponets/modalCompra.php'; ?>
+    <?php require_once __DIR__ . '/egresosComponets/modalAjuste.php'; ?>
+    <?php require_once __DIR__ . '/egresosComponets/modalDetalles.php'; ?>
 
 
 
@@ -443,13 +446,7 @@ if (isset($e['piezas_faltantes']) && $e['piezas_faltantes'] !== null): ?>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>$(document).on('show.bs.modal', '.modal', function () {
-    const zIndex = 1050 + (10 * $('.modal:visible').length);
-    $(this).css('z-index', zIndex);
-    setTimeout(function() {
-        $('.modal-backdrop').not('.modal-stack').css('z-index', zIndex - 1).addClass('modal-stack');
-    }, 0);
-});</script>
+
     <script>
     // Forzamos que sea global con window.
     window.DATA_COMPRAS = {
@@ -672,10 +669,38 @@ function confirmarCancelacionCompra(id, folio) {
 }
     </script>
 
-    <?php require_once __DIR__ . '/egresosComponets/modalCompra.php'; ?>
-    <?php require_once __DIR__ . '/egresosComponets/modalAjuste.php'; ?>
-    <?php require_once __DIR__ . '/egresosComponets/modalDetalles.php'; ?>
+ <script>
+$(document).on('show.bs.modal', '.modal', function () {
+    // 1. Calculamos profundidad
+    const zIndex = 1050 + (10 * $('.modal:visible').length);
+    const $modal = $(this);
+    
+    // 2. Aplicamos z-index al modal actual
+    $modal.css('z-index', zIndex);
 
+    // 3. Ajuste del Backdrop (Fondo Negro)
+    // Usamos un delay un poco más largo (50ms) para asegurar que Bootstrap ya creó el div
+    setTimeout(function() {
+        const $backdrop = $('.modal-backdrop').not('.modal-stack').last();
+        if ($backdrop.length) {
+            $backdrop.css('z-index', zIndex - 1).addClass('modal-stack');
+        }
+    }, 50);
+});
+
+// CRÍTICO: Reparar el scroll y bloqueo al cerrar modales múltiples
+$(document).on('hidden.bs.modal', '.modal', function () {
+    if ($('.modal:visible').length > 0) {
+        // Si aún hay modales abiertos, forzamos que el body no pierda la clase
+        setTimeout(function() {
+            $(document.body).addClass('modal-open');
+        }, 10);
+    } else {
+        // Si ya no hay modales, limpiamos cualquier residuo de capas
+        $('.modal-backdrop').remove();
+    }
+});
+</script>
 </body>
 
 </html>

@@ -13,6 +13,8 @@ require_once __DIR__ . '/../models/solicitudCompraModel.php';
 require_once __DIR__ . '/../models/productosModel.php';
 require_once __DIR__ . '/../models/proveedoresModel.php';
 require_once __DIR__ . '/../models/almacen_model.php'; 
+require_once __DIR__ . '/../models/egresos/comprasModel.php';
+
 
 protegerPagina('solicitudesCompra'); 
 
@@ -20,7 +22,7 @@ $solicitudModel = new SolicitudCompra($conexion);
 $productosModel = new ProductosModel($conexion);
 $almacenModel   = new AlmacenModel($conexion);
 $proveedorModel = new ProveedoresModel($conexion);
-
+$comprasModel = new CompraModel($conexion);
 $paginaActual = 'solicitudesCompra'; 
 $almacen_usuario = $_SESSION['almacen_id'] ?? 0;
 $es_admin = ($_SESSION['rol_id'] == 1 || $almacen_usuario == 0);
@@ -94,7 +96,12 @@ if (isset($_GET['action']) && $_GET['action'] === 'eliminar') {
     }
     exit;
 }
-
+if (isset($_GET['action']) && $_GET['action'] === 'getSiguienteFolio') {
+    header('Content-Type: application/json');
+    $siguiente = $comprasModel->generarSiguienteFolio();
+    echo json_encode(['success' => true, 'folio' => $siguiente]);
+    exit;
+}
 // --- CARGA DE VISTA ---
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     try {
@@ -105,33 +112,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
         $almacenes   = $almacenModel->getAlmacenes(); 
 
         $tituloPagina = "Solicitudes de Compra";
+      
         require_once __DIR__ . '/../views/solicitudesCompra_view.php';
         
     } catch (Exception $e) {
         die("Error fatal: " . $e->getMessage());
     }
-}
-// --- ACCIÓN: OBTENER DETALLE JSON (AJAX) ---
-if (isset($_GET['action']) && $_GET['action'] === 'getDetalleJSON') {
-    // 1. Forzamos la limpieza del búfer para evitar espacios en blanco
-    if (ob_get_level()) ob_end_clean(); 
-    
+}if (isset($_GET['action']) && $_GET['action'] === 'obtenerDetalle') {
+    // Limpieza de buffer para evitar basura en el JSON
+    if (ob_get_level()) ob_end_clean();
     header('Content-Type: application/json; charset=utf-8');
-    
+
     try {
         $id = intval($_GET['id'] ?? 0);
-        if ($id <= 0) throw new Exception("ID de solicitud no válido.");
-
+        
+        // Llamamos al modelo. Si el modelo tiene 'return', $detalle tendrá los datos.
         $detalle = $solicitudModel->obtenerDetalle($id);
-        
-        // 2. Si es null o false, devolvemos array vacío
-        $respuesta = ($detalle !== false) ? $detalle : [];
-        
-        echo json_encode($respuesta);
+
+        if ($detalle === null) {
+            throw new Exception("El modelo no devolvió datos (Void).");
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'data'   => $detalle
+        ]);
+
     } catch (Throwable $e) {
-        // Enviar el error real en formato JSON
-        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+        echo json_encode([
+            'status'  => 'error', 
+            'message' => $e->getMessage()
+        ]);
     }
-    // 3. Importante: terminar la ejecución aquí
     exit;
 }
+if (isset($_POST['action']) && $_POST['action'] === 'guardarCompraCompleta') {
+    // 1. Decodificar los items (vienen como string JSON desde el JS)
+    $items = json_decode($_POST['items'], true);
+    
+    // Validar que el JSON sea válido
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        echo json_encode(['success' => false, 'message' => 'Error al procesar el detalle de productos.']);
+        exit;
+    }
+
+    // 2. Sanitizar datos de cabecera
+    // Nota: 'folio' viene del input name="folio" del formulario capturado por FormData
+    $folio      = $_POST['folio'] ?? ''; 
+    $proveedor  = $_POST['proveedor'] ?? 'Sin Proveedor';
+    $almacen_id = intval($_POST['almacen_id'] ?? 0);
+    
+    // Asegúrate de que esta sea la variable exacta que usas en tu sistema de Login
+    $user_id    = $_SESSION['usuario_id'] ?? $_SESSION['id'] ?? 0; 
+    
+    // 3. Obtener el archivo (FormData lo envía con el name del input file)
+    $evidencia = $_FILES['evidencia_compra'] ?? null;
+
+    // 4. Ejecutar el modelo
+    // Asumo que $compraModel ya está instanciado arriba en tu controlador
+    $resultado = $comprasModel->guardarCompraCompleta(
+        $items, 
+        $folio, 
+        $proveedor, 
+        $evidencia, 
+        $almacen_id, 
+        $user_id
+    );
+
+    // 5. RESPUESTA CRÍTICA: El AJAX espera un JSON
+    header('Content-Type: application/json');
+    echo json_encode($resultado);
+    exit; // Importante para detener cualquier salida extra de HTML
+}
+
+    

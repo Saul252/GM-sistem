@@ -56,19 +56,25 @@ class SolicitudCompra {
         return ($result) ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
 
-    public function obtenerDetalle($id) {
-        $sql = "SELECT d.*, p.nombre as producto_nombre, p.sku, p.unidad_medida
-                FROM detalle_solicitud_compra d
-                INNER JOIN productos p ON d.producto_id = p.id
-                WHERE d.solicitud_id = ?";
-                
-        $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        return $result->fetch_all(MYSQLI_ASSOC);
-    }
-
+public function obtenerDetalle($id) {
+    $sql = "SELECT d.*, p.nombre as producto_nombre, p.sku, p.unidad_medida, 
+                   p.unidad_reporte, p.factor_conversion, s.almacen_id as almacen_origen_id,
+                   a.nombre as almacen_nombre, prov.nombre_comercial as proveedor_nombre
+            FROM detalle_solicitud_compra d
+            INNER JOIN productos p ON d.producto_id = p.id
+            INNER JOIN solicitudes_compra s ON d.solicitud_id = s.id
+            INNER JOIN almacenes a ON s.almacen_id = a.id
+            LEFT JOIN proveedores prov ON s.proveedor_id = prov.id
+            WHERE d.solicitud_id = ?";
+            
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    // IMPORTANTE: Aquí es donde entregamos los datos al controlador
+    return $result->fetch_all(MYSQLI_ASSOC); 
+}
     public function eliminar($id) {
         try {
             // Verificar estado con MySQLi

@@ -182,14 +182,15 @@
                 </a>
             </li>
             <?php endif; ?>
-               <?php if (puedeVerModulo(modulo: '')): ?>
+               <?php if (puedeVerModulo(modulo: 'solicitudesCompra')): ?>
 <li class="nav-item">
-    <a href="/cfsistem/app/controllers/configuracionController.php" 
-       class="nav-link <?= $paginaActual == 'configuracionController' ? 'active' : '' ?>">
-        <i class="bi bi-gear-fill"></i><span>Configuración</span>
+    <a href="/cfsistem/app/controllers/solicitudesCompraController.php" 
+       class="nav-link <?= $paginaActual == 'solicitudesCompraontroller' ? 'active' : '' ?>">
+        <i class="bi bi-gear-fill"></i><span>solicitudesCompra</span>
     </a>
 </li>
 <?php endif; ?>
+
              <?php if (puedeVerModulo(modulo: 'Configuracion')): ?>
 <li class="nav-item">
     <a href="/cfsistem/app/controllers/configuracionController.php" 

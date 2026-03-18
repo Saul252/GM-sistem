@@ -48,6 +48,3 @@
 .modal { 
     z-index: 1060 !important; 
 }
-.modal-backdrop { 
-    z-index: 1050 !important; 
-}
