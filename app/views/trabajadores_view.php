@@ -5,7 +5,7 @@
  */
 // Definimos los roles y estados que coinciden con el ENUM de la BD para validación visual
 $rolesEnum = ['administrador', 'vendedor', 'chofer', 'almacenista', 'cargador'];
-$estadosEnum = ['activo', 'inactivo', 'vacaciones'];
+$estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
 ?>
 <!DOCTYPE html>
 <html lang="es">

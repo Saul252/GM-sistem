@@ -33,4 +33,15 @@ class TrabajadorModel {
         $id = intval($id);
         return $this->db->query("DELETE FROM trabajadores WHERE id = $id");
     }
+    // Dentro de clase TrabajadorModel
+public function listarPersonalLogistica() {
+    // Filtramos por los roles que definiste en tu ENUM de la base de datos
+    $sql = "SELECT id, nombre, rol 
+            FROM trabajadores 
+            WHERE estado = 'activo' 
+            AND rol IN ('chofer', 'cargador') 
+            ORDER BY nombre ASC";
+    $res = $this->db->query($sql);
+    return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+}
 }

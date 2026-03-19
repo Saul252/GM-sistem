@@ -350,4 +350,67 @@ public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_a
     }
     return $data;
 }
+public function listarSoloDespachadosPatio() {
+    $sql = "SELECT 
+                m.id as movimiento_id,
+                v.folio as folio_venta,
+                m.fecha as fecha_movimiento,
+                p.nombre as producto,
+                p.sku,
+                m.cantidad,
+                p.unidad_reporte,
+                a.nombre as almacen_origen,
+                rsl.fecha_despacho, -- Nombre correcto según tu DB
+                u.nombre as despacho_por
+            FROM movimientos m
+            -- Unión con el registro de patio
+            INNER JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
+            INNER JOIN productos p ON m.producto_id = p.id
+            LEFT JOIN ventas v ON m.referencia_id = v.id
+            LEFT JOIN almacenes a ON m.almacen_origen_id = a.id
+            LEFT JOIN usuarios u ON rsl.usuario_patio_id = u.id
+            -- Filtro: Que NO exista ya en la tabla maestro de repartos
+            -- Nota: En tu tabla transporte_repartos_maestro no veo movimiento_id, 
+            -- pero usaremos entrega_venta_id o una lógica similar si es necesario.
+            LEFT JOIN transporte_repartos_maestro trm ON v.id = trm.entrega_venta_id
+            
+            WHERE m.tipo = 'salida' 
+              AND trm.id IS NULL 
+            ORDER BY rsl.fecha_despacho DESC";
+
+    $res = $this->db->query($sql);
+    $data = [];
+    
+    if($res) {
+        while ($row = $res->fetch_assoc()) {
+            // Formateamos la fecha para que se vea bien en la vista
+            $row['fecha_format'] = date('d/m/Y H:i', strtotime($row['fecha_despacho']));
+            $data[] = $row;
+        }
+    }
+    return $data;
+}
+public function getDetalleParaDespacho($movimiento_id) {
+    $sql = "SELECT 
+                m.id AS movimiento_id,
+                m.cantidad,
+                p.nombre AS producto_nombre,
+                p.unidad_reporte,
+                p.factor_conversion,
+                v.folio AS folio_venta,
+                c.nombre_comercial AS cliente_nombre,
+                c.direccion AS cliente_direccion_fiscal, -- Esta es la que usaremos
+                c.telefono AS cliente_telefono
+            FROM movimientos m
+            INNER JOIN productos p ON m.producto_id = p.id
+            LEFT JOIN ventas v ON m.referencia_id = v.id
+            LEFT JOIN clientes c ON v.id_cliente = c.id
+            WHERE m.id = ? 
+            LIMIT 1";
+            
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param("i", $movimiento_id);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();
+}
 }

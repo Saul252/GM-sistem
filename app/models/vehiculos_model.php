@@ -50,4 +50,14 @@ public function guardar($d) {
         // Hacemos un borrado lógico para no perder historial de viajes o mantenimientos
         return $this->db->query("UPDATE transporte_vehiculos SET activo = 0 WHERE id = $id");
     }
+    // Dentro de clase VehiculoModel
+public function listarDisponiblesRuta() {
+    $sql = "SELECT id, nombre, placas, capacidad_carga_kg 
+            FROM transporte_vehiculos 
+            WHERE activo = 1 
+            AND estado_unidad = 'disponible' 
+            ORDER BY nombre ASC";
+    $res = $this->db->query($sql);
+    return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+}
 }

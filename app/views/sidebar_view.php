@@ -207,6 +207,14 @@
     </a>
 </li>
 <?php endif; ?>
+             <?php if (puedeVerModulo(modulo: 'repartos')): ?>
+<li class="nav-item">
+    <a href="/cfsistem/app/controllers/repartosController.php" 
+       class="nav-link <?= $paginaActual == 'repartosController' ? 'active' : '' ?>">
+       <i class="bi bi-truck-flatbed"></i><span>Repartos</span>
+    </a>
+</li>
+<?php endif; ?>
              <?php if (puedeVerModulo(modulo: 'Configuracion')): ?>
 <li class="nav-item">
     <a href="/cfsistem/app/controllers/configuracionController.php" 
