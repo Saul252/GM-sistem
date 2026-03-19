@@ -51,10 +51,65 @@
     <div class="main-content">
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <div>
-                    <h2 class="fw-bold m-0"><i class="bi bi-truck text-primary me-2"></i> Proveedores</h2>
-                    <p class="text-muted small">Gestión de suministros y cuentas por pagar</p>
-                </div>
+               <div class="d-flex justify-content-between align-items-center flex-wrap mb-4" style="gap: 15px; width: 100%;">
+    <style>
+        .ios-micro-card {
+            background: #ffffff !important;
+            border-radius: 12px !important;
+            border: 1px solid rgba(0,0,0,0.05) !important;
+            padding: 4px 10px !important;
+            min-width: 85px !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            border-left: 3px solid #5856d6 !important;
+        }
+        .ios-m-label { 
+            color: #8e8e93; font-size: 0.55rem; font-weight: 700; 
+            text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.1; margin: 0;
+        }
+        .ios-m-value { 
+            color: #1c1c1e; font-size: 1rem; font-weight: 700; 
+            letter-spacing: -0.02em; line-height: 1; margin-top: 1px;
+        }
+    </style>
+
+    <div style="flex: 1; min-width: 200px;">
+        <h2 class="fw-bold m-0" style="letter-spacing: -0.02em; color: #1c1c1e;">
+            <i class="bi bi-truck text-primary me-2"></i> Proveedores
+        </h2>
+        <p class="text-muted mb-0" style="font-size: 0.85rem;">Gestión de suministros y cuentas por pagar</p>
+    </div>
+
+    <div class="d-flex align-items-center" style="gap: 12px;">
+        
+        <?php 
+            // ESCÁNER UNIVERSAL DE VARIABLES
+            $valor_final = 0;
+            if (isset($nproveedores)) {
+                if (is_numeric($nproveedores)) {
+                    $valor_final = $nproveedores;
+                } elseif (is_array($nproveedores)) {
+                    // Probamos todas las llaves posibles que hayamos usado
+                    $valor_final = $nproveedores['total'] 
+                                 ?? $nproveedores['mis_clientes'] 
+                                 ?? $nproveedores['mis_productos'] 
+                                 ?? 0;
+                }
+            }
+        ?>
+
+        <div class="ios-micro-card">
+            <p class="ios-m-label">Proveedores</p>
+            <div class="ios-micro-value">
+                <?= number_format((float)$valor_final) ?>
+            </div>
+        </div>
+
+       
+    </div>
+</div>
                 <button class="btn btn-primary rounded-pill px-4 shadow-sm" onclick="nuevoProveedor()">
                     <i class="bi bi-plus-lg me-2"></i> Nuevo Proveedor
                 </button>

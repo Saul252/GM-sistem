@@ -209,4 +209,43 @@ public function cambiarEstado($id, $estado, $almacen_id = 0) {
         $stmt->execute();
         return $stmt->get_result()->fetch_assoc();
     }
+ public function getResumenClientes($almacen_id) {
+    // 1. Limpiamos el ID
+    $id = intval($almacen_id);
+
+    // 2. CONTEO GLOBAL (Esto es lo que ve el Admin)
+    // Contamos todos los clientes activos sin importar a qué almacén pertenecen
+    $sqlGlobal = "SELECT COUNT(*) as total FROM clientes ";
+    $queryGlobal = $this->db->query($sqlGlobal);
+    $totalSistema = ($queryGlobal) ? intval($queryGlobal->fetch_assoc()['total']) : 0;
+
+    // 3. RETORNO DE LÓGICA
+    if ($id === 0) {
+        // --- CASO ADMINISTRADOR ---
+        // Para el Admin, "mis_clientes" es igual al "total_sistema"
+        return [
+            "tipo"          => "admin",
+            "nombre"        => "Control Global",
+            "mis_clientes"  => $totalSistema, 
+            "total_sistema" => $totalSistema
+        ];
+    } else {
+        // --- CASO VENDEDOR (ID > 0) ---
+        // Solo contamos los que le pertenecen a SU almacén
+        $sqlLocal = "SELECT COUNT(*) as total FROM clientes WHERE almacen_id = $id ";
+        $queryLocal = $this->db->query($sqlLocal);
+        $totalLocal = ($queryLocal) ? intval($queryLocal->fetch_assoc()['total']) : 0;
+
+        // Traemos el nombre del almacén para el footer del widget
+        $sqlNom = "SELECT nombre FROM almacenes WHERE id = $id LIMIT 1";
+        $resNom = $this->db->query($sqlNom)->fetch_assoc();
+
+        return [
+            "tipo"          => "vendedor",
+            "nombre"        => $resNom['nombre'] ?? 'Sucursal',
+            "mis_clientes"  => $totalLocal,
+            "total_sistema" => $totalSistema
+        ];
+    }
+}
     }

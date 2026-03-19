@@ -42,11 +42,141 @@
     .modal {
         overflow-y: auto !important;
     }
+     /* Contenedor mini para la esquina superior */
+    .ios-mini-container {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        padding: 10px;
+    }
+
+    .ios-micro-card {
+        background: #ffffff;
+        border-radius: 14px;
+        border: 1px solid rgba(0,0,0,0.04);
+        padding: 8px 12px;
+        min-width: 110px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .ios-micro-label { 
+        color: #8e8e93; 
+        font-size: 0.6rem; 
+        font-weight: 700; 
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        line-height: 1;
+        margin-bottom: 4px;
+    }
+
+    .ios-micro-value { 
+        color: #1c1c1e; 
+        font-size: 1.1rem; 
+        font-weight: 700; 
+        letter-spacing: -0.02em;
+        line-height: 1;
+    }
+
+    .ios-micro-footer {
+        font-size: 0.65rem;
+        color: #aeaeb2;
+        margin-top: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100px;
+    }
+
+    /* Colores de acento sutiles en el borde izquierdo */
+    .border-blue { border-left: 3px solid #007aff; }
+    .border-purple { border-left: 3px solid #5856d6; }
+    .border-green { border-left: 3px solid #34c759; }
     </style>
     <div class="main-content">
-        <h2 class="mb-4 fw-bold">
-            <i class="bi bi-box-seam text-primary"></i> Módulo de Almacén
-        </h2>
+   <div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
+    <h2 class="fw-bold mb-0" style="letter-spacing: -0.02em; color: #1c1c1e;">
+        <i class="bi bi-box-seam text-primary"></i> Módulo de Almacén
+    </h2>
+
+    <?php 
+        $rData = $resumenData ?? ['tipo' => 'error', 'nombre' => 'No disponible', 'mis_productos' => 0, 'total_sistema' => 0];
+        $cant_prod  = $rData['mis_productos'];
+        $total_cat  = $rData['total_sistema'];
+        $cobertura  = ($total_cat > 0) ? round(($cant_prod / $total_cat) * 100, 1) : 0;
+    ?>
+
+    <div class="d-flex align-items-center" style="gap: 8px;">
+        
+        <div class="ios-micro-card border-blue">
+            <span class="ios-micro-label"><?= ($rData['tipo'] == 'admin') ? 'Global' : 'Stock' ?></span>
+            <div class="ios-micro-value"><?= number_format($cant_prod) ?></div>
+            <div class="ios-micro-footer text-truncate" style="max-width: 80px;" title="<?= $rData['nombre'] ?>">
+                <?= $rData['nombre'] ?>
+            </div>
+        </div>
+
+        <div class="ios-micro-card border-purple">
+            <span class="ios-micro-label">Catálogo</span>
+            <div class="ios-micro-value"><?= number_format($total_cat) ?></div>
+            <div class="ios-micro-footer">Items</div>
+        </div>
+
+        <div class="ios-micro-card border-green">
+            <span class="ios-micro-label">Cobertura</span>
+            <div class="d-flex align-items-baseline">
+                <span class="ios-micro-value"><?= $cobertura ?></span>
+                <span style="font-size: 0.6rem; font-weight: 700; color: #1c1c1e; margin-left: 1px;">%</span>
+            </div>
+            <div class="progress" style="height: 3px; background-color: #f2f2f7; border-radius: 10px; margin-top: 4px; width: 100%;">
+                <div class="progress-bar" style="width: <?= $cobertura ?>%; background-color: #34c759;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilos ultra-finos para no afectar el main-content */
+    .ios-micro-card {
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid rgba(0,0,0,0.05);
+        padding: 5px 10px;
+        min-width: 90px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .ios-micro-label { 
+        color: #8e8e93; 
+        font-size: 0.55rem; 
+        font-weight: 700; 
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        line-height: 1.2;
+    }
+    .ios-micro-value { 
+        color: #1c1c1e; 
+        font-size: 1rem; 
+        font-weight: 700; 
+        letter-spacing: -0.02em;
+        line-height: 1;
+        margin-top: 2px;
+    }
+    .ios-micro-footer {
+        font-size: 0.6rem;
+        color: #aeaeb2;
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .border-blue { border-left: 3px solid #007aff; }
+    .border-purple { border-left: 3px solid #5856d6; }
+    .border-green { border-left: 3px solid #34c759; }
+</style>
 
         <div class="card p-3 shadow-sm">
             <div class="row mb-3 g-2 align-items-center">
@@ -135,6 +265,8 @@
                 </table>
             </div>
         </div>
+
+
     </div>
 
     <div class="modal fade" id="modalTraspaso" tabindex="-1">
@@ -817,7 +949,6 @@
         card.find('.total-piezas-h').val(totalPiezas.toFixed(2));
     }
     </script>
-
 
 </body>
 

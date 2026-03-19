@@ -169,6 +169,7 @@
                     <table class="table table-hover align-middle mb-0" id="tablaVentas">
                         <thead>
                             <tr>
+                                <th>Id</th>
                                 <th class="ps-3">Fecha</th>
                                 <th>Folio</th>
                                 <th>Almacén</th>
@@ -334,6 +335,7 @@
 
         const params = new URLSearchParams({
             action: 'listar',
+            // <--- Nuevo parámetro para el ID de venta
             f_search: $('#f_search').val(),
             f_rango: $('#f_rango').val(),
             f_inicio: $('#f_ini').val(),
@@ -356,6 +358,7 @@
                     `<span class="text-danger small fw-bold">Debe: $${saldo.toFixed(2)}</span>`;
 
                 return `<tr>
+                <td class="ps-3 small">${v.id}</td>
                 <td class="ps-3 small">${v.fecha}</td>
                 <td class="fw-bold">${v.folio}</td>
                 <td><span class="badge bg-light text-dark border fw-normal">${v.almacen_nombre}</span></td>

@@ -35,4 +35,15 @@ class ProveedoresModel {
         $stmt->bind_param("ii", $estado, $id);
         return $stmt->execute();
     }
+    public function getResumenProveedores() {
+    // Contamos solo los que están activos para que el número sea real
+    $sql = "SELECT COUNT(*) as total FROM proveedores WHERE activo = 1";
+    $query = $this->db->query($sql);
+    $res = ($query) ? $query->fetch_assoc() : ['total' => 0];
+    
+    return [
+        "total" => intval($res['total'] ?? 0),
+        "etiqueta" => "Global"
+    ];
+}
 }

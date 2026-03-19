@@ -70,4 +70,38 @@ class AlmacenModel {
     
   return $this->db->query($sql)->fetch_all(MYSQLI_ASSOC);
 }
+
+public function getResumenStock($almacen_id) {
+    // 1. Conteo global de productos únicos ACTIVOS en el catálogo maestro
+    $sqlGlobal = "SELECT COUNT(*) as total FROM productos WHERE activo = 1";
+    $resGlobal = $this->db->query($sqlGlobal)->fetch_assoc();
+    $totalRegistrados = intval($resGlobal['total'] ?? 0);
+
+    $id = intval($almacen_id);
+
+    if ($id > 0) {
+        // --- CASO VENDEDOR: Conteo de lo que tiene sucursal vs el total ---
+        $sqlAlmacen = "SELECT 
+                            (SELECT COUNT(DISTINCT producto_id) FROM inventario WHERE almacen_id = $id) as total_en_almacen,
+                            nombre as nombre_almacen
+                        FROM almacenes WHERE id = $id";
+        $res = $this->db->query($sqlAlmacen)->fetch_assoc();
+        
+        return [
+            "tipo" => "vendedor",
+            "nombre" => $res['nombre_almacen'] ?? 'Almacén No Identificado',
+            "mis_productos" => intval($res['total_en_almacen'] ?? 0),
+            "total_sistema" => $totalRegistrados
+        ];
+    } else {
+        // --- CASO ADMINISTRADOR: Control Total del Sistema ---
+        // Al ser admin, sus "productos" son el 100% del catálogo activo
+        return [
+            "tipo" => "admin",
+            "nombre" => "Sede Central (Global)",
+            "mis_productos" => $totalRegistrados, // Aquí forzamos el 100% de cobertura
+            "total_sistema" => $totalRegistrados
+        ];
+    }
+}
 }

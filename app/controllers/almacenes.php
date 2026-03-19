@@ -29,26 +29,51 @@ class AlmacenController {
         $this->categoriaModel = new CategoriaModel($conexion); 
     }
 
-    public function index() {
-        $paginaActual = 'almacenes'; 
-        $almacen_usuario = $_SESSION['almacen_id'] ?? 0;
+   public function index() {
+    $paginaActual = 'almacenes'; 
+    // Mantenemos el ID de sesión para los filtros de las tablas de abajo
+    $almacen_usuario = $_SESSION['almacen_id'] ?? 0;
 
-        try {
-            $categorias = $this->model->getCategorias();
-            $almacenes = $this->model->getAlmacenes($almacen_usuario);
-            $todosLosAlmacenes = $this->model->getAlmacenesDestino($almacen_usuario);
-            $productos = $this->model->getInventario($almacen_usuario);
+    try {
+        // 1. Cargamos el catálogo y almacenes para los selectores/tablas
+        $categorias = $this->model->getCategorias();
+        $almacenes = $this->model->getAlmacenes($almacen_usuario);
+        $todosLosAlmacenes = $this->model->getAlmacenesDestino($almacen_usuario);
+        
+        // 2. Cargamos el inventario detallado para el DataTable
+        $productos = $this->model->getInventario($almacen_usuario);
 
-            if ($categorias === null) $categorias = [];
-            if ($almacenes === null) $almacenes = [];
-            if ($productos === null) $productos = [];
+        // --- 3. NUEVA LÓGICA: RESUMEN AUTOMÁTICO PARA LAS TARJETAS ---
+        // El modelo detectará por sesión si es Admin o Vendedor
+       
+        $resumenData = $this->model->getResumenStock( $almacen_usuario);
 
-            require_once __DIR__ . '/../views/almacenes_view.php';
+// AÑADE ESTO TEMPORALMENTE PARA TESTEAR:
+// var_dump($resumenData); die();
+        // -------------------------------------------------------------
 
-        } catch (Exception $e) {
-            die("Error en el Controlador de Almacén: " . $e->getMessage());
+        // Validaciones de seguridad para evitar errores en la vista
+        if ($categorias === null) $categorias = [];
+        if ($almacenes === null) $almacenes = [];
+        if ($productos === null) $productos = [];
+        if ($resumenData === null) {
+            $resumenData = [
+                'tipo' => 'error', 
+                'nombre' => 'No disponible', 
+                'mis_productos' => 0, 
+                'total_sistema' => 0
+            ];
         }
+
+        // 4. Renderizamos la vista (ya lleva $resumenData inyectado)
+        require_once __DIR__ . '/../views/almacenes_view.php';
+
+    } catch (Exception $e) {
+        // Un mensaje un poco más limpio para el usuario final
+        error_log("Error en AlmacenController: " . $e->getMessage());
+        die("Lo sentimos, hubo un problema al cargar el inventario. Por favor, intenta más tarde.");
     }
+}
 
     /**
      * AJAX: Obtener lista completa de productos para refrescar Selects en Compras
@@ -157,6 +182,9 @@ public function obtenerListaAlmacenes() {
     // 3. Terminamos la ejecución para que no se pegue el HTML del Layout
     exit; 
 }
+/**
+     * AJAX: Obtiene el resumen de productos (Mi Almacén vs Total Sistema)
+     */
 
 
 }
@@ -184,7 +212,9 @@ if (isset($conexion)) {
             case 'getAlmacenesJSON': // <--- AÑADE ESTO
         $controller->obtenerListaAlmacenes();
         break;
-   
+   // --- NUEVO CASO AQUÍ ---
+        
+        // -----------------------
         default:
             $controller->index();
             break;

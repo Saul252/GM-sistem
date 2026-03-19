@@ -41,15 +41,7 @@ $usosCFDI = ['G01' => 'Adquisición', 'G03' => 'Gastos', 'P01' => 'Por definir',
     <?php renderizarLayout($paginaActual); ?>
 
     <main class="main-content">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2 class="fw-bold m-0">Cartera de Clientes</h2>
-                <p class="text-muted mb-0">Gestiona tus clientes y sus ubicaciones</p>
-            </div>
-            <button class="btn btn-primary rounded-pill px-4" onclick="nuevoCliente()">
-                <i class="bi bi-plus-circle me-2"></i>Nuevo Cliente
-            </button>
-        </div>
+       
 
         <div class="card card-table p-4">
             <div class="row mb-4 g-3">

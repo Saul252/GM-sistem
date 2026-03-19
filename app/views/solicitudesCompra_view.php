@@ -27,7 +27,21 @@ error_reporting(E_ALL);
     <?php renderizarLayout($paginaActual); ?>
 
     <main class="main-content">
+        
         <div class="glass-card p-4 mb-4">
+
+        <div class="row align-items-center mb-5">
+            <div class="col-md-8">
+                <h1 class="h3 fw-bold mb-1">Solicitudes de Compra</h1>
+                <p class="text-muted small">Gestión de requerimientos de materiales</p>
+            </div>
+            <div class="col-md-4 text-md-end">
+                <button class="btn btn-add" onclick="nuevaSolicitud()">
+                    <i class="bi bi-plus-lg me-2"></i> Crear Solicitud
+                </button>
+            </div>
+        </div>
+
             <div class="row g-3 align-items-end">
                 <div class="col-md-3">
                     <label class="form-label small fw-bold text-muted text-uppercase">Rango de Fecha</label>
@@ -70,18 +84,6 @@ error_reporting(E_ALL);
             </div>
         </div>
 
-        <div class="row align-items-center mb-5">
-            <div class="col-md-8">
-                <h1 class="h3 fw-bold mb-1">Solicitudes de Compra</h1>
-                <p class="text-muted small">Gestión de requerimientos de materiales</p>
-            </div>
-            <div class="col-md-4 text-md-end">
-                <button class="btn btn-add" onclick="nuevaSolicitud()">
-                    <i class="bi bi-plus-lg me-2"></i> Crear Solicitud
-                </button>
-            </div>
-        </div>
-
         <div class="glass-card p-4">
             <div class="table-responsive">
                 <table id="tablaSolicitudes" class="table align-middle w-100">
@@ -118,18 +120,22 @@ error_reporting(E_ALL);
                                 <span class="badge badge-status <?= $clase ?> rounded-pill"><?= $status ?></span>
                             </td>
                             <td class="text-end">
-                                <button class="btn btn-sm btn-white border shadow-sm"
+                                
+                                <?php if($status === 'PENDIENTE'): ?>
+                                    <button class="btn btn-sm btn-white border shadow-sm"
                                     onclick="gestionarSolicitud(<?= $s['id'] ?>)">
                                     <i class="bi bi-eye text-primary"></i> Gestionar
                                 </button>
-                                <?php if($status === 'PENDIENTE'): ?>
                                 <button class="btn btn-sm btn-white border shadow-sm"
                                     onclick="eliminarSolicitud(<?= $s['id'] ?>)">
                                     <i class="bi bi-trash text-danger"></i>
                                 </button>
                                 <?php endif; ?>
-                                <button class="btn btn-sm btn-white border shadow-sm" onclick="prepararImpresion(<?= $s['id'] ?>)">
-    <i class="bi bi-printer text-dark"></i>
+                                <button class="btn btn-sm btn-white border shadow-sm rounded-pill px-3" 
+        onclick="prepararImpresion(<?= $s['id'] ?>)" 
+        title="Imprimir solicitud">
+    <i class="bi bi-printer text-primary me-1"></i> 
+    <span class="text-dark fw-medium">Imprimir</span>
 </button>
                             </td>
                         </tr>

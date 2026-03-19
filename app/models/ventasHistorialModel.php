@@ -24,7 +24,7 @@ class VentaHistorialModel {
         // Buscador (Folio o Cliente)
         if (!empty($filtros['search'])) {
             $s = $this->db->real_escape_string($filtros['search']);
-            $where .= " AND (c.nombre_comercial LIKE '%$s%' OR v.folio LIKE '%$s%') ";
+            $where .= " AND (c.nombre_comercial LIKE '%$s%' OR v.folio LIKE '%$s%'OR v.id LIKE '%$s%') ";
         }
 
         // Estatus Entrega

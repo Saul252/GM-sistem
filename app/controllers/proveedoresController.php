@@ -31,5 +31,6 @@ if (isset($_GET['action'])) {
 }
 
 $proveedores = $model->listarTodos();
+$nproveedores = $model->getResumenProveedores();
 $tituloPagina = "Catálogo de Proveedores";
 require_once __DIR__ . '/../views/proveedores_view.php';

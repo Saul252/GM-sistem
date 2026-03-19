@@ -186,11 +186,27 @@
 <li class="nav-item">
     <a href="/cfsistem/app/controllers/solicitudesCompraController.php" 
        class="nav-link <?= $paginaActual == 'solicitudesCompraontroller' ? 'active' : '' ?>">
-        <i class="bi bi-gear-fill"></i><span>solicitudesCompra</span>
+       <i class="bi bi-cart-check-fill"></i><span>solicitudesCompra</span>
+    </a>
+</li>
+
+<?php endif; ?>
+ <?php if (puedeVerModulo(modulo: 'trabajadores')): ?>
+<li class="nav-item">
+    <a href="/cfsistem/app/controllers/trabajadoresController.php" 
+       class="nav-link <?= $paginaActual == 'trabjadoresController' ? 'active' : '' ?>">
+       <i class="bi bi-people-fill"></i><span>Trabajadores</span>
     </a>
 </li>
 <?php endif; ?>
-
+   <?php if (puedeVerModulo(modulo: 'vehiculos')): ?>
+<li class="nav-item">
+    <a href="/cfsistem/app/controllers/vehiculosController.php" 
+       class="nav-link <?= $paginaActual == 'vehiculosController' ? 'active' : '' ?>">
+        <i class="bi bi-truck-front-fill"></i><span>Vehiculos</span>
+    </a>
+</li>
+<?php endif; ?>
              <?php if (puedeVerModulo(modulo: 'Configuracion')): ?>
 <li class="nav-item">
     <a href="/cfsistem/app/controllers/configuracionController.php" 

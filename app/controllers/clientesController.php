@@ -133,6 +133,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
 
         // Pasamos el ID a la función para que filtre automáticamente
         $clientes = $clientesModel->listarTodosViewClientes($almacen_usuario);
+          $nclientes = $clientesModel->getResumenClientes($almacen_usuario);
         
         $tituloPagina = "Administración de Clientes";
         require_once __DIR__ . '/../views/clientes_view.php';
