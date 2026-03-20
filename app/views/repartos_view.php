@@ -225,9 +225,9 @@ window.cargarPendientes = async function() {
                 ? `<button class="btn btn-info btn-sm" onclick="imprimirReparto(${item.movimiento_id})">
                         <i class="fas fa-print"></i> Imprimir
                    </button>`
-                : `<button class="btn btn-gradient btn-sm" onclick="prepararModalReparto(${item.movimiento_id})">
-                        Asignar
-                   </button>`;
+                : `<button class="btn btn-gradient btn-sm" onclick="prepararModalReparto(${item.movimiento_id}, ${item.almacen_origen_id})">
+            Asignar
+       </button>`;
 
             const badge = enRuta
                 ? `<span class="badge bg-info">EN RUTA</span>`

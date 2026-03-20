@@ -357,6 +357,7 @@ public function listarSoloDespachadosPatio() {
                 m.fecha as fecha_movimiento,
                 p.nombre as producto,
                 p.sku,
+                m.almacen_origen_id,
                 m.cantidad,
                 p.unidad_reporte,
                 a.nombre as almacen_origen,
