@@ -360,30 +360,34 @@ public function listarSoloDespachadosPatio() {
                 m.cantidad,
                 p.unidad_reporte,
                 a.nombre as almacen_origen,
-                rsl.fecha_despacho, -- Nombre correcto según tu DB
-                u.nombre as despacho_por
+                rsl.fecha_despacho, 
+                u.nombre as despacho_por,
+                1 as ya_despachado,
+                -- Ahora sí traerá el estado real de trm porque el JOIN es por m.id
+                IFNULL(trm.estado_reparto, 'pendiente') as estado_reparto
             FROM movimientos m
-            -- Unión con el registro de patio
             INNER JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
             INNER JOIN productos p ON m.producto_id = p.id
             LEFT JOIN ventas v ON m.referencia_id = v.id
             LEFT JOIN almacenes a ON m.almacen_origen_id = a.id
             LEFT JOIN usuarios u ON rsl.usuario_patio_id = u.id
-            -- Filtro: Que NO exista ya en la tabla maestro de repartos
-            -- Nota: En tu tabla transporte_repartos_maestro no veo movimiento_id, 
-            -- pero usaremos entrega_venta_id o una lógica similar si es necesario.
-            LEFT JOIN transporte_repartos_maestro trm ON v.id = trm.entrega_venta_id
+            
+            -- CAMBIO CLAVE: trm.entrega_venta_id contiene el movimiento_id (según tu función iniciarReparto)
+            LEFT JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id
+            
+            LEFT JOIN transmutacion_detalle td ON m.id = td.movimiento_id
             
             WHERE m.tipo = 'salida' 
-              AND trm.id IS NULL 
+              AND td.id IS NULL
+              AND (v.id IS NULL OR v.estado_general = 'activa')
+              -- Filtro para la vista: No mostrar si ya fue cancelado (opcional, según tu flujo)
+              AND (trm.estado_reparto IS NULL OR trm.estado_reparto != 'cancelado')
             ORDER BY rsl.fecha_despacho DESC";
 
     $res = $this->db->query($sql);
     $data = [];
-    
     if($res) {
         while ($row = $res->fetch_assoc()) {
-            // Formateamos la fecha para que se vea bien en la vista
             $row['fecha_format'] = date('d/m/Y H:i', strtotime($row['fecha_despacho']));
             $data[] = $row;
         }

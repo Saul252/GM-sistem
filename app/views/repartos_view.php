@@ -174,6 +174,7 @@
                 <p class="text-muted fw-medium mt-3">No hay productos pendientes de asignar a ruta.</p>
             </div>
         </div>
+
     </main>
 
    
@@ -181,6 +182,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
      <?php require_once __DIR__ . '/entregasComponets/repartoModal.php'; ?>
+                   <?php require_once __DIR__ . '/entregasComponets/monitorDeRuta.php'; ?>
+
 
 
 <script>
@@ -200,38 +203,49 @@ window.formatQty = function(cantidad, factor, unidad) {
     }
     return `<div class="fw-bold text-dark fs-6">${cant} <small class="fw-normal text-muted">pzas</small></div>`;
 };
-
-// 3. CARGA DE TABLA
 window.cargarPendientes = async function() {
     const body = $('#bodyPendientes');
     try {
         const resp = await fetch(`${window.CONTROLLER}?action=listar_pendientes_ruta`);
         const res = await resp.json();
+        
         if (!res.success) {
-            body.html('<tr><td colspan="6" class="text-center py-4">Sin pendientes</td></tr>');
+            body.html('<tr><td colspan="6" class="text-center py-4">Sin datos</td></tr>');
             return;
         }
+        
         $('#count_pendientes').text(res.data.length);
         body.empty();
+
         res.data.forEach(item => {
+            // Si el estado no es 'pendiente' ni 'cancelado', asumimos que está en ruta/transito
+            const enRuta = (item.estado_reparto !== 'pendiente' && item.estado_reparto !== 'cancelado');
+
+            const btnAccion = enRuta 
+                ? `<button class="btn btn-info btn-sm" onclick="imprimirReparto(${item.movimiento_id})">
+                        <i class="fas fa-print"></i> Imprimir
+                   </button>`
+                : `<button class="btn btn-gradient btn-sm" onclick="prepararModalReparto(${item.movimiento_id})">
+                        Asignar
+                   </button>`;
+
+            const badge = enRuta
+                ? `<span class="badge bg-info">EN RUTA</span>`
+                : `<span class="badge bg-success">EN PATIO</span>`;
+
             body.append(`
                 <tr>
                     <td>#${item.folio_venta || 'S/F'}</td>
-                    <td>${item.producto}<br>${window.formatQty(item.cantidad, item.factor_conversion, item.unidad_reporte)}</td>
+                    <td>${item.producto}<br><small>${item.cantidad} ${item.unidad_reporte}</small></td>
                     <td>${item.almacen_origen}</td>
                     <td>${item.despacho_por || 'Sistema'}</td>
-                    <td class="text-center"><span class="badge-premium st-disponible">EN PATIO</span></td>
-                    <td class="text-end">
-                        <button class="btn btn-gradient btn-sm" onclick="prepararModalReparto(${item.movimiento_id})">
-                            Asignar
-                        </button>
-                    </td>
+                    <td class="text-center">${badge}</td>
+                    <td class="text-end">${btnAccion}</td>
                 </tr>
             `);
         });
     } catch (e) { console.error(e); }
 };
-
 $(document).ready(function() {
     window.cargarPendientes();
     // Buscador

@@ -85,6 +85,16 @@ if ($action === 'guardar_reparto') {
             ]);
             exit;
         }
+        if ($action === 'listar_viajes_activos') {
+    $viajes = $repartoM->listarViajesActivos();
+    echo json_encode(['success' => true, 'data' => $viajes]);
+}
+
+if ($action === 'finalizar_viaje') {
+    $v_id = intval($_POST['vehiculo_id']);
+    $repartoM->finalizarViajeVehiculo($v_id);
+    echo json_encode(['success' => true, 'message' => 'Viaje finalizado y pedidos marcados como entregados.']);
+}
 
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
