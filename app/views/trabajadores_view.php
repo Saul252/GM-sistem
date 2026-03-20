@@ -105,6 +105,7 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                             <th>Nombre</th>
                             <th>Teléfono</th>
                             <th>Rol / Puesto</th>
+                            <th>Almacén</th>
                             <th>Estado</th>
                             <th class="text-end">Acciones</th>
                         </tr>
@@ -122,6 +123,9 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                                 <span class="badge bg-light text-dark border fw-normal text-uppercase" style="font-size: 0.7rem;">
                                     <?= $t['rol'] ?>
                                 </span>
+                            </td>
+                            <td>
+                                <span class="small text-muted"><i class="bi bi-geo-alt"></i> ID: <?= $t['almacen_id'] ?></span>
                             </td>
                             <td>
                                 <?php 
@@ -182,6 +186,22 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                                     <?php endforeach; ?>
                                 </select>
                             </div>
+
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold small">Almacén / Sucursal</label>
+                                <?php if ($_SESSION['almacen_id'] == 0): ?>
+                                    <select name="almacen_id" id="t_almacen_id" class="form-select" required>
+                                        <option value="">Seleccionar Almacén...</option>
+                                        <?php foreach($listaAlmacenes as $alm): ?>
+                                            <option value="<?= $alm['id'] ?>"><?= htmlspecialchars($alm['nombre']) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                <?php else: ?>
+                                    <input type="text" class="form-control bg-light" value="Asignación Automática" readonly>
+                                    <input type="hidden" name="almacen_id" id="t_almacen_id" value="<?= $_SESSION['almacen_id'] ?>">
+                                <?php endif; ?>
+                            </div>
+
                             <div class="col-md-12">
                                 <label class="form-label fw-bold small">Estado Laboral</label>
                                 <select name="estado" id="t_estado" class="form-select">
@@ -231,6 +251,8 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
     function nuevoTrabajador() {
         $('#formTrabajador')[0].reset();
         $('#trabajador_id').val('0');
+        // Si el select de almacén existe, resetearlo también
+        if ($('#t_almacen_id').is('select')) $('#t_almacen_id').val('');
         $('#modalTitulo').text('Nuevo Trabajador');
         $('#modalTrabajador').modal('show');
     }
@@ -242,6 +264,10 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
         $('#t_telefono').val(t.telefono);
         $('#t_rol').val(t.rol);
         $('#t_estado').val(t.estado);
+        // Seteamos el almacén
+        if ($('#t_almacen_id').is('select')) {
+            $('#t_almacen_id').val(t.almacen_id);
+        }
         $('#modalTrabajador').modal('show');
     }
 
@@ -255,6 +281,8 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
             if (res.status === 'success') {
                 Swal.fire({ icon: 'success', title: '¡Éxito!', showConfirmButton: false, timer: 1000 })
                 .then(() => location.reload());
+            } else {
+                Swal.fire('Error', res.message, 'error');
             }
         } catch (e) { Swal.fire('Error', 'No se pudo guardar', 'error'); }
     });

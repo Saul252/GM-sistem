@@ -69,31 +69,75 @@ if ($action === 'get_recursos_reparto') {
         }
         
 if ($action === 'guardar_reparto') {
-            // Validamos que los datos mínimos existan antes de llamar al modelo
-            if (empty($_POST['vehiculo_id']) || empty($_POST['chofer_id']) || empty($_POST['movimiento_id'])) {
-                throw new Exception("Faltan datos obligatorios: Unidad, Chofer o ID de Movimiento.");
-            }
+    // 1. Validaciones iniciales
+    if (empty($_POST['vehiculo_id']) || empty($_POST['chofer_id']) || empty($_POST['movimiento_id'])) {
+        throw new Exception("Faltan datos obligatorios: Unidad, Chofer o ID de Movimiento.");
+    }
 
-            // Llamamos al método del modelo y capturamos el ID del nuevo reparto
-            // El modelo se encarga de la transacción y los inserts
-            $reparto_id = $repartoM->iniciarReparto($_POST);
+    $vehiculo_id = intval($_POST['vehiculo_id']);
+    
+    // 2. Lógica de Consolidación: ¿El camión ya tiene una ruta abierta?
+    // Usamos la función auxiliar que ya tienes en tu modelo
+    $rutaActiva = $repartoM->buscarRutaAbierta($vehiculo_id);
 
-            // Si llegamos aquí, todo salió bien
-            echo json_encode([
-                'success' => true, 
-                'message' => '¡Logística confirmada! Se generó el Folio de Salida #' . $reparto_id
-            ]);
-            exit;
+    if ($rutaActiva) {
+        // CASO A: El camión ya está en ruta, reutilizamos el folio existente
+        $_POST['folio_viaje'] = $rutaActiva['viaje_folio'];
+    } else {
+        // CASO B: Es la primera carga del camión para esta ruta
+        // Generamos un folio nuevo único
+        $_POST['folio_viaje'] = "RUT-" . date('ymd') . "-" . str_pad($vehiculo_id, 2, "0", STR_PAD_LEFT) . "-" . rand(10, 99);
+        
+        // MVC: Actualizamos el estado del vehículo a 'en_ruta'
+        // Esto solo ocurre cuando se inicia la ruta por primera vez
+        if (method_exists($vehiculoM, 'actualizarEstado')) {
+            $vehiculoM->actualizarEstado($vehiculo_id, 'en_ruta');
         }
+    }
+
+    // 3. Llamamos a tu función original iniciarReparto
+    // Ahora $_POST ya lleva el 'folio_viaje' que requiere la tabla de consolidación
+    $reparto_id = $repartoM->iniciarReparto($_POST);
+
+    // 4. Respuesta al cliente
+    echo json_encode([
+        'success' => true, 
+        'message' => '¡Logística confirmada!',
+        'folio'   => $_POST['folio_viaje'], // Informamos qué folio se asignó
+        'reparto_id' => $reparto_id
+    ]);
+    exit;
+}
         if ($action === 'listar_viajes_activos') {
     $viajes = $repartoM->listarViajesActivos();
     echo json_encode(['success' => true, 'data' => $viajes]);
 }
 
 if ($action === 'finalizar_viaje') {
-    $v_id = intval($_POST['vehiculo_id']);
-    $repartoM->finalizarViajeVehiculo($v_id);
-    echo json_encode(['success' => true, 'message' => 'Viaje finalizado y pedidos marcados como entregados.']);
+    try {
+        $v_id = intval($_POST['vehiculo_id']);
+        $viaje_folio = $_POST['viaje_folio'];
+
+        if (empty($v_id) || empty($viaje_folio)) {
+            throw new Exception("Faltan datos obligatorios para finalizar.");
+        }
+
+        // 1. Cerramos la logística (Repartos y Folio)
+        $repartoM->finalizarViajeLogistica($v_id, $viaje_folio);
+
+        // 2. Liberamos el vehículo (Cambiamos el ENUM a 'disponible')
+        // Usamos la función que ya tenías o la genérica de actualizar estado
+        $vehiculoM->actualizarEstado($v_id, 'disponible');
+
+        echo json_encode([
+            'success' => true, 
+            'message' => '¡Viaje finalizado! El vehículo está disponible y los pedidos se marcaron como completados.'
+        ]);
+
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit;
 }
 
     } catch (Exception $e) {
@@ -110,5 +154,3 @@ $totalUnidadesLibres = count($unidadesLibres);
 $tituloPagina = "Gestión de Repartos y Logística";
 
 require_once __DIR__ . '/../views/repartos_view.php';
-
-

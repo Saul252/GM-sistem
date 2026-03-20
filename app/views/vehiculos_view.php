@@ -1,7 +1,7 @@
 <?php
 /**
  * vehiculos_view.php 
- * Versión de alta fidelidad visual para cfsistem
+ * Versión ajustada para segmentación por Almacén - cfsistem
  */
 $estadosUnidad = [
     'disponible'     => ['label' => 'Disponible', 'class' => 'st-disponible', 'dot' => '#28a745'],
@@ -44,7 +44,6 @@ $estadosUnidad = [
             transition: all 0.3s ease;
         }
 
-        /* Card Elegante con Efecto Cristal */
         .card-premium {
             background: var(--glass-bg);
             backdrop-filter: blur(10px);
@@ -54,7 +53,6 @@ $estadosUnidad = [
             padding: 30px;
         }
 
-        /* Micro Cards Rediseñadas */
         .ios-micro-card {
             background: white;
             border-radius: 18px;
@@ -76,7 +74,6 @@ $estadosUnidad = [
             font-size: 1.2rem;
         }
 
-        /* Badges de Estado Premium */
         .badge-premium {
             padding: 8px 14px;
             border-radius: 12px;
@@ -93,7 +90,6 @@ $estadosUnidad = [
         .st-taller { background: #fff8e6; color: #d97706; }
         .st-fuera { background: #fff0f0; color: #d11a2a; }
 
-        /* Estilo de Tabla */
         .table thead th {
             background: transparent;
             color: #8e8e93;
@@ -109,7 +105,6 @@ $estadosUnidad = [
         }
         .table tbody tr:hover { background: rgba(0,122,255,0.02); }
 
-        /* Botón Guardar Gradiente */
         .btn-gradient {
             background: linear-gradient(135deg, #007aff 0%, #0056b3 100%);
             color: white; border: none; border-radius: 12px;
@@ -176,6 +171,7 @@ $estadosUnidad = [
                             <th>Unidad</th>
                             <th>Identificación</th>
                             <th>Capacidad</th>
+                            <?php if ($_SESSION['almacen_id'] == 0): ?><th>Almacén</th><?php endif; ?>
                             <th>Estado</th>
                             <th class="text-end">Opciones</th>
                         </tr>
@@ -206,6 +202,11 @@ $estadosUnidad = [
                                     <small class="text-muted fw-normal">kg</small>
                                 </div>
                             </td>
+                            <?php if ($_SESSION['almacen_id'] == 0): ?>
+                            <td>
+                                <span class="small text-muted"><i class="bi bi-geo-alt"></i> ID: <?= $v['almacen_id'] ?></span>
+                            </td>
+                            <?php endif; ?>
                             <td>
                                 <span class="badge-premium <?= $estadosUnidad[$v['estado_unidad']]['class'] ?>">
                                     <span style="height: 8px; width: 8px; background:<?= $estadosUnidad[$v['estado_unidad']]['dot'] ?>; border-radius:50%"></span>
@@ -264,6 +265,22 @@ $estadosUnidad = [
                             <label class="form-label fw-bold text-secondary">Año</label>
                             <input type="number" name="modelo_año" id="v_modelo" class="form-control bg-light border-0 rounded-4">
                         </div>
+
+                        <div class="col-12">
+                            <label class="form-label fw-bold text-secondary">Almacén Asignado</label>
+                            <?php if ($_SESSION['almacen_id'] == 0): ?>
+                                <select name="almacen_id" id="v_almacen_id" class="form-select bg-light border-0 rounded-4 fw-medium" required>
+                                    <option value="">Seleccionar Almacén...</option>
+                                    <?php foreach($listaAlmacenes as $alm): ?>
+                                        <option value="<?= $alm['id'] ?>"><?= htmlspecialchars($alm['nombre']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            <?php else: ?>
+                                <input type="text" class="form-control bg-light border-0 rounded-4" value="Sucursal Actual" readonly>
+                                <input type="hidden" name="almacen_id" id="v_almacen_id" value="<?= $_SESSION['almacen_id'] ?>">
+                            <?php endif; ?>
+                        </div>
+
                         <div class="col-12">
                             <label class="form-label fw-bold text-secondary">VIN / Serie</label>
                             <input type="text" name="serie_vin" id="v_vin" class="form-control bg-light border-0 rounded-4 text-uppercase">
@@ -285,40 +302,26 @@ $estadosUnidad = [
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
    <script>
-/**
- * cfsistem - Gestión de Flota JS
- * Manejo de DataTables, Modales y peticiones AJAX
- */
 let tabla;
 
 $(document).ready(function() {
-    // 1. Inicialización de DataTables con diseño limpio
     tabla = $('#tablaVehiculos').DataTable({
-        "language": { 
-            "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" 
-        },
-        // 'rt' oculta el buscador nativo de DT porque usamos el nuestro personalizado arriba
+        "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
         "dom": 'rt<"d-flex justify-content-between align-items-center mt-4 px-2"ip>',
         "pageLength": 8,
         "responsive": true,
         "columnDefs": [
-            { "orderable": false, "targets": 4 } // Desactivar orden en la columna de Acciones
+            { "orderable": false, "targets": <?php echo ($_SESSION['almacen_id'] == 0) ? '5' : '4'; ?> }
         ]
     });
 
-    // 2. Buscador personalizado vinculado al input superior
-    $('#busquedaVehiculo').on('keyup', function() { 
-        tabla.search(this.value).draw(); 
-    });
+    $('#busquedaVehiculo').on('keyup', function() { tabla.search(this.value).draw(); });
 
-    // 3. Filtro por Estado (Usa data-attributes en las filas de la tabla)
     $('#filtroEstado').on('change', function() {
         const val = $(this).val();
-        $.fn.dataTable.ext.search.pop(); // Limpiar filtro anterior
-        
+        $.fn.dataTable.ext.search.pop();
         if (val !== "") {
             $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                // Buscamos el atributo data-estado en el TR actual
                 const rowEstado = $(tabla.row(dataIndex).node()).attr('data-estado');
                 return rowEstado === val;
             });
@@ -327,24 +330,16 @@ $(document).ready(function() {
     });
 });
 
-/**
- * Prepara el modal para una nueva unidad
- */
 function nuevoVehiculo() {
     $('#formVehiculo')[0].reset();
-    $('#v_id').val('0'); // Importante: ID 0 indica al Model que es un INSERT
+    $('#v_id').val('0');
+    if ($('#v_almacen_id').is('select')) $('#v_almacen_id').val('');
     $('#modalTitulo').html('<i class="bi bi-plus-circle me-2"></i>Añadir Nueva Unidad');
     $('#modalVehiculo').modal('show');
 }
 
-/**
- * Carga los datos de un vehículo existente en el modal
- * @param {Object} v - Datos del vehículo pasados vía JSON desde PHP
- */
 function editarVehiculo(v) {
     $('#modalTitulo').html('<i class="bi bi-pencil-square me-2"></i>Gestionar Unidad');
-    
-    // Asignación de valores a los inputs del modal
     $('#v_id').val(v.id);
     $('#v_nombre').val(v.nombre);
     $('#v_placas').val(v.placas);
@@ -352,103 +347,48 @@ function editarVehiculo(v) {
     $('#v_capacidad').val(v.capacidad_carga_kg);
     $('#v_estado').val(v.estado_unidad);
     $('#v_vin').val(v.serie_vin);
-    
+    if ($('#v_almacen_id').is('select')) $('#v_almacen_id').val(v.almacen_id);
     $('#modalVehiculo').modal('show');
 }
 
-/**
- * Procesa el envío del formulario (Guardar o Actualizar)
- */
 $('#formVehiculo').on('submit', async function(e) {
     e.preventDefault();
-
-    Swal.fire({ 
-        title: 'Procesando datos...', 
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading() 
-    });
-
+    Swal.fire({ title: 'Procesando...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
     try {
         const formData = new FormData(this);
-        // Enviamos la petición al controlador actual (mismo archivo o ruta definida)
-        const resp = await fetch('/cfsistem/app/controllers/vehiculosController.php', { 
-            method: 'POST', 
-            body: formData 
-        });
-
-        if (!resp.ok) throw new Error('Error en la respuesta del servidor');
-
+        const resp = await fetch('/cfsistem/app/controllers/vehiculosController.php', { method: 'POST', body: formData });
         const res = await resp.json();
-        
         if (res.status === 'success') {
-            Swal.fire({ 
-                icon: 'success', 
-                title: '¡Operación Exitosa!', 
-                text: 'La unidad se ha guardado correctamente.',
-                timer: 1500,
-                showConfirmButton: false 
-            }).then(() => location.reload());
+            Swal.fire({ icon: 'success', title: '¡Éxito!', timer: 1500, showConfirmButton: false }).then(() => location.reload());
         } else {
-            Swal.fire('Error', res.message || 'No se pudo completar la acción', 'error');
+            Swal.fire('Error', res.message || 'No se pudo guardar', 'error');
         }
-    } catch (error) {
-        console.error('Error AJAX:', error);
-        Swal.fire('Error de Conexión', 'No se pudo contactar con el servidor.', 'error');
-    }
+    } catch (error) { Swal.fire('Error', 'Error de Conexión', 'error'); }
 });
 
-/**
- * Elimina (borrado lógico) una unidad de la flota
- * @param {number} id - ID del registro
- */
 async function eliminarVehiculo(id) {
     const confirmacion = await Swal.fire({
         title: '¿Confirmar Baja?',
-        text: "La unidad se marcará como inactiva en el inventario de la flota.",
+        text: "La unidad se marcará como inactiva.",
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#ff3b30', // Rojo iOS
-        cancelButtonColor: '#8e8e93',
-        confirmButtonText: 'Sí, dar de baja',
-        cancelButtonText: 'Cancelar',
-        borderRadius: '20px'
+        confirmButtonColor: '#ff3b30',
+        confirmButtonText: 'Sí, dar de baja'
     });
-
     if (confirmacion.isConfirmed) {
-        try {
-            const fd = new FormData();
-            fd.append('action', 'eliminar');
-            fd.append('id', id);
-
-            const resp = await fetch('/cfsistem/app/controllers/vehiculosController.php', { 
-                method: 'POST', 
-                body: fd 
-            });
-            const res = await resp.json();
-
-            if (res.status === 'success') {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Baja confirmada',
-                    showConfirmButton: false,
-                    timer: 1000
-                }).then(() => location.reload());
-            } else {
-                Swal.fire('Error', 'No se pudo eliminar el registro.', 'error');
-            }
-        } catch (err) {
-            Swal.fire('Error', 'Error de red al intentar eliminar.', 'error');
-        }
+        const fd = new FormData();
+        fd.append('action', 'eliminar');
+        fd.append('id', id);
+        const resp = await fetch('/cfsistem/app/controllers/vehiculosController.php', { method: 'POST', body: fd });
+        const res = await resp.json();
+        if (res.status === 'success') location.reload();
     }
 }
 
-/**
- * Limpia todos los filtros y refresca la tabla
- */
 function limpiarFiltros() {
     $('#busquedaVehiculo').val('');
     $('#filtroEstado').val('');
-    $.fn.dataTable.ext.search.pop(); // Elimina filtros personalizados de DT
+    $.fn.dataTable.ext.search.pop();
     tabla.search('').draw();
 }
 </script>

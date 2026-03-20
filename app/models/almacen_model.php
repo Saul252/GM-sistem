@@ -10,7 +10,7 @@ class AlmacenModel {
         return $this->db->query("SELECT id, nombre FROM categorias ORDER BY nombre ASC")->fetch_all(MYSQLI_ASSOC);
     }
 
-    public function getAlmacenes($almacen_id = 0) {
+    public function getAlmacenes($almacen_id ) {
         $sql = "SELECT * FROM almacenes WHERE activo = 1";
         if ($almacen_id > 0) $sql .= " AND id = " . intval($almacen_id);
         $sql .= " ORDER BY nombre ASC";

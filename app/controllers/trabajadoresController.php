@@ -8,44 +8,46 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../controllers/LayoutController.php';
 require_once __DIR__ . '/../models/trabajadores_model.php';
-
+require_once __DIR__ . '/../models/almacen_model.php';
 // Protegemos la página
 protegerPagina('trabajadores'); 
 
 $trabajadorModel = new TrabajadorModel($conexion);
+$almacenesModel= new AlmacenModel($conexion);
 $paginaActual = 'trabajadores';
 
+// --- ACCIÓN: GUARDAR / ACTUALIZAR TRABAJADOR (AJAX) ---
 // --- ACCIÓN: GUARDAR / ACTUALIZAR TRABAJADOR (AJAX) ---
 if (isset($_POST['action']) && $_POST['action'] === 'guardar') {
     if (ob_get_level()) ob_clean(); 
     header('Content-Type: application/json');
     
     try {
-        // Preparamos los datos tal como los espera tu modelo guardar($d)
         $datos = [
-            'id'       => intval($_POST['id'] ?? 0), // El modelo usa empty($d['id']) para decidir
-            'nombre'   => trim($_POST['nombre'] ?? ''),
-            'telefono' => trim($_POST['telefono'] ?? ''),
-            'rol'      => $_POST['rol'] ?? 'vendedor',
-            'estado'   => $_POST['estado'] ?? 'activo'
+            'id'         => intval($_POST['id'] ?? 0),
+            'nombre'     => trim($_POST['nombre'] ?? ''),
+            'telefono'   => trim($_POST['telefono'] ?? ''),
+            'rol'        => $_POST['rol'] ?? 'vendedor',
+            'estado'     => $_POST['estado'] ?? 'activo',
+            // Si el usuario es admin (0), toma el del select; si no, toma el de su sesión
+            'almacen_id' => ($_SESSION['almacen_id'] == 0) ? intval($_POST['almacen_id'] ?? 0) : intval($_SESSION['almacen_id'])
         ];
 
         if (empty($datos['nombre']) || empty($datos['telefono'])) {
             throw new Exception("El nombre y el teléfono son obligatorios.");
         }
+        
+        if ($datos['almacen_id'] <= 0) {
+            throw new Exception("Debes asignar un almacén válido al trabajador.");
+        }
 
-        // Llamada ajustada a tu modelo: solo un parámetro
         $resultado = $trabajadorModel->guardar($datos);
         
-        if ($resultado) {
-            echo json_encode([
-                'status'  => 'success', 
-                'message' => ($datos['id'] > 0) ? "Datos actualizados correctamente." : "Trabajador registrado con éxito.",
-                'id'      => ($datos['id'] > 0) ? $datos['id'] : $conexion->insert_id
-            ]);
-        } else {
-            throw new Exception("Error al procesar la solicitud en la base de datos.");
-        }
+        echo json_encode([
+            'status'  => 'success', 
+            'message' => "Operación exitosa.",
+            'id'      => ($datos['id'] > 0) ? $datos['id'] : $conexion->insert_id
+        ]);
 
     } catch (Throwable $e) {
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
@@ -53,6 +55,24 @@ if (isset($_POST['action']) && $_POST['action'] === 'guardar') {
     exit;
 }
 
+// --- CARGA DE VISTA (GET) ---
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
+    try {
+        $almacenusu = $_SESSION['almacen_id'];
+        
+        // Si es admin (0), listamos todos; si no, solo los de su almacén
+        $trabajadores = ($almacenusu == 0) ? $trabajadorModel->listar() : $trabajadorModel->listarPorAlmacen($almacenusu);
+        
+        // Obtenemos lista de almacenes para el selector del modal
+        $listaAlmacenes = $almacenesModel->getAlmacenes($almacenusu); 
+        
+        $tituloPagina = "Gestión de Personal";
+        require_once __DIR__ . '/../views/trabajadores_view.php';
+        
+    } catch (Exception $e) {
+        die("Error al cargar la vista: " . $e->getMessage());
+    }
+}
 // --- ACCIÓN: ELIMINAR TRABAJADOR (AJAX) ---
 if (isset($_POST['action']) && $_POST['action'] === 'eliminar') {
     if (ob_get_level()) ob_clean();
@@ -78,7 +98,9 @@ if (isset($_POST['action']) && $_POST['action'] === 'eliminar') {
 // --- CARGA DE VISTA (GET) ---
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     try {
+        $almacenusu=$_SESSION['almacen_id'];
         $trabajadores = $trabajadorModel->listar();
+        $almacenesModel= $almacenes->getAlmacenes($almacenusu);
         $tituloPagina = "Gestión de Personal";
         
         // Asegúrate de que la ruta a la vista sea correcta
