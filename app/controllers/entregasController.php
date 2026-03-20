@@ -1,22 +1,26 @@
 <?php
 require_once __DIR__ . '/../../includes/auth.php';
-
-
 require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../models/entregasModel.php'; 
+// Asegúrate de que estos nombres de archivo de modelo sean los correctos en tu carpeta models
+require_once __DIR__ . '/../models/RepartosModel.php'; 
+require_once __DIR__ . '/../models/vehiculos_model.php'; 
+require_once __DIR__ . '/../models/trabajadores_model.php'; 
 require_once __DIR__ . '/../controllers/LayoutController.php';
+
 protegerPagina('entregas'); 
-$paginaActual='entregas';
-$modelo = new EntregaModel($conexion);
+$paginaActual = 'entregas';
+
+// Instanciación de modelos
+$modelo      = new EntregaModel($conexion);
+$repartoM    = new RepartoModel($conexion);
+$vehiculoM   = new VehiculoModel($conexion);
+$trabajadorM = new TrabajadorModel($conexion);
 
 // Datos de sesión
 $almacen_usuario = $_SESSION['almacen_id'] ?? 0;
 $es_admin        = (isset($_SESSION['rol_id']) && $_SESSION['rol_id'] == 1); 
 
-/**
- * IMPORTANTE: Asegúrate de que en tu auth.php la sesión se guarde como 'id_usuario' 
- * o 'usuario_id'. Aquí homologamos para que coincida con tu Modelo.
- */
 if(!isset($_SESSION['id_usuario']) && isset($_SESSION['usuario_id'])){
     $_SESSION['id_usuario'] = $_SESSION['usuario_id'];
 }
@@ -31,29 +35,36 @@ if (isset($_GET['ajax'])) {
                 echo json_encode(['data' => $entregas]);
                 break;
 
+            case 'get_recursos_reparto':
+                $movimiento_id = $_GET['id'] ?? 0;
+                $detalle = $modelo->getDetalleParaDespacho($movimiento_id);
+                if (!$detalle) {
+                    echo json_encode(["success" => false, "message" => "Movimiento no encontrado"]);
+                } else {
+                    echo json_encode(["success" => true, "data" => ["entrega" => $detalle]]);
+                }
+                break;
+
+            case 'get_recursos_sucursal':
+                $almacen_id = intval($_GET['almacen_id'] ?? 0);
+                echo json_encode([
+                    "success"  => true,
+                    "unidades" => $vehiculoM->listarPorAlmacen($almacen_id),
+                    "choferes" => $trabajadorM->listarPorAlmacen($almacen_id)
+                ]);
+                break;
+
             case 'simular':
                 $id = intval($_GET['id'] ?? 0);
                 echo json_encode($modelo->simularDespachoLotes($id));
                 break;
 
             case 'imprimir':
-                $id = intval($_GET['id'] ?? 0);
-                if ($id <= 0) throw new Exception("ID de movimiento no válido.");
-                
-                $datos = $modelo->obtenerDatosImpresion($id);
-                if (!$datos) throw new Exception("No se encontraron datos para la impresión.");
-                
-                // Enviamos los datos. El campo 'detalle_json' ya vendrá estructurado desde el modelo.
-                echo json_encode(['success' => true, 'data' => $datos]);
-                break;
             case 'imprimirGanancia':
                 $id = intval($_GET['id'] ?? 0);
                 if ($id <= 0) throw new Exception("ID de movimiento no válido.");
-                
-                $datos = $modelo->obtenerDatosVentaGananciaImpresion($id);
+                $datos = ($_GET['ajax'] === 'imprimir') ? $modelo->obtenerDatosImpresion($id) : $modelo->obtenerDatosVentaGananciaImpresion($id);
                 if (!$datos) throw new Exception("No se encontraron datos para la impresión.");
-                
-                // Enviamos los datos. El campo 'detalle_json' ya vendrá estructurado desde el modelo.
                 echo json_encode(['success' => true, 'data' => $datos]);
                 break;
                 
@@ -70,23 +81,45 @@ if (isset($_GET['ajax'])) {
 // --- MANEJO DE PETICIONES AJAX (POST) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $accion = $_POST['ajax'] ?? '';
-    
-    if ($accion === 'despachar') {
-        header('Content-Type: application/json');
-        try {
+    header('Content-Type: application/json');
+
+    try {
+        if ($accion === 'despachar') {
             $id_usuario = $_SESSION['id_usuario'] ?? 0;
             if ($id_usuario <= 0) throw new Exception("Sesión expirada o usuario no identificado.");
-
             $id_movimiento = intval($_POST['id_movimiento'] ?? 0);
             if ($id_movimiento <= 0) throw new Exception("ID de movimiento no válido.");
+            echo json_encode($modelo->procesarDespachoFisico($id_movimiento));
+        } 
+        
+        elseif ($accion === 'guardar_reparto') {
+            if (empty($_POST['vehiculo_id']) || empty($_POST['chofer_id']) || empty($_POST['movimiento_id'])) {
+                throw new Exception("Faltan datos obligatorios.");
+            }
 
-            $resultado = $modelo->procesarDespachoFisico($id_movimiento);
-            echo json_encode($resultado);
-        } catch (Exception $e) {
-            echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+            $vehiculo_id = intval($_POST['vehiculo_id']);
+            $rutaActiva = $repartoM->buscarRutaAbierta($vehiculo_id);
+
+            if ($rutaActiva) {
+                $_POST['folio_viaje'] = $rutaActiva['viaje_folio'];
+            } else {
+                $_POST['folio_viaje'] = "RUT-" . date('ymd') . "-" . str_pad($vehiculo_id, 2, "0", STR_PAD_LEFT) . "-" . rand(10, 99);
+                if (method_exists($vehiculoM, 'actualizarEstado')) {
+                    $vehiculoM->actualizarEstado($vehiculo_id, 'en_ruta');
+                }
+            }
+
+            $repartoM->iniciarReparto($_POST);
+            echo json_encode([
+                'success' => true, 
+                'message' => '¡Logística confirmada!',
+                'folio'   => $_POST['folio_viaje']
+            ]);
         }
-        exit;
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
+    exit;
 }
 
 // --- CARGA NORMAL DE LA VISTA ---

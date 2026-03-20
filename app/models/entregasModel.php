@@ -76,6 +76,7 @@ public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_a
                 'folio_venta'       => $row['folio_venta'] ?? '---',
                 'fecha_format'      => date('d/m/Y H:i', strtotime($row['fecha'])),
                 'producto'          => $row['prod_nombre'],
+                'almacen_origen_id' => $row['almacen_origen_id'], // <--- AGREGA ESTA LÍNEA
                 'sku'               => $row['sku'],
                 'cantidad'          => $row['cantidad'],
                 'factor_conversion' => $row['factor_conversion'],

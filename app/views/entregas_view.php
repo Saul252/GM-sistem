@@ -157,6 +157,7 @@
     <?php cargarScripts(); ?>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
 
     <script>
 $(document).ready(function() {
@@ -223,7 +224,10 @@ $(document).ready(function() {
                     style="padding: 8px 12px; transition: all 0.2s;">
                 <i class="bi bi-graph-up-arrow text-success"></i>
             </button>
-        </div>
+            <button class="btn btn-primary btn-sm px-3 rounded-pill shadow-sm ms-2" onclick="prepararModalReparto(${m.id}, ${m.almacen_origen_id})">
+                    <i class="bi bi-truck me-1"></i> Asignar Ruta
+               </button>
+            </div>
     </div>`;
                         } else {
                             accionHtml = `
@@ -512,5 +516,7 @@ let html = `
     cargarEntregas();
 });
 </script>
+ <?php require_once __DIR__ . '/entregasComponets/repartoModalEntregas.php'; ?>
+   
 </body>
 </html>
