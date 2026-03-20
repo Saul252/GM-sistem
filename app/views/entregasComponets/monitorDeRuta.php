@@ -1,24 +1,121 @@
-<div class="card shadow-sm border-0">
-    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3">
-        <h5 class="mb-0 small text-uppercase fw-bold"><i class="fas fa-truck-moving me-2"></i> Monitor de Logística Consolidada</h5>
-        <button class="btn btn-sm btn-outline-light rounded-pill px-3" onclick="cargarMonitorViajes()">
-            <i class="fas fa-sync-alt"></i> Actualizar
-        </button>
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr class="small text-muted text-uppercase">
-                        <th class="ps-4">Unidad / Folio Ruta</th>
-                        <th>Chofer (Responsable)</th>
-                        <th>Ayudantes</th>
-                        <th>Carga Detallada (Consolidado)</th>
-                        <th class="text-end pe-4">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="bodyMonitorViajes"></tbody>
-            </table>
+<style>
+    /* Estilos específicos para el Monitor de Viajes (Línea iOS) */
+    .card-monitor {
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.7);
+        border-radius: 22px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+        overflow: hidden;
+    }
+
+    .header-monitor {
+        background: #1d1d1f; /* Dark mode style para el monitor activo */
+        color: white;
+        padding: 1.2rem 1.5rem;
+        border: none;
+    }
+
+    .table-monitor thead th {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #86868b;
+        font-weight: 600;
+        padding: 1.2rem;
+        border-bottom: 2px solid #f2f2f7;
+    }
+
+    .table-monitor tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .table-monitor tbody tr:hover {
+        background-color: rgba(0, 122, 255, 0.02);
+    }
+
+    /* Badge para el Folio del Viaje */
+    .badge-folio {
+        background: #e8f4ff;
+        color: #007aff;
+        font-family: 'SF Mono', SFMono-Regular, ui-monospace, monospace;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 0.7rem;
+    }
+
+    /* Contenedor de Carga Detallada */
+    .carga-scroll {
+        background: #f5f5f7;
+        border-radius: 12px;
+        padding: 12px;
+        font-size: 0.85rem;
+        color: #424245;
+        max-height: 100px;
+        overflow-y: auto;
+        border: 1px solid rgba(0,0,0,0.03);
+    }
+
+    /* Avatar del Chofer */
+    .avatar-chofer {
+        width: 36px;
+        height: 36px;
+        background: #007aff;
+        color: white;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
+    }
+
+    .btn-finish {
+        background: #34c759;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 8px 16px;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+
+    .btn-finish:hover {
+        background: #28a745;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(52, 199, 89, 0.2);
+    }
+</style>
+
+<div class="main-content">
+    <div class="card card-monitor animate__animated animate__fadeIn">
+        <div class="header-monitor d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-bold text-uppercase small">
+                <i class="bi bi-truck-flatbed me-2"></i> Monitor de Logística Consolidada
+            </h6>
+            <button class="btn btn-sm btn-outline-light rounded-pill px-3 border-opacity-25" onclick="cargarMonitorViajes()">
+                <i class="bi bi-arrow-repeat me-1"></i> Actualizar
+            </button>
+        </div>
+        
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-monitor align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Unidad / Folio Ruta</th>
+                            <th>Chofer Responsable</th>
+                            <th>Tripulación</th>
+                            <th>Carga Consolidada</th>
+                            <th class="text-end pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bodyMonitorViajes">
+                        </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -27,47 +124,50 @@
 window.cargarMonitorViajes = async function() {
     const body = $('#bodyMonitorViajes');
     try {
+        body.html('<tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary spinner-border-sm"></div></td></tr>');
+        
         const resp = await fetch(`/cfsistem/app/controllers/repartosController.php?action=listar_viajes_activos`);
         const result = await resp.json();
         const data = result.data || result; 
 
         if (!data || data.length === 0) {
-            body.html('<tr><td colspan="5" class="text-center py-5 text-muted">No hay movimientos en ruta actualmente</td></tr>');
+            body.html('<tr><td colspan="5" class="text-center py-5 text-muted"><i class="bi bi-geo-alt fs-2 d-block mb-2 opacity-25"></i> No hay unidades en ruta actualmente</td></tr>');
             return;
         }
 
         body.empty();
         data.forEach(v => {
             const listaAyudantes = v.tripulantes 
-                ? `<div class="small text-secondary"><i class="fas fa-users me-1 text-info"></i>${v.tripulantes}</div>`
-                : `<span class="badge bg-light text-warning fw-normal border">Solo Chofer</span>`;
+                ? `<div class="small text-muted fw-medium"><i class="bi bi-people-fill me-1 text-primary"></i> ${v.tripulantes}</div>`
+                : `<span class="badge bg-light text-secondary fw-normal border" style="font-size:0.65rem;">Solo Chofer</span>`;
 
             body.append(`
-                <tr class="border-bottom">
+                <tr class="animate__animated animate__fadeIn">
                     <td class="ps-4">
-                        <div class="fw-bold text-dark">${v.unidad}</div>
-                        <div class="badge bg-info text-dark border-0 small font-monospace" style="font-size: 0.7rem;">
-                            <i class="fas fa-hashtag me-1"></i>${v.viaje_folio}
-                        </div>
+                        <div class="fw-bold text-dark" style="font-size:0.95rem;">${v.unidad}</div>
+                        <div class="badge-folio mt-1"><i class="bi bi-hash"></i>${v.viaje_folio}</div>
                     </td>
                     <td>
                         <div class="d-flex align-items-center">
-                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2 shadow-sm" style="width: 35px; height: 35px;">
-                                <i class="fas fa-user-tie"></i>
+                            <div class="avatar-chofer me-3">
+                                <i class="bi bi-person-badge"></i>
                             </div>
-                            <div class="fw-bold text-uppercase text-primary" style="font-size: 0.85rem;">${v.chofer}</div>
+                            <div>
+                                <div class="fw-bold text-uppercase" style="font-size: 0.8rem; color:#1d1d1f;">${v.chofer}</div>
+                                <small class="text-muted">Conductor</small>
+                            </div>
                         </div>
                     </td>
                     <td>${listaAyudantes}</td>
                     <td>
-                        <div class="small p-2 bg-light rounded border-start border-3 border-primary" style="max-height: 120px; overflow-y: auto; line-height: 1.5;">
+                        <div class="carga-scroll">
                             ${v.detalles_carga}
                         </div>
                     </td>
                     <td class="text-end pe-4">
-                        <button class="btn btn-success btn-sm rounded-pill px-3 shadow-sm" 
+                        <button class="btn btn-finish btn-sm" 
                                 onclick="finalizarViaje(${v.vehiculo_id}, '${v.viaje_folio}')">
-                            <i class="fas fa-flag-checkered me-1"></i> Finalizar
+                            <i class="bi bi-check-all me-1"></i> FINALIZAR
                         </button>
                     </td>
                 </tr>
@@ -99,19 +199,23 @@ window.finalizarViaje = async function(vehiculoId, folioRuta) {
         const res = await resp.json();
         
         if (res.success) {
-            // Si usas SweetAlert2 (opcional, si no alert normal)
             if (typeof Swal !== 'undefined') {
-                Swal.fire('¡Viaje Finalizado!', res.message, 'success');
+                Swal.fire({
+                    title: '¡Viaje Finalizado!',
+                    text: res.message,
+                    icon: 'success',
+                    confirmButtonColor: '#007aff',
+                    customClass: { popup: 'rounded-4' }
+                });
             } else {
                 alert(res.message);
             }
             cargarMonitorViajes(); 
         } else {
-            throw new Error(res.message || "Error desconocido en el servidor");
+            throw new Error(res.message || "Error desconocido");
         }
     } catch (e) {
-        console.error("Error al finalizar:", e);
-        alert('No se pudo finalizar el viaje: ' + e.message);
+        alert('Error: ' + e.message);
     }
 };
 </script>

@@ -350,7 +350,8 @@ public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_a
     }
     return $data;
 }
-public function listarSoloDespachadosPatio() {
+public function listarSoloDespachadosPatio($almacen_id = 0) {
+    // 1. Base de la consulta
     $sql = "SELECT 
                 m.id as movimiento_id,
                 v.folio as folio_venta,
@@ -364,7 +365,6 @@ public function listarSoloDespachadosPatio() {
                 rsl.fecha_despacho, 
                 u.nombre as despacho_por,
                 1 as ya_despachado,
-                -- Ahora sí traerá el estado real de trm porque el JOIN es por m.id
                 IFNULL(trm.estado_reparto, 'pendiente') as estado_reparto
             FROM movimientos m
             INNER JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
@@ -372,30 +372,36 @@ public function listarSoloDespachadosPatio() {
             LEFT JOIN ventas v ON m.referencia_id = v.id
             LEFT JOIN almacenes a ON m.almacen_origen_id = a.id
             LEFT JOIN usuarios u ON rsl.usuario_patio_id = u.id
-            
-            -- CAMBIO CLAVE: trm.entrega_venta_id contiene el movimiento_id (según tu función iniciarReparto)
             LEFT JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id
-            
             LEFT JOIN transmutacion_detalle td ON m.id = td.movimiento_id
-            
             WHERE m.tipo = 'salida' 
               AND td.id IS NULL
               AND (v.id IS NULL OR v.estado_general = 'activa')
-              -- Filtro para la vista: No mostrar si ya fue cancelado (opcional, según tu flujo)
-              AND (trm.estado_reparto IS NULL OR trm.estado_reparto != 'cancelado')
-            ORDER BY rsl.fecha_despacho DESC";
+              AND (trm.estado_reparto IS NULL OR trm.estado_reparto != 'cancelado')";
+
+    // 2. Aplicar filtro de Almacén si se proporciona un ID válido
+    if (intval($almacen_id) > 0) {
+        $sql .= " AND m.almacen_origen_id = " . intval($almacen_id);
+    }
+
+    // 3. Ordenar por fecha de despacho más reciente
+    $sql .= " ORDER BY rsl.fecha_despacho DESC";
 
     $res = $this->db->query($sql);
     $data = [];
+
     if($res) {
         while ($row = $res->fetch_assoc()) {
-            $row['fecha_format'] = date('d/m/Y H:i', strtotime($row['fecha_despacho']));
+            // Formateo de fecha para que el JS la lea directo
+            $row['fecha_format'] = !empty($row['fecha_despacho']) 
+                ? date('d/m/Y H:i', strtotime($row['fecha_despacho'])) 
+                : 'S/F';
             $data[] = $row;
         }
     }
+    
     return $data;
-}
-public function getDetalleParaDespacho($movimiento_id) {
+}public function getDetalleParaDespacho($movimiento_id) {
     $sql = "SELECT 
                 m.id AS movimiento_id,
                 m.cantidad,

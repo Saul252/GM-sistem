@@ -642,3 +642,20 @@ CREATE TABLE `transporte_tripulantes_detalle` (
   CONSTRAINT `fk_trip_reparto_cab` FOREIGN KEY (`reparto_id`) REFERENCES `transporte_repartos_maestro` (`id`) ON DELETE CASCADE,
   CONSTRAINT `fk_trip_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+CREATE TABLE `transporte_consolidacion` (
+  `id` int(11) NOT NULL,
+  `viaje_folio` varchar(50) NOT NULL,
+  `vehiculo_id` int(11) NOT NULL,
+  `reparto_id` int(11) NOT NULL,
+  `estatus_consolidado` enum('abierto','cerrado') DEFAULT 'abierto',
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+ALTER TABLE `transporte_consolidacion`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_vehiculo_activo` (`vehiculo_id`,`estatus_consolidado`);
+
+ALTER TABLE `transporte_consolidacion`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+COMMIT;
+

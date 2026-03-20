@@ -106,31 +106,26 @@ public function buscarRutaAbierta($vehiculo_id) {
     $stmt->execute();
     return $stmt->get_result()->fetch_assoc();
 }
-public function listarViajesActivos() {
+public function listarViajesActivos($almacen_id = 0) {
+    $almacen_id = intval($almacen_id);
+    
     $sql = "SELECT 
                 tc.viaje_folio,
                 tc.vehiculo_id,
                 tv.nombre as unidad,
                 tv.placas,
-                -- El chofer es el encargado del PRIMER reparto del grupo (suponiendo que es el mismo)
-                (SELECT tr.nombre FROM trabajadores tr 
-                 INNER JOIN transporte_repartos_maestro trm2 ON tr.id = trm2.usuario_encargado_id 
-                 WHERE trm2.id = MIN(trm.id) LIMIT 1) as chofer,
-                -- Agrupamos todos los tripulantes de TODOS los repartos del folio, sin repetir nombres
-                (SELECT GROUP_CONCAT(DISTINCT tr.nombre SEPARATOR ', ') 
+                -- Obtenemos el nombre del chofer desde trabajadores (usuario_encargado_id)
+                (SELECT nombre FROM trabajadores WHERE id = trm.usuario_encargado_id LIMIT 1) as chofer,
+                -- Concatenamos los tripulantes
+                (SELECT GROUP_CONCAT(tr.nombre SEPARATOR ', ') 
                  FROM transporte_tripulantes_detalle ttd
                  INNER JOIN trabajadores tr ON ttd.usuario_id = tr.id
-                 INNER JOIN transporte_consolidacion tc2 ON ttd.reparto_id = tc2.reparto_id
-                 WHERE tc2.viaje_folio = tc.viaje_folio) as tripulantes,
-                -- Detalles de carga consolidados de todos los repartos del folio
+                 WHERE ttd.reparto_id = trm.id) as tripulantes,
+                -- Detalles de lo que lleva el camión
                 GROUP_CONCAT(
-                    CONCAT(
-                        '<b>[', COALESCE(v.folio, 'S/F'), ']</b> ',
-                        CASE 
-                            WHEN m.cantidad >= p.factor_conversion AND p.factor_conversion > 0 
-                            THEN CONCAT(ROUND(m.cantidad / p.factor_conversion, 2), ' ', p.unidad_reporte)
-                            ELSE CONCAT(m.cantidad, ' ', p.unidad_medida)
-                        END,
+                    DISTINCT CONCAT(
+                        '• <b>[', COALESCE(v.folio, 'S/F'), ']</b> ',
+                        m.cantidad, ' ', p.unidad_medida,
                         ' - ', p.nombre
                     ) 
                     SEPARATOR '<br>'
@@ -140,10 +135,17 @@ public function listarViajesActivos() {
             INNER JOIN transporte_vehiculos tv ON tc.vehiculo_id = tv.id
             LEFT JOIN movimientos m ON trm.entrega_venta_id = m.id
             LEFT JOIN productos p ON m.producto_id = p.id
-            LEFT JOIN ventas v ON m.referencia_id = v.id
-            WHERE tc.estatus_consolidado = 'abierto'
-            AND trm.estado_reparto = 'en_transito'
-            GROUP BY tc.viaje_folio"; // Agrupación clave por Folio de Ruta
+            LEFT JOIN ventas v ON m.referencia_id = v.id -- Unimos con ventas para sacar el almacén
+            WHERE tc.estatus_consolidado = 'abierto'";
+
+    // FILTRO DINÁMICO POR ALMACÉN
+    if ($almacen_id > 0) {
+        // Filtramos por el almacén de la venta original
+        $sql .= " AND v.almacen_id = $almacen_id";
+    }
+
+    $sql .= " GROUP BY tc.viaje_folio, tc.vehiculo_id, tv.nombre, tv.placas";
+    $sql .= " ORDER BY tc.viaje_folio DESC";
             
     $res = $this->db->query($sql);
     return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
