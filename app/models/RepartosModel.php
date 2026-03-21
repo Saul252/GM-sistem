@@ -247,23 +247,27 @@ public function listarHistorialDeRepartos($almacen_id = 0) {
                 tc.viaje_folio,
                 tc.vehiculo_id,
                 tc.estatus_consolidado AS estado_final,
-                tv.nombre AS unidad,
+                tv.nombre as unidad,
                 tv.placas,
-                -- 1. Chofer (Subconsulta)
-                (SELECT nombre FROM trabajadores WHERE id = trm.usuario_encargado_id LIMIT 1) AS chofer,
-                
-                -- 2. Tripulantes (Subconsulta)
-                (SELECT GROUP_CONCAT(tr.nombre SEPARATOR ', ') 
+                -- 1. Chofer: Tomamos el encargado del primer reparto del viaje
+                (SELECT t.nombre FROM trabajadores t 
+                 INNER JOIN transporte_repartos_maestro trm2 ON t.id = trm2.usuario_encargado_id 
+                 WHERE trm2.id = tc.reparto_id LIMIT 1) as chofer,
+                 
+                -- 2. Tripulantes: Concatenamos todos los ayudantes de los repartos del viaje
+                (SELECT GROUP_CONCAT(DISTINCT tr.nombre SEPARATOR ', ') 
                  FROM transporte_tripulantes_detalle ttd
                  INNER JOIN trabajadores tr ON ttd.usuario_id = tr.id
-                 WHERE ttd.reparto_id = trm.id) AS tripulantes,
-                
-                -- 3. Destinos / Itinerario (Subconsulta)
+                 INNER JOIN transporte_consolidacion tc2 ON ttd.reparto_id = tc2.reparto_id
+                 WHERE tc2.viaje_folio = tc.viaje_folio) as tripulantes,
+                 
+                -- 3. DESTINOS CORREGIDOS: Busca todos los puntos de todos los repartos del mismo folio
                 (SELECT GROUP_CONCAT(DISTINCT COALESCE(rp.descripcion_punto, 'Entrega en Obra') SEPARATOR '<br>')
                  FROM transporte_rutas_puntos rp 
-                 WHERE rp.reparto_id = trm.id) AS ruta_destinos,
-
-                -- 4. Carga consolidada
+                 INNER JOIN transporte_consolidacion tc3 ON rp.reparto_id = tc3.reparto_id
+                 WHERE tc3.viaje_folio = tc.viaje_folio) as ruta_destinos,
+                 
+                -- 4. Detalles de carga consolidada
                 GROUP_CONCAT(
                     DISTINCT CONCAT(
                         '• <b>[', COALESCE(v.folio, 'S/F'), ']</b> ',
@@ -271,10 +275,7 @@ public function listarHistorialDeRepartos($almacen_id = 0) {
                         ' - ', p.nombre
                     ) 
                     SEPARATOR '<br>'
-                ) AS detalles_carga,
-                
-                -- 5. Fecha de movimiento (Usamos MAX para el último registro del grupo)
-                MAX(trm.id) as last_id -- Auxiliar para ordenamiento si no hay columna de fecha
+                ) as detalles_carga
                 
             FROM transporte_consolidacion tc
             INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
@@ -282,22 +283,13 @@ public function listarHistorialDeRepartos($almacen_id = 0) {
             LEFT JOIN movimientos m ON trm.entrega_venta_id = m.id
             LEFT JOIN productos p ON m.producto_id = p.id
             LEFT JOIN ventas v ON m.referencia_id = v.id 
-
             WHERE tc.estatus_consolidado != 'abierto'";
 
     if ($almacen_id > 0) {
         $sql .= " AND v.almacen_id = $almacen_id";
     }
 
-    $sql .= " GROUP BY 
-                tc.viaje_folio, 
-                tc.vehiculo_id, 
-                tc.estatus_consolidado, 
-                tv.nombre, 
-                tv.placas,
-                trm.usuario_encargado_id,
-                trm.id";
-
+    $sql .= " GROUP BY tc.viaje_folio, tc.vehiculo_id, tv.nombre, tv.placas, tc.estatus_consolidado";
     $sql .= " ORDER BY tc.viaje_folio DESC";
             
     $res = $this->db->query($sql);
