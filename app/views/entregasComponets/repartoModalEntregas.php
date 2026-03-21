@@ -85,7 +85,7 @@
 <script>
 $(document).ready(function() {
     // CAMBIO 1: Nueva ruta del controlador
-    const URL_ENTREGAS = '/opt/lampp/htdocs/cfsistem/app/controllers/entregasController.php';
+    const URL_ENTREGAS = '/cfsistem/app/controllers/entregasController.php';
 
     window.prepararModalReparto = async function(movimientoId, almacenId) {
         if(typeof Swal !== 'undefined') {

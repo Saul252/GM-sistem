@@ -33,11 +33,6 @@ public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_a
     $almacen_filtro = intval($filtros['almacen_id'] ?? 0);
     $target_almacen = ($almacen_usuario_sesion > 0) ? $almacen_usuario_sesion : $almacen_filtro;
 
-    // --- FILTRO ACTUALIZADO ---
-    // 1. Debe ser tipo 'salida'
-    // 2. No debe estar despachado (usuario_recibe_id NULL/0)
-    // 3. Si tiene venta, la venta debe estar 'activa'
-    // 4. NO debe existir en transmutacion_detalle (para ignorar conversiones de producto)
     $where = "WHERE m.tipo = 'salida' 
               AND (m.usuario_recibe_id IS NULL OR m.usuario_recibe_id = 0)
               AND DATE(m.fecha) BETWEEN '$inicio' AND '$fin'
@@ -48,23 +43,26 @@ public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_a
         $where .= " AND m.almacen_origen_id = $target_almacen"; 
     }
 
+    // CAMBIO: Se agregó IFNULL(trm.estado_reparto, 'pendiente') y el LEFT JOIN con transporte_repartos_maestro
     $sql = "SELECT 
                 m.*, 
                 v.folio as folio_venta,
                 p.nombre as prod_nombre, p.sku, p.factor_conversion, p.unidad_reporte,
                 a1.nombre as origen_nombre,
                 u1.nombre as usuario_nombre,
-                IF(rsl.id IS NOT NULL, 1, 0) as ya_despachado
+                IF(rsl.id IS NOT NULL, 1, 0) as ya_despachado,
+                IFNULL(trm.estado_reparto, 'pendiente') as estado_reparto
             FROM movimientos m 
             INNER JOIN productos p ON m.producto_id = p.id
             LEFT JOIN ventas v ON m.referencia_id = v.id
             LEFT JOIN almacenes a1 ON m.almacen_origen_id = a1.id
             LEFT JOIN usuarios u1 ON m.usuario_registra_id = u1.id
             LEFT JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
-            LEFT JOIN transmutacion_detalle td ON m.id = td.movimiento_id -- Unión para identificar transmutaciones
+            LEFT JOIN transmutacion_detalle td ON m.id = td.movimiento_id
+            LEFT JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id
             $where 
             GROUP BY m.id 
-            ORDER BY m.id DESC"; // Orden estricto 89, 88, 87...
+            ORDER BY m.id DESC";
 
     $resultado = $this->db->query($sql);
     $data = [];
@@ -73,17 +71,18 @@ public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_a
         while ($row = $resultado->fetch_assoc()) {
             $data[] = [
                 'id'                => $row['id'], 
+                'almacen_origen_id' => $row['almacen_origen_id'],
                 'folio_venta'       => $row['folio_venta'] ?? '---',
                 'fecha_format'      => date('d/m/Y H:i', strtotime($row['fecha'])),
                 'producto'          => $row['prod_nombre'],
-                'almacen_origen_id' => $row['almacen_origen_id'], // <--- AGREGA ESTA LÍNEA
                 'sku'               => $row['sku'],
                 'cantidad'          => $row['cantidad'],
                 'factor_conversion' => $row['factor_conversion'],
                 'unidad_reporte'    => $row['unidad_reporte'] ?? 'PZA',
                 'origen'            => $row['origen_nombre'] ?? '---',
                 'u_reg'             => $row['usuario_nombre'] ?? 'Sist.',
-                'ya_despachado'     => intval($row['ya_despachado'])
+                'ya_despachado'     => intval($row['ya_despachado']),
+                'estado_reparto'    => $row['estado_reparto'] // CAMBIO: Se envía al JS
             ];
         }
     }

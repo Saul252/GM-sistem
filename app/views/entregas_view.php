@@ -202,41 +202,53 @@ $(document).ready(function() {
                 tabla.clear();
                 if(res.data) {
                     res.data.forEach(m => {
-                        let accionHtml = '';
-                        if (parseInt(m.ya_despachado) === 1) {
-                            accionHtml = `
-                               <div class="d-flex align-items-center justify-content-end pe-3">
-        <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3 py-2 me-3" style="font-size: 0.75rem;">
-            <i class="bi bi-check-circle-fill me-1"></i> ENTREGADO
-        </span>
+                      // Dentro del res.data.forEach(m => { ... })
 
-        <div class="btn-group shadow-sm" role="group" style="border-radius: 20px; overflow: hidden;">
-            <button onclick="imprimirComprobante(${m.id})" 
-                    class="btn btn-sm btn-white border-end" 
-                    title="Imprimir Vale de Patio"
-                    style="padding: 8px 12px; transition: all 0.2s;">
-                <i class="bi bi-printer text-secondary"></i>
-            </button>
-            
-            <button onclick="verDetalleGanancia(${m.id})" 
-                    class="btn btn-sm btn-white" 
-                    title="Ver Análisis Financiero"
-                    style="padding: 8px 12px; transition: all 0.2s;">
-                <i class="bi bi-graph-up-arrow text-success"></i>
-            </button>
-            <button class="btn btn-primary btn-sm px-3 rounded-pill shadow-sm ms-2" onclick="prepararModalReparto(${m.id}, ${m.almacen_origen_id})">
-                    <i class="bi bi-truck me-1"></i> Asignar Ruta
-               </button>
+let accionHtml = '';
+if (parseInt(m.ya_despachado) === 1) {
+    // Definimos si el botón debe estar bloqueado
+    // Nota: Ajusta los strings si en tu base de datos se guardan distinto (ej: 'En Ruta')
+    const bloqueado = (m.estado_reparto === 'en_ruta' || m.estado_reparto === 'completado');
+    const labelBoton = bloqueado ? m.estado_reparto.toUpperCase() : 'Asignar Ruta';
+    const claseBoton = bloqueado ? 'btn-secondary' : 'btn-primary';
+
+    accionHtml = `
+        <div class="d-flex align-items-center justify-content-end pe-3">
+            <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3 py-2 me-3" style="font-size: 0.75rem;">
+                <i class="bi bi-check-circle-fill me-1"></i> ENTREGADO
+            </span>
+
+            <div class="btn-group shadow-sm" role="group" style="border-radius: 20px; overflow: hidden;">
+                <button onclick="imprimirComprobante(${m.id})" 
+                        class="btn btn-sm btn-white border-end" 
+                        title="Imprimir Vale de Patio"
+                        style="padding: 8px 12px;">
+                    <i class="bi bi-printer text-secondary"></i>
+                </button>
+                
+                <button onclick="verDetalleGanancia(${m.id})" 
+                        class="btn btn-sm btn-white" 
+                        title="Ver Análisis Financiero"
+                        style="padding: 8px 12px;">
+                    <i class="bi bi-graph-up-arrow text-success"></i>
+                </button>
             </div>
-    </div>`;
-                        } else {
-                            accionHtml = `
-                                <div class="pe-3 text-end">
-                                    <button onclick="prepararDespacho(${m.id})" class="btn btn-despachar rounded-pill shadow-sm">
-                                        <i class="bi bi-file-earmark-ruled me-1"></i> Preparar
-                                    </button>
-                                </div>`;
-                        }
+
+            <button class="btn ${claseBoton} btn-sm px-3 rounded-pill shadow-sm ms-2" 
+                    onclick="prepararModalReparto(${m.id}, ${m.almacen_origen_id})"
+                    ${bloqueado ? 'disabled title="Este movimiento ya tiene una ruta asignada"' : ''}>
+                <i class="bi ${bloqueado ? 'bi-lock-fill' : 'bi-truck'} me-1"></i> ${labelBoton}
+            </button>
+        </div>`;
+} else {
+    // Lógica para cuando aún no se despacha (botón Preparar)
+    accionHtml = `
+        <div class="pe-3 text-end">
+            <button onclick="prepararDespacho(${m.id})" class="btn btn-despachar rounded-pill shadow-sm">
+                <i class="bi bi-file-earmark-ruled me-1"></i> Preparar
+            </button>
+        </div>`;
+}
 
 // AGREGADO: Folio de Venta y Número de Operación (ID del movimiento)
                         tabla.row.add([
