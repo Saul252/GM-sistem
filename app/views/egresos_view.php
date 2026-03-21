@@ -12,40 +12,72 @@
     <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
 
     <style>
-    :root {
-        --nav-height: 65px;
-        --sidebar-width: 260px;
-    }
+        :root {
+    --nav-height: 65px;
+    --sidebar-width: 260px;
+}
 
+.main-content {
+    margin-left: var(--sidebar-width);
+    margin-top: var(--nav-height);
+    padding: 1.5rem 2rem;
+    width: calc(100% - var(--sidebar-width));
+    min-height: calc(100vh - var(--nav-height));
+    transition: all 0.3s ease;
+    display: block;
+}
+
+.card-kpi {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.table-responsive {
+    border-radius: 12px;
+    background: white;
+    border: 1px solid #e2e8f0;
+}
+
+@media (max-width: 992px) {
     .main-content {
-        margin-left: var(--sidebar-width);
-        margin-top: var(--nav-height);
-        padding: 1.5rem 2rem;
-        width: calc(100% - var(--sidebar-width));
-        min-height: calc(100vh - var(--nav-height));
-        transition: all 0.3s ease;
-        display: block;
+        margin-left: 0;
+        width: 100%;
+        padding: 1rem;
     }
+}
+/* ── NIVEL 1 - Modales principales ── */
+#modalGasto,
+#modalNuevaCompra,
+#modalVerDetalle,
+#modalAjusteFaltante {
+    z-index: 1060 !important;
+}
 
-    .card-kpi {
-        border: none;
-        border-radius: 12px;
-        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    }
+/* ── NIVEL 2 - Modales secundarios ── */
+#modalAgregarProducto,
+#modalNuevoProveedorRapido {
+    z-index: 1110 !important;
+}
 
-    .table-responsive {
-        border-radius: 12px;
-        background: white;
-        border: 1px solid #e2e8f0;
-    }
+/* ── NIVEL 3 - Modales terciarios ── */
+#modalAgregarCategoria {
+    z-index: 1160 !important;
+}
 
-    @media (max-width: 992px) {
-        .main-content {
-            margin-left: 0;
-            width: 100%;
-            padding: 1rem;
-        }
-    }
+/* ── BACKDROPS por nivel ── */
+/* Bootstrap genera los backdrops en orden, 
+   los forzamos con nth-of-type */
+.modal-backdrop:nth-of-type(1) { z-index: 1050 !important; }
+.modal-backdrop:nth-of-type(2) { z-index: 1100 !important; }
+.modal-backdrop:nth-of-type(3) { z-index: 1150 !important; }
+
+/* ── Select2 siempre arriba de todo ── */
+.select2-container--open { z-index: 1200 !important; }
+
+
+/* Select2 siempre por encima de todo */
+.select2-container--open { z-index: 1090 !important; }
     </style>
 </head>
 
@@ -670,37 +702,16 @@ function confirmarCancelacionCompra(id, folio) {
     </script>
 
  <script>
-$(document).on('show.bs.modal', '.modal', function () {
-    // 1. Calculamos profundidad
-    const zIndex = 1050 + (10 * $('.modal:visible').length);
-    const $modal = $(this);
-    
-    // 2. Aplicamos z-index al modal actual
-    $modal.css('z-index', zIndex);
-
-    // 3. Ajuste del Backdrop (Fondo Negro)
-    // Usamos un delay un poco más largo (50ms) para asegurar que Bootstrap ya creó el div
-    setTimeout(function() {
-        const $backdrop = $('.modal-backdrop').not('.modal-stack').last();
-        if ($backdrop.length) {
-            $backdrop.css('z-index', zIndex - 1).addClass('modal-stack');
+(function () {
+    $(document).on('hidden.bs.modal', '.modal', function () {
+        if ($('.modal.show').length === 0) {
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open').css('padding-right', '');
+        } else {
+            $('body').addClass('modal-open');
         }
-    }, 50);
-});
-
-// CRÍTICO: Reparar el scroll y bloqueo al cerrar modales múltiples
-$(document).on('hidden.bs.modal', '.modal', function () {
-    if ($('.modal:visible').length > 0) {
-        // Si aún hay modales abiertos, forzamos que el body no pierda la clase
-        setTimeout(function() {
-            $(document.body).addClass('modal-open');
-        }, 10);
-    } else {
-        // Si ya no hay modales, limpiamos cualquier residuo de capas
-        $('.modal-backdrop').remove();
-    }
-});
-</script>
+    });
+})();</script>
 </body>
 
 </html>

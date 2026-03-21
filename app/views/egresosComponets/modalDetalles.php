@@ -13,9 +13,6 @@
 </div>
 
 <style>
-/* CSS para asegurar que el modal de detalles gane en profundidad */
-#modalVerDetalle { z-index: 1070 !important; }
-#modalVerDetalle + .modal-backdrop { z-index: 1065 !important; }
 
 .ticket-header { background: #f8f9fa; border-bottom: 2px dashed #dee2e6; padding: 2rem 1.5rem; text-align: center; }
 .ticket-body { padding: 1.5rem; font-family: 'Courier New', Courier, monospace; }

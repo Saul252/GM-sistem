@@ -142,21 +142,3 @@ window.addEventListener('load', function() {
 });
 </script>
 
-<style>
-    /* Ajuste para que Select2 combine con el diseño premium */
-    .select2-container--bootstrap-5 .select2-selection {
-        border-radius: 0.375rem;
-        border: 1px solid #dee2e6;
-        height: calc(3.5rem + 2px); /* Ajustar a la altura de tus otros inputs si es necesario */
-        display: flex;
-        align-items: center;
-    }
-    
-    /* Evitar que el modal de proveedor quede detrás del modal de compra */
-    .modal-backdrop + .modal-backdrop {
-        z-index: 1065;
-    }
-    #modalNuevoProveedorRapido {
-        z-index: 1070;
-    }
-</style>
