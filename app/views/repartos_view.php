@@ -249,6 +249,7 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
     
     <?php require_once __DIR__ . '/entregasComponets/repartoModal.php'; ?>
 <?php require_once __DIR__ . '/entregasComponets/editarRepartoModal.php'; ?>
+<?php require_once __DIR__ . '/entregasComponets/minitordeHistorialDeReparto.php'; ?>
 
     <script>
     // --- LÓGICA DE MONITOR DE VIAJES ---

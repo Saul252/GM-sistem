@@ -43,53 +43,59 @@
         </div>
     </div>
 </div>
-<script>
-    window.abrirModalEdicionViaje = async function(folio, vehiculoId, almacenId) {
+<script>window.abrirModalEdicionViaje = async function(folio, vehiculoId) {
     $('#edit_viaje_folio').val(folio);
-    $('#edit_vehiculo_id').val(vehiculoId);
     $('#editFolioTitle').text('Ruta ' + folio);
     
     try {
-        // 1. Cargar Choferes y Ayudantes de la sucursal
-        const respRecursos = await fetch(`/cfsistem/app/controllers/repartosController.php?action=get_recursos_sucursal&almacen_id=${almacenId}`);
+        // A. Primero traemos los detalles del viaje para saber de qué ALMACÉN es
+        const respViaje = await fetch(`/cfsistem/app/controllers/repartosController.php?action=get_detalles_viaje&folio=${folio}`);
+        const viaje = await respViaje.json();
+        
+        if (!viaje.success) throw new Error(viaje.message);
+        const info = viaje.data;
+        const idSucursal = info.almacen_id; // <--- ¡Aquí está la magia!
+
+        // B. Ahora que sabemos el almacén, traemos los choferes de esa sucursal
+        const respRecursos = await fetch(`/cfsistem/app/controllers/repartosController.php?action=get_recursos_sucursal&almacen_id=${idSucursal}`);
         const recursos = await respRecursos.json();
-        
-        let htmlChoferes = '';
+
+        // 1. Llenar Choferes
+        let hChofer = '<option value="">Seleccione...</option>';
         recursos.choferes.forEach(c => {
-            htmlChoferes += `<option value="${c.id}">${c.nombre}</option>`;
+            hChofer += `<option value="${c.id}" ${c.id == info.chofer_id ? 'selected' : ''}>${c.nombre}</option>`;
         });
-        $('#edit_chofer_id').html(htmlChoferes);
-        
-        // 2. Cargar los materiales específicos de este viaje
-        const respMateriales = await fetch(`/cfsistem/app/controllers/repartosController.php?action=get_detalles_viaje&folio=${folio}`);
-        const materiales = await respMateriales.json();
-        
-        let htmlMat = '';
-        materiales.data.forEach(m => {
-            htmlMat += `
-                <div class="list-group-item border-0 border-bottom d-flex flex-column p-3 bg-white" id="item_mov_${m.movimiento_id}">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <div>
-                            <span class="fw-bold d-block">${m.producto}</span>
-                            <small class="text-muted">Cant: ${m.cantidad} | Folio: ${m.folio_venta}</small>
-                        </div>
-                        <button type="button" class="btn btn-sm btn-outline-danger border-0" onclick="quitarEntregaDeRuta(${m.movimiento_id})">
+        $('#edit_chofer_id').html(hChofer);
+
+        // 2. Llenar Ayudantes
+        let hTrip = '';
+        const idsActuales = (info.tripulantes_ids || []).map(id => id.toString());
+        recursos.choferes.forEach(a => {
+            const isSel = idsActuales.includes(a.id.toString()) ? 'selected' : '';
+            hTrip += `<option value="${a.id}" ${isSel}>${a.nombre}</option>`;
+        });
+        $('#edit_tripulantes').html(hTrip);
+
+        // 3. Llenar Materiales
+        let hMat = '';
+        info.materiales.forEach(m => {
+            hMat += `
+                <div class="list-group-item border-0 border-bottom p-3 bg-white" id="item_mov_${m.movimiento_id}">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="fw-bold small">${m.producto} (${m.cantidad})</span>
+                        <button type="button" class="btn btn-sm text-danger" onclick="quitarEntregaDeRuta(${m.movimiento_id})">
                             <i class="bi bi-trash"></i>
                         </button>
                     </div>
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light border-0"><i class="bi bi-geo-alt"></i></span>
-                        <input type="text" class="form-control border-0 bg-light destino-input" 
-                               data-movid="${m.movimiento_id}" value="${m.destino}" placeholder="Cambiar destino...">
-                    </div>
-                </div>
-            `;
+                    <input type="text" class="form-control form-control-sm bg-light border-0 destino-input" 
+                           data-movid="${m.movimiento_id}" value="${m.destino || 'Entrega en Obra'}">
+                </div>`;
         });
-        $('#listaMaterialesEdit').html(htmlMat);
-        
+        $('#listaMaterialesEdit').html(hMat);
+
         $('#modalEditarViaje').modal('show');
+
     } catch (e) {
-        Swal.fire('Error', 'No se pudieron cargar los datos del viaje', 'error');
+        Swal.fire('Error', 'No se pudo cargar la logística: ' + e.message, 'error');
     }
-}
-</script>
+}</script>

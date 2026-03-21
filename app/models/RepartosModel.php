@@ -240,6 +240,69 @@ public function listarViajesActivos($almacen_id = 0) {
     $res = $this->db->query($sql);
     return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
 }
+public function listarHistorialDeRepartos($almacen_id = 0) {
+    $almacen_id = intval($almacen_id);
+    
+    $sql = "SELECT 
+                tc.viaje_folio,
+                tc.vehiculo_id,
+                tc.estatus_consolidado AS estado_final,
+                tv.nombre AS unidad,
+                tv.placas,
+                -- 1. Chofer (Subconsulta)
+                (SELECT nombre FROM trabajadores WHERE id = trm.usuario_encargado_id LIMIT 1) AS chofer,
+                
+                -- 2. Tripulantes (Subconsulta)
+                (SELECT GROUP_CONCAT(tr.nombre SEPARATOR ', ') 
+                 FROM transporte_tripulantes_detalle ttd
+                 INNER JOIN trabajadores tr ON ttd.usuario_id = tr.id
+                 WHERE ttd.reparto_id = trm.id) AS tripulantes,
+                
+                -- 3. Destinos / Itinerario (Subconsulta)
+                (SELECT GROUP_CONCAT(DISTINCT COALESCE(rp.descripcion_punto, 'Entrega en Obra') SEPARATOR '<br>')
+                 FROM transporte_rutas_puntos rp 
+                 WHERE rp.reparto_id = trm.id) AS ruta_destinos,
+
+                -- 4. Carga consolidada
+                GROUP_CONCAT(
+                    DISTINCT CONCAT(
+                        '• <b>[', COALESCE(v.folio, 'S/F'), ']</b> ',
+                        m.cantidad, ' ', p.unidad_medida,
+                        ' - ', p.nombre
+                    ) 
+                    SEPARATOR '<br>'
+                ) AS detalles_carga,
+                
+                -- 5. Fecha de movimiento (Usamos MAX para el último registro del grupo)
+                MAX(trm.id) as last_id -- Auxiliar para ordenamiento si no hay columna de fecha
+                
+            FROM transporte_consolidacion tc
+            INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
+            INNER JOIN transporte_vehiculos tv ON tc.vehiculo_id = tv.id
+            LEFT JOIN movimientos m ON trm.entrega_venta_id = m.id
+            LEFT JOIN productos p ON m.producto_id = p.id
+            LEFT JOIN ventas v ON m.referencia_id = v.id 
+
+            WHERE tc.estatus_consolidado != 'abierto'";
+
+    if ($almacen_id > 0) {
+        $sql .= " AND v.almacen_id = $almacen_id";
+    }
+
+    $sql .= " GROUP BY 
+                tc.viaje_folio, 
+                tc.vehiculo_id, 
+                tc.estatus_consolidado, 
+                tv.nombre, 
+                tv.placas,
+                trm.usuario_encargado_id,
+                trm.id";
+
+    $sql .= " ORDER BY tc.viaje_folio DESC";
+            
+    $res = $this->db->query($sql);
+    return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+}
 public function finalizarViajeVehiculo($vehiculo_id) {
     try {
         $this->db->begin_transaction();
@@ -427,25 +490,50 @@ public function actualizarLogisticaCompleta($datos) {
     }
 }
 public function getDetallesViaje($folio_viaje) {
-    $sql = "SELECT 
-                m.id as movimiento_id,
-                p.nombre as producto,
-                m.cantidad,
-                v.folio as folio_venta,
-                rp.descripcion_punto as destino,
-                rp.id as punto_id
-            FROM transporte_consolidacion tc
-            INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
-            INNER JOIN movimientos m ON trm.entrega_venta_id = m.id
-            INNER JOIN productos p ON m.producto_id = p.id
-            LEFT JOIN ventas v ON m.referencia_id = v.id
-            LEFT JOIN transporte_rutas_puntos rp ON trm.id = rp.reparto_id
-            WHERE tc.viaje_folio = ?
-            GROUP BY m.id";
+    // 1. Buscamos la cabecera, incluyendo el almacen_id de la venta
+    $sqlHeader = "SELECT 
+                    tc.viaje_folio,
+                    tc.vehiculo_id,
+                    trm.usuario_encargado_id as chofer_id,
+                    v.almacen_id  -- <--- Aquí lo obtenemos del movimiento/venta
+                  FROM transporte_consolidacion tc
+                  INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
+                  LEFT JOIN movimientos m ON trm.entrega_venta_id = m.id
+                  LEFT JOIN ventas v ON m.referencia_id = v.id
+                  WHERE tc.viaje_folio = ? LIMIT 1";
+    
+    $stmtH = $this->db->prepare($sqlHeader);
+    $stmtH->bind_param("s", $folio_viaje);
+    $stmtH->execute();
+    $header = $stmtH->get_result()->fetch_assoc();
 
-    $stmt = $this->db->prepare($sql);
-    $stmt->bind_param("s", $folio_viaje);
-    $stmt->execute();
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    if (!$header) return null;
+
+    // 2. IDs de Tripulantes (para el select múltiple)
+    $sqlT = "SELECT usuario_id FROM transporte_tripulantes_detalle 
+             WHERE reparto_id IN (SELECT reparto_id FROM transporte_consolidacion WHERE viaje_folio = ?)";
+    $stmtT = $this->db->prepare($sqlT);
+    $stmtT->bind_param("s", $folio_viaje);
+    $stmtT->execute();
+    $resT = $stmtT->get_result();
+    $header['tripulantes_ids'] = [];
+    while($r = $resT->fetch_assoc()) $header['tripulantes_ids'][] = $r['usuario_id'];
+
+    // 3. Materiales y sus destinos
+    $sqlMat = "SELECT m.id as movimiento_id, p.nombre as producto, m.cantidad, 
+                      v.folio as folio_venta, rp.descripcion_punto as destino
+               FROM transporte_consolidacion tc
+               INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
+               INNER JOIN movimientos m ON trm.entrega_venta_id = m.id
+               INNER JOIN productos p ON m.producto_id = p.id
+               LEFT JOIN ventas v ON m.referencia_id = v.id
+               LEFT JOIN transporte_rutas_puntos rp ON trm.id = rp.reparto_id
+               WHERE tc.viaje_folio = ?";
+    $stmtM = $this->db->prepare($sqlMat);
+    $stmtM->bind_param("s", $folio_viaje);
+    $stmtM->execute();
+    $header['materiales'] = $stmtM->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    return $header;
 }
 }

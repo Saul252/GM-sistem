@@ -111,17 +111,15 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
             ]);
             exit;
         }
-     
 if ($action === 'get_detalles_viaje') {
     $folio = $_GET['folio'] ?? '';
-    if (empty($folio)) throw new Exception("Folio no proporcionado.");
-
     $detalles = $repartoM->getDetallesViaje($folio);
     
-    echo json_encode([
-        "success" => true,
-        "data"    => $detalles
-    ]);
+    if ($detalles) {
+        echo json_encode(["success" => true, "data" => $detalles]);
+    } else {
+        echo json_encode(["success" => false, "message" => "No se encontró información"]);
+    }
     exit;
 }
 
@@ -131,7 +129,32 @@ if ($action === 'actualizar_logistica_completa') {
     echo json_encode(["success" => true, "message" => "Ruta actualizada correctamente"]);
     exit;
 }
+// --- HISTORIAL DE REPARTOS FINALIZADOS ---
+if ($action === 'listar_historial') {
+    // Limpiamos cualquier salida previa (Warnings) para que el JSON sea puro
+    ob_clean(); 
+    header('Content-Type: application/json');
 
+    try {
+        $almacen_id = isset($_GET['almacen_id']) ? intval($_GET['almacen_id']) : 0;
+        $historial = $repartoM->listarHistorialDeRepartos($almacen_id);
+
+        // Si el modelo regresa false o null, lo convertimos en array vacío
+        $data = $historial ? $historial : [];
+
+        echo json_encode([
+            "success" => true, 
+            "data" => $data
+        ]);
+    } catch (Exception $e) {
+        http_response_code(500);
+        echo json_encode([
+            "success" => false, 
+            "message" => $e->getMessage()
+        ]);
+    }
+    exit;
+}
 
         // if ($action === 'cancelar_entrega_individual') {
         //     $movimiento_id = intval($_REQUEST['movimiento_id'] ?? 0);
