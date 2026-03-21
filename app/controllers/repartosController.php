@@ -88,6 +88,67 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
          * BLOQUE 2: GESTIÓN DE VISTA Y FILTROS
          * -----------------------------------------------------------
          */
+        if ($action === 'cancelar_viaje_completo') {
+            // Recibimos los datos del monitor (GET o POST)
+            $folio_viaje = $_REQUEST['folio'] ?? '';
+            $vehiculo_id = intval($_REQUEST['vehiculo_id'] ?? 0);
+
+            if (empty($folio_viaje) || $vehiculo_id === 0) {
+                throw new Exception("Datos de viaje insuficientes para cancelar.");
+            }
+
+            // 1. Ejecutamos la limpieza masiva en el modelo
+            $repartoM->cancelarViajeCompleto($folio_viaje, $vehiculo_id);
+
+            // 2. IMPORTANTE: Regresamos el vehículo a estado disponible
+            if (method_exists($vehiculoM, 'actualizarEstado')) {
+                $vehiculoM->actualizarEstado($vehiculo_id, 'disponible');
+            }
+
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Ruta anulada y unidades liberadas correctamente.'
+            ]);
+            exit;
+        }
+     
+if ($action === 'get_detalles_viaje') {
+    $folio = $_GET['folio'] ?? '';
+    if (empty($folio)) throw new Exception("Folio no proporcionado.");
+
+    $detalles = $repartoM->getDetallesViaje($folio);
+    
+    echo json_encode([
+        "success" => true,
+        "data"    => $detalles
+    ]);
+    exit;
+}
+
+if ($action === 'actualizar_logistica_completa') {
+    // Esta es la función que procesa los cambios del modal (Chofer, Ayudantes y Destinos)
+    $res = $repartoM->actualizarLogisticaCompleta($_POST);
+    echo json_encode(["success" => true, "message" => "Ruta actualizada correctamente"]);
+    exit;
+}
+
+
+        // if ($action === 'cancelar_entrega_individual') {
+        //     $movimiento_id = intval($_REQUEST['movimiento_id'] ?? 0);
+            
+        //     if ($movimiento_id === 0) {
+        //         throw new Exception("ID de movimiento no válido.");
+        //     }
+
+        //     // Esta llama a la función que limpia un solo movimiento_id
+        //     $repartoM->cancelarEntregaIndividual();
+
+        //     echo json_encode([
+        //         'success' => true, 
+        //         'message' => 'La entrega ha sido removida del reparto.'
+        //     ]);
+        //     exit;
+        // }
 
         if ($action === 'listar_pendientes_ruta') {
             // Prioridad: 1. El filtro del GET, 2. El almacén de la sesión

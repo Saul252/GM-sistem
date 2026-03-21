@@ -166,11 +166,12 @@ $(document).ready(function() {
     let movimientoActualID = null;
 
     const tabla = $('#tablaEntregas').DataTable({
-        language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
-        dom: '<"d-flex justify-content-between p-3 border-bottom"f>rt<"p-3"ip>',
-        order: [[0, 'asc']],
-        pageLength: 20
-    });
+    language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
+    dom: '<"d-flex justify-content-between p-3 border-bottom"f>rt<"p-3"ip>',
+    // CAMBIO: De 'asc' a 'desc' para que el ID más alto (el más nuevo) aparezca primero
+    order: [[1, 'desc']], 
+    pageLength: 20
+});
 
     /**
      * AJUSTE: Función de formateo para mostrar Unidades de Reporte (Ej: Toneladas)

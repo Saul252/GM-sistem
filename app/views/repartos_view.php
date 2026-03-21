@@ -248,65 +248,133 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <?php require_once __DIR__ . '/entregasComponets/repartoModal.php'; ?>
+<?php require_once __DIR__ . '/entregasComponets/editarRepartoModal.php'; ?>
 
     <script>
     // --- LÓGICA DE MONITOR DE VIAJES ---
-    window.cargarMonitorViajes = async function() {
-        const body = $('#bodyMonitorViajes');
-        const almacenId = $('#filtroAlmacen').val() || 0;
+   window.cargarMonitorViajes = async function() {
+    const body = $('#bodyMonitorViajes');
+    const almacenId = $('#filtroAlmacen').val() || 0;
+    
+    try {
+        body.html('<tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary spinner-border-sm"></div><div class="mt-2 text-muted small">Consultando satélite...</div></td></tr>');
         
-        try {
-            body.html('<tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary spinner-border-sm"></div><div class="mt-2 text-muted small">Consultando satélite...</div></td></tr>');
-            
-            const resp = await fetch(`/cfsistem/app/controllers/repartosController.php?action=listar_viajes_activos&almacen_id=${almacenId}`);
-            const result = await resp.json();
-            const data = result.data || result; 
+        const resp = await fetch(`/cfsistem/app/controllers/repartosController.php?action=listar_viajes_activos&almacen_id=${almacenId}`);
+        const result = await resp.json();
+        const data = result.data || result; 
 
-            if (!data || data.length === 0) {
-                body.html('<tr><td colspan="5" class="text-center py-5 text-muted opacity-50"><i class="bi bi-geo-alt fs-2 d-block mb-2"></i> No hay unidades activas en ruta</td></tr>');
-                return;
-            }
-
-            body.empty();
-            data.forEach(v => {
-                const listaAyudantes = v.tripulantes 
-                    ? `<div class="small text-muted fw-medium"><i class="bi bi-people-fill me-1 text-primary"></i> ${v.tripulantes}</div>`
-                    : `<span class="badge bg-light text-secondary fw-normal border" style="font-size:0.6rem;">Solo Conductor</span>`;
-
-                body.append(`
-                    <tr class="animate__animated animate__fadeIn">
-                        <td class="ps-4">
-                            <div class="fw-bold text-dark" style="font-size:1rem;">${v.unidad}</div>
-                            <div class="badge-folio mt-1"><i class="bi bi-hash"></i>${v.viaje_folio}</div>
-                            <div class="small text-muted mt-1" style="font-size:0.7rem;">📍 ${v.almacen_nombre || 'N/A'}</div>
-                        </td>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <div class="avatar-chofer me-3">
-                                    <i class="bi bi-person-badge"></i>
-                                </div>
-                                <div>
-                                    <div class="fw-bold text-uppercase" style="font-size: 0.75rem; color:#1d1d1f;">${v.chofer}</div>
-                                    <small class="text-muted" style="font-size: 0.65rem;">Operador Logístico</small>
-                                </div>
-                            </div>
-                        </td>
-                        <td>${listaAyudantes}</td>
-                        <td><div class="carga-scroll">${v.detalles_carga}</div></td>
-                        <td class="text-end pe-4">
-                            <button class="btn btn-finish btn-sm" onclick="finalizarViaje(${v.vehiculo_id}, '${v.viaje_folio}')">
-                                <i class="bi bi-check-all me-1"></i> FINALIZAR
-                            </button>
-                        </td>
-                    </tr>
-                `);
-            });
-        } catch (e) { 
-            body.html('<tr><td colspan="5" class="text-center py-4 text-danger">Error de conexión</td></tr>');
+        if (!data || data.length === 0) {
+            body.html('<tr><td colspan="5" class="text-center py-5 text-muted opacity-50"><i class="bi bi-geo-alt fs-2 d-block mb-2"></i> No hay unidades activas en ruta</td></tr>');
+            return;
         }
-    };
 
-    // --- LÓGICA DE PENDIENTES ---
+        body.empty();
+        data.forEach(v => {
+            const listaAyudantes = v.tripulantes 
+                ? `<div class="small text-muted fw-medium"><i class="bi bi-people-fill me-1 text-primary"></i> ${v.tripulantes}</div>`
+                : `<span class="badge bg-light text-secondary fw-normal border" style="font-size:0.6rem;">Solo Conductor</span>`;
+
+            body.append(`
+                <tr class="animate__animated animate__fadeIn border-bottom" style="border-color: #f2f2f7 !important;">
+                    <td class="ps-4">
+                        <div class="fw-bold text-dark" style="font-size:0.95rem; letter-spacing:-0.01em;">${v.unidad}</div>
+                        <div class="badge-folio mt-1"><i class="bi bi-hash"></i>${v.viaje_folio}</div>
+                        <div class="small text-muted mt-1" style="font-size:0.7rem;">📍 ${v.almacen_nombre || 'N/A'}</div>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-chofer me-3">
+                                <i class="bi bi-person-badge"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold text-uppercase" style="font-size: 0.72rem; color:#1d1d1f; letter-spacing:0.02em;">${v.chofer}</div>
+                                <small class="text-muted" style="font-size: 0.62rem;">Operador Logístico</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${listaAyudantes}</td>
+                    <td><div class="carga-scroll" style="font-size:0.75rem; color:#424245;">${v.detalles_carga}</div></td>
+                    <td class="text-end pe-4">
+                    <button class="btn btn-sm btn-light border-0" 
+                onclick="abrirModalEdicionViaje('${v.viaje_folio}', ${v.vehiculo_id}, ${v.chofer_id})"
+                style="border-radius: 10px; color: #007aff; background: #f2f2f7;">
+            <i class="bi bi-pencil-square"></i>
+        </button>
+                        <div class="d-flex justify-content-end" style="gap: 8px;">
+                            <button class="btn btn-sm d-flex align-items-center justify-content-center" 
+                                    onclick="confirmarCancelacionViaje(${v.vehiculo_id}, '${v.viaje_folio}')"
+                                    style="background: #fff; color: #ff3b30; border: 1px solid #ff3b30; border-radius: 10px; padding: 6px 12px; font-weight: 600; font-size: 0.68rem; transition: all 0.3s ease;">
+                                <i class="bi bi-x-circle me-1"></i> CANCELAR
+                            </button>
+
+                            <button class="btn btn-finish btn-sm d-flex align-items-center justify-content-center" 
+                                    onclick="finalizarViaje(${v.vehiculo_id}, '${v.viaje_folio}')"
+                                    style="background: #14c41d; color: #fff; border: none; border-radius: 10px; padding: 6px 14px; font-weight: 600; font-size: 0.68rem;">
+                                <i class="bi bi-check2-all me-1"></i> FINALIZAR
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `);
+        });
+    } catch (e) { 
+        body.html('<tr><td colspan="5" class="text-center py-4 text-danger">Error de conexión</td></tr>');
+    }
+};
+
+// --- 1. FUNCIÓN DE CONFIRMACIÓN (TUYA, AJUSTADA) ---
+window.confirmarCancelacionViaje = function(vehiculoId, folioViaje) {
+    Swal.fire({
+        title: '¿Anular este viaje?',
+        text: `Se cancelarán todas las entregas asociadas al folio ${folioViaje} y los materiales volverán a estar disponibles.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ff3b30',
+        cancelButtonColor: '#8e8e93',
+        confirmButtonText: 'Sí, cancelar ruta',
+        cancelButtonText: 'Mantener activo',
+        customClass: {
+            popup: 'rounded-4 shadow',
+            confirmButton: 'rounded-3 px-4',
+            cancelButton: 'rounded-3 px-4'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Llamamos a la función que realmente ejecuta el borrado
+            cancelarTodoElViaje(vehiculoId, folioViaje);
+        }
+    });
+};
+
+// --- 2. FUNCIÓN DE EJECUCIÓN (LA QUE SE COMUNICA CON EL CONTROLLER) ---
+async function cancelarTodoElViaje(vehiculoId, folioViaje) {
+    try {
+        // Mostramos un loader sutil para que el usuario sepa que se está procesando
+        $('#loader').removeClass('d-none');
+
+        const resp = await fetch(`/cfsistem/app/controllers/repartosController.php?action=cancelar_viaje_completo&folio=${folioViaje}&vehiculo_id=${vehiculoId}`);
+        const res = await resp.json();
+
+        if (res.success) {
+            Swal.fire({
+                title: 'Ruta Anulada',
+                text: res.message,
+                icon: 'success',
+                confirmButtonColor: '#1c1c1e',
+                customClass: { popup: 'rounded-4' }
+            });
+            // Recargamos el monitor de viajes para que la unidad desaparezca
+            window.cargarMonitorViajes();
+        } else {
+            Swal.fire('Error', res.message || 'No se pudo anular', 'error');
+        }
+    } catch (e) {
+        console.error(e);
+        Swal.fire('Error de sistema', 'Ocurrió un error al conectar con el satélite.', 'error');
+    } finally {
+        $('#loader').addClass('d-none');
+    }
+}
     window.CONTROLLER = '/cfsistem/app/controllers/repartosController.php';
     let allData = [];
     let filteredData = [];
