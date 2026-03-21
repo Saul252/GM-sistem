@@ -158,6 +158,8 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
+ 
+    <?php require_once __DIR__ . '/entregasComponets/entregasPatioModal.php'; ?>
 
     <script>
 $(document).ready(function() {
@@ -204,51 +206,83 @@ $(document).ready(function() {
                     res.data.forEach(m => {
                       // Dentro del res.data.forEach(m => { ... })
 
-let accionHtml = '';
+let contenidoAccion = '';
+
 if (parseInt(m.ya_despachado) === 1) {
-    // Definimos si el botón debe estar bloqueado
-    // Nota: Ajusta los strings si en tu base de datos se guardan distinto (ej: 'En Ruta')
-    const bloqueado = (m.estado_reparto === 'en_ruta' || m.estado_reparto === 'completado');
-    const labelBoton = bloqueado ? m.estado_reparto.toUpperCase() : 'Asignar Ruta';
-    const claseBoton = bloqueado ? 'btn-secondary' : 'btn-primary';
+    // Definimos los estados de bloqueo
+    const entregaFinalizada = (m.estado_reparto === 'completado');
+    const enRuta = (m.estado_reparto === 'en_transito');
 
-    accionHtml = `
-        <div class="d-flex align-items-center justify-content-end pe-3">
-            <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3 py-2 me-3" style="font-size: 0.75rem;">
-                <i class="bi bi-check-circle-fill me-1"></i> ENTREGADO
-            </span>
+    if (entregaFinalizada || enRuta) {
+        // --- VISTA DE SEGUIMIENTO E IMPRESIÓN (SIN BOTONES OPERATIVOS) ---
+        const colorEstado = entregaFinalizada ? '#28a745' : '#ff9500';
+        const bgEstado = entregaFinalizada ? 'rgba(52, 199, 89, 0.08)' : 'rgba(255, 149, 0, 0.08)';
+        const borderEstado = entregaFinalizada ? 'rgba(52, 199, 89, 0.15)' : 'rgba(255, 149, 0, 0.15)';
+        const textoEstado = entregaFinalizada ? 'MATERIAL ENTREGADO' : 'MERCANCÍA EN TRÁNSITO';
+        const iconoEstado = entregaFinalizada ? 'bi-check-circle-fill' : 'bi-truck';
 
-            <div class="btn-group shadow-sm" role="group" style="border-radius: 20px; overflow: hidden;">
-                <button onclick="imprimirComprobante(${m.id})" 
-                        class="btn btn-sm btn-white border-end" 
-                        title="Imprimir Vale de Patio"
-                        style="padding: 8px 12px;">
-                    <i class="bi bi-printer text-secondary"></i>
-                </button>
+        contenidoAccion = `
+            <div class="d-flex align-items-center justify-content-end pe-2 py-1" style="animation: fadeIn 0.5s ease;">
                 
-                <button onclick="verDetalleGanancia(${m.id})" 
-                        class="btn btn-sm btn-white" 
-                        title="Ver Análisis Financiero"
-                        style="padding: 8px 12px;">
-                    <i class="bi bi-graph-up-arrow text-success"></i>
-                </button>
-            </div>
+                <div class="d-flex align-items-center me-3" style="background: ${bgEstado}; padding: 8px 20px; border-radius: 16px; border: 1px solid ${borderEstado};">
+                    <i class="bi ${iconoEstado} me-2" style="color: ${colorEstado}; font-size: 1rem;"></i>
+                    <span style="color: ${colorEstado}; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.03em;">${textoEstado}</span>
+                </div>
 
-            <button class="btn ${claseBoton} btn-sm px-3 rounded-pill shadow-sm ms-2" 
-                    onclick="prepararModalReparto(${m.id}, ${m.almacen_origen_id})"
-                    ${bloqueado ? 'disabled title="Este movimiento ya tiene una ruta asignada"' : ''}>
-                <i class="bi ${bloqueado ? 'bi-lock-fill' : 'bi-truck'} me-1"></i> ${labelBoton}
-            </button>
-        </div>`;
+                <button onclick="imprimirComprobante(${m.id})" 
+                        class="btn d-flex align-items-center justify-content-center shadow-sm" 
+                        style="background: #ffffff; color: #1c1c1e; border: 1px solid #efeff4; border-radius: 16px; height: 42px; padding: 0 20px; transition: all 0.3s ease;">
+                    <i class="bi bi-printer-fill me-2" style="color: #007aff;"></i>
+                    <span style="font-size: 0.75rem; font-weight: 600;">IMPRIMIR MOVIMIENTO</span>
+                </button>
+
+                <button onclick="verDetalleGanancia(${m.id})" class="btn btn-link ms-2 text-decoration-none" style="color: #ceced2;">
+                    <i class="bi bi-graph-up-arrow fs-6"></i>
+                </button>
+            </div>`;
+    } else {
+        // --- VISTA DE ACCIÓN (CUANDO AÚN NO SE ASIGNA RUTA O PATIO) ---
+        contenidoAccion = `
+            <div class="d-flex align-items-center justify-content-end pe-2 py-1" style="gap: 12px;">
+                
+                <div class="d-flex bg-white rounded-pill p-1 border shadow-sm" style="border-color: rgba(0,0,0,0.05) !important;">
+                    <button onclick="imprimirComprobante(${m.id})" class="btn btn-link btn-sm text-decoration-none px-3 border-end" style="color: #8e8e93; border-color: rgba(0,0,0,0.1) !important;">
+                        <i class="bi bi-printer fs-6"></i>
+                    </button>
+                    <button onclick="verDetalleGanancia(${m.id})" class="btn btn-link btn-sm text-decoration-none px-3" style="color: #34c759;">
+                        <i class="bi bi-graph-up-arrow fs-6"></i>
+                    </button>
+                </div>
+
+                <div class="d-flex" style="gap: 8px;">
+                    <button onclick="prepararModalPatio(${m.id}, ${m.almacen_origen_id})"
+                            class="btn rounded-pill px-3 d-flex align-items-center justify-content-center"
+                            style="background: #007aff; color: #fff; border: none; font-weight: 600; height: 38px; transition: 0.3s;">
+                        <i class="bi bi-box-seam me-2"></i><span style="font-size: 0.75rem;">ENTREGAR EN PATIO</span>
+                    </button>
+
+                    <button onclick="prepararModalReparto(${m.id}, ${m.almacen_origen_id})"
+                            class="btn rounded-pill px-3 d-flex align-items-center justify-content-center"
+                            style="background: #1c1c1e; color: #fff; border: none; font-weight: 600; height: 38px; transition: 0.3s;">
+                        <i class="bi bi-truck me-2"></i><span style="font-size: 0.75rem;">ASIGNAR A RUTA</span>
+                    </button>
+                </div>
+            </div>`;
+    }
 } else {
-    // Lógica para cuando aún no se despacha (botón Preparar)
-    accionHtml = `
-        <div class="pe-3 text-end">
-            <button onclick="prepararDespacho(${m.id})" class="btn btn-despachar rounded-pill shadow-sm">
-                <i class="bi bi-file-earmark-ruled me-1"></i> Preparar
+    // --- VISTA INICIAL: POR DESPACHAR ---
+    contenidoAccion = `
+        <div class="pe-3 text-end py-1">
+            <button onclick="prepararDespacho(${m.id})" 
+                    class="btn rounded-pill shadow-sm px-4 d-flex align-items-center justify-content-center ms-auto" 
+                    style="background: #5856d6; color: white; border: none; font-weight: 700; height: 40px; transition: all 0.3s ease;">
+                <i class="bi bi-file-earmark-check me-2"></i> 
+                <span style="font-size: 0.85rem;">DESPACHAR MATERIAL</span>
             </button>
         </div>`;
 }
+
+accionHtml = contenidoAccion;
 
 // AGREGADO: Folio de Venta y Número de Operación (ID del movimiento)
                         tabla.row.add([

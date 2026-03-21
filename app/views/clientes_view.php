@@ -1,71 +1,122 @@
 <?php
 /**
  * clientes_view.php
- * Vista de administración de clientes completa: Filtros, CRUD por Modales y AJAX.
+ * Vista de administración de clientes: Filtros, CRUD por Modales y AJAX.
+ * Lógica de permisos: Admin global vs Usuario de sucursal.
  */
 $usosCFDI = ['G01' => 'Adquisición', 'G03' => 'Gastos', 'P01' => 'Por definir', 'S01' => 'Sin efectos'];
+$almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Clientes | Sistema</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clientes | cfsistem</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    
     <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
+    
     <style>
-        :root { --sidebar-width: 260px; --navbar-height: 65px; }
-        body { background-color: #f4f7f6; }
-        .main-content { margin-left: var(--sidebar-width); padding: 40px; padding-top: calc(var(--navbar-height) + 20px); }
-        .card-table { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); background: white; }
+        :root { 
+            --sidebar-width: 260px; 
+            --navbar-height: 65px;
+            --apple-bg: #f5f5f7;
+            --accent-blue: #007aff;
+        }
+
+        body { 
+            background-color: var(--apple-bg); 
+            font-family: 'SF Pro Display', -apple-system, sans-serif;
+            color: #1d1d1f;
+        }
+
+        .main-content { 
+            margin-left: var(--sidebar-width); 
+            padding: 40px; 
+            padding-top: calc(var(--navbar-height) + 20px); 
+        }
+
+        .card-premium { 
+            border: none; 
+            border-radius: 20px; 
+            box-shadow: 0 8px 30px rgba(0,0,0,0.04); 
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+        }
+
         .badge-ubicacion { 
-            background-color: #f8f9fa; 
-            color: #333; 
-            border: 1px solid #ddd; 
-            padding: 0.5rem 0.75rem;
-            font-size: 0.875rem;
+            background-color: #f2f2f7; 
+            color: #1d1d1f; 
+            border: 1px solid #d1d1d6; 
+            padding: 0.4rem 0.7rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 8px;
         }
-        .filtros-activos {
-            background-color: #e3f2fd !important;
-            border-color: #2196f3 !important;
-            color: #1976d2 !important;
-            font-weight: bold;
+
+        /* DataTables Custom */
+        .dataTables_wrapper .pagination .page-item.active .page-link {
+            background-color: var(--accent-blue);
+            border-color: var(--accent-blue);
+            border-radius: 8px;
         }
+
+        .table thead th {
+            background: #fbfbfd;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #86868b;
+            border-bottom: 1px solid #d1d1d6;
+        }
+
         @media (max-width: 768px) { 
             .main-content { margin-left: 0; padding: 20px; padding-top: 90px; } 
         }
     </style>
 </head>
 <body>
-    <?php renderizarLayout($paginaActual); ?>
+    <?php if (function_exists('renderizarLayout')) { renderizarLayout($paginaActual); } ?>
 
     <main class="main-content">
-       
+        
+        <div class="d-flex justify-content-between align-items-center mb-5 animate__animated animate__fadeIn">
+            <div>
+                <h2 class="fw-bold m-0" style="font-size: 2rem; letter-spacing: -0.03em;">Cartera de Clientes</h2>
+                <p class="text-muted mb-0">Gestión de datos fiscales y comerciales</p>
+            </div>
+            <button class="btn btn-primary rounded-pill px-4 shadow-sm d-flex align-items-center" 
+                    onclick="nuevoCliente()" style="background: var(--accent-blue); border:none; height: 42px; font-weight: 600;">
+                <i class="bi bi-person-plus-fill me-2 fs-5"></i> NUEVO CLIENTE
+            </button>
+        </div>
 
-        <div class="card card-table p-4">
+        <div class="card card-premium p-4 animate__animated animate__fadeInUp">
             <div class="row mb-4 g-3">
                 <div class="col-md-5">
-                    <div class="input-group">
-                        <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-                        <input type="text" id="busquedaCliente" class="form-control border-start-0" placeholder="Buscar por nombre, RFC...">
+                    <div class="input-group bg-light rounded-3 p-1">
+                        <span class="input-group-text bg-transparent border-0 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" id="busquedaCliente" class="form-control border-0 bg-transparent shadow-none" placeholder="Buscar por nombre, RFC o correo...">
                     </div>
                 </div>
 
                 <?php if ($almacen_usuario == 0): ?>
                 <div class="col-md-4">
-                    <select id="filtroAlmacenVista" class="form-select">
-                        <option value="">📍 Todos los Almacenes</option>
+                    <select id="filtroAlmacenVista" class="form-select border-0 bg-light rounded-3 h-100 shadow-none">
+                        <option value="">🌐 Todas las Sucursales</option>
                         <?php foreach ($almacenes as $alm): ?>
-                            <option value="<?= $alm['id'] ?>">
-                                <?= htmlspecialchars($alm['nombre']) ?>
-                            </option>
+                            <option value="<?= $alm['id'] ?>">📍 <?= htmlspecialchars($alm['nombre']) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <button class="btn btn-outline-secondary w-100" onclick="limpiarFiltros()">
-                        <i class="bi bi-arrow-clockwise"></i> Limpiar Filtros
+                    <button class="btn btn-outline-secondary w-100 rounded-3 border-0 bg-light fw-bold text-muted" onclick="limpiarFiltros()">
+                        <i class="bi bi-arrow-clockwise me-1"></i> RESET
                     </button>
                 </div>
                 <?php endif; ?>
@@ -73,65 +124,57 @@ $usosCFDI = ['G01' => 'Adquisición', 'G03' => 'Gastos', 'P01' => 'Por definir',
 
             <div class="table-responsive">
                 <table id="tablaClientes" class="table table-hover align-middle w-100">
-                    <thead class="table-dark">
+                    <thead>
                         <tr>
-                            <th>Nombre Comercial</th>
-                            <th>RFC</th>
-                            <th>Ubicación</th>
-                            <th>Estado</th>
-                            <th class="text-end">Acciones</th>
+                            <th class="ps-3">Nombre Comercial / Razón Social</th>
+                            <th>Identificación (RFC)</th>
+                            <th>Sucursal</th>
+                            <th>Estatus</th>
+                            <th class="text-end pe-3">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($clientes as $c): ?>
                         <tr class="fila-cliente" data-almacen-id="<?= $c['almacen_id'] ?>">
-                            <td>
-                                <strong><?= htmlspecialchars($c['nombre_comercial']) ?></strong>
+                            <td class="ps-3">
+                                <div class="fw-bold" style="color: #1d1d1f;"><?= htmlspecialchars($c['nombre_comercial']) ?></div>
                                 <?php if (!empty($c['razon_social'])): ?>
-                                <br><small class="text-muted"><?= htmlspecialchars($c['razon_social']) ?></small>
+                                <div class="text-muted small" style="font-size: 0.7rem;"><?= htmlspecialchars($c['razon_social']) ?></div>
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <span class="badge bg-light text-dark border px-2 py-1">
+                                <span class="badge bg-white text-dark border px-2 py-1 fw-bold" style="font-family: monospace;">
                                     <?= htmlspecialchars($c['rfc']) ?>
                                 </span>
                             </td>
-                           <td>
-    <span class="badge badge-ubicacion">
-        <i class="bi bi-house-door me-1"></i>
-        <?php 
-            $nombreAlmacen = 'Principal / Global'; // Valor por defecto
-            foreach ($almacenes as $alm) {
-                if ($alm['id'] == $c['almacen_id']) {
-                    $nombreAlmacen = $alm['nombre'];
-                    break;
-                }
-            }
-            echo htmlspecialchars($nombreAlmacen);
-        ?>
-    </span>
-</td>
+                            <td>
+                                <span class="badge-ubicacion">
+                                    <i class="bi bi-geo-alt me-1"></i>
+                                    <?php 
+                                        $nombreAlmacen = 'Global'; 
+                                        foreach ($almacenes as $alm) {
+                                            if ($alm['id'] == $c['almacen_id']) { $nombreAlmacen = $alm['nombre']; break; }
+                                        }
+                                        echo htmlspecialchars($nombreAlmacen);
+                                    ?>
+                                </span>
+                            </td>
                             <td>
                                 <div class="form-check form-switch">
-                                    <input class="form-check-input" 
-                                           type="checkbox" 
-                                           <?= $c['activo'] ? 'checked' : '' ?> 
-                                           onchange="cambiarEstado(<?= $c['id'] ?>, this.checked ? 1 : 0)"
-                                           id="switch_<?= $c['id'] ?>">
-                                    <label class="form-check-label" for="switch_<?= $c['id'] ?>">
+                                    <input class="form-check-input" type="checkbox" <?= $c['activo'] ? 'checked' : '' ?> 
+                                           onchange="cambiarEstado(<?= $c['id'] ?>, this.checked ? 1 : 0)" id="switch_<?= $c['id'] ?>">
+                                    <label class="form-check-label small fw-medium" for="switch_<?= $c['id'] ?>">
                                         <?= $c['activo'] ? 'Activo' : 'Inactivo' ?>
                                     </label>
                                 </div>
                             </td>
-                            <td class="text-end">
-                                <div class="btn-group">
-                                    <button class="btn btn-sm btn-outline-primary border-0" 
-                                            onclick="editarCliente(<?= $c['id'] ?>)" title="Editar">
-                                        <i class="bi bi-pencil-square fs-5"></i>
+                            <td class="text-end pe-3">
+                                <div class="btn-group shadow-sm rounded-pill bg-white px-1">
+                                    <button class="btn btn-link btn-sm text-primary p-2" onclick="editarCliente(<?= $c['id'] ?>)">
+                                        <i class="bi bi-pencil-square"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-success border-0" 
-                                            onclick="verDetalles(<?= $c['id'] ?>)" title="Ver detalles">
-                                        <i class="bi bi-eye fs-5"></i>
+                                    <button class="btn btn-link btn-sm text-success p-2" onclick="verDetalles(<?= $c['id'] ?>)">
+                                        <i class="bi bi-eye"></i>
                                     </button>
                                 </div>
                             </td>
@@ -144,78 +187,66 @@ $usosCFDI = ['G01' => 'Adquisición', 'G03' => 'Gastos', 'P01' => 'Por definir',
     </main>
 
     <div class="modal fade" id="modalCliente" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content border-0 shadow-lg">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow: hidden;">
                 <form id="formCliente">
-                    <div class="modal-header bg-dark text-white">
-                        <h5 class="modal-title" id="modalTitulo">Nuevo Cliente</h5>
+                    <div class="modal-header bg-dark text-white border-0 py-3">
+                        <h5 class="modal-title fw-bold px-2" id="modalTitulo">Nuevo Cliente</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body p-4">
                         <input type="hidden" name="cliente_id" id="cliente_id" value="0">
                         
                         <div class="row g-3">
                             <div class="col-md-12">
-                                <label class="form-label fw-bold">Nombre Comercial *</label>
-                                <input type="text" name="nombre_comercial" id="nombre_comercial" class="form-control" required>
+                                <label class="form-label small fw-bold text-muted">NOMBRE COMERCIAL *</label>
+                                <input type="text" name="nombre_comercial" id="nombre_comercial" class="form-control rounded-3" required>
                             </div>
                             <div class="col-md-12">
-                                <label class="form-label fw-bold">Razón Social</label>
-                                <input type="text" name="razon_social" id="razon_social" class="form-control">
+                                <label class="form-label small fw-bold text-muted">RAZÓN SOCIAL</label>
+                                <input type="text" name="razon_social" id="razon_social" class="form-control rounded-3">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">RFC *</label>
-                                <input type="text" name="rfc" id="rfc" class="form-control text-uppercase" maxlength="13" required>
+                                <label class="form-label small fw-bold text-muted">RFC *</label>
+                                <input type="text" name="rfc" id="rfc" class="form-control text-uppercase rounded-3" maxlength="13" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">Régimen Fiscal</label>
-                                <input type="text" name="regimen_fiscal" id="regimen_fiscal" class="form-control" placeholder="Ej. 601">
+                                <label class="form-label small fw-bold text-muted">CÓDIGO POSTAL</label>
+                                <input type="text" name="codigo_postal" id="codigo_postal" class="form-control rounded-3" maxlength="5">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">Código Postal</label>
-                                <input type="text" name="codigo_postal" id="codigo_postal" class="form-control" maxlength="5">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Uso CFDI</label>
-                                <select name="uso_cfdi" id="uso_cfdi" class="form-select">
+                                <label class="form-label small fw-bold text-muted">USO CFDI</label>
+                                <select name="uso_cfdi" id="uso_cfdi" class="form-select rounded-3">
                                     <?php foreach($usosCFDI as $key => $val): ?>
                                         <option value="<?= $key ?>"><?= $key ?> - <?= $val ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">Correo</label>
-                                <input type="email" name="correo" id="correo" class="form-control">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Teléfono</label>
-                                <input type="tel" name="telefono" id="telefono" class="form-control">
-                            </div>
-                            <div class="col-md-12">
-                                <label class="form-label fw-bold">Dirección</label>
-                                <textarea name="direccion" id="direccion" class="form-control" rows="2"></textarea>
+                                <label class="form-label small fw-bold text-muted">CORREO</label>
+                                <input type="email" name="correo" id="correo" class="form-control rounded-3">
                             </div>
 
                             <?php if ($almacen_usuario == 0): ?>
                             <div class="col-md-12">
-                                <label class="form-label fw-bold text-primary">Asignar a Almacén *</label>
-                                <select name="almacen_id" id="almacen_id_modal" class="form-select border-primary" required>
-                                    <option value="">-- Seleccionar --</option>
-                                    <?php foreach ($almacenes as $alm): ?>
-                                        <option value="<?= $alm['id'] ?>"><?= htmlspecialchars($alm['nombre']) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
+                                <div class="bg-light p-3 rounded-4 mt-2 border border-dashed">
+                                    <label class="form-label small fw-bold text-primary">ASIGNAR A SUCURSAL *</label>
+                                    <select name="almacen_id" id="almacen_id_modal" class="form-select border-primary shadow-none" required>
+                                        <option value="">-- Seleccionar Almacén --</option>
+                                        <?php foreach ($almacenes as $alm): ?>
+                                            <option value="<?= $alm['id'] ?>"><?= htmlspecialchars($alm['nombre']) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
                             </div>
                             <?php else: ?>
                                 <input type="hidden" name="almacen_id" value="<?= $almacen_usuario ?>">
                             <?php endif; ?>
                         </div>
                     </div>
-                    <div class="modal-footer bg-light">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary px-4">
-                            <i class="bi bi-save me-2"></i>Guardar Cliente
-                        </button>
+                    <div class="modal-footer bg-light border-0 px-4 pb-4">
+                        <button type="button" class="btn btn-link text-secondary fw-bold text-decoration-none" data-bs-dismiss="modal">CANCELAR</button>
+                        <button type="submit" class="btn btn-primary px-5 rounded-pill fw-bold shadow">GUARDAR DATOS</button>
                     </div>
                 </form>
             </div>
@@ -231,45 +262,27 @@ $usosCFDI = ['G01' => 'Adquisición', 'G03' => 'Gastos', 'P01' => 'Por definir',
     <script>
     let tabla;
 
-    // Función para escapar caracteres especiales en búsqueda regex
-    function escapeRegExp(string) {
-        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    }
-
     $(document).ready(function() {
-        // Inicializar DataTable
         tabla = $('#tablaClientes').DataTable({
             "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
-            "dom": 'rt<"row mt-3"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+            "dom": 'rt<"row mt-3 px-3"<"col-sm-12 col-md-5 small text-muted"i><"col-sm-12 col-md-7"p>>',
             "pageLength": 15,
-            "responsive": true,
+            "order": [[0, 'asc']],
             "columnDefs": [
-                { "targets": [4], "orderable": false, "searchable": false },
+                { "targets": [4], "orderable": false },
                 { "targets": [2], "visible": <?= ($almacen_usuario == 0) ? 'true' : 'false' ?> }
-            ],
-            "order": [[0, 'asc']]
+            ]
         });
 
-        // Buscador de texto libre
-        $('#busquedaCliente').on('keyup', function() {
-            tabla.search(this.value).draw();
-        });
+        $('#busquedaCliente').on('keyup', function() { tabla.search(this.value).draw(); });
 
-        // FILTRO DE ALMACÉN
         $('#filtroAlmacenVista').on('change', function() {
-            const almacenId = $(this).val();
+            const val = $(this).val();
             $.fn.dataTable.ext.search.pop();
-
-            if (almacenId !== "") {
-                $(this).addClass('filtros-activos');
-                $.fn.dataTable.ext.search.push(
-                    function(settings, data, dataIndex) {
-                        const row = tabla.row(dataIndex).node();
-                        return $(row).attr('data-almacen-id') == almacenId;
-                    }
-                );
-            } else {
-                $(this).removeClass('filtros-activos');
+            if (val !== "") {
+                $.fn.dataTable.ext.search.push(function(s, d, i) {
+                    return $(tabla.row(i).node()).attr('data-almacen-id') == val;
+                });
             }
             tabla.draw();
         });
@@ -277,21 +290,19 @@ $usosCFDI = ['G01' => 'Adquisición', 'G03' => 'Gastos', 'P01' => 'Por definir',
 
     function limpiarFiltros() {
         $('#busquedaCliente').val('');
-        $('#filtroAlmacenVista').val('').removeClass('filtros-activos');
+        $('#filtroAlmacenVista').val('');
         $.fn.dataTable.ext.search.pop();
         tabla.search('').draw();
     }
 
-    // --- CRUD ACTIONS ---
-
     function nuevoCliente() {
         $('#formCliente')[0].reset();
         $('#cliente_id').val('0');
-        $('#modalTitulo').text('Nuevo Cliente');
+        $('#modalTitulo').text('Nuevo Registro de Cliente');
         
-        // Si hay un almacén seleccionado en el filtro, ponerlo por defecto
-        const filtroActual = $('#filtroAlmacenVista').val();
-        if(filtroActual) $('#almacen_id_modal').val(filtroActual);
+        // Auto-seleccionar almacén si hay filtro activo
+        const filtro = $('#filtroAlmacenVista').val();
+        if(filtro) $('#almacen_id_modal').val(filtro);
         
         $('#modalCliente').modal('show');
     }
@@ -300,78 +311,46 @@ $usosCFDI = ['G01' => 'Adquisición', 'G03' => 'Gastos', 'P01' => 'Por definir',
         try {
             const resp = await fetch(`clientesController.php?action=obtenerPorId&id=${id}`);
             const res = await resp.json();
-            
             if (res.success) {
                 const c = res.data;
-                $('#modalTitulo').text('Editar Cliente');
+                $('#modalTitulo').text('Actualizar Cliente');
                 $('#cliente_id').val(c.id);
                 $('#nombre_comercial').val(c.nombre_comercial);
                 $('#razon_social').val(c.razon_social);
                 $('#rfc').val(c.rfc);
-                $('#regimen_fiscal').val(c.regimen_fiscal);
-                $('#codigo_postal').val(c.codigo_postal);
                 $('#correo').val(c.correo);
-                $('#telefono').val(c.telefono);
-                $('#direccion').val(c.direccion);
-                $('#uso_cfdi').val(c.uso_cfdi);
                 $('#almacen_id_modal').val(c.almacen_id);
-                
                 $('#modalCliente').modal('show');
-            } else {
-                Swal.fire('Error', res.message, 'error');
             }
         } catch (e) { console.error(e); }
     }
 
     $('#formCliente').on('submit', async function(e) {
         e.preventDefault();
-        const formData = new FormData(this);
-        
         try {
             const resp = await fetch('clientesController.php?action=guardar', {
                 method: 'POST',
-                body: formData
+                body: new FormData(this)
             });
             const res = await resp.json();
-            
             if (res.success) {
-                Swal.fire({ icon: 'success', title: '¡Guardado!', text: res.message, timer: 1500, showConfirmButton: false })
+                Swal.fire({ icon: 'success', title: 'Éxito', text: res.message, timer: 1500, showConfirmButton: false })
                 .then(() => location.reload());
             } else {
-                Swal.fire('Atención', res.message, 'warning');
+                Swal.fire('Error', res.message, 'error');
             }
-        } catch (e) { Swal.fire('Error', 'No se pudo procesar la solicitud', 'error'); }
+        } catch (e) { console.error(e); }
     });
 
     async function cambiarEstado(id, estado) {
-        const formData = new FormData();
-        formData.append('id', id);
-        formData.append('estado', estado);
-        
-        try {
-            const response = await fetch('clientesController.php?action=cambiarEstado', { method: 'POST', body: formData });
-            const res = await response.json();
-            if (res.success) {
-                Swal.fire({ icon: 'success', title: '¡Estado actualizado!', timer: 1000, showConfirmButton: false });
-                $(`#switch_${id}`).next('label').text(estado ? 'Activo' : 'Inactivo');
-            }
-        } catch (e) { console.error(e); }
+        const fd = new FormData();
+        fd.append('id', id); fd.append('estado', estado);
+        fetch('clientesController.php?action=cambiarEstado', { method: 'POST', body: fd });
     }
 
     function verDetalles(id) {
-        // Redirigir o abrir otro modal de solo lectura si lo deseas
-        Swal.fire({
-            title: 'Cargando detalles...',
-            allowOutsideClick: false,
-            didOpen: () => {
-                Swal.showLoading();
-                setTimeout(() => { 
-                    Swal.close();
-                    window.location.href = `clientesController.php?action=detalles&id=${id}`;
-                }, 500);
-            }
-        });
+        window.location.href = `clientesController.php?action=detalles&id=${id}`;
     }
     </script>
-</body>/
+</body>
 </html>

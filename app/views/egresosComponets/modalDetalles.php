@@ -22,10 +22,51 @@
 
 /* Estilo para impresión: Oculta todo excepto el contenido del ticket */
 @media print {
-    body * { visibility: hidden; }
-    #ticketContenido, #ticketContenido * { visibility: visible; }
-    #ticketContenido { position: absolute; left: 0; top: 0; width: 100%; padding: 0; margin: 0; }
-    .modal-footer, .btn-close { display: none !important; }
+    /* 1. Ocultamos TODO lo que esté en el body */
+    body * {
+        visibility: hidden;
+        -webkit-print-color-adjust: exact !important; /* Mantiene colores de fondo */
+        print-color-adjust: exact !important;
+    }
+
+    /* 2. Solo el contenido del ticket y sus hijos serán visibles */
+    #modalVerDetalle, 
+    #modalVerDetalle .modal-content,
+    #ticketContenido, 
+    #ticketContenido * {
+        visibility: visible !important;
+    }
+
+    /* 3. Posicionamos el modal al inicio de la página de impresión */
+    #modalVerDetalle {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        display: block !important;
+        overflow: visible !important;
+    }
+
+    /* 4. Quitamos sombras, bordes de modal y botones que no queremos en papel */
+    .modal-dialog {
+        max-width: 100% !important;
+        margin: 0 !important;
+    }
+    .modal-content {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    .modal-footer, .btn-close, .btn, .modal-backdrop {
+        display: none !important;
+    }
+
+    /* 5. Forzamos que el body no tenga scroll ni fondos grises */
+    body {
+        background-color: white !important;
+    }
+
 }
 </style>
 

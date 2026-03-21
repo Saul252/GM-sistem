@@ -97,6 +97,96 @@ public function iniciarReparto($datos) {
         throw $e;
     }
 }
+public function entregarEnPatioCliente($datos) {
+    try {
+        // --- PARÁMETROS ---
+        $vehiculo_virtual_id = 999; 
+        $movimiento_id       = intval($datos['movimiento_id']);
+        $trabajador_id       = intval($datos['chofer_id']); 
+        $usuario_operador_id = intval($datos['usuario_sistema_id']); 
+        $observaciones       = !empty($datos['observaciones']) ? $datos['observaciones'] : 'Entrega Directa en Patio';
+        $tripulantes         = isset($datos['tripulantes']) && is_array($datos['tripulantes']) ? $datos['tripulantes'] : [];
+
+        // --- 1. VALIDACIÓN DE INTEGRIDAD ---
+        $sqlCheck = "SELECT rp.id FROM transporte_rutas_puntos rp
+                     INNER JOIN transporte_repartos_maestro trm ON rp.reparto_id = trm.id
+                     WHERE trm.entrega_venta_id = ? 
+                     AND trm.estado_reparto != 'cancelado' LIMIT 1";
+        
+        $stmtCheck = $this->db->prepare($sqlCheck);
+        $stmtCheck->bind_param("i", $movimiento_id);
+        $stmtCheck->execute();
+        
+        if ($stmtCheck->get_result()->num_rows > 0) {
+            throw new Exception("Ya existe un proceso de entrega activo para este despacho.");
+        }
+
+        $this->db->begin_transaction();
+
+        // --- 2. CREAR EL MAESTRO DEL REPARTO ---
+        // Estado 'completado' y registramos hora de llegada inmediata
+        $estado_maestro = 'completado'; 
+
+        $sqlM = "INSERT INTO transporte_repartos_maestro (
+                    vehiculo_id, 
+                    usuario_encargado_id, 
+                    entrega_venta_id, 
+                    fecha_programada, 
+                    estado_reparto,
+                    hora_llegada_real
+                ) VALUES (?, ?, ?, CURDATE(), ?, NOW())";
+        
+        $stmtM = $this->db->prepare($sqlM);
+        $stmtM->bind_param("iiis", $vehiculo_virtual_id, $usuario_operador_id, $movimiento_id, $estado_maestro);
+        $stmtM->execute();
+        $reparto_id = $this->db->insert_id;
+
+        // --- 3. INSERTAR EL PUNTO DE RUTA ---
+        $estado_punto = 'visitado'; 
+        $descripcion  = "ENTREGA EN PATIO: " . $observaciones;
+
+        $sqlP = "INSERT INTO transporte_rutas_puntos (
+                    reparto_id, 
+                    orden_visita, 
+                    descripcion_punto, 
+                    estado_punto
+                ) VALUES (?, 1, ?, ?)";
+        
+        $stmtP = $this->db->prepare($sqlP);
+        $stmtP->bind_param("iss", $reparto_id, $descripcion, $estado_punto);
+        $stmtP->execute();
+
+        // --- 4. REGISTRAR TRIPULACIÓN ---
+        if (!empty($tripulantes)) {
+            $sqlT = "INSERT INTO transporte_tripulantes_detalle (reparto_id, usuario_id) VALUES (?, ?)";
+            $stmtT = $this->db->prepare($sqlT);
+            foreach ($tripulantes as $u_id) {
+                $uid = intval($u_id);
+                $stmtT->bind_param("ii", $reparto_id, $uid);
+                $stmtT->execute();
+            }
+        }
+
+        // --- 5. ASEGURAR DISPONIBILIDAD DEL VEHÍCULO VIRTUAL ---
+        // Forzamos que el 999 siempre esté listo para el siguiente cliente
+        $sqlV = "UPDATE transporte_vehiculos SET estado_unidad = 'disponible' WHERE id = ?";
+        $stmtV = $this->db->prepare($sqlV);
+        $stmtV->bind_param("i", $vehiculo_virtual_id);
+        $stmtV->execute();
+
+        $this->db->commit();
+        
+        return [
+            'success' => true,
+            'reparto_id' => $reparto_id,
+            'message' => '¡Entrega finalizada! El mostrador sigue disponible para otros clientes.'
+        ];
+
+    } catch (Exception $e) {
+        if (isset($this->db) && $this->db->in_transaction) $this->db->rollback();
+        throw $e;
+    }
+}
 // Función auxiliar para el controlador
 public function buscarRutaAbierta($vehiculo_id) {
     $sql = "SELECT viaje_folio FROM transporte_consolidacion 
@@ -210,4 +300,9 @@ public function finalizarViajeLogistica($vehiculo_id, $viaje_folio) {
         throw $e;
     }
 }
+/**
+ * Finaliza el ciclo de mercancía cuando el cliente recoge en patio.
+ * Se registra un responsable (chofer_id) pero sin vehículo ni ruta.
+ */
+
 }

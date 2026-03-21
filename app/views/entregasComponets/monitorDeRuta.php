@@ -11,10 +11,26 @@
     }
 
     .header-monitor {
-        background: #1d1d1f; /* Dark mode style para el monitor activo */
+        background: #1d1d1f; 
         color: white;
         padding: 1.2rem 1.5rem;
         border: none;
+    }
+
+    /* Estilo para el SELECT de Almacenes en el Header */
+    #filtroAlmacenMonitor {
+        background-color: rgba(255, 255, 255, 0.15);
+        color: white;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    #filtroAlmacenMonitor:hover {
+        background-color: rgba(255, 255, 255, 0.25);
+    }
+    #filtroAlmacenMonitor option {
+        color: #333; /* Texto oscuro para que se vea al desplegar */
+        background-color: white;
     }
 
     .table-monitor thead th {
@@ -35,7 +51,6 @@
         background-color: rgba(0, 122, 255, 0.02);
     }
 
-    /* Badge para el Folio del Viaje */
     .badge-folio {
         background: #e8f4ff;
         color: #007aff;
@@ -46,7 +61,6 @@
         font-size: 0.7rem;
     }
 
-    /* Contenedor de Carga Detallada */
     .carga-scroll {
         background: #f5f5f7;
         border-radius: 12px;
@@ -58,7 +72,6 @@
         border: 1px solid rgba(0,0,0,0.03);
     }
 
-    /* Avatar del Chofer */
     .avatar-chofer {
         width: 36px;
         height: 36px;
@@ -92,9 +105,8 @@
 <div class="main-content">
     <div class="card card-monitor animate__animated animate__fadeIn">
         <div class="header-monitor d-flex justify-content-between align-items-center">
-            <h6 class="mb-0 fw-bold text-uppercase small">
-                <i class="bi bi-truck-flatbed me-2"></i> Monitor de Logística Consolidada
-            </h6>
+   
+
             <button class="btn btn-sm btn-outline-light rounded-pill px-3 border-opacity-25" onclick="cargarMonitorViajes()">
                 <i class="bi bi-arrow-repeat me-1"></i> Actualizar
             </button>
@@ -123,12 +135,23 @@
 <script>
 window.cargarMonitorViajes = async function() {
     const body = $('#bodyMonitorViajes');
+    
+    // Obtenemos el almacén si el select existe (Admin), si no mandamos vacío
+    const selectAlm = document.getElementById('filtroAlmacenMonitor');
+    const almacenId = selectAlm ? selectAlm.value : '';
+
     try {
-        body.html('<tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary spinner-border-sm"></div></td></tr>');
+        body.html('<tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary spinner-border-sm"></div><div class="mt-2 text-muted small">Consultando rutas...</div></td></tr>');
         
-        const resp = await fetch(`/cfsistem/app/controllers/repartosController.php?action=listar_viajes_activos`);
+        const resp = await fetch(`/cfsistem/app/controllers/repartosController.php?action=listar_viajes_activos&almacen_id=${almacenId}`);
         const result = await resp.json();
+        
         const data = result.data || result; 
+
+        if (result.success === false) {
+             body.html(`<tr><td colspan="5" class="text-center py-5 text-danger">${result.message}</td></tr>`);
+             return;
+        }
 
         if (!data || data.length === 0) {
             body.html('<tr><td colspan="5" class="text-center py-5 text-muted"><i class="bi bi-geo-alt fs-2 d-block mb-2 opacity-25"></i> No hay unidades en ruta actualmente</td></tr>');
@@ -146,6 +169,7 @@ window.cargarMonitorViajes = async function() {
                     <td class="ps-4">
                         <div class="fw-bold text-dark" style="font-size:0.95rem;">${v.unidad}</div>
                         <div class="badge-folio mt-1"><i class="bi bi-hash"></i>${v.viaje_folio}</div>
+                        <div class="small text-muted mt-1" style="font-size:0.7rem;">📍 ${v.almacen_nombre || 'N/A'}</div>
                     </td>
                     <td>
                         <div class="d-flex align-items-center">
@@ -175,7 +199,7 @@ window.cargarMonitorViajes = async function() {
         });
     } catch (e) { 
         console.error("Error al cargar monitor:", e); 
-        body.html('<tr><td colspan="5" class="text-center py-4 text-danger">Error de conexión con el servidor</td></tr>');
+        body.html('<tr><td colspan="5" class="text-center py-4 text-danger">Error de comunicación con el controlador</td></tr>');
     }
 };
 
@@ -204,8 +228,7 @@ window.finalizarViaje = async function(vehiculoId, folioRuta) {
                     title: '¡Viaje Finalizado!',
                     text: res.message,
                     icon: 'success',
-                    confirmButtonColor: '#007aff',
-                    customClass: { popup: 'rounded-4' }
+                    confirmButtonColor: '#007aff'
                 });
             } else {
                 alert(res.message);

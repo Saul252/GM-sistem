@@ -116,6 +116,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'folio'   => $_POST['folio_viaje']
             ]);
         }
+        // --- NUEVA LÓGICA: ENTREGA DIRECTA AL CLIENTE (PATIO) ---
+        elseif ($accion === 'entregar_en_patio') {
+    // Validaciones básicas
+    if (empty($_POST['movimiento_id']) || empty($_POST['chofer_id'])) {
+        throw new Exception("Error: Debe indicar el movimiento y el personal responsable de la entrega.");
+    }
+
+    // 1. Usamos el ID del usuario en sesión para satisfacer la Foreign Key de la BD
+    $_POST['usuario_sistema_id'] = $_SESSION['id_usuario'] ?? $_SESSION['usuario_id'] ?? 0;
+    
+    // 2. Usamos el ID 999 del vehículo virtual que creamos (para evitar el error de FK en vehiculo_id)
+    $_POST['vehiculo_id'] = 999; 
+
+    // Ejecutamos la función en el modelo de repartos
+    $resultado = $repartoM->entregarEnPatioCliente($_POST);
+
+    echo json_encode($resultado);
+}
+
+        else {
+            throw new Exception("Acción POST no definida.");
+        }
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }

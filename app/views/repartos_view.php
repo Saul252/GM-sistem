@@ -1,7 +1,7 @@
 <?php
 /**
  * repartos_view.php 
- * Gestión de logística: Pendientes en Patio, En Ruta y Completados
+ * Gestión de logística: Monitor de Viajes y Órdenes de Entrega
  */
 $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
 ?>
@@ -22,10 +22,11 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
         :root { 
             --sidebar-width: 260px; 
             --navbar-height: 65px;
-            --glass-bg: rgba(255, 255, 255, 0.92);
+            --glass-bg: rgba(255, 255, 255, 0.95);
             --accent-color: #007aff;
             --ios-gray: #f2f2f7;
             --text-main: #1d1d1f;
+            --apple-dark: #1d1d1f;
         }
 
         body { 
@@ -42,15 +43,17 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
             padding-top: calc(var(--navbar-height) + 20px); 
         }
 
-        /* Card Estilo Premium */
+        /* --- CONTENEDORES PREMIUM --- */
         .card-premium {
             background: var(--glass-bg);
             backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
             border: 1px solid rgba(255,255,255,0.7);
-            border-radius: 20px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.03);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.04);
             overflow: hidden;
             margin-bottom: 2rem;
+            transition: transform 0.3s ease;
         }
 
         .card-header-ios {
@@ -59,31 +62,87 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
             padding: 1.2rem 1.5rem;
         }
 
-        /* Badges de Estado */
-        .badge-premium {
-            padding: 5px 12px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 0.68rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
+        /* --- MONITOR DE VIAJES (CABECERA OSCURA) --- */
+        .header-monitor {
+            background: var(--apple-dark);
+            color: white;
+            padding: 1.2rem 1.5rem;
+            border: none;
         }
-        .st-disponible { background: #f2f2f7; color: #8e8e93; border: 1px solid #d1d1d6; }
-        .st-ruta { background: #e8f4ff; color: #007aff; border: 1px solid #cce5ff; }
-        .st-completado { background: #e6ffed; color: #1a7f37; border: 1px solid #bef5cb; }
 
-        /* Botones */
-        .btn-gradient {
-            background: #007aff; color: white; border: none; border-radius: 12px;
-            padding: 10px 24px; font-weight: 500; transition: all 0.2s;
+        .table-monitor thead th {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #86868b;
+            font-weight: 600;
+            padding: 1.2rem;
+            border-bottom: 2px solid #f2f2f7;
         }
-        .btn-gradient:hover { background: #0066cc; transform: translateY(-1px); color: white; }
+
+        /* --- TABLAS Y ELEMENTOS --- */
+        .table thead th {
+            background: #fbfbfd;
+            font-size: 0.75rem;
+            color: #86868b;
+            text-transform: uppercase;
+            font-weight: 600;
+            padding: 1rem;
+            border-bottom: 1px solid #f2f2f7;
+        }
+
+        .avatar-chofer {
+            width: 38px; height: 38px;
+            background: var(--accent-color);
+            color: white; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
+        }
+
+        .badge-premium {
+            padding: 6px 14px; border-radius: 10px;
+            font-weight: 700; font-size: 0.65rem;
+            display: inline-flex; align-items: center; gap: 6px;
+            text-transform: uppercase; letter-spacing: 0.3px;
+        }
+        .st-disponible { background: #f2f2f7; color: #1d1d1f; border: 1px solid #d1d1d6; }
+        .st-ruta { background: rgba(0, 122, 255, 0.1); color: #007aff; border: 1px solid rgba(0, 122, 255, 0.1); }
+        .st-completado { background: rgba(52, 199, 89, 0.1); color: #28a745; border: 1px solid rgba(52, 199, 89, 0.1); }
+
+        .carga-scroll {
+            background: #f5f5f7; border-radius: 14px; padding: 12px;
+            font-size: 0.82rem; color: #424245; max-height: 110px;
+            overflow-y: auto; border: 1px solid rgba(0,0,0,0.03);
+        }
+
+        /* --- BOTONES --- */
+        .btn-finish {
+            background: #34c759; color: white; border: none; border-radius: 12px;
+            padding: 8px 20px; font-weight: 600; transition: all 0.3s;
+        }
+        .btn-finish:hover { background: #28a745; transform: scale(1.02); box-shadow: 0 4px 15px rgba(52, 199, 89, 0.3); }
+
+        .btn-gradient {
+            background: var(--accent-color); color: white; border: none; border-radius: 12px;
+            padding: 10px 24px; font-weight: 600; font-size: 0.75rem; transition: all 0.3s;
+        }
+        .btn-gradient:hover { background: #0066cc; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0, 122, 255, 0.25); }
 
         .form-select-ios {
-            border-radius: 12px; border: 1px solid transparent;
-            background-color: var(--ios-gray); padding: 10px 16px;
+            border-radius: 14px; border: 1px solid rgba(0,0,0,0.05);
+            background-color: white; padding: 10px 18px; font-weight: 500;
         }
+
+        .badge-folio {
+            background: #e8f4ff; color: #007aff;
+            font-family: 'SF Mono', monospace; font-weight: 700;
+            padding: 4px 10px; border-radius: 8px; font-size: 0.68rem;
+        }
+
+        @keyframes pulse-soft {
+            0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; }
+        }
+        .animate-pulse-soft { animation: pulse-soft 2s infinite ease-in-out; }
 
         @media (max-width: 768px) { .main-content { margin-left: 0; padding: 20px; } }
     </style>
@@ -92,17 +151,16 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
     <?php if (function_exists('renderizarLayout')) { renderizarLayout($paginaActual); } ?>
 
     <main class="main-content">
-        <div id="contenedor-monitor-dinamico"></div>
-
-        <div class="d-flex justify-content-between align-items-center mb-5 animate__animated animate__fadeIn">
+        
+        <div class="d-flex justify-content-between align-items-end mb-4 animate__animated animate__fadeIn">
             <div>
-                <h2 class="fw-bold m-0" style="font-size: 1.8rem;">Logística de Salidas</h2>
-                <p class="text-muted mb-0">Gestión de carga y asignación de unidades</p>
+                <h2 class="fw-bold m-0" style="font-size: 2.2rem; letter-spacing: -0.04em;">Centro de Logística</h2>
+                <p class="text-muted mb-0" style="font-size: 1.1rem;">Supervisión de entregas y control de flota en tiempo real.</p>
             </div>
-            <div class="bg-white rounded-4 p-3 shadow-sm border d-flex align-items-center gap-3">
-                <div class="text-primary fs-3"><i class="bi bi-box-seam-fill"></i></div>
+            <div class="bg-white rounded-4 p-3 shadow-sm border d-flex align-items-center gap-3" style="min-width: 200px;">
+                <div class="text-primary fs-3"><i class="bi bi-truck-flatbed"></i></div>
                 <div>
-                    <small class="text-muted fw-bold d-block" style="font-size: 0.6rem;">REGISTROS TOTALES</small>
+                    <small class="text-muted fw-bold d-block" style="font-size: 0.6rem; letter-spacing: 0.05em;">ÓRDENES PENDIENTES</small>
                     <span class="fs-4 fw-bold" id="count_pendientes">0</span>
                 </div>
             </div>
@@ -110,26 +168,56 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
 
         <div class="row g-3 mb-4 animate__animated animate__fadeInUp">
             <div class="col-md-8">
-                <div class="card-premium p-2 px-3 mb-0 d-flex align-items-center shadow-sm">
-                    <i class="bi bi-search text-muted me-3"></i>
-                    <input type="text" id="buscarSalida" class="form-control border-0 bg-transparent py-2" placeholder="Buscar por folio o producto...">
+                <div class="card-premium p-2 px-3 mb-0 d-flex align-items-center shadow-sm" style="border-radius: 16px;">
+                    <i class="bi bi-search text-muted me-3 fs-5"></i>
+                    <input type="text" id="buscarSalida" class="form-control border-0 bg-transparent py-2 shadow-none" placeholder="Buscar por folio, cliente o producto...">
                 </div>
             </div>
             <div class="col-md-4">
-                <select id="filtroAlmacen" class="form-select-ios h-100 w-100 shadow-sm" onchange="cargarPendientes()">
-                    <option value="0">--- Todas las Sucursales ---</option>
+                <select id="filtroAlmacen" class="form-select-ios h-100 w-100 shadow-sm" onchange="cargarPendientes(); cargarMonitorViajes();">
+                    <option value="0">🌐 Todas las Sucursales</option>
                     <?php if(isset($listaAlmacenes)) foreach($listaAlmacenes as $alm): ?>
-                        <option value="<?= $alm['id'] ?>"><?= $alm['nombre'] ?></option>
+                        <option value="<?= $alm['id'] ?>">📍 <?= $alm['nombre'] ?></option>
                     <?php endforeach; ?>
                 </select>
             </div>
         </div>
 
-        <div class="card card-premium animate__animated animate__fadeInUp">
+        <div class="card card-premium card-monitor animate__animated animate__fadeInUp" style="animation-delay: 0.1s;">
+            <div class="header-monitor d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-bold text-uppercase small">
+                    <i class="bi bi-broadcast me-2 text-primary animate-pulse-soft"></i> Monitor de Unidades en Tránsito
+                </h6>
+                <button class="btn btn-sm btn-outline-light rounded-pill px-3 border-opacity-25" onclick="cargarMonitorViajes()">
+                    <i class="bi bi-arrow-repeat me-1"></i> Actualizar Monitor
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-monitor align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">Unidad / Folio Ruta</th>
+                                <th>Chofer Responsable</th>
+                                <th>Tripulación</th>
+                                <th>Carga Consolidada</th>
+                                <th class="text-end pe-4">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="bodyMonitorViajes">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card card-premium animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
             <div class="card-header-ios d-flex justify-content-between align-items-center">
-                <h6 class="mb-0 fw-bold text-uppercase small"><i class="bi bi-list-ul me-2 text-primary"></i> Ordenes de Entrega</h6>
-                <button class="btn btn-sm btn-light border" onclick="cargarPendientes()">
-                    <i class="bi bi-arrow-clockwise"></i>
+                <h6 class="mb-0 fw-bold text-uppercase small" style="color: #424245;">
+                    <i class="bi bi-stack me-2 text-primary"></i> Órdenes de Entrega y Patio
+                </h6>
+                <button class="btn btn-sm btn-light border rounded-pill px-3" onclick="cargarPendientes()">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Sincronizar
                 </button>
             </div>
             <div class="table-responsive">
@@ -138,18 +226,19 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
                         <tr>
                             <th class="ps-4">Folio / Fecha</th>
                             <th>Producto / Detalle</th>
-                            <th>Almacén</th>
-                            <th class="text-center">Estado</th> 
+                            <th>Almacén Origen</th>
+                            <th class="text-center">Estatus</th> 
                             <th class="text-end pe-4">Gestión</th>
                         </tr>
                     </thead>
-                    <tbody id="bodyPendientes"></tbody>
+                    <tbody id="bodyPendientes">
+                        </tbody>
                 </table>
             </div>
 
-            <div class="d-flex justify-content-between align-items-center px-4 py-4 border-top bg-light-subtle">
-                <div class="small text-muted fw-medium" id="pageIndicatorText"></div>
-                <nav><ul class="pagination mb-0" id="paginationBootstrap"></ul></nav>
+            <div class="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-light-subtle">
+                <div class="small text-muted fw-bold" id="pageIndicatorText" style="font-size: 0.7rem; letter-spacing: 0.05em;"></div>
+                <nav><ul class="pagination pagination-sm mb-0" id="paginationBootstrap"></ul></nav>
             </div>
         </div>
     </main>
@@ -159,110 +248,179 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <?php require_once __DIR__ . '/entregasComponets/repartoModal.php'; ?>
-    <?php require_once __DIR__ . '/entregasComponets/monitorDeRuta.php'; ?>
 
-<script>
-window.CONTROLLER = '/cfsistem/app/controllers/repartosController.php';
-let allData = [];
-let filteredData = [];
-let currentPage = 1;
-const rowsPerPage = 10;
-
-window.cargarPendientes = async function() {
-    const body = $('#bodyPendientes');
-    const idAlmacen = $('#filtroAlmacen').val();
-    try {
-        body.html('<tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary spinner-border-sm"></div></td></tr>');
-        const resp = await fetch(`${window.CONTROLLER}?action=listar_pendientes_ruta&almacen_id=${idAlmacen}`);
-        const res = await resp.json();
+    <script>
+    // --- LÓGICA DE MONITOR DE VIAJES ---
+    window.cargarMonitorViajes = async function() {
+        const body = $('#bodyMonitorViajes');
+        const almacenId = $('#filtroAlmacen').val() || 0;
         
-        allData = res.success ? res.data : [];
-        filteredData = [...allData];
-        $('#count_pendientes').text(allData.length);
-        currentPage = 1;
-        renderTable();
-    } catch (e) { console.error(e); }
-};
+        try {
+            body.html('<tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary spinner-border-sm"></div><div class="mt-2 text-muted small">Consultando satélite...</div></td></tr>');
+            
+            const resp = await fetch(`/cfsistem/app/controllers/repartosController.php?action=listar_viajes_activos&almacen_id=${almacenId}`);
+            const result = await resp.json();
+            const data = result.data || result; 
 
-function renderTable() {
-    const body = $('#bodyPendientes');
-    body.empty();
+            if (!data || data.length === 0) {
+                body.html('<tr><td colspan="5" class="text-center py-5 text-muted opacity-50"><i class="bi bi-geo-alt fs-2 d-block mb-2"></i> No hay unidades activas en ruta</td></tr>');
+                return;
+            }
 
-    const start = (currentPage - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-    const items = filteredData.slice(start, end);
+            body.empty();
+            data.forEach(v => {
+                const listaAyudantes = v.tripulantes 
+                    ? `<div class="small text-muted fw-medium"><i class="bi bi-people-fill me-1 text-primary"></i> ${v.tripulantes}</div>`
+                    : `<span class="badge bg-light text-secondary fw-normal border" style="font-size:0.6rem;">Solo Conductor</span>`;
 
-    if (items.length === 0) {
-        body.html('<tr><td colspan="5" class="text-center py-5 text-muted">No se encontraron registros.</td></tr>');
-        return;
-    }
+                body.append(`
+                    <tr class="animate__animated animate__fadeIn">
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark" style="font-size:1rem;">${v.unidad}</div>
+                            <div class="badge-folio mt-1"><i class="bi bi-hash"></i>${v.viaje_folio}</div>
+                            <div class="small text-muted mt-1" style="font-size:0.7rem;">📍 ${v.almacen_nombre || 'N/A'}</div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-chofer me-3">
+                                    <i class="bi bi-person-badge"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-uppercase" style="font-size: 0.75rem; color:#1d1d1f;">${v.chofer}</div>
+                                    <small class="text-muted" style="font-size: 0.65rem;">Operador Logístico</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${listaAyudantes}</td>
+                        <td><div class="carga-scroll">${v.detalles_carga}</div></td>
+                        <td class="text-end pe-4">
+                            <button class="btn btn-finish btn-sm" onclick="finalizarViaje(${v.vehiculo_id}, '${v.viaje_folio}')">
+                                <i class="bi bi-check-all me-1"></i> FINALIZAR
+                            </button>
+                        </td>
+                    </tr>
+                `);
+            });
+        } catch (e) { 
+            body.html('<tr><td colspan="5" class="text-center py-4 text-danger">Error de conexión</td></tr>');
+        }
+    };
 
-    items.forEach(item => {
-        let badge = '';
-        let btnAccion = '';
-        const estado = (item.estado_reparto || '').toLowerCase().trim();
+    // --- LÓGICA DE PENDIENTES ---
+    window.CONTROLLER = '/cfsistem/app/controllers/repartosController.php';
+    let allData = [];
+    let filteredData = [];
+    let currentPage = 1;
+    const rowsPerPage = 10;
 
-        if (estado === 'completado') {
-            badge = '<span class="badge-premium st-completado"><i class="bi bi-check-circle-fill"></i> COMPLETADO</span>';
-            btnAccion = `<button class="btn btn-outline-success btn-sm rounded-pill px-3" onclick="verEntrega(${item.movimiento_id})"><i class="bi bi-eye"></i> Ver</button>`;
-        } 
-        else if (estado === 'en_transito') {
-            badge = '<span class="badge-premium st-ruta"><i class="bi bi-truck"></i> EN CAMINO</span>';
-            btnAccion = `<button class="btn btn-light btn-sm rounded-pill border shadow-sm px-3" onclick="imprimirReparto(${item.movimiento_id})"><i class="bi bi-printer"></i> Ticket</button>`;
-        } 
-        else {
-            badge = '<span class="badge-premium st-disponible"><i class="bi bi-house-door"></i> EN PATIO</span>';
-            btnAccion = `<button class="btn btn-gradient btn-sm px-3" onclick="prepararModalReparto(${item.movimiento_id}, ${item.almacen_origen_id})">ASIGNAR RUTA</button>`;
+    window.cargarPendientes = async function() {
+        const body = $('#bodyPendientes');
+        const idAlmacen = $('#filtroAlmacen').val();
+        try {
+            body.html('<tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary spinner-border-sm"></div></td></tr>');
+            const resp = await fetch(`${window.CONTROLLER}?action=listar_pendientes_ruta&almacen_id=${idAlmacen}`);
+            const res = await resp.json();
+            
+            allData = res.success ? res.data : [];
+            filteredData = [...allData];
+            $('#count_pendientes').text(allData.length);
+            currentPage = 1;
+            renderTable();
+        } catch (e) { console.error(e); }
+    };
+
+    function renderTable() {
+        const body = $('#bodyPendientes');
+        body.empty();
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        const items = filteredData.slice(start, end);
+
+        if (items.length === 0) {
+            body.html('<tr><td colspan="5" class="text-center py-5 text-muted">Bandeja de entrada vacía</td></tr>');
+            return;
         }
 
-        body.append(`
-            <tr class="animate__animated animate__fadeIn">
-                <td class="ps-4">
-                    <div class="fw-bold text-dark">#${item.folio_venta || 'S/F'}</div>
-                    <div class="text-muted small">${item.fecha_format || ''}</div>
-                </td>
-                <td>
-                    <div class="fw-medium">${item.producto}</div>
-                    <div class="text-muted small">${item.cantidad} ${item.unidad_reporte}</div>
-                </td>
-                <td><span class="small text-muted">${item.almacen_origen}</span></td>
-                <td class="text-center">${badge}</td>
-                <td class="text-end pe-4">${btnAccion}</td>
-            </tr>
-        `);
-    });
-    renderPagination();
-}
+        items.forEach(item => {
+            let badge = '';
+            let btnAccion = '';
+            const estado = (item.estado_reparto || '').toLowerCase().trim();
 
-function renderPagination() {
-    const totalPages = Math.ceil(filteredData.length / rowsPerPage);
-    const container = $('#paginationBootstrap');
-    container.empty();
-    $('#pageIndicatorText').text(`Página ${currentPage} de ${totalPages || 1}`);
+            if (estado === 'completado') {
+                badge = '<span class="badge-premium st-completado"><i class="bi bi-check-circle-fill"></i> Entregado</span>';
+                btnAccion = `<button class="btn btn-outline-success btn-sm rounded-pill px-3" onclick="verEntrega(${item.movimiento_id})"><i class="bi bi-eye"></i></button>`;
+            } 
+            else if (estado === 'en_transito') {
+                badge = '<span class="badge-premium st-ruta"><i class="bi bi-truck animate-pulse-soft"></i> En Tránsito</span>';
+                btnAccion = `<button class="btn btn-light btn-sm rounded-pill border shadow-sm px-3" onclick="imprimirReparto(${item.movimiento_id})"><i class="bi bi-printer"></i></button>`;
+            } 
+            else {
+                badge = '<span class="badge-premium st-disponible"><i class="bi bi-house"></i> En Patio</span>';
+                btnAccion = `<button class="btn btn-gradient btn-sm px-3" onclick="prepararModalReparto(${item.movimiento_id}, ${item.almacen_origen_id})">ASIGNAR RUTA</button>`;
+            }
 
-    container.append(`<li class="page-item ${currentPage === 1 ? 'disabled' : ''}"><a class="page-link" href="javascript:void(0)" onclick="changePage(${currentPage - 1})"><</a></li>`);
-    for (let i = 1; i <= totalPages; i++) {
-        if(i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
-            container.append(`<li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link" href="javascript:void(0)" onclick="changePage(${i})">${i}</a></li>`);
-        }
+            body.append(`
+                <tr class="animate__animated animate__fadeIn">
+                    <td class="ps-4">
+                        <div class="fw-bold text-dark" style="font-size: 0.9rem;">#${item.folio_venta || 'S/F'}</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">${item.fecha_format || ''}</div>
+                    </td>
+                    <td>
+                        <div class="fw-bold text-dark" style="font-size: 0.85rem;">${item.producto}</div>
+                        <div class="text-muted small">${item.cantidad} ${item.unidad_reporte}</div>
+                    </td>
+                    <td><span class="small text-muted fw-bold">📍 ${item.almacen_origen}</span></td>
+                    <td class="text-center">${badge}</td>
+                    <td class="text-end pe-4">${btnAccion}</td>
+                </tr>
+            `);
+        });
+        renderPagination();
     }
-    container.append(`<li class="page-item ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}"><a class="page-link" href="javascript:void(0)" onclick="changePage(${currentPage + 1})">></a></li>`);
-}
 
-window.changePage = function(p) {
-    currentPage = p;
-    renderTable();
-};
+    function renderPagination() {
+        const totalPages = Math.ceil(filteredData.length / rowsPerPage);
+        const container = $('#paginationBootstrap');
+        container.empty();
+        $('#pageIndicatorText').text(`VISUALIZANDO PÁGINA ${currentPage} DE ${totalPages || 1}`);
 
-$(document).ready(function() {
-    cargarPendientes();
-    $("#buscarSalida").on("keyup", function() {
-        const val = $(this).val().toLowerCase();
-        filteredData = allData.filter(i => `${i.folio_venta} ${i.producto}`.toLowerCase().includes(val));
-        currentPage = 1;
-        renderTable();
+        container.append(`<li class="page-item ${currentPage === 1 ? 'disabled' : ''}"><a class="page-link" href="javascript:void(0)" onclick="changePage(${currentPage - 1})">Anterior</a></li>`);
+        for (let i = 1; i <= totalPages; i++) {
+            if(i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                container.append(`<li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link" href="javascript:void(0)" onclick="changePage(${i})">${i}</a></li>`);
+            }
+        }
+        container.append(`<li class="page-item ${currentPage === totalPages || totalPages === 0 ? 'disabled' : ''}"><a class="page-link" href="javascript:void(0)" onclick="changePage(${currentPage + 1})">Siguiente</a></li>`);
+    }
+
+    window.changePage = function(p) { currentPage = p; renderTable(); };
+
+    window.finalizarViaje = async function(vehiculoId, folioRuta) {
+        if (!confirm(`¿Confirmar llegada de la unidad ${folioRuta}?`)) return;
+        try {
+            const formData = new FormData();
+            formData.append('vehiculo_id', vehiculoId);
+            formData.append('viaje_folio', folioRuta);
+            const resp = await fetch(`/cfsistem/app/controllers/repartosController.php?action=finalizar_viaje`, { method: 'POST', body: formData });
+            const res = await resp.json();
+            if (res.success) {
+                Swal.fire('Éxito', res.message, 'success');
+                cargarMonitorViajes();
+                cargarPendientes();
+            }
+        } catch (e) { console.error(e); }
+    };
+
+    $(document).ready(function() {
+        cargarPendientes();
+        cargarMonitorViajes();
+        $("#buscarSalida").on("keyup", function() {
+            const val = $(this).val().toLowerCase();
+            filteredData = allData.filter(i => `${i.folio_venta} ${i.producto} ${i.almacen_origen}`.toLowerCase().includes(val));
+            currentPage = 1;
+            renderTable();
+        });
     });
-});
-</script>
+    </script>
 </body>
 </html>
