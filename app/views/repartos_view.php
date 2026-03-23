@@ -398,54 +398,105 @@ async function cancelarTodoElViaje(vehiculoId, folioViaje) {
         } catch (e) { console.error(e); }
     };
 
-    function renderTable() {
-        const body = $('#bodyPendientes');
-        body.empty();
-        const start = (currentPage - 1) * rowsPerPage;
-        const end = start + rowsPerPage;
-        const items = filteredData.slice(start, end);
 
-        if (items.length === 0) {
-            body.html('<tr><td colspan="5" class="text-center py-5 text-muted">Bandeja de entrada vacía</td></tr>');
-            return;
+
+
+
+
+
+
+
+
+
+
+
+function renderTable() {
+    const body = $('#bodyPendientes');
+    body.empty();
+    const start = (currentPage - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    const items = filteredData.slice(start, end);
+
+    if (items.length === 0) {
+        body.html('<tr><td colspan="5" class="text-center py-5 text-muted">Bandeja de entrada vacía</td></tr>');
+        return;
+    }
+
+    items.forEach(item => {
+        // --- LÓGICA DE CÁLCULO DE UNIDADES (SIN CEROS) ---
+        let cantidad = parseFloat(item.cantidad) || 0;
+        let factor = parseFloat(item.factor_conversion) || 1;
+        let uReporte = item.unidad_reporte || 'Unid.';
+        let uMedida = item.unidad_medida || 'Pz';
+        let displayEntrega = "";
+
+        if (factor > 1) {
+            let enteros = Math.floor(cantidad / factor);
+            let sobrantes = cantidad % factor;
+
+            let partes = [];
+            if (enteros > 0) partes.push(`<strong>${enteros}</strong> ${uReporte}`);
+            if (sobrantes > 0) partes.push(`<strong>${sobrantes}</strong> ${uMedida}`);
+
+            // Unimos con " + " solo si existen ambas partes
+            displayEntrega = partes.length > 0 ? partes.join(' + ') : `0 ${uMedida}`;
+        } else {
+            displayEntrega = `<strong>${cantidad}</strong> ${uMedida}`;
         }
 
-        items.forEach(item => {
-            let badge = '';
-            let btnAccion = '';
-            const estado = (item.estado_reparto || '').toLowerCase().trim();
+        // --- LÓGICA DE BADGES Y BOTONES ---
+        let badge = '';
+        let btnAccion = '';
+        const estado = (item.estado_reparto || '').toLowerCase().trim();
 
-            if (estado === 'completado') {
-                badge = '<span class="badge-premium st-completado"><i class="bi bi-check-circle-fill"></i> Entregado</span>';
-                btnAccion = `<button class="btn btn-outline-success btn-sm rounded-pill px-3" onclick="verEntrega(${item.movimiento_id})"><i class="bi bi-eye"></i></button>`;
-            } 
-            else if (estado === 'en_transito') {
-                badge = '<span class="badge-premium st-ruta"><i class="bi bi-truck animate-pulse-soft"></i> En Tránsito</span>';
-                btnAccion = `<button class="btn btn-light btn-sm rounded-pill border shadow-sm px-3" onclick="imprimirReparto(${item.movimiento_id})"><i class="bi bi-printer"></i></button>`;
-            } 
-            else {
-                badge = '<span class="badge-premium st-disponible"><i class="bi bi-house"></i> En Patio</span>';
-                btnAccion = `<button class="btn btn-gradient btn-sm px-3" onclick="prepararModalReparto(${item.movimiento_id}, ${item.almacen_origen_id})">ASIGNAR RUTA</button>`;
-            }
+        if (estado === 'completado') {
+            badge = '<span class="badge-premium st-completado"><i class="bi bi-check-circle-fill"></i> Entregado</span>';
+            btnAccion = `<button class="btn btn-outline-success btn-sm rounded-pill px-3" onclick="verEntrega(${item.movimiento_id})"><i class="bi bi-eye"></i></button>`;
+        } 
+        else if (estado === 'en_transito') {
+            badge = '<span class="badge-premium st-ruta"><i class="bi bi-truck animate-pulse-soft"></i> En Tránsito</span>';
+            btnAccion = `<button class="btn btn-light btn-sm rounded-pill border shadow-sm px-3" onclick="imprimirReparto(${item.movimiento_id})"><i class="bi bi-printer"></i></button>`;
+        } 
+        else {
+            badge = '<span class="badge-premium st-disponible"><i class="bi bi-house"></i> En Patio</span>';
+            btnAccion = `<button class="btn btn-gradient btn-sm px-3" onclick="prepararModalReparto(${item.movimiento_id}, ${item.almacen_origen_id})">ASIGNAR RUTA</button>`;
+        }
 
-            body.append(`
-                <tr class="animate__animated animate__fadeIn">
-                    <td class="ps-4">
-                        <div class="fw-bold text-dark" style="font-size: 0.9rem;">#${item.folio_venta || 'S/F'}</div>
-                        <div class="text-muted" style="font-size: 0.75rem;">${item.fecha_format || ''}</div>
-                    </td>
-                    <td>
-                        <div class="fw-bold text-dark" style="font-size: 0.85rem;">${item.producto}</div>
-                        <div class="text-muted small">${item.cantidad} ${item.unidad_reporte}</div>
-                    </td>
-                    <td><span class="small text-muted fw-bold">📍 ${item.almacen_origen}</span></td>
-                    <td class="text-center">${badge}</td>
-                    <td class="text-end pe-4">${btnAccion}</td>
-                </tr>
-            `);
-        });
-        renderPagination();
-    }
+        // --- RENDERIZADO DE LA FILA ---
+        body.append(`
+            <tr class="animate__animated animate__fadeIn">
+                <td class="ps-4">
+                    <div class="fw-bold text-dark" style="font-size: 0.9rem;">#${item.folio_venta || 'S/F'}</div>
+                    <div class="text-muted" style="font-size: 0.75rem;">${item.fecha_format || ''}</div>
+                </td>
+                <td>
+                    <div class="fw-bold text-dark" style="font-size: 0.85rem;">${item.producto}</div>
+                    <div class="text-muted small">${displayEntrega}</div>
+                </td>
+                <td><span class="small text-muted fw-bold">📍 ${item.almacen_origen}</span></td>
+                <td class="text-center">${badge}</td>
+                <td class="text-end pe-4">${btnAccion}</td>
+            </tr>
+        `);
+    });
+    renderPagination();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     function renderPagination() {
         const totalPages = Math.ceil(filteredData.length / rowsPerPage);

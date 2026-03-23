@@ -173,17 +173,20 @@ if ($action === 'listar_historial') {
         //     exit;
         // }
 
-        if ($action === 'listar_pendientes_ruta') {
-            // Prioridad: 1. El filtro del GET, 2. El almacén de la sesión
-            $almacen_id = isset($_GET['almacen_id']) ? intval($_GET['almacen_id']) : intval($_SESSION['almacen_id']);
-            
-            // Pasamos el ID al modelo (asegúrate que tu modelo acepte este parámetro ahora)
-            $lista = $entregaM->listarSoloDespachadosPatio($almacen_id);
-            
-            echo json_encode(['success' => true, 'data' => $lista]);
-            exit;
-        }
-
+       if ($action === 'listar_pendientes_ruta') {
+    // Tomamos el almacen_id del GET (filtro) o de la sesión (por defecto)
+    $almacen_id = isset($_GET['almacen_id']) ? intval($_GET['almacen_id']) : intval($_SESSION['almacen_id'] ?? 0);
+    
+    // El modelo ya devuelve el array con 'cantidad_display' incluido
+    $lista = $entregaM->listarSoloDespachadosPatio($almacen_id);
+    
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => true, 
+        'data' => $lista
+    ]);
+    exit;
+}
   if ($action === 'listar_viajes_activos') {
     // 1. Limpiamos cualquier salida previa para evitar JSON corrupto
     if (ob_get_length()) ob_clean();

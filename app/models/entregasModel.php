@@ -351,16 +351,17 @@ public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_a
     return $data;
 }
 public function listarSoloDespachadosPatio($almacen_id = 0) {
-    // 1. Base de la consulta
     $sql = "SELECT 
                 m.id as movimiento_id,
                 v.folio as folio_venta,
                 m.fecha as fecha_movimiento,
                 p.nombre as producto,
                 p.sku,
+                p.unidad_medida,       -- Agregado: necesario para el cálculo
+                p.unidad_reporte,
+                p.factor_conversion,   -- Agregado: necesario para el cálculo
                 m.almacen_origen_id,
                 m.cantidad,
-                p.unidad_reporte,
                 a.nombre as almacen_origen,
                 rsl.fecha_despacho, 
                 u.nombre as despacho_por,
@@ -379,12 +380,10 @@ public function listarSoloDespachadosPatio($almacen_id = 0) {
               AND (v.id IS NULL OR v.estado_general = 'activa')
               AND (trm.estado_reparto IS NULL OR trm.estado_reparto != 'cancelado')";
 
-    // 2. Aplicar filtro de Almacén si se proporciona un ID válido
     if (intval($almacen_id) > 0) {
         $sql .= " AND m.almacen_origen_id = " . intval($almacen_id);
     }
 
-    // 3. Ordenar por fecha de despacho más reciente
     $sql .= " ORDER BY rsl.fecha_despacho DESC";
 
     $res = $this->db->query($sql);
@@ -392,16 +391,35 @@ public function listarSoloDespachadosPatio($almacen_id = 0) {
 
     if($res) {
         while ($row = $res->fetch_assoc()) {
-            // Formateo de fecha para que el JS la lea directo
             $row['fecha_format'] = !empty($row['fecha_despacho']) 
                 ? date('d/m/Y H:i', strtotime($row['fecha_despacho'])) 
                 : 'S/F';
+
+            // --- Lógica de Desglose ---
+            $cantidad = floatval($row['cantidad']);
+            $factor   = floatval($row['factor_conversion'] ?? 1);
+            $u_rep    = $row['unidad_reporte'] ?: 'Unid.';
+            $u_med    = $row['unidad_medida'] ?: 'Pz';
+
+            if ($factor > 1) {
+                $enteros   = (int) floor($cantidad / $factor);
+                $sobrantes = fmod($cantidad, $factor);
+
+                if ($sobrantes > 0) {
+                    $row['cantidad_display'] = "{$enteros} {$u_rep} + {$sobrantes} {$u_med}";
+                } else {
+                    $row['cantidad_display'] = "{$enteros} {$u_rep}";
+                }
+            } else {
+                $row['cantidad_display'] = "{$cantidad} {$u_med}";
+            }
+
             $data[] = $row;
         }
     }
-    
     return $data;
-}public function getDetalleParaDespacho($movimiento_id) {
+}
+public function getDetalleParaDespacho($movimiento_id) {
     $sql = "SELECT 
                 m.id AS movimiento_id,
                 m.cantidad,
