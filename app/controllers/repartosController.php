@@ -46,6 +46,7 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
             echo json_encode(["success" => true, "data" => ["entrega" => $detalle]]);
             exit; 
         }
+        
 
         if ($action === 'get_recursos_sucursal') {
             $almacen_id = intval($_GET['almacen_id'] ?? 0);
@@ -82,6 +83,62 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
             ]);
             exit;
         }
+        /**
+         * -----------------------------------------------------------
+         * BLOQUE: DETALLE EXTENDIDO PARA MONITOR (MODAL FLECHITA)
+         * -----------------------------------------------------------
+         */
+   // --- ACCIÓN: OBTENER DETALLE DE TRAZABILIDAD (MONITOR) ---
+if ($action === 'get_detalle_trazabilidad') {
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+
+    $tipo = $_GET['tipo'] ?? 'MOSTRADOR';
+    $id   = intval($_GET['id']);
+
+    if ($id <= 0) {
+        echo json_encode(["success" => false, "message" => "ID de seguimiento no válido."]);
+        exit;
+    }
+
+    try {
+        $data = null;
+
+        if ($tipo === 'RUTA') {
+            // getDetalleRutaMonitor recibe reparto_id
+            // devuelve: viaje_folio, vehiculo, placas, chofer, usuario_asigno_sistema,
+            //           lista_productos[] (producto, cantidad, cliente_destino, ticket),
+            //           tripulantes[] (nombre)
+            $data = $repartoM->getDetalleRutaCompleta($id);
+
+        } else {
+            // getDetalleMovimientoNormal recibe movimiento_id
+            // devuelve: movimiento_id, cantidad, fecha_salida, producto, folio_venta,
+            //           cliente, usuario_asigno_sistema, usuario_patio, fecha_patio
+            $data = $repartoM->getDetalleMovimientoNormal($id);
+        }
+
+        if ($data) {
+            echo json_encode([
+                "success"        => true,
+                "tipo_procesado" => $tipo,
+                "data"           => $data
+            ]);
+        } else {
+            echo json_encode([
+                "success" => false,
+                "message" => "No se encontró información para este registro."
+            ]);
+        }
+
+    } catch (Exception $e) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Error interno: " . $e->getMessage()
+        ]);
+    }
+    exit;
+}
 /**
          * NUEVA ACCIÓN: Obtener el resumen de quién y cómo entregó la mercancía
          * Se activa desde el botón del "Ojito" en la tabla.
@@ -108,6 +165,48 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
     }
     exit;
 }
+/**
+         * -----------------------------------------------------------
+         * BLOQUE: MONITOR DE ENTREGAS COMPLETADAS
+         * -----------------------------------------------------------
+         */
+
+       if ($action === 'get_monitor_entregas') {
+    header('Content-Type: application/json'); // Importante declarar el tipo de contenido al inicio
+
+    // 1. Obtenemos el almacén (del filtro o de la sesión)
+    $almacen_id = isset($_GET['almacen_id']) ? intval($_GET['almacen_id']) : intval($_SESSION['almacen_id'] ?? 0);
+    
+    // 2. Parámetros de paginación (opcionales, por defecto 0 y 25)
+    $inicio = isset($_GET['inicio']) ? intval($_GET['inicio']) : 0;
+    $limite = isset($_GET['limite']) ? intval($_GET['limite']) : 25;
+    
+    // 3. Llamamos a la función pasando los 3 parámetros requeridos
+    $registros = $repartoM->getMonitorEntregas($almacen_id, $inicio, $limite);
+    
+    // 4. Verificamos si es un array (aunque esté vacío, el modelo debería devolver [])
+    if (is_array($registros)) {
+        echo json_encode([
+            "success" => true, 
+            "data" => $registros,
+            "count" => count($registros),
+            "offset" => $inicio
+        ]);
+    } else {
+        echo json_encode([
+            "success" => false, 
+            "message" => "Error al obtener la trazabilidad de entregas."
+        ]);
+    }
+    exit;
+}
+        /**
+         * NOTA: Para el modal del "Ojito" en el monitor, 
+         * usaremos la acción 'get_resumen_despacho' que ya tienes arriba, 
+         * solo asegúrate de que tu función 'obtenerHistorialFisico' en el modelo 
+         * reciba el 'movimiento_id' y retorne los datos de la ruta si el movimiento 
+         * está asociado a una.
+         */
         /**
          * -----------------------------------------------------------
          * BLOQUE 2: GESTIÓN DE VISTA Y FILTROS
@@ -154,50 +253,7 @@ if ($action === 'actualizar_logistica_completa') {
     echo json_encode(["success" => true, "message" => "Ruta actualizada correctamente"]);
     exit;
 }
-// --- HISTORIAL DE REPARTOS FINALIZADOS ---
-if ($action === 'listar_historial') {
-    // Limpiamos cualquier salida previa (Warnings) para que el JSON sea puro
-    ob_clean(); 
-    header('Content-Type: application/json');
-
-    try {
-        $almacen_id = isset($_GET['almacen_id']) ? intval($_GET['almacen_id']) : 0;
-        $historial = $repartoM->listarHistorialDeRepartos($almacen_id);
-
-        // Si el modelo regresa false o null, lo convertimos en array vacío
-        $data = $historial ? $historial : [];
-
-        echo json_encode([
-            "success" => true, 
-            "data" => $data
-        ]);
-    } catch (Exception $e) {
-        http_response_code(500);
-        echo json_encode([
-            "success" => false, 
-            "message" => $e->getMessage()
-        ]);
-    }
-    exit;
-}
-
-        // if ($action === 'cancelar_entrega_individual') {
-        //     $movimiento_id = intval($_REQUEST['movimiento_id'] ?? 0);
-            
-        //     if ($movimiento_id === 0) {
-        //         throw new Exception("ID de movimiento no válido.");
-        //     }
-
-        //     // Esta llama a la función que limpia un solo movimiento_id
-        //     $repartoM->cancelarEntregaIndividual();
-
-        //     echo json_encode([
-        //         'success' => true, 
-        //         'message' => 'La entrega ha sido removida del reparto.'
-        //     ]);
-        //     exit;
-        // }
-
+// --- 
        if ($action === 'listar_pendientes_ruta') {
     // Tomamos el almacen_id del GET (filtro) o de la sesión (por defecto)
     $almacen_id = isset($_GET['almacen_id']) ? intval($_GET['almacen_id']) : intval($_SESSION['almacen_id'] ?? 0);

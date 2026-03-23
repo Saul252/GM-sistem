@@ -681,4 +681,273 @@ public function getTripulantesPorReparto($reparto_id) {
     $stmt->execute();
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
+public function getMonitorEntregas($almacen_id = 0, $inicio = 0, $limite = 25) {
+    if (ob_get_level()) ob_clean();
+
+    // Filtro dinámico por almacén
+    $where_almacen = ($almacen_id > 0) ? " AND m.almacen_origen_id = ? " : "";
+
+    $sql = "SELECT 
+                -- 1. IDs CRÍTICOS PARA EL MODAL (Agregados)
+                m.id AS movimiento_id, 
+                trm.id AS reparto_id,
+                
+                -- Agrupador: Si hay viaje consolidado, colapsa por folio de viaje, si no, por movimiento
+                IFNULL(tc.viaje_folio, CONCAT('MOV-', m.id)) AS grupo_id,
+                v.id AS venta_id,
+                tc.viaje_folio AS numero_ruta,
+                IF(tc.viaje_folio IS NOT NULL, 'RUTA', 'MOSTRADOR') AS tipo_salida,
+                
+                -- Identificador Visual: Folio de Viaje o Folio de Venta
+                COALESCE(tc.viaje_folio, v.folio) AS identificador_visual,
+                
+                -- Cliente
+                CASE 
+                    WHEN tc.viaje_folio IS NOT NULL THEN 'VARIOS CLIENTES (RUTA)'
+                    ELSE c.nombre_comercial
+                END AS cliente_display,
+                
+                -- Producto
+                CASE 
+                    WHEN tc.viaje_folio IS NOT NULL THEN 'MATERIALES DIVERSOS (CARGA CONSOLIDADA)'
+                    ELSE p.nombre 
+                END AS producto_nombre,
+
+                SUM(m.cantidad) as total_bultos,
+                p.unidad_reporte,
+                p.unidad_medida,
+                p.factor_conversion,
+
+                -- Vehículo y Responsable Operativo
+                CASE 
+                    WHEN tc.viaje_folio IS NOT NULL THEN IFNULL(tv.nombre, 'POR ASIGNAR') 
+                    ELSE 'RECOLECCIÓN PROPIA' 
+                END AS vehiculo,
+                COALESCE(t_chofer.nombre, t_patio.nombre, u_reg.nombre, 'POR ASIGNAR') AS responsable,
+
+                -- Extracción de Lotes
+                (SELECT GROUP_CONCAT(DISTINCT ls.codigo_lote SEPARATOR ', ')
+                 FROM lotes_movimientos_salida lms
+                 INNER JOIN lotes_stock ls ON lms.lote_id = ls.id
+                 WHERE lms.entrega_venta_id = m.id 
+                 OR (lms.detalle_venta_id > 0 AND lms.detalle_venta_id IN (
+                     SELECT dv.id FROM detalle_venta dv WHERE dv.venta_id = v.id
+                 ))
+                ) AS lotes_involucrados,
+                
+                -- Fecha con formato para el JS
+                DATE_FORMAT(MAX(IFNULL(rsl.fecha_despacho, m.fecha)), '%d/%m/%Y %H:%i') AS fecha_evento
+
+            FROM movimientos m
+            INNER JOIN productos p ON m.producto_id = p.id
+            INNER JOIN ventas v ON m.referencia_id = v.id
+            LEFT JOIN clientes c ON v.id_cliente = c.id
+            LEFT JOIN usuarios u_reg ON m.usuario_registra_id = u_reg.id
+            
+            -- Logística
+            LEFT JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id AND trm.estado_reparto != 'cancelado'
+            LEFT JOIN transporte_vehiculos tv ON trm.vehiculo_id = tv.id
+            LEFT JOIN transporte_consolidacion tc ON trm.id = tc.reparto_id
+            LEFT JOIN trabajadores t_chofer ON trm.usuario_encargado_id = t_chofer.id
+            
+            -- Patio
+            LEFT JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
+            LEFT JOIN trabajadores t_patio ON rsl.usuario_despacho_id = t_patio.id 
+
+            WHERE m.tipo = 'salida' 
+            $where_almacen
+
+            GROUP BY grupo_id
+            ORDER BY MAX(m.fecha) DESC 
+            LIMIT ?, ?";
+
+    $stmt = $this->db->prepare($sql);
+    
+    if ($almacen_id > 0) {
+        $stmt->bind_param("iii", $almacen_id, $inicio, $limite);
+    } else {
+        $stmt->bind_param("ii", $inicio, $limite);
+    }
+
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $data = [];
+
+    while ($row = $result->fetch_assoc()) {
+        // Lógica de visualización de cantidades (Conversión a Enteros/Restos)
+        if ($row['numero_ruta'] != null) {
+            $row['lectura_fisica'] = "CARGA CONSOLIDADA";
+        } else {
+            $txt = "";
+            $f = (float)$row['factor_conversion'];
+            $val = (float)$row['total_bultos'];
+            
+            if ($f > 1) {
+                $entero = floor($val / $f);
+                $resto = fmod($val, $f);
+                if ($entero > 0) $txt .= (int)$entero . " " . $row['unidad_reporte'];
+                if ($resto > 0) $txt .= ($txt !== "" ? " y " : "") . $resto . " " . $row['unidad_medida'];
+            } else {
+                $txt = $val . " " . $row['unidad_medida'];
+            }
+            $row['lectura_fisica'] = ($txt === "") ? "0" : $txt;
+        }
+
+        $row['lotes_involucrados'] = $row['lotes_involucrados'] ?? 'SIN LOTE';
+        $data[] = $row;
+    }
+
+    return $data;
+}
+/**
+ * Detalle de un movimiento simple (sin ruta/reparto)
+ * Trae: cliente, producto, cantidad, quién despachó en sistema,
+ * quién entregó físicamente, cuándo se entregó.
+ */
+public function getDetalleMovimientoNormal($movimiento_id) {
+    $sql = "SELECT 
+                m.id AS movimiento_id,
+                m.cantidad,
+                p.nombre AS producto,
+                p.unidad_medida,
+                p.unidad_reporte,
+                p.factor_conversion,
+                DATE_FORMAT(m.fecha, '%d/%m/%Y %H:%i') AS fecha_salida,
+
+                -- Venta y Cliente
+                v.folio AS folio_venta,
+                c.nombre_comercial AS cliente,
+                c.telefono AS cliente_telefono,
+                c.direccion AS cliente_direccion,
+
+                -- Quién registró el movimiento en el sistema
+                u_asigna.nombre AS usuario_asigno_sistema,
+
+                -- Quién validó la salida en el sistema (admin de patio)
+                u_despacho.nombre AS usuario_valida_patio,
+
+                -- Quién entregó físicamente (trabajador de patio)
+                u_patio.nombre AS trabajador_despacho_patio,
+
+                -- Cuándo salió físicamente
+                DATE_FORMAT(rsl.fecha_despacho, '%d/%m/%Y %H:%i') AS fecha_despacho
+
+            FROM movimientos m
+            INNER JOIN productos p ON m.producto_id = p.id
+            LEFT JOIN ventas v ON m.referencia_id = v.id
+            LEFT JOIN clientes c ON v.id_cliente = c.id
+            LEFT JOIN usuarios u_asigna ON m.usuario_registra_id = u_asigna.id
+            LEFT JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
+            LEFT JOIN usuarios u_patio ON rsl.usuario_patio_id = u_patio.id
+            LEFT JOIN usuarios u_despacho ON rsl.usuario_despacho_id = u_despacho.id
+            WHERE m.id = ?
+            LIMIT 1";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param("i", $movimiento_id);
+    $stmt->execute();
+    $res = $stmt->get_result()->fetch_assoc();
+
+    if (!$res) return null;
+
+    // Formateo de cantidad con factor de conversión
+    $cantidad = floatval($res['cantidad']);
+    $factor   = floatval($res['factor_conversion'] ?? 1);
+
+    if ($factor > 1) {
+        $enteros   = (int) floor($cantidad / $factor);
+        $sobrantes = fmod($cantidad, $factor);
+        $res['cantidad_display'] = $sobrantes > 0
+            ? "{$enteros} {$res['unidad_reporte']} + {$sobrantes} {$res['unidad_medida']}"
+            : "{$enteros} {$res['unidad_reporte']}";
+    } else {
+        $res['cantidad_display'] = "{$cantidad} {$res['unidad_medida']}";
+    }
+
+    return $res;
+}
+
+/**
+ * Detalle completo de una ruta/viaje agrupado por cliente.
+ * Trae: vehículo, chofer, ayudantes, y por cada cliente:
+ * su dirección de entrega y todos los productos que recibió.
+ */
+public function getDetalleRutaCompleta($movimiento_id) {
+    // 1. Buscamos el folio del viaje al que pertenece este movimiento
+    $sqlFolio = "SELECT tc.viaje_folio 
+                 FROM transporte_consolidacion tc
+                 INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
+                 WHERE trm.entrega_venta_id = ? 
+                 LIMIT 1";
+    
+    $stmtF = $this->db->prepare($sqlFolio);
+    $stmtF->bind_param("i", $movimiento_id);
+    $stmtF->execute();
+    $resFolio = $stmtF->get_result()->fetch_assoc();
+
+    // Si no tiene viaje (es salida directa de patio), usamos la otra lógica
+    if (!$resFolio) {
+        return $this->getDetalleMovimientoNormal($movimiento_id);
+    }
+
+    $viaje_folio = $resFolio['viaje_folio'];
+
+    // 2. Traemos la información general del viaje (Camión, Chofer, Ayudantes)
+    $sqlHeader = "SELECT 
+                    tc.viaje_folio,
+                    tv.nombre as vehiculo,
+                    tv.placas,
+                    t_chofer.nombre as chofer_nombre,
+                    u_autoriza.nombre as autorizado_por
+                  FROM transporte_consolidacion tc
+                  INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
+                  INNER JOIN transporte_vehiculos tv ON tc.vehiculo_id = tv.id
+                  LEFT JOIN trabajadores t_chofer ON trm.usuario_encargado_id = t_chofer.id
+                  LEFT JOIN movimientos m ON trm.entrega_venta_id = m.id
+                  LEFT JOIN usuarios u_autoriza ON m.usuario_registra_id = u_autoriza.id
+                  WHERE tc.viaje_folio = ? 
+                  LIMIT 1";
+
+    $stmtH = $this->db->prepare($sqlHeader);
+    $stmtH->bind_param("s", $viaje_folio);
+    $stmtH->execute();
+    $data = $stmtH->get_result()->fetch_assoc();
+
+    // 3. Traemos a TODOS los clientes y productos de este viaje (El desglose que pediste)
+    $sqlDetalles = "SELECT 
+                        v.folio as folio_venta,
+                        c.nombre_comercial as cliente,
+                        p.nombre as producto,
+                        m.cantidad,
+                        p.unidad_medida,
+                        trp.descripcion_punto as direccion_entrega,
+                        trp.orden_visita
+                    FROM transporte_consolidacion tc
+                    INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
+                    INNER JOIN movimientos m ON trm.entrega_venta_id = m.id
+                    INNER JOIN productos p ON m.producto_id = p.id
+                    LEFT JOIN ventas v ON m.referencia_id = v.id
+                    LEFT JOIN clientes c ON v.id_cliente = c.id
+                    LEFT JOIN transporte_rutas_puntos trp ON trm.id = trp.reparto_id
+                    WHERE tc.viaje_folio = ?
+                    ORDER BY trp.orden_visita ASC";
+
+    $stmtD = $this->db->prepare($sqlDetalles);
+    $stmtD->bind_param("s", $viaje_folio);
+    $stmtD->execute();
+    $data['entregas'] = $stmtD->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    // 4. Tripulantes (Ayudantes)
+    $sqlT = "SELECT DISTINCT t.nombre 
+             FROM transporte_tripulantes_detalle ttd
+             INNER JOIN trabajadores t ON ttd.usuario_id = t.id
+             INNER JOIN transporte_consolidacion tc ON ttd.reparto_id = tc.reparto_id
+             WHERE tc.viaje_folio = ?";
+    $stmtT = $this->db->prepare($sqlT);
+    $stmtT->bind_param("s", $viaje_folio);
+    $stmtT->execute();
+    $data['tripulantes'] = $stmtT->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    return $data;
+}
 }
