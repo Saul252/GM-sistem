@@ -66,9 +66,29 @@
         </div>
     </div>
 </div>
-<script>
-$(document).ready(function() {
+<script>$(document).ready(function() {
     const URL_ENTREGAS = '/cfsistem/app/controllers/entregasController.php';
+
+    /**
+     * LÓGICA DE EXCLUSIÓN PARA PATIO:
+     * Evita que el Despachador Responsable sea seleccionado como Ayudante.
+     */
+    $('#patio_chofer_id').on('change', function() {
+        const selectedEncargado = $(this).val();
+        
+        $('#patio_tripulantes option').each(function() {
+            const val = $(this).val();
+            if (selectedEncargado && val === selectedEncargado) {
+                $(this).prop('disabled', true).hide();
+                // Si ya estaba seleccionado como ayudante, lo quitamos
+                if ($(this).is(':selected')) {
+                    $(this).prop('selected', false);
+                }
+            } else {
+                $(this).prop('disabled', false).show();
+            }
+        });
+    });
 
     /**
      * FUNCIÓN DE FORMATEO: 
@@ -150,6 +170,9 @@ $(document).ready(function() {
                     selectC.append('<option disabled>❌ Sin personal en esta sucursal</option>');
                 }
 
+                // Sincronizar exclusión inmediatamente después de cargar la lista
+                $('#patio_chofer_id').trigger('change');
+
                 if(typeof Swal !== 'undefined') Swal.close();
                 $('#modalEntregaPatio').modal('show');
             } else {
@@ -190,7 +213,6 @@ $(document).ready(function() {
                     timer: 2000 
                 });
                 
-                // Actualizar tablas si las funciones existen
                 if (window.renderTable) window.renderTable();
                 if (window.cargarPendientes) window.cargarPendientes();
             } else {
@@ -203,5 +225,4 @@ $(document).ready(function() {
             btn.prop('disabled', false).html(originalHtml);
         }
     });
-});
-</script>
+});</script>

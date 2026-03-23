@@ -160,6 +160,7 @@
     
  
     <?php require_once __DIR__ . '/entregasComponets/entregasPatioModal.php'; ?>
+<?php require_once __DIR__ . '/entregasComponets/modalVerDetalleEntregas.php'; ?>
 
     <script>
 $(document).ready(function() {
@@ -240,6 +241,8 @@ if (parseInt(m.ya_despachado) === 1) {
                 <button onclick="verDetalleGanancia(${m.id})" class="btn btn-link ms-2 text-decoration-none" style="color: #ceced2;">
                     <i class="bi bi-graph-up-arrow fs-6"></i>
                 </button>
+                <button class="btn btn-outline-success btn-sm rounded-pill px-3" onclick="verEntrega(${m.id})"><i class="bi bi-eye"></i></button>;
+        
             </div>`;
     } else {
         // --- VISTA DE ACCIÓN (CUANDO AÚN NO SE ASIGNA RUTA O PATIO) ---
@@ -250,6 +253,7 @@ if (parseInt(m.ya_despachado) === 1) {
                     <button onclick="imprimirComprobante(${m.id})" class="btn btn-link btn-sm text-decoration-none px-3 border-end" style="color: #8e8e93; border-color: rgba(0,0,0,0.1) !important;">
                         <i class="bi bi-printer fs-6"></i>
                     </button>
+                   
                     <button onclick="verDetalleGanancia(${m.id})" class="btn btn-link btn-sm text-decoration-none px-3" style="color: #34c759;">
                         <i class="bi bi-graph-up-arrow fs-6"></i>
                     </button>

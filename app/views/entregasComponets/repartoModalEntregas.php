@@ -83,9 +83,30 @@
 </div>
 
 <script>
-$(document).ready(function() {
+    $(document).ready(function() {
     // 1. Definición de la ruta al controlador de entregas
     const URL_ENTREGAS = '/cfsistem/app/controllers/entregasController.php';
+
+    /**
+     * LÓGICA DE EXCLUSIÓN:
+     * Evita que el chofer sea seleccionado como ayudante al mismo tiempo.
+     */
+    $('#v_chofer_id').on('change', function() {
+        const selectedChofer = $(this).val();
+        
+        $('#v_tripulantes option').each(function() {
+            const val = $(this).val();
+            if (selectedChofer && val === selectedChofer) {
+                $(this).prop('disabled', true).hide();
+                // Si ya estaba seleccionado como ayudante, lo quitamos
+                if ($(this).is(':selected')) {
+                    $(this).prop('selected', false);
+                }
+            } else {
+                $(this).prop('disabled', false).show();
+            }
+        });
+    });
 
     /**
      * FUNCIÓN DE FORMATEO: 
@@ -102,20 +123,16 @@ $(document).ready(function() {
             const sobrantes = qty % f;
 
             let partes = [];
-            // Solo agregamos la unidad mayor si es mayor a 0
             if (enteros > 0) {
                 partes.push(`<span class="fw-bold text-primary">${enteros}</span> ${unitRep}`);
             }
-            // Solo agregamos la unidad base si es mayor a 0
             if (sobrantes > 0) {
                 partes.push(`<span class="fw-bold text-primary">${sobrantes}</span> ${unitMed}`);
             }
 
-            // Si el resultado es vacío (ej. cantidad 0), mostramos 0 en unidad base
             return partes.length > 0 ? partes.join(' + ') : `0 ${unitMed}`;
         }
         
-        // Si no hay factor de conversión, mostramos la unidad base directamente
         return `<span class="fw-bold text-primary">${qty}</span> ${unitMed}`;
     }
 
@@ -132,7 +149,6 @@ $(document).ready(function() {
         }
 
         try {
-            // Peticiones usando el parámetro ajax= para el controlador de entregas
             const [respDetalle, respRecursos] = await Promise.all([
                 fetch(`${URL_ENTREGAS}?ajax=get_recursos_reparto&id=${movimientoId}`),
                 fetch(`${URL_ENTREGAS}?ajax=get_recursos_sucursal&almacen_id=${almacenId}`)
@@ -144,16 +160,13 @@ $(document).ready(function() {
             if (resDetalle.success && resRecursos.success) {
                 const e = resDetalle.data.entrega;
 
-                // Llenar campos de identificación
                 $('#rep_movimiento_id').val(movimientoId);
                 $('#rep_almacen_id').val(almacenId);
                 
-                // Info visual de producto y cliente
                 $('#info_producto_modal').text(e.producto_nombre || e.producto);
                 $('#v_cliente_nombre').text(e.cliente_nombre || 'Venta Mostrador');
                 $('#v_direccion_entrega').val(e.cliente_direccion_fiscal || '');
                 
-                // --- APLICACIÓN DE LA LÓGICA DE UNIDADES LIMPIAS ---
                 const htmlCantidad = formatUnitsClean(
                     e.cantidad, 
                     e.factor_conversion, 
@@ -162,7 +175,6 @@ $(document).ready(function() {
                 );
                 $('#info_cantidad_modal').html(htmlCantidad);
 
-                // Llenar select de Unidades/Vehículos
                 const selectU = $('#v_vehiculo_id').empty().append('<option value="">Seleccione camión...</option>');
                 if(resRecursos.unidades && resRecursos.unidades.length > 0) {
                     resRecursos.unidades.forEach(u => {
@@ -172,7 +184,6 @@ $(document).ready(function() {
                     selectU.append('<option disabled>❌ Sin camiones en esta sucursal</option>');
                 }
 
-                // Llenar select de Personal (Chofer y Ayudantes)
                 const selectC = $('#v_chofer_id').empty().append('<option value="">Seleccione chofer...</option>');
                 const selectT = $('#v_tripulantes').empty();
                 if(resRecursos.choferes && resRecursos.choferes.length > 0) {
@@ -183,6 +194,9 @@ $(document).ready(function() {
                 } else {
                     selectC.append('<option disabled>❌ Sin personal disponible</option>');
                 }
+
+                // Sincronizar listas al terminar de llenar los datos
+                $('#v_chofer_id').trigger('change');
 
                 if(typeof Swal !== 'undefined') Swal.close();
                 $('#modalVehiculo').modal('show');
@@ -201,13 +215,12 @@ $(document).ready(function() {
     $('#formReparto').on('submit', async function(e) {
         e.preventDefault();
         const btn = $('#btnGuardarReparto');
-        const originalHtml = btn.html(); // Guardamos el icono y texto original
+        const originalHtml = btn.html();
         
         btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Enviando...');
 
         try {
             const formData = new FormData(this);
-            // Indicar al controlador la acción ajax
             formData.append('ajax', 'guardar_reparto');
 
             const resp = await fetch(URL_ENTREGAS, { 
@@ -224,7 +237,6 @@ $(document).ready(function() {
                     text: res.message,
                     timer: 2000
                 });
-                // Actualizar la vista principal
                 if (window.cargarPendientes) window.cargarPendientes();
             } else {
                 Swal.fire('Atención', res.message, 'warning');
@@ -233,7 +245,6 @@ $(document).ready(function() {
             console.error(error);
             Swal.fire('Error', 'Error crítico al procesar la salida de logística.', 'error');
         } finally {
-            // Restauramos el botón a su estado original (Azul y con icono)
             btn.prop('disabled', false).html(originalHtml);
         }
     });

@@ -82,7 +82,32 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
             ]);
             exit;
         }
+/**
+         * NUEVA ACCIÓN: Obtener el resumen de quién y cómo entregó la mercancía
+         * Se activa desde el botón del "Ojito" en la tabla.
+         */
+       if ($action === 'get_resumen_despacho') {
+    $movimiento_id = intval($_REQUEST['id'] ?? 0);
+    
+    // 1. Obtenemos el resumen completo (que ya trae cliente y tripulantes básicos)
+    $resumen = $repartoM->obtenerHistorialFisico($movimiento_id);
+    
+    if ($resumen) {
+        // 2. IMPORTANTE: Solo sobreescribe tripulantes si el array viene vacío 
+        // y realmente es un reparto de logística.
+        if (empty($resumen['tripulantes']) && !empty($resumen['reparto_id'])) {
+            $resumen['tripulantes'] = $repartoM->getTripulantesPorReparto($resumen['reparto_id']);
+        }
 
+        // 3. Forzamos el header para que el JS reciba JSON puro
+        header('Content-Type: application/json');
+        echo json_encode(["success" => true, "data" => $resumen]);
+    } else {
+        header('Content-Type: application/json');
+        echo json_encode(["success" => false, "message" => "No se encontraron registros de salida física."]);
+    }
+    exit;
+}
         /**
          * -----------------------------------------------------------
          * BLOQUE 2: GESTIÓN DE VISTA Y FILTROS

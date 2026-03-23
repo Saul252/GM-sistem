@@ -528,4 +528,157 @@ public function getDetallesViaje($folio_viaje) {
 
     return $header;
 }
+public function getResumenDespacho($movimiento_id) {
+    $sql = "SELECT 
+                m.id as movimiento_id,
+                m.cantidad,
+                p.nombre as producto_nombre,
+                v.folio as folio_venta,
+                c.nombre_comercial as cliente,
+                
+                -- Usuario que registró el movimiento
+                u_mov.nombre as administrador_sistema,
+                
+                -- Logística
+                trm.id as reparto_id,
+                trm.estado_reparto,
+                tv.nombre as vehiculo,
+                tv.placas,
+                u_chofer.nombre as chofer_nombre,
+                tc.viaje_folio,
+                
+                -- Patio
+                rsl.fecha_despacho as fecha_patio,
+                u_patio.nombre as despachador_patio,
+                u_despacho.nombre as administrador_patio
+                
+            FROM movimientos m
+            INNER JOIN productos p ON m.producto_id = p.id
+            LEFT JOIN ventas v ON m.referencia_id = v.id
+            LEFT JOIN clientes c ON v.id_cliente = c.id
+            LEFT JOIN usuarios u_mov ON m.usuario_registra_id = u_mov.id
+            
+            LEFT JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id
+            LEFT JOIN transporte_vehiculos tv ON trm.vehiculo_id = tv.id
+            LEFT JOIN usuarios u_chofer ON trm.usuario_encargado_id = u_chofer.id
+            LEFT JOIN transporte_consolidacion tc ON trm.id = tc.reparto_id
+            
+            LEFT JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
+            LEFT JOIN usuarios u_patio ON rsl.usuario_patio_id = u_patio.id
+            LEFT JOIN usuarios u_despacho ON rsl.usuario_despacho_id = u_despacho.id
+            
+            WHERE m.id = ? LIMIT 1";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param("i", $movimiento_id);
+    $stmt->execute();
+    $res = $stmt->get_result()->fetch_assoc();
+
+    if (!$res) return null;
+
+    // Tripulantes: transporte_tripulantes_detalle.usuario_id -> usuarios
+    $res['tripulantes'] = [];
+    if ($res['reparto_id']) {
+        $sqlT = "SELECT u.nombre 
+                 FROM transporte_tripulantes_detalle ttd
+                 INNER JOIN usuarios u ON ttd.usuario_id = u.id
+                 WHERE ttd.reparto_id = ?";
+        $stmtT = $this->db->prepare($sqlT);
+        $stmtT->bind_param("i", $res['reparto_id']);
+        $stmtT->execute();
+        $res['tripulantes'] = $stmtT->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+
+    return $res;
+}
+
+public function obtenerHistorialFisico($movimiento_id) {
+    $sql = "SELECT 
+                m.id as movimiento_id,
+                m.cantidad,
+                m.fecha as fecha_movimiento,
+                p.nombre as producto_nombre,
+                v.folio as folio_venta,
+                c.nombre_comercial as cliente,
+                
+                -- DIRECCIÓN DE ENTREGA (Desde los puntos de ruta)
+                trp.descripcion_punto as direccion_entrega,
+                
+                -- TRAZABILIDAD DE SISTEMA (Usuarios que operan el software)
+                u_asigna.nombre as usuario_asigno_sistema,    -- El que capturó el movimiento/reparto
+                u_valida.nombre as usuario_valida_patio,    -- El que dio salida oficial en el sistema
+                
+                -- TRAZABILIDAD FÍSICA (Trabajadores que mueven el material)
+                t_chofer.nombre as trabajador_entrega_ruta,  -- Chofer asignado
+                t_patio.nombre as trabajador_despacho_patio, -- Almacenista que cargó
+                
+                -- DATOS DE LOGÍSTICA
+                trm.id as reparto_id,
+                trm.estado_reparto,
+                tv.nombre as vehiculo,
+                tv.placas,
+                tc.viaje_folio,
+                
+                -- DATOS DE PATIO
+                rsl.fecha_despacho as fecha_patio
+                
+            FROM movimientos m
+            INNER JOIN productos p ON m.producto_id = p.id
+            LEFT JOIN ventas v ON m.referencia_id = v.id
+            LEFT JOIN clientes c ON v.id_cliente = c.id
+            
+            -- ¿Quién asignó/creó el movimiento en el sistema?
+            LEFT JOIN usuarios u_asigna ON m.usuario_registra_id = u_asigna.id
+            
+            -- LOGÍSTICA: Relación con Repartos
+            LEFT JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id
+            LEFT JOIN transporte_vehiculos tv ON trm.vehiculo_id = tv.id
+            LEFT JOIN transporte_consolidacion tc ON trm.id = tc.reparto_id
+            -- El chofer es un trabajador
+            LEFT JOIN trabajadores t_chofer ON trm.usuario_encargado_id = t_chofer.id
+            -- Dirección del primer punto de la ruta (donde se entrega)
+            LEFT JOIN transporte_rutas_puntos trp ON trm.id = trp.reparto_id AND trp.orden_visita = 1
+            
+            -- PATIO: Registro físico de salida
+            LEFT JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
+            -- El despachador físico es un trabajador
+            LEFT JOIN trabajadores t_patio ON rsl.usuario_patio_id = t_patio.id
+            -- El que valida la salida en el sistema es un usuario (Administrativo de patio)
+            LEFT JOIN usuarios u_valida ON rsl.usuario_despacho_id = u_valida.id
+            
+            WHERE m.id = ? LIMIT 1";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param("i", $movimiento_id);
+    $stmt->execute();
+    $res = $stmt->get_result()->fetch_assoc();
+
+    if (!$res) return null;
+
+    // Tripulantes/Ayudantes (Siempre de la tabla trabajadores)
+    $res['tripulantes'] = [];
+    if ($res['reparto_id']) {
+        $sqlT = "SELECT t.nombre 
+                 FROM transporte_tripulantes_detalle ttd
+                 INNER JOIN trabajadores t ON ttd.usuario_id = t.id
+                 WHERE ttd.reparto_id = ?";
+        $stmtT = $this->db->prepare($sqlT);
+        $stmtT->bind_param("i", $res['reparto_id']);
+        $stmtT->execute();
+        $res['tripulantes'] = $stmtT->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+
+    return $res;
+}
+
+public function getTripulantesPorReparto($reparto_id) {
+    $sql = "SELECT u.nombre 
+            FROM transporte_tripulantes_detalle ttd
+            INNER JOIN usuarios u ON ttd.usuario_id = u.id
+            WHERE ttd.reparto_id = ?";
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param("i", $reparto_id);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
 }

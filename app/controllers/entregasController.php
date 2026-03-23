@@ -58,7 +58,19 @@ if (isset($_GET['ajax'])) {
                 $id = intval($_GET['id'] ?? 0);
                 echo json_encode($modelo->simularDespachoLotes($id));
                 break;
-
+case 'get_resumen_despacho':
+                $movimiento_id = intval($_GET['id'] ?? 0);
+                $resumen = $repartoM->obtenerHistorialFisico($movimiento_id);
+                
+                if ($resumen) {
+                    if (empty($resumen['tripulantes']) && !empty($resumen['reparto_id'])) {
+                        $resumen['tripulantes'] = $repartoM->getTripulantesPorReparto($resumen['reparto_id']);
+                    }
+                    echo json_encode(["success" => true, "data" => $resumen]);
+                } else {
+                    echo json_encode(["success" => false, "message" => "No se encontró registro."]);
+                }
+                break;
             case 'imprimir':
             case 'imprimirGanancia':
                 $id = intval($_GET['id'] ?? 0);

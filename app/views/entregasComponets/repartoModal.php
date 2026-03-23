@@ -81,10 +81,31 @@
         </div>
     </div>
 </div>
-<script>
-$(document).ready(function() {
+<script>$(document).ready(function() {
     // 1. Configuración de Ruta
     const URL_ENTREGAS = '/cfsistem/app/controllers/entregasController.php';
+
+    /**
+     * NUEVA LÓGICA: Exclusión de Chofer en Ayudantes
+     * Escucha el cambio en el select de chofer para deshabilitar esa opción en ayudantes.
+     */
+    $('#v_chofer_id').on('change', function() {
+        const selectedChofer = $(this).val();
+        
+        // Iterar opciones de ayudantes
+        $('#v_tripulantes option').each(function() {
+            const val = $(this).val();
+            if (selectedChofer && val === selectedChofer) {
+                $(this).prop('disabled', true).hide();
+                // Si estaba seleccionado como ayudante, quitar la selección
+                if ($(this).is(':selected')) {
+                    $(this).prop('selected', false);
+                }
+            } else {
+                $(this).prop('disabled', false).show();
+            }
+        });
+    });
 
     /**
      * FUNCIÓN AUXILIAR: Formateo de cantidades (Limpia ceros)
@@ -100,7 +121,6 @@ $(document).ready(function() {
             const sobrantes = qty % f;
 
             let partes = [];
-            // Solo agregamos si el valor es mayor a cero
             if (enteros > 0) partes.push(`<span class="fw-bold text-primary">${enteros}</span> ${unitRep}`);
             if (sobrantes > 0) partes.push(`<span class="fw-bold text-primary">${sobrantes}</span> ${unitMed}`);
 
@@ -122,7 +142,6 @@ $(document).ready(function() {
         }
 
         try {
-            // Peticiones usando la estructura de tu nuevo controlador (ajax=)
             const [respDetalle, respRecursos] = await Promise.all([
                 fetch(`${URL_ENTREGAS}?ajax=get_recursos_reparto&id=${movimientoId}`),
                 fetch(`${URL_ENTREGAS}?ajax=get_recursos_sucursal&almacen_id=${almacenId}`)
@@ -134,14 +153,12 @@ $(document).ready(function() {
             if (resDetalle.success && resRecursos.success) {
                 const e = resDetalle.data.entrega;
 
-                // Llenar campos ocultos y textos básicos
                 $('#rep_movimiento_id').val(movimientoId);
                 $('#rep_almacen_id').val(almacenId);
                 $('#info_producto_modal').text(e.producto_nombre || e.producto);
                 $('#v_cliente_nombre').text(e.cliente_nombre || 'Venta Mostrador');
                 $('#v_direccion_entrega').val(e.cliente_direccion_fiscal || '');
                 
-                // Aplicar limpieza de unidades (evita mostrar "0")
                 const htmlCantidad = formatUnits(
                     e.cantidad, 
                     e.factor_conversion, 
@@ -170,6 +187,9 @@ $(document).ready(function() {
                     });
                 }
 
+                // IMPORTANTE: Resetear la visibilidad de los ayudantes al llenar el modal
+                $('#v_chofer_id').trigger('change');
+
                 if(typeof Swal !== 'undefined') Swal.close();
                 $('#modalVehiculo').modal('show');
             } else {
@@ -193,7 +213,6 @@ $(document).ready(function() {
 
         try {
             const formData = new FormData(this);
-            // IMPORTANTE: Enviar 'ajax' para que el controlador lo detecte
             formData.append('ajax', 'guardar_reparto');
 
             const resp = await fetch(URL_ENTREGAS, { method: 'POST', body: formData });
@@ -202,7 +221,6 @@ $(document).ready(function() {
             if (res.success) {
                 $('#modalVehiculo').modal('hide');
                 Swal.fire({ icon: 'success', title: 'Salida Autorizada', text: res.message, timer: 2000 });
-                // Refresca la tabla principal si la función existe
                 if (window.renderTable) window.renderTable();
                 if (window.cargarPendientes) window.cargarPendientes();
             } else {
@@ -214,5 +232,4 @@ $(document).ready(function() {
             btn.prop('disabled', false).html(originalHtml);
         }
     });
-});
-</script>
+});</script>
