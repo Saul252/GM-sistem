@@ -67,79 +67,141 @@
     </div>
 </div>
 <script>
-    window.prepararModalPatio = async function(movimientoId, almacenId) {
-    if(typeof Swal !== 'undefined') {
-        Swal.fire({ title: 'Cargando recursos...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-    }
+$(document).ready(function() {
+    const URL_ENTREGAS = '/cfsistem/app/controllers/entregasController.php';
 
-    try {
-        const URL_ENTREGAS = '/cfsistem/app/controllers/entregasController.php';
-        
-        const [respDetalle, respRecursos] = await Promise.all([
-            fetch(`${URL_ENTREGAS}?ajax=get_recursos_reparto&id=${movimientoId}`),
-            fetch(`${URL_ENTREGAS}?ajax=get_recursos_sucursal&almacen_id=${almacenId}`)
-        ]);
+    /**
+     * FUNCIÓN DE FORMATEO: 
+     * Limpia los ceros para que no aparezca "0 Toneladas + 5 Pz".
+     */
+    function formatUnitsClean(cantidad, factor, uReporte, uMedida) {
+        const qty = parseFloat(cantidad) || 0;
+        const f = parseFloat(factor) || 1;
+        const unitRep = uReporte || 'Unid.';
+        const unitMed = uMedida || 'Pz';
 
-        const resDetalle = await respDetalle.json();
-        const resRecursos = await respRecursos.json();
+        if (f > 1) {
+            const enteros = Math.floor(qty / f);
+            const sobrantes = qty % f;
 
-        if (resDetalle.success && resRecursos.success) {
-            const e = resDetalle.data.entrega;
-
-            $('#patio_movimiento_id').val(movimientoId);
-            $('#patio_almacen_id').val(almacenId);
-            $('#patio_producto_info').text(e.producto_nombre || e.producto);
-            $('#patio_cliente_nombre').text(e.cliente_nombre || 'Venta Mostrador');
-            $('#patio_cantidad_info').text(`${e.cantidad} ${e.unidad_reporte || ''}`);
-
-            // Llenar responsables y ayudantes
-            const selectC = $('#patio_chofer_id').empty().append('<option value="">Seleccione encargado...</option>');
-            const selectT = $('#patio_tripulantes').empty();
-            
-            if(resRecursos.choferes && resRecursos.choferes.length > 0) {
-                resRecursos.choferes.forEach(c => {
-                    selectC.append(`<option value="${c.id}">${c.nombre}</option>`);
-                    selectT.append(`<option value="${c.id}">${c.nombre}</option>`);
-                });
+            let partes = [];
+            if (enteros > 0) {
+                partes.push(`<span class="fw-bold text-success">${enteros}</span> ${unitRep}`);
+            }
+            if (sobrantes > 0) {
+                partes.push(`<span class="fw-bold text-success">${sobrantes}</span> ${unitMed}`);
             }
 
-            if(typeof Swal !== 'undefined') Swal.close();
-            $('#modalEntregaPatio').modal('show');
+            return partes.length > 0 ? partes.join(' + ') : `0 ${unitMed}`;
         }
-    } catch (error) {
-        console.error(error);
-        Swal.fire('Error', 'No se pudo conectar con el almacén.', 'error');
+        
+        return `<span class="fw-bold text-success">${qty}</span> ${unitMed}`;
     }
-};
 
-// Manejo del envío
-$('#formEntregaPatio').on('submit', async function(e) {
-    e.preventDefault();
-    const btn = $('#btnGuardarPatio');
-    btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Finalizando...');
-
-    try {
-        const formData = new FormData(this);
-        // Enviamos a la nueva acción del controlador que creamos antes
-        formData.append('ajax', 'entregar_en_patio'); 
-
-        const resp = await fetch('/cfsistem/app/controllers/entregasController.php', { 
-            method: 'POST', 
-            body: formData 
-        });
-        const res = await resp.json();
-
-        if (res.success) {
-            $('#modalEntregaPatio').modal('hide');
-            Swal.fire({ icon: 'success', title: 'Entrega Exitosa', text: 'El ciclo de mercancía se ha cerrado.', timer: 2000 });
-            if (window.cargarPendientes) window.cargarPendientes();
-        } else {
-            Swal.fire('Atención', res.message, 'warning');
+    /**
+     * FUNCIÓN B: Preparar y abrir modal de Patio
+     */
+    window.prepararModalPatio = async function(movimientoId, almacenId) {
+        if(typeof Swal !== 'undefined') {
+            Swal.fire({ 
+                title: 'Cargando recursos...', 
+                allowOutsideClick: false, 
+                didOpen: () => Swal.showLoading() 
+            });
         }
-    } catch (error) {
-        Swal.fire('Error', 'Error crítico al procesar entrega.', 'error');
-    } finally {
-        btn.prop('disabled', false).html('<i class="bi bi-check2-all me-2"></i>Finalizar Entrega');
-    }
+
+        try {
+            const [respDetalle, respRecursos] = await Promise.all([
+                fetch(`${URL_ENTREGAS}?ajax=get_recursos_reparto&id=${movimientoId}`),
+                fetch(`${URL_ENTREGAS}?ajax=get_recursos_sucursal&almacen_id=${almacenId}`)
+            ]);
+
+            const resDetalle = await respDetalle.json();
+            const resRecursos = await respRecursos.json();
+
+            if (resDetalle.success && resRecursos.success) {
+                const e = resDetalle.data.entrega;
+
+                // Llenar IDs y textos básicos
+                $('#patio_movimiento_id').val(movimientoId);
+                $('#patio_almacen_id').val(almacenId);
+                $('#patio_producto_info').text(e.producto_nombre || e.producto);
+                $('#patio_cliente_nombre').text(e.cliente_nombre || 'Venta Mostrador');
+
+                // --- APLICAR LÓGICA DE UNIDADES LIMPIAS ---
+                const htmlCantidad = formatUnitsClean(
+                    e.cantidad, 
+                    e.factor_conversion, 
+                    e.unidad_reporte, 
+                    e.unidad_medida
+                );
+                $('#patio_cantidad_info').html(htmlCantidad);
+
+                // Llenar responsables y ayudantes
+                const selectC = $('#patio_chofer_id').empty().append('<option value="">Seleccione encargado...</option>');
+                const selectT = $('#patio_tripulantes').empty();
+                
+                if(resRecursos.choferes && resRecursos.choferes.length > 0) {
+                    resRecursos.choferes.forEach(c => {
+                        selectC.append(`<option value="${c.id}">${c.nombre}</option>`);
+                        selectT.append(`<option value="${c.id}">${c.nombre}</option>`);
+                    });
+                } else {
+                    selectC.append('<option disabled>❌ Sin personal en esta sucursal</option>');
+                }
+
+                if(typeof Swal !== 'undefined') Swal.close();
+                $('#modalEntregaPatio').modal('show');
+            } else {
+                throw new Error("Error al obtener datos");
+            }
+        } catch (error) {
+            console.error(error);
+            Swal.fire('Error', 'No se pudo conectar con el almacén para obtener los recursos.', 'error');
+        }
+    };
+
+    /**
+     * FUNCIÓN C: Envío del formulario
+     */
+    $('#formEntregaPatio').on('submit', async function(e) {
+        e.preventDefault();
+        const btn = $('#btnGuardarPatio');
+        const originalHtml = btn.html();
+        
+        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Finalizando...');
+
+        try {
+            const formData = new FormData(this);
+            formData.append('ajax', 'entregar_en_patio'); 
+
+            const resp = await fetch(URL_ENTREGAS, { 
+                method: 'POST', 
+                body: formData 
+            });
+            const res = await resp.json();
+
+            if (res.success) {
+                $('#modalEntregaPatio').modal('hide');
+                Swal.fire({ 
+                    icon: 'success', 
+                    title: 'Entrega Exitosa', 
+                    text: 'El ciclo de mercancía se ha cerrado correctamente.', 
+                    timer: 2000 
+                });
+                
+                // Actualizar tablas si las funciones existen
+                if (window.renderTable) window.renderTable();
+                if (window.cargarPendientes) window.cargarPendientes();
+            } else {
+                Swal.fire('Atención', res.message, 'warning');
+            }
+        } catch (error) {
+            console.error(error);
+            Swal.fire('Error', 'Error crítico al procesar la entrega en patio.', 'error');
+        } finally {
+            btn.prop('disabled', false).html(originalHtml);
+        }
+    });
 });
 </script>

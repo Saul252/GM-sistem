@@ -81,126 +81,137 @@
         </div>
     </div>
 </div>
-
 <script>
 $(document).ready(function() {
-    const URL_CONTROLLER = '/cfsistem/app/controllers/repartosController.php';
+    // 1. Configuración de Ruta
+    const URL_ENTREGAS = '/cfsistem/app/controllers/entregasController.php';
 
     /**
-     * FUNCIÓN A: Cargar Vehículos y Personal de la sucursal específica
+     * FUNCIÓN AUXILIAR: Formateo de cantidades (Limpia ceros)
      */
-    window.cargarRecursosSucursal = async function(almacenId) {
-        const selectU = $('#v_vehiculo_id').empty().append('<option value="">Seleccione camión...</option>');
-        const selectC = $('#v_chofer_id').empty().append('<option value="">Seleccione chofer...</option>');
-        const selectT = $('#v_tripulantes').empty();
+    function formatUnits(cantidad, factor, uReporte, uMedida) {
+        const qty = parseFloat(cantidad) || 0;
+        const f = parseFloat(factor) || 1;
+        const unitRep = uReporte || 'Unid.';
+        const unitMed = uMedida || 'Pz';
+
+        if (f > 1) {
+            const enteros = Math.floor(qty / f);
+            const sobrantes = qty % f;
+
+            let partes = [];
+            // Solo agregamos si el valor es mayor a cero
+            if (enteros > 0) partes.push(`<span class="fw-bold text-primary">${enteros}</span> ${unitRep}`);
+            if (sobrantes > 0) partes.push(`<span class="fw-bold text-primary">${sobrantes}</span> ${unitMed}`);
+
+            return partes.length > 0 ? partes.join(' + ') : `0 ${unitMed}`;
+        }
+        return `<span class="fw-bold text-primary">${qty}</span> ${unitMed}`;
+    }
+
+    /**
+     * FUNCIÓN B: Cargar recursos y abrir modal
+     */
+    window.prepararModalReparto = async function(movimientoId, almacenId) {
+        if(typeof Swal !== 'undefined') {
+            Swal.fire({ 
+                title: 'Sincronizando...', 
+                allowOutsideClick: false, 
+                didOpen: () => Swal.showLoading() 
+            });
+        }
 
         try {
-            const resp = await fetch(`${URL_CONTROLLER}?action=get_recursos_sucursal&almacen_id=${almacenId}`);
-            const res = await resp.json();
+            // Peticiones usando la estructura de tu nuevo controlador (ajax=)
+            const [respDetalle, respRecursos] = await Promise.all([
+                fetch(`${URL_ENTREGAS}?ajax=get_recursos_reparto&id=${movimientoId}`),
+                fetch(`${URL_ENTREGAS}?ajax=get_recursos_sucursal&almacen_id=${almacenId}`)
+            ]);
 
-            if (res.success) {
-                // Llenar Unidades
-                if (res.unidades.length === 0) {
-                    selectU.empty().append('<option disabled>❌ Sin unidades en esta sucursal</option>');
+            const resDetalle = await respDetalle.json();
+            const resRecursos = await respRecursos.json();
+
+            if (resDetalle.success && resRecursos.success) {
+                const e = resDetalle.data.entrega;
+
+                // Llenar campos ocultos y textos básicos
+                $('#rep_movimiento_id').val(movimientoId);
+                $('#rep_almacen_id').val(almacenId);
+                $('#info_producto_modal').text(e.producto_nombre || e.producto);
+                $('#v_cliente_nombre').text(e.cliente_nombre || 'Venta Mostrador');
+                $('#v_direccion_entrega').val(e.cliente_direccion_fiscal || '');
+                
+                // Aplicar limpieza de unidades (evita mostrar "0")
+                const htmlCantidad = formatUnits(
+                    e.cantidad, 
+                    e.factor_conversion, 
+                    e.unidad_reporte, 
+                    e.unidad_medida
+                );
+                $('#info_cantidad_modal').html(htmlCantidad);
+
+                // Llenar Unidades/Vehículos
+                const selectU = $('#v_vehiculo_id').empty().append('<option value="">Seleccione camión...</option>');
+                if(resRecursos.unidades && resRecursos.unidades.length > 0) {
+                    resRecursos.unidades.forEach(u => {
+                        selectU.append(`<option value="${u.id}">${u.nombre} [${u.placas || 'S/P'}]</option>`);
+                    });
                 } else {
-                    res.unidades.forEach(u => selectU.append(`<option value="${u.id}">${u.nombre} [${u.placas}]</option>`));
+                    selectU.append('<option disabled>❌ Sin camiones disponibles</option>');
                 }
 
-                // Llenar Choferes
-                if (res.choferes.length === 0) {
-                    selectC.empty().append('<option disabled>❌ Sin personal en esta sucursal</option>');
-                } else {
-                    res.choferes.forEach(c => {
+                // Llenar Choferes y Ayudantes
+                const selectC = $('#v_chofer_id').empty().append('<option value="">Seleccione chofer...</option>');
+                const selectT = $('#v_tripulantes').empty();
+                if(resRecursos.choferes && resRecursos.choferes.length > 0) {
+                    resRecursos.choferes.forEach(c => {
                         selectC.append(`<option value="${c.id}">${c.nombre}</option>`);
                         selectT.append(`<option value="${c.id}">${c.nombre}</option>`);
                     });
                 }
+
+                if(typeof Swal !== 'undefined') Swal.close();
+                $('#modalVehiculo').modal('show');
+            } else {
+                throw new Error("No se pudieron cargar los datos del servidor.");
             }
         } catch (error) {
-            console.error("Error al cargar recursos:", error);
+            console.error("Error modal:", error);
+            Swal.fire('Error', 'No se pudo conectar con el almacén.', 'error');
         }
     };
 
     /**
-     * FUNCIÓN B: Preparar datos del movimiento y abrir modal
-     */
-   window.prepararModalReparto = async function(movimientoId, almacenId) {
-    if(typeof Swal !== 'undefined') Swal.fire({ title: 'Cargando recursos...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
-
-    try {
-        // Ejecutamos ambas peticiones: 
-        // 1. Los detalles del producto/cliente
-        // 2. Los recursos del almacén (ya tenemos el ID)
-        const [respDetalle, respRecursos] = await Promise.all([
-            fetch(`${URL_CONTROLLER}?action=get_recursos_reparto&id=${movimientoId}`),
-            fetch(`${URL_CONTROLLER}?action=get_recursos_sucursal&almacen_id=${almacenId}`)
-        ]);
-
-        const resDetalle = await respDetalle.json();
-        const resRecursos = await respRecursos.json();
-
-        if (resDetalle.success && resRecursos.success) {
-            const e = resDetalle.data.entrega;
-
-            // Llenar datos visuales
-            $('#rep_movimiento_id').val(movimientoId);
-            $('#rep_almacen_id').val(almacenId);
-            $('#info_producto_modal').text(e.producto_nombre || e.producto);
-            $('#v_cliente_nombre').text(e.cliente_nombre || 'Venta Mostrador');
-            $('#v_direccion_entrega').val(e.cliente_direccion_fiscal || '');
-            
-            if(window.formatQty) {
-                $('#info_cantidad_modal').html(window.formatQty(e.cantidad, e.factor_conversion, e.unidad_reporte));
-            }
-
-            // Llenar Unidades
-            const selectU = $('#v_vehiculo_id').empty().append('<option value="">Seleccione camión...</option>');
-            resRecursos.unidades.forEach(u => selectU.append(`<option value="${u.id}">${u.nombre} [${u.placas}]</option>`));
-
-            // Llenar Choferes
-            const selectC = $('#v_chofer_id').empty().append('<option value="">Seleccione chofer...</option>');
-            const selectT = $('#v_tripulantes').empty();
-            resRecursos.choferes.forEach(c => {
-                selectC.append(`<option value="${c.id}">${c.nombre}</option>`);
-                selectT.append(`<option value="${c.id}">${c.nombre}</option>`);
-            });
-
-            if(typeof Swal !== 'undefined') Swal.close();
-            $('#modalVehiculo').modal('show');
-        } else {
-            Swal.fire('Error', 'No se pudieron obtener todos los recursos.', 'error');
-        }
-    } catch (error) {
-        console.error("Error en el modal:", error);
-        Swal.fire('Error', 'Error de comunicación con el servidor.', 'error');
-    }
-};
-    /**
-     * FUNCIÓN C: Guardar el reparto
+     * FUNCIÓN C: Guardar el despacho
      */
     $('#formReparto').on('submit', async function(e) {
         e.preventDefault();
         const btn = $('#btnGuardarReparto');
-        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Procesando...');
+        const originalHtml = btn.html();
+        
+        btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Enviando...');
 
         try {
             const formData = new FormData(this);
-            formData.append('action', 'guardar_reparto');
+            // IMPORTANTE: Enviar 'ajax' para que el controlador lo detecte
+            formData.append('ajax', 'guardar_reparto');
 
-            const resp = await fetch(URL_CONTROLLER, { method: 'POST', body: formData });
+            const resp = await fetch(URL_ENTREGAS, { method: 'POST', body: formData });
             const res = await resp.json();
 
             if (res.success) {
                 $('#modalVehiculo').modal('hide');
-                Swal.fire('¡Éxito!', res.message, 'success');
+                Swal.fire({ icon: 'success', title: 'Salida Autorizada', text: res.message, timer: 2000 });
+                // Refresca la tabla principal si la función existe
+                if (window.renderTable) window.renderTable();
                 if (window.cargarPendientes) window.cargarPendientes();
             } else {
-                Swal.fire('Error', res.message, 'error');
+                Swal.fire('Atención', res.message, 'warning');
             }
         } catch (error) {
-            Swal.fire('Error', 'Ocurrió un error al guardar.', 'error');
+            Swal.fire('Error', 'Fallo crítico al procesar el despacho.', 'error');
         } finally {
-            btn.prop('disabled', false).html('<i class="bi bi-send-check me-2"></i>Confirmar Salida');
+            btn.prop('disabled', false).html(originalHtml);
         }
     });
 });

@@ -425,10 +425,11 @@ public function getDetalleParaDespacho($movimiento_id) {
                 m.cantidad,
                 p.nombre AS producto_nombre,
                 p.unidad_reporte,
+                p.unidad_medida,       -- <--- Agregado: Vital para el desglose en JS
                 p.factor_conversion,
                 v.folio AS folio_venta,
                 c.nombre_comercial AS cliente_nombre,
-                c.direccion AS cliente_direccion_fiscal, -- Esta es la que usaremos
+                c.direccion AS cliente_direccion_fiscal,
                 c.telefono AS cliente_telefono
             FROM movimientos m
             INNER JOIN productos p ON m.producto_id = p.id
@@ -438,8 +439,21 @@ public function getDetalleParaDespacho($movimiento_id) {
             LIMIT 1";
             
     $stmt = $this->db->prepare($sql);
+    
+    if (!$stmt) {
+        return null;
+    }
+
     $stmt->bind_param("i", $movimiento_id);
     $stmt->execute();
-    return $stmt->get_result()->fetch_assoc();
+    $resultado = $stmt->get_result()->fetch_assoc();
+
+    // Pequeña validación de seguridad para el factor
+    if ($resultado) {
+        $resultado['factor_conversion'] = floatval($resultado['factor_conversion'] ?? 1);
+        $resultado['cantidad'] = floatval($resultado['cantidad'] ?? 0);
+    }
+
+    return $resultado;
 }
 }
