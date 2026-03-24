@@ -119,22 +119,30 @@ public function listarProductos() {
     if (!$res) return [];
     return $res->fetch_all(MYSQLI_ASSOC);
 }
-    public function registrarGasto($cabecera, $descripciones, $cantidades, $precios) {
+public function registrarGasto($cabecera, $descripciones, $cantidades, $precios) {
     // 1. Iniciar transacción
     $this->db->begin_transaction();
     
     try {
-        // 2. Insertar Cabecera
-        $sql = "INSERT INTO gastos (folio, fecha_gasto, almacen_id, usuario_registra_id, beneficiario, metodo_pago, total, documento_url, observaciones, estado) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pagado')";
+        // 2. Insertar Cabecera ✅ CON CATEGORÍA
+        $sql = "INSERT INTO gastos (folio, fecha_gasto, almacen_id, categoria_id, usuario_registra_id, beneficiario, metodo_pago, total, documento_url, observaciones, estado) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pagado')";
         
         $stmt = $this->db->prepare($sql);
         if (!$stmt) throw new Exception("Error en Prepare Cabecera: " . $this->db->error);
 
-        $stmt->bind_param("ssiissdss", 
-            $cabecera['folio'], $cabecera['fecha'], $cabecera['almacen_id'], 
-            $cabecera['usuario_id'], $cabecera['beneficiario'], $cabecera['metodo_pago'], 
-            $cabecera['total'], $cabecera['documento_url'], $cabecera['observaciones']
+        // ✅ AGREGAR categoria_id
+        $stmt->bind_param("ssiiisddss", 
+            $cabecera['folio'], 
+            $cabecera['fecha'], 
+            $cabecera['almacen_id'],
+            $cabecera['categoria_id'],  // ✅ NUEVO
+            $cabecera['usuario_id'], 
+            $cabecera['beneficiario'], 
+            $cabecera['metodo_pago'], 
+            $cabecera['total'], 
+            $cabecera['documento_url'], 
+            $cabecera['observaciones']
         );
         
         if (!$stmt->execute()) {
@@ -149,7 +157,7 @@ public function listarProductos() {
         if (!$stmtD) throw new Exception("Error en Prepare Detalle: " . $this->db->error);
 
         foreach ($descripciones as $i => $desc) {
-            if (empty($desc)) continue; // Evitar filas vacías
+            if (empty($desc)) continue;
             
             $cant = floatval($cantidades[$i]);
             $prec = floatval($precios[$i]);
@@ -161,20 +169,19 @@ public function listarProductos() {
             }
         }
 
-        // 4. EL PASO FINAL: Si llegamos aquí, guardamos de verdad
+        // 4. Commit
         if ($this->db->commit()) {
-            return true;
+            return ['success' => true, 'id' => $gasto_id];
         } else {
-            throw new Exception("Error al hacer Commit en la base de datos.");
+            throw new Exception("Error al hacer Commit.");
         }
 
     } catch (Exception $e) {
         $this->db->rollback();
-        // ESTO ES VITAL: Mandamos el error de vuelta al controlador
-        throw $e; 
+        throw $e;
     }
 }
-    /**
+ /**
      * 3. REGISTRA UNA COMPRA (AFECTA INVENTARIO)
      * Según tu tabla 'compras' y 'detalle_compra'
      */
@@ -280,25 +287,30 @@ public function obtenerDetalleCompleto($tipo, $id) {
         $response['items'] = $stmtDet->get_result()->fetch_all(MYSQLI_ASSOC);
 
     } else {
-        // CABECERA GASTOS
-        $sql = "SELECT g.*, a.nombre as almacen_nombre, u.nombre as usuario_nombre 
-                FROM gastos g 
-                JOIN almacenes a ON g.almacen_id = a.id 
-                JOIN usuarios u ON g.usuario_registra_id = u.id 
-                WHERE g.id = ?";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("i", $id);
-        $stmt->execute();
-        $response['cabecera'] = $stmt->get_result()->fetch_assoc();
+       // --- MEJORA EN CABECERA GASTOS ---
+        // Agregamos JOIN a la tabla de categorías para obtener el nombre
+       $sql = "SELECT g.*, a.nombre as almacen_nombre, u.nombre as usuario_nombre, 
+               gc.nombre as categoria_nombre 
+        FROM gastos g 
+        JOIN almacenes a ON g.almacen_id = a.id 
+        JOIN usuarios u ON g.usuario_registra_id = u.id 
+        LEFT JOIN gastos_categorias gc ON g.categoria_id = gc.id 
+        WHERE g.id = ?";
 
-        // DETALLE GASTOS (Simple descripción)
-        $sqlDet = "SELECT * FROM detalle_gasto WHERE gasto_id = ?";
-        $stmtDet = $this->db->prepare($sqlDet);
-        $stmtDet->bind_param("i", $id);
-        $stmtDet->execute();
-        $response['items'] = $stmtDet->get_result()->fetch_all(MYSQLI_ASSOC);
+$stmt = $this->db->prepare($sql);
+if (!$stmt) throw new Exception("Error en SQL Gastos: " . $this->db->error);
+
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$response['cabecera'] = $stmt->get_result()->fetch_assoc();
+
+// DETALLE GASTOS
+$sqlDet = "SELECT * FROM detalle_gasto WHERE gasto_id = ?";
+$stmtDet = $this->db->prepare($sqlDet);
+$stmtDet->bind_param("i", $id);
+$stmtDet->execute();
+$response['items'] = $stmtDet->get_result()->fetch_all(MYSQLI_ASSOC);
     }
-
     return $response;
 }
     

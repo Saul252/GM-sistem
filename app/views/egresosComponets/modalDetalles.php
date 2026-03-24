@@ -71,9 +71,10 @@
 </style>
 
 <script>
-function verDetalle(tipo, id) {
+    function verDetalle(tipo, id) {
     $.get(`/cfsistem/app/controllers/egresosController.php?action=obtenerDetalleMovimiento&tipo=${tipo}&id=${id}`, function(data) {
         if (!data.success) return Swal.fire('Error', data.message, 'error');
+
 
         const c = data.cabecera;
         const esCompra = (tipo === 'compra');
@@ -104,14 +105,8 @@ function verDetalle(tipo, id) {
                                 <i class="bi bi-arrow-right text-success"></i> ${mov} ${item.unidad_medida}
                             </div>`;
                     });
-                } else {
-                    detalleMovimientos = '<div class="small text-muted italic mt-1">Sin entradas físicas registradas</div>';
                 }
             }
-
-            const qComprada = parseFloat(item.cantidad_pedida || item.cantidad || 0);
-            const qRecibida = parseFloat(item.cantidad_recibida || 0);
-            const qPendiente = parseFloat(item.cantidad_faltante || 0);
 
             filasHtml += `
                 <tr class="align-top">
@@ -122,17 +117,27 @@ function verDetalle(tipo, id) {
                         ${esCompra ? detalleMovimientos : ''}
                     </td>
                     <td class="text-center bg-light">
-                        <span class="d-block fw-bold">${qComprada}</span>
-                        <small class="text-muted">${esCompra ? item.unidad_medida : 'UND'}</small>
+                        <span class="d-block fw-bold">${parseFloat(item.cantidad_pedida || item.cantidad || 0)}</span>
+                        <small class="text-muted">${esCompra ? item.unidad_medida : 'unidades'}</small>
                     </td>
                     ${esCompra ? `
-                        <td class="text-center text-success fw-bold bg-light">${qRecibida}</td>
-                        <td class="text-center ${qPendiente > 0 ? 'text-danger fw-bold' : 'text-muted'} bg-light">${qPendiente}</td>
+                        <td class="text-center text-success fw-bold bg-light">${parseFloat(item.cantidad_recibida || 0)}</td>
+                        <td class="text-center bg-light">${parseFloat(item.cantidad_faltante || 0)}</td>
                     ` : ''}
                     <td class="text-end">$${parseFloat(item.precio_unitario).toFixed(2)}</td>
                     <td class="text-end fw-bold">$${parseFloat(item.subtotal).toFixed(2)}</td>
                 </tr>`;
         });
+console.log(c.categoria_nombre );
+        // --- LÓGICA DE LA CATEGORÍA (SOLO PARA GASTOS) ---
+        let htmlCategoria = '';
+        if (!esCompra && c.categoria_nombre) {
+            htmlCategoria = `
+                <div class="mt-2 pt-2 border-top">
+                    <small class="text-muted d-block" style="font-size: 0.65rem;">CATEGORÍA DEL GASTO</small>
+                    <span class="fw-bold text-primary"><i class="bi bi-tag-fill me-1"></i> ${c.categoria_nombre.toUpperCase()}</span>
+                </div>`;
+        }
 
         const docHTML = `
             <div class="p-4 bg-white shadow-sm mx-auto" style="max-width: 950px; color: #333; font-family: 'Segoe UI', sans-serif;">
@@ -144,7 +149,7 @@ function verDetalle(tipo, id) {
                     <div class="col-5 text-end">
                         <div class="h4 fw-bold text-dark mb-0">${tipo.toUpperCase()}</div>
                         <div class="badge bg-dark fs-6">FOLIO: ${c.folio}</div>
-                        <div class="small text-muted mt-1">Fecha Emisión: ${c.fecha_registro}</div>
+                        <div class="small text-muted mt-1">Fecha: ${c.fecha_registro || c.fecha_gasto}</div>
                     </div>
                 </div>
 
@@ -154,15 +159,16 @@ function verDetalle(tipo, id) {
                             <small class="text-muted fw-bold text-uppercase d-block mb-2 border-bottom">Control Interno</small>
                             <div><strong>Almacén:</strong> ${c.almacen_nombre || 'N/A'}</div>
                             <div><strong>Usuario:</strong> ${c.usuario_nombre}</div>
-                            <div><strong>Estado:</strong> <span class="badge ${c.estado === 'confirmada' || c.estado === 'pagado' ? 'bg-success' : 'bg-warning'}">${c.estado.toUpperCase()}</span></div>
+                            ${htmlCategoria} <div class="mt-2"><strong>Estado:</strong> <span class="badge ${c.estado === 'confirmada' || c.estado === 'pagado' ? 'bg-success' : 'bg-warning'}">${c.estado.toUpperCase()}</span></div>
                         </div>
                     </div>
                     <div class="col-6 text-end">
                         <div class="p-3 border rounded-3 bg-light h-100">
                             <small class="text-muted fw-bold text-uppercase d-block mb-2 border-bottom">${esCompra ? 'Proveedor' : 'Beneficiario'}</small>
                             <div class="h6 mb-1 fw-bold text-primary">${c.proveedor || c.beneficiario}</div>
-                            <small class="d-block">Método: ${c.metodo_pago || 'No especificado'}</small>
-                            <small class="d-block text-truncate">Ref: ${c.documento_url ? 'Comprobante adjunto' : 'Sin documento'}</small>
+                            
+                            <small class="d-block text-muted">Método: ${c.metodo_pago || 'N/A'}</small>
+                            ${c.documento_url ? `<a href="${c.documento_url}" target="_blank" class="btn btn-link btn-sm p-0 text-decoration-none"><i class="bi bi-file-earmark-pdf"></i> Ver Comprobante</a>` : '<small class="text-muted">Sin adjunto</small>'}
                         </div>
                     </div>
                 </div>
@@ -174,7 +180,7 @@ function verDetalle(tipo, id) {
                                 <th style="width: 10%">SKU</th>
                                 <th style="width: ${esCompra ? '40%' : '55%'}">Descripción</th>
                                 <th class="text-center">Cant.</th>
-                                ${esCompra ? '<th class="text-center">Recibido</th><th class="text-center">Pendiente</th>' : ''}
+                                ${esCompra ? '<th class="text-center">Recibido</th><th class="text-center">Pend.</th>' : ''}
                                 <th class="text-end">P. Unit</th>
                                 <th class="text-end">Total</th>
                             </tr>
@@ -184,7 +190,7 @@ function verDetalle(tipo, id) {
                         </tbody>
                         <tfoot>
                             <tr class="table-secondary">
-                                <td colspan="${esCompra ? 5 : 3}" class="text-end fw-bold text-uppercase">Total Neto:</td>
+                                <td colspan="${esCompra ? 5 : 4}" class="text-end fw-bold text-uppercase">Total Neto:</td>
                                 <td class="text-end fw-bold h5 text-primary mb-0">$${parseFloat(c.total).toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
                             </tr>
                         </tfoot>
@@ -195,14 +201,12 @@ function verDetalle(tipo, id) {
 
                 <div class="row mt-5 pt-4 text-center">
                     <div class="col-4"><div style="border-top: 2px solid #333; margin: 0 15px;" class="pt-2 small fw-bold">SOLICITADO POR</div></div>
-                    <div class="col-4"><div style="border-top: 2px solid #333; margin: 0 15px;" class="pt-2 small fw-bold">VO. BO. ALMACÉN</div></div>
+                    <div class="col-4"><div style="border-top: 2px solid #333; margin: 0 15px;" class="pt-2 small fw-bold">ALMACÉN / RECIBO</div></div>
                     <div class="col-4"><div style="border-top: 2px solid #333; margin: 0 15px;" class="pt-2 small fw-bold">AUTORIZACIÓN</div></div>
                 </div>
             </div>`;
 
         $('#ticketContenido').html(docHTML);
-        
-        // Uso de instancia oficial de Bootstrap para evitar conflictos de backdrop
         const modalEl = document.getElementById('modalVerDetalle');
         const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
         modalInstance.show();

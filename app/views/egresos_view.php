@@ -347,112 +347,7 @@ if (isset($e['piezas_faltantes']) && $e['piezas_faltantes'] !== null): ?>
             </div>
         </div>
     </main>
-    <div class="modal fade" id="modalGasto" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <form id="formNuevoGasto" enctype="multipart/form-data">
-                <div class="modal-content">
-                    <div class="modal-header bg-warning text-dark">
-                        <h5 class="modal-title fw-bold"><i class="bi bi-cash-stack me-2"></i> Registrar Nuevo Gasto</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-4">
-                                <label class="form-label small fw-bold">Folio/Factura</label>
-                                <input type="text" id="folio_gasto" name="folio" class="form-control"
-                                    placeholder="Cargando..." readonly required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold">Almacén Destino</label>
-                                <select name="almacen_id" class="form-select bg-light"
-                                    <?= ($_SESSION['rol_id'] != 1) ? 'readonly style="pointer-events: none;"' : '' ?>
-                                    required>
-                                    <?php foreach($almacenes as $alm): ?>
-                                    <option value="<?= $alm['id'] ?>"
-                                        <?= ($_SESSION['almacen_id'] == $alm['id']) ? 'selected' : '' ?>>
-                                        <?= $alm['nombre'] ?>
-                                    </option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <?php if($_SESSION['rol_id'] != 1): ?>
-                                <div class="form-text text-muted">Asignado automáticamente a tu almacén.</div>
-                                <?php endif; ?>
-                            </div>
-                            <div class="col-md-8">
-                                <label class="form-label small fw-bold">Beneficiario (Quién recibe)</label>
-                                <input type="text" name="beneficiario" class="form-control"
-                                    placeholder="Ej: CFE, Gasolinera, Juan Pérez" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold">Método de Pago</label>
-                                <select name="metodo_pago" class="form-select">
-                                    <option value="Efectivo">Efectivo</option>
-                                    <option value="Transferencia">Transferencia</option>
-                                    <option value="Tarjeta">Tarjeta</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold">Comprobante (Evidencia)</label>
-                                <input type="file" name="documento" class="form-control" accept=".jpg,.png,.pdf">
-                            </div>
-                        </div>
-
-                        <hr>
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h6 class="fw-bold mb-0">Conceptos del Gasto</h6>
-                            <button type="button" class="btn btn-sm btn-outline-dark" onclick="agregarFilaGasto()">
-                                <i class="bi bi-plus-circle"></i> Agregar Concepto
-                            </button>
-                        </div>
-
-                        <div class="table-responsive">
-                            <table class="table table-sm" id="tablaConceptosGasto">
-                                <thead>
-                                    <tr>
-                                        <th>Descripción</th>
-                                        <th width="120">Cant.</th>
-                                        <th width="150">Precio Unit.</th>
-                                        <th width="120">Subtotal</th>
-                                        <th width="40"></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td><input type="text" name="desc[]" class="form-control form-control-sm"
-                                                required></td>
-                                        <td><input type="number" name="cant[]" class="form-control form-control-sm cant"
-                                                value="1" step="any" oninput="calcularGasto()"></td>
-                                        <td><input type="number" name="precio[]"
-                                                class="form-control form-control-sm precio" value="0.00" step="any"
-                                                oninput="calcularGasto()"></td>
-                                        <td class="text-end fw-bold subtotal_fila">$0.00</td>
-                                        <td></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-8">
-                                <label class="form-label small fw-bold">Observaciones</label>
-                                <textarea name="observaciones" class="form-control" rows="2"></textarea>
-                            </div>
-                            <div class="col-md-4 text-end">
-                                <h4 class="text-muted mb-0">TOTAL</h4>
-                                <h2 class="fw-bold text-dark" id="txtTotalGasto">$ 0.00</h2>
-                                <input type="hidden" name="total_final" id="inputTotalGasto" value="0">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-warning fw-bold">Guardar Gasto</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
-
+  
 
 
 
@@ -468,6 +363,7 @@ require_once $ruta;
    <?php require_once __DIR__ . '/egresosComponets/modalCompra.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/modalAjuste.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/modalDetalles.php'; ?>
+        <?php require_once __DIR__ . '/egresosComponets//modalGasto.php'; ?>
 
 
 
@@ -488,8 +384,7 @@ require_once $ruta;
     // Imprime esto en la consola para que verifiques si hay datos
     console.log("Productos cargados:", window.DATA_COMPRAS.productos);
     </script>
-    <script src="/cfsistem/app/backend/compras_js/modalGastoslogica.js"></script>
-
+   
     <script>
     (function() {
         document.addEventListener('DOMContentLoaded', function() {
@@ -574,45 +469,7 @@ require_once $ruta;
     })();
     </script>
 
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Escuchamos la apertura del modal usando JS Nativo (Vanilla JS)
-        document.addEventListener('show.bs.modal', function(event) {
-            // Obtenemos el ID del modal que se está abriendo
-            const modalId = event.target.id;
-
-            // AHORA COINCIDE: modalGasto
-            if (modalId === 'modalGasto') {
-                console.log("Modal de Gasto detectado. Solicitando folio...");
-
-                const inputFolio = document.getElementById('folio_gasto');
-                if (!inputFolio) return;
-
-                // Petición al controlador
-                fetch('egresosController.php?action=getSiguienteFolioGasto')
-                    .then(res => {
-                        // Si el servidor falla (404, 500), lo veremos aquí
-                        if (!res.ok) throw new Error("Código de error servidor: " + res.status);
-                        return res.json();
-                    })
-                    .then(data => {
-                        console.log("Respuesta del servidor para el folio:",
-                        data); // Mira esto en la consola
-                        if (data.success) {
-                            document.getElementById('folio_gasto').value = data.folio;
-                        } else {
-                            console.error("El modelo falló:", data.message);
-                        }
-                    })
-                    .catch(err => {
-                        console.error(
-                            "Error al procesar el JSON. Es posible que el PHP esté enviando errores de texto antes del JSON.",
-                            err);
-                    });
-            }
-        });
-    });
-    </script>
+   
  <script>
 function confirmarCancelacionCompra(id, folio) {
     Swal.fire({
