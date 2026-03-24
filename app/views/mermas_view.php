@@ -90,7 +90,7 @@
     <?php if (function_exists('renderizarLayout')) renderizarLayout('Mermas'); ?>
 
     <div class="main-content">
-        <div class="container-fluid" style="max-width: 1000px;">
+       
             
             <?php if (isset($_GET['msg'])): ?>
                 <div class="alert alert-success border-0 shadow-sm rounded-4 mb-4">
@@ -165,7 +165,7 @@
                     </form>
                 </div>
             </div>
-        </div>
+      
         <div class="card card-apple">
   <div class="table-responsive p-0" id="contenedor-tabla">
     <table class="table table-hover align-middle mb-0" style="font-size: 0.95rem;">
