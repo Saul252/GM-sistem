@@ -868,86 +868,73 @@ public function getDetalleMovimientoNormal($movimiento_id) {
 }
 
 /**
- * Detalle completo de una ruta/viaje agrupado por cliente.
- * Trae: vehículo, chofer, ayudantes, y por cada cliente:
- * su dirección de entrega y todos los productos que recibió.
+ * Obtiene el listado completo de viajes con detalle de rutas, 
+ * productos, conductores y ayudantes.
+ * * @param PDO $db Conexión a la base de datos sistema_almacenes
+ * @return array Lista de movimientos logísticos
  */
-public function getDetalleRutaCompleta($movimiento_id) {
-    // 1. Buscamos el folio del viaje al que pertenece este movimiento
-    $sqlFolio = "SELECT tc.viaje_folio 
-                 FROM transporte_consolidacion tc
-                 INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
-                 WHERE trm.entrega_venta_id = ? 
-                 LIMIT 1";
-    
-    $stmtF = $this->db->prepare($sqlFolio);
-    $stmtF->bind_param("i", $movimiento_id);
-    $stmtF->execute();
-    $resFolio = $stmtF->get_result()->fetch_assoc();
+/**
+ * Obtiene el reporte de viajes. 
+ * Si se envía un folio, filtra por ese específico; si no, trae todos.
+ */
+/**
+ * Obtiene el reporte detallado de un viaje por su folio o el listado general.
+ * Adaptado para el sistema cfsistem.
+ * * @param string|null $folio_folio El folio del viaje (ej: RUT-260324-02-25)
+ * @return array Arreglo asociativo con los datos para el modal
+ */
+public function obtenerViajesLogistica($folio_folio = null) {
+    try {
+        $sql = "SELECT 
+                    tc.viaje_folio AS folio_viaje,
+                    tc.fecha_creacion AS fecha_viaje,
+                    trm.estado_reparto AS estatus_logistico,
+                    tv.nombre AS unidad_nombre,
+                    tv.placas AS unidad_placas,
+                    u_chofer.nombre AS nombre_chofer,
+                    (SELECT GROUP_CONCAT(u_ayu.nombre SEPARATOR ' / ') 
+                     FROM transporte_tripulantes_detalle ttd
+                     INNER JOIN usuarios u_ayu ON ttd.usuario_id = u_ayu.id
+                     WHERE ttd.reparto_id = tc.reparto_id) AS ayudantes,
+                    trp.orden_visita,
+                    trp.descripcion_punto AS direccion_entrega,
+                    trp.estado_punto AS estatus_parada,
+                    trp.latitud, 
+                    trp.longitud,
+                    v.folio AS folio_venta,
+                    c.nombre_comercial AS cliente,
+                    c.telefono AS tel_cliente,
+                    p.nombre AS producto_nombre,
+                    m.cantidad,
+                    p.unidad_medida AS um,
+                    p.sku AS SKU
+                FROM transporte_consolidacion tc
+                INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
+                INNER JOIN transporte_vehiculos tv ON tc.vehiculo_id = tv.id
+                INNER JOIN transporte_rutas_puntos trp ON trm.id = trp.reparto_id 
+                INNER JOIN movimientos m ON trm.entrega_venta_id = m.id
+                INNER JOIN productos p ON m.producto_id = p.id
+                LEFT JOIN ventas v ON m.referencia_id = v.id
+                LEFT JOIN clientes c ON v.id_cliente = c.id
+                LEFT JOIN usuarios u_chofer ON trm.usuario_encargado_id = u_chofer.id";
 
-    // Si no tiene viaje (es salida directa de patio), usamos la otra lógica
-    if (!$resFolio) {
-        return $this->getDetalleMovimientoNormal($movimiento_id);
+        if (!empty($folio_folio)) {
+            $sql .= " WHERE tc.viaje_folio = ?";
+        }
+
+        $sql .= " ORDER BY tc.fecha_creacion DESC, tc.viaje_folio ASC, trp.orden_visita ASC";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!empty($folio_folio)) {
+            $stmt->bind_param("s", $folio_folio);
+        }
+
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    } catch (Exception $e) {
+        throw new Exception("Error en la base de datos: " . $e->getMessage());
     }
-
-    $viaje_folio = $resFolio['viaje_folio'];
-
-    // 2. Traemos la información general del viaje (Camión, Chofer, Ayudantes)
-    $sqlHeader = "SELECT 
-                    tc.viaje_folio,
-                    tv.nombre as vehiculo,
-                    tv.placas,
-                    t_chofer.nombre as chofer_nombre,
-                    u_autoriza.nombre as autorizado_por
-                  FROM transporte_consolidacion tc
-                  INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
-                  INNER JOIN transporte_vehiculos tv ON tc.vehiculo_id = tv.id
-                  LEFT JOIN trabajadores t_chofer ON trm.usuario_encargado_id = t_chofer.id
-                  LEFT JOIN movimientos m ON trm.entrega_venta_id = m.id
-                  LEFT JOIN usuarios u_autoriza ON m.usuario_registra_id = u_autoriza.id
-                  WHERE tc.viaje_folio = ? 
-                  LIMIT 1";
-
-    $stmtH = $this->db->prepare($sqlHeader);
-    $stmtH->bind_param("s", $viaje_folio);
-    $stmtH->execute();
-    $data = $stmtH->get_result()->fetch_assoc();
-
-    // 3. Traemos a TODOS los clientes y productos de este viaje (El desglose que pediste)
-    $sqlDetalles = "SELECT 
-                        v.folio as folio_venta,
-                        c.nombre_comercial as cliente,
-                        p.nombre as producto,
-                        m.cantidad,
-                        p.unidad_medida,
-                        trp.descripcion_punto as direccion_entrega,
-                        trp.orden_visita
-                    FROM transporte_consolidacion tc
-                    INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
-                    INNER JOIN movimientos m ON trm.entrega_venta_id = m.id
-                    INNER JOIN productos p ON m.producto_id = p.id
-                    LEFT JOIN ventas v ON m.referencia_id = v.id
-                    LEFT JOIN clientes c ON v.id_cliente = c.id
-                    LEFT JOIN transporte_rutas_puntos trp ON trm.id = trp.reparto_id
-                    WHERE tc.viaje_folio = ?
-                    ORDER BY trp.orden_visita ASC";
-
-    $stmtD = $this->db->prepare($sqlDetalles);
-    $stmtD->bind_param("s", $viaje_folio);
-    $stmtD->execute();
-    $data['entregas'] = $stmtD->get_result()->fetch_all(MYSQLI_ASSOC);
-
-    // 4. Tripulantes (Ayudantes)
-    $sqlT = "SELECT DISTINCT t.nombre 
-             FROM transporte_tripulantes_detalle ttd
-             INNER JOIN trabajadores t ON ttd.usuario_id = t.id
-             INNER JOIN transporte_consolidacion tc ON ttd.reparto_id = tc.reparto_id
-             WHERE tc.viaje_folio = ?";
-    $stmtT = $this->db->prepare($sqlT);
-    $stmtT->bind_param("s", $viaje_folio);
-    $stmtT->execute();
-    $data['tripulantes'] = $stmtT->get_result()->fetch_all(MYSQLI_ASSOC);
-
-    return $data;
 }
 }

@@ -109,7 +109,7 @@ if ($action === 'get_detalle_trazabilidad') {
             // devuelve: viaje_folio, vehiculo, placas, chofer, usuario_asigno_sistema,
             //           lista_productos[] (producto, cantidad, cliente_destino, ticket),
             //           tripulantes[] (nombre)
-            $data = $repartoM->getDetalleRutaCompleta($id);
+            $data = $repartoM->obtenerViajesLogistica($id);
 
         } else {
             // getDetalleMovimientoNormal recibe movimiento_id
@@ -135,6 +135,46 @@ if ($action === 'get_detalle_trazabilidad') {
         echo json_encode([
             "success" => false,
             "message" => "Error interno: " . $e->getMessage()
+        ]);
+    }
+    exit;
+}
+/**
+         * -----------------------------------------------------------
+         * BLOQUE: DETALLE PARA HOJA DE RUTA (NUEVO MODAL AZUL)
+         * -----------------------------------------------------------
+         */
+        if ($action === 'get_detalle_ruta_completa') {
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+
+    // Cambiamos a string porque el folio de viaje (RUT-XXXX) no es un entero
+    $folio_viaje = trim($_REQUEST['id'] ?? '');
+
+    if (empty($folio_viaje)) {
+        echo json_encode(["success" => false, "message" => "Folio de viaje no válido."]);
+        exit;
+    }
+
+    try {
+        // El modelo busca por el string del folio
+        $data = $repartoM->obtenerViajesLogistica($folio_viaje);
+
+        if (!empty($data)) {
+            echo json_encode([
+                "success" => true,
+                "data"    => $data
+            ]);
+        } else {
+            echo json_encode([
+                "success" => false,
+                "message" => "No se encontraron entregas para el folio: " . $folio_viaje
+            ]);
+        }
+    } catch (Exception $e) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Error en el servidor: " . $e->getMessage()
         ]);
     }
     exit;

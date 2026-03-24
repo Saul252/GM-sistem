@@ -104,6 +104,7 @@
     </div>
 </div>
 <?php require_once __DIR__ . '/detalleMonitor.php' ?>
+<?php require_once __DIR__ . '/detalleRuta.php' ?>
 
 <script>
 let offsetActual = 0;
@@ -134,17 +135,16 @@ function cargarMonitor() {
         }
     });
 }
-
 function renderizarFilas(data, append) {
     let html = '';
     const tbody = $('#tbodyMonitor');
 
     data.forEach(row => {
-        // --- LÓGICA DE BANDERA E ID INTELIGENTE ---
+        // --- 1. LÓGICA DE IDENTIFICACIÓN ---
         const tipo = row.tipo_salida; // 'RUTA' o 'MOSTRADOR'
         const idParaModal = (tipo === 'RUTA') ? (row.reparto_id || 0) : (row.movimiento_id || 0);
 
-        // --- PREPARACIÓN DE VARIABLES ---
+        // --- 2. PREPARACIÓN DE VARIABLES (UI) ---
         const numRuta = (row.numero_ruta && row.numero_ruta != '0') ? row.numero_ruta : row.reparto_id;
         const rawCliente = (row.cliente_display || '').toLowerCase().trim();
         const esRutaEspecial = (rawCliente === '' || rawCliente === 'null' || rawCliente.includes('varios clientes'));
@@ -161,7 +161,30 @@ function renderizarFilas(data, append) {
             ? '<i class="bi bi-truck text-primary fs-5"></i>' 
             : '<i class="bi bi-shop text-success fs-5"></i>';
 
-        // --- CONSTRUCCIÓN DE LA FILA ---
+        // --- 3. SELECCIÓN DE BOTÓN Y FUNCIÓN DESTINO ---
+        let botonAccion = '';
+        
+        if (tipo === 'RUTA') {
+            // Botón Azul para Rutas -> Llama a abrirModalRuta
+            botonAccion = `
+                <button type="button" 
+        class="btn shadow-sm btn-sm rounded-circle border-0" 
+        style="background: #e7f1ff; width: 32px; height: 32px;"
+        onclick="verDetalleViaje('${row.numero_ruta}')"> 
+    <i class="bi bi-geo-alt-fill text-primary"></i>
+</button>`;
+        } else {
+            // Botón Gris estándar para Movimientos -> Llama a verDetalleEntrega (la que ya tienes)
+            botonAccion = `
+                <button type="button" 
+                        class="btn shadow-sm btn-sm rounded-circle border-0" 
+                        style="background: #f0f0f5; width: 32px; height: 32px;"
+                        onclick="verDetalleEntrega('${tipo}', ${idParaModal})">
+                    <i class="bi bi-chevron-right text-primary"></i>
+                </button>`;
+        }
+
+        // --- 4. CONSTRUCCIÓN DE LA FILA ---
         html += `
             <tr class="align-middle">
                 <td class="text-center">${iconModo}</td>
@@ -192,12 +215,7 @@ function renderizarFilas(data, append) {
                     <small class="d-block text-muted" style="font-size: 0.6rem;">${row.fecha_evento ? row.fecha_evento.split(' ')[1] : ''}</small>
                 </td>
                 <td class="text-center">
-                   <button type="button" 
-                           class="btn shadow-sm btn-sm rounded-circle border-0" 
-                           style="background: #f0f0f5; width: 32px; height: 32px;"
-                           onclick="verDetalleEntrega('${tipo}', ${idParaModal})">
-                        <i class="bi bi-chevron-right text-primary"></i>
-                    </button>
+                   ${botonAccion}
                 </td>
             </tr>`;
     });
@@ -205,7 +223,6 @@ function renderizarFilas(data, append) {
     append ? tbody.append(html) : tbody.html(html);
     (data.length < limiteCarga) ? $('#btnCargarMas').hide() : $('#btnCargarMas').show();
 }
-
 function cargarMas() {
     offsetActual += limiteCarga;
     const idAlmacen = $('#filtro_almacen_monitor').val();
