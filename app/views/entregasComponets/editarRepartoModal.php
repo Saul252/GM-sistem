@@ -57,35 +57,26 @@
 
 
 window.abrirModalEdicionViaje = async function(folio, vehiculoId) {
-    // 1. Limpieza inicial y asignación de Folio
     $('#edit_viaje_folio').val(folio);
-    
-    // --- ESTA ES LA LÍNEA QUE FALTABA ---
-    // Si pasas el vehiculoId por parámetro, lo usamos; si no, lo tomaremos de info.vehiculo_id abajo
     if(vehiculoId) $('#edit_vehiculo_id').val(vehiculoId);
-    
     $('#editFolioTitle').text('Ruta ' + folio);
     
     try {
-        // A. Traer detalles del viaje
         const respViaje = await fetch(`/cfsistem/app/controllers/repartosController.php?action=get_detalles_viaje&folio=${folio}`);
         const viaje = await respViaje.json();
         
         if (!viaje.success) throw new Error(viaje.message);
         const info = viaje.data;
         
-        // RESPALDO: Si no venía por parámetro, lo sacamos de la base de datos
         if(!$('#edit_vehiculo_id').val()) {
             $('#edit_vehiculo_id').val(info.vehiculo_id);
         }
 
-        // Mostrar la unidad en el subtítulo (Estética iOS)
         $('#editUnidadSubtitle').html(`
             <i class="fas fa-truck me-1"></i> ${info.unidad_nombre} 
             <span class="badge bg-light text-dark ms-2" style="font-weight: 500;">${info.unidad_placas}</span>
         `);
 
-        // B. Traer recursos (Choferes/Ayudantes) de la sucursal
         const respRecursos = await fetch(`/cfsistem/app/controllers/repartosController.php?action=get_recursos_sucursal&almacen_id=${info.almacen_id}`);
         const recursos = await respRecursos.json();
 
@@ -105,12 +96,20 @@ window.abrirModalEdicionViaje = async function(folio, vehiculoId) {
         });
         $('#edit_tripulantes').html(hTrip);
 
+        // ============================================================
+        // CORRECCIÓN AQUÍ: Ejecutar con un pequeño delay para asegurar renderizado
+        // ============================================================
+        setTimeout(() => {
+            actualizarListaAyudantes($('#edit_chofer_id').val());
+        }, 100);
+        // ============================================================
+
         // 3. Llenar Materiales
         let hMat = '';
         if(info.materiales && info.materiales.length > 0) {
             info.materiales.forEach(m => {
                 hMat += `
-                    <div class="list-group-item border-0 border-bottom p-3 bg-white" id="item_mov_${m.movimiento_id}" style="transition: all 0.2s;">
+                    <div class="list-group-item border-0 border-bottom p-3 bg-white" id="item_mov_${m.movimiento_id}">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div>
                                 <span class="badge bg-light text-primary mb-1" style="font-size: 0.65rem;">SKU: ${m.sku || 'N/A'}</span>
@@ -145,7 +144,6 @@ window.abrirModalEdicionViaje = async function(folio, vehiculoId) {
         Swal.fire('Atención', 'Ocurrió un error al cargar los datos: ' + e.message, 'warning');
     }
 }
-
 
 
 
@@ -218,6 +216,34 @@ async function guardarCambiosViaje() {
     } finally {
         btnGuardar.disabled = false;
         btnGuardar.innerHTML = 'Guardar Cambios';
+    }
+}
+// Listener para cuando cambia el chofer
+$('#edit_chofer_id').on('change', function() {
+    const choferId = $(this).val();
+    actualizarListaAyudantes(choferId);
+});
+
+function actualizarListaAyudantes(choferSeleccionadoId) {
+    const $selectAyudantes = $('#edit_tripulantes');
+    
+    // Recorremos todas las opciones de ayudantes
+    $selectAyudantes.find('option').each(function() {
+        const $opcion = $(this);
+        
+        if ($opcion.val() === choferSeleccionadoId && choferSeleccionadoId !== "") {
+            // Si es el mismo ID que el chofer, deseleccionamos y ocultamos
+            $opcion.prop('selected', false);
+            $opcion.attr('disabled', 'disabled').hide();
+        } else {
+            // Si no, lo habilitamos y mostramos
+            $opcion.removeAttr('disabled').show();
+        }
+    });
+
+    // Si usas Select2, necesitas esta línea para refrescar la vista:
+    if ($selectAyudantes.hasClass('select2-hidden-accessible')) {
+        $selectAyudantes.trigger('change.select2');
     }
 }
 </script>
