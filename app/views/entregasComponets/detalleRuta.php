@@ -1,47 +1,182 @@
 <style>
-    @media print {
-    /* Ocultar todo lo que está fuera del modal */
-    body * {
+@media print {
+    /* Reset completo para impresión */
+    * {
         visibility: hidden;
+        color: #000 !important;
+        background: white !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        backdrop-filter: none !important;
+        text-shadow: none !important;
     }
     
-    /* Mostrar solo el modal y sus hijos */
+    body {
+        -webkit-print-color-adjust: exact;
+        color-adjust: exact;
+        font-size: 12pt;
+        line-height: 1.4;
+        margin: 0;
+        padding: 20px;
+    }
+
+    /* Mostrar SOLO el contenido del modal */
     #modalDetalleViaje, #modalDetalleViaje * {
         visibility: visible;
     }
 
-    /* Posicionar el modal al inicio de la página */
+    /* Posicionar perfectamente */
     #modalDetalleViaje {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-        margin: 0;
-        padding: 0;
-        visibility: visible;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
-    /* Ocultar botones de cerrar e imprimir en la hoja */
-    .modal-footer, .btn-close {
-        display: none !important;
+    .modal-dialog {
+        margin: 0 !important;
+        max-width: none !important;
+        width: 100% !important;
     }
 
-    /* Ajustes estéticos para papel */
     .modal-content {
-        border: none !important;
+        border: 2px solid #333 !important;
         box-shadow: none !important;
         background: white !important;
-        backdrop-filter: none !important;
+        padding: 20px !important;
+        margin: 0 !important;
+        max-height: none !important;
+    }
+
+    /* HEADER - Título principal */
+    .modal-header {
+        border-bottom: 3px solid #1a73e8 !important;
+        background: #f8f9fa !important;
+        padding-bottom: 15px !important;
+        margin: -20px -20px 20px -20px !important;
+        padding: 20px 20px 15px 20px !important;
+    }
+
+    .modal-title {
+        font-size: 22pt !important;
+        font-weight: bold !important;
+        color: #1a73e8 !important;
+        margin: 0 !important;
+    }
+
+    /* INFO CARDS - Más elegantes */
+    .row.g-3 > div[class*="col"] {
+        margin-bottom: 15px !important;
+        padding: 0 !important;
+    }
+
+    .row.g-3 > div[class*="col"] > div {
+        background: #f8f9fa !important;
+        border: 1px solid #dee2e6 !important;
+        border-left: 4px solid #1a73e8 !important;
+        padding: 15px !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .row.g-3 small {
+        font-size: 9pt !important;
+        font-weight: bold !important;
+        color: #495057 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+    }
+
+    .row.g-3 span.fw-bold {
+        font-size: 14pt !important;
+        color: #000 !important;
+    }
+
+    .badge {
+        background: #1a73e8 !important;
+        color: white !important;
+        font-size: 10pt !important;
+        padding: 4px 8px !important;
+    }
+
+    /* TABLA - Súper profesional */
+    .table-responsive {
+        border: 1px solid #dee2e6 !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        background: white !important;
+        box-shadow: none !important;
     }
 
     .table {
-        width: 100% !important;
+        margin: 0 !important;
+        font-size: 11pt !important;
         border-collapse: collapse !important;
     }
 
-    /* Asegurar que el texto sea negro y legible */
+    .table thead th {
+        background: #1a73e8 !important;
+        color: white !important;
+        font-weight: bold !important;
+        font-size: 10pt !important;
+        padding: 12px 8px !important;
+        border: none !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+    }
+
+    .table tbody td {
+        padding: 12px 8px !important;
+        border-bottom: 1px solid #dee2e6 !important;
+        vertical-align: middle !important;
+    }
+
+    .table tbody tr:nth-child(even) {
+        background: #f8f9fa !important;
+    }
+
+    .table tbody tr:hover {
+        background: #e3f2fd !important;
+    }
+
+    /* Estilos específicos de contenido */
     .text-dark, .fw-bold {
         color: #000 !important;
+        font-weight: bold !important;
+    }
+
+    code {
+        background: #e3f2fd !important;
+        color: #1a73e8 !important;
+        padding: 2px 6px !important;
+        border-radius: 3px !important;
+        font-size: 10pt !important;
+    }
+
+    small {
+        font-size: 9pt !important;
+        color: #6c757d !important;
+    }
+
+    /* Ocultar elementos no necesarios */
+    .modal-footer,
+    .btn-close,
+    a[href*="google.com/maps"] {
+        display: none !important;
+    }
+
+    /* Footer de página */
+    @page {
+        margin: 1.5cm;
+        @bottom-center {
+            content: "Hoja de Ruta - " counter(page) " / " counter(pages);
+            font-size: 10pt;
+            color: #666;
+        }
     }
 }
 </style>
@@ -163,5 +298,10 @@ function verDetalleViaje(folio) {
         .catch(err => {
             console.error("3. Error fatal en fetch o proceso de datos:", err);
         });
+}
+function imprimirHojaRuta() {
+    // Pequeño truco para asegurar que el scroll no afecte la captura
+    window.scrollTo(0,0);
+    window.print();
 }
 </script>

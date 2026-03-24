@@ -287,6 +287,106 @@ if ($action === 'get_detalles_viaje') {
     exit;
 }
 
+
+
+
+/**
+ * -----------------------------------------------------------
+ * BLOQUE: EDICIÓN DINÁMICA DE RUTA (MODAL EDITAR)
+ * -----------------------------------------------------------
+ */
+
+
+
+if ($action === 'guardar_cambios_viaje') {
+    // Limpieza radical para asegurar JSON puro
+    if (ob_get_level()) ob_clean(); 
+    header('Content-Type: application/json; charset=utf-8');
+
+    try {
+        $folio = $_POST['viaje_folio'] ?? '';
+        $vehiculo_id = intval($_POST['vehiculo_id'] ?? 0);
+        $chofer_id = intval($_POST['chofer_id'] ?? 0);
+
+        // Validaciones críticas para la Base de Datos
+        if (empty($folio)) throw new Exception("El folio del viaje es requerido.");
+        if ($vehiculo_id <= 0) throw new Exception("ID de vehículo no válido o no seleccionado.");
+        if ($chofer_id <= 0) throw new Exception("Debe asignar un chofer responsable.");
+
+        $datos = [
+            'viaje_folio' => $folio,
+            'chofer_id'   => $chofer_id,
+            'vehiculo_id' => $vehiculo_id,
+            'tripulantes' => $_POST['tripulantes'] ?? [], // Array de IDs de ayudantes
+            'destinos'    => []
+        ];
+
+        // Procesar el JSON de direcciones enviado desde el JS
+        if (isset($_POST['destinos_data'])) {
+            $json_raw = stripslashes($_POST['destinos_data']);
+            $datos['destinos'] = json_decode($json_raw, true);
+            
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new Exception("Error en el formato de las direcciones enviadas.");
+            }
+        }
+
+        // Llamada al Modelo (Asegúrate que $repartoM esté instanciado arriba)
+        $repartoM->guardarCambiosViaje($datos);
+
+        echo json_encode([
+            "success" => true, 
+            "message" => "Logística actualizada: Folio $folio"
+        ]);
+
+    } catch (Exception $e) {
+        // Si algo falla, limpiamos el búfer otra vez para que solo salga el error JSON
+        if (ob_get_level()) ob_clean();
+        echo json_encode([
+            "success" => false, 
+            "message" => "Error en servidor: " . $e->getMessage()
+        ]);
+    }
+    exit; // Crucial: Detiene cualquier impresión de HTML posterior
+}
+
+/**
+ * 2. QUITAR ENTREGA DE RUTA
+ * Elimina un material de la logística y lo libera para nueva programación
+ */
+if ($action === 'quitar_entrega_ruta') {
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json; charset=utf-8');
+
+    try {
+        $mov_id = intval($_POST['movimiento_id'] ?? 0);
+
+        if ($mov_id <= 0) {
+            throw new Exception("ID de movimiento (entrega_venta_id) no válido.");
+        }
+
+        // Llamada al Modelo
+        $repartoM->quitarEntregaDeRuta($mov_id);
+
+        echo json_encode([
+            "success" => true, 
+            "message" => "Material removido y disponible para nueva asignación."
+        ]);
+
+    } catch (Exception $e) {
+        if (ob_get_level()) ob_clean();
+        echo json_encode([
+            "success" => false, 
+            "message" => "No se pudo remover el material: " . $e->getMessage()
+        ]);
+    }
+    exit;
+}
+
+
+
+
+
 if ($action === 'actualizar_logistica_completa') {
     // Esta es la función que procesa los cambios del modal (Chofer, Ayudantes y Destinos)
     $res = $repartoM->actualizarLogisticaCompleta($_POST);

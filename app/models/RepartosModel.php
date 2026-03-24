@@ -482,17 +482,24 @@ public function actualizarLogisticaCompleta($datos) {
     }
 }
 public function getDetallesViaje($folio_viaje) {
-    // 1. Buscamos la cabecera, incluyendo el almacen_id de la venta
+    // 1. Cabecera Detallada (Unidad, Chofer y Almacén)
     $sqlHeader = "SELECT 
                     tc.viaje_folio,
                     tc.vehiculo_id,
-                    trm.usuario_encargado_id as chofer_id,
-                    v.almacen_id  -- <--- Aquí lo obtenemos del movimiento/venta
+                    tv.nombre AS unidad_nombre,
+                    tv.placas AS unidad_placas,
+                    trm.usuario_encargado_id AS chofer_id,
+                    t_chofer.nombre AS nombre_chofer,
+                    trm.estado_reparto AS estatus_logistico,
+                    v.almacen_id
                   FROM transporte_consolidacion tc
                   INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
+                  INNER JOIN transporte_vehiculos tv ON tc.vehiculo_id = tv.id
+                  LEFT JOIN trabajadores t_chofer ON trm.usuario_encargado_id = t_chofer.id
                   LEFT JOIN movimientos m ON trm.entrega_venta_id = m.id
                   LEFT JOIN ventas v ON m.referencia_id = v.id
-                  WHERE tc.viaje_folio = ? LIMIT 1";
+                  WHERE tc.viaje_folio = ? 
+                  LIMIT 1";
     
     $stmtH = $this->db->prepare($sqlHeader);
     $stmtH->bind_param("s", $folio_viaje);
@@ -501,26 +508,41 @@ public function getDetallesViaje($folio_viaje) {
 
     if (!$header) return null;
 
-    // 2. IDs de Tripulantes (para el select múltiple)
-    $sqlT = "SELECT usuario_id FROM transporte_tripulantes_detalle 
-             WHERE reparto_id IN (SELECT reparto_id FROM transporte_consolidacion WHERE viaje_folio = ?)";
+    // 2. IDs de Tripulantes (Para el Select2 o múltiple en el formulario)
+    $sqlT = "SELECT DISTINCT ttd.usuario_id 
+         FROM transporte_tripulantes_detalle ttd
+         INNER JOIN transporte_consolidacion tc ON ttd.reparto_id = tc.reparto_id
+         WHERE tc.viaje_folio = ?";
     $stmtT = $this->db->prepare($sqlT);
-    $stmtT->bind_param("s", $folio_viaje);
+    $stmtT->bind_param("s", $folio_viaje); // Ajustado para usar el mismo parámetro
     $stmtT->execute();
     $resT = $stmtT->get_result();
     $header['tripulantes_ids'] = [];
-    while($r = $resT->fetch_assoc()) $header['tripulantes_ids'][] = $r['usuario_id'];
+    while($r = $resT->fetch_assoc()) {
+        $header['tripulantes_ids'][] = $r['usuario_id'];
+    }
 
-    // 3. Materiales y sus destinos
-    $sqlMat = "SELECT m.id as movimiento_id, p.nombre as producto, m.cantidad, 
-                      v.folio as folio_venta, rp.descripcion_punto as destino
+    // 3. Materiales, Destinos y Especificaciones Técnicas
+    $sqlMat = "SELECT 
+                    m.id AS movimiento_id, 
+                    p.nombre AS producto, 
+                    p.sku AS sku,
+                    p.unidad_medida AS um,
+                    m.cantidad, 
+                    v.folio AS folio_venta, 
+                    c.nombre_comercial AS cliente,
+                    rp.descripcion_punto AS destino,
+                    rp.orden_visita
                FROM transporte_consolidacion tc
                INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
                INNER JOIN movimientos m ON trm.entrega_venta_id = m.id
                INNER JOIN productos p ON m.producto_id = p.id
                LEFT JOIN ventas v ON m.referencia_id = v.id
+               LEFT JOIN clientes c ON v.id_cliente = c.id
                LEFT JOIN transporte_rutas_puntos rp ON trm.id = rp.reparto_id
-               WHERE tc.viaje_folio = ?";
+               WHERE tc.viaje_folio = ?
+               ORDER BY rp.orden_visita ASC";
+               
     $stmtM = $this->db->prepare($sqlMat);
     $stmtM->bind_param("s", $folio_viaje);
     $stmtM->execute();
@@ -916,7 +938,7 @@ public function obtenerViajesLogistica($folio_folio = null) {
                 INNER JOIN productos p ON m.producto_id = p.id
                 LEFT JOIN ventas v ON m.referencia_id = v.id
                 LEFT JOIN clientes c ON v.id_cliente = c.id
-                LEFT JOIN usuarios u_chofer ON trm.usuario_encargado_id = u_chofer.id";
+                LEFT JOIN trabajadores u_chofer ON trm.usuario_encargado_id = u_chofer.id";
 
         if (!empty($folio_folio)) {
             $sql .= " WHERE tc.viaje_folio = ?";
@@ -935,6 +957,104 @@ public function obtenerViajesLogistica($folio_folio = null) {
 
     } catch (Exception $e) {
         throw new Exception("Error en la base de datos: " . $e->getMessage());
+    }
+}
+public function quitarEntregaDeRuta($movimiento_id) {
+    try {
+        $this->db->begin_transaction();
+
+        // 1. Buscamos el reparto_id asociado a ese movimiento de venta
+        $sql = "SELECT id FROM transporte_repartos_maestro WHERE entrega_venta_id = ? LIMIT 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("i", $movimiento_id);
+        $stmt->execute();
+        $res = $stmt->get_result()->fetch_assoc();
+
+        if ($res) {
+            $rid = $res['id'];
+
+            // 2. Eliminamos en orden para respetar llaves foráneas
+            $this->db->query("DELETE FROM transporte_rutas_puntos WHERE reparto_id = $rid");
+            $this->db->query("DELETE FROM transporte_tripulantes_detalle WHERE reparto_id = $rid");
+            $this->db->query("DELETE FROM transporte_consolidacion WHERE reparto_id = $rid");
+            $this->db->query("DELETE FROM transporte_repartos_maestro WHERE id = $rid");
+        }
+
+        return $this->db->commit();
+    } catch (Exception $e) {
+        @$this->db->rollback();
+        throw $e;
+    }
+}
+public function guardarCambiosViaje($datos) {
+    try {
+        $this->db->begin_transaction();
+
+        $folio       = $datos['viaje_folio'];
+        $chofer_id   = $datos['chofer_id'];
+        $vehiculo_id = $datos['vehiculo_id'];
+        $tripulantes = $datos['tripulantes']; // Array de IDs de ayudantes
+        $destinos    = $datos['destinos'];    // Array [mov_id => "direccion"]
+
+        // 1. Obtener todos los reparto_id asociados a este folio de viaje
+        $sqlRepartos = "SELECT reparto_id FROM transporte_consolidacion WHERE viaje_folio = ?";
+        $stmtR = $this->db->prepare($sqlRepartos);
+        $stmtR->bind_param("s", $folio);
+        $stmtR->execute();
+        $result = $stmtR->get_result();
+        
+        $ids_reparto = [];
+        while($row = $result->fetch_assoc()) {
+            $ids_reparto[] = $row['reparto_id'];
+        }
+
+        if (empty($ids_reparto)) {
+            throw new Exception("No se encontraron registros para el folio: " . $folio);
+        }
+
+        $in_repartos = implode(',', $ids_reparto);
+
+        // 2. Actualizar Maestro (Chofer y Vehículo)
+        $sqlM = "UPDATE transporte_repartos_maestro 
+                 SET usuario_encargado_id = ?, vehiculo_id = ? 
+                 WHERE id IN ($in_repartos)";
+        $stmtM = $this->db->prepare($sqlM);
+        $stmtM->bind_param("ii", $chofer_id, $vehiculo_id);
+        $stmtM->execute();
+
+        // 3. Actualizar Tripulantes (Limpiar e Insertar nuevos)
+        $this->db->query("DELETE FROM transporte_tripulantes_detalle WHERE reparto_id IN ($in_repartos)");
+        
+        if (!empty($tripulantes)) {
+            $sqlT = "INSERT INTO transporte_tripulantes_detalle (reparto_id, usuario_id) VALUES (?, ?)";
+            $stmtT = $this->db->prepare($sqlT);
+            foreach ($ids_reparto as $rid) {
+                foreach ($tripulantes as $u_id) {
+                    $u_id = intval($u_id);
+                    if ($u_id === $chofer_id) continue; // No duplicar chofer como ayudante
+                    $stmtT->bind_param("ii", $rid, $u_id);
+                    $stmtT->execute();
+                }
+            }
+        }
+
+        // 4. Actualizar Direcciones en transporte_rutas_puntos
+        // Usamos el movimiento_id (entrega_venta_id) para saber qué dirección es de quién
+        $sqlP = "UPDATE transporte_rutas_puntos rp
+                 JOIN transporte_repartos_maestro rm ON rp.reparto_id = rm.id
+                 SET rp.descripcion_punto = ?
+                 WHERE rm.entrega_venta_id = ?";
+        $stmtP = $this->db->prepare($sqlP);
+        foreach ($destinos as $mov_id => $dir) {
+            $stmtP->bind_param("si", $dir, $mov_id);
+            $stmtP->execute();
+        }
+
+        return $this->db->commit();
+
+    } catch (Exception $e) {
+        @$this->db->rollback();
+        throw $e;
     }
 }
 }
