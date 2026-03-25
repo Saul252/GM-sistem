@@ -65,7 +65,14 @@ try {
     }
 
     $total = $subtotal - $descuento;
-    $folio = "V-" . date('ymdHis');
+    // Obtener el último ID para el folio (V01, V02, etc.)
+$resFolio = $conexion->query("SELECT MAX(id) as ultimo_id FROM ventas");
+$filaFolio = $resFolio->fetch_assoc();
+$proximo_id = ($filaFolio['ultimo_id'] ?? 0) + 1;
+
+// Generamos el folio: V + el ID con ceros a la izquierda (ejemplo: V01, V0012)
+// str_pad le agrega ceros para que siempre tenga al menos 2 dígitos
+$folio = "V-" . str_pad($proximo_id, 2, "0", STR_PAD_LEFT);
     $id_almacen_vta = intval($carrito[0]['almacen_id']);
 
     // Determinar estado de entrega global (Igual que en tu función procesarEntrega)

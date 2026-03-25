@@ -215,6 +215,14 @@
     </a>
 </li>
 <?php endif; ?>
+             <?php if (puedeVerModulo(modulo: 'pedidosVendedor')): ?>
+<li class="nav-item">
+    <a href="/cfsistem/app/controllers/pedidosVendedorController.php" 
+       class="nav-link <?= $paginaActual == 'pedidosVendedorController' ? 'active' : '' ?>">
+        <i class="bi bi-gear-fill"></i><span>Pedidos Vendedor</span>
+    </a>
+</li>
+<?php endif; ?>
              <?php if (puedeVerModulo(modulo: 'Configuracion')): ?>
 <li class="nav-item">
     <a href="/cfsistem/app/controllers/configuracionController.php" 
