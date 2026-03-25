@@ -26,6 +26,7 @@ $modulos = [
     ['id' => 'trabajadores', 'url' => '/cfsistem/app/controllers/trabajadoresController.php', 'icon' => 'bi-people-fill', 'class' => 'text-primary', 'label' => 'Trabajadores', 'desc' => 'Recursos H.'],
     ['id' => 'vehiculos', 'url' => '/cfsistem/app/controllers/vehiculosController.php', 'icon' => 'bi-truck-front-fill', 'class' => 'text-secondary', 'label' => 'Vehículos', 'desc' => 'Control Flota'],
     ['id' => 'repartos', 'url' => '/cfsistem/app/controllers/repartosController.php', 'icon' => 'bi-truck-flatbed', 'class' => 'text-info', 'label' => 'Repartos', 'desc' => 'Monitor Ruta'],
+    ['id' => 'pedidosVendedor', 'url' => '/cfsistem/app/controllers/pedidosVendedorController.php', 'icon' => 'bi-person-badge-fill', 'class' => 'text-warning', 'label' => 'Pedidos Vendedor', 'desc' => 'Preventa'],
     ];
 ?>
 <!DOCTYPE html>

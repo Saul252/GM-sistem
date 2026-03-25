@@ -1,15 +1,29 @@
 body {
     background: #eef2f7;
+    margin: 0;
+    padding: 0;
 }
 
-/* CONTENEDOR PRINCIPAL */
+/* CONTENEDOR PRINCIPAL RESPONSIVO */
 .main {
-    margin-left: 260px;
-    padding-top: 90px;
-    padding-left: 25px;
-    padding-right: 25px;
+    /* Por defecto en móviles y tablets */
+    margin-left: 0; 
+    padding-top: 80px; /* Un poco menos de espacio arriba en móvil */
+    padding-left: 15px;
+    padding-right: 15px;
     max-width: 1200px;
     margin-right: auto;
+    transition: margin-left .3s ease;
+}
+
+/* Ajuste para pantallas grandes (Escritorio) */
+@media (min-width: 992px) {
+    .main {
+        margin-left: 260px; /* Recupera el espacio del sidebar */
+        padding-top: 90px;
+        padding-left: 25px;
+        padding-right: 25px;
+    }
 }
 
 /* TARJETAS */
@@ -19,14 +33,20 @@ body {
     background: #ffffff;
     box-shadow: 0 12px 25px rgba(0,0,0,.06);
     transition: .25s ease;
-    /* Usamos flex para asegurar que todo esté centrado perfectamente */
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     height: 100%;
-    padding: 25px 15px; /* Reducido un poco para mayor elegancia */
+    padding: 20px 10px; /* Un poco más compacto en móvil */
     text-align: center;
+}
+
+/* En escritorio las tarjetas pueden tener más padding */
+@media (min-width: 768px) {
+    .card-modulo {
+        padding: 25px 15px;
+    }
 }
 
 .card-modulo:hover {
@@ -34,22 +54,30 @@ body {
     box-shadow: 0 20px 40px rgba(0,0,0,.12);
 }
 
-/* ICONOS: La clave de la alineación */
+/* ICONOS */
 .icono-modulo {
-    font-size: 2.8rem;
-    /* Creamos un contenedor invisible cuadrado para el icono */
-    height: 70px; 
-    width: 70px;
+    font-size: 2.2rem; /* Un poco más pequeño en móvil */
+    height: 60px; 
+    width: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 10px; /* Espacio fijo entre icono y texto */
+    margin-bottom: 8px;
     transition: transform 0.3s ease;
 }
 
-/* COLORES ELEGANTES (Añadido Historial) */
+@media (min-width: 768px) {
+    .icono-modulo {
+        font-size: 2.8rem;
+        height: 70px;
+        width: 70px;
+        margin-bottom: 10px;
+    }
+}
+
+/* COLORES ELEGANTES */
 .icon-ventas      { color: #0d6efd; }
-.icon-historial   { color: #0dcaf0; } /* Un azul más claro para diferenciar */
+.icon-historial   { color: #0dcaf0; }
 .icon-compras     { color: #6610f2; }
 .icon-almacen     { color: #fd7e14; }
 .icon-movimientos { color: #198754; }
@@ -57,13 +85,25 @@ body {
 .icon-mermas      { color: #dc3545; }
 
 .card-modulo h6 {
-    font-weight: 700; /* Un poco más de peso */
-    font-size: 1.05rem;
+    font-weight: 700;
+    font-size: 0.95rem; /* Ajuste de fuente para móvil */
     margin-bottom: 2px;
     color: #1f2937;
 }
 
+@media (min-width: 768px) {
+    .card-modulo h6 {
+        font-size: 1.05rem;
+    }
+}
+
 .card-modulo small {
-    font-size: .85rem;
-    color: #6b7280; /* Gris más suave para el subtítulo */
+    font-size: .75rem;
+    color: #6b7280;
+}
+
+@media (min-width: 768px) {
+    .card-modulo small {
+        font-size: .85rem;
+    }
 }

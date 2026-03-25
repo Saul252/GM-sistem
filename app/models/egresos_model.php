@@ -14,38 +14,34 @@ public function obtenerAlmacenesActivos() {
      * 1. OBTIENE TODO EL FLUJO (COMPRAS + GASTOS)
      * Usa un UNION para juntar ambas tablas en una sola lista para la tabla principal
      */
-public function obtenerTodosLosEgresos($desde, $hasta, $almacen_id = 0, $tipo_filtro = 'todos') {
-    // 1. Fragmentos de WHERE para el almacén
+public function obtenerTodosLosEgresos($desde, $hasta, $almacen_id = 0, $tipo_filtro = 'todos', $categoria_gasto_id = 0) {
+    // 1. Fragmentos de WHERE para el almacén y categoría
     $whereAlmacenC = ($almacen_id > 0) ? " AND c.almacen_id = ?" : "";
     $whereAlmacenG = ($almacen_id > 0) ? " AND g.almacen_id = ?" : "";
+    
+    // Filtro específico para gastos (Si se selecciona categoría)
+    $whereCatG = ($categoria_gasto_id > 0) ? " AND g.categoria_id = ?" : "";
 
-    // 2. Query de Compras: Solo listamos las que NO están canceladas
+    // 2. Query de Compras
     $queryCompra = "
         SELECT 
             c.id, c.folio, c.fecha_compra AS fecha, c.proveedor AS entidad, 
-            c.total, 'compra' AS tipo, c.tiene_faltantes, c.documento_url,
+            c.total, 'compra' AS tipo, c.tiene_faltantes, c.documento_url, 0 AS categoria_id,
             IFNULL((SELECT SUM(cantidad_pendiente) FROM faltantes_ingreso WHERE compra_id = c.id), 0) AS piezas_faltantes,
-            a.nombre AS almacen_nombre,
-            c.estado
+            a.nombre AS almacen_nombre, c.estado
         FROM compras c
         JOIN almacenes a ON c.almacen_id = a.id
-        WHERE (c.fecha_compra BETWEEN ? AND ?) 
-        AND c.estado != 'cancelada' 
-        $whereAlmacenC";
+        WHERE (c.fecha_compra BETWEEN ? AND ?) AND c.estado != 'cancelada' $whereAlmacenC";
 
-    // 3. Query de Gastos: Generalmente los gastos nacen 'pagados'
-    // Si llegas a implementar cancelación de gastos, añade aquí: AND g.estado != 'cancelado'
+    // 3. Query de Gastos (Incluyendo la categoría)
     $queryGasto = "
         SELECT 
             g.id, g.folio, g.fecha_gasto AS fecha, g.beneficiario AS entidad, 
-            g.total, 'gasto' AS tipo, 0 AS tiene_faltantes, g.documento_url, 0 AS piezas_faltantes,
-            a.nombre AS almacen_nombre,
-            g.estado
+            g.total, 'gasto' AS tipo, 0 AS tiene_faltantes, g.documento_url, g.categoria_id,
+            0 AS piezas_faltantes, a.nombre AS almacen_nombre, g.estado
         FROM gastos g
         JOIN almacenes a ON g.almacen_id = a.id
-        WHERE (g.fecha_gasto BETWEEN ? AND ?) 
-        AND g.estado != 'cancelado'
-        $whereAlmacenG";
+        WHERE (g.fecha_gasto BETWEEN ? AND ?) AND g.estado != 'cancelado' $whereAlmacenG $whereCatG";
 
     // 4. Construcción de la SQL final
     if ($tipo_filtro === 'compra') {
@@ -58,21 +54,26 @@ public function obtenerTodosLosEgresos($desde, $hasta, $almacen_id = 0, $tipo_fi
 
     $stmt = $this->db->prepare($sql);
 
-    // 5. Bindeo de parámetros (Mantenemos tu lógica de 6, 4, 3 o 2 parámetros)
-    if ($tipo_filtro === 'todos') {
-        if ($almacen_id > 0) {
-            $stmt->bind_param("ssissi", $desde, $hasta, $almacen_id, $desde, $hasta, $almacen_id);
-        } else {
-            $stmt->bind_param("ssss", $desde, $hasta, $desde, $hasta);
-        }
-    } else {
-        if ($almacen_id > 0) {
-            $stmt->bind_param("ssi", $desde, $hasta, $almacen_id);
-        } else {
-            $stmt->bind_param("ss", $desde, $hasta);
-        }
+    // 5. Bindeo dinámico de parámetros (Para evitar errores de conteo)
+    $params = [];
+    $types = "";
+
+    // Lógica para COMPRAS (Si aplica)
+    if ($tipo_filtro === 'todos' || $tipo_filtro === 'compra') {
+        $types .= "ss"; 
+        $params[] = $desde; $params[] = $hasta;
+        if ($almacen_id > 0) { $types .= "i"; $params[] = $almacen_id; }
     }
-    
+
+    // Lógica para GASTOS (Si aplica)
+    if ($tipo_filtro === 'todos' || $tipo_filtro === 'gasto') {
+        $types .= "ss"; 
+        $params[] = $desde; $params[] = $hasta;
+        if ($almacen_id > 0) { $types .= "i"; $params[] = $almacen_id; }
+        if ($categoria_gasto_id > 0) { $types .= "i"; $params[] = $categoria_gasto_id; }
+    }
+
+    $stmt->bind_param($types, ...$params);
     $stmt->execute();
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }

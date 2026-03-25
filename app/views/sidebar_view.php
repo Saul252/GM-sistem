@@ -1,248 +1,94 @@
-<nav class="navbar fixed-top navbar-expand-lg navbar-dark navbar-premium">
-    <div class="container-fluid px-4">
-        <div class="d-flex align-items-center gap-3">
+<?php
+/**
+ * CONFIGURACIÓN DE MÓDULOS
+ * Optimizamos la renderización mediante un bucle para evitar repetir HTML.
+ */
+$modulos = [
+    ['id' => 'inicio', 'url' => '/cfsistem/app/views/inicio.php', 'icon' => 'bi-house-door', 'label' => 'Inicio', 'active' => ($archivoActual == 'inicio.php')],
+    ['id' => 'ventas', 'url' => '/cfsistem/app/controllers/ventasController.php', 'icon' => 'bi-cart-check', 'label' => 'Ventas', 'active' => ($archivoActual == 'ventasController.php')],
+    ['id' => 'almacenes', 'url' => '/cfsistem/app/controllers/almacenes.php', 'icon' => 'bi-box-seam', 'label' => 'Almacén', 'active' => ($archivoActual == 'almacenes.php' || $archivoActual == 'almacen.php')],
+    ['id' => 'movimientos', 'url' => '/cfsistem/app/controllers/movimientosController.php', 'icon' => 'bi-arrow-left-right', 'label' => 'Movimientos', 'active' => ($archivoActual == 'movimientosController.php')],
+    ['id' => 'ventashistorial', 'url' => '/cfsistem/app/controllers/ventasHistorialController.php', 'icon' => 'bi-receipt', 'label' => 'Historial', 'active' => ($archivoActual == 'ventasHistorialController.php')],
+    ['id' => 'usuarios', 'url' => '/cfsistem/app/controllers/usuariosController.php', 'icon' => 'bi-people', 'label' => 'Usuarios', 'active' => ($archivoActual == 'usuariosController.php')],
+    ['id' => 'compras', 'url' => '/cfsistem/app/controllers/egresosController.php', 'icon' => 'bi-bag-check', 'label' => 'Compras', 'active' => ($archivoActual == 'egresosController.php' || $archivoActual == 'gastos.php')],
+    ['id' => 'proveedores', 'url' => '/cfsistem/app/controllers/proveedoresController.php', 'icon' => 'bi-person-badge', 'label' => 'Proveedores', 'active' => ($archivoActual == 'proveedoresController.php')],
+    ['id' => 'clientes', 'url' => '/cfsistem/app/controllers/clientesController.php', 'icon' => 'bi-person-lines-fill', 'label' => 'Clientes', 'active' => ($archivoActual == 'clientesController.php')],
+    ['id' => 'Mermas', 'url' => '/cfsistem/app/controllers/mermasController.php', 'icon' => 'bi-exclamation-triangle', 'label' => 'Mermas', 'active' => ($archivoActual == 'mermasController.php')],
+    ['id' => 'transmutaciones', 'url' => '/cfsistem/app/controllers/transmutacionesController.php', 'icon' => 'bi-arrow-repeat', 'label' => 'Conversiones', 'active' => ($archivoActual == 'transmutacionesController.php')],
+    ['id' => 'finanzas', 'url' => '/cfsistem/app/controllers/finanzasController.php', 'icon' => 'bi-graph-up-arrow', 'label' => 'Finanzas', 'active' => ($archivoActual == 'finanzasController.php')],
+    ['id' => 'corteCaja', 'url' => '/cfsistem/app/controllers/corteCajaController.php', 'icon' => 'bi-calculator', 'label' => 'Corte de Caja', 'active' => ($archivoActual == 'corteCajaController.php')],
+    ['id' => 'entregas', 'url' => '/cfsistem/app/controllers/entregasController.php', 'icon' => 'bi-truck', 'label' => 'Despachos', 'active' => ($archivoActual == 'entregasController.php')],
+    ['id' => 'clientesEstatus', 'url' => '/cfsistem/app/controllers/clientesEstatusController.php', 'icon' => 'bi-person-badge', 'label' => 'Estatus Clientes', 'active' => ($paginaActual == 'clientesEstatus')],
+    ['id' => 'solicitudesCompra', 'url' => '/cfsistem/app/controllers/solicitudesCompraController.php', 'icon' => 'bi-cart-check-fill', 'label' => 'Solicitudes Compra', 'active' => ($paginaActual == 'solicitudesCompraontroller')],
+    ['id' => 'trabajadores', 'url' => '/cfsistem/app/controllers/trabajadoresController.php', 'icon' => 'bi-people-fill', 'label' => 'Trabajadores', 'active' => ($paginaActual == 'trabjadoresController')],
+    ['id' => 'vehiculos', 'url' => '/cfsistem/app/controllers/vehiculosController.php', 'icon' => 'bi-truck-front-fill', 'label' => 'Vehículos', 'active' => ($paginaActual == 'vehiculosController')],
+    ['id' => 'repartos', 'url' => '/cfsistem/app/controllers/repartosController.php', 'icon' => 'bi-truck-flatbed', 'label' => 'Repartos', 'active' => ($paginaActual == 'repartosController')],
+    ['id' => 'pedidosVendedor', 'url' => '/cfsistem/app/controllers/pedidosVendedorController.php', 'icon' => 'bi-person-badge-fill', 'label' => 'Pedidos Vendedor', 'desc' => 'Preventa', 'active' => ($paginaActual == 'pedidosVendedorController')],
+    ['id' => 'Configuracion', 'url' => '/cfsistem/app/controllers/configuracionController.php', 'icon' => 'bi-gear-fill', 'label' => 'Configuración', 'active' => ($paginaActual == 'configuracionController')],
+];
+?>
 
-            <button class="btn btn-toggle" id="toggleSidebar"><i class="bi bi-list fs-3 text-white"></i></button>
-            <span class="fw-semibold text-white"><?= $tituloPagina ?></span>
-        </div>
-        <div class="d-flex align-items-center gap-3">
-            <div class="dropdown me-2">
-                <a href="javascript:void(0);" class="text-white position-relative" id="btnNotif">
+<nav class="navbar fixed-top navbar-expand navbar-dark navbar-premium shadow-sm">
+    <div class="container-fluid px-2 px-md-4">
+        <div class="d-flex align-items-center gap-2 gap-md-3">
+            <button class="btn btn-toggle border-0" id="toggleSidebar" aria-label="Abrir Menú">
+                <i class="bi bi-list fs-2 text-white"></i>
+            </button>
+             </div>
+
+        <div class="d-flex align-items-center gap-2 gap-md-3">
+            <div class="dropdown">
+                <a href="javascript:void(0);" class="text-white position-relative p-2" id="btnNotif" data-bs-toggle="dropdown">
                     <i class="bi bi-bell fs-4"></i>
-                    <span id="notif-badge"
-                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
+                    <span id="notif-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
                 </a>
-                <ul class="shadow-lg border-0 p-0" id="menuNotif"
-                    style="width: 320px; max-height: 400px; overflow-y: auto; display: none; position: absolute; right: 0; background: white; z-index: 1060; list-style: none; border-radius: 8px;">
+                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0" id="menuNotif" style="width: 320px; max-width: 90vw; max-height: 400px; overflow-y: auto;">
                     <li class="p-3 border-bottom bg-light">
                         <h6 class="mb-0 fw-bold text-dark">Traspasos Pendientes</h6>
                     </li>
                     <div id="lista-notificaciones">
                         <li class="p-3 text-center text-muted small">Cargando...</li>
                     </div>
-                    <li>
-                        <hr class="dropdown-divider m-0">
-                    </li>
-                    <li><a class="dropdown-item text-center py-2 small text-primary fw-bold"
-                            href="/cfsistem/app/views/almacenes.php">Ver todos</a></li>
+                    <li><hr class="dropdown-divider m-0"></li>
+                    <li><a class="dropdown-item text-center py-2 small text-primary fw-bold" href="/cfsistem/app/views/almacenes.php">Ver todos</a></li>
                 </ul>
             </div>
-            <div class="user-badge">
-                <i class="bi bi-person-circle me-2"></i>
-                <span><?= $_SESSION['nombre'] ?? 'Usuario' ?></span>
+
+            <div class="user-badge d-flex align-items-center text-white bg-white bg-opacity-10 px-3 py-1 rounded-pill">
+                <i class="bi bi-person-circle fs-5"></i>
+                <span class="ms-2 d-none d-md-inline small"><?= $_SESSION['nombre'] ?? 'Usuario' ?></span>
             </div>
-            <a href="/cfsistem/logout.php" class="btn btn-logout"><i class="bi bi-box-arrow-right text-white"></i></a>
+
+            <a href="/cfsistem/logout.php" class="btn btn-sm btn-outline-light border-0 rounded-circle" title="Cerrar Sesión">
+                <i class="bi bi-box-arrow-right fs-4"></i>
+            </a>
         </div>
     </div>
 </nav>
 
-<aside id="sidebar">
+<aside id="sidebar" class="bg-white border-end shadow-sm">
     <div class="p-3">
-        <h5 class="text-center mb-4">Menú</h5>
-        <?php if (!empty($_SESSION['rol'])): ?>
-        <div class="text-center small text-secondary mb-3">Rol: <?= ucfirst($_SESSION['rol']) ?></div>
-        <?php endif; ?>
+        <div class="text-center mb-4">
+            <h5 class="fw-bold text-primary mb-1">Menú</h5>
+            <?php if (!empty($_SESSION['rol'])): ?>
+                <span class="badge bg-light text-secondary border">Rol: <?= ucfirst($_SESSION['rol']) ?></span>
+            <?php endif; ?>
+        </div>
 
         <ul class="nav nav-pills flex-column gap-1">
-            <?php if (puedeVerModulo('inicio')): ?>
-            <li class="nav-item">
-                <a href="/cfsistem/app/views/inicio.php"
-                    class="nav-link <?= $archivoActual == 'inicio.php' ? 'active' : '' ?>">
-                    <i class="bi bi-house-door"></i><span>Inicio</span>
-                </a>
-            </li>
-            <?php endif; ?>
-
-            <?php if (puedeVerModulo('ventas')): ?>
-            <li class="nav-item">
-                <a href="/cfsistem/app/controllers/ventasController.php"
-                    class="nav-link <?= $archivoActual == 'ventasController.php' ? 'active' : '' ?>">
-                    <i class="bi bi-cart-check"></i><span>Ventas</span>
-                </a>
-            </li>
-            <?php endif; ?>
-
-            <?php if (puedeVerModulo('almacenes')): ?>
-            <li class="nav-item">
-                <a href="/cfsistem/app/controllers/almacenes.php"
-                    class="nav-link <?= ($archivoActual == 'almacenes.php' || $archivoActual == 'almacen.php') ? 'active' : '' ?>">
-                    <i class="bi bi-box-seam"></i><span>Almacén</span>
-                </a>
-            </li>
-            <?php endif; ?>
-
-            <?php if (puedeVerModulo('movimientos')): ?>
-            <li class="nav-item">
-                <a href="/cfsistem/app/controllers/movimientosController.php"
-                    class="nav-link <?= $archivoActual == 'movimientosController.php' ? 'active' : '' ?>">
-                    <i class="bi bi-arrow-left-right"></i><span>Movimientos</span>
-                </a>
-            </li>
-            <?php endif; ?>
-
-            <?php if (puedeVerModulo('ventashistorial')): ?>
-            <li class="nav-item">
-                <a href="/cfsistem/app/controllers/ventasHistorialController.php"
-                    class="nav-link <?= $archivoActual == 'ventasHistorialController.php' ? 'active' : '' ?>">
-                    <i class="bi bi-receipt"></i><span>Historial</span>
-                </a>
-            </li>
-            <?php endif; ?>
-
-            <?php if (puedeVerModulo('caja')): ?>
-            <li class="nav-item">
-                <a href="/cfsistem/pantallas/caja.php"
-                    class="nav-link <?= $archivoActual == 'cajaController.php' ? 'active' : '' ?>">
-                    <i class="bi bi-cash-stack"></i><span>Caja</span>
-                </a>
-            </li>
-            <?php endif; ?>
-
-            <?php if (puedeVerModulo('usuarios')): ?>
-            <li class="nav-item">
-                <a href="/cfsistem/app/controllers/usuariosController.php"
-                    class="nav-link <?= $archivoActual == 'usuariosController.php' ? 'active' : '' ?>">
-                    <i class="bi bi-people"></i><span>Usuarios</span>
-                </a>
-            </li>
-            <?php endif; ?>
-
-            <?php if (puedeVerModulo('compras')): ?>
-            <li class="nav-item">
-                <a href="/cfsistem/app/controllers/egresosController.php"
-                    class="nav-link <?= ($archivoActual == 'egresosController.php' || $archivoActual == 'gastos.php') ? 'active' : '' ?>">
-                    <i class="bi bi-bag-check"></i><span>Compras</span>
-                </a>
-            </li>
-            <?php endif; ?>
-            <?php if (puedeVerModulo('proveedores')): ?>
-            <li class="nav-item">
-                <a href="/cfsistem/app/controllers/proveedoresController.php"
-                    class="nav-link <?= ($archivoActual == 'proveedoresController.php') ? 'active' : '' ?>">
-                   <i class="bi bi-person-badge"></i><span>Proveedores</span>
-                </a>
-            </li>
-            <?php endif; ?>
-
-            <?php if (puedeVerModulo('clientes')): ?>
-            <li class="nav-item">
-                <a href="/cfsistem/app/controllers/clientesController.php"
-                    class="nav-link <?= $archivoActual == 'clientesController.php' ? 'active' : '' ?>">
-                    <i class="bi bi-person-lines-fill"></i><span>Clientes</span>
-                </a>
-            </li>
-            <?php endif; ?>
-
-            <?php if (puedeVerModulo('Mermas')): ?>
-            <li class="nav-item">
-                <a href="/cfsistem/app/controllers/mermasController.php"
-                    class="nav-link <?= $archivoActual == 'mermasController.php' ? 'active' : '' ?>">
-                    <i class="bi bi-exclamation-triangle"></i><span>Mermas</span>
-                </a>
-            </li>
-            <?php endif; ?>
-            <?php if (puedeVerModulo('transmutaciones')): ?>
-            <li class="nav-item">
-                <a href="/cfsistem/app/controllers/transmutacionesController.php"
-                    class="nav-link <?= $archivoActual == 'transmutacionesController.php' ? 'active' : '' ?>">
-                    <i class="bi bi-arrow-repeat"></i><span>Conversiones</span>
-                </a>
-            </li>
-            <?php endif; ?>
-
-            <?php if (puedeVerModulo('finanzas')): ?>
-            <li class="nav-item">
-                <a href="/cfsistem/app/controllers/finanzasController.php"
-                    class="nav-link <?= $archivoActual == 'finanzasController.php' ? 'active' : '' ?>">
-                    <i class="bi bi-graph-up-arrow"></i><span>Finanzas</span>
-                </a>
-            </li>
-            <?php endif; ?>
-            <?php if (puedeVerModulo('corteCaja')): ?>
-            <li class="nav-item">
-                <a href="/cfsistem/app/controllers/corteCajaController.php"
-                    class="nav-link <?= $archivoActual == 'corteCajaController.php' ? 'active' : '' ?>">
-                    <i class="bi bi-calculator"></i><span>Corte de Caja</span>
-                </a>
-            </li>
-            <?php endif; ?>
-            <?php if (puedeVerModulo('entregas')): ?>
-            <li class="nav-item">
-                <a href="/cfsistem/app/controllers/entregasController.php"
-                    class="nav-link <?= $archivoActual == 'entregasController.php' ? 'active' : '' ?>">
-                    <i class="bi bi-truck"></i><span>Despachos</span>
-                </a>
-            </li>
-            <?php endif; ?>
-            <?php if (puedeVerModulo(modulo: 'clientesEstatus')): ?>
-            <li class="nav-item">
-                <a href="/cfsistem/app/controllers/clientesEstatusController.php"
-                    class="nav-link <?= $paginaActual == 'clientesEstatus' ? 'active' : '' ?>">
-                    <i class="bi bi-person-badge"></i><span>Estatus Clientes</span>
-                </a>
-            </li>
-            <?php endif; ?>
-               <?php if (puedeVerModulo(modulo: 'solicitudesCompra')): ?>
-<li class="nav-item">
-    <a href="/cfsistem/app/controllers/solicitudesCompraController.php" 
-       class="nav-link <?= $paginaActual == 'solicitudesCompraontroller' ? 'active' : '' ?>">
-       <i class="bi bi-cart-check-fill"></i><span>solicitudesCompra</span>
-    </a>
-</li>
-
-<?php endif; ?>
- <?php if (puedeVerModulo(modulo: 'trabajadores')): ?>
-<li class="nav-item">
-    <a href="/cfsistem/app/controllers/trabajadoresController.php" 
-       class="nav-link <?= $paginaActual == 'trabjadoresController' ? 'active' : '' ?>">
-       <i class="bi bi-people-fill"></i><span>Trabajadores</span>
-    </a>
-</li>
-<?php endif; ?>
-   <?php if (puedeVerModulo(modulo: 'vehiculos')): ?>
-<li class="nav-item">
-    <a href="/cfsistem/app/controllers/vehiculosController.php" 
-       class="nav-link <?= $paginaActual == 'vehiculosController' ? 'active' : '' ?>">
-        <i class="bi bi-truck-front-fill"></i><span>Vehiculos</span>
-    </a>
-</li>
-<?php endif; ?>
-             <?php if (puedeVerModulo(modulo: 'repartos')): ?>
-<li class="nav-item">
-    <a href="/cfsistem/app/controllers/repartosController.php" 
-       class="nav-link <?= $paginaActual == 'repartosController' ? 'active' : '' ?>">
-       <i class="bi bi-truck-flatbed"></i><span>Repartos</span>
-    </a>
-</li>
-<?php endif; ?>
-             <?php if (puedeVerModulo(modulo: 'pedidosVendedor')): ?>
-<li class="nav-item">
-    <a href="/cfsistem/app/controllers/pedidosVendedorController.php" 
-       class="nav-link <?= $paginaActual == 'pedidosVendedorController' ? 'active' : '' ?>">
-        <i class="bi bi-gear-fill"></i><span>Pedidos Vendedor</span>
-    </a>
-</li>
-<?php endif; ?>
-             <?php if (puedeVerModulo(modulo: 'Configuracion')): ?>
-<li class="nav-item">
-    <a href="/cfsistem/app/controllers/configuracionController.php" 
-       class="nav-link <?= $paginaActual == 'configuracionController' ? 'active' : '' ?>">
-        <i class="bi bi-gear-fill"></i><span>Configuración</span>
-    </a>
-</li>
-<?php endif; ?>
-        
-            <!-- 
-<li class="nav-item">
-    <a href="/cfsistem/app/views/gestionar_permisos.php" class="nav-link <?= $archivoActual == 'cofiguracionController.php' ? 'active' : '' ?>">
-        <i class="bi bi-key"></i><span>Gestión de Permisos</span>
-    </a>
-</li> -->
-
+            <?php foreach ($modulos as $m): ?>
+                <?php if (puedeVerModulo($m['id'])): ?>
+                <li class="nav-item">
+                    <a href="<?= $m['url'] ?>" class="nav-link d-flex align-items-center gap-3 <?= $m['active'] ? 'active shadow-sm' : 'text-dark' ?>">
+                        <i class="<?= $m['icon'] ?> fs-5"></i>
+                        <span><?= $m['label'] ?></span>
+                    </a>
+                </li>
+                <?php endif; ?>
+            <?php endforeach; ?>
         </ul>
     </div>
 </aside>
-
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>';
 <script>
 // --- 1. LÓGICA DEL SIDEBAR ---

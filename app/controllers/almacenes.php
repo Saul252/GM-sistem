@@ -30,6 +30,7 @@ class AlmacenController {
     }
 
    public function index() {
+
     $paginaActual = 'almacenes'; 
     // Mantenemos el ID de sesión para los filtros de las tablas de abajo
     $almacen_usuario = $_SESSION['almacen_id'] ?? 0;
@@ -66,6 +67,7 @@ class AlmacenController {
         }
 
         // 4. Renderizamos la vista (ya lleva $resumenData inyectado)
+        $tituloPagina='Almacenes';
         require_once __DIR__ . '/../views/almacenes_view.php';
 
     } catch (Exception $e) {

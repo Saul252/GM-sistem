@@ -1,53 +1,79 @@
- <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
-
-    <?php if (function_exists('renderizarLayout')) {
-        renderizarLayout($paginaActual); 
-    } ?>
+ 
+    
+   
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Despacho de Materiales (Patio) | Sistema</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
     
-    <?php cargarEstilos(); ?>
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
     
     <style>
-        :root { --glass-bg: rgba(255, 255, 255, 0.9); }
-        body { 
-            background-color: #f4f7fa; 
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            padding-top: 75px; 
+        :root { 
+            --sidebar-width: 260px; 
+            --navbar-height: 65px;
+            --apple-bg: #f5f5f7;
+            --accent-blue: #007aff;
         }
-        .main-content { padding: 1.5rem; min-height: calc(100vh - 75px); }
-        .card-custom { 
-            border: none; border-radius: 16px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
-            background: var(--glass-bg); backdrop-filter: blur(10px);
-        }
-        .table thead th { 
-            background-color: #fcfcfd; color: #64748b; font-weight: 700;
-            text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em;
-            padding: 1.25rem; border-bottom: 2px solid #f1f5f9;
-        }
-        .btn-despachar {
-            background: #2563eb; color: white; border: none;
-            font-weight: 700; font-size: 0.75rem; padding: 6px 18px;
-            transition: all 0.2s;
-            border-radius: 50px;
-        }
-        .btn-despachar:hover { background: #1d4ed8; transform: translateY(-1px); box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2); }
-        .input-disabled { background-color: #f8fafc !important; color: #94a3b8; cursor: not-allowed; }
 
-        @media print {
-            body * { visibility: hidden; }
-            #documentoPatio, #documentoPatio * { visibility: visible; }
-            #documentoPatio { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; background: white; }
-            .modal-footer, .btn-close, .modal-header, .btn-print-action { display: none !important; }
+        body { 
+            background-color: var(--apple-bg); 
+            font-family: 'SF Pro Display', -apple-system, sans-serif;
+            color: #1d1d1f;
+        }
+
+        .main-content { 
+            margin-left: var(--sidebar-width); 
+            padding: 40px; 
+            padding-top: calc(var(--navbar-height) + 20px); 
+        }
+
+        .card-premium { 
+            border: none; 
+            border-radius: 20px; 
+            box-shadow: 0 8px 30px rgba(0,0,0,0.04); 
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+        }
+
+        .badge-ubicacion { 
+            background-color: #f2f2f7; 
+            color: #1d1d1f; 
+            border: 1px solid #d1d1d6; 
+            padding: 0.4rem 0.7rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 8px;
+        }
+
+        /* DataTables Custom */
+        .dataTables_wrapper .pagination .page-item.active .page-link {
+            background-color: var(--accent-blue);
+            border-color: var(--accent-blue);
+            border-radius: 8px;
+        }
+
+        .table thead th {
+            background: #fbfbfd;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #86868b;
+            border-bottom: 1px solid #d1d1d6;
+        }
+
+        @media (max-width: 768px) { 
+            .main-content { margin-left: 0; padding: 20px; padding-top: 90px; } 
         }
     </style>
+   
+   
 </head>
 <body>
 
@@ -154,7 +180,12 @@
         </div>
     </div>
 
-    <?php cargarScripts(); ?>
+
+     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     

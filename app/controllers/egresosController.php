@@ -295,7 +295,45 @@ if ($action === 'cancelarGasto') {
     }
     exit;
 }
+// --- DENTRO DE: if ($_SERVER['REQUEST_METHOD'] === 'POST') ---
+// Cambié $accion por $action para que coincida con tu declaración superior// Busca la línea donde recibes la acción
+$action = $_GET['action'] ?? $_POST['action'] ?? $_POST['ajax'] ?? '';
 
+if ($action === 'guardar_categoria_egreso') {
+    // 1. Limpieza total de búfer para que no haya ni un espacio en blanco antes del {
+    while (ob_get_level()) ob_end_clean(); 
+    
+    header('Content-Type: application/json; charset=utf-8');
+
+    try {
+        $nombre = trim($_POST['nombre'] ?? '');
+        
+        if (empty($nombre)) {
+            throw new Exception("El nombre de la categoría es obligatorio.");
+        }
+
+        // Usamos la instancia que ya definiste al inicio de tu controller
+        // Si tu modelo devuelve el ID insertado:
+        $id_final = $gastosCategorias->guardar($nombre, ''); 
+
+        if ($id_final) {
+            echo json_encode([
+                "success" => true, 
+                "id_insertado" => $id_final, 
+                "message" => "Categoría creada correctamente"
+            ]);
+        } else {
+            throw new Exception("Error al guardar en la base de datos.");
+        }
+    } catch (Exception $e) {
+        echo json_encode([
+            "success" => false, 
+            "message" => $e->getMessage()
+        ]);
+    }
+    // 2. OBLIGATORIO: Detener el script aquí
+    exit; 
+}
 // =========================================================================
 // --- CARGA DE VISTA (GET) ---
 // =========================================================================
@@ -308,16 +346,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && empty($action)) {
     $rol_id = $_SESSION['rol_id'] ?? 0;
     $mi_almacen_id = $_SESSION['almacen_id'] ?? 0;
     $almacen_a_consultar = ($rol_id == 1) ? (isset($_GET['almacen_filtro']) ? intval($_GET['almacen_filtro']) : 0) : $mi_almacen_id;
-
-    $egresos = $egresoModel->obtenerTodosLosEgresos($fecha_desde, $fecha_hasta, $almacen_a_consultar, $tipo_filtro);
-
+$categoria_gasto_id = isset($_GET['categoria_gasto_filtro']) ? intval($_GET['categoria_gasto_filtro']) : 0;
+    $egresos = $egresoModel->obtenerTodosLosEgresos($fecha_desde, $fecha_hasta, $almacen_a_consultar, $tipo_filtro, $categoria_gasto_id);
     $totalSumCompras = 0;
     $totalSumGastos = 0;
     foreach ($egresos as $e) {
         if ($e['tipo'] == 'compra') $totalSumCompras += $e['total'];
         else $totalSumGastos += $e['total'];
     }
-    
+    $CategoriasGastos= $gastosCategorias->listarTodas();
+   
     $granTotalEgresos = $totalSumCompras + $totalSumGastos;
     $almacenes = $egresoModel->obtenerAlmacenesActivos();
     $productos = $comprasModel->obtenerProductos(); 

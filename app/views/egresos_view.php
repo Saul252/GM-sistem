@@ -10,75 +10,97 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
     <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
-
-    <style>
-        :root {
+<style>
+:root {
     --nav-height: 65px;
     --sidebar-width: 260px;
+    --primary-radius: 12px;
 }
 
+/* --- ESTRUCTURA BASE --- */
 .main-content {
     margin-left: var(--sidebar-width);
     margin-top: var(--nav-height);
     padding: 1.5rem 2rem;
     width: calc(100% - var(--sidebar-width));
     min-height: calc(100vh - var(--nav-height));
-    transition: all 0.3s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: block;
 }
 
+/* --- COMPONENTES --- */
 .card-kpi {
     border: none;
-    border-radius: 12px;
+    border-radius: var(--primary-radius);
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1rem;
 }
 
 .table-responsive {
-    border-radius: 12px;
+    border-radius: var(--primary-radius);
     background: white;
     border: 1px solid #e2e8f0;
+    /* Evita que la tabla rompa el layout en móvil */
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; 
 }
 
+/* --- RESPONSIVE (MÓVIL Y TABLET) --- */
 @media (max-width: 992px) {
     .main-content {
         margin-left: 0;
         width: 100%;
-        padding: 1rem;
+        padding: 1rem 0.75rem; /* Menos padding en los lados para ganar espacio */
+    }
+
+    /* Ajuste de títulos para que no se corten */
+    h2 { font-size: 1.5rem; }
+    
+    /* Botones de acción en móvil: se apilan si es necesario */
+    .d-md-flex.gap-2 {
+        flex-direction: column;
+        gap: 0.5rem !important;
+    }
+
+    /* Mejora táctil para inputs y selects */
+    .form-control, .form-select, .btn {
+        min-height: 44px; /* Tamaño recomendado para dedos */
     }
 }
-/* ── NIVEL 1 - Modales principales ── */
-#modalGasto,
-#modalNuevaCompra,
-#modalVerDetalle,
-#modalAjusteFaltante {
-    z-index: 1060 !important;
+
+/* --- GESTIÓN DE MODALES (Z-INDEX) --- */
+/* Nivel 1: Principales */
+#modalGasto, #modalNuevaCompra, #modalVerDetalle, #modalAjusteFaltante { 
+    z-index: 1060 !important; 
 }
 
-/* ── NIVEL 2 - Modales secundarios ── */
-#modalAgregarProducto,
-#modalNuevoProveedorRapido {
-    z-index: 1110 !important;
+/* Nivel 2: Secundarios (Productos, Proveedores) */
+#modalAgregarProducto, #modalNuevoProveedorRapido { 
+    z-index: 1110 !important; 
 }
 
-/* ── NIVEL 3 - Modales terciarios ── */
-#modalAgregarCategoria {
-    z-index: 1160 !important;
+/* Nivel 3: Terciarios (Categorías) */
+#modalAgregarCategoria { 
+    z-index: 1160 !important; 
 }
 
-/* ── BACKDROPS por nivel ── */
-/* Bootstrap genera los backdrops en orden, 
-   los forzamos con nth-of-type */
-.modal-backdrop:nth-of-type(1) { z-index: 1050 !important; }
-.modal-backdrop:nth-of-type(2) { z-index: 1100 !important; }
-.modal-backdrop:nth-of-type(3) { z-index: 1150 !important; }
+/* Backdrops forzados para modales anidados */
+.modal-backdrop:nth-of-type(1) { z-index: 1055 !important; }
+.modal-backdrop:nth-of-type(2) { z-index: 1105 !important; }
+.modal-backdrop:nth-of-type(3) { z-index: 1155 !important; }
 
-/* ── Select2 siempre arriba de todo ── */
-.select2-container--open { z-index: 1200 !important; }
+/* Select2: Debe estar por encima de todos los modales anteriores */
+.select2-container--open { 
+    z-index: 9999 !important; 
+}
 
-
-/* Select2 siempre por encima de todo */
-.select2-container--open { z-index: 1090 !important; }
-    </style>
+/* Ajuste específico para Select2 en Móvil */
+.select2-container .select2-selection--single {
+    height: 38px !important;
+    display: flex;
+    align-items: center;
+}
+</style>
 </head>
 
 <body class="bg-light">
@@ -88,104 +110,117 @@
     <main class="main-content">
         <div class="container-fluid">
 
-            <div class="row align-items-center mb-4">
-                <div class="col-md-7">
-                    <h2 class="fw-bold text-dark mb-1">Compras y gastos</h2>
-                    <p class="text-muted mb-0">Gestión de flujo de caja e inventario</p>
-                </div>
-                <div class="col-md-5 text-md-end mt-3 mt-md-0">
-                    <div class="d-grid d-md-flex gap-2 justify-content-md-end">
-                        <button class="btn btn-warning" onclick="abrirModalGasto()">
-                            <i class="bi bi-cash-stack"></i> Nuevo Gasto
-                        </button>
+         <div class="row align-items-center mb-4">
+    <div class="col-md-7">
+        <h2 class="fw-bold text-dark mb-1" style="letter-spacing: -0.5px;">Compras y Gastos</h2>
+        <p class="text-muted mb-0 small text-uppercase fw-semibold" style="letter-spacing: 0.5px;">
+            <i class="bi bi-layers-half"></i> Gestión de flujo de caja e inventario
+        </p>
+    </div>
+    <div class="col-md-5 text-md-end mt-3 mt-md-0">
+        <div class="d-flex gap-2 justify-content-md-end">
+            <button class="btn btn-warning fw-bold px-3 shadow-sm border-0" 
+                    onclick="abrirModalGasto()" 
+                    style="border-radius: 10px; background: #ffc107; color: #000;">
+                <i class="bi bi-cash-stack me-1"></i> Nuevo Gasto
+            </button>
 
-                        <button class="btn btn-primary" onclick="abrirModalCompra()">
-                            <i class="bi bi-cart-plus"></i> Nueva Compra
-                        </button>
-                    </div>
-                </div>
-            </div>
+            <button class="btn btn-primary fw-bold px-3 shadow-sm border-0" 
+                    onclick="abrirModalCompra()" 
+                    style="border-radius: 10px; background: #0d6efd;">
+                <i class="bi bi-cart-plus me-1"></i> Nueva Compra
+            </button>
+        </div>
+    </div>
+</div>
 
-            <div class="card mb-4 shadow-sm border-0">
-                <div class="card mb-4 shadow-sm border-0">
-                    <div class="card-body bg-light rounded">
-                        <?php 
-        $periodo_sel = $_GET['periodo_filtro'] ?? 'mes'; 
-        $tipo_sel    = $_GET['tipo_filtro'] ?? 'todos';
+          <div class="card mb-4 shadow-sm border-0" style="border-radius: 15px;">
+    <div class="card-body p-4">
+        <?php 
+            $periodo_sel = $_GET['periodo_filtro'] ?? 'mes'; 
+            $tipo_sel    = $_GET['tipo_filtro'] ?? 'todos';
+            // Asegúrate de usar la variable correcta que viene del controller
+            $categoria_gasto_id = $_GET['categoria_gasto_filtro'] ?? 0;
         ?>
-                        <form id="formFiltros" method="GET" action="">
-                            <div class="row g-3 align-items-end">
+        <form id="formFiltros" method="GET" action="">
+            <div class="row g-3 align-items-end">
 
-                                <div class="col-md-2">
-                                    <label class="form-label fw-bold small text-uppercase text-primary">Periodo:</label>
-                                    <select id="filtro_rapido" name="periodo_filtro"
-                                        class="form-select border-primary fw-bold">
-                                        <option value="hoy" <?= ($periodo_sel == 'hoy') ? 'selected' : '' ?>>Hoy
-                                        </option>
-                                        <option value="ayer" <?= ($periodo_sel == 'ayer') ? 'selected' : '' ?>>Ayer
-                                        </option>
-                                        <option value="semana" <?= ($periodo_sel == 'semana') ? 'selected' : '' ?>>Esta
-                                            Semana</option>
-                                        <option value="mes" <?= ($periodo_sel == 'mes') ? 'selected' : '' ?>>Este Mes
-                                        </option>
-                                        <option value="personalizado"
-                                            <?= ($periodo_sel == 'personalizado') ? 'selected' : '' ?>>📅 Personalizado
-                                        </option>
-                                    </select>
-                                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold small text-uppercase text-primary">
+                        <i class="bi bi-calendar3 me-1"></i> Periodo
+                    </label>
+                    <select id="filtro_rapido" name="periodo_filtro" 
+                            class="form-select border-0 bg-light fw-bold" style="border-radius: 10px;">
+                        <option value="hoy" <?= ($periodo_sel == 'hoy') ? 'selected' : '' ?>>Hoy</option>
+                        <option value="ayer" <?= ($periodo_sel == 'ayer') ? 'selected' : '' ?>>Ayer</option>
+                        <option value="semana" <?= ($periodo_sel == 'semana') ? 'selected' : '' ?>>Esta Semana</option>
+                        <option value="mes" <?= ($periodo_sel == 'mes') ? 'selected' : '' ?>>Este Mes</option>
+                        <option value="personalizado" <?= ($periodo_sel == 'personalizado') ? 'selected' : '' ?>>📅 Personalizado</option>
+                    </select>
+                </div>
 
-                                <div class="col-md-2">
-                                    <label class="form-label fw-bold small text-uppercase">Desde:</label>
-                                    <input type="date" name="desde" id="fecha_desde" class="form-control"
-                                        value="<?= $fecha_desde ?>"
-                                        <?= ($periodo_sel !== 'personalizado') ? 'disabled' : '' ?>>
-                                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold small text-uppercase text-muted">Desde</label>
+                    <input type="date" name="desde" id="fecha_desde" 
+                           class="form-control border-0 bg-light" style="border-radius: 10px;"
+                           value="<?= $fecha_desde ?>" <?= ($periodo_sel !== 'personalizado') ? 'disabled' : '' ?>>
+                </div>
 
-                                <div class="col-md-2">
-                                    <label class="form-label fw-bold small text-uppercase">Hasta:</label>
-                                    <input type="date" name="hasta" id="fecha_hasta" class="form-control"
-                                        value="<?= $fecha_hasta ?>"
-                                        <?= ($periodo_sel !== 'personalizado') ? 'disabled' : '' ?>>
-                                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold small text-uppercase text-muted">Hasta</label>
+                    <input type="date" name="hasta" id="fecha_hasta" 
+                           class="form-control border-0 bg-light" style="border-radius: 10px;"
+                           value="<?= $fecha_hasta ?>" <?= ($periodo_sel !== 'personalizado') ? 'disabled' : '' ?>>
+                </div>
 
-                                <div class="col-md-2">
-                                    <label class="form-label fw-bold small text-uppercase text-primary">Mostrar:</label>
-                                    <select name="tipo_filtro" id="tipo_filtro"
-                                        class="form-select fw-bold border-primary shadow-sm">
-                                        <option value="todos" <?= ($tipo_sel == 'todos') ? 'selected' : '' ?>>📁 Todos
-                                        </option>
-                                        <option value="compra" <?= ($tipo_sel == 'compra') ? 'selected' : '' ?>>🛒
-                                            Compras</option>
-                                        <option value="gasto" <?= ($tipo_sel == 'gasto') ? 'selected' : '' ?>>💸 Gastos
-                                        </option>
-                                    </select>
-                                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold small text-uppercase text-primary">Mostrar</label>
+                    <select name="tipo_filtro" id="tipo_filtro" 
+                            class="form-select fw-bold border-0 bg-light" style="border-radius: 10px;">
+                        <option value="todos" <?= ($tipo_sel == 'todos') ? 'selected' : '' ?>>📁 Todos</option>
+                        <option value="compra" <?= ($tipo_sel == 'compra') ? 'selected' : '' ?>>🛒 Compras</option>
+                        <option value="gasto" <?= ($tipo_sel == 'gasto') ? 'selected' : '' ?>>💸 Gastos</option>
+                    </select>
+                </div>
 
-                                <?php if ($_SESSION['rol_id'] == 1): ?>
-                                <div class="col-md-2">
-                                    <label class="form-label fw-bold small text-uppercase">Almacén:</label>
-                                    <select id="almacen_filtro" name="almacen_filtro" class="form-select">
-                                        <option value="0">🌐 Todos</option>
-                                        <?php foreach ($almacenes as $alm): ?>
-                                        <option value="<?= $alm['id'] ?>"
-                                            <?= (isset($_GET['almacen_filtro']) && $_GET['almacen_filtro'] == $alm['id']) ? 'selected' : '' ?>>
-                                            📍 <?= $alm['nombre'] ?>
-                                        </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <?php endif; ?>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold small text-uppercase text-muted" id="label_categoria">Categoría</label>
+                    <select id="categoria_gasto_filtro" name="categoria_gasto_filtro" 
+                            class="form-select border-0 bg-light" style="border-radius: 10px;">
+                        <option value="0">-- Todas --</option>
+                        <?php foreach ($listaCategoriasGastos as $cat): ?>
+                            <option value="<?= $cat['id'] ?>" <?= ($categoria_gasto_id == $cat['id']) ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($cat['nombre']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
 
-                                <div class="col-md-2">
-                                    <button type="submit" class="btn btn-primary w-100 fw-bold">
-                                        <i class="bi bi-funnel"></i> FILTRAR
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
+                <?php if ($_SESSION['rol_id'] == 1): ?>
+                <div class="col-md-2">
+                    <label class="form-label fw-bold small text-uppercase text-muted">Almacén</label>
+                    <select id="almacen_filtro" name="almacen_filtro" 
+                            class="form-select border-0 bg-light" style="border-radius: 10px;">
+                        <option value="0">🌐 Todos</option>
+                        <?php foreach ($almacenes as $alm): ?>
+                        <option value="<?= $alm['id'] ?>" <?= (isset($_GET['almacen_filtro']) && $_GET['almacen_filtro'] == $alm['id']) ? 'selected' : '' ?>>
+                            📍 <?= $alm['nombre'] ?>
+                        </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <?php endif; ?>
+
+                <div class="col-md-auto">
+                    <button type="submit" class="btn btn-primary shadow-sm d-flex align-items-center justify-content-center" 
+                            style="border-radius: 12px; width: 45px; height: 40px; transition: all 0.3s;">
+                        <i class="bi bi-funnel-fill" style="font-size: 1.1rem;"></i>
+                    </button>
                 </div>
             </div>
+        </form>
+    </div>
+</div>
 
             <div class="row g-3 mb-4">
                 <div class="col-md-4">
@@ -232,116 +267,91 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if(!empty($egresos)): ?>
-                            <?php foreach($egresos as $e): ?>
-                            <tr>
-                                <td class="ps-3"><span class="text-muted small">#</span><?= $e['id'] ?></td>
-                                <td>
-                                    <span class="text-secondary small fw-semibold">
-                                        <i class="bi bi-geo-alt-fill text-danger" style="font-size: 0.7rem;"></i>
-                                        <?= htmlspecialchars($e['almacen_nombre']) ?>
-                                    </span>
-                                </td>
-
-                                <td class="text-muted small"><?= date('d/m/Y', strtotime($e['fecha'])) ?></td>
-                                <td class="fw-bold text-dark">
-                                    <?php      $prefijo = ($e['tipo'] == 'compra') ? 'FC-' : 'FG-'; 
-                                           // Imprimimos el prefijo unido al folio     
-                                              echo $prefijo . $e['folio'];     ?>
-                                </td>
-                                <td>
-                                    <span
-                                        class="badge rounded-pill <?= $e['tipo'] == 'compra' ? 'bg-primary' : 'bg-warning text-dark' ?>">
-                                        <?= strtoupper($e['tipo']) ?>
-                                    </span>
-                                </td>
-
-                                <td><?= htmlspecialchars($e['entidad']) ?></td>
-                                <td class="fw-bold text-end">$<?= number_format($e['total'], 2) ?></td>
-
-                                <td class="text-center">
-                                    <?php if($e['tipo'] == 'compra'): ?>
-                                    <?php if($e['piezas_faltantes'] > 0): ?>
-                                    <div class="d-flex flex-column align-items-center">
-                                        <span class="badge bg-danger mb-1" style="font-size: 0.7rem;">
-                                            FALTAN: <?= number_format($e['piezas_faltantes'], 2) ?>
-                                        </span>
-
-                                    </div>
-                                    <?php elseif( $e['piezas_faltantes'] <= 0): ?>
-                                    <span class="badge bg-success" style="font-size: 0.7rem;">
-                                        <i class="bi bi-check-circle"></i> COMPLETADO
-                                    </span>
-                                    <?php else: ?>
-                                    <span class="text-muted small">-</span>
-                                    <?php endif; ?>
-                                    <?php else: ?>
-                                    <span class="text-muted small">-</span>
-                                    <?php endif; ?>
-                                </td>
-
-                                <td class="text-center">
-                                    <?php if(!empty($e['documento_url'])): ?>
-                                    <?php 
-            // Determinamos el prefijo de la ruta según el tipo
-            // Si es gasto, añadimos la carpeta intermedia
-            $ruta_base = ($e['tipo'] == 'gasto') ? 'uploads/evidencias/' : '';
-        ?>
-
-                                    <a href="../../<?= $ruta_base . $e['documento_url'] ?>" target="_blank"
-                                        class="text-primary h5">
-                                        <i class="bi bi-file-earmark-pdf"></i>
-                                    </a>
-                                    <?php else: ?>
-                                    <span class="text-muted small">-</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td class="text-end pe-3">
-                                    <?php 
-// 1. Verificamos que exista la llave y que NO sea NULL
-// 2. Verificamos que sea mayor a 0 para mostrar el botón
-if (isset($e['piezas_faltantes']) && $e['piezas_faltantes'] !== null): ?>
-
-                                    <?php if ($e['piezas_faltantes'] <= 0): ?>
-
-                                    <?php else: ?>
-                                    <button class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size: 0.65rem;"
-                                        onclick="abrirModalAjuste(<?= $e['id'] ?>, '<?= $e['folio'] ?>')">
-                                        <i class="bi bi-wrench-adjustable"></i> Ajustar
-                                    </button>
-                                    <?php endif; ?>
-
-                                    <?php endif; ?>
-
-                                    <button class="btn btn-sm btn-light border"
-                                        onclick="verDetalle('<?= $e['tipo'] ?>', <?= $e['id'] ?>)">
-                                        <i class="bi bi-eye"></i>
-                                    </button>  
-                                   <?php if ($e['tipo'] == 'compra'): ?>
-                <span class="badge bg-success">Compra</span>
-                <button class="btn btn-sm btn-light border" 
-                        onclick="confirmarCancelacionCompra('<?= $e['id'] ?>', '<?= $e['folio'] ?>')">
-                    <i class="fas fa-ban"></i> Anular
-                </button>
+    <?php if(!empty($egresos)): ?>
+        <?php foreach($egresos as $e): ?>
+            <tr>
+                <td class="ps-3"><span class="text-muted small">#</span><?= $e['id'] ?></td>
+                <td>
+                    <span class="text-secondary small fw-semibold">
+                        <i class="bi bi-geo-alt-fill text-danger" style="font-size: 0.7rem;"></i>
+                        <?= htmlspecialchars($e['almacen_nombre'] ?? 'N/A') ?>
+                    </span>
+                </td>
+                <td class="text-muted small"><?= date('d/m/Y', strtotime($e['fecha'])) ?></td>
+                <td class="fw-bold text-dark">
+                    <?= ($e['tipo'] == 'compra' ? 'FC-' : 'FG-') . $e['folio'] ?>
+                </td>
                 
-            <?php else: ?>
-                <span class="badge bg-info">Gasto</span>
-                <button class="btn btn-sm btn-light border" 
-                        onclick="confirmarCancelacionGasto('<?= $e['id'] ?>', '<?= $e['folio'] ?>')">
-                    <i class="fas fa-ban"></i> Anular
-                </button>
-            <?php endif; ?>
-                                    
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                            <?php else: ?>
-                            <tr>
-                                <td colspan="9" class="text-center py-4 text-muted">No se encontraron movimientos en
-                                    este rango.</td>
-                            </tr>
-                            <?php endif; ?>
-                        </tbody>
+                <td>
+                    <span class="badge rounded-pill <?= $e['tipo'] == 'compra' ? 'bg-primary' : 'bg-warning text-dark' ?>">
+                        <?= strtoupper($e['tipo']) ?>
+                    </span>
+                    <?php if($e['tipo'] == 'gasto' && !empty($e['categoria_nombre'])): ?>
+                        <br>
+                        <span class="badge bg-light text-dark border mt-1" style="font-size: 0.65rem;">
+                            <i class="bi bi-tag-fill text-muted"></i> <?= htmlspecialchars($e['categoria_nombre']) ?>
+                        </span>
+                    <?php endif; ?>
+                </td>
+
+                <td><?= htmlspecialchars($e['entidad']) ?></td>
+                <td class="fw-bold text-end">$<?= number_format($e['total'], 2) ?></td>
+
+                <td class="text-center">
+                    <?php if($e['tipo'] == 'compra'): ?>
+                        <?php if($e['piezas_faltantes'] > 0): ?>
+                            <span class="badge bg-danger" style="font-size: 0.7rem;">
+                                FALTAN: <?= number_format($e['piezas_faltantes'], 2) ?>
+                            </span>
+                        <?php else: ?>
+                            <span class="badge bg-success" style="font-size: 0.7rem;">
+                                <i class="bi bi-check-circle"></i> COMPLETADO
+                            </span>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <span class="text-muted small">-</span>
+                    <?php endif; ?>
+                </td>
+
+                <td class="text-center">
+                    <?php if(!empty($e['documento_url'])): ?>
+                        <?php $ruta_base = ($e['tipo'] == 'gasto') ? 'uploads/evidencias/' : ''; ?>
+                        <a href="../../<?= $ruta_base . $e['documento_url'] ?>" target="_blank" class="text-primary h5">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                        </a>
+                    <?php else: ?>
+                        <span class="text-muted small">-</span>
+                    <?php endif; ?>
+                </td>
+
+                <td class="text-end pe-3">
+                    <div class="btn-group">
+                        <?php if ($e['tipo'] == 'compra' && ($e['piezas_faltantes'] ?? 0) > 0): ?>
+                            <button class="btn btn-sm btn-outline-danger py-0 px-2" 
+                                    onclick="abrirModalAjuste(<?= $e['id'] ?>, '<?= $e['folio'] ?>')">
+                                <i class="bi bi-wrench-adjustable"></i>
+                            </button>
+                        <?php endif; ?>
+
+                        <button class="btn btn-sm btn-light border" title="Ver Detalle"
+                                onclick="verDetalle('<?= $e['tipo'] ?>', <?= $e['id'] ?>)">
+                            <i class="bi bi-eye"></i>
+                        </button>
+
+                        <button class="btn btn-sm btn-light border text-danger" title="Anular"
+                                onclick="<?= ($e['tipo'] == 'compra') ? "confirmarCancelacionCompra" : "confirmarCancelacionGasto" ?>('<?= $e['id'] ?>', '<?= $e['folio'] ?>')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <tr>
+            <td colspan="10" class="text-center py-4 text-muted">No se encontraron movimientos.</td>
+        </tr>
+    <?php endif; ?>
+</tbody>
                     </table>
                 </div>
             </div>
@@ -387,87 +397,114 @@ require_once $ruta;
    
     <script>
     (function() {
-        document.addEventListener('DOMContentLoaded', function() {
-            const f = {
-                form: document.getElementById('formFiltros'),
-                periodo: document.getElementById('filtro_rapido'),
-                desde: document.getElementById('fecha_desde'),
-                hasta: document.getElementById('fecha_hasta'),
-                almacen: document.getElementById('almacen_filtro'),
-                tipo: document.getElementById('tipo_filtro')
-            };
+    document.addEventListener('DOMContentLoaded', function() {
+        const f = {
+            form: document.getElementById('formFiltros'),
+            periodo: document.getElementById('filtro_rapido'),
+            desde: document.getElementById('fecha_desde'),
+            hasta: document.getElementById('fecha_hasta'),
+            almacen: document.getElementById('almacen_filtro'),
+            tipo: document.getElementById('tipo_filtro'),
+            // --- NUEVO: Filtro de Categoría ---
+            categoria: document.getElementById('categoria_gasto_filtro')
+        };
 
-            const formatearFecha = (date) => {
-                const y = date.getFullYear();
-                const m = String(date.getMonth() + 1).padStart(2, '0');
-                const d = String(date.getDate()).padStart(2, '0');
-                return `${y}-${m}-${d}`;
-            };
+        const formatearFecha = (date) => {
+            const y = date.getFullYear();
+            const m = String(date.getMonth() + 1).padStart(2, '0');
+            const d = String(date.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        };
 
-            const procesarEnvio = () => {
-                // Habilitar campos para que viajen en la URL
+        const procesarEnvio = () => {
+            f.desde.disabled = false;
+            f.hasta.disabled = false;
+            f.form.submit();
+        };
+
+        // --- LÓGICA DE VISIBILIDAD (Opcional pero recomendada) ---
+        const gestionarVisibilidadCategoria = () => {
+            if (!f.categoria) return;
+            // Si el usuario elige "Solo Compras", la categoría de gasto no tiene sentido
+            if (f.tipo && f.tipo.value === 'compra') {
+                f.categoria.parentElement.style.opacity = '0.5';
+                f.categoria.disabled = true;
+            } else {
+                f.categoria.parentElement.style.opacity = '1';
+                f.categoria.disabled = false;
+            }
+        };
+
+        // Evento Periodo Rápido
+        f.periodo.addEventListener('change', function() {
+            if (this.value === 'personalizado') {
                 f.desde.disabled = false;
                 f.hasta.disabled = false;
-                f.form.submit();
-            };
+                f.desde.focus();
+                return;
+            }
 
-            // Evento Periodo Rápido
-            f.periodo.addEventListener('change', function() {
-                if (this.value === 'personalizado') {
-                    f.desde.disabled = false;
-                    f.hasta.disabled = false;
-                    f.desde.focus();
-                    return;
+            let hoy = new Date();
+            let d = new Date();
+            let h = new Date();
+
+            switch (this.value) {
+                case 'ayer':
+                    d.setDate(hoy.getDate() - 1);
+                    h.setDate(hoy.getDate() - 1);
+                    break;
+                case 'semana':
+                    const day = hoy.getDay();
+                    const diff = hoy.getDate() - day + (day === 0 ? -6 : 1);
+                    d.setDate(diff);
+                    break;
+                case 'mes':
+                    d = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+                    break;
+            }
+
+            f.desde.value = formatearFecha(d);
+            f.hasta.value = formatearFecha(h);
+            procesarEnvio();
+        });
+
+        // Evento Cambios Manuales en Fechas
+        [f.desde, f.hasta].forEach(el => {
+            el.addEventListener('change', () => {
+                if (f.periodo.value !== 'personalizado') {
+                    f.periodo.value = 'personalizado';
                 }
-
-                let hoy = new Date();
-                let d = new Date();
-                let h = new Date();
-
-                switch (this.value) {
-                    case 'ayer':
-                        d.setDate(hoy.getDate() - 1);
-                        h.setDate(hoy.getDate() - 1);
-                        break;
-                    case 'semana':
-                        const day = hoy.getDay();
-                        const diff = hoy.getDate() - day + (day === 0 ? -6 : 1);
-                        d.setDate(diff);
-                        break;
-                    case 'mes':
-                        d = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-                        break;
+                if (f.desde.value && f.hasta.value) {
+                    procesarEnvio();
                 }
-
-                f.desde.value = formatearFecha(d);
-                f.hasta.value = formatearFecha(h);
-                procesarEnvio();
-            });
-
-            // Evento Cambios Manuales en Fechas
-            [f.desde, f.hasta].forEach(el => {
-                el.addEventListener('change', () => {
-                    if (f.periodo.value !== 'personalizado') {
-                        f.periodo.value = 'personalizado';
-                    }
-                    if (f.desde.value && f.hasta.value) {
-                        procesarEnvio();
-                    }
-                });
-            });
-
-            // Evento Almacén y Tipo
-            if (f.almacen) f.almacen.addEventListener('change', procesarEnvio);
-            if (f.tipo) f.tipo.addEventListener('change', procesarEnvio);
-
-            // Asegurar envío manual por botón
-            f.form.addEventListener('submit', function(e) {
-                f.desde.disabled = false;
-                f.hasta.disabled = false;
             });
         });
-    })();
-    </script>
+
+        // Eventos de Selects
+        if (f.almacen) f.almacen.addEventListener('change', procesarEnvio);
+        
+        if (f.tipo) {
+            f.tipo.addEventListener('change', () => {
+                gestionarVisibilidadCategoria();
+                procesarEnvio();
+            });
+        }
+
+        // --- NUEVO: Evento para el filtro de categoría ---
+        if (f.categoria) {
+            f.categoria.addEventListener('change', procesarEnvio);
+        }
+
+        // Ejecutar al cargar para setear estado inicial del select categoría
+        gestionarVisibilidadCategoria();
+
+        // Asegurar envío manual por botón
+        f.form.addEventListener('submit', function(e) {
+            f.desde.disabled = false;
+            f.hasta.disabled = false;
+        });
+    });
+})();    </script>
 
    
  <script>

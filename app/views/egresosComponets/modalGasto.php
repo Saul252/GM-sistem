@@ -118,10 +118,7 @@
                     <label class="small fw-bold text-muted">Nombre</label>
                     <input type="text" id="nuevo_nombre_cat" class="form-control border-0 bg-light" style="border-radius: 10px;" placeholder="Ej: Servicios">
                 </div>
-                <div class="mb-1">
-                    <label class="small fw-bold text-muted">Descripción</label>
-                    <input type="text" id="nuevo_desc_cat" class="form-control border-0 bg-light" style="border-radius: 10px;">
-                </div>
+               
             </div>
             <div class="modal-footer border-0 pt-0">
                 <button type="button" class="btn btn-primary w-100 fw-bold" onclick="guardarNuevaCategoria()" style="border-radius: 10px;">Agregar</button>
@@ -328,4 +325,100 @@ function agregarFilaGasto() {
     tbody.appendChild(fila);
     calcularGasto();
 }
-</script>
+// ==================== FUNCIONES DE CATEGORÍA ====================
+
+/**
+ * Abre el modal pequeño para registrar una nueva categoría de gasto
+ */
+function abrirModalNuevaCategoria() {
+    // Usamos jQuery para asegurar compatibilidad con tu estructura anterior
+    // o Bootstrap nativo si prefieres
+    const modalCat = new bootstrap.Modal(document.getElementById('modalNuevaCategoriaGasto'));
+    modalCat.show();
+}
+
+/**
+ * Envía la nueva categoría al controlador y actualiza el select principal
+ */function guardarNuevaCategoria() {
+    const nombreInput = document.getElementById('nuevo_nombre_cat');
+    const nombre = nombreInput.value.trim();
+
+    if (!nombre) {
+        return Swal.fire({
+            icon: 'warning',
+            title: 'Campo requerido',
+            text: 'Debes escribir el nombre de la categoría',
+            toast: true,
+            position: 'top-end',
+            timer: 3000
+        });
+    }
+
+    // Preparar datos para el controlador (Coincidiendo con el Modelo)
+    const datos = new FormData();
+    datos.append('ajax', 'guardar_categoria_egreso'); // Acción para el controlador
+    datos.append('nombre', nombre);
+
+    // Botón de carga
+    const btn = document.querySelector('#modalNuevaCategoriaGasto .btn-primary');
+    const textoOriginal = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+    // Petición al controlador de egresos
+    fetch('/cfsistem/app/controllers/egresosController.php', {
+        method: 'POST',
+        body: datos
+    })
+    .then(res => {
+        // Validación de seguridad para el JSON
+        if (!res.ok) throw new Error('Respuesta del servidor no válida');
+        return res.json();
+    })
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                icon: 'success',
+                title: 'Categoría creada',
+                timer: 1500,
+                showConfirmButton: false
+            });
+
+            // 1. Limpiar campos
+            nombreInput.value = '';
+            const descInput = document.getElementById('nuevo_desc_cat');
+            if(descInput) descInput.value = '';
+
+            // 2. Cerrar el modal de categoría usando la instancia de Bootstrap
+            const modalEl = document.getElementById('modalNuevaCategoriaGasto');
+            const modalInst = bootstrap.Modal.getInstance(modalEl);
+            if (modalInst) modalInst.hide();
+
+            // 3. Actualizar el select principal de Gastos
+            const select = document.getElementById('select_categoria_gasto');
+            if (select) {
+                // Añadimos la opción: new Option(texto, valor, defaultSelected, selected)
+                const nuevaOpcion = new Option(nombre, data.id, true, true);
+                select.add(nuevaOpcion);
+                // Forzamos el cambio para que se visualice
+                select.value = data.id;
+            }
+
+        } else {
+            throw new Error(data.message || 'Error al guardar');
+        }
+    })
+    .catch(err => {
+        console.error('❌ Error Cat:', err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: err.message,
+            confirmButtonColor: '#0d6efd'
+        });
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = textoOriginal;
+    });
+}</script>
