@@ -301,7 +301,7 @@ public function finalizarViajeVehiculo($vehiculo_id) {
 
         // 1. Actualizar Maestro de Repartos
         $sqlM = "UPDATE transporte_repartos_maestro 
-                 SET estado_reparto = 'entregado', 
+                 SET estado_reparto = 'completado', 
                      fecha_entrega = NOW() 
                  WHERE vehiculo_id = ? AND estado_reparto = 'en_transito'";
         $stmtM = $this->db->prepare($sqlM);
@@ -312,7 +312,7 @@ public function finalizarViajeVehiculo($vehiculo_id) {
         $sqlP = "UPDATE transporte_rutas_puntos rp
                  INNER JOIN transporte_repartos_maestro trm ON rp.reparto_id = trm.id
                  SET rp.estado_punto = 'visitado'
-                 WHERE trm.vehiculo_id = ? AND trm.estado_reparto = 'entregado'";
+                 WHERE trm.vehiculo_id = ? AND trm.estado_reparto = 'completado'";
         $stmtP = $this->db->prepare($sqlP);
         $stmtP->bind_param("i", $vehiculo_id);
         $stmtP->execute();
@@ -601,9 +601,9 @@ public function getResumenDespacho($movimiento_id) {
     // Tripulantes: transporte_tripulantes_detalle.usuario_id -> usuarios
     $res['tripulantes'] = [];
     if ($res['reparto_id']) {
-        $sqlT = "SELECT u.nombre 
+        $sqlT = "SELECT t.nombre 
                  FROM transporte_tripulantes_detalle ttd
-                 INNER JOIN usuarios u ON ttd.usuario_id = u.id
+                LEFT JOIN trabajadores t ON tttd.usuario_encargado_id = t.id
                  WHERE ttd.reparto_id = ?";
         $stmtT = $this->db->prepare($sqlT);
         $stmtT->bind_param("i", $res['reparto_id']);
@@ -638,6 +638,7 @@ public function obtenerHistorialFisico($movimiento_id) {
                 trm.id as reparto_id,
                 trm.estado_reparto,
                 tv.nombre as vehiculo,
+                 trm.hora_llegada_real AS fecha_llegada,
                 tv.placas,
                 tc.viaje_folio,
                 
@@ -694,10 +695,11 @@ public function obtenerHistorialFisico($movimiento_id) {
 }
 
 public function getTripulantesPorReparto($reparto_id) {
-    $sql = "SELECT u.nombre 
+    $sql = "SELECT t.nombre 
             FROM transporte_tripulantes_detalle ttd
-            INNER JOIN usuarios u ON ttd.usuario_id = u.id
+            LEFT JOIN trabajadores t ON ttd.usuario_id = t.id
             WHERE ttd.reparto_id = ?";
+    
     $stmt = $this->db->prepare($sql);
     $stmt->bind_param("i", $reparto_id);
     $stmt->execute();
@@ -910,6 +912,7 @@ public function obtenerViajesLogistica($folio_folio = null) {
         $sql = "SELECT 
                     tc.viaje_folio AS folio_viaje,
                     tc.fecha_creacion AS fecha_viaje,
+                    trm.hora_llegada_real AS fecha_llegada,
                     trm.estado_reparto AS estatus_logistico,
                     tv.nombre AS unidad_nombre,
                     tv.placas AS unidad_placas,

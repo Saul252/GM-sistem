@@ -77,18 +77,41 @@
                                 </div>
                             </div>
                             
-                            <div class="p-3 bg-white rounded-4 border border-light shadow-sm mb-3">
-                                <div class="row">
-                                    <div class="col-6">
-                                        <label class="text-muted small d-block mb-1" style="font-weight: 600;"><i class="bi bi-calendar-event text-primary me-1"></i>Salida de Ruta</label>
-                                        <span class="fw-bold text-dark" style="font-size: 0.85rem;">${d.fecha_patio || d.fecha_movimiento}</span>
-                                    </div>
-                                    <div class="col-6 border-start">
-                                        <label class="text-muted small d-block mb-1" style="font-weight: 600;"><i class="bi bi-geo-alt-fill text-danger me-1"></i>Destino</label>
-                                        <span class="fw-bold text-dark" style="font-size: 0.85rem;">${d.direccion_entrega || 'Sucursal'}</span>
-                                    </div>
-                                </div>
-                            </div>
+                           <div class="p-3 bg-white rounded-4 border border-light shadow-sm mb-3">
+    <div class="row align-items-center">
+        <div class="col-7">
+            <div class="d-flex mb-2">
+                <div class="me-3">
+                    <label class="text-muted small d-block mb-0" style="font-weight: 600; font-size: 0.7rem;">
+                        <i class="bi bi-calendar-check text-primary me-1"></i>SALIDA
+                    </label>
+                    <span class="fw-bold text-dark" style="font-size: 0.85rem;">
+                        ${d.fecha_patio || d.fecha_movimiento}
+                    </span>
+                </div>
+                <div class="ps-3 border-start">
+                    <label class="text-muted small d-block mb-0" style="font-weight: 600; font-size: 0.7rem;">
+                        <i class="bi bi-flag-fill text-success me-1"></i>LLEGADA
+                    </label>
+                    <span class="fw-bold ${d.fecha_llegada ? 'text-dark' : 'text-primary'}" style="font-size: 0.85rem;">
+                        ${d.fecha_llegada ? d.fecha_llegada : '<span class="badge rounded-pill bg-light text-primary border border-primary-subtle" style="font-size: 0.65rem;">EN TRÁNSITO</span>'}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-5 border-start">
+            <div class="ps-2">
+                <label class="text-muted small d-block mb-0" style="font-weight: 600; font-size: 0.7rem;">
+                    <i class="bi bi-geo-alt-fill text-danger me-1"></i>DESTINO FINAL
+                </label>
+                <div class="fw-bold text-dark text-truncate" style="font-size: 0.85rem;" title="${d.direccion_entrega || 'Entrega en Sucursal'}">
+                    ${d.direccion_entrega || 'Sucursal'}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
                             <div class="row g-2 mb-3">
                                 <div class="col-7">

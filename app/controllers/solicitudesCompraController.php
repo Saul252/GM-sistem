@@ -67,7 +67,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardar') {
         $resultado = $solicitudModel->crear($data, $items_procesados);
         
         if ($resultado === true) {
-            echo json_encode(['status' => 'success', 'message' => '¡Solicitud #'.($conexion->insert_id ?? '').' guardada con éxito!']);
+            echo json_encode(['status' => 'success', 'message' => '¡Solicitud guardada con éxito!']);
         } else {
             // Si el modelo falló internamente
             throw new Exception($resultado ?: "Error en la base de datos al insertar.");

@@ -211,6 +211,11 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
                                 <label class="form-label small fw-bold text-muted">RFC *</label>
                                 <input type="text" name="rfc" id="rfc" class="form-control text-uppercase rounded-3" maxlength="13" required>
                             </div>
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Dirección Completa</label>
+                                <textarea name="direccion" id="direccion" class="form-control" rows="2"
+                                    placeholder="Calle, número, colonia..."></textarea>
+                            </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold text-muted">CÓDIGO POSTAL</label>
                                 <input type="text" name="codigo_postal" id="codigo_postal" class="form-control rounded-3" maxlength="5">
@@ -319,6 +324,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
                 $('#nombre_comercial').val(c.nombre_comercial);
                 $('#razon_social').val(c.razon_social);
                 $('#rfc').val(c.rfc);
+                 $('#direccion').val(c.direccion);
                 $('#correo').val(c.correo);
                 $('#almacen_id_modal').val(c.almacen_id);
                 $('#modalCliente').modal('show');

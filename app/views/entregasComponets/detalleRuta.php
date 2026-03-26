@@ -182,56 +182,101 @@
 </style>
 <div class="modal fade" id="modalDetalleViaje" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content" style="border-radius: 22px; border: none; overflow: hidden; backdrop-filter: blur(15px); background: rgba(255, 255, 255, 0.85);">
-            <div class="modal-header" style="border: none; background: rgba(255, 255, 255, 0.5);">
-                <h5 class="modal-title fw-bold text-dark"><i class="fas fa-truck-loading me-2"></i>Hoja de Ruta: <span id="txtFolioViaje"></span></h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content shadow-lg" style="border-radius: 20px; border: none; overflow: hidden;">
+
+            <!-- HEADER -->
+            <div class="modal-header bg-dark text-white" style="border: none;">
+                <h5 class="modal-title fw-semibold">
+                    <i class="fas fa-route me-2"></i>
+                    Hoja de Ruta: <span id="txtFolioViaje" class="fw-bold"></span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
+
+            <!-- BODY -->
+            <div class="modal-body" style="background: #f6f8fa;">
+
+                <!-- INFO CARDS -->
                 <div class="row g-3 mb-4">
-                    <div class="col-md-4">
-                        <div class="p-3" style="background: white; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                            <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Unidad y Placas</small>
-                            <span id="txtUnidad" class="d-block fw-bold text-dark"></span>
-                            <span id="txtPlacas" class="badge bg-light text-dark mt-1"></span>
+
+                    <!-- UNIDAD -->
+                    <div class="col-md-3">
+                        <div class="p-3 h-100 bg-white rounded-4 shadow-sm">
+                            <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem;">Unidad</small>
+                            <div id="txtUnidad" class="fw-bold fs-6 text-dark mt-1"></div>
+                            <span id="txtPlacas" class="badge bg-secondary-subtle text-dark mt-2"></span>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="p-3" style="background: white; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                            <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Equipo de Trabajo</small>
-                            <span class="d-block text-dark"><strong>Chofer:</strong> <span id="txtChofer"></span></span>
-                            <small id="txtAyudantes" class="text-secondary"></small>
+
+                    <!-- FECHAS -->
+                    <div class="col-md-3">
+                        <div class="p-3 h-100 bg-white rounded-4 shadow-sm">
+                            <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem;">Fechas</small>
+                            
+                            <div class="mt-2">
+                                <small class="text-muted">Inicio</small>
+                                <div id="txtFInicio" class="fw-bold text-dark"></div>
+                            </div>
+
+                            <div class="mt-2">
+                                <small class="text-muted">Final</small>
+                                <div id="txtFFinal" class="fw-bold text-success"></div>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="p-3" style="background: white; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                            <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.65rem;">Estado de Logística</small>
-                            <div id="txtEstatusLogistico" class="mt-1"></div>
+
+                    <!-- EQUIPO -->
+                    <div class="col-md-3">
+                        <div class="p-3 h-100 bg-white rounded-4 shadow-sm">
+                            <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem;">Equipo</small>
+                            <div class="mt-2">
+                                <strong>Chofer:</strong>
+                                <div id="txtChofer" class="fw-semibold"></div>
+                            </div>
+                            <small id="txtAyudantes" class="text-muted d-block mt-1"></small>
                         </div>
                     </div>
+
+                    <!-- ESTATUS -->
+                    <div class="col-md-3">
+                        <div class="p-3 h-100 bg-white rounded-4 shadow-sm">
+                            <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem;">Estatus</small>
+                            <div id="txtEstatusLogistico" class="mt-2"></div>
+                        </div>
+                    </div>
+
                 </div>
 
-                <div class="table-responsive" style="border-radius: 15px; background: white;">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="ps-3" style="font-size: 0.75rem;">ORDEN</th>
-                                <th style="font-size: 0.75rem;">CLIENTE / DESTINO</th>
-                                <th style="font-size: 0.75rem;">TICKET</th>
-                                <th style="font-size: 0.75rem;">PRODUCTO</th>
-                                <th class="text-center" style="font-size: 0.75rem;">CANTIDAD</th>
-                                <th class="pe-3 text-center" style="font-size: 0.75rem;">MAPA</th>
+                <!-- TABLA -->
+                <div class="table-responsive bg-white rounded-4 shadow-sm">
+                    <table class="table align-middle mb-0">
+                        <thead style="background: #f1f3f5;">
+                            <tr class="text-muted">
+                                <th class="ps-3" style="font-size: 0.75rem;">#</th>
+                                <th style="font-size: 0.75rem;">Cliente / Destino</th>
+                                <th style="font-size: 0.75rem;">Ticket</th>
+                                <th style="font-size: 0.75rem;">Producto</th>
+                                <th class="text-center" style="font-size: 0.75rem;">Cantidad</th>
+                                <th class="text-center pe-3" style="font-size: 0.75rem;">Mapa</th>
                             </tr>
                         </thead>
                         <tbody id="bodyDetalleViaje" style="font-size: 0.85rem;">
-                            </tbody>
+                        </tbody>
                     </table>
                 </div>
+
             </div>
-            <div class="modal-footer" style="border: none;">
-                <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal" style="border-radius: 12px;">Cerrar</button>
-                <button type="button" class="btn btn-dark fw-bold" onclick="window.print()" style="border-radius: 12px;">Imprimir Ruta</button>
+
+            <!-- FOOTER -->
+            <div class="modal-footer bg-white" style="border-top: 1px solid #eee;">
+                <button type="button" class="btn btn-outline-secondary rounded-3 px-4" data-bs-dismiss="modal">
+                    Cerrar
+                </button>
+                <button type="button" class="btn btn-dark rounded-3 px-4" onclick="window.print()">
+                    <i class="fas fa-print me-1"></i> Imprimir
+                </button>
             </div>
+
         </div>
     </div>
 </div>
@@ -253,10 +298,15 @@ function verDetalleViaje(folio) {
 
             const registros = response.data;
             const v = registros[0];
+const inicio = document.getElementById('txtFInicio');
+const final = document.getElementById('txtFFinal');
 
+if (inicio) inicio.innerText = v.fecha_viaje || 'N/A';
+if (final) final.innerText = v.fecha_llegada || 'En ruta';
             // Llenar cabecera
             document.getElementById('txtFolioViaje').innerText = v.folio_viaje || 'S/N';
             document.getElementById('txtUnidad').innerText = v.unidad_nombre || 'N/A';
+           
             document.getElementById('txtPlacas').innerText = v.unidad_placas || '';
             document.getElementById('txtChofer').innerText = v.nombre_chofer || 'No asignado';
             document.getElementById('txtAyudantes').innerText = v.ayudantes ? `Ayudantes: ${v.ayudantes}` : 'Sin ayudantes';
@@ -268,25 +318,31 @@ function verDetalleViaje(folio) {
 
             // Llenar tabla
             let html = '';
-            registros.forEach(item => {
-                const mapsUrl = (item.latitud && item.longitud) 
-                    ? `<a href="https://www.google.com/maps?q=${item.latitud},${item.longitud}" target="_blank" class="btn btn-sm btn-outline-primary" style="border-radius: 10px;"><i class="fas fa-map-marker-alt"></i></a>`
-                    : `<span class="text-muted small">N/A</span>`;
+           let contador = 1;
 
-                html += `
-                <tr>
-                    <td class="ps-3 text-center"><span class="badge bg-dark rounded-circle">${item.orden_visita}</span></td>
-                    <td>
-                        <strong class="text-dark">${item.cliente}</strong>
-                        <small class="d-block text-secondary" style="font-size: 0.7rem;">${item.direccion_entrega}</small>
-                    </td>
-                    <td><code class="text-primary">${item.folio_venta}</code></td>
-                    <td>${item.producto_nombre} <br> <small class="text-muted">${item.um || ''}</small></td>
-                    <td class="text-center fw-bold">${parseFloat(item.cantidad).toFixed(2)}</td>
-                    <td class="text-center">${mapsUrl}</td>
-                </tr>`;
-            });
+registros.forEach(item => {
 
+    const mapsUrl = (item.latitud && item.longitud) 
+        ? `<a href="https://www.google.com/maps?q=${item.latitud},${item.longitud}" target="_blank" class="btn btn-sm btn-outline-primary" style="border-radius: 10px;"><i class="fas fa-map-marker-alt"></i></a>`
+        : `<span class="text-muted small">N/A</span>`;
+
+    html += `
+    <tr>
+        <td class="ps-3 text-center">
+            <span class="badge bg-dark rounded-circle">${contador}</span>
+        </td>
+        <td>
+            <strong class="text-dark">${item.cliente}</strong>
+            <small class="d-block text-secondary" style="font-size: 0.7rem;">${item.direccion_entrega}</small>
+        </td>
+        <td><code class="text-primary">${item.folio_venta}</code></td>
+        <td>${item.producto_nombre} <br> <small class="text-muted">${item.um || ''}</small></td>
+        <td class="text-center fw-bold">${parseFloat(item.cantidad).toFixed(2)}</td>
+        <td class="text-center">${mapsUrl}</td>
+    </tr>`;
+
+    contador++;
+});
             document.getElementById('bodyDetalleViaje').innerHTML = html;
 
             // Abrir modal

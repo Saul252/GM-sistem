@@ -184,18 +184,18 @@
                     </select>
                 </div>
 
-                <div class="col-md-2">
-                    <label class="form-label fw-bold small text-uppercase text-muted" id="label_categoria">Categoría</label>
-                    <select id="categoria_gasto_filtro" name="categoria_gasto_filtro" 
-                            class="form-select border-0 bg-light" style="border-radius: 10px;">
-                        <option value="0">-- Todas --</option>
-                        <?php foreach ($listaCategoriasGastos as $cat): ?>
-                            <option value="<?= $cat['id'] ?>" <?= ($categoria_gasto_id == $cat['id']) ? 'selected' : '' ?>>
-                                <?= htmlspecialchars($cat['nombre']) ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
+               <div class="col-md-2 d-none animate__animated animate__fadeIn" id="contenedor_categoria">
+    <label class="form-label fw-bold small text-uppercase text-muted">Categoría</label>
+    <select id="categoria_gasto_filtro" name="categoria_gasto_filtro" 
+            class="form-select border-0 bg-light" style="border-radius: 10px;">
+        <option value="0">-- Todas --</option>
+        <?php foreach ($listaCategoriasGastos as $cat): ?>
+            <option value="<?= $cat['id'] ?>" <?= ($categoria_gasto_id == $cat['id']) ? 'selected' : '' ?>>
+                <?= htmlspecialchars($cat['nombre']) ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
+</div>
 
                 <?php if ($_SESSION['rol_id'] == 1): ?>
                 <div class="col-md-2">
@@ -625,6 +625,25 @@ function confirmarCancelacionCompra(id, folio) {
         input.disabled = !esPersonalizado; // Activa o desactiva el input
     });
 });
+</script>
+<script>
+function toggleCategoria() {
+    const tipoFiltro = document.getElementById('tipo_filtro');
+    const contenedor = document.getElementById('contenedor_categoria');
+    const selectCat = document.getElementById('categoria_gasto_filtro');
+
+    if (tipoFiltro.value === 'gasto') {
+        // Mostrar con efecto suave si usas Animate.css, si no, solo quita d-none
+        contenedor.classList.remove('d-none');
+    } else {
+        // Ocultar y resetear filtro para no enviar basura al servidor
+        contenedor.classList.add('d-none');
+        selectCat.value = "0"; 
+    }
+}
+
+// Ejecutar al cargar para mantener estado tras recarga de página
+document.addEventListener('DOMContentLoaded', toggleCategoria);
 </script>
 </body>
 

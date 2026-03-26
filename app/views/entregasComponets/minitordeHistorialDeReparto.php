@@ -102,7 +102,10 @@
         <div class="d-flex justify-content-between align-items-center p-3 header-movil">
             <h6 class="m-0 fw-bold">Monitor de Entregas</h6>
             <select id="filtro_almacen_monitor" class="form-select form-select-sm border-0 bg-light" onchange="cargarMonitor()">
-                <option value="0">Todos los Almacenes</option>
+                <?php if ($almacen_sesion == 0): ?>
+                  
+            <option value="0">Todos los Almacenes</option>
+  <?php endif?>
                 <?php foreach ($listaAlmacenes as $alm): ?>
                     <option value="<?= $alm['id'] ?>"><?= $alm['nombre'] ?></option>
                 <?php endforeach; ?>

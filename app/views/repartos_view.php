@@ -16,8 +16,7 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-      <?php require_once __DIR__ . '/layout/icono.php' ?>
-    <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
+     <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
    
     <style>
         :root { 
@@ -457,7 +456,7 @@ function renderTable() {
         } 
         else if (estado === 'en_transito') {
             badge = '<span class="badge-premium st-ruta"><i class="bi bi-truck animate-pulse-soft"></i> En Tránsito</span>';
-            btnAccion = `<button class="btn btn-light btn-sm rounded-pill border shadow-sm px-3" onclick="imprimirReparto(${item.movimiento_id})"><i class="bi bi-printer"></i></button>`;
+            btnAccion = `<button class="btn btn-light btn-sm rounded-pill border shadow-sm px-3" onclick="verEntrega(${item.movimiento_id})"><i class="bi-truck"></i></button>`;
         } 
         else {
             badge = '<span class="badge-premium st-disponible"><i class="bi bi-house"></i> En Patio</span>';

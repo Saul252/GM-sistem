@@ -231,13 +231,15 @@
 
             if (res.success) {
                 $('#modalVehiculo').modal('hide');
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Despacho Confirmado!',
-                    text: res.message,
-                    timer: 2000
-                });
-                if (window.cargarPendientes) window.cargarPendientes();
+               Swal.fire({
+        icon: 'success',
+        title: 'Salida Autorizada',
+        text: res.message,
+        timer: 2000,
+        showConfirmButton: false
+    }).then(() => {
+        location.reload(); // 🔄 recarga la página
+    });
             } else {
                 Swal.fire('Atención', res.message, 'warning');
             }

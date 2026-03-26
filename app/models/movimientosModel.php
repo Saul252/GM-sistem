@@ -165,4 +165,24 @@ class MovimientoModel {
             return ['success' => false, 'message' => $e->getMessage()];
         }
     }
+    public function obtenerIdMovimientoPorVenta($venta_id) {
+    $ids = []; // Array para almacenar los movimientos
+    
+    $sql = "SELECT m.id 
+            FROM movimientos m 
+            INNER JOIN ventas v ON m.referencia_id = v.id 
+            WHERE v.id = ?";
+            
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param("i", $venta_id);
+    $stmt->execute();
+    $resultado = $stmt->get_result();
+    
+    // Recorremos todos los resultados, no solo el primero
+    while ($fila = $resultado->fetch_assoc()) {
+        $ids[] = $fila['id'];
+    }
+    
+    return $ids; // Ahora regresa un array, ej: [45, 46, 47]
+}
 }

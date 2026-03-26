@@ -354,7 +354,7 @@ $categoria_gasto_id = isset($_GET['categoria_gasto_filtro']) ? intval($_GET['cat
         if ($e['tipo'] == 'compra') $totalSumCompras += $e['total'];
         else $totalSumGastos += $e['total'];
     }
-    $CategoriasGastos= $gastosCategorias->listarTodas();
+    $listaCategoriasGastos= $gastosCategorias->listarTodas();
    
     $granTotalEgresos = $totalSumCompras + $totalSumGastos;
     $almacenes = $egresoModel->obtenerAlmacenesActivos();
