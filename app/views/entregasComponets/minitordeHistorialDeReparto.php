@@ -1,8 +1,12 @@
 <style>
+    /* Reset y base */
     .margen {
-        margin-left: var(--sidebar-width); 
-        padding: 15px;
-        max-width: calc(100vw - var(--sidebar-width));
+        /* Usamos calc para restar el sidebar del ancho total y evitar el desborde */
+        margin-left: var(--sidebar-width, 0); 
+        padding: 20px; /* Reducido de 40px a 20px para dar más espacio al contenido */
+        width: auto; 
+        max-width: 100%;
+        box-sizing: border-box; /* Asegura que padding no sume al ancho total */
         overflow-x: hidden;
     }
     
@@ -12,68 +16,92 @@
         border: none;
         box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         margin-bottom: 15px;
+        width: 100%; /* Forzamos a que no exceda el padre */
+        overflow: hidden;
     }
 
     .table-monitor {
         width: 100%;
-        table-layout: fixed; 
         margin: 0;
         border-collapse: collapse;
+        table-layout: auto; /* Cambiado a auto para que las columnas se ajusten dinámicamente */
     }
 
-    .table-monitor thead th {
-        font-size: 0.65rem;
-        color: #8e8e93;
-        text-transform: uppercase;
-        padding: 10px 5px;
-        background: #f9f9fb;
+    /* Estilos Desktop */
+    @media (min-width: 768px) {
+        .table-monitor thead th {
+            font-size: 0.65rem;
+            color: #8e8e93;
+            text-transform: uppercase;
+            padding: 10px 5px;
+            background: #f9f9fb;
+        }
+
+        .table-monitor tbody td {
+            padding: 12px 8px;
+            vertical-align: middle;
+            border-top: 1px solid #f2f2f7;
+            font-size: 0.85rem;
+            /* Control de desborde interno de celdas */
+            max-width: 150px; 
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
     }
 
-    .table-monitor tbody td {
-        padding: 10px 5px;
-        vertical-align: middle;
-        border-top: 1px solid #f2f2f7;
-        font-size: 0.8rem;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
+    /* --- SOLUCIÓN AL DESBORDE MÓVIL --- */
+    @media (max-width: 767px) {
+        .margen {
+            margin-left: 0 !important; 
+            padding: 10px;
+            width: 100vw; /* Aseguramos que use el ancho de la ventana */
+        }
 
-    /* Ajuste de anchos optimizado */
-    .col-m { width: 35px; }       
-    .col-ref { width: 80px; }     
-    .col-cli { width: 25%; }      
-    .col-prod { width: 25%; }     
-    .col-cant { width: 90px; }    
-    .col-resp { width: 110px; }   
-    .col-fecha { width: 85px; }   
-    .col-ver { width: 45px; }     
+        .table-monitor thead {
+            display: none;
+        }
 
-    .txt-bold { font-weight: 700; color: #1c1c1e; display: block; }
-    .txt-sub { font-size: 0.72rem; color: #8e8e93; display: block; line-height: 1.2; }
-    
-    /* Color azul para IDs de ruta */
-    .text-ruta-id {
-        color: #007aff;
-        font-weight: 800;
-    }
+        .table-monitor tbody tr {
+            display: block;
+            padding: 12px;
+            border-bottom: 8px solid #f2f2f7;
+            width: 100%;
+            box-sizing: border-box;
+        }
 
-    .btn-detalle {
-        width: 32px;
-        height: 32px;
-        border-radius: 10px;
-        border: none;
-        background: #f2f2f7;
-        color: #007aff;
-        cursor: pointer;
+        .table-monitor tbody td {
+            display: flex; /* Cambiado a flex para mejor control de espacio */
+            justify-content: space-between;
+            width: 100% !important;
+            padding: 6px 0;
+            border: none;
+            font-size: 0.85rem;
+        }
+
+        .table-monitor td::before {
+            content: attr(data-label);
+            font-weight: 700;
+            color: #8e8e93;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            margin-right: 15px;
+            flex-shrink: 0; /* Que la etiqueta no se encoga */
+        }
+        
+        /* Alineamos el contenido a la derecha en móvil para que se vea como ficha */
+        .table-monitor td > * {
+            text-align: right;
+            word-break: break-word; /* Romper palabras largas si es necesario */
+        }
     }
 </style>
 
 <div class="container-fluid mt-3 margen">
     <div class="card-ios">
-        <div class="d-flex justify-content-between align-items-center p-3">
+        <div class="d-flex justify-content-between align-items-center p-3 header-movil">
             <h6 class="m-0 fw-bold">Monitor de Entregas</h6>
-            <select id="filtro_almacen_monitor" class="form-select form-select-sm border-0 bg-light" style="width: 180px; border-radius: 8px;" onchange="cargarMonitor()">
+            <select id="filtro_almacen_monitor" class="form-select form-select-sm border-0 bg-light" onchange="cargarMonitor()">
                 <option value="0">Todos los Almacenes</option>
                 <?php foreach ($listaAlmacenes as $alm): ?>
                     <option value="<?= $alm['id'] ?>"><?= $alm['nombre'] ?></option>
@@ -96,10 +124,11 @@
                     <th class="col-ver"></th>
                 </tr>
             </thead>
-            <tbody id="tbodyMonitor"></tbody>
+            <tbody id="tbodyMonitor">
+                </tbody>
         </table>
-        <div class="p-2 text-center border-top">
-            <button class="btn btn-sm btn-link text-decoration-none" id="btnCargarMas" onclick="cargarMas()" style="font-size: 0.75rem; font-weight: 600;">MOSTRAR MÁS REGISTROS</button>
+        <div class="p-3 text-center border-top">
+            <button class="btn btn-sm btn-link text-decoration-none w-100" id="btnCargarMas" onclick="cargarMas()" style="font-size: 0.75rem; font-weight: 600;">MOSTRAR MÁS REGISTROS</button>
         </div>
     </div>
 </div>

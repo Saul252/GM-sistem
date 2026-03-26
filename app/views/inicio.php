@@ -34,73 +34,120 @@ $modulos = [
 <head>
     <meta charset="UTF-8">
     <title>Inicio - Sistema de Almacenes</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link href="/cfsistem/css/inicio.css" rel="stylesheet">
     <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
 
-    <style>
-        :root { --sidebar-width: 260px; --navbar-height: 65px; }
-        body { background-color: #f2f2f7; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        
+<style>
+    :root { 
+        --sidebar-width: 260px; 
+        --navbar-height: 65px; 
+        --ios-bg: #f2f2f7;
+    }
+    
+    body { 
+        background-color: var(--ios-bg); 
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif; 
+        overflow-x: hidden;
+    }
+    
+    .main-content { 
+        margin-left: var(--sidebar-width); 
+        padding: 30px; 
+        padding-top: calc(var(--navbar-height) + 20px); 
+        min-height: 100vh;
+        transition: all 0.3s ease;
+    }
+
+    /* ESTILO IOS CARD REFINADO */
+    .card-modulo {
+        background: #ffffff;
+        border: none;
+        border-radius: 24px; /* Curva más estética */
+        padding: 1.5rem 1rem;
+        height: 100%;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+    }
+
+    .icono-modulo {
+        font-size: 2.8rem; /* Un poco más grande para que no se vea vacío */
+        margin-bottom: 10px;
+        display: block;
+    }
+
+    .modulo-titulo { 
+        font-weight: 700; 
+        font-size: 0.95rem; 
+        color: #1c1c1e; 
+        margin-bottom: 3px;
+        letter-spacing: -0.3px;
+    }
+
+    .modulo-desc { 
+        font-size: 0.75rem; 
+        color: #8e8e93; 
+        font-weight: 400;
+        line-height: 1.2;
+    }
+
+    /* --- AJUSTES PARA MÓVIL (ELIMINA EL EFECTO DE LEJANÍA) --- */
+    @media (max-width: 768px) { 
         .main-content { 
-            margin-left: var(--sidebar-width); 
-            padding: 30px; 
-            padding-top: calc(var(--navbar-height) + 20px); 
-            min-height: 100vh;
+            margin-left: 0 !important; 
+            padding: 15px 12px; /* Reducimos padding lateral para ganar espacio */
+            padding-top: calc(var(--navbar-height) + 15px); 
         }
 
-        /* ESTILO IOS CARD */
-        .card-modulo {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px); /* Efecto cristal de iOS */
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 22px; /* Curva característica de iOS */
-            padding: 1.5rem 1rem;
-            height: 100%;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-        }
-
-        .card-modulo:hover {
-            transform: scale(1.03); /* Zoom suave al estilo Apple */
-            background: rgba(255, 255, 255, 1);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.08) !important;
+        /* Forzamos 2 columnas que ocupen bien el ancho */
+        .row-cols-2 > * {
+            padding-left: 6px !important;
+            padding-right: 6px !important;
         }
 
         .icono-modulo {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
-            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.05));
+            font-size: 2.4rem;
         }
 
-        .modulo-titulo { font-weight: 600; font-size: 0.95rem; color: #1c1c1e; margin-bottom: 2px; }
-        .modulo-desc { font-size: 0.75rem; color: #8e8e93; font-weight: 400; }
+        h2 { font-size: 1.6rem !important; }
 
-        @media (max-width: 768px) { .main-content { margin-left: 0; padding-top: 90px; } }
-    </style>
-</head>
+        /* Efecto de presión al tocar (Feedback táctil) */
+        .card-modulo:active {
+            transform: scale(0.94);
+            background-color: #f9f9fb;
+        }
+    }
+
+    /* Hover solo para Desktop */
+    @media (min-width: 992px) {
+        .card-modulo:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.08);
+        }
+    }
+</style>
 
 <body>
     <?php if (function_exists('renderizarLayout')) { renderizarLayout($paginaActual); } ?>
 
     <main class="main-content">
-        <div class="container-fluid">
-            <div class="d-flex align-items-center mb-4">
-                <div class="p-3 bg-white rounded-4 shadow-sm me-3">
+        <div class="container-fluid p-0">
+            <div class="d-flex align-items-center mb-4 header-section px-2">
+                <div class="p-3 bg-white rounded-4 shadow-sm me-3 d-none d-sm-block">
                     <i class="bi bi-grid-1x2-fill text-primary fs-4"></i>
                 </div>
                 <div>
-                    <h2 class="fw-bold m-0" style="letter-spacing: -0.5px;">Panel Principal</h2>
-                    <p class="text-muted mb-0">Gestión de recursos cfsistem</p>
+                    <h2 class="fw-bold m-0" style="letter-spacing: -0.8px;">Panel Principal</h2>
+                    <p class="text-muted mb-0" style="font-size: 0.9rem;">Gestión de recursos cfsistem</p>
                 </div>
             </div>
 
-            <div class="row g-4 row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-6">
+            <div class="row g-2 g-md-4 row-cols-2 row-cols-sm-3 row-cols-md-3 row-cols-lg-4 row-cols-xl-6">
                 
                 <?php foreach ($modulos as $m): ?>
                     <?php if (puedeVerModulo($m['id'])): ?>
@@ -109,14 +156,18 @@ $modulos = [
                             <div class="card card-modulo text-center">
                                 <i class="bi <?= $m['icon'] ?> icono-modulo <?= $m['class'] ?>"></i>
                                 <span class="modulo-titulo"><?= $m['label'] ?></span>
-                                <span class="modulo-desc"><?= $m['desc'] ?></span>
+                                <span class="modulo-desc text-truncate w-100"><?= $m['desc'] ?></span>
                             </div>
                         </a>
                     </div>
                     <?php endif; ?>
                 <?php endforeach; ?>
 
-                <!--< ?php > if (puedeVerModulo('corteCaja')): ?> -->
+            </div>
+        </div>
+    </main>
+</body>
+   <!--< ?php > if (puedeVerModulo('corteCaja')): ?> -->
                <!-- 
                 <div class="col">
                     <a href="/cfsistem/app/controllers/corteCajaController.php" class="text-decoration-none h-100 d-block">
@@ -134,9 +185,3 @@ $modulos = [
                 </div>
                 -->
                  <!-- < ?php endif; ?> -->
-
-            </div>
-        </div>
-    </main>
-</body>
-</html>

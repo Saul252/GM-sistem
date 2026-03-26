@@ -166,6 +166,8 @@ if ($action === 'index') {
         // CARGA INICIAL:
         // Pasamos el ID de la sesión. Si es 0, el modelo traerá todo el historial global.
         $historial = $transModel->listarTransmutaciones($almacen_sesion);
+   $almacen_param = (int)($_SESSION['almacen_id'] ?? 0);
+$listaConversiones = $transModel->listarConfiguraciones($almacen_param);
 
         include __DIR__ . '/../views/transmutaciones.php';
     } catch (Exception $e) {

@@ -145,34 +145,33 @@
         <form id="formFiltros" method="GET" action="">
             <div class="row g-3 align-items-end">
 
-                <div class="col-md-2">
-                    <label class="form-label fw-bold small text-uppercase text-primary">
-                        <i class="bi bi-calendar3 me-1"></i> Periodo
-                    </label>
-                    <select id="filtro_rapido" name="periodo_filtro" 
-                            class="form-select border-0 bg-light fw-bold" style="border-radius: 10px;">
-                        <option value="hoy" <?= ($periodo_sel == 'hoy') ? 'selected' : '' ?>>Hoy</option>
-                        <option value="ayer" <?= ($periodo_sel == 'ayer') ? 'selected' : '' ?>>Ayer</option>
-                        <option value="semana" <?= ($periodo_sel == 'semana') ? 'selected' : '' ?>>Esta Semana</option>
-                        <option value="mes" <?= ($periodo_sel == 'mes') ? 'selected' : '' ?>>Este Mes</option>
-                        <option value="personalizado" <?= ($periodo_sel == 'personalizado') ? 'selected' : '' ?>>📅 Personalizado</option>
-                    </select>
-                </div>
+             <div class="col-md-2">
+    <label class="form-label fw-bold small text-uppercase text-primary">
+        <i class="bi bi-calendar3 me-1"></i> Periodo
+    </label>
+    <select id="filtro_rapido" name="periodo_filtro" 
+            class="form-select border-0 bg-light fw-bold" style="border-radius: 10px;">
+        <option value="hoy" <?= ($periodo_sel == 'hoy') ? 'selected' : '' ?>>Hoy</option>
+        <option value="ayer" <?= ($periodo_sel == 'ayer') ? 'selected' : '' ?>>Ayer</option>
+        <option value="semana" <?= ($periodo_sel == 'semana') ? 'selected' : '' ?>>Esta Semana</option>
+        <option value="mes" <?= ($periodo_sel == 'mes') ? 'selected' : '' ?>>Este Mes</option>
+        <option value="personalizado" <?= ($periodo_sel == 'personalizado') ? 'selected' : '' ?>>📅 Personalizado</option>
+    </select>
+</div>
 
-                <div class="col-md-2">
-                    <label class="form-label fw-bold small text-uppercase text-muted">Desde</label>
-                    <input type="date" name="desde" id="fecha_desde" 
-                           class="form-control border-0 bg-light" style="border-radius: 10px;"
-                           value="<?= $fecha_desde ?>" <?= ($periodo_sel !== 'personalizado') ? 'disabled' : '' ?>>
-                </div>
+<div class="col-md-2 div-fechas <?= ($periodo_sel !== 'personalizado') ? 'd-none' : '' ?>">
+    <label class="form-label fw-bold small text-uppercase text-muted">Desde</label>
+    <input type="date" name="desde" id="fecha_desde" 
+           class="form-control border-0 bg-light" style="border-radius: 10px;"
+           value="<?= $fecha_desde ?>" <?= ($periodo_sel !== 'personalizado') ? 'disabled' : '' ?>>
+</div>
 
-                <div class="col-md-2">
-                    <label class="form-label fw-bold small text-uppercase text-muted">Hasta</label>
-                    <input type="date" name="hasta" id="fecha_hasta" 
-                           class="form-control border-0 bg-light" style="border-radius: 10px;"
-                           value="<?= $fecha_hasta ?>" <?= ($periodo_sel !== 'personalizado') ? 'disabled' : '' ?>>
-                </div>
-
+<div class="col-md-2 div-fechas <?= ($periodo_sel !== 'personalizado') ? 'd-none' : '' ?>">
+    <label class="form-label fw-bold small text-uppercase text-muted">Hasta</label>
+    <input type="date" name="hasta" id="fecha_hasta" 
+           class="form-control border-0 bg-light" style="border-radius: 10px;"
+           value="<?= $fecha_hasta ?>" <?= ($periodo_sel !== 'personalizado') ? 'disabled' : '' ?>>
+</div>
                 <div class="col-md-2">
                     <label class="form-label fw-bold small text-uppercase text-primary">Mostrar</label>
                     <select name="tipo_filtro" id="tipo_filtro" 
@@ -606,6 +605,25 @@ function confirmarCancelacionCompra(id, folio) {
         }
     });
 })();</script>
+<script>
+    document.getElementById('filtro_rapido').addEventListener('change', function() {
+    const esPersonalizado = this.value === 'personalizado';
+    const contenedoresFechas = document.querySelectorAll('.div-fechas');
+    const inputsFechas = document.querySelectorAll('.div-fechas input');
+
+    contenedoresFechas.forEach(div => {
+        if (esPersonalizado) {
+            div.classList.remove('d-none'); // Muestra el contenedor
+        } else {
+            div.classList.add('d-none');    // Oculta el contenedor
+        }
+    });
+
+    inputsFechas.forEach(input => {
+        input.disabled = !esPersonalizado; // Activa o desactiva el input
+    });
+});
+</script>
 </body>
 
 </html>

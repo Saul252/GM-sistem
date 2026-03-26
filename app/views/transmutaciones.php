@@ -12,167 +12,178 @@
 </head>
 <body>
     <?php if (function_exists('renderizarLayout')) renderizarLayout('Mermas'); ?>
-
-    <div class="main-content">
-        <div class="container-fluid">
-            
-            <div class="page-header">
-                <div class="page-title">
-                    <h1><i class="fas fa-random text-primary me-2"></i>Transmutación de Productos</h1>
-                    <small class="text-muted">Procesa la transformación de materiales e insumos</small>
-                </div>
-                <button type="button" class="btn btn-dark btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#modalEquivalencia">
-                    <i class="fas fa-cog me-1"></i> Configurar Equivalencias
-                </button>
+<div class="main-content">
+    <div class="container-fluid">
+        
+        <div class="page-header">
+            <div class="page-title">
+                <h1><i class="fas fa-random text-primary me-2"></i>Transmutación de Productos</h1>
+                <small class="text-muted">Procesa la transformación de materiales e insumos</small>
             </div>
+            <button type="button" class="btn btn-dark btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#modalEquivalencia">
+                <i class="fas fa-cog me-1"></i> Configurar Equivalencias
+            </button>
+        </div>
 
-            <div class="card card-custom">
-                <div class="card-header-custom">
-                    <h6 class="m-0 font-weight-bold" style="color: var(--primary-color);">
-                        <i class="fas fa-plus-circle me-2"></i>Nueva Operación de Transformación
-                    </h6>
-                </div>
-                <div class="card-body p-4">
-                    <form id="formTransmutacion">
-                        <div class="row align-items-stretch">
-                            <div class="col-lg-5">
-                                <div class="section-box box-origen">
-                                    <div class="section-title text-danger">
-                                        <i class="fas fa-minus-circle me-2"></i>Producto Origen (Salida)
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Almacén de Trabajo</label>
-                                        <select name="almacen_id" id="trans_almacen" class="form-select shadow-sm" required>
-                                            <option value="">Seleccione Almacén...</option>
-                                            <?php foreach ($almacenes as $a): ?>
-                                                <option value="<?= $a['id'] ?>"><?= htmlspecialchars($a['nombre']) ?></option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Producto a Transformar</label>
-                                        <select name="producto_origen_id" id="trans_producto_origen" class="form-select" disabled required></select>
-                                    </div>
-                                    <div class="row g-2">
-                                        <div class="col-md-7">
-                                            <label class="form-label">Lote Origen</label>
-                                            <select name="lote_origen_id" id="trans_lote_origen" class="form-select" disabled required></select>
-                                        </div>
-                                        <div class="col-md-5">
-                                            <label class="form-label">Cantidad Salida</label>
-                                            <input type="number" step="0.01" name="cantidad_origen" id="trans_cant_origen" class="form-control" required>
-                                            <div class="small mt-1 text-muted">Stock: <span id="trans_stock_disp" class="fw-bold text-danger">0</span></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-lg-2 conversion-arrow">
-                                <i class="fas fa-arrow-right fa-3x d-none d-lg-block"></i>
-                                <i class="fas fa-arrow-down fa-2x d-lg-none"></i>
-                            </div>
-
-                            <div class="col-lg-5">
-                                <div class="section-box box-destino">
-                                    <div class="section-title text-success">
-                                        <i class="fas fa-plus-circle me-2"></i>Producto Destino (Entrada)
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Convertir a:</label>
-                                        <select name="producto_destino_id" id="trans_producto_destino" class="form-select" disabled required>
-                                            <option value="">Seleccione origen primero</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Lote Destino</label>
-                                        <select name="lote_destino_id" id="trans_lote_destino" class="form-select" disabled>
-                                            <option value="0">-- Crear Lote Nuevo --</option>
-                                        </select>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Cantidad Obtenida (Real)</label>
-                                        <input type="number" step="0.01" name="cantidad_destino" id="trans_cant_destino" class="form-control" style="border-color: #68d391;" required>
-                                        <div id="info_conversion" class="small mt-1 fw-bold text-primary"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row mt-4">
-                            <div class="col-12">
-                                <label class="form-label">Notas / Observaciones del Proceso</label>
-                                <textarea name="observaciones" class="form-control" rows="2" placeholder="Describa el motivo o detalles de la transformación..."></textarea>
-                            </div>
-                        </div>
-
-                        <div class="text-center mt-4">
-                            <hr class="my-4" style="opacity: 0.1;">
-                            <button type="reset" class="btn btn-light px-4 me-2">
-                                <i class="fas fa-eraser me-1"></i> Limpiar
-                            </button>
-                            <button type="submit" class="btn btn-primary px-5 shadow">
-                                <i class="fas fa-check-circle me-1"></i> Procesar Transmutación
-                            </button>
-                        </div>
-                    </form>
-                </div>
+       <div class="row align-items-stretch">
+    <div class="col-lg-4">
+        <div class="card card-custom mb-4 h-100">
+            <div class="card-header-custom">
+                <h6 class="m-0 font-weight-bold text-dark">
+                    <i class="fas fa-book me-2"></i>Guía de Equivalencias Activas
+                </h6>
             </div>
-
-     <div class="card card-custom">
-    <div class="card-header-custom d-flex justify-content-between align-middle">
-        <h6 class="m-0 font-weight-bold text-dark"><i class="fas fa-history me-2"></i>Historial de Movimientos</h6>
+            <div class="card-body p-3">
+                <?php require_once __DIR__ . '/transmutaciones/reglasConversion.php' ?>
+            </div>
+        </div>
     </div>
-    <div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle" id="tablaHistorial">
-                <thead class="table-light">
-                    <tr>
-                        <th width="50px">ID</th>
-                        <th>Fecha</th>
-                        <th>Origen (Sale)</th>
-                        <th>Cant.</th>
-                        <th>Destino (Entra)</th>
-                        <th>Cant.</th>
-                        <th>Responsable</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (!empty($historial)): ?>
-                        <?php foreach ($historial as $t): ?>
-                        <tr>
-                            <td><span class="badge bg-light text-dark border">#<?= $t['id'] ?></span></td>
-                            <td><small><?= date('d/m/Y H:i', strtotime($t['fecha_registro'])) ?></small></td>
-                            <td>
-                                <i class="fas fa-minus-circle text-danger me-1"></i>
-                                <?= htmlspecialchars($t['producto_origen'] ?? 'N/A') ?>
-                            </td>
-                            <td class="fw-bold"><?= number_format($t['cant_origen'], 2) ?></td>
-                            <td>
-                                <i class="fas fa-plus-circle text-success me-1"></i>
-                                <?= htmlspecialchars($t['producto_destino'] ?? 'N/A') ?>
-                            </td>
-                            <td class="fw-bold"><?= number_format($t['cant_destino'], 2) ?></td>
-                            <td>
-                                <i class="fas fa-user-circle me-1 text-muted"></i>
-                                <small><?= htmlspecialchars($t['usuario_nombre'] ?? 'Sistema') ?></small>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    <?php else: ?>
-                        <tr>
-                            <td colspan="7" class="text-center text-muted p-4">
-                                <i class="fas fa-info-circle me-1"></i> No se encontraron registros de transmutación.
-                            </td>
-                        </tr>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+
+    <div class="col-lg-8">
+        <div class="card card-custom mb-4 h-100">
+            <div class="card-header-custom">
+                <h6 class="m-0 font-weight-bold" style="color: var(--primary-color);">
+                    <i class="fas fa-plus-circle me-2"></i>Nueva Operación de Transformación
+                </h6>
+            </div>
+            <div class="card-body p-4">
+                <form id="formTransmutacion">
+                    <div class="row align-items-stretch">
+                        <div class="col-xl-5">
+                            <div class="section-box box-origen">
+                                <div class="section-title text-danger">
+                                    <i class="fas fa-minus-circle me-2"></i>Producto Origen (Salida)
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-xs">Almacén de Trabajo</label>
+                                    <select name="almacen_id" id="trans_almacen" class="form-select shadow-sm" required>
+                                        <option value="">Seleccione Almacén...</option>
+                                        <?php foreach ($almacenes as $a): ?>
+                                            <option value="<?= $a['id'] ?>"><?= htmlspecialchars($a['nombre']) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-xs">Producto a Transformar</label>
+                                    <select name="producto_origen_id" id="trans_producto_origen" class="form-select" disabled required></select>
+                                </div>
+                                <div class="row g-2">
+                                    <div class="col-md-7">
+                                        <label class="form-label text-xs">Lote Origen</label>
+                                        <select name="lote_origen_id" id="trans_lote_origen" class="form-select" disabled required></select>
+                                    </div>
+                                    <div class="col-md-5">
+                                        <label class="form-label text-xs">Cant. Salida</label>
+                                        <input type="number" step="0.01" name="cantidad_origen" id="trans_cant_origen" class="form-control" required>
+                                        <div class="small mt-1 text-muted">Stock: <span id="trans_stock_disp" class="fw-bold text-danger">0</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-xl-2 conversion-arrow d-flex align-items-center justify-content-center">
+                            <i class="fas fa-arrow-right fa-2x d-none d-xl-block"></i>
+                            <i class="fas fa-arrow-down fa-2x d-xl-none my-3"></i>
+                        </div>
+
+                        <div class="col-xl-5">
+                            <div class="section-box box-destino">
+                                <div class="section-title text-success">
+                                    <i class="fas fa-plus-circle me-2"></i>Producto Destino (Entrada)
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-xs">Convertir a:</label>
+                                    <select name="producto_destino_id" id="trans_producto_destino" class="form-select" disabled required>
+                                        <option value="">Seleccione origen primero</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-xs">Lote Destino</label>
+                                    <select name="lote_destino_id" id="trans_lote_destino" class="form-select" disabled>
+                                        <option value="0">-- Crear Lote Nuevo --</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label text-xs">Cant. Obtenida (Real)</label>
+                                    <input type="number" step="0.01" name="cantidad_destino" id="trans_cant_destino" class="form-control" style="border-color: #68d391;" required>
+                                    <div id="info_conversion" class="small mt-1 fw-bold text-primary"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <textarea name="observaciones" class="form-control form-control-sm" rows="2" placeholder="Notas del proceso..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="text-end mt-3">
+                        <button type="reset" class="btn btn-light btn-sm me-2">Limpiar</button>
+                        <button type="submit" class="btn btn-primary btn-sm px-4 shadow">
+                            <i class="fas fa-check-circle me-1"></i> Procesar
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
+
+        <div class="card card-custom">
+            <div class="card-header-custom d-flex justify-content-between align-middle">
+                <h6 class="m-0 font-weight-bold text-dark"><i class="fas fa-history me-2"></i>Historial de Movimientos</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle" id="tablaHistorial">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="50px">ID</th>
+                                <th>Fecha</th>
+                                <th>Origen (Sale)</th>
+                                <th>Cant.</th>
+                                <th>Destino (Entra)</th>
+                                <th>Cant.</th>
+                                <th>Responsable</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (!empty($historial)): ?>
+                                <?php foreach ($historial as $t): ?>
+                                <tr>
+                                    <td><span class="badge bg-light text-dark border">#<?= $t['id'] ?></span></td>
+                                    <td><small><?= date('d/m/Y H:i', strtotime($t['fecha_registro'])) ?></small></td>
+                                    <td>
+                                        <i class="fas fa-minus-circle text-danger me-1"></i>
+                                        <?= htmlspecialchars($t['producto_origen'] ?? 'N/A') ?>
+                                    </td>
+                                    <td class="fw-bold"><?= number_format($t['cant_origen'], 2) ?></td>
+                                    <td>
+                                        <i class="fas fa-plus-circle text-success me-1"></i>
+                                        <?= htmlspecialchars($t['producto_destino'] ?? 'N/A') ?>
+                                    </td>
+                                    <td class="fw-bold"><?= number_format($t['cant_destino'], 2) ?></td>
+                                    <td>
+                                        <i class="fas fa-user-circle me-1 text-muted"></i>
+                                        <small><?= htmlspecialchars($t['usuario_nombre'] ?? 'Sistema') ?></small>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted p-4">
+                                        <i class="fas fa-info-circle me-1"></i> No se encontraron registros de transmutación.
+                                    </td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
-
+</div>
     <div class="modal fade" id="modalEquivalencia" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
@@ -276,7 +287,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         const baseUrl = '/cfsistem/app/controllers/transmutacionesController.php';

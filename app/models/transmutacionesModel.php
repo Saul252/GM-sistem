@@ -217,4 +217,48 @@ public function listarTransmutaciones($almacen_id) {
     $stmt->execute();
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
+/**
+ * Obtiene las reglas de transmutación configuradas.
+ * @param int $almacen_id Si es 0, actúa como SuperAdmin y trae todas.
+ * @return array Lista de reglas con nombres de productos y almacenes.
+ */
+public function listarConfiguraciones($almacen_id = 0) {
+    try {
+        // Añadimos ct.almacen_id para que el PHP pueda agrupar
+        $sql = "SELECT 
+                    ct.id,
+                    ct.almacen_id, 
+                    a.nombre AS almacen,
+                    p1.sku AS sku_origen,
+                    p1.nombre AS producto_origen,
+                    p2.sku AS sku_destino,
+                    p2.nombre AS producto_destino,
+                    ct.rendimiento_teorico,
+                    p1.unidad_medida AS unidad,
+                    ct.notas
+                FROM config_transmutaciones ct
+                JOIN almacenes a ON ct.almacen_id = a.id
+                JOIN productos p1 ON ct.producto_origen_id = p1.id
+                JOIN productos p2 ON ct.producto_destino_id = p2.id";
+
+        if ($almacen_id > 0) {
+            $sql .= " WHERE ct.almacen_id = ?";
+        }
+
+        $sql .= " ORDER BY a.nombre ASC";
+
+        $stmt = $this->db->prepare($sql);
+
+        if ($almacen_id > 0) {
+            $stmt->bind_param("i", $almacen_id);
+        }
+
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    } catch (Exception $e) {
+        error_log("Error en listarConfiguraciones: " . $e->getMessage());
+        return [];
+    }
+}
 }
