@@ -16,7 +16,8 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
   
   
- <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
+  <?php require_once __DIR__ . '/layout/icono.php' ?>
+    <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
      <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
     <style>
         :root { --sidebar-width: 260px; --navbar-height: 65px; }

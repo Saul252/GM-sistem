@@ -1,5 +1,7 @@
+  <?php require_once __DIR__ . '/layout/icono.php' ?>
+    <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
 <?php 
-if (function_exists('cargarEstilos')) { cargarEstilos(); } 
+
 renderizarLayout($paginaActual);
 
 $id_venta = intval($_GET['id'] ?? 0);

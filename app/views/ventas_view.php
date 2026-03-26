@@ -4,7 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Ventas | Sistema</title>
-    <?php cargarEstilos(); ?>
+      <?php require_once __DIR__ . '/layout/icono.php' ?>
+    <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
     <link href="/cfsistem/css/ventas.css" rel="stylesheet">
     <style>
     body {

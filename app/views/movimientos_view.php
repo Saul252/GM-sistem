@@ -7,7 +7,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial de Movimientos | Sistema</title>
     
-    <?php cargarEstilos(); ?>
+      <?php require_once __DIR__ . '/layout/icono.php' ?>
+    <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     
