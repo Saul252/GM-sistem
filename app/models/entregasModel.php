@@ -456,4 +456,77 @@ public function getDetalleParaDespacho($movimiento_id) {
 
     return $resultado;
 }
+public function cajaRapidaEntregarEnPatioCliente($datos) {
+    try {
+        $vehiculo_virtual_id = 999; 
+        $movimiento_id       = intval($datos['movimiento_id']);
+        $chofer_id           = intval($datos['chofer_id']); 
+        $usuario_operador_id = intval($datos['usuario_sistema_id']); 
+        $observaciones       = !empty($datos['observaciones']) ? $datos['observaciones'] : 'Entrega Directa en Patio';
+        
+        // Unimos al chofer y los ayudantes en una sola lista de personal
+        $tripulantes = isset($datos['tripulantes']) && is_array($datos['tripulantes']) ? $datos['tripulantes'] : [];
+        if ($chofer_id > 0) array_unshift($tripulantes, $chofer_id); // El chofer va primero
+        $tripulantes = array_unique($tripulantes);
+
+        // 1. VALIDACIÓN: Ahora checamos por MOVIMIENTO, no por VENTA completa
+        // para que si la venta tiene 3 productos, cada uno pueda registrar su salida.
+        $sqlCheck = "SELECT id FROM transporte_repartos_maestro 
+                     WHERE entrega_venta_id = ? AND estado_reparto != 'cancelado' LIMIT 1";
+        
+        $stmtCheck = $this->db->prepare($sqlCheck);
+        $stmtCheck->bind_param("i", $movimiento_id);
+        $stmtCheck->execute();
+        
+        if ($stmtCheck->get_result()->num_rows > 0) {
+            return ['success' => true, 'message' => 'Movimiento ya procesado.']; 
+        }
+
+        $this->db->begin_transaction();
+
+        // 2. MAESTRO (Incluimos el chofer responsable en el query si tu tabla tiene la columna)
+        // He añadido 'id_chofer_asignado' asumiendo que existe, si no, bórralo del query.
+        $sqlM = "INSERT INTO transporte_repartos_maestro (
+                    vehiculo_id, usuario_encargado_id, entrega_venta_id, 
+                    fecha_programada, estado_reparto, hora_llegada_real
+                ) VALUES (?, ?, ?, CURDATE(), 'completado', NOW())";
+        
+        $stmtM = $this->db->prepare($sqlM);
+        $stmtM->bind_param("iii", $vehiculo_virtual_id, $usuario_operador_id, $movimiento_id);
+        $stmtM->execute();
+        $reparto_id = $this->db->insert_id;
+
+        // 3. PUNTO DE RUTA
+        $sqlP = "INSERT INTO transporte_rutas_puntos (reparto_id, orden_visita, descripcion_punto, estado_punto) 
+                 VALUES (?, 1, ?, 'visitado')";
+        $descripcion = "PATIO: " . $observaciones;
+        $stmtP = $this->db->prepare($sqlP);
+        $stmtP->bind_param("is", $reparto_id, $descripcion);
+        $stmtP->execute();
+
+        // 4. TRIPULACIÓN (Bucle seguro)
+        if (!empty($tripulantes)) {
+            $sqlT = "INSERT INTO transporte_tripulantes_detalle (reparto_id, usuario_id) VALUES (?, ?)";
+            $stmtT = $this->db->prepare($sqlT);
+            foreach ($tripulantes as $u_id) {
+                $uid = intval($u_id);
+                if($uid > 0) {
+                    $stmtT->bind_param("ii", $reparto_id, $uid);
+                    $stmtT->execute();
+                }
+            }
+        }
+
+        // 5. VEHÍCULO SIEMPRE LIBRE
+        $this->db->query("UPDATE transporte_vehiculos SET estado_unidad = 'disponible' WHERE id = $vehiculo_virtual_id");
+
+        $this->db->commit();
+        return ['success' => true, 'reparto_id' => $reparto_id];
+
+    } catch (Exception $e) {
+        // Rollback genérico más seguro
+        if ($this->db->connect_errno == 0) $this->db->rollback();
+        throw $e;
+    }
+}
 }

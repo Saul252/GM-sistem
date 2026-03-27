@@ -336,113 +336,200 @@
         </div>
     </div>
 
- <div class="modal fade" id="modalFinalizarVenta" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title fw-bold"><i class="bi bi-receipt-cutoff me-2"></i>Finalizar Transacción</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+ <div class="modal fade" id="modalFinalizarVenta" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 2rem; background: #f2f2f7; overflow: hidden;">
+            
+            <div class="modal-header border-0 bg-white bg-opacity-75 pt-4 px-4" style="backdrop-filter: blur(10px);">
+                <div class="d-flex align-items-center">
+                    <div class="bg-primary bg-opacity-10 p-2 rounded-4 me-3">
+                        <i class="bi bi-receipt-cutoff text-primary fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold text-dark mb-0">Finalizar Transacción</h5>
+                        <small class="text-muted fw-medium">Revisa los detalles antes de confirmar</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close shadow-none bg-light rounded-circle p-2" data-bs-dismiss="modal" aria-label="Close" style="font-size: 0.7rem;"></button>
             </div>
+
             <div class="modal-body p-4">
                 <div class="row g-4">
-                    <div class="col-lg-7 border-end">
-                        <h6 class="text-uppercase fw-bold mb-3 text-primary">Detalle de Salida de Material</h6>
-                        <div class="table-responsive" style="max-height: 350px;">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Producto</th>
-                                        <th class="text-center">Venta</th>
-                                        <th class="text-center">Entregar Hoy</th>
-                                        <th class="text-end">Subtotal</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tablaConfirmacion"></tbody>
-                            </table>
-                        </div>
-                        <div class="card bg-primary bg-opacity-10 border-0 mt-3">
-                            <div class="card-body p-3 text-end">
-                                <input type="hidden" id="descuentoGeneral" value="0">
-                                <span class="text-muted small d-block fw-bold text-uppercase">Total a Cobrar</span>
-                                <h2 class="fw-bold mb-0 text-primary">$<span id="totalFinalModal">0.00</span></h2>
+                    
+                    <div class="col-lg-7">
+                        <div class="card border-0 shadow-sm h-100" style="border-radius: 1.5rem; background: #ffffff;">
+                            <div class="card-body p-4">
+                                <h6 class="text-uppercase fw-bold mb-4 text-secondary" style="font-size: 0.7rem; letter-spacing: 1px;">
+                                    <i class="bi bi-list-ul me-2 text-primary"></i>Resumen de Salida
+                                </h6>
+                                
+                                <div class="table-responsive" style="max-height: 380px;">
+                                    <table class="table table-borderless align-middle">
+                                        <thead>
+                                            <tr class="text-muted small border-bottom border-light">
+                                                <th class="pb-3 fw-bold">Producto</th>
+                                                <th class="pb-3 text-center fw-bold">Venta</th>
+                                                <th class="pb-3 text-center fw-bold">Hoy</th>
+                                                <th class="pb-3 text-end fw-bold">Subtotal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tablaConfirmacion">
+                                            </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="mt-auto pt-4">
+                                    <div class="p-4 rounded-4 bg-primary shadow-sm text-white d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #007aff 0%, #0056b3 100%) !important;">
+                                        <div>
+                                            <span class="d-block small opacity-75 fw-bold text-uppercase" style="font-size: 0.6rem;">Total a Cobrar</span>
+                                            <input type="hidden" id="descuentoGeneral" value="0">
+                                        </div>
+                                        <h2 class="fw-bold mb-0" style="letter-spacing: -1px;">$<span id="totalFinalModal">0.00</span></h2>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="col-lg-5">
-                        <h6 class="text-uppercase fw-bold mb-3 text-primary">Información del Cliente</h6>
-                        <div class="input-group mb-3">
-                            <select id="selectCliente" class="form-select border-primary">
-                                <?php foreach($clientes as $c): 
-                                    $almacen_u = $_SESSION['almacen_id'] ?? 0;
-                                    $esAdmin = ($almacen_u == 0);
-                                    $esSuAlmacen = ($c['almacen_id'] == $almacen_u);
-                                    $esGlobal = (is_null($c['almacen_id']) || $c['almacen_id'] == '');
-                                    $esPublicoGeneral = ($c['rfc'] === 'XAXX010101000');
+                        <div class="d-flex flex-column gap-3">
+                            
+                            <div class="card border-0 shadow-sm" style="border-radius: 1.5rem;">
+                                <div class="card-body p-4">
+                                    <h6 class="text-uppercase fw-bold mb-3 text-secondary" style="font-size: 0.7rem; letter-spacing: 1px;">
+                                        <i class="bi bi-person-circle me-2 text-primary"></i>Información del Cliente
+                                    </h6>
+                                    <div class="input-group mb-3 shadow-none">
+                                        <select id="selectCliente" class="form-select border-0 bg-light rounded-4 p-2 px-3 shadow-none fw-medium">
+                                            <?php foreach($clientes as $c): 
+                                                $almacen_u = $_SESSION['almacen_id'] ?? 0;
+                                                $esAdmin = ($almacen_u == 0);
+                                                $esSuAlmacen = ($c['almacen_id'] == $almacen_u);
+                                                $esGlobal = (is_null($c['almacen_id']) || $c['almacen_id'] == '');
+                                                $esPublicoGeneral = ($c['rfc'] === 'XAXX010101000');
 
-                                    if ($esAdmin || $esSuAlmacen || $esGlobal || $esPublicoGeneral): 
-                                ?>
-                                <option value="<?= $c['id'] ?>" 
-                                        data-rfc="<?= $c['rfc'] ?>"
-                                        data-rs="<?= $c['razon_social'] ?>" 
-                                        data-regimen="<?= $c['regimen_fiscal'] ?>">
-                                    <?= htmlspecialchars($c['nombre_comercial']) ?>
-                                </option>
-                                <?php endif; endforeach; ?>
-                            </select>
-                            <button class="btn btn-outline-primary" type="button" onclick="abrirModalNuevoCliente()">
-                                <i class="bi bi-person-plus"></i>
-                            </button>
-                        </div>
+                                                if ($esAdmin || $esSuAlmacen || $esGlobal || $esPublicoGeneral): 
+                                            ?>
+                                            <option value="<?= $c['id'] ?>" 
+                                                    data-rfc="<?= $c['rfc'] ?>"
+                                                    data-rs="<?= $c['razon_social'] ?>" 
+                                                    data-regimen="<?= $c['regimen_fiscal'] ?>">
+                                                <?= htmlspecialchars($c['nombre_comercial']) ?>
+                                            </option>
+                                            <?php endif; endforeach; ?>
+                                        </select>
+                                        <button class="btn btn-primary rounded-4 ms-2 px-3 shadow-none" type="button" onclick="abrirModalNuevoCliente()">
+                                            <i class="bi bi-plus-lg"></i>
+                                        </button>
+                                    </div>
 
-                        <div class="p-3 border rounded mb-3 bg-white shadow-sm">
-                            <div class="row g-2">
-                                <div class="col-12"><small class="text-muted d-block text-uppercase" style="font-size: 0.7rem;">Razón Social:</small><span id="f_razon_social" class="fw-bold small text-truncate d-block">---</span></div>
-                                <div class="col-6"><small class="text-muted d-block text-uppercase" style="font-size: 0.7rem;">RFC:</small><span id="f_rfc" class="fw-bold">---</span></div>
-                                <div class="col-6"><small class="text-muted d-block text-uppercase" style="font-size: 0.7rem;">Régimen:</small><span id="f_regimen" class="badge bg-info">---</span></div>
-                            </div>
-                        </div>
-
-                        <div class="p-3 border rounded mb-3 bg-light border-success border-opacity-25 shadow-sm">
-                            <h6 class="text-uppercase fw-bold mb-3 small text-success"><i class="bi bi-cash-coin"></i> Registro de Pago</h6>
-                            <div class="row g-2">
-                                <div class="col-md-4">
-                                    <label class="small fw-bold text-muted">A Cobrar</label>
-                                    <input type="number" id="monto_pagar" class="form-control form-control-sm border-primary fw-bold" readonly>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="small fw-bold text-success">Efectivo</label>
-                                    <input type="number" id="efectivo_recibido" class="form-control form-control-sm border-success fw-bold text-success" placeholder="0.00" step="0.01">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="small fw-bold">Método</label>
-                                    <select id="metodo_pago" class="form-select form-select-sm border-success">
-                                        <option value="Efectivo">Efectivo</option>
-                                        <option value="Transferencia">Transferencia</option>
-                                        <option value="Tarjeta">Tarjeta</option>
-                                    </select>
+                                    <div class="p-3 rounded-4 bg-light border-0 small">
+                                        <div class="mb-2">
+                                            <span class="text-muted d-block" style="font-size: 0.6rem; font-weight: 800;">RAZÓN SOCIAL</span>
+                                            <span id="f_razon_social" class="fw-bold text-dark text-truncate d-block">---</span>
+                                        </div>
+                                        <div class="row g-0">
+                                            <div class="col-6">
+                                                <span class="text-muted d-block" style="font-size: 0.6rem; font-weight: 800;">RFC</span>
+                                                <span id="f_rfc" class="fw-bold text-dark">---</span>
+                                            </div>
+                                            <div class="col-6 text-end">
+                                                <span id="f_regimen" class="badge rounded-pill bg-white text-primary border border-primary border-opacity-25 px-3 py-2">---</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div id="contenedor_cambio" class="mt-3 p-2 rounded text-center d-none" style="background-color: rgba(52, 199, 89, 0.1); border: 1px dashed #34c759;">
-                                <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.6rem;">Cambio para el cliente:</span>
-                                <h3 class="fw-bold text-success mb-0" id="texto_cambio">$0.00</h3>
+                            <div class="card border-0 shadow-sm" style="border-radius: 1.5rem; background: #ffffff;">
+                                <div class="card-body p-4">
+                                    <h6 class="text-uppercase fw-bold mb-3 text-success" style="font-size: 0.7rem; letter-spacing: 1px;">
+                                        <i class="bi bi-credit-card me-2"></i>Método de Pago
+                                    </h6>
+                                    <div class="row g-2">
+                                        <div class="col-4">
+                                            <label class="small fw-bold text-muted mb-1" style="font-size: 0.6rem;">A PAGAR</label>
+                                            <input type="number" id="monto_pagar" class="form-control border-0 bg-light p-2 rounded-3 fw-bold text-primary shadow-none text-center" readonly>
+                                        </div>
+                                        <div class="col-4">
+                                            <label class="small fw-bold text-success mb-1" style="font-size: 0.6rem;">EFECTIVO</label>
+                                            <input type="number" id="efectivo_recibido" class="form-control border-0 bg-success bg-opacity-10 p-2 rounded-3 fw-bold text-success shadow-none text-center" placeholder="0.00" step="0.01">
+                                        </div>
+                                        <div class="col-4">
+                                            <label class="small fw-bold text-muted mb-1" style="font-size: 0.6rem;">MÉTODO</label>
+                                            <select id="metodo_pago" class="form-select border-0 bg-light p-2 rounded-3 shadow-none fw-bold small">
+                                                <option value="Efectivo">Efectivo</option>
+                                                <option value="Transferencia">Transferencia</option>
+                                                <option value="Tarjeta">Tarjeta</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div id="contenedor_cambio" class="mt-3 p-3 rounded-4 text-center d-none" style="background: #e1fcef; border: 1px dashed #34c759;">
+                                        <span class="text-success small fw-bold text-uppercase" style="font-size: 0.6rem; letter-spacing: 1px;">Cambio para el cliente</span>
+                                        <h3 class="fw-bold text-success mb-0" id="texto_cambio">$0.00</h3>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <textarea id="obsVenta" class="form-control border-0 bg-white p-3 rounded-4 shadow-sm" rows="2" placeholder="Notas adicionales de la venta..." style="font-size: 0.85rem;"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="card border-0 shadow-sm" style="border-radius: 1.5rem;">
+                            <div class="card-body p-4">
+                                <h6 class="text-uppercase fw-bold mb-4 text-secondary" style="font-size: 0.7rem; letter-spacing: 1px;">
+                                    <i class="bi bi-truck me-2 text-primary"></i>Datos de Despacho
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="p-3 rounded-4 bg-light">
+                                            <label class="form-label small fw-bold text-muted mb-1" style="font-size: 0.6rem;">DESPACHADOR RESPONSABLE</label>
+                                            <select name="chofer_id" id="patio_chofer_id" class="form-select border-0 bg-transparent shadow-none fw-bold p-0">
+                                                <option value="">Seleccione encargado...</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-3 rounded-4 bg-light">
+                                            <label class="form-label small fw-bold text-muted mb-1" style="font-size: 0.6rem;">AYUDANTES (MULTIPLE)</label>
+                                            <select name="tripulantes[]" id="patio_tripulantes" class="form-select border-0 bg-transparent shadow-none fw-bold p-0" multiple style="min-height: 24px;">
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-3 rounded-4 bg-light">
+                                            <label class="form-label small fw-bold text-muted mb-1" style="font-size: 0.6rem;">OBSERVACIONES DE ENTREGA</label>
+                                            <textarea name="observaciones" class="form-control border-0 bg-transparent shadow-none p-0 fw-medium" rows="1" placeholder="Ej. Revisado por cliente..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-
-                        <textarea id="obsVenta" class="form-control shadow-sm" rows="2" placeholder="Notas adicionales de la venta..."></textarea>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer bg-light border-0">
-                <button class="btn btn-link text-muted me-auto" data-bs-dismiss="modal">Cerrar</button>
-                <button id="btnFinalizarVenta" class="btn btn-success btn-lg px-5 shadow fw-bold" onclick="procesarVenta()">
-                    <i class="bi bi-check-circle-fill"></i> FINALIZAR VENTA
+
+            <div class="modal-footer border-0 bg-white p-4 pt-2">
+                <button class="btn btn-link text-muted fw-bold text-decoration-none me-auto" data-bs-dismiss="modal">Cancelar</button>
+                <button id="btnFinalizarVenta" class="btn btn-success rounded-pill px-5 py-3 fw-bold shadow-sm" onclick="procesarVenta()" style="background: #34c759 !important; border: none !important;">
+                    <i class="bi bi-check-lg me-2"></i>Finalizar Transacción
                 </button>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+/* Personalización de Scroll para iOS Look */
+#modalFinalizarVenta .table-responsive::-webkit-scrollbar { width: 4px; }
+#modalFinalizarVenta .table-responsive::-webkit-scrollbar-thumb { background: #d1d1d6; border-radius: 10px; }
+#modalFinalizarVenta .form-select, #modalFinalizarVenta .form-control { transition: all 0.2s ease; }
+#modalFinalizarVenta .form-select:focus, #modalFinalizarVenta .form-control:focus { background-color: #e5e5ea !important; }
+#modalFinalizarVenta .btn-primary { background-color: #007aff !important; border: none; }
+#modalFinalizarVenta .text-primary { color: #007aff !important; }
+</style>
 
     <div class="modal fade" id="modalNuevoCliente" tabindex="-1" aria-labelledby="modalNuevoClienteLabel"
         aria-hidden="true">
@@ -550,8 +637,54 @@
     <script src="/cfsistem/app/backend/js_ventas/carrito.js"></script>
     <script src="/cfsistem/app/backend/js_ventas/filtros.js"></script>
     <script src="/cfsistem/app/backend/js_ventas/nuevo_cliente.js"></script>
+  <script>
+    async function cargarPersonalDespacho(alm) {
+        // 1. Definir la ruta si no existe globalmente (ajusta según tu estructura)
+        const rutaControlador = '/cfsistem/app/controllers/cajaRapidaController.php';
+        
+        // 2. Referencias a los selects usando jQuery
+        const selectC = $('#patio_chofer_id');
+        const selectT = $('#patio_tripulantes');
+
+        if (!selectC.length) return; // Salir si el modal no está en el DOM
+
+        // Feedback visual inmediato
+        selectC.empty().append('<option value="">Cargando personal...</option>');
+        selectT.empty();
+
+        try {
+            // 3. Petición al servidor
+            const response = await fetch(`${rutaControlador}?action=get_recursos_sucursal&almacen_id=${alm}`);
+            
+            if (!response.ok) throw new Error('Error en la respuesta del servidor');
+            
+            const res = await response.json();
+
+            if (res.success && res.choferes) {
+                selectC.empty().append('<option value="">Seleccione encargado...</option>');
+                selectT.empty();
+
+                // 4. Llenar los selects
+                res.choferes.forEach(persona => {
+                    const option = `<option value="${persona.id}">${persona.nombre}</option>`;
+                    selectC.append(option);
+                    selectT.append(option);
+                });
+                
+                console.log(`Personal cargado para almacén ${alm}`);
+            } else {
+                throw new Error(res.message || 'No se encontró personal');
+            }
+        } catch (e) {
+            console.error("Error en cargarPersonalDespacho:", e);
+            selectC.empty().append('<option value="">Error al cargar personal</option>');
+            
+            // Opcional: Avisar al usuario con un Toast o alert pequeño
+            // Swal.fire('Nota', 'No se pudo cargar la lista de choferes para este almacén', 'info');
+        }
+    }
+</script>
    
-    
 <script>
     // Escuchar cambios en el efectivo recibido
 document.addEventListener('input', function(e) {
@@ -619,11 +752,10 @@ document.addEventListener('change', function(e) {
     }
 });
 </script>
-    <script>
-    // Lógica de validación de pago y avisos
-
+  <script>
+    // --- 1. VALIDACIÓN DE PAGO Y EVENTOS DE CLIENTE (Tus funciones originales) ---
     document.getElementById('monto_pagar').addEventListener('input', function() {
-        const totalTexto = document.getElementById('totalFinalModal').innerText.replace(/,/g, '');
+        const totalTexto = document.getElementById('totalFinalModal').innerText.replace(/[$,]/g, '');
         const totalFinal = parseFloat(totalTexto) || 0;
         let valor = parseFloat(this.value) || 0;
         const aviso = document.getElementById('pago_aviso');
@@ -631,12 +763,9 @@ document.addEventListener('change', function(e) {
         if (valor < 0) this.value = 0;
         else if (valor > totalFinal) this.value = totalFinal;
 
-        if (valor === totalFinal && totalFinal > 0) aviso.innerHTML =
-            '<span class="text-success"><i class="bi bi-check-all"></i> PAGO COMPLETO</span>';
-        else if (valor > 0 && valor < totalFinal) aviso.innerHTML =
-            '<span class="text-warning"><i class="bi bi-pie-chart"></i> PAGO PARCIAL</span>';
-        else if (valor === 0 && totalFinal > 0) aviso.innerHTML =
-            '<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> CRÉDITO</span>';
+        if (valor === totalFinal && totalFinal > 0) aviso.innerHTML = '<span class="text-success"><i class="bi bi-check-all"></i> PAGO COMPLETO</span>';
+        else if (valor > 0 && valor < totalFinal) aviso.innerHTML = '<span class="text-warning"><i class="bi bi-pie-chart"></i> PAGO PARCIAL</span>';
+        else if (valor === 0 && totalFinal > 0) aviso.innerHTML = '<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> CRÉDITO</span>';
         else aviso.innerHTML = '';
     });
 
@@ -662,124 +791,206 @@ document.addEventListener('change', function(e) {
         let cantidadUsuario = parseFloat(inputCant.value) || 0;
         let cantidadReal = (modo === 'referencia') ? (cantidadUsuario * factor) : cantidadUsuario;
 
-         if (cantidadReal > stockDisponible) {
-             Swal.fire('Stock insuficiente', `No puedes agregar ${cantidadReal} unidades. Stock: ${stockDisponible}`,
-                 'error');
+        if (cantidadReal > stockDisponible) {
+            Swal.fire('Stock insuficiente', `No puedes agregar ${cantidadReal} unidades. Stock: ${stockDisponible}`, 'error');
             return;
-         }
+        }
 
-        inputCant.value = cantidadReal; // Ajuste temporal para agregarProducto
+        inputCant.value = cantidadReal; 
         if (typeof agregarProducto === "function") agregarProducto(btn);
-        inputCant.value = 1; // Reset
+        inputCant.value = 1; 
     }
-    </script>
+
+    // --- 2. LÓGICA DE PROCESAR VENTA CON REDIRECCIÓN OBLIGATORIA ---
+    window.procesarVenta = function() {
+        // Validaciones de seguridad antes del envío
+        const idCliente = document.getElementById('selectCliente').value;
+        if (!idCliente || !window.carrito || window.carrito.length === 0) {
+            return Swal.fire('Atención', 'El carrito está vacío o no hay cliente seleccionado.', 'warning');
+        }
+
+        const totalTexto = document.getElementById('totalFinalModal').innerText.replace(/[$,]/g, '');
+        const totalVenta = parseFloat(totalTexto) || 0;
+        const montoPagado = parseFloat(document.getElementById('monto_pagar').value) || 0;
+        
+        const btnFinalizar = document.querySelector('#modalFinalizarVenta .btn-success');
+
+        // Preparación de datos para enviar al controlador
+        const datosVenta = {
+            id_cliente: parseInt(idCliente),
+            monto_pagado: montoPagado,
+            total_venta: totalVenta,
+            metodo_pago: document.getElementById('metodo_pago').value,
+            observaciones: document.getElementById('obsVenta').value,
+            carrito: window.carrito
+        };
+
+        if(btnFinalizar) {
+            btnFinalizar.disabled = true;
+            btnFinalizar.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Guardando...';
+        }
+
+        fetch('/cfsistem/app/controllers/cajaRapidaController.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(datosVenta) 
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Error en el servidor');
+            return res.json();
+        })
+        .then(res => {
+            if (res.status === 'success' || res.success) {
+                // Capturamos los datos devueltos por el PHP
+                const movs = res.movimientos || res.debug_id_movimiento || [];
+                const idsStr = Array.isArray(movs) ? movs.join(',') : movs;
+                const idAlmacen = res.almacen_id || 1;
+                const idVenta = res.id_venta;
+
+                Swal.fire({
+                    title: '¡Venta Exitosa!',
+                    html: `<div class="text-center">${res.message}<br><small class="text-muted">Redirigiendo a despacho en patio...</small></div>`,
+                    icon: 'success',
+                    showDenyButton: true,
+                    confirmButtonText: '<i class="bi bi-printer"></i> Ticket',
+                    denyButtonText: '<i class="bi bi-file-earmark-pdf"></i> Nota',
+                    allowOutsideClick: true,
+                    timer: 4000, // 4 segundos para que dé tiempo de elegir impresión
+                    timerProgressBar: true,
+                    confirmButtonColor: '#007aff',
+                    denyButtonColor: '#6c757d',
+                    
+                }).then((result) => {
+                    // Manejo de la impresión (en ventana nueva)
+                    let printUrl = '';
+                    if (result.isConfirmed) {
+                        printUrl = `/cfsistem/app/backend/ventas/ticket_venta.php?id=${idVenta}`;
+                    } else if (result.isDenied) {
+                        printUrl = `/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=${idVenta}`;
+                    }
+                    
+                    if (printUrl) window.open(printUrl, '_blank');
+                    // Al cerrarse el modal después de esto, entrará en acción el 'didClose'
+                });
+
+            } else {
+                Swal.fire('Error', res.message || 'Error desconocido', 'error');
+                if(btnFinalizar) {
+                    btnFinalizar.disabled = false;
+                    btnFinalizar.innerHTML = '<i class="bi bi-check-circle-fill"></i> CONFIRMAR Y GUARDAR';
+                }
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            Swal.fire('Error Crítico', 'No se pudo conectar con el servidor.', 'error');
+            if(btnFinalizar) btnFinalizar.disabled = false;
+        });
+    };
+</script>
     <script>
         window.procesarVenta = function() {
-    // 1. Validaciones previas
+    // 1. Validaciones básicas
     if (!window.carrito || window.carrito.length === 0) {
-        return Swal.fire('Carrito vacío', 'Agrega productos antes de cobrar.', 'warning');
+        return Swal.fire('Carrito vacío', 'Agrega productos.', 'warning');
     }
 
     const idCliente = document.getElementById('selectCliente').value;
-    if (!idCliente) {
-        return Swal.fire('Cliente requerido', 'Selecciona un cliente para continuar.', 'warning');
-    }
+    const idChofer = document.getElementById('patio_chofer_id').value; // <--- OBLIGATORIO PARA LOGÍSTICA
 
-    // 2. Captura de datos del DOM
-    const totalTexto = document.getElementById('totalFinalModal').innerText.replace(/[$,]/g, '');
-    const totalVenta = parseFloat(totalTexto) || 0;
+    if (!idCliente) return Swal.fire('Cliente requerido', 'Selecciona un cliente.', 'warning');
+    if (!idChofer) return Swal.fire('Despachador requerido', 'Selecciona quién entrega en patio.', 'warning');
+
+    // 2. Captura de datos (Incluyendo los nuevos campos de logística iOS)
+    const totalVenta = parseFloat(document.getElementById('totalFinalModal').innerText.replace(/[$,]/g, '')) || 0;
     const montoPagado = parseFloat(document.getElementById('monto_pagar').value) || 0;
-    const metodoPago = document.getElementById('metodo_pago').value;
-    const observaciones = document.getElementById('obsVenta').value;
+    
+    // Obtenemos los ayudantes del select múltiple (jQuery)
+    const ayudantesIds = $('#patio_tripulantes').val() || []; 
 
-    // 3. Confirmación de seguridad
+    // 3. Confirmación
     Swal.fire({
-        title: '¿Confirmar Cobro?',
-        html: `Total: <b class="text-primary">$${totalVenta.toFixed(2)}</b><br>Recibido: <b>$${montoPagado.toFixed(2)}</b>`,
+        title: '¿Finalizar Transacción?',
+        text: `Se registrará la salida con el despachador seleccionado.`,
         icon: 'question',
         showCancelButton: true,
         confirmButtonText: 'Sí, finalizar',
-        cancelButtonText: 'Cancelar',
         confirmButtonColor: '#34c759'
     }).then((result) => {
         if (result.isConfirmed) {
             
-            const btnFinalizar = document.querySelector('#modalFinalizarVenta .btn-success');
-            if(btnFinalizar) {
-                btnFinalizar.disabled = true;
-                btnFinalizar.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Guardando...';
-            }
+            const btnFinalizar = document.querySelector('#btnFinalizarVenta');
+            btnFinalizar.disabled = true;
+            btnFinalizar.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Procesando...';
 
-            // 4. Mapeo de datos para el VentasModel
-            const datosVenta = {
-                id_cliente: parseInt(idCliente),
-                descuento: 0,
-                monto_pagado: montoPagado,
-                metodo_pago: metodoPago,
-                total_venta: totalVenta,
-                observaciones: observaciones,
-                carrito: window.carrito.map(item => ({
-                    producto_id: parseInt(item.producto_id),
-                    almacen_id: parseInt(item.almacen_id),
-                    cantidad: parseFloat(item.cantidad),
-                    entrega_hoy: parseFloat(item.entrega_hoy), 
-                    precio_unitario: parseFloat(item.precio_unitario),
-                    tipo_precio: item.tipo_precio
-                }))
-            };
+            // 4. MAPEO DE DATOS COMPLETO (Venta + Logística)
+           // --- MAPEO DE DATOS COMPLETO (Venta + Logística Automática) ---
+const datosVenta = {
+    // 1. Datos de la Transacción
+    id_cliente: parseInt(idCliente),
+    id_almacen: parseInt(document.getElementById('modal_select_almacen')?.value || 0), 
+    monto_pagado: parseFloat(montoPagado) || 0,
+    metodo_pago: document.getElementById('metodo_pago').value,
+    total_venta: parseFloat(totalVenta) || 0,
+    observaciones: document.getElementById('obsVenta').value,
 
-            // 5. Envío al Controlador (Ruta exacta proporcionada)
-            fetch('/cfsistem/app/controllers/cajaRapidaController.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(datosVenta)
-            })
-            .then(res => {
-                if (!res.ok) throw new Error('Error en la comunicación con el servidor');
-                return res.json();
-            })
-            .then(res => {
-                if (res.status === 'success') {
-                    // Verificamos si hubo faltantes según la lógica de tu controlador
-                    const esParcial = res.message.includes('⚠️');
-                    console.log(res.debug_id_movimiento);
-                    
-                    Swal.fire({
-                        title: esParcial ? 'Venta Parcial' : '¡Venta Exitosa!',
-                        html: `<div class="text-start small">${res.message}</div>`,
-                        icon: esParcial ? 'warning' : 'success',
-                        showDenyButton: true,
-                        confirmButtonText: '<i class="bi bi-printer"></i> Ticket',
-                        denyButtonText: '<i class="bi bi-file-earmark-pdf"></i> Nota sin precios',
-                        confirmButtonColor: '#007aff',
-                        denyButtonColor: '#6c757d'
-                    }).then((result) => {
-                        // Rutas de impresión (ajustar si tus tickets están en otro lado)
-                        let printUrl = '';
-                        if (result.isConfirmed) {
-                            printUrl = `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`;
-                        } else if (result.isDenied) {
-                            printUrl = `/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=${res.id_venta}`;
-                        }
+    // 2. Datos de Logística (Para tu función cajaRapidaEntregarEnPatioCliente)
+    chofer_id: parseInt(document.getElementById('patio_chofer_id').value) || 0,
+    tripulantes: $('#patio_tripulantes').val() || [], // Array de IDs de ayudantes
+    observaciones_entrega: document.querySelector('textarea[name="observaciones"]')?.value || 'Entrega en Patio',
 
-                        if (printUrl) window.open(printUrl, '_blank');
-                        
-                        // Recarga limpia para actualizar stocks en la vista
-                       
-                    });
-                } else {
-                    Swal.fire('Error', res.message || 'No se pudo guardar la venta', 'error');
-                    if(btnFinalizar) {
-                        btnFinalizar.disabled = false;
-                        btnFinalizar.innerHTML = '<i class="bi bi-check-circle-fill"></i> CONFIRMAR Y GUARDAR';
-                    }
-                }
-            })
-            .catch(err => {
-                console.error(err);
-                Swal.fire('Error Crítico', 'Hubo un problema al conectar con el controlador.', 'error');
-                if(btnFinalizar) btnFinalizar.disabled = false;
-            });
+    // 3. Detalle de Productos (Carrito)
+    carrito: window.carrito.map(item => ({
+        producto_id: parseInt(item.producto_id),
+        almacen_id: parseInt(item.almacen_id),
+        cantidad: parseFloat(item.cantidad),
+        entrega_hoy: parseFloat(item.entrega_hoy || item.cantidad), 
+        precio_unitario: parseFloat(item.precio_unitario),
+        tipo_precio: item.tipo_precio
+    }))
+};
+
+// --- ENVÍO AL CONTROLADOR ---
+fetch('/cfsistem/app/controllers/cajaRapidaController.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(datosVenta)
+})
+.then(res => {
+    // Si el servidor manda un error de PHP, esto lo captura antes de fallar el JSON
+    if (!res.ok) {
+        return res.text().then(text => { throw new Error("Error en servidor: " + text) });
+    }
+    return res.json();
+})
+.then(res => {
+    if (res.status === 'success') {
+        Swal.fire({
+            title: '¡Venta y Despacho OK!',
+            text: res.message,
+            icon: 'success',
+            confirmButtonText: '<i class="bi bi-printer"></i> Imprimir Ticket',
+            confirmButtonColor: '#007aff'
+        }).then(() => {
+            // Abrir ticket y limpiar pantalla
+            window.open(`/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`, '_blank');
+            location.reload(); 
+        });
+    } else {
+        throw new Error(res.message || "Error desconocido al guardar.");
+    }
+})
+.catch(err => {
+    console.error("Error Crítico:", err);
+    Swal.fire('Error de Sistema', err.message, 'error');
+    
+    // Reactivamos el botón para reintentar
+    const btn = document.querySelector('#btnFinalizarVenta');
+    if(btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check-lg me-2"></i>PROCESAR TRANSACCIÓN';
+    }
+});
         }
     });
 };
@@ -789,11 +1000,31 @@ document.addEventListener('change', function(e) {
  * 4. FUNCIÓN PARA ABRIR EL MODAL DE FINALIZACIÓN
  */
 window.abrirModalFinalizar = function() {
+    // 1. Validación de Carrito
     if (!window.carrito || window.carrito.length === 0) {
         Swal.fire('Carrito vacío', 'Agrega productos antes de finalizar la venta.', 'warning');
         return;
     }
 
+    // 2. OBTENER Y VALIDAR ALMACÉN (Especialmente para Admin con id 0)
+    let idAlmacenFinal = <?= (int)($_SESSION['almacen_id'] ?? 0) ?>;
+    
+    // Si la sesión es 0 (Admin), buscamos el valor del select 'filtroAlmacen'
+    if (idAlmacenFinal === 0) {
+        const selectAlm = document.getElementById('filtroAlmacen');
+        if (!selectAlm || selectAlm.value === "" || selectAlm.value === "0") {
+            Swal.fire({
+                title: 'Seleccione Almacén',
+                text: 'Es obligatorio elegir un almacén de origen para asignar el personal de despacho.',
+                icon: 'warning',
+                confirmButtonColor: '#007aff'
+            });
+            return; // Bloquea la apertura del modal
+        }
+        idAlmacenFinal = selectAlm.value;
+    }
+
+    // 3. Renderizado de la tabla (Tu lógica original)
     const tabla = document.getElementById("tablaConfirmacion");
     if (!tabla) return;
     tabla.innerHTML = "";
@@ -803,13 +1034,8 @@ window.abrirModalFinalizar = function() {
             item.entrega_hoy = item.cantidad;
         }
 
-        // Cálculos iniciales de venta total
         const cantFactorVenta = Math.floor(item.cantidad / item.factor);
         const piezasRestantesVenta = Math.round((item.cantidad % item.factor) * 100) / 100;
-
-        // Cálculos dinámicos de lo que se está ENTREGANDO
-        const fEntregar = Math.floor(item.entrega_hoy / item.factor);
-        const pEntregar = Math.round((item.entrega_hoy % item.factor) * 100) / 100;
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -820,7 +1046,6 @@ window.abrirModalFinalizar = function() {
                 <div class="mt-1" style="font-size: 0.7rem; color: #055160; background: #e3f2fd; padding: 4px 8px; border-radius: 4px; border-left: 3px solid #0d6efd;">
                     <i class="bi bi-info-circle-fill"></i> Factor: 1 <b>${item.unidad_reporte}</b> = <b>${item.factor}</b> pzas.<br>
                     Vendido: ${cantFactorVenta} ${item.unidad_reporte} + ${piezasRestantesVenta} pzas.<br>
-                    
                 </div>
             </td>
             <td class="text-center">
@@ -845,16 +1070,27 @@ window.abrirModalFinalizar = function() {
         tabla.appendChild(tr);
     });
 
-    // Llamada segura a la función local
+    // 4. Actualizaciones finales antes de mostrar
     window.recalcularTotalModal();
 
+    // Sincronizar el select interno del modal (si existe para el admin)
+    const modalSelectAlm = document.getElementById('modal_select_almacen');
+    if (modalSelectAlm) {
+        modalSelectAlm.value = idAlmacenFinal;
+    }
+
+    // CARGA DE PERSONAL: Usamos el ID validado
+    if (typeof cargarPersonalDespacho === "function") {
+        cargarPersonalDespacho(idAlmacenFinal);
+    }
+
+    // 5. Apertura del Modal
     const modalElement = document.getElementById('modalFinalizarVenta');
     if (modalElement) {
         const myModal = new bootstrap.Modal(modalElement);
         myModal.show();
     }
 };
-
 /**
  * 5. RECALCULAR TOTALES DENTRO DEL MODAL
  */

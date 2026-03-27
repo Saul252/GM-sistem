@@ -9,9 +9,9 @@ require_once __DIR__ . '/../models/categoriasModel.php';
 require_once __DIR__ . '/../models/cajaRapidaModel.php'; 
 require_once __DIR__ . '/../models/entregasModel.php';
 require_once __DIR__ . '/../models/movimientosModel.php';
-require_once __DIR__ . '/../models/vehiculos_model.php'; // Verifica que el nombre de archivo coincida
+require_once __DIR__ . '/../models/vehiculos_model.php'; 
 require_once __DIR__ . '/../models/trabajadores_model.php';
-require_once __DIR__ . '/../models/RepartosModel.php'; // Modelo necesario para patio
+require_once __DIR__ . '/../models/RepartosModel.php'; 
 
 protegerPagina('ventas'); 
 $paginaActual = 'ventas';
@@ -21,19 +21,11 @@ $modeloEntrega    = new EntregaModel($conexion);
 $modeloMovimiento = new MovimientoModel($conexion);
 $vehiculoM        = new VehiculoModel($conexion);
 $trabajadorM      = new TrabajadorModel($conexion);
-$repartoM         = new RepartoModel($conexion); // Instancia para la lógica de patio
+$repartoM         = new RepartoModel($conexion); // Sincronizado con el nombre del modelo
 
 // --- 1. LÓGICA DE PETICIONES AJAX (GET) ---
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
-if ($action === 'get_recursos_reparto') {
-    if (ob_get_length()) ob_clean();
-    header('Content-Type: application/json');
-    $movimiento_id = intval($_GET['id'] ?? 0);
-    $detalle = $modeloEntrega->getDetalleParaDespacho($movimiento_id);
-    echo json_encode($detalle ? ["success" => true, "data" => ["entrega" => $detalle]] : ["success" => false, "message" => "Movimiento no encontrado"]);
-    exit;
-}
 
 if ($action === 'get_recursos_sucursal') {
     if (ob_get_length()) ob_clean();
@@ -46,60 +38,80 @@ if ($action === 'get_recursos_sucursal') {
     ]);
     exit;
 }
-
 // --- 2. LÓGICA DE GUARDADO (POST) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // 1. LIMPIEZA TOTAL: Evita que cualquier Warning previo ensucie el JSON
     if (ob_get_length()) ob_clean();
     header('Content-Type: application/json');
 
-    // CASO A: Entrega en Patio (Viene de FormData)
-    if ($action === 'entregar_en_patio') {
-        try {
-            if (empty($_POST['movimiento_id']) || empty($_POST['chofer_id'])) {
-                throw new Exception("Debe indicar el movimiento y el responsable de entrega.");
-            }
-
-            // Preparar datos para el modelo
-            $datosPatio = $_POST;
-            $datosPatio['usuario_sistema_id'] = $_SESSION['id_usuario'] ?? $_SESSION['usuario_id'] ?? 0;
-            $datosPatio['vehiculo_id'] = 999; // Vehículo virtual para patio
-
-            $resultadoPatio = $repartoM->entregarEnPatioCliente($datosPatio);
-            echo json_encode($resultadoPatio);
-        } catch (Exception $e) {
-            echo json_encode(["success" => false, "message" => $e->getMessage()]);
-        }
-        exit;
-    }
-
-    // CASO B: Venta Rápida (Viene de JSON payload)
+    // 2. LEER EL PAYLOAD
     $input = file_get_contents("php://input");
     $data = json_decode($input, true);
 
     if ($data) {
-        $resultado = cajaRapidaModel::guardarVentaRapida($conexion, $data);
-        
-        if ($resultado['status'] === 'success') {
-            $ventaid = $resultado['id_venta']; 
-            $listaMovs = $modeloMovimiento->obtenerIdMovimientoPorVenta($ventaid);
-
-            if (!empty($listaMovs) && is_array($listaMovs)) {
-                foreach ($listaMovs as $idMov) {
-                    $resDespacho = $modeloEntrega->procesarDespachoFisico($idMov);
-                    if (!$resDespacho['success']) {
-                        error_log("Error despacho lotes ID: " . $idMov . " - " . $resDespacho['message']);
-                    }
-                }
+        try {
+            // --- VALIDACIÓN DE INSTANCIAS ---
+            // Asegúrate de que estas variables existan. Si no, lánzamos error controlado.
+            if (!isset($modeloMovimiento) || !isset($modeloEntrega)) {
+                 throw new Exception("Error interno: Los modelos de logística no están instanciados.");
             }
 
-            // Formatear mensaje de éxito/parcial
-            $resultado['message'] = ($resultado['total_entregado'] < $resultado['total_pedido']) 
-                ? "⚠️ Venta {$resultado['folio']} parcial por falta de stock." 
-                : "✅ Venta {$resultado['folio']} completada y stock descontado.";
+            // --- PASO 1: GUARDAR LA VENTA ---
+            $resultado = cajaRapidaModel::guardarVentaRapida($conexion, $data);
             
-            $resultado['movimientos_ids'] = $listaMovs;
+            if ($resultado['status'] === 'success') {
+                $ventaid = $resultado['id_venta']; 
+                
+                // --- PASO 2: OBTENER MOVIMIENTOS ---
+                $listaMovs = $modeloMovimiento->obtenerIdMovimientoPorVenta($ventaid);
+
+                if (!empty($listaMovs) && is_array($listaMovs)) {
+                    
+                    // Identificar al usuario (Blindaje de sesión)
+                    $usuarioSistemaId = $_SESSION['id_usuario'] ?? $_SESSION['usuario_id'] ?? 0;
+
+                    foreach ($listaMovs as $idMov) {
+                        // --- PASO 3: LOGÍSTICA AUTOMÁTICA ---
+                        try {
+                            $datosPatio = [
+                                'movimiento_id'      => $idMov,
+                                'chofer_id'          => $data['chofer_id'] ?? 0,
+                                'usuario_sistema_id' => $usuarioSistemaId,
+                                'observaciones'      => $data['observaciones_entrega'] ?? 'Entrega Directa en Patio',
+                                'tripulantes'        => $data['tripulantes'] ?? []
+                            ];
+
+                            $modeloEntrega->cajaRapidaEntregarEnPatioCliente($datosPatio);
+
+                        } catch (Exception $e) {
+                            error_log("Error en logística MovID {$idMov}: " . $e->getMessage());
+                        }
+
+                        // --- PASO 4: DESPACHO FÍSICO (LOTES) ---
+                        $resDespacho = $modeloEntrega->procesarDespachoFisico($idMov);
+                        if (!$resDespacho['success']) {
+                            error_log("Error despacho lotes ID: " . $idMov . " - " . $resDespacho['message']);
+                        }
+                    }
+                }
+
+                $resultado['message'] = ($resultado['total_entregado'] < $resultado['total_pedido']) 
+                    ? "⚠️ Venta {$resultado['folio']} parcial por falta de stock. Logística registrada." 
+                    : "✅ Venta {$resultado['folio']} completada. Stock descontado y personal asignado.";
+                
+                $resultado['movimientos_ids'] = $listaMovs;
+            }
+            
+            echo json_encode($resultado);
+            exit;
+
+        } catch (Exception $ex) {
+            // Si algo falla, devolvemos un JSON de error en lugar de dejar que PHP muera
+            echo json_encode(["status" => "error", "message" => $ex->getMessage()]);
+            exit;
         }
-        echo json_encode($resultado);
+    } else {
+        echo json_encode(["status" => "error", "message" => "No se recibieron datos válidos."]);
         exit;
     }
 }

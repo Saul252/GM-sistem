@@ -187,6 +187,7 @@ public function entregarEnPatioCliente($datos) {
         throw $e;
     }
 }
+
 // Función auxiliar para el controlador
 public function buscarRutaAbierta($vehiculo_id) {
     $sql = "SELECT viaje_folio FROM transporte_consolidacion 

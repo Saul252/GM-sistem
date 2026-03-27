@@ -374,7 +374,7 @@ require_once $ruta;
    <?php require_once __DIR__ . '/egresosComponets/modalCompra.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/modalAjuste.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/modalDetalles.php'; ?>
-        <?php require_once __DIR__ . '/egresosComponets//modalGasto.php'; ?>
+        <?php require_once __DIR__ . '/egresosComponets/modalGasto.php'; ?>
 
 
 
