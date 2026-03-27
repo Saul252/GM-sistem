@@ -71,6 +71,22 @@ case 'get_resumen_despacho':
                     echo json_encode(["success" => false, "message" => "No se encontró registro."]);
                 }
                 break;
+                case 'get_ids_pendientes_venta':
+        // Obtiene solo los IDs [193, 194...] de una venta para procesarlos
+        $venta_id = intval($_GET['venta_id'] ?? 0);
+        $ids = $repartoM->listarIdsPendientesPorVenta($venta_id);
+        echo json_encode(['success' => true, 'ids' => $ids]);
+        break;
+
+    case 'simular_masivo':
+        // Muestra qué lotes se verán afectados antes de hacer el movimiento real
+        // Recibe: entregasController.php?ajax=simular_masivo&ids[]=193&ids[]=194
+        $ids = $_GET['ids'] ?? [];
+        if (empty($ids)) throw new Exception("No hay IDs para simular.");
+        echo json_encode($repartoM->simularDespachoLotesMasivo($ids));
+        break;
+
+
             case 'imprimir':
             case 'imprimirGanancia':
                 $id = intval($_GET['id'] ?? 0);
@@ -96,17 +112,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
 
     try {
-        if ($accion === 'despachar') {
-            $id_usuario = $_SESSION['id_usuario'] ?? 0;
-            if ($id_usuario <= 0) throw new Exception("Sesión expirada o usuario no identificado.");
+        // Validación centralizada de sesión
+        $id_usuario_sesion = $_SESSION['id_usuario'] ?? $_SESSION['usuario_id'] ?? 0;
+        if ($id_usuario_sesion <= 0) {
+            throw new Exception("Sesión expirada o usuario no identificado.");
+        }
+
+        // 1. DESPACHO MASIVO POR VENTA (Lógica procesarDespachoFisicoMasivo)
+        if ($accion === 'despachar_venta_completa') {
+            $ids = $_POST['ids_movimientos'] ?? [];
+            if (empty($ids)) {
+                throw new Exception("No se seleccionaron productos para el despacho masivo.");
+            }
+            // Esta función ejecuta la transacción para todos los IDs enviados
+            echo json_encode($repartoM->procesarDespachoFisicoMasivo($ids));
+        } 
+
+        // 2. DESPACHO INDIVIDUAL (Lógica original)
+        elseif ($accion === 'despachar') {
             $id_movimiento = intval($_POST['id_movimiento'] ?? 0);
-            if ($id_movimiento <= 0) throw new Exception("ID de movimiento no válido.");
+            if ($id_movimiento <= 0) {
+                throw new Exception("ID de movimiento no válido.");
+            }
             echo json_encode($modelo->procesarDespachoFisico($id_movimiento));
         } 
         
+        // 3. LOGÍSTICA Y RUTAS DE REPARTO
         elseif ($accion === 'guardar_reparto') {
             if (empty($_POST['vehiculo_id']) || empty($_POST['chofer_id']) || empty($_POST['movimiento_id'])) {
-                throw new Exception("Faltan datos obligatorios.");
+                throw new Exception("Faltan datos obligatorios para el reparto.");
             }
 
             $vehiculo_id = intval($_POST['vehiculo_id']);
@@ -128,34 +162,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'folio'   => $_POST['folio_viaje']
             ]);
         }
-        // --- NUEVA LÓGICA: ENTREGA DIRECTA AL CLIENTE (PATIO) ---
+
+        // 4. ENTREGA DIRECTA AL CLIENTE (PATIO)
         elseif ($accion === 'entregar_en_patio') {
-    // Validaciones básicas
-    if (empty($_POST['movimiento_id']) || empty($_POST['chofer_id'])) {
-        throw new Exception("Error: Debe indicar el movimiento y el personal responsable de la entrega.");
-    }
+            if (empty($_POST['movimiento_id']) || empty($_POST['chofer_id'])) {
+                throw new Exception("Error: Debe indicar el movimiento y el personal responsable de la entrega.");
+            }
 
-    // 1. Usamos el ID del usuario en sesión para satisfacer la Foreign Key de la BD
-    $_POST['usuario_sistema_id'] = $_SESSION['id_usuario'] ?? $_SESSION['usuario_id'] ?? 0;
-    
-    // 2. Usamos el ID 999 del vehículo virtual que creamos (para evitar el error de FK en vehiculo_id)
-    $_POST['vehiculo_id'] = 999; 
+            // Datos forzados para la consistencia de la base de datos
+            $_POST['usuario_sistema_id'] = $id_usuario_sesion;
+            $_POST['vehiculo_id'] = 999; // Vehículo virtual (Patio)
 
-    // Ejecutamos la función en el modelo de repartos
-    $resultado = $repartoM->entregarEnPatioCliente($_POST);
-
-    echo json_encode($resultado);
-}
-
-        else {
-            throw new Exception("Acción POST no definida.");
+            $resultado = $repartoM->entregarEnPatioCliente($_POST);
+            echo json_encode($resultado);
         }
+
+        // CASO POR DEFECTO
+        else {
+            throw new Exception("Acción POST '$accion' no reconocida.");
+        }
+
     } catch (Exception $e) {
+        // Respuesta unificada para errores capturados
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
     exit;
 }
-
 // --- CARGA NORMAL DE LA VISTA ---
 $paginaActual = 'Entregas';
 require_once __DIR__ . '/../views/entregas_view.php';

@@ -53,41 +53,56 @@
     </div>
 </div>
 <script>
+/**
+ * CF SYSTEM - Módulo de Logística (iOS Style)
+ * Gestión de Rutas y Consolidación
+ */
 
+// Configuración de Notificaciones rápidas (estilo iOS)
+const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 2000,
+    timerProgressBar: true
+});
 
-
+/**
+ * Abre el modal y carga toda la info del viaje, choferes y materiales
+ */
 window.abrirModalEdicionViaje = async function(folio, vehiculoId) {
+    // Reset de campos básicos
     $('#edit_viaje_folio').val(folio);
-    if(vehiculoId) $('#edit_vehiculo_id').val(vehiculoId);
     $('#editFolioTitle').text('Ruta ' + folio);
-    
+    $('#listaMaterialesEdit').html('<div class="p-4 text-center"><div class="spinner-border text-primary"></div></div>');
+
     try {
+        // 1. Obtener detalles del viaje (Materiales, Chofer actual, etc)
         const respViaje = await fetch(`/cfsistem/app/controllers/repartosController.php?action=get_detalles_viaje&folio=${folio}`);
         const viaje = await respViaje.json();
         
         if (!viaje.success) throw new Error(viaje.message);
         const info = viaje.data;
-        
-        if(!$('#edit_vehiculo_id').val()) {
-            $('#edit_vehiculo_id').val(info.vehiculo_id);
-        }
 
+        // Seteo de vehículo
+        $('#edit_vehiculo_id').val(info.vehiculo_id);
         $('#editUnidadSubtitle').html(`
             <i class="fas fa-truck me-1"></i> ${info.unidad_nombre} 
             <span class="badge bg-light text-dark ms-2" style="font-weight: 500;">${info.unidad_placas}</span>
         `);
 
+        // 2. Obtener catálogo de Choferes/Ayudantes del almacén correspondiente
         const respRecursos = await fetch(`/cfsistem/app/controllers/repartosController.php?action=get_recursos_sucursal&almacen_id=${info.almacen_id}`);
         const recursos = await respRecursos.json();
 
-        // 1. Llenar Choferes
+        // Llenar Select de Choferes
         let hChofer = '<option value="">Seleccione chofer...</option>';
         recursos.choferes.forEach(c => {
             hChofer += `<option value="${c.id}" ${c.id == info.chofer_id ? 'selected' : ''}>${c.nombre}</option>`;
         });
         $('#edit_chofer_id').html(hChofer);
 
-        // 2. Llenar Ayudantes (Tripulantes)
+        // Llenar Select de Ayudantes (Tripulantes)
         let hTrip = '';
         const idsActuales = (info.tripulantes_ids || []).map(id => id.toString());
         recursos.choferes.forEach(a => {
@@ -96,20 +111,12 @@ window.abrirModalEdicionViaje = async function(folio, vehiculoId) {
         });
         $('#edit_tripulantes').html(hTrip);
 
-        // ============================================================
-        // CORRECCIÓN AQUÍ: Ejecutar con un pequeño delay para asegurar renderizado
-        // ============================================================
-        setTimeout(() => {
-            actualizarListaAyudantes($('#edit_chofer_id').val());
-        }, 100);
-        // ============================================================
-
-        // 3. Llenar Materiales
+        // 3. Renderizar Lista de Materiales (Entregas)
         let hMat = '';
         if(info.materiales && info.materiales.length > 0) {
             info.materiales.forEach(m => {
                 hMat += `
-                    <div class="list-group-item border-0 border-bottom p-3 bg-white" id="item_mov_${m.movimiento_id}">
+                    <div class="list-group-item border-0 border-bottom p-3 bg-white item-entrega" id="item_mov_${m.movimiento_id}" data-movid="${m.movimiento_id}">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div>
                                 <span class="badge bg-light text-primary mb-1" style="font-size: 0.65rem;">SKU: ${m.sku || 'N/A'}</span>
@@ -117,9 +124,9 @@ window.abrirModalEdicionViaje = async function(folio, vehiculoId) {
                                 <small class="text-muted fw-bold">Cant: ${parseFloat(m.cantidad).toFixed(2)} ${m.um || ''}</small>
                             </div>
                             <div class="text-end">
-                                <span class="d-block fw-bold text-primary small">${m.cliente || 'Público General'}</span>
-                                <button type="button" class="btn btn-sm btn-light text-danger rounded-circle mt-1" 
-                                        onclick="quitarEntregaDeRuta(${m.movimiento_id})" title="Quitar de esta ruta">
+                                <span class="d-block fw-bold text-primary small" style="font-size: 0.75rem;">${m.cliente || 'Público General'}</span>
+                                <button type="button" class="btn btn-sm btn-light text-danger rounded-circle mt-1 btn-quitar-item" 
+                                        onclick="quitarEntregaVisual(${m.movimiento_id})" title="Quitar de esta ruta">
                                     <i class="fas fa-times"></i>
                                 </button>
                             </div>
@@ -137,113 +144,130 @@ window.abrirModalEdicionViaje = async function(folio, vehiculoId) {
         }
         $('#listaMaterialesEdit').html(hMat);
 
+        // Ajustar visualización de ayudantes según chofer seleccionado
+        setTimeout(() => { actualizarListaAyudantes($('#edit_chofer_id').val()); }, 100);
+
         $('#modalEditarViaje').modal('show');
 
     } catch (e) {
-        console.error("Error en abrirModal:", e);
-        Swal.fire('Atención', 'Ocurrió un error al cargar los datos: ' + e.message, 'warning');
+        console.error("Error al abrir modal:", e);
+        Swal.fire('Atención', e.message, 'warning');
     }
 }
 
+/**
+ * Quita el item visualmente del modal. 
+ * La eliminación real en BD ocurre hasta dar click en "Guardar Cambios".
+ */
+window.quitarEntregaVisual = function(movimientoId) {
+    $(`#item_mov_${movimientoId}`).fadeOut(300, function() {
+        $(this).remove();
+        if ($('.item-entrega').length === 0) {
+            $('#listaMaterialesEdit').html('<div class="p-4 text-center text-muted">No hay productos en esta ruta</div>');
+        }
+        Toast.fire({ icon: 'info', title: 'Removido de la lista' });
+    });
+}
 
-
-
-
-async function guardarCambiosViaje() {
-    const form = document.getElementById('formEditarViaje');
+/**
+ * Envía todos los cambios al controlador (Sincronización Total)
+ */
+window.guardarCambiosViaje = async function() {
     const btnGuardar = document.querySelector('#modalEditarViaje .btn-primary');
     
-    // 1. Recopilamos las direcciones de los inputs .destino-input
-    const destinos = {};
+    // 1. Recopilar direcciones de los items que quedaron físicamente en el modal
+    const destinosData = {};
     const inputs = document.querySelectorAll('.destino-input');
     
+    // Si el usuario quitó todos los materiales visualmente
     if (inputs.length === 0) {
-        return Swal.fire('Atención', 'No hay materiales en esta ruta.', 'warning');
+        return Swal.fire('Atención', 'No puedes dejar una ruta vacía. Si deseas cancelarla, usa la opción correspondiente.', 'warning');
     }
 
     inputs.forEach(input => {
-        destinos[input.dataset.movid] = input.value.trim();
+        destinosData[input.dataset.movid] = input.value.trim();
     });
 
-    // 2. Preparamos el FormData
-    const formData = new FormData(form);
+    // 2. Preparar FormData desde el formulario
+    const formElement = document.getElementById('formEditarViaje');
+    const formData = new FormData(formElement);
+    
+    // Agregamos la acción y el JSON de destinos
     formData.append('action', 'guardar_cambios_viaje');
-    // Enviamos el objeto de direcciones como un string JSON
-    formData.append('destinos_data', JSON.stringify(destinos));
+    formData.append('destinos_data', JSON.stringify(destinosData));
 
     try {
-        // Efecto visual de carga (iOS Style)
         btnGuardar.disabled = true;
-        btnGuardar.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Guardando...';
+        btnGuardar.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Aplicando...';
 
         const resp = await fetch(`/cfsistem/app/controllers/repartosController.php`, {
             method: 'POST',
             body: formData
         });
 
-        // Leemos como texto primero para detectar errores de PHP (Warnings/Espacios)
-        const text = await resp.text();
+        // LEER COMO TEXTO PRIMERO (Para depuración)
+        const rawResponse = await resp.text();
         let res;
-
+        
         try {
-            res = JSON.parse(text);
+            res = JSON.parse(rawResponse);
         } catch (e) {
-            console.error("Respuesta no válida:", text);
-            throw new Error("El servidor devolvió un formato incorrecto. Revisa la consola (F12).");
+            console.error("Respuesta del servidor no es JSON:", rawResponse);
+            throw new Error("El servidor devolvió un error interno. Revisa la consola.");
         }
 
         if (res.success) {
-            Swal.fire({
+            // EL SWEET ALERT DE ÉXITO
+            await Swal.fire({
                 icon: 'success',
                 title: '¡Logística Actualizada!',
-                text: res.message,
-                timer: 1500,
+                text: res.message || 'Los cambios se aplicaron correctamente',
+                timer: 2000,
                 showConfirmButton: false
             });
             
             $('#modalEditarViaje').modal('hide');
             
-            // Refrescar tabla o lista
-            if (typeof listarViajesActivos === 'function') listarViajesActivos();
-            else location.reload();
-
+            // Refrescar vista
+            if (typeof listarViajesActivos === 'function') {
+                listarViajesActivos();
+            } else {
+                location.reload();
+            }
         } else {
-            throw new Error(res.message);
+            throw new Error(res.message || "Error desconocido en el servidor");
         }
 
     } catch (err) {
-        Swal.fire('Error', err.message, 'error');
+        console.error("Error en guardarCambiosViaje:", err);
+        Swal.fire('Error al guardar', err.message, 'error');
     } finally {
         btnGuardar.disabled = false;
         btnGuardar.innerHTML = 'Guardar Cambios';
     }
 }
-// Listener para cuando cambia el chofer
-$('#edit_chofer_id').on('change', function() {
-    const choferId = $(this).val();
-    actualizarListaAyudantes(choferId);
-});
-
-function actualizarListaAyudantes(choferSeleccionadoId) {
+/**
+ * Evita que el chofer sea seleccionado como su propio ayudante
+ */
+function actualizarListaAyudantes(choferId) {
     const $selectAyudantes = $('#edit_tripulantes');
-    
-    // Recorremos todas las opciones de ayudantes
     $selectAyudantes.find('option').each(function() {
-        const $opcion = $(this);
-        
-        if ($opcion.val() === choferSeleccionadoId && choferSeleccionadoId !== "") {
-            // Si es el mismo ID que el chofer, deseleccionamos y ocultamos
-            $opcion.prop('selected', false);
-            $opcion.attr('disabled', 'disabled').hide();
+        const $opt = $(this);
+        if ($opt.val() == choferId && choferId !== "") {
+            $opt.prop('selected', false).attr('disabled', 'disabled').hide();
         } else {
-            // Si no, lo habilitamos y mostramos
-            $opcion.removeAttr('disabled').show();
+            $opt.removeAttr('disabled').show();
         }
     });
 
-    // Si usas Select2, necesitas esta línea para refrescar la vista:
     if ($selectAyudantes.hasClass('select2-hidden-accessible')) {
         $selectAyudantes.trigger('change.select2');
     }
 }
+
+// Evento: Al cambiar chofer, limpiar lista de ayudantes
+$('#edit_chofer_id').on('change', function() {
+    actualizarListaAyudantes($(this).val());
+});
+
 </script>

@@ -72,6 +72,15 @@
         @media (max-width: 768px) { 
             .main-content { margin-left: 0; padding: 20px; padding-top: 90px; } 
         }
+        .form-check-input:checked {
+    background-color: var(--accent-blue);
+    border-color: var(--accent-blue);
+}
+
+.form-switch .form-check-input {
+    width: 2.5em;
+    cursor: pointer;
+}
     </style>
    
    
@@ -128,9 +137,18 @@
                                 <?php endif; ?>
                             </select>
                         </div>
-                        <div class="col-md-2">
-                            <button type="button" id="btnReset" class="btn btn-dark w-100 rounded-pill fw-bold">Limpiar</button>
-                        </div>
+                        
+    <div class="form-check form-switch pt-2">
+        <input class="form-check-input" type="checkbox" id="checkAgruparVenta">
+        <label class="form-check-label small fw-bold text-primary" for="checkAgruparVenta">
+            <i class="bi bi-layers-half me-1"></i> AGRUPAR POR VENTA
+        </label>
+    
+</div>
+<div class="col-md-2">
+    <button type="button" id="btnReset" class="btn btn-dark w-100 rounded-pill fw-bold">Limpiar</button>
+</div>
+                        
                     </form>
                 </div>
             </div>
@@ -188,11 +206,12 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+     
  
     <?php require_once __DIR__ . '/entregasComponets/entregasPatioModal.php'; ?>
 <?php require_once __DIR__ . '/entregasComponets/modalVerDetalleEntregas.php'; ?>
+<?php require_once __DIR__ . '/entregasComponets/modalEntregaVentas.php'; ?>
 
     <script>
 $(document).ready(function() {
@@ -222,77 +241,131 @@ $(document).ready(function() {
         return `<div class="fw-bold text-dark fs-6">${cant} <small class="fw-normal text-muted">pzas</small></div>`;
     }
 
-    function cargarEntregas() {
-        $('#loader').removeClass('d-none');
-        $.ajax({
-            url: 'entregasController.php',
-            data: {
-                ajax: 'listar',
-                periodo: $('#selectorPeriodo').val(),
-                f_inicio: $('#f_inicio').val(),
-                f_fin: $('#f_fin').val(),
-                almacen_id: $('#filtroAlmacen').val()
-            },
-            dataType: 'json',
-            success: function(res) {
-                tabla.clear();
-                if(res.data) {
-                    res.data.forEach(m => {
-                      // Dentro del res.data.forEach(m => { ... })
+  function cargarEntregas() {
+    $('#loader').removeClass('d-none');
+    const agrupar = $('#checkAgruparVenta').is(':checked');
 
-let contenidoAccion = '';
+    $.ajax({
+        url: 'entregasController.php',
+        data: {
+            ajax: 'listar',
+            periodo: $('#selectorPeriodo').val(),
+            f_inicio: $('#f_inicio').val(),
+            f_fin: $('#f_fin').val(),
+            almacen_id: $('#filtroAlmacen').val()
+        },
+        dataType: 'json',
+        success: function(res) {
+            tabla.clear();
+            if (!res.data) { tabla.draw(); return; }
 
-if (parseInt(m.ya_despachado) === 1) {
-    // Definimos los estados de bloqueo
-    const entregaFinalizada = (m.estado_reparto === 'completado');
-    const enRuta = (m.estado_reparto === 'en_transito');
+            let datosAMostrar = res.data;
 
-    if (entregaFinalizada || enRuta) {
-        // --- VISTA DE SEGUIMIENTO E IMPRESIÓN (SIN BOTONES OPERATIVOS) ---
-        const colorEstado = entregaFinalizada ? '#28a745' : '#ff9500';
-        const bgEstado = entregaFinalizada ? 'rgba(52, 199, 89, 0.08)' : 'rgba(255, 149, 0, 0.08)';
-        const borderEstado = entregaFinalizada ? 'rgba(52, 199, 89, 0.15)' : 'rgba(255, 149, 0, 0.15)';
-        const textoEstado = entregaFinalizada ? 'MATERIAL ENTREGADO' : 'MERCANCÍA EN TRÁNSITO';
-        const iconoEstado = entregaFinalizada ? 'bi-check-circle-fill' : 'bi-truck';
+            if (agrupar) {
+                const grupos = {};
+                res.data.forEach(item => {
+                    const folio = item.folio_venta || 'SIN-FOLIO';
+                    if (!grupos[folio]) {
+                        grupos[folio] = { 
+                            ...item, 
+                            total_items: 0, 
+                            items_despachados: 0, 
+                            items_en_ruta: 0,
+                            items_completados: 0,
+                            ids_movimientos: [] 
+                        };
+                    }
+                    grupos[folio].total_items++;
+                    
+                    // Contadores de estado para decidir qué botones mostrar
+                    if (parseInt(item.ya_despachado) === 1) grupos[folio].items_despachados++;
+                    if (item.estado_reparto === 'en_transito') grupos[folio].items_en_ruta++;
+                    if (item.estado_reparto === 'completado') grupos[folio].items_completados++;
+                    
+                    grupos[folio].ids_movimientos.push(item.id);
+                });
+                datosAMostrar = Object.values(grupos);
+            }
 
-        contenidoAccion = `
-            <div class="d-flex align-items-center justify-content-end pe-2 py-1" style="animation: fadeIn 0.5s ease;">
-                
-                <div class="d-flex align-items-center me-3" style="background: ${bgEstado}; padding: 8px 20px; border-radius: 16px; border: 1px solid ${borderEstado};">
-                    <i class="bi ${iconoEstado} me-2" style="color: ${colorEstado}; font-size: 1rem;"></i>
-                    <span style="color: ${colorEstado}; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.03em;">${textoEstado}</span>
-                </div>
+            datosAMostrar.forEach(m => {
+                let accionHtml = '';
+                let prodCol = '';
+                let cantCol = '';
 
-                <button onclick="imprimirComprobante(${m.id})" 
-                        class="btn d-flex align-items-center justify-content-center shadow-sm" 
-                        style="background: #ffffff; color: #1c1c1e; border: 1px solid #efeff4; border-radius: 16px; height: 42px; padding: 0 20px; transition: all 0.3s ease;">
-                    <i class="bi bi-printer-fill me-2" style="color: #007aff;"></i>
-                    <span style="font-size: 0.75rem; font-weight: 600;">IMPRIMIR MOVIMIENTO</span>
-                </button>
+                // --- LÓGICA PARA VISTA AGRUPADA ---
+                if (agrupar && m.total_items > 1) {
+                    const todoDespachado = (m.total_items === m.items_despachados);
+                    const todoCompletado = (m.total_items === m.items_completados);
+                    const algoEnRuta     = (m.items_en_ruta > 0);
 
-                <button onclick="verDetalleGanancia(${m.id})" class="btn btn-link ms-2 text-decoration-none" style="color: #ceced2;">
-                    <i class="bi bi-graph-up-arrow fs-6"></i>
-                </button>
-                <button class="btn btn-outline-success btn-sm rounded-pill px-3" onclick="verEntrega(${m.id})"><i class="bi bi-eye"></i></button>;
-        
-            </div>`;
-    } else {
-        // --- VISTA DE ACCIÓN (CUANDO AÚN NO SE ASIGNA RUTA O PATIO) ---
-        contenidoAccion = `
-            <div class="d-flex align-items-center justify-content-end pe-2 py-1" style="gap: 12px;">
-                
-                <div class="d-flex bg-white rounded-pill p-1 border shadow-sm" style="border-color: rgba(0,0,0,0.05) !important;">
-                    <button onclick="imprimirComprobante(${m.id})" class="btn btn-link btn-sm text-decoration-none px-3 border-end" style="color: #8e8e93; border-color: rgba(0,0,0,0.1) !important;">
-                        <i class="bi bi-printer fs-6"></i>
-                    </button>
-                   
-                    <button onclick="verDetalleGanancia(${m.id})" class="btn btn-link btn-sm text-decoration-none px-3" style="color: #34c759;">
-                        <i class="bi bi-graph-up-arrow fs-6"></i>
-                    </button>
-                </div>
+                    cantCol = `<div class="text-center text-muted small">${m.total_items} Artículos</div>`;
+                    prodCol = `<b>Venta Consolidada</b><br><small class="text-muted">Folio: ${m.folio_venta}</small>`;
 
-                <div class="d-flex" style="gap: 8px;">
-                    <button onclick="prepararModalPatio(${m.id}, ${m.almacen_origen_id})"
+                    if (todoCompletado) {
+                        // ESTADO: ENTREGADO
+                        accionHtml = `
+                            <div class="text-end pe-3">
+                                <span class="badge rounded-pill p-2 px-3" style="background: rgba(40, 167, 69, 0.1); color: #28a745; border: 1px solid #28a745;">
+                                    <i class="bi bi-check2-all me-1"></i> MATERIAL ENTREGADO
+                                </span>
+                            </div>`;
+                    } 
+                    else if (algoEnRuta) {
+                        // ESTADO: EN TRANSITO
+                        accionHtml = `
+                            <div class="text-end pe-3">
+                                <span class="badge rounded-pill p-2 px-3" style="background: rgba(255, 149, 0, 0.1); color: #ff9500; border: 1px solid #ff9500;">
+                                    <i class="bi bi-truck me-1"></i> MERCANCÍA EN TRÁNSITO
+                                </span>
+                            </div>`;
+                    }
+                    else if (todoDespachado) {
+                        // ESTADO: YA DESPACHADO (Mostrar botones de Patio/Ruta para el grupo)
+                        accionHtml = `
+                            <div class="d-flex align-items-center justify-content-end pe-3" style="gap: 8px;">
+                                <button onclick="prepararModalPatioMasivo('${m.ids_movimientos.join(',')}', ${m.almacen_origen_id})"
+                                        class="btn rounded-pill px-3 shadow-sm d-flex align-items-center"
+                                        style="background: #007aff; color: #fff; border: none; height: 35px; font-size: 0.75rem; font-weight: 600;">
+                                    <i class="bi bi-box-seam me-2"></i>Entregar en Patio 
+                                </button>
+                                <button onclick="prepararModalRepartoMasivo('${m.ids_movimientos.join(',')}', ${m.almacen_origen_id})"
+                                        class="btn rounded-pill px-3 shadow-sm d-flex align-items-center"
+                                        style="background: #1c1c1e; color: #fff; border: none; height: 35px; font-size: 0.75rem; font-weight: 600;">
+                                    <i class="bi bi-truck me-2"></i> Asignar a Ruta
+                                </button>
+                            </div>`;
+                    } 
+                    else {
+                        // ESTADO: PENDIENTE DE DESPACHO
+                        accionHtml = `
+                            <div class="text-end pe-3">
+                                <button class="btn btn-sm rounded-pill btn-dark px-4 shadow-sm" onclick="abrirModalDespachoVenta(${m.venta_id},${m.almacen_origen_id})">
+                                    <i class="bi bi-list-check me-1"></i> GESTIONAR VENTA
+                                </button>
+                            </div>`;
+                    }
+                } 
+                // --- LÓGICA PARA VISTA INDIVIDUAL ---
+                else {
+                    const yaDespachado = (parseInt(m.ya_despachado) === 1);
+                    const enRuta       = (m.estado_reparto === 'en_transito');
+                    const completado   = (m.estado_reparto === 'completado');
+
+                    if (completado || enRuta) {
+                        const color = completado ? '#28a745' : '#ff9500';
+                        const texto = completado ? 'MATERIAL ENTREGADO' : 'MERCANCÍA EN TRÁNSITO';
+                        accionHtml = `
+                            <div class="d-flex align-items-center justify-content-end pe-3 py-1">
+                                <span class="fw-bold me-3" style="color: ${color}; font-size: 0.7rem;">${texto}</span>
+                                <button onclick="imprimirComprobante(${m.id})" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                    <i class="bi bi-printer"></i>
+                                </button>
+                            </div>`;
+                    } 
+                    else if (yaDespachado) {
+                        accionHtml = `
+                            <div class="d-flex align-items-center justify-content-end pe-3 py-1" style="gap: 8px;">
+                               <button onclick="prepararModalPatio(${m.id}, ${m.almacen_origen_id})"
                             class="btn rounded-pill px-3 d-flex align-items-center justify-content-center"
                             style="background: #007aff; color: #fff; border: none; font-weight: 600; height: 38px; transition: 0.3s;">
                         <i class="bi bi-box-seam me-2"></i><span style="font-size: 0.75rem;">ENTREGAR EN PATIO</span>
@@ -303,42 +376,41 @@ if (parseInt(m.ya_despachado) === 1) {
                             style="background: #1c1c1e; color: #fff; border: none; font-weight: 600; height: 38px; transition: 0.3s;">
                         <i class="bi bi-truck me-2"></i><span style="font-size: 0.75rem;">ASIGNAR A RUTA</span>
                     </button>
-                </div>
-            </div>`;
-    }
-} else {
-    // --- VISTA INICIAL: POR DESPACHAR ---
-    contenidoAccion = `
-        <div class="pe-3 text-end py-1">
-            <button onclick="prepararDespacho(${m.id})" 
-                    class="btn rounded-pill shadow-sm px-4 d-flex align-items-center justify-content-center ms-auto" 
-                    style="background: #5856d6; color: white; border: none; font-weight: 700; height: 40px; transition: all 0.3s ease;">
-                <i class="bi bi-file-earmark-check me-2"></i> 
-                <span style="font-size: 0.85rem;">DESPACHAR MATERIAL</span>
-            </button>
-        </div>`;
-}
-
-accionHtml = contenidoAccion;
-
-// AGREGADO: Folio de Venta y Número de Operación (ID del movimiento)
-                        tabla.row.add([
-                            `<span class="ps-3 fw-bold text-secondary">#${m.id}</span>`, // ID Movimiento
-                            `<span class="fw-bold text-primary">${m.folio_venta || '---'}</span>`, // Folio Venta
-                            `<span class="text-dark">${m.fecha_format}</span>`, // Fecha formateada
-                            `<b>${m.producto}</b><br><small class="text-primary font-monospace">${m.sku}</small>`,
-                            `<div class="text-center">${formatQty(m.cantidad, m.factor_conversion, m.unidad_reporte)}</div>`,
-                            `<div><span class="badge bg-light text-dark border"><i class="bi bi-geo-alt me-1"></i>${m.origen}</span></div>`,
-                            accionHtml
-                        ]);
-                    });
+                            </div>`;
+                    } 
+                    else {
+                        accionHtml = `
+                            <div class="pe-3 text-end py-1">
+                                <button onclick="prepararDespacho(${m.id})" class="btn btn-sm rounded-pill shadow-sm px-4" style="background: #5856d6; color: white; font-weight: 600;">
+                                    <i class="bi bi-file-earmark-check me-1"></i> DESPACHAR
+                                </button>
+                            </div>`;
+                    }
+                    prodCol = `<b>${m.producto}</b><br><small class="text-primary font-monospace">${m.sku}</small>`;
+                    cantCol = `<div class="text-center">${formatQty(m.cantidad, m.factor_conversion, m.unidad_reporte)}</div>`;
                 }
-                tabla.draw();
-            },
-            complete: () => $('#loader').addClass('d-none')
-        });
-    }
 
+                // Renderizado final de la fila
+                tabla.row.add([
+                    `<span class="ps-3 fw-bold text-secondary">#${agrupar ? 'GRP' : m.id}</span>`,
+                    `<span class="fw-bold text-primary">${m.folio_venta || '---'}</span>`,
+                    `<span class="text-dark small">${m.fecha_format}</span>`,
+                    prodCol,
+                    cantCol,
+                    `<div><span class="badge bg-light text-dark border small"><i class="bi bi-geo-alt me-1"></i>${m.origen}</span></div>`,
+                    accionHtml
+                ]);
+            });
+            tabla.draw();
+        },
+        complete: () => $('#loader').addClass('d-none')
+    });
+}// Evento para recargar al cambiar el check
+$('#checkAgruparVenta').on('change', function() {
+    cargarEntregas();
+});
+// Escuchar el cambio del checkbox
+$('#checkAgruparVenta').on('change', cargarEntregas);
     // FASE 1: SIMULACIÓN CON CONVERSIÓN
     window.prepararDespacho = function(id) {
         movimientoActualID = id;

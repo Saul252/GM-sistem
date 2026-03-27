@@ -308,46 +308,56 @@ if ($action === 'guardar_cambios_viaje') {
         $vehiculo_id = intval($_POST['vehiculo_id'] ?? 0);
         $chofer_id = intval($_POST['chofer_id'] ?? 0);
 
-        // Validaciones críticas para la Base de Datos
+        // Validaciones críticas
         if (empty($folio)) throw new Exception("El folio del viaje es requerido.");
-        if ($vehiculo_id <= 0) throw new Exception("ID de vehículo no válido o no seleccionado.");
+        if ($vehiculo_id <= 0) throw new Exception("Seleccione un vehículo válido.");
         if ($chofer_id <= 0) throw new Exception("Debe asignar un chofer responsable.");
+
+        // Aseguramos que tripulantes sea siempre un array (aunque venga vacío)
+        $tripulantes = $_POST['tripulantes'] ?? [];
+        if (!is_array($tripulantes)) {
+            $tripulantes = [$tripulantes];
+        }
 
         $datos = [
             'viaje_folio' => $folio,
             'chofer_id'   => $chofer_id,
             'vehiculo_id' => $vehiculo_id,
-            'tripulantes' => $_POST['tripulantes'] ?? [], // Array de IDs de ayudantes
+            'tripulantes' => $tripulantes,
             'destinos'    => []
         ];
 
         // Procesar el JSON de direcciones enviado desde el JS
-        if (isset($_POST['destinos_data'])) {
+        if (!empty($_POST['destinos_data'])) {
+            // Quitamos posibles escapes de comillas que PHP añade a veces
             $json_raw = stripslashes($_POST['destinos_data']);
             $datos['destinos'] = json_decode($json_raw, true);
             
             if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new Exception("Error en el formato de las direcciones enviadas.");
+                throw new Exception("Error en el formato de los destinos: " . json_last_error_msg());
             }
         }
 
-        // Llamada al Modelo (Asegúrate que $repartoM esté instanciado arriba)
-        $repartoM->guardarCambiosViaje($datos);
+        // Ejecución en el Modelo
+        $resultado = $repartoM->guardarCambiosViaje($datos);
 
-        echo json_encode([
-            "success" => true, 
-            "message" => "Logística actualizada: Folio $folio"
-        ]);
+        if ($resultado) {
+            echo json_encode([
+                "success" => true, 
+                "message" => "Logística actualizada correctamente. Folio: $folio"
+            ]);
+        } else {
+            throw new Exception("No se pudieron aplicar los cambios en la base de datos.");
+        }
 
     } catch (Exception $e) {
-        // Si algo falla, limpiamos el búfer otra vez para que solo salga el error JSON
         if (ob_get_level()) ob_clean();
         echo json_encode([
             "success" => false, 
-            "message" => "Error en servidor: " . $e->getMessage()
+            "message" => $e->getMessage()
         ]);
     }
-    exit; // Crucial: Detiene cualquier impresión de HTML posterior
+    exit; 
 }
 
 /**

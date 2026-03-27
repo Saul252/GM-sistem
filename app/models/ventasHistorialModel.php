@@ -130,63 +130,96 @@ public function obtenerDetalleCompleto($id) {
     ];
 }
 
-    public function procesarEntrega($venta_id, $productos, $usuario_id) {
-        $this->db->begin_transaction();
-        try {
-            $vta_info = $this->db->query("SELECT almacen_id, folio FROM ventas WHERE id = $venta_id")->fetch_assoc();
-            $almacen_id = $vta_info['almacen_id'];
+   public function procesarEntrega($venta_id, $productos, $usuario_id) {
+    $this->db->begin_transaction();
+    try {
+        // Obtener almacén y folio de la venta
+        $vta_info = $this->db->query("SELECT almacen_id, folio FROM ventas WHERE id = $venta_id")->fetch_assoc();
+        if (!$vta_info) throw new Exception("Venta no encontrada.");
+        
+        $almacen_id = $vta_info['almacen_id'];
 
-            // 1. Crear cabecera de entrega
-            $stmt = $this->db->prepare("INSERT INTO entregas_venta (venta_id, usuario_id, fecha) VALUES (?, ?, NOW())");
-            $stmt->bind_param("ii", $venta_id, $usuario_id);
-            $stmt->execute();
-            $entrega_id = $this->db->insert_id;
+        // 1. Crear cabecera de entrega
+        $stmt = $this->db->prepare("INSERT INTO entregas_venta (venta_id, usuario_id, fecha) VALUES (?, ?, NOW())");
+        $stmt->bind_param("ii", $venta_id, $usuario_id);
+        $stmt->execute();
+        $entrega_id = $this->db->insert_id;
 
-            foreach ($productos as $dv_id => $cant) {
-                $dv_id = intval($dv_id);
-                $cant = floatval($cant);
-                if ($cant <= 0) continue;
+        foreach ($productos as $dv_id => $cant) {
+            $dv_id = intval($dv_id);
+            $cant = floatval($cant);
+            if ($cant <= 0) continue;
 
-                // Verificar pendiente
-                $res_v = $this->db->query("SELECT (cantidad - cantidad_entregada) as pendiente, producto_id FROM detalle_venta WHERE id = $dv_id")->fetch_assoc();
-                if ($cant > $res_v['pendiente']) throw new Exception("Cantidad excede el pendiente para el producto ID: $dv_id");
-
-                // 2. Registrar detalle de entrega y actualizar detalle_venta
-                $this->db->query("INSERT INTO detalle_entrega (entrega_id, detalle_venta_id, cantidad) VALUES ($entrega_id, $dv_id, $cant)");
-                $this->db->query("UPDATE detalle_venta SET cantidad_entregada = cantidad_entregada + $cant WHERE id = $dv_id");
-
-                // 3. Descontar Stock e Insertar Movimiento
-                $this->db->query("UPDATE inventario SET stock = stock - $cant WHERE producto_id = {$res_v['producto_id']} AND almacen_id = $almacen_id");
-                
-                $mov_obs = "Salida por entrega parcial. Folio Venta: " . $vta_info['folio'];
-                $this->db->query("INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_origen_id, usuario_registra_id, referencia_id, observaciones) 
-                                 VALUES ({$res_v['producto_id']}, 'salida', $cant, $almacen_id, $usuario_id, $venta_id, '$mov_obs')");
+            // --- VALIDACIÓN A: Pendiente por entregar en la venta ---
+            $res_v = $this->db->query("SELECT (cantidad - cantidad_entregada) as pendiente, producto_id, (SELECT nombre FROM productos WHERE id = producto_id) as nombre_prod 
+                                       FROM detalle_venta WHERE id = $dv_id")->fetch_assoc();
+            
+            if ($cant > $res_v['pendiente']) {
+                throw new Exception("La cantidad ({$cant}) excede lo pendiente para: {$res_v['nombre_prod']}");
             }
 
-            // 4. Actualizar estado_entrega general de la venta
-            $check = $this->db->query("SELECT SUM(cantidad - cantidad_entregada) as deuda FROM detalle_venta WHERE venta_id = $venta_id")->fetch_assoc();
-            $st = ($check['deuda'] <= 0) ? 'entregado' : 'parcial';
-            $this->db->query("UPDATE ventas SET estado_entrega = '$st' WHERE id = $venta_id");
+            // --- VALIDACIÓN B: Stock real en el almacén de la venta ---
+            $stock_res = $this->db->query("SELECT stock FROM inventario 
+                                           WHERE producto_id = {$res_v['producto_id']} 
+                                           AND almacen_id = $almacen_id")->fetch_assoc();
+            
+            $stock_actual = ($stock_res) ? floatval($stock_res['stock']) : 0;
 
-            $this->db->commit();
-            return true;
-        } catch (Exception $e) {
-            $this->db->rollback();
-            throw $e;
+            if ($stock_actual < $cant) {
+                throw new Exception("Stock insuficiente en almacén para {$res_v['nombre_prod']}. Disponible: {$stock_actual}, Requerido: {$cant}");
+            }
+
+            // 2. Registrar detalle de entrega y actualizar detalle_venta
+            $this->db->query("INSERT INTO detalle_entrega (entrega_id, detalle_venta_id, cantidad) VALUES ($entrega_id, $dv_id, $cant)");
+            $this->db->query("UPDATE detalle_venta SET cantidad_entregada = cantidad_entregada + $cant WHERE id = $dv_id");
+
+            // 3. Descontar Stock e Insertar Movimiento
+            $this->db->query("UPDATE inventario SET stock = stock - $cant 
+                             WHERE producto_id = {$res_v['producto_id']} AND almacen_id = $almacen_id");
+            
+            $mov_obs = "Salida por entrega parcial. Folio Venta: " . $vta_info['folio'];
+            $this->db->query("INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_origen_id, usuario_registra_id, referencia_id, observaciones) 
+                             VALUES ({$res_v['producto_id']}, 'salida', $cant, $almacen_id, $usuario_id, $venta_id, '$mov_obs')");
         }
-    }
 
-    public function registrarAbono($venta_id, $monto, $usuario_id, $metodo_pago) {
-    // 1. Agregamos la columna metodo_pago a la consulta
-    $stmt = $this->db->prepare("INSERT INTO historial_pagos (venta_id, monto, fecha, usuario_id, metodo_pago) VALUES (?, ?, NOW(), ?, ?)");
+        // 4. Actualizar estado_entrega general de la venta
+        $check = $this->db->query("SELECT SUM(cantidad - cantidad_entregada) as deuda FROM detalle_venta WHERE venta_id = $venta_id")->fetch_assoc();
+        $st = ($check['deuda'] <= 0) ? 'entregado' : 'parcial';
+        $this->db->query("UPDATE ventas SET estado_entrega = '$st' WHERE id = $venta_id");
+
+        $this->db->commit();
+        return true;
+    } catch (Exception $e) {
+        $this->db->rollback();
+        throw $e; // El controlador capturará el mensaje de "Stock insuficiente"
+    }
+}
+
+public function registrarAbono($venta_id, $monto, $usuario_id, $metodo_pago, $fecha_pago) {
+    // 1. Definimos el INSERT (5 columnas)
+    $sql = "INSERT INTO historial_pagos (venta_id, monto, fecha, usuario_id, metodo_pago) 
+            VALUES (?, ?, ?, ?, ?)";
     
-    // 2. Ajustamos los parámetros: 
-    // "i" (integer) para venta_id
-    // "d" (double/decimal) para monto
-    // "i" (integer) para usuario_id
-    // "s" (string) para metodo_pago
-    $stmt->bind_param("idis", $venta_id, $monto, $usuario_id, $metodo_pago);
+    $stmt = $this->db->prepare($sql);
+    
+    // 2. CORRECCIÓN DE BIND_PARAM:
+    // El orden DEBE ser el mismo que en el INSERT:
+    // 1. venta_id (i)
+    // 2. monto (d)
+    // 3. fecha (s)
+    // 4. usuario_id (i)
+    // 5. metodo_pago (s)
+    
+    // Tu error era que el orden de las letras "idiss" no coincidía con las variables.
+    $stmt->bind_param("idsis", 
+        $venta_id,    // (i)
+        $monto,       // (d)
+        $fecha_pago,  // (s)
+        $usuario_id,  // (i)
+        $metodo_pago  // (s)
+    );
     
     return $stmt->execute();
 }
+
 }

@@ -963,30 +963,36 @@ public function obtenerViajesLogistica($folio_folio = null) {
         throw new Exception("Error en la base de datos: " . $e->getMessage());
     }
 }
-public function quitarEntregaDeRuta($movimiento_id) {
+public function quitarEntregaDeRuta($entrega_venta_id) {
     try {
         $this->db->begin_transaction();
 
-        // 1. Buscamos el reparto_id asociado a ese movimiento de venta
+        // 1. Buscamos el reparto_id en el maestro de transporte usando la relación
         $sql = "SELECT id FROM transporte_repartos_maestro WHERE entrega_venta_id = ? LIMIT 1";
         $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("i", $movimiento_id);
+        $stmt->bind_param("i", $entrega_venta_id);
         $stmt->execute();
         $res = $stmt->get_result()->fetch_assoc();
 
         if ($res) {
             $rid = $res['id'];
 
-            // 2. Eliminamos en orden para respetar llaves foráneas
+            // 2. Limpieza de tablas de logística (Módulo Independiente)
             $this->db->query("DELETE FROM transporte_rutas_puntos WHERE reparto_id = $rid");
             $this->db->query("DELETE FROM transporte_tripulantes_detalle WHERE reparto_id = $rid");
             $this->db->query("DELETE FROM transporte_consolidacion WHERE reparto_id = $rid");
+            
+            // 3. Borramos el maestro del reparto
+            // NOTA: No tocamos 'ventas' ni 'entregas_venta' para evitar el error de columna
             $this->db->query("DELETE FROM transporte_repartos_maestro WHERE id = $rid");
         }
 
-        return $this->db->commit();
+        $this->db->commit();
+        return true;
     } catch (Exception $e) {
-        @$this->db->rollback();
+        if ($this->db->connect_errno == 0 && $this->db->ping()) {
+            $this->db->rollback();
+        }
         throw $e;
     }
 }
@@ -995,70 +1001,274 @@ public function guardarCambiosViaje($datos) {
         $this->db->begin_transaction();
 
         $folio       = $datos['viaje_folio'];
-        $chofer_id   = $datos['chofer_id'];
-        $vehiculo_id = $datos['vehiculo_id'];
-        $tripulantes = $datos['tripulantes']; // Array de IDs de ayudantes
-        $destinos    = $datos['destinos'];    // Array [mov_id => "direccion"]
+        $chofer_id   = intval($datos['chofer_id']);
+        $vehiculo_id = intval($datos['vehiculo_id']);
+        $tripulantes = isset($datos['tripulantes']) ? $datos['tripulantes'] : [];
+        $destinos    = isset($datos['destinos']) ? $datos['destinos'] : [];
 
-        // 1. Obtener todos los reparto_id asociados a este folio de viaje
-        $sqlRepartos = "SELECT reparto_id FROM transporte_consolidacion WHERE viaje_folio = ?";
-        $stmtR = $this->db->prepare($sqlRepartos);
-        $stmtR->bind_param("s", $folio);
-        $stmtR->execute();
-        $result = $stmtR->get_result();
-        
-        $ids_reparto = [];
-        while($row = $result->fetch_assoc()) {
-            $ids_reparto[] = $row['reparto_id'];
+        // 1. Mapear qué entregas existen en este folio de viaje
+        $sqlActuales = "SELECT trm.entrega_venta_id, trm.id as reparto_id 
+                        FROM transporte_consolidacion tc
+                        JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
+                        WHERE tc.viaje_folio = ?";
+        $stmtA = $this->db->prepare($sqlActuales);
+        $stmtA->bind_param("s", $folio);
+        $stmtA->execute();
+        $resA = $stmtA->get_result();
+
+        $mapeo_bd = []; 
+        while($row = $resA->fetch_assoc()){
+            $mapeo_bd[$row['entrega_venta_id']] = $row['reparto_id'];
         }
 
-        if (empty($ids_reparto)) {
-            throw new Exception("No se encontraron registros para el folio: " . $folio);
+        // 2. Sincronización: Quitar los que ya no vienen en el JSON
+        foreach ($mapeo_bd as $mov_id_bd => $reparto_id) {
+            if (!isset($destinos[$mov_id_bd])) {
+                $this->quitarEntregaDeRuta($mov_id_bd);
+            }
         }
 
-        $in_repartos = implode(',', $ids_reparto);
+        // 3. Actualizar los que permanecen en la ruta
+        $ids_vivos = [];
+        foreach ($destinos as $mov_id => $dir) {
+            if (isset($mapeo_bd[$mov_id])) {
+                $ids_vivos[] = $mapeo_bd[$mov_id];
+            }
+        }
 
-        // 2. Actualizar Maestro (Chofer y Vehículo)
-        $sqlM = "UPDATE transporte_repartos_maestro 
-                 SET usuario_encargado_id = ?, vehiculo_id = ? 
-                 WHERE id IN ($in_repartos)";
-        $stmtM = $this->db->prepare($sqlM);
-        $stmtM->bind_param("ii", $chofer_id, $vehiculo_id);
-        $stmtM->execute();
+        if (!empty($ids_vivos)) {
+            $in_repartos = implode(',', array_map('intval', $ids_vivos));
 
-        // 3. Actualizar Tripulantes (Limpiar e Insertar nuevos)
-        $this->db->query("DELETE FROM transporte_tripulantes_detalle WHERE reparto_id IN ($in_repartos)");
-        
-        if (!empty($tripulantes)) {
+            // A. Actualizar Maestro (Chofer y Vehículo)
+            // Usamos los campos correctos: usuario_encargado_id y vehiculo_id
+            $sqlM = "UPDATE transporte_repartos_maestro 
+                     SET usuario_encargado_id = ?, vehiculo_id = ? 
+                     WHERE id IN ($in_repartos)";
+            $stmtM = $this->db->prepare($sqlM);
+            $stmtM->bind_param("ii", $chofer_id, $vehiculo_id);
+            $stmtM->execute();
+
+            // B. Actualizar Ayudantes
+            $this->db->query("DELETE FROM transporte_tripulantes_detalle WHERE reparto_id IN ($in_repartos)");
+            
             $sqlT = "INSERT INTO transporte_tripulantes_detalle (reparto_id, usuario_id) VALUES (?, ?)";
             $stmtT = $this->db->prepare($sqlT);
-            foreach ($ids_reparto as $rid) {
+            
+            foreach ($ids_vivos as $rid) {
                 foreach ($tripulantes as $u_id) {
-                    $u_id = intval($u_id);
-                    if ($u_id === $chofer_id) continue; // No duplicar chofer como ayudante
-                    $stmtT->bind_param("ii", $rid, $u_id);
+                    $uid = intval($u_id);
+                    if ($uid === $chofer_id) continue; 
+                    $stmtT->bind_param("ii", $rid, $uid);
                     $stmtT->execute();
+                }
+            }
+
+            // C. Actualizar Direcciones (Puntos de Ruta)
+            $sqlP = "UPDATE transporte_rutas_puntos SET descripcion_punto = ? WHERE reparto_id = ?";
+            $stmtP = $this->db->prepare($sqlP);
+            foreach ($destinos as $mov_id => $dir) {
+                if (isset($mapeo_bd[$mov_id])) {
+                    $dir_txt = substr($dir, 0, 255);
+                    $stmtP->bind_param("si", $dir_txt, $mapeo_bd[$mov_id]);
+                    $stmtP->execute();
                 }
             }
         }
 
-        // 4. Actualizar Direcciones en transporte_rutas_puntos
-        // Usamos el movimiento_id (entrega_venta_id) para saber qué dirección es de quién
-        $sqlP = "UPDATE transporte_rutas_puntos rp
-                 JOIN transporte_repartos_maestro rm ON rp.reparto_id = rm.id
-                 SET rp.descripcion_punto = ?
-                 WHERE rm.entrega_venta_id = ?";
-        $stmtP = $this->db->prepare($sqlP);
-        foreach ($destinos as $mov_id => $dir) {
-            $stmtP->bind_param("si", $dir, $mov_id);
-            $stmtP->execute();
+        $this->db->commit();
+        return true;
+    } catch (Exception $e) {
+        $this->db->rollback();
+        throw $e;
+    }
+}
+public function procesarDespachoFisicoMasivo($idsMovimientos) {
+    if (empty($idsMovimientos)) {
+        return ['success' => false, 'message' => 'No se proporcionaron IDs para procesar.'];
+    }
+
+    $this->db->begin_transaction();
+
+    try {
+        $id_usuario = $_SESSION['usuario_id'] ?? 0;
+        if ($id_usuario <= 0) throw new Exception("Error: Sesión de usuario no válida.");
+
+        foreach ($idsMovimientos as $idMovimiento) {
+            $idMovimiento = intval($idMovimiento);
+
+            // 1. Obtener info del movimiento y su relación con la venta
+            $sqlMov = "SELECT m.id, m.producto_id, m.almacen_origen_id, m.cantidad,
+                              dv.id as det_venta_id, dv.precio_unitario as precio_pactado,
+                              ev.id as entrega_id
+                       FROM movimientos m
+                       LEFT JOIN detalle_venta dv ON m.referencia_id = dv.venta_id AND m.producto_id = dv.producto_id
+                       LEFT JOIN entregas_venta ev ON dv.venta_id = ev.venta_id
+                       WHERE m.id = $idMovimiento LIMIT 1";
+            
+            $resMov = $this->db->query($sqlMov);
+            $mov = $resMov->fetch_assoc();
+
+            if (!$mov) throw new Exception("Movimiento ID $idMovimiento no encontrado.");
+
+            $prod_id           = $mov['producto_id'];
+            $alm_id            = $mov['almacen_origen_id'];
+            $cantidad_restante = floatval($mov['cantidad']);
+            $entrega_id        = intval($mov['entrega_id'] ?? 0);
+            $det_venta_id      = intval($mov['det_venta_id'] ?? 0);
+            $precio_pactado    = floatval($mov['precio_pactado'] ?? 0);
+
+            // 2. Buscar lotes disponibles (FIFO: El más viejo primero)
+            $sqlLotes = "SELECT id, cantidad_actual, precio_compra_unitario 
+                         FROM lotes_stock 
+                         WHERE producto_id = $prod_id 
+                           AND almacen_id = $alm_id 
+                           AND cantidad_actual > 0 
+                           AND estado_lote = 'activo'
+                         ORDER BY fecha_ingreso ASC, id ASC";
+            
+            $resLotes = $this->db->query($sqlLotes);
+
+            if ($resLotes->num_rows == 0 && $cantidad_restante > 0) {
+                throw new Exception("Sin stock en lotes para el producto ID: $prod_id");
+            }
+
+            // 3. Descontar de lotes hasta agotar la cantidad del movimiento
+            while ($cantidad_restante > 0 && $lote = $resLotes->fetch_assoc()) {
+                $lote_id         = $lote['id'];
+                $stock_lote      = floatval($lote['cantidad_actual']);
+                $costo_historico = $lote['precio_compra_unitario'];
+
+                $a_tomar          = min($cantidad_restante, $stock_lote);
+                $nuevo_stock_lote = $stock_lote - $a_tomar;
+                $nuevo_estado     = ($nuevo_stock_lote <= 0) ? 'agotado' : 'activo';
+
+                // Actualizar el lote
+                $this->db->query("UPDATE lotes_stock 
+                                 SET cantidad_actual = $nuevo_stock_lote, estado_lote = '$nuevo_estado' 
+                                 WHERE id = $lote_id");
+
+                // Registrar la salida específica del lote
+                $sqlSalida = "INSERT INTO lotes_movimientos_salida 
+                              (lote_id, entrega_venta_id, detalle_venta_id, cantidad_salida, costo_compra_historico, precio_venta_pactado) 
+                              VALUES ($lote_id, $entrega_id, $det_venta_id, $a_tomar, $costo_historico, $precio_pactado)";
+                
+                if (!$this->db->query($sqlSalida)) throw new Exception("Error al insertar salida de lote.");
+
+                $cantidad_restante -= $a_tomar;
+            }
+
+            // 4. Insertar en el "Puente" para marcar que el bodeguero ya lo entregó físicamente
+            // Esto es lo que hace que desaparezca de la lista de pendientes
+            $sqlPuente = "INSERT INTO registro_salida_lotes (movimiento_id, usuario_patio_id, usuario_despacho_id) 
+                          VALUES ($idMovimiento, $id_usuario, $id_usuario)";
+
+            if (!$this->db->query($sqlPuente)) throw new Exception("Error en registro físico: " . $this->db->error);
         }
 
-        return $this->db->commit();
+        $this->db->commit();
+        return ['success' => true, 'message' => count($idsMovimientos) . ' productos despachados correctamente.'];
 
     } catch (Exception $e) {
-        @$this->db->rollback();
-        throw $e;
+        $this->db->rollback();
+        return ['success' => false, 'message' => "Error: " . $e->getMessage()];
+    }
+}
+public function listarIdsPendientesPorVenta($venta_id) {
+    $venta_id = intval($venta_id);
+
+    // Solo pedimos m.id para optimizar la consulta
+    $sql = "SELECT m.id 
+            FROM movimientos m
+            LEFT JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
+            LEFT JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id
+            WHERE m.referencia_id = $venta_id 
+              AND m.tipo = 'salida'
+              AND rsl.id IS NULL
+              AND (trm.id IS NULL OR trm.estado_reparto = 'cancelado')
+            ORDER BY m.id ASC";
+
+    $resultado = $this->db->query($sql);
+    $ids = [];
+
+    if ($resultado) {
+        while ($row = $resultado->fetch_assoc()) {
+            // Guardamos solo el ID como entero
+            $ids[] = intval($row['id']);
+        }
+    }
+    
+    // Retorna algo como: [193, 194, 198]
+    return $ids;
+}
+public function simularDespachoLotesMasivo($idsMovimientos) {
+    try {
+        if (empty($idsMovimientos)) throw new Exception("No hay IDs para procesar.");
+        
+        // Limpiamos los IDs para evitar inyecciones
+        $idsClean = array_map('intval', $idsMovimientos);
+        $idsString = implode(',', $idsClean);
+
+        // 1. Obtenemos todos los movimientos de una sola vez
+        $sqlMovs = "SELECT m.id, m.producto_id, m.almacen_origen_id, m.cantidad, 
+                           p.nombre as prod_nombre, p.factor_conversion, p.unidad_reporte 
+                    FROM movimientos m 
+                    INNER JOIN productos p ON m.producto_id = p.id 
+                    WHERE m.id IN ($idsString)";
+        
+        $resMovs = $this->db->query($sqlMovs);
+        $resultados = [];
+
+        while ($mov = $resMovs->fetch_assoc()) {
+            $movId    = $mov['id'];
+            $prodId   = $mov['producto_id'];
+            $almId    = $mov['almacen_origen_id'];
+            $restante = floatval($mov['cantidad']);
+            $factor   = floatval($mov['factor_conversion'] ?: 1);
+
+            // 2. Buscamos lotes para ESTE producto y almacén (FIFO)
+            $sqlLotes = "SELECT id, codigo_lote, cantidad_actual, fecha_ingreso 
+                         FROM lotes_stock 
+                         WHERE producto_id = $prodId AND almacen_id = $almId 
+                         AND cantidad_actual > 0 AND estado_lote = 'activo' 
+                         ORDER BY fecha_ingreso ASC";
+            
+            $resLotes = $this->db->query($sqlLotes);
+            $lotesParaEsteMov = [];
+
+            while ($restante > 0 && $lote = $resLotes->fetch_assoc()) {
+                $cantidadEnLote = floatval($lote['cantidad_actual']);
+                $tomar = min($restante, $cantidadEnLote);
+
+                $lotesParaEsteMov[] = [
+                    'lote_id'            => $lote['id'],
+                    'codigo'             => $lote['codigo_lote'],
+                    'fecha_entrada'      => date('d/m/Y', strtotime($lote['fecha_ingreso'])),
+                    'cantidad_en_lote'   => $cantidadEnLote,
+                    'cantidad_a_extraer' => $tomar,
+                    'saldo_final'        => $cantidadEnLote - $tomar
+                ];
+                $restante -= $tomar;
+            }
+
+            // 3. Agrupamos el resultado por ID de movimiento
+            $resultados[] = [
+                'movimiento_id'     => $movId,
+                'producto'          => $mov['prod_nombre'],
+                'total_solicitado'  => $mov['cantidad'],
+                'unidad_reporte'    => $mov['unidad_reporte'],
+                'factor_conversion' => $factor,
+                'lotes'             => $lotesParaEsteMov,
+                'pendiente'         => $restante // Si es > 0, falta stock
+            ];
+        }
+
+        return [
+            'success' => true,
+            'data'    => $resultados
+        ];
+
+    } catch (Exception $e) {
+        return ['success' => false, 'message' => $e->getMessage()];
     }
 }
 }

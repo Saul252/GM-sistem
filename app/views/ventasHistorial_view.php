@@ -287,43 +287,11 @@
             </div>
         </div>
     </div>
-    <div class="modal fade" id="modalAbono" tabindex="-1" style="z-index: 1060;">
-        <div class="modal-dialog modal-sm modal-dialog-centered">
-            <div class="modal-content shadow-lg border-0">
-                <div class="modal-header bg-dark text-white">
-                    <h6 class="modal-title">Registrar Abono</h6>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-secondary text-uppercase">Monto a Recibir</label>
-                        <div class="input-group input-group-lg">
-                            <span class="input-group-text bg-light border-end-0">$</span>
-                            <input type="number" id="inputMontoAbono" class="form-control border-start-0 ps-0 fw-bold"
-                                step="any">
-                        </div>
-                        <div id="infoSaldo" class="badge bg-light text-dark border w-100 mt-2 py-2"></div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small fw-bold text-secondary text-uppercase">Método de Pago</label>
-                        <select id="selectMetodoPago" class="form-select">
-                            <option value="Efectivo">Efectivo</option>
-                            <option value="Transferencia">Transferencia</option>
-                            <option value="Tarjeta">Tarjeta</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="modal-footer p-2">
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="button" class="btn btn-primary btn-sm" onclick="guardarAbonoModal()">Guardar</button>
-                </div>
-            </div>
-        </div>
-    </div>
+ 
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+ <?php require_once __DIR__ . '/ventasHistorialModales/registarAbono.php'; ?>
 
     <script>
     const modalObj = new bootstrap.Modal('#modalDetalle');
@@ -534,123 +502,56 @@ $('#tbodyHistorial').html(data.historial.length > 0 ? data.historial.map(h => {
             console.error("Error al obtener detalle:", error);
         }
     }
-    async function procesarEntrega() {
-        const fd = new FormData();
-        let ok = false;
-        $('.input-entrega').each(function() {
-            if ($(this).val() > 0) {
-                fd.append(`productos[${$(this).data('id')}]`, $(this).val());
-                ok = true;
-            }
-        });
-
-        if (!ok) return Swal.fire('Error', 'Indique cantidades', 'warning');
-
-        fd.append('venta_id', ventaActual.info.id);
-
-        try {
-            // Mandamos action por URL para que el controlador lo atrape en $_GET['action']
-            const res = await fetch(`${URL_CONTROLLER}?action=guardarEntrega`, {
-                method: 'POST',
-                body: fd
-            });
-            const result = await res.json();
-            if (result.status == 'success') {
-                modalObj.hide();
-                getVentas();
-                Swal.fire('Listo', 'Entrega guardada', 'success');
-            }
-        } catch (e) {
-            console.error("Error al procesar entrega:", e);
-        }
-    }
-    // Instanciamos el nuevo modal
-    const modalAbonoObj = new bootstrap.Modal('#modalAbono');
-
-    function abrirFlujoAbono() {
-        const totalVenta = parseFloat(ventaActual.info.total || 0);
-        const pagado = parseFloat(ventaActual.info.total_pagado || 0);
-        const saldoPendiente = totalVenta - pagado;
-
-        if (saldoPendiente <= 0) {
-            Swal.fire('Venta Liquidada', 'Sin saldo pendiente.', 'success');
-            return;
-        }
-
-        // Llenamos los datos en el mini-modal
-        $('#inputMontoAbono').val(saldoPendiente.toFixed(2));
-        $('#infoSaldo').text('Saldo máximo: $' + saldoPendiente.toFixed(2));
-
-        // Mostramos el modal
-        modalAbonoObj.show();
-
-        // Forzamos el foco al abrir (esto ya no fallará)
-        document.getElementById('modalAbono').addEventListener('shown.bs.modal', () => {
-            document.getElementById('inputMontoAbono').focus();
-            document.getElementById('inputMontoAbono').select();
-        }, {
-            once: true
-        });
-    }
-
-    // Agrega este listener para validar en tiempo real mientras el usuario escribe
-    $(document).on('input', '#inputMontoAbono', function() {
-        const totalVenta = parseFloat(ventaActual.info.total || 0);
-        const pagado = parseFloat(ventaActual.info.total_pagado || 0);
-        const saldoPendiente = parseFloat((totalVenta - pagado).toFixed(2));
-        const montoIngresado = parseFloat($(this).val()) || 0;
-
-        if (montoIngresado > saldoPendiente) {
-            $(this).addClass('is-invalid text-danger');
-            $('#infoSaldo').removeClass('bg-light text-dark').addClass('bg-danger text-white');
-        } else {
-            $(this).removeClass('is-invalid text-danger');
-            $('#infoSaldo').removeClass('bg-danger text-white').addClass('bg-light text-dark');
+   async function procesarEntrega() {
+    const fd = new FormData();
+    let ok = false;
+    
+    $('.input-entrega').each(function() {
+        const cant = parseFloat($(this).val());
+        if (cant > 0) {
+            // Enviamos el ID del detalle de venta y la cantidad
+            fd.append(`productos[${$(this).data('id')}]`, cant);
+            ok = true;
         }
     });
 
-    async function guardarAbonoModal() {
-        const totalVenta = parseFloat(ventaActual.info.total || 0);
-        const pagado = parseFloat(ventaActual.info.total_pagado || 0);
-        const saldoPendiente = parseFloat((totalVenta - pagado).toFixed(2));
-        const monto = parseFloat($('#inputMontoAbono').val());
+    if (!ok) return Swal.fire('Atención', 'Indique al menos una cantidad válida para entregar', 'warning');
 
-        // Obtenemos el método seleccionado
-        const metodo = $('#selectMetodoPago').val();
+    fd.append('venta_id', ventaActual.info.id);
 
-        if (!monto || monto <= 0) {
-            return Swal.fire('Error', 'Ingrese un monto válido', 'warning');
-        }
+    try {
+        const res = await fetch(`${URL_CONTROLLER}?action=guardarEntrega`, {
+            method: 'POST',
+            body: fd
+        });
 
-        if (monto > saldoPendiente) {
-            return Swal.fire('Error', `El monto excede el saldo ($${saldoPendiente})`, 'error');
-        }
+        // Verificamos si la respuesta del servidor es un JSON válido
+        const result = await res.json();
 
-        const fd = new FormData();
-        fd.append('venta_id', ventaActual.info.id);
-        fd.append('monto', monto);
-        fd.append('metodo_pago', metodo); // <--- Esto envía el método al controlador
-
-        try {
-            const res = await fetch(`${URL_CONTROLLER}?action=guardarAbono`, {
-                method: 'POST',
-                body: fd
+        if (result.status === 'success') {
+            modalObj.hide();
+            getVentas(); // Recargamos la tabla para ver el nuevo estado
+            Swal.fire({
+                title: '¡Listo!',
+                text: 'Entrega guardada correctamente',
+                icon: 'success',
+                timer: 2000
             });
-            const data = await res.json();
-
-            if (data.status === 'success') {
-                modalAbonoObj.hide();
-                Swal.fire('Éxito', 'Abono guardado correctamente', 'success');
-                await verDetalle(ventaActual.info.id);
-                getVentas();
-            } else {
-                Swal.fire('Error', data.message || 'Error al guardar', 'error');
-            }
-        } catch (e) {
-            console.error("Error en la petición:", e);
+        } else {
+            // AQUÍ MANEJAMOS EL ERROR DE STOCK (o cualquier otro error del Model)
+            // Usamos result.message que es el que trae "Stock insuficiente en almacén..."
+            Swal.fire('No se pudo entregar', result.message || 'Error desconocido', 'error');
         }
-    }
 
+    } catch (e) {
+        console.error("Error al procesar entrega:", e);
+        Swal.fire('Error Técnico', 'Hubo un problema de conexión con el servidor', 'error');
+    }
+}  // Instanciamos el nuevo modal
+    const modalAbonoObj = new bootstrap.Modal('#modalAbono');
+
+ 
+  
     function togglePerso() {
         $('#div_p').toggleClass('d-none', $('#f_rango').val() !== 'personalizado');
         getVentas();

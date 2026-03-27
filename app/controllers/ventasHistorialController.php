@@ -43,21 +43,27 @@ if (isset($_GET['action']) && $_GET['action'] === 'listar') {
     exit;
 }
 
-// --- ACCIÓN: GUARDAR ENTREGA ---
 if (isset($_GET['action']) && $_GET['action'] === 'guardarEntrega') {
+    // Limpiamos cualquier salida previa para que solo salga el JSON
     if (ob_get_level()) ob_clean();
     header('Content-Type: application/json');
 
     try {
+        if (empty($_POST['venta_id'])) throw new Exception("ID de venta no recibido.");
+        
         $venta_id = intval($_POST['venta_id']);
         $productos = $_POST['productos'] ?? [];
         $usuario_id = $_SESSION['usuario_id'] ?? 1;
 
         $resultado = $ventasModel->procesarEntrega($venta_id, $productos, $usuario_id);
-        echo json_encode(['status' => 'success']);
+        
+        echo json_encode(['status' => 'success', 'message' => 'Entrega procesada correctamente']);
 
-    } catch (Throwable $e) {
+    } catch (Exception $e) {
+        // Importante: Mandar el mensaje real de la excepción (ej. "Stock insuficiente...")
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    } catch (Throwable $t) {
+        echo json_encode(['status' => 'error', 'message' => 'Error crítico en el servidor']);
     }
     exit;
 }
@@ -68,22 +74,28 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardarAbono') {
     header('Content-Type: application/json');
 
     try {
-        $venta_id = intval($_POST['venta_id']);
-        $monto = floatval($_POST['monto']);
-        $metodo = $_POST['metodo_pago']; // Aquí lo guardas como $metodo
-        $usuario_id = $_SESSION['usuario_id'] ?? 1;
+        $venta_id   = intval($_POST['venta_id']);
+        $monto      = floatval($_POST['monto']);
+        $metodo     = $_POST['metodo_pago'] ?? 'Efectivo'; 
+        $usuario_id = $_SESSION['usuario_id'] ?? $_SESSION['id_usuario'] ?? 1;
 
-        // USA $metodo AQUÍ ABAJO:
-        $resultado = $ventasModel->registrarAbono($venta_id, $monto, $usuario_id, $metodo);
+        // --- CAPTURA DE FECHA ---
+        // Si el JS mandó 'fecha_pago', la usamos. Si no, usamos la del servidor.
+        $fecha_pago = !empty($_POST['fecha_pago']) ? $_POST['fecha_pago'] : date('Y-m-d H:i:s');
+
+        // IMPORTANTE: Asegúrate de que tu modelo reciba este 5to parámetro ($fecha_pago)
+        $resultado = $ventasModel->registrarAbono($venta_id, $monto, $usuario_id, $metodo, $fecha_pago);
         
         if ($resultado) {
             echo json_encode(['status' => 'success']);
         } else {
-            echo json_encode(['status' => 'error', 'message' => 'No se pudo insertar el registro']);
+            echo json_encode(['status' => 'error', 'message' => 'No se pudo insertar el registro del abono']);
         }
 
     } catch (Throwable $e) {
-        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+        // Logueamos el error interno para depuración
+        error_log("Error en guardarAbono: " . $e->getMessage());
+        echo json_encode(['status' => 'error', 'message' => 'Ocurrió un error: ' . $e->getMessage()]);
     }
     exit;
 }
