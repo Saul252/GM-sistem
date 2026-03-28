@@ -308,7 +308,10 @@ $(document).ready(function() {
                                 <span class="badge rounded-pill p-2 px-3" style="background: rgba(40, 167, 69, 0.1); color: #28a745; border: 1px solid #28a745;">
                                     <i class="bi bi-check2-all me-1"></i> MATERIAL ENTREGADO
                                 </span>
-                            </div>`;
+                            </div>
+                              <button onclick="verDetalleGanancia(${m.id})" class="btn btn-link ms-2 text-decoration-none" style="color: #ceced2;">
+                    <i class="bi bi-graph-up-arrow fs-6"></i>
+                </button>`;
                     } 
                     else if (algoEnRuta) {
                         // ESTADO: EN TRANSITO
@@ -317,7 +320,10 @@ $(document).ready(function() {
                                 <span class="badge rounded-pill p-2 px-3" style="background: rgba(255, 149, 0, 0.1); color: #ff9500; border: 1px solid #ff9500;">
                                     <i class="bi bi-truck me-1"></i> MERCANCÍA EN TRÁNSITO
                                 </span>
-                            </div>`;
+                            </div>
+                              <button onclick="verDetalleGanancia(${m.id})" class="btn btn-link ms-2 text-decoration-none" style="color: #ceced2;">
+                    <i class="bi bi-graph-up-arrow fs-6"></i>
+                </button>`;
                     }
                     else if (todoDespachado) {
                         // ESTADO: YA DESPACHADO (Mostrar botones de Patio/Ruta para el grupo)
@@ -360,7 +366,10 @@ $(document).ready(function() {
                                 <button onclick="imprimirComprobante(${m.id})" class="btn btn-sm btn-outline-primary rounded-pill px-3">
                                     <i class="bi bi-printer"></i>
                                 </button>
-                            </div>`;
+                            </div>
+                              <button onclick="verDetalleGanancia(${m.id})" class="btn btn-link ms-2 text-decoration-none" style="color: #ceced2;">
+                    <i class="bi bi-graph-up-arrow fs-6"></i>
+                </button>`;
                     } 
                     else if (yaDespachado) {
                         accionHtml = `
@@ -392,7 +401,7 @@ $(document).ready(function() {
 
                 // Renderizado final de la fila
                 tabla.row.add([
-                    `<span class="ps-3 fw-bold text-secondary">#${agrupar ? 'GRP' : m.id}</span>`,
+                    `<span class="ps-3 fw-bold text-secondary">#${agrupar ? m.id : m.id}</span>`,
                     `<span class="fw-bold text-primary">${m.folio_venta || '---'}</span>`,
                     `<span class="text-dark small">${m.fecha_format}</span>`,
                     prodCol,

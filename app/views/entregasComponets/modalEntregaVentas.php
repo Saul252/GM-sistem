@@ -67,8 +67,8 @@
             <div class="modal-footer border-0 bg-white py-3 px-4" style="border-radius: 0 0 25px 25px;">
                 <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" id="btnEjecutarDespachoMasivo" class="btn btn-success rounded-pill px-5 fw-bold shadow" disabled>
-                    <i class="bi bi-check-circle me-2"></i>Confirmar Despacho
-                </button>
+    <i class="bi bi-check-circle me-2"></i>Confirmar Despacho
+</button>
             </div>
         </div>
     </div>
@@ -196,38 +196,78 @@ function toggleFormRuta(mostrar) {
 /**
  * PROCESO FINAL: Envía despacho + logística en una sola petición
  */
-async function ejecutarSalidaFinal(ids, boton) {
+async function ejecutarSalidaMasivaFinal(ids, boton) {
     const tipo = $('input[name="tipo_entrega_masiva"]:checked').val();
     
     if (tipo === 'ruta' && (!$('#mv_vehiculo_id').val() || !$('#mv_chofer_id').val())) {
-        return Swal.fire('Atención', 'Datos de ruta incompletos', 'warning');
+        return Swal.fire('Atención', 'Por favor, asigne una unidad y un chofer para la ruta.', 'warning');
     }
 
     boton.disabled = true;
     boton.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Procesando...`;
 
+    let textResponse = ''; // ✅ DECLARADA FUERA DEL TRY
+
     try {
         const formData = new FormData();
-        formData.append('ajax', 'despachar_y_entregar_masivo');
+        formData.append('ajax', 'despachar_venta_completa'); 
         formData.append('tipo_logistica', tipo);
-        formData.append('vehiculo_id', $('#mv_vehiculo_id').val());
-        formData.append('chofer_id', $('#mv_chofer_id').val());
-        formData.append('direccion', $('#mv_direccion').val());
+        formData.append('vehiculo_id', $('#mv_vehiculo_id').val() || 0);
+        formData.append('chofer_id', $('#mv_chofer_id').val() || 0);
+        formData.append('direccion', $('#mv_direccion').val() || '');
+        
+        const tripulantes = $('#mv_tripulantes').val() || [];
+        tripulantes.forEach(tId => formData.append('tripulantes[]', tId));
         ids.forEach(id => formData.append('ids_movimientos[]', id));
 
-        const resp = await fetch('/cfsistem/app/controllers/repartosController.php', { method: 'POST', body: formData });
-        const res = await resp.json();
+        const resp = await fetch('/cfsistem/app/controllers/entregasController.php', { 
+            method: 'POST', 
+            body: formData 
+        });
+
+        textResponse = await resp.text(); // ✅ GUARDADA EN VARIABLE GLOBAL
+        
+        console.log('🔍 RESPUESTA DEL SERVIDOR:', textResponse.substring(0, 300));
+
+        // VERIFICAR SI ES HTML
+        if (textResponse.includes('<html') || textResponse.includes('<!DOCTYPE') || 
+            textResponse.includes('<body') || textResponse.match(/<[^>]+>/)) {
+            throw new Error(`❌ HTML detectado. Servidor dice:\n${textResponse.substring(0, 200)}`);
+        }
+
+        const res = JSON.parse(textResponse);
 
         if (res.success) {
-            Swal.fire({ icon: 'success', title: '¡Listo!', text: res.message, timer: 2000, showConfirmButton: false })
-            .then(() => location.reload());
+            Swal.fire({ 
+                icon: 'success', 
+                title: '¡Despacho Exitoso!', 
+                text: res.message, 
+                timer: 2000, 
+                showConfirmButton: false 
+            }).then(() => location.reload());
+            return; // ✅ SALIR TEMPRANO
         } else {
-            throw new Error(res.message);
+            throw new Error(res.message || 'Error del servidor');
         }
+
     } catch (e) {
-        Swal.fire('Error', e.message, 'error');
+        console.error("❌ ERROR COMPLETO:", e.message);
+        console.error("📄 RESPUESTA RAW:", textResponse.substring(0, 500)); // ✅ AHORA SÍ FUNCIONA
+        
+        let mensajeError = e.message;
+        if (textResponse && textResponse.length > 0) {
+            mensajeError += `\n\nServidor responde: ${textResponse.substring(0, 100)}...`;
+        }
+        
+        Swal.fire({
+            icon: 'error', 
+            title: 'Error de Despacho',
+            html: mensajeError.replace(/\n/g, '<br>')
+        });
+    } finally {
+        // ✅ SIEMPRE RESTAURAR BOTÓN
         boton.disabled = false;
-        boton.innerHTML = '<i class="bi bi-check-circle me-2"></i>Procesar Salida';
+        boton.innerHTML = '<i class="bi bi-check-circle me-2"></i>Confirmar Despacho';
     }
 }
 </script>

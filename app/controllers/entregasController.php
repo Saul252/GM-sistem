@@ -118,16 +118,98 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new Exception("Sesión expirada o usuario no identificado.");
         }
 
-        // 1. DESPACHO MASIVO POR VENTA (Lógica procesarDespachoFisicoMasivo)
-        if ($accion === 'despachar_venta_completa') {
-            $ids = $_POST['ids_movimientos'] ?? [];
-            if (empty($ids)) {
-                throw new Exception("No se seleccionaron productos para el despacho masivo.");
-            }
-            // Esta función ejecuta la transacción para todos los IDs enviados
-            echo json_encode($repartoM->procesarDespachoFisicoMasivo($ids));
-        } 
+        /// 1. DESPACHO MASIVO POR VENTA (Lógica procesarDespachoFisicoMasivo)
+     if ($accion === 'despachar_venta_completa') {
+    // 1. Limpieza absoluta de salida para asegurar JSON puro y sin caracteres extraños
+    while (ob_get_level()) ob_end_clean();
+    header('Content-Type: application/json');
 
+    try {
+        // Captura de datos desde el $_POST enviado por JS
+        $ids = $_POST['ids_movimientos'] ?? [];
+        $tipoLogistica = $_POST['tipo_logistica'] ?? 'patio';
+        $vehiculoId = intval($_POST['vehiculo_id'] ?? 0);
+        $choferId = intval($_POST['chofer_id'] ?? 0);
+        $usuarioSistemaId = $_SESSION['id_usuario'] ?? $_SESSION['usuario_id'] ?? 0;
+        $direccion = $_POST['direccion'] ?? 'Entrega en Obra';
+        $tripulantes = $_POST['tripulantes'] ?? [];
+
+        if (empty($ids)) {
+            throw new Exception("No se seleccionaron productos para el despacho masivo.");
+        }
+
+        // A. PROCESO FÍSICO: Afectar inventario y lotes mediante el modelo
+        $resultadoDespacho = $repartoM->procesarDespachoFisicoMasivo($ids);
+
+        if ($resultadoDespacho['success']) {
+            $folioViaje = "";
+
+            // B. LÓGICA DE LOGÍSTICA (Generación de folio y estado de unidad)
+            if ($tipoLogistica === 'ruta') {
+                $rutaActiva = $repartoM->buscarRutaAbierta($vehiculoId);
+                
+                if ($rutaActiva) {
+                    $folioViaje = $rutaActiva['viaje_folio'];
+                } else {
+                    // Generación de folio: RUT + Fecha + ID Camión con ceros + Aleatorio
+                    $folioViaje = "RUT-" . date('ymd') . "-" . str_pad($vehiculoId, 2, "0", STR_PAD_LEFT) . "-" . rand(10, 99);
+                    
+                    // Actualizar el estado del camión a 'en_ruta' si el método existe
+                    if (method_exists($vehiculoM, 'actualizarEstado')) {
+                        $vehiculoM->actualizarEstado($vehiculoId, 'en_ruta');
+                    }
+                }
+            }
+
+            // C. BUCLE DE INSERCIÓN: Procesar cada ID de movimiento recibido
+            foreach ($ids as $idMov) {
+                // Preparamos el array de datos con los nombres que los métodos del modelo esperan
+                $datosReparto = [
+                    'movimiento_id'      => $idMov,
+                    'vehiculo_id'        => $vehiculoId,
+                    'chofer_id'          => $choferId,
+                    'direccion_entrega'  => $direccion, 
+                    'tripulantes'        => $tripulantes,
+                    'folio_viaje'        => $folioViaje,
+                    'usuario_sistema_id' => $usuarioSistemaId,
+                    'observaciones'      => 'Entrega Directa en Patio (Despacho Masivo)'
+                ];
+
+                try {
+                    if ($tipoLogistica === 'ruta') {
+                        $repartoM->iniciarReparto($datosReparto);
+                    } else {
+                        // Para patio, el vehiculo_id se fuerza a 999 (Virtual)
+                        $datosReparto['vehiculo_id'] = 999;
+                        $repartoM->entregarEnPatioCliente($datosReparto);
+                    }
+                } catch (Exception $e) {
+                    // Si un registro individual falla, se loguea y se continúa con el siguiente
+                    error_log("Error en logística individual MovID {$idMov}: " . $e->getMessage());
+                    continue; 
+                }
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => '¡Logística masiva confirmada!',
+                'folio'   => $folioViaje
+            ]);
+        } else {
+            // En caso de que el proceso físico (lotes) falle, devolvemos el error específico
+            echo json_encode($resultadoDespacho);
+        }
+
+    } catch (Throwable $t) {
+        // Captura errores fatales o excepciones y devuelve un JSON limpio
+        echo json_encode([
+            'success' => false,
+            'message' => "Error de servidor: " . $t->getMessage()
+        ]);
+    }
+    // Finalizamos la ejecución para evitar que se cargue cualquier HTML posterior
+    exit; 
+}
         // 2. DESPACHO INDIVIDUAL (Lógica original)
         elseif ($accion === 'despachar') {
             $id_movimiento = intval($_POST['id_movimiento'] ?? 0);
