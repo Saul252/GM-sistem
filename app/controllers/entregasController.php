@@ -77,6 +77,41 @@ case 'get_resumen_despacho':
         $ids = $repartoM->listarIdsPendientesPorVenta($venta_id);
         echo json_encode(['success' => true, 'ids' => $ids]);
         break;
+        // ... dentro del switch ($_GET['ajax']) ...
+case 'entregas_pendientes':
+    try {
+        // 1. Validar entrada
+        $venta_id = intval($_GET['venta_id'] ?? 0);
+        if ($venta_id <= 0) {
+            throw new Exception("ID de venta no válido.");
+        }
+
+        // 2. Llamar a tu función del modelo
+        $pendientes = $repartoM->listarDespachosPendientesPorVenta($venta_id);
+        
+        // 3. Responder según el resultado
+        if (empty($pendientes)) {
+            echo json_encode([
+                'success' => false, 
+                'message' => "No hay productos pendientes para despacho en esta venta (o ya están en ruta)."
+            ]);
+        } else {
+            // Extraemos solo los IDs en un array simple [193, 194, ...] si así lo prefiere tu JS
+            // o enviamos el array de objetos completo.
+            echo json_encode([
+                'success' => true, 
+                'ids' => array_column($pendientes, 'id'), // Array simple de IDs
+                'data' => $pendientes,                    // Datos completos
+                'total' => count($pendientes)
+            ]);
+        }
+    } catch (Exception $e) {
+        echo json_encode([
+            'success' => false, 
+            'message' => $e->getMessage()
+        ]);
+    }
+    break;
 
     case 'simular_masivo':
         // Muestra qué lotes se verán afectados antes de hacer el movimiento real
@@ -85,16 +120,82 @@ case 'get_resumen_despacho':
         if (empty($ids)) throw new Exception("No hay IDs para simular.");
         echo json_encode($repartoM->simularDespachoLotesMasivo($ids));
         break;
+case 'obtenerAuditoriaVenta':
+    try {
+        // 1. Limpieza de salida para evitar errores de JSON
+        if (ob_get_level()) ob_end_clean();
+        header('Content-Type: application/json');
 
+        // 2. Validamos el ID de la venta (ahora buscamos por Venta, no por Movimiento)
+        $idVenta = intval($_GET['id_venta'] ?? 0);
+        if ($idVenta <= 0) {
+            throw new Exception("ID de venta no válido para la auditoría.");
+        }
 
-            case 'imprimir':
-            case 'imprimirGanancia':
-                $id = intval($_GET['id'] ?? 0);
-                if ($id <= 0) throw new Exception("ID de movimiento no válido.");
-                $datos = ($_GET['ajax'] === 'imprimir') ? $modelo->obtenerDatosImpresion($id) : $modelo->obtenerDatosVentaGananciaImpresion($id);
-                if (!$datos) throw new Exception("No se encontraron datos para la impresión.");
-                echo json_encode(['success' => true, 'data' => $datos]);
-                break;
+        // 3. Llamamos al método que creamos en el modelo
+        // Este ya regresa el array con ['productos', 'gran_total_costo', etc.]
+        $reporte = $modelo->obtenerAuditoriaFinancieraVenta($idVenta);
+
+        if (empty($reporte['productos'])) {
+            throw new Exception("No se encontraron productos o lotes despachados para esta venta.");
+        }
+
+        // 4. Respuesta exitosa
+        echo json_encode([
+            'success' => true,
+            'data'    => $reporte
+        ]);
+
+    } catch (Exception $e) {
+        http_response_code(400);
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+    }
+    exit;
+    break;
+
+           case 'imprimirGanancia':
+case 'imprimir': // Unificamos lógica si ambos devuelven JSON de impresión
+    try {
+        // Limpiamos cualquier salida previa para asegurar un JSON puro
+        if (ob_get_level()) ob_end_clean();
+        header('Content-Type: application/json');
+
+        $id = intval($_GET['id'] ?? 0);
+        if ($id <= 0) {
+            throw new Exception("ID de movimiento no válido.");
+        }
+
+        // Decidimos qué método del modelo llamar según el parámetro 'ajax'
+        if ($_GET['ajax'] === 'imprimirGanancia') {
+            $datos = $modelo->obtenerDatosVentaGananciaImpresion($id);
+        } else {
+            $datos = $modelo->obtenerDatosImpresion($id);
+        }
+
+        if (!$datos) {
+            throw new Exception("No se encontraron registros para el movimiento #$id.");
+        }
+
+        // Devolvemos el éxito con los datos procesados
+        echo json_encode([
+            'success' => true, 
+            'data'    => $datos
+        ]);
+
+    } catch (Exception $e) {
+        // En caso de error, devolvemos un 400 o 500 y el mensaje JSON
+        http_response_code(400); 
+        echo json_encode([
+            'success' => false, 
+            'message' => $e->getMessage()
+        ]);
+    }
+    exit; // Importante para detener la ejecución del resto del script
+    break;
+    
                 
             default:
                 throw new Exception("Acción AJAX no reconocida.");
@@ -208,6 +309,80 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
     }
     // Finalizamos la ejecución para evitar que se cargue cualquier HTML posterior
+    exit; 
+}
+if ($accion === 'despachar_venta_completaFaltantesEntrega') {
+    // 1. Limpieza absoluta de salida para asegurar JSON puro
+    while (ob_get_level()) ob_end_clean();
+    header('Content-Type: application/json');
+
+    try {
+        $ids = $_POST['ids_movimientos'] ?? [];
+        $tipoLogistica = $_POST['tipo_logistica'] ?? 'patio';
+        $vehiculoId = intval($_POST['vehiculo_id'] ?? 0);
+        $choferId = intval($_POST['chofer_id'] ?? 0);
+        $usuarioSistemaId = $_SESSION['id_usuario'] ?? $_SESSION['usuario_id'] ?? 0;
+        $direccion = $_POST['direccion'] ?? 'Entrega en Obra';
+        $tripulantes = $_POST['tripulantes'] ?? [];
+
+        if (empty($ids)) {
+            throw new Exception("No se seleccionaron productos para asignar logística.");
+        }
+
+        // --- A. LÓGICA DE FOLIO DE VIAJE ---
+        $folioViaje = "";
+        if ($tipoLogistica === 'ruta') {
+            $rutaActiva = $repartoM->buscarRutaAbierta($vehiculoId);
+            
+            if ($rutaActiva) {
+                $folioViaje = $rutaActiva['viaje_folio'];
+            } else {
+                $folioViaje = "RUT-" . date('ymd') . "-" . str_pad($vehiculoId, 2, "0", STR_PAD_LEFT) . "-" . rand(10, 99);
+                if (method_exists($vehiculoM, 'actualizarEstado')) {
+                    $vehiculoM->actualizarEstado($vehiculoId, 'en_ruta');
+                }
+            }
+        }
+
+        // --- B. BUCLE DE REGISTRO LOGÍSTICO ---
+        foreach ($ids as $idMov) {
+            $datosReparto = [
+                'movimiento_id'      => intval($idMov),
+                'vehiculo_id'        => $vehiculoId,
+                'chofer_id'          => $choferId,
+                'direccion_entrega'  => $direccion, 
+                'tripulantes'        => $tripulantes,
+                'folio_viaje'        => $folioViaje,
+                'usuario_sistema_id' => $usuarioSistemaId,
+                'observaciones'      => 'Asignación Logística (Faltantes)'
+            ];
+
+            try {
+                if ($tipoLogistica === 'ruta') {
+                    $repartoM->iniciarReparto($datosReparto);
+                } else {
+                    $datosReparto['vehiculo_id'] = 999; // ID Virtual para Patio
+                    $repartoM->entregarEnPatioCliente($datosReparto);
+                }
+            } catch (Exception $e) {
+                // Si falla un ID (ej. ya está en ruta), registramos el error y seguimos con los demás
+                error_log("Error en logística individual MovID {$idMov}: " . $e->getMessage());
+                continue; 
+            }
+        }
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Logística de faltantes confirmada correctamente.',
+            'folio'   => $folioViaje
+        ]);
+
+    } catch (Throwable $t) {
+        echo json_encode([
+            'success' => false,
+            'message' => "Error de servidor: " . $t->getMessage()
+        ]);
+    }
     exit; 
 }
         // 2. DESPACHO INDIVIDUAL (Lógica original)

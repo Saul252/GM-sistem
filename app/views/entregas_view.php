@@ -212,7 +212,7 @@
     <?php require_once __DIR__ . '/entregasComponets/entregasPatioModal.php'; ?>
 <?php require_once __DIR__ . '/entregasComponets/modalVerDetalleEntregas.php'; ?>
 <?php require_once __DIR__ . '/entregasComponets/modalEntregaVentas.php'; ?>
-
+<?php require_once __DIR__ . '/entregasComponets/modalDespachosEntregaPorVentaId.php'; ?>
     <script>
 $(document).ready(function() {
     let movimientoActualID = null;
@@ -303,15 +303,17 @@ $(document).ready(function() {
 
                     if (todoCompletado) {
                         // ESTADO: ENTREGADO
-                        accionHtml = `
-                            <div class="text-end pe-3">
-                                <span class="badge rounded-pill p-2 px-3" style="background: rgba(40, 167, 69, 0.1); color: #28a745; border: 1px solid #28a745;">
-                                    <i class="bi bi-check2-all me-1"></i> MATERIAL ENTREGADO
-                                </span>
-                            </div>
-                              <button onclick="verDetalleGanancia(${m.id})" class="btn btn-link ms-2 text-decoration-none" style="color: #ceced2;">
-                    <i class="bi bi-graph-up-arrow fs-6"></i>
-                </button>`;
+                      accionHtml = `<div class="card border-0 shadow-sm rounded-3 p-3 mb-0 bg-light">
+    <div class="d-flex align-items-center justify-content-between">
+        <button class="btn btn-link p-0 text-primary fw-semibold text-decoration-none" 
+                onclick="verDetalleGananciaVenta(${m.venta_id})">
+            <i class="bi bi-graph-up me-2"></i>Auditoría
+        </button>
+        <span class="badge bg-success text-white px-3 py-2 fs-6">
+            <i class="bi bi-check-circle-fill me-1"></i>Entregado
+        </span>
+    </div>
+</div>`;
                     } 
                     else if (algoEnRuta) {
                         // ESTADO: EN TRANSITO
@@ -326,24 +328,19 @@ $(document).ready(function() {
                 </button>`;
                     }
                     else if (todoDespachado) {
-                        // ESTADO: YA DESPACHADO (Mostrar botones de Patio/Ruta para el grupo)
-                        accionHtml = `
-                            <div class="d-flex align-items-center justify-content-end pe-3" style="gap: 8px;">
-                                <button onclick="prepararModalPatioMasivo('${m.ids_movimientos.join(',')}', ${m.almacen_origen_id})"
-                                        class="btn rounded-pill px-3 shadow-sm d-flex align-items-center"
-                                        style="background: #007aff; color: #fff; border: none; height: 35px; font-size: 0.75rem; font-weight: 600;">
-                                    <i class="bi bi-box-seam me-2"></i>Entregar en Patio 
-                                </button>
-                                <button onclick="prepararModalRepartoMasivo('${m.ids_movimientos.join(',')}', ${m.almacen_origen_id})"
-                                        class="btn rounded-pill px-3 shadow-sm d-flex align-items-center"
-                                        style="background: #1c1c1e; color: #fff; border: none; height: 35px; font-size: 0.75rem; font-weight: 600;">
-                                    <i class="bi bi-truck me-2"></i> Asignar a Ruta
-                                </button>
-                            </div>`;
-                    } 
+                        // ESTADO: YA DESPACHADO (Fisicamente fuera, pero sin destino asignado)
+accionHtml = `
+    <div class="d-flex gap-2">
+        <button onclick="repartosDespachos(${m.venta_id}, ${m.almacen_origen_id})"
+                class="btn rounded-pill px-3 shadow-sm d-flex align-items-center"
+                style="background: #007aff; color: #fff; border: none; height: 35px; font-size: 0.75rem; font-weight: 600; transition: all 0.3s ease;">
+            <i class="bi bi-geo-alt-fill me-2"></i> Destino Entrega
+        </button>
+    </div>`;}
                     else {
                         // ESTADO: PENDIENTE DE DESPACHO
                         accionHtml = `
+             
                             <div class="text-end pe-3">
                                 <button class="btn btn-sm rounded-pill btn-dark px-4 shadow-sm" onclick="abrirModalDespachoVenta(${m.venta_id},${m.almacen_origen_id})">
                                     <i class="bi bi-list-check me-1"></i> GESTIONAR VENTA
@@ -595,15 +592,16 @@ $('#checkAgruparVenta').on('change', cargarEntregas);
 };
 
 window.verDetalleGanancia = function(id) {
-    // Ajuste de UI para el modal de auditoría
+    // 1. Preparar la interfaz antes de la llamada
     $('#btnConfirmarFinal').addClass('d-none'); 
     $('#btnImprimirModal').removeClass('d-none'); 
     $('#loader').removeClass('d-none');
     
-    $.getJSON('entregasController.php', { ajax: 'imprimirGanancia', id: id }, function(res) {
+    $.getJSON('/cfsistem/app/controllers/entregasController.php', { ajax: 'imprimirGanancia', id: id }, function(res) {
         if(res.success) {
             const d = res.data;
-            const colorGanancia = parseFloat(d.ganancia_neta) < 0 ? 'text-danger' : 'text-success';
+            const ganancia = parseFloat(d.ganancia_neta || 0);
+            const colorGanancia = ganancia < 0 ? 'text-danger' : 'text-success';
             
             let filasLotes = '';
             if (d.detalle_financiero) {
@@ -611,16 +609,19 @@ window.verDetalleGanancia = function(id) {
                 registros.forEach(reg => {
                     const c = reg.split('|'); 
                     if (c.length === 4) {
-                        const subC = parseFloat(c[1]) * parseFloat(c[2]);
-                        const subV = parseFloat(c[1]) * parseFloat(c[3]);
+                        const cant = parseFloat(c[1] || 0);
+                        const cost = parseFloat(c[2] || 0);
+                        const prec = parseFloat(c[3] || 0);
+                        const subC = cant * cost;
+                        const subV = cant * prec;
                         const util = subV - subC;
 
                         filasLotes += `
                             <tr>
                                 <td class="font-monospace text-start ps-2">${c[0]}</td>
-                                <td>${c[1]}</td>
-                                <td class="text-end text-muted">$ ${parseFloat(c[2]).toFixed(2)}</td>
-                                <td class="text-end">$ ${parseFloat(c[3]).toFixed(2)}</td>
+                                <td>${cant}</td>
+                                <td class="text-end text-muted">$ ${cost.toFixed(2)}</td>
+                                <td class="text-end">$ ${prec.toFixed(2)}</td>
                                 <td class="text-end text-muted">$ ${subC.toFixed(2)}</td>
                                 <td class="text-end fw-bold">$ ${subV.toFixed(2)}</td>
                                 <td class="text-end fw-bold ${util < 0 ? 'text-danger' : 'text-success'}">$ ${util.toFixed(2)}</td>
@@ -629,56 +630,202 @@ window.verDetalleGanancia = function(id) {
                 });
             }
 
-           // Dentro de tu función window.verDetalleGanancia:
+            // 2. Construcción del HTML (Asegúrate de que no falte ninguna comilla)
+            let html = `
+                <div class="text-center mb-4">
+                    <div class="badge bg-success mb-2">Reporte Financiero</div>
+                    <h4 class="mb-1 text-uppercase fw-bold text-dark">Rentabilidad de Venta</h4>
+                    <p class="text-muted small">ID Movimiento: #<b>${d.movimiento_id}</b> | Producto: <b>${d.producto || 'N/A'}</b></p>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover table-bordered align-middle text-center">
+                        <thead class="table-dark small">
+                            <tr>
+                                <th>Lote Origen</th>
+                                <th>Cant.</th>
+                                <th>Costo Adq.</th>
+                                <th>Precio Venta</th>
+                                <th>Inversión</th>
+                                <th>Ingreso Bruto</th>
+                                <th>Utilidad</th>
+                            </tr>
+                        </thead>
+                        <tbody style="font-size: 0.75rem;">
+                            ${filasLotes || '<tr><td colspan="7">No hay datos de lotes</td></tr>'}
+                        </tbody>
+                        <tfoot class="table-info fw-bold">
+                            <tr>
+                                <td colspan="4" class="text-end small">RESUMEN DE OPERACIÓN:</td>
+                                <td class="text-end">$ ${parseFloat(d.total_costo || 0).toFixed(2)}</td>
+                                <td class="text-end">$ ${parseFloat(d.total_venta || 0).toFixed(2)}</td>
+                                <td class="text-end ${colorGanancia}" style="font-size: 0.95rem;">
+                                    $ ${ganancia.toFixed(2)}
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>`;
 
-// 1. Cambiamos el color del encabezado de la tabla a oscuro para denotar "Auditoría"
-let html = `
-    <div class="text-center mb-4">
-        <div class="badge bg-success mb-2">Reporte Financiero</div>
-        <h4 class="mb-1 text-uppercase fw-bold text-dark">Rentabilidad de Venta</h4>
-        <p class="text-muted small">ID Movimiento: #<b>${d.movimiento_id}</b> | Folio: <b>${d.folio_venta || 'N/A'}</b></p>
-    </div>
-    
-    <div class="table-responsive">
-        <table class="table table-sm table-hover table-bordered align-middle text-center">
-            <thead class="table-dark small"> <tr>
-                    <th>Lote Origen</th>
-                    <th>Cant.</th>
-                    <th>Costo Adq.</th>
-                    <th>Precio Venta</th>
-                    <th>Inversión</th>
-                    <th>Ingreso Bruto</th>
-                    <th>Utilidad</th>
-                </tr>
-            </thead>
-            <tbody style="font-size: 0.75rem;">
-                ${filasLotes}
-            </tbody>
-            <tfoot class="table-info fw-bold"> <tr>
-                    <td colspan="4" class="text-end small">RESUMEN DE OPERACIÓN:</td>
-                    <td class="text-end">$ ${parseFloat(d.total_costo).toFixed(2)}</td>
-                    <td class="text-end">$ ${parseFloat(d.total_venta).toFixed(2)}</td>
-                    <td class="text-end ${colorGanancia}" style="font-size: 0.95rem;">
-                        $ ${parseFloat(d.ganancia_neta).toFixed(2)}
-                    </td>
-                </tr>
-            </tfoot>
-        </table>
-    </div>
-    ...
-`;
-            // Recuerda que si clonas el modal, el ID del contenedor debe ser distinto
-            // o puedes reusar el mismo si no se abren al mismo tiempo.
+            // 3. Inyección y Apertura
             $('#documentoPatio').html(html); 
-            $('#modalSimulacion').modal('show');
+            
+            // Verificación manual: Si no abre, revisa que el ID en tu HTML sea exactamente "modalSimulacion"
+            if ($('#modalSimulacion').length) {
+                $('#modalSimulacion').modal('show');
+            } else {
+                console.error("El modal #modalSimulacion no existe en el DOM.");
+                Swal.fire('Error de UI', 'No se encontró el contenedor del modal.', 'error');
+            }
+
         } else {
             Swal.fire('Error de Consulta', res.message, 'error');
         }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        console.error("Error en la petición:", textStatus, errorThrown);
+        Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
     }).always(() => $('#loader').addClass('d-none'));
 };
+window.verDetalleGananciaVenta = function(idVenta) {
+    // UI Inicial
+    $('#loader').removeClass('d-none');
+    
+    $.getJSON('entregasController.php', { ajax: 'obtenerAuditoriaVenta', id_venta: idVenta }, function(res) {
+        if(res.success) {
+            const r = res.data; // Contiene productos, gran_total_costo, gran_total_venta, etc.
+            const colorGlobal = r.ganancia_neta_total < 0 ? 'text-danger' : 'text-success';
 
+            // 1. Generar el HTML para cada producto en el arreglo
+            let htmlProductos = r.productos.map(p => {
+                const gananciaProd = parseFloat(p.ganancia_prod || 0);
+                const colorProd = gananciaProd < 0 ? 'text-danger' : 'text-success';
+                
+                // Procesar Lotes del producto
+                let filasLotes = '';
+                if (p.detalle_financiero) {
+                    p.detalle_financiero.split('___').forEach(reg => {
+                        const c = reg.split('|');
+                        if (c.length === 4) {
+                            const subU = parseFloat(c[3]) - parseFloat(c[2]);
+                            filasLotes += `
+                                <tr>
+                                    <td class="text-start small fw-bold text-secondary">${c[0]}</td>
+                                    <td>${c[1]}</td>
+                                    <td class="text-end text-muted small">$${parseFloat(c[2]).toFixed(2)}</td>
+                                    <td class="text-end small">$${parseFloat(c[3]).toFixed(2)}</td>
+                                    <td class="text-end fw-bold ${subU < 0 ? 'text-danger' : 'text-success'}">$${subU.toFixed(2)}</td>
+                                </tr>`;
+                        }
+                    });
+                }
+
+                return `
+                <div class="card mb-4 border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
+                    <div class="card-header bg-light border-0 py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge bg-dark mb-1">${p.sku}</span>
+                                <h5 class="mb-0 fw-bold text-dark">${p.producto}</h5>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted d-block small-caps">UTILIDAD ARTÍCULO</small>
+                                <span class="h5 mb-0 fw-bold ${colorProd}">$ ${gananciaProd.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-sm mb-0 align-middle">
+                            <thead class="bg-white small text-uppercase text-muted">
+                                <tr>
+                                    <th class="ps-3" style="font-size: 0.65rem;">Lote</th>
+                                    <th style="font-size: 0.65rem;">Cant.</th>
+                                    <th class="text-end" style="font-size: 0.65rem;">Costo U.</th>
+                                    <th class="text-end" style="font-size: 0.65rem;">Venta U.</th>
+                                    <th class="text-end pe-3" style="font-size: 0.65rem;">Margen U.</th>
+                                </tr>
+                            </thead>
+                            <tbody class="border-top-0" style="font-size: 0.8rem;">
+                                ${filasLotes}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>`;
+            }).join('');
+
+            // 2. Construcción del Layout Principal
+            let htmlFinal = `
+                <div class="px-2">
+                    <div class="text-center mb-4 pt-2">
+                        <h6 class="text-uppercase text-muted ls-2 fw-bold" style="letter-spacing: 2px; font-size: 0.7rem;">Auditoría de Rentabilidad</h6>
+                        <h3 class="fw-bold mb-0">Folio: ${r.productos[0].folio || 'Venta'}</h3>
+                        <hr class="mx-auto" style="width: 50px; height: 3px; background: #28a745; border:0; opacity: 1;">
+                    </div>
+
+                    <div class="row g-3 mb-4 text-center">
+                        <div class="col-4">
+                            <div class="p-3 rounded-4 bg-light shadow-sm border">
+                                <small class="text-muted d-block small-caps">INVERSIÓN TOTAL</small>
+                                <span class="h6 fw-bold text-dark">$ ${parseFloat(r.gran_total_costo).toLocaleString()}</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-3 rounded-4 bg-light shadow-sm border">
+                                <small class="text-muted d-block small-caps">INGRESO BRUTO</small>
+                                <span class="h6 fw-bold text-dark">$ ${parseFloat(r.gran_total_venta).toLocaleString()}</span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-3 rounded-4 shadow-sm border" style="background: #f0fff4;">
+                                <small class="text-muted d-block small-caps">GANANCIA NETA</small>
+                                <span class="h6 fw-bold ${colorGlobal}">$ ${parseFloat(r.ganancia_neta_total).toLocaleString()}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${htmlProductos}
+                </div>
+            `;
+
+            // Inyectar y mostrar
+            $('#documentoPatio').html(htmlFinal); 
+            $('#modalSimulacion').modal('show');
+
+        } else {
+            Swal.fire('Atención', res.message, 'warning');
+        }
+    }).always(() => $('#loader').addClass('d-none'));
+};
     cargarEntregas();
 });
+
+
+
+
+
+async function prepararModalRepartoMasivo(ventaId) {
+    try {
+        const response = await fetch(`entregasController.php?ajax=entregas_pendientes&venta_id=${ventaId}`);
+        const result = await response.json();
+
+        if (result.success) {
+            console.log("Productos listos para despachar:", result.data);
+            
+            // Aquí podrías llenar tu tabla del modal masivo
+            // result.data.forEach(item => { ... });
+            
+        } else {
+            alert(result.message);
+        }
+    } catch (error) {
+        console.error("Error al obtener pendientes:", error);
+    }
+}
+
+
+
+
+
+
 </script>
  <?php require_once __DIR__ . '/entregasComponets/repartoModalEntregas.php'; ?>
    

@@ -1271,4 +1271,27 @@ public function simularDespachoLotesMasivo($idsMovimientos) {
         return ['success' => false, 'message' => $e->getMessage()];
     }
 }
+public function listarDespachosPendientesPorVenta($venta_id) {
+    $venta_id = intval($venta_id);
+
+    $sql = "SELECT m.id 
+            FROM movimientos m
+            LEFT JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
+            LEFT JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id
+            WHERE m.referencia_id = $venta_id 
+              AND m.tipo = 'salida'             
+              AND (trm.id IS NULL OR trm.estado_reparto = 'cancelado')
+            ORDER BY m.id ASC";
+
+    $resultado = $this->db->query($sql);
+    $pendientes = [];
+
+    if ($resultado) {
+        while ($row = $resultado->fetch_assoc()) {
+            $pendientes[] = $row;
+        }
+    }
+    
+    return $pendientes;
+}
 }

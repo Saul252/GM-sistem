@@ -221,52 +221,56 @@ public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_a
 
     // AJUSTE: IMPRESIÓN CON FACTORES
     public function obtenerDatosImpresion($idMovimiento) {
-        $sql = "SELECT 
-                    m.id as movimiento_id,
-                    m.fecha as fecha_solicitud,
-                    m.cantidad as cantidad_total,
-                    p.nombre as producto,
-                    p.sku,
-                    p.unidad_reporte,
-                    p.factor_conversion,
-                    a_orig.nombre as almacen_origen,
-                    u_patio.nombre as usuario_despacho,
-                    rsl.fecha_despacho,
-                    (SELECT GROUP_CONCAT(CONCAT(ls.codigo_lote, ' (', lms.cantidad_salida, ' pzas)') SEPARATOR '\n')
-                     FROM lotes_movimientos_salida lms
-                     INNER JOIN lotes_stock ls ON lms.lote_id = ls.id
-                     WHERE lms.detalle_venta_id = (
-                         SELECT dv.id FROM detalle_venta dv 
-                         WHERE dv.venta_id = m.referencia_id AND dv.producto_id = m.producto_id LIMIT 1
-                     ) OR (m.tipo = 'salida' AND lms.detalle_venta_id = 0 AND ls.producto_id = m.producto_id)
-                    ) as detalle_lotes
-                FROM movimientos m
-                INNER JOIN productos p ON m.producto_id = p.id
-                LEFT JOIN almacenes a_orig ON m.almacen_origen_id = a_orig.id
-                INNER JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
-                LEFT JOIN usuarios u_patio ON rsl.usuario_patio_id = u_patio.id
-                WHERE m.id = $idMovimiento";
+    $idMovimiento = intval($idMovimiento);
+    $sql = "SELECT 
+                m.id as movimiento_id,
+                m.fecha as fecha_solicitud,
+                m.cantidad as cantidad_total,
+                p.nombre as producto,
+                p.sku,
+                p.unidad_reporte,
+                p.factor_conversion,
+                a_orig.nombre as almacen_origen,
+                u_patio.nombre as usuario_despacho,
+                rsl.fecha_despacho,
+                /* Obtenemos los lotes usando la relación lms -> entregas_venta -> movimientos */
+                (SELECT GROUP_CONCAT(CONCAT(ls.codigo_lote, ' (', lms.cantidad_salida, ' pzas)') SEPARATOR '\n')
+                 FROM lotes_movimientos_salida lms
+                 INNER JOIN lotes_stock ls ON lms.lote_id = ls.id
+                 INNER JOIN entregas_venta ev ON lms.entrega_venta_id = ev.id
+                 WHERE ev.venta_id = m.referencia_id 
+                 AND lms.detalle_venta_id IN (
+                     SELECT dv.id FROM detalle_venta dv 
+                     WHERE dv.venta_id = m.referencia_id AND dv.producto_id = m.producto_id
+                 )
+                 /* Filtramos para que solo muestre lo del despacho vinculado a este movimiento */
+                 AND ev.fecha >= DATE_SUB(rsl.fecha_despacho, INTERVAL 1 MINUTE)
+                ) as detalle_lotes
+            FROM movimientos m
+            INNER JOIN productos p ON m.producto_id = p.id
+            LEFT JOIN almacenes a_orig ON m.almacen_origen_id = a_orig.id
+            INNER JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
+            LEFT JOIN usuarios u_patio ON rsl.usuario_patio_id = u_patio.id
+            WHERE m.id = $idMovimiento";
 
-        $res = $this->db->query($sql);
-        $data = $res->fetch_assoc();
+    $res = $this->db->query($sql);
+    $data = $res->fetch_assoc();
 
-        if ($data) {
-            $cant = floatval($data['cantidad_total']);
-            $factor = floatval($data['factor_conversion'] ?: 1);
-            
-            if ($factor > 1 && $cant >= $factor) {
-                $unidades = floor($cant / $factor);
-                $resto = round($cant % $factor, 2);
-                $data['cantidad_convertida'] = "$unidades " . $data['unidad_reporte'] . ($resto > 0 ? " + $resto pzas" : "");
-            } else {
-                $data['cantidad_convertida'] = "$cant pzas";
-            }
+    if ($data) {
+        $cant = floatval($data['cantidad_total']);
+        $factor = floatval($data['factor_conversion'] ?: 1);
+        
+        if ($factor > 1 && $cant >= $factor) {
+            $unidades = floor($cant / $factor);
+            $resto = round($cant % $factor, 2);
+            $data['cantidad_convertida'] = "$unidades " . $data['unidad_reporte'] . ($resto > 0 ? " + $resto pzas" : "");
+        } else {
+            $data['cantidad_convertida'] = "$cant pzas";
         }
-        return $data;
     }
-
-    public function obtenerDatosVentaGananciaImpresion($idMovimiento) {
-    // Sanitizamos el ID
+    return $data;
+}
+public function obtenerDatosVentaGananciaImpresion($idMovimiento) {
     $idMovimiento = intval($idMovimiento);
 
     $sql = "SELECT 
@@ -281,7 +285,6 @@ public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_a
                 u_patio.nombre as usuario_despacho,
                 rsl.fecha_despacho,
                 
-                /* Detalle de lotes delimitado para el JS */
                 (SELECT GROUP_CONCAT(
                     CONCAT(
                         ls.codigo_lote, '|', 
@@ -292,33 +295,32 @@ public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_a
                 )
                  FROM lotes_movimientos_salida lms
                  INNER JOIN lotes_stock ls ON lms.lote_id = ls.id
-                 WHERE lms.id IN (
-                    SELECT lms2.id 
-                    FROM lotes_movimientos_salida lms2
-                    INNER JOIN registro_salida_lotes rsl2 ON rsl2.movimiento_id = $idMovimiento
-                    WHERE lms2.entrega_venta_id = (SELECT ev.id FROM entregas_venta ev WHERE ev.venta_id = m.referencia_id LIMIT 1)
-                    OR (m.tipo = 'salida' AND lms2.detalle_venta_id = 0 AND ls.producto_id = m.producto_id)
+                 INNER JOIN entregas_venta ev ON lms.entrega_venta_id = ev.id
+                 WHERE ev.venta_id = m.referencia_id 
+                 AND lms.detalle_venta_id IN (
+                     SELECT dv.id FROM detalle_venta dv 
+                     WHERE dv.venta_id = m.referencia_id AND dv.producto_id = m.producto_id
                  )
                 ) as detalle_financiero,
 
-                /* Totales basados EXACTAMENTE en los mismos lotes del detalle anterior */
-                (SELECT SUM(lms3.costo_compra_historico * lms3.cantidad_salida) 
-                 FROM lotes_movimientos_salida lms3 
-                 WHERE lms3.id IN (
-                    SELECT lms4.id FROM lotes_movimientos_salida lms4
-                    INNER JOIN registro_salida_lotes rsl4 ON rsl4.movimiento_id = $idMovimiento
-                    WHERE lms4.entrega_venta_id = (SELECT ev4.id FROM entregas_venta ev4 WHERE ev4.venta_id = m.referencia_id LIMIT 1)
-                    OR (m.tipo = 'salida' AND lms4.detalle_venta_id = 0)
+                /* Totales */
+                (SELECT SUM(lms.costo_compra_historico * lms.cantidad_salida) 
+                 FROM lotes_movimientos_salida lms
+                 INNER JOIN entregas_venta ev ON lms.entrega_venta_id = ev.id
+                 WHERE ev.venta_id = m.referencia_id 
+                 AND lms.detalle_venta_id IN (
+                     SELECT dv.id FROM detalle_venta dv 
+                     WHERE dv.venta_id = m.referencia_id AND dv.producto_id = m.producto_id
                  )
                 ) as total_costo,
 
-                (SELECT SUM(lms5.precio_venta_pactado * lms5.cantidad_salida) 
-                 FROM lotes_movimientos_salida lms5 
-                 WHERE lms5.id IN (
-                    SELECT lms6.id FROM lotes_movimientos_salida lms6
-                    INNER JOIN registro_salida_lotes rsl6 ON rsl6.movimiento_id = $idMovimiento
-                    WHERE lms6.entrega_venta_id = (SELECT ev5.id FROM entregas_venta ev5 WHERE ev5.venta_id = m.referencia_id LIMIT 1)
-                    OR (m.tipo = 'salida' AND lms6.detalle_venta_id = 0)
+                (SELECT SUM(lms.precio_venta_pactado * lms.cantidad_salida) 
+                 FROM lotes_movimientos_salida lms
+                 INNER JOIN entregas_venta ev ON lms.entrega_venta_id = ev.id
+                 WHERE ev.venta_id = m.referencia_id 
+                 AND lms.detalle_venta_id IN (
+                     SELECT dv.id FROM detalle_venta dv 
+                     WHERE dv.venta_id = m.referencia_id AND dv.producto_id = m.producto_id
                  )
                 ) as total_venta
 
@@ -336,7 +338,6 @@ public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_a
         $cant = floatval($data['cantidad_total']);
         $factor = floatval($data['factor_conversion'] ?: 1);
         
-        // Formateo de cantidad convertida
         if ($factor > 1 && $cant >= $factor) {
             $unidades = floor($cant / $factor);
             $resto = round($cant % $factor, 2);
@@ -345,7 +346,6 @@ public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_a
             $data['cantidad_convertida'] = "$cant pzas";
         }
 
-        // Cálculos finales
         $total_c = floatval($data['total_costo'] ?? 0);
         $total_v = floatval($data['total_venta'] ?? 0);
         $data['ganancia_neta'] = round($total_v - $total_c, 2);
@@ -719,5 +719,98 @@ public function procesarDespachoFisicoMasivo($idsMovimientos) {
         $this->db->rollback();
         return ['success' => false, 'message' => "Error: " . $e->getMessage()];
     }
+}
+public function obtenerDatosVentaCompletaImpresion($idVenta) {
+    $idVenta = intval($idVenta);
+    $sql = "SELECT 
+                v.id as venta_id,
+                v.folio,
+                v.fecha as fecha_venta,
+                dv.id as detalle_id,
+                p.nombre as producto,
+                p.sku,
+                p.unidad_reporte,
+                p.factor_conversion,
+                dv.cantidad as cantidad_pactada,
+                /* Obtenemos los lotes vinculados a este detalle de venta específico */
+                (SELECT GROUP_CONCAT(CONCAT(ls.codigo_lote, ' (', lms.cantidad_salida, ' pzas)') SEPARATOR '\n')
+                 FROM lotes_movimientos_salida lms
+                 INNER JOIN lotes_stock ls ON lms.lote_id = ls.id
+                 WHERE lms.detalle_venta_id = dv.id
+                ) as detalle_lotes
+            FROM ventas v
+            INNER JOIN detalle_venta dv ON v.id = dv.venta_id
+            INNER JOIN productos p ON dv.producto_id = p.id
+            WHERE v.id = $idVenta";
+
+    $res = $this->db->query($sql);
+    $productos = [];
+
+    while ($row = $res->fetch_assoc()) {
+        $cant = floatval($row['cantidad_pactada']);
+        $factor = floatval($row['factor_conversion'] ?: 1);
+        
+        // Formateo de cantidad estilo "10 Bultos + 2 pzas"
+        if ($factor > 1 && $cant >= $factor) {
+            $unidades = floor($cant / $factor);
+            $resto = round($cant % $factor, 2);
+            $row['cantidad_convertida'] = "$unidades " . $row['unidad_reporte'] . ($resto > 0 ? " + $resto pzas" : "");
+        } else {
+            $row['cantidad_convertida'] = "$cant pzas";
+        }
+        $productos[] = $row;
+    }
+    return $productos;
+}
+public function obtenerAuditoriaFinancieraVenta($idVenta) {
+    $idVenta = intval($idVenta);
+    $sql = "SELECT 
+                p.id as producto_id,
+                p.nombre as producto,
+                p.sku,
+                dv.cantidad as cantidad_total,
+                p.unidad_reporte,
+                p.factor_conversion,
+                /* Detalle de lotes financiero */
+                (SELECT GROUP_CONCAT(
+                    CONCAT(ls.codigo_lote, '|', lms.cantidad_salida, '|', lms.costo_compra_historico, '|', lms.precio_venta_pactado) 
+                    SEPARATOR '___')
+                 FROM lotes_movimientos_salida lms
+                 INNER JOIN lotes_stock ls ON lms.lote_id = ls.id
+                 WHERE lms.detalle_venta_id = dv.id
+                ) as detalle_financiero,
+                /* Totales por producto */
+                (SELECT SUM(lms.costo_compra_historico * lms.cantidad_salida) 
+                 FROM lotes_movimientos_salida lms WHERE lms.detalle_venta_id = dv.id) as costo_total_prod,
+                (SELECT SUM(lms.precio_venta_pactado * lms.cantidad_salida) 
+                 FROM lotes_movimientos_salida lms WHERE lms.detalle_venta_id = dv.id) as venta_total_prod
+            FROM detalle_venta dv
+            INNER JOIN productos p ON dv.producto_id = p.id
+            WHERE dv.venta_id = $idVenta";
+
+    $res = $this->db->query($sql);
+    $dataReporte = [
+        'productos' => [],
+        'gran_total_costo' => 0,
+        'gran_total_venta' => 0,
+        'ganancia_neta_total' => 0
+    ];
+
+    while ($row = $res->fetch_assoc()) {
+        $costoProd = floatval($row['costo_total_prod'] ?? 0);
+        $ventaProd = floatval($row['venta_total_prod'] ?? 0);
+        
+        $row['ganancia_prod'] = round($ventaProd - $costoProd, 2);
+        
+        // Sumamos al global de la venta
+        $dataReporte['gran_total_costo'] += $costoProd;
+        $dataReporte['gran_total_venta'] += $ventaProd;
+        
+        $dataReporte['productos'][] = $row;
+    }
+
+    $dataReporte['ganancia_neta_total'] = round($dataReporte['gran_total_venta'] - $dataReporte['gran_total_costo'], 2);
+    
+    return $dataReporte;
 }
 }
