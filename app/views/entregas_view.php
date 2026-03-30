@@ -212,6 +212,7 @@
     <?php require_once __DIR__ . '/entregasComponets/entregasPatioModal.php'; ?>
 <?php require_once __DIR__ . '/entregasComponets/modalVerDetalleEntregas.php'; ?>
 <?php require_once __DIR__ . '/entregasComponets/modalEntregaVentas.php'; ?>
+<?php require_once __DIR__ . '/entregasComponets/modalDespachosEntregaPorVentaId.php'; ?>
     <script>
 $(document).ready(function() {
     let movimientoActualID = null;
@@ -344,7 +345,7 @@ $(document).ready(function() {
                         // ESTADO: YA DESPACHADO (Fisicamente fuera, pero sin destino asignado)
 accionHtml = `
     <div class="d-flex gap-2">
-        <button onclick="abrirModalDespachoVenta(${m.venta_id}, ${m.almacen_origen_id})"
+        <button onclick="abrirModalDespachoVentaGfin(${m.venta_id}, ${m.almacen_origen_id})"
                 class="btn rounded-pill px-3 shadow-sm d-flex align-items-center"
                 style="background: #007aff; color: #fff; border: none; height: 35px; font-size: 0.75rem; font-weight: 600; transition: all 0.3s ease;">
             <i class="bi bi-geo-alt-fill me-2"></i> Destino Entrega
@@ -619,6 +620,7 @@ window.verDetalleGanancia = function(id) {
     $.getJSON('/cfsistem/app/controllers/entregasController.php', { ajax: 'imprimirGanancia', id: id }, function(res) {
         if(res.success) {
             const d = res.data;
+            console.log(d);
             const ganancia = parseFloat(d.ganancia_neta || 0);
             const colorGanancia = ganancia < 0 ? 'text-danger' : 'text-success';
             

@@ -1275,13 +1275,16 @@ public function listarDespachosPendientesPorVenta($venta_id) {
     $venta_id = intval($venta_id);
 
     $sql = "SELECT m.id 
-            FROM movimientos m
-            LEFT JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
-            LEFT JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id
-            WHERE m.referencia_id = $venta_id 
-              AND m.tipo = 'salida'             
-              AND (trm.id IS NULL OR trm.estado_reparto = 'cancelado')
-            ORDER BY m.id ASC";
+FROM movimientos m
+-- Unimos con patio (rsl) para saber que YA salieron de bodega
+INNER JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
+-- Unimos con transporte (trm) para filtrar los que ya tienen ruta
+LEFT JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id
+WHERE m.referencia_id = 92
+  AND m.tipo = 'salida'
+  -- CLAVE: Que NO tenga registro en transporte (trm.id es NULL)
+  AND trm.id IS NULL
+ORDER BY m.id ASC;";
 
     $resultado = $this->db->query($sql);
     $pendientes = [];
