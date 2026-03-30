@@ -1183,7 +1183,7 @@ public function listarIdsPendientesPorVenta($venta_id) {
             LEFT JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id
             WHERE m.referencia_id = $venta_id 
               AND m.tipo = 'salida'
-              AND rsl.id IS NULL
+             
               AND (trm.id IS NULL OR trm.estado_reparto = 'cancelado')
             ORDER BY m.id ASC";
 

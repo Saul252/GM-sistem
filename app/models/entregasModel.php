@@ -813,4 +813,44 @@ public function obtenerAuditoriaFinancieraVenta($idVenta) {
     
     return $dataReporte;
 }
+public function cancelarDespachoFisico($idMovimiento) {
+    $this->db->begin_transaction();
+    $idMov = intval($idMovimiento);
+
+    try {
+        // Buscamos los lotes que salieron asociados a este movimiento específico
+        // a través de la tabla registro_salida_lotes
+        $sqlLotes = "SELECT lms.id, lms.lote_id, lms.cantidad_salida 
+                     FROM lotes_movimientos_salida lms
+                     INNER JOIN registro_salida_lotes rsl ON lms.entrega_venta_id = (
+                         SELECT ev.id FROM entregas_venta ev 
+                         INNER JOIN movimientos m ON ev.venta_id = m.referencia_id 
+                         WHERE m.id = $idMov LIMIT 1
+                     )
+                     WHERE rsl.movimiento_id = $idMov";
+        
+        $res = $this->db->query($sqlLotes);
+
+        while ($row = $res->fetch_assoc()) {
+            // 1. Devolver cantidad al stock real
+            $this->db->query("UPDATE lotes_stock 
+                             SET cantidad_actual = cantidad_actual + {$row['cantidad_salida']}, 
+                                 estado_lote = 'activo' 
+                             WHERE id = {$row['lote_id']}");
+
+            // 2. Eliminar el desglose de salida de ese lote
+            $this->db->query("DELETE FROM lotes_movimientos_salida WHERE id = {$row['id']}");
+        }
+
+        // 3. Eliminar el registro que confirma que el despacho se hizo
+        $this->db->query("DELETE FROM registro_salida_lotes WHERE movimiento_id = $idMov");
+
+        $this->db->commit();
+        return ['success' => true, 'message' => 'Inventario restaurado con éxito.'];
+
+    } catch (Exception $e) {
+        $this->db->rollback();
+        return ['success' => false, 'message' => $e->getMessage()];
+    }
+}
 }

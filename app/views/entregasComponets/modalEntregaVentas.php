@@ -1,4 +1,4 @@
-<div class="modal fade" id="modalDespachoVenta" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalDespachoVentaTotal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 25px; background: #f8f9fa;">
             <div class="modal-header border-0 bg-white" style="border-radius: 25px 25px 0 0; padding: 1.5rem 2rem;">
@@ -6,7 +6,7 @@
                     <i class="bi bi-box-seam-fill fs-4"></i>
                 </div>
                 <div>
-                    <h5 class="modal-title fw-bold mb-0">Despacho Masivo de Venta</h5>
+                    <h5 class="modal-title fw-bold mb-0">Despacho Masivo Por Venta</h5>
                     <span class="badge bg-light text-dark border mt-1" id="txtFolioVenta">Cargando...</span>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -75,6 +75,7 @@
 </div>
 
 <script>
+
 /**
  * Alterna la visualización de los campos de ruta
  */
@@ -86,9 +87,10 @@ function toggleFormRuta(mostrar) {
 /**
  * FUNCIÓN PRINCIPAL: Abre modal, carga lotes y carga recursos de logística
  */
-async function abrirModalDespachoVenta(ventaId,almacenId) {
+async function abrirModalDespachoVentaTotal(ventaId,almacenId) {
+        console.log("ventasTotal");
     const URL_ENTREGAS = 'entregasController.php'; 
-    const modalElement = document.getElementById('modalDespachoVenta');
+    const modalElement = document.getElementById('modalDespachoVentaTotal');
     const modal = new bootstrap.Modal(modalElement);
     const contenedor = document.getElementById('listaItemsDespacho');
     const txtFolio = document.getElementById('txtFolioVenta');

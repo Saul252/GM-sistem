@@ -220,96 +220,239 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         /// 1. DESPACHO MASIVO POR VENTA (Lógica procesarDespachoFisicoMasivo)
-     if ($accion === 'despachar_venta_completa') {
-    // 1. Limpieza absoluta de salida para asegurar JSON puro y sin caracteres extraños
-    while (ob_get_level()) ob_end_clean();
+     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $accion = $_POST['ajax'] ?? '';
     header('Content-Type: application/json');
 
     try {
-        // Captura de datos desde el $_POST enviado por JS
+        // Validación centralizada de sesión
+        $id_usuario_sesion = $_SESSION['id_usuario'] ?? $_SESSION['usuario_id'] ?? 0;
+        if ($id_usuario_sesion <= 0) {
+            throw new Exception("Sesión expirada o usuario no identificado.");
+        }
+
+        /// 1. DESPACHO MASIVO POR VENTA (Lógica procesarDespachoFisicoMasivo)
+        if ($accion === 'despachar_venta_completa') {
+            // ✅ Headers ya están arriba, ob_clean opcional si no hay output previo
+            
+            try {
+                $ids = $_POST['ids_movimientos'] ?? [];
+                $tipoLogistica = $_POST['tipo_logistica'] ?? 'patio';
+                $vehiculoId = intval($_POST['vehiculo_id'] ?? 0);
+                $choferId = intval($_POST['chofer_id'] ?? 0);
+                $usuarioSistemaId = $id_usuario_sesion;
+                $direccion = $_POST['direccion'] ?? 'Entrega en Obra';
+                $tripulantes = $_POST['tripulantes'] ?? [];
+
+                if (empty($ids)) {
+                    throw new Exception("No se seleccionaron productos para el despacho masivo.");
+                }
+
+                $resultadoDespacho = $repartoM->procesarDespachoFisicoMasivo($ids);
+
+                if ($resultadoDespacho['success']) {
+                    $folioViaje = "";
+
+                    if ($tipoLogistica === 'ruta') {
+                        $rutaActiva = $repartoM->buscarRutaAbierta($vehiculoId);
+                        
+                        if ($rutaActiva) {
+                            $folioViaje = $rutaActiva['viaje_folio'];
+                        } else {
+                            $folioViaje = "RUT-" . date('ymd') . "-" . str_pad($vehiculoId, 2, "0", STR_PAD_LEFT) . "-" . rand(10, 99);
+                            
+                            if (method_exists($vehiculoM, 'actualizarEstado')) {
+                                $vehiculoM->actualizarEstado($vehiculoId, 'en_ruta');
+                            }
+                        }
+                    }
+
+                    foreach ($ids as $idMov) {
+                        $datosReparto = [
+                            'movimiento_id'      => $idMov,
+                            'vehiculo_id'        => $vehiculoId,
+                            'chofer_id'          => $choferId,
+                            'direccion_entrega'  => $direccion, 
+                            'tripulantes'        => $tripulantes,
+                            'folio_viaje'        => $folioViaje,
+                            'usuario_sistema_id' => $usuarioSistemaId,
+                            'observaciones'      => 'Entrega Directa en Patio (Despacho Masivo)'
+                        ];
+
+                        try {
+                            if ($tipoLogistica === 'ruta') {
+                                $repartoM->iniciarReparto($datosReparto);
+                            } else {
+                                $datosReparto['vehiculo_id'] = 999;
+                                $repartoM->entregarEnPatioCliente($datosReparto);
+                            }
+                        } catch (Exception $e) {
+                            error_log("Error en logística individual MovID {$idMov}: " . $e->getMessage());
+                            continue; 
+                        }
+                    }
+
+                    echo json_encode([
+                        'success' => true,
+                        'message' => '¡Logística masiva confirmada!',
+                        'folio'   => $folioViaje
+                    ]);
+                } else {
+                    echo json_encode($resultadoDespacho);
+                }
+
+            } catch (Throwable $t) {
+                echo json_encode([
+                    'success' => false,
+                    'message' => "Error de servidor: " . $t->getMessage()
+                ]);
+            }
+            exit; 
+        }
+
+       if ($accion === 'despachar_venta_completaFaltantesEntrega') {
+    while (ob_get_level()) ob_end_clean(); // ✅ LIMPIEZA CRÍTICA
+    
+    try {
         $ids = $_POST['ids_movimientos'] ?? [];
         $tipoLogistica = $_POST['tipo_logistica'] ?? 'patio';
         $vehiculoId = intval($_POST['vehiculo_id'] ?? 0);
         $choferId = intval($_POST['chofer_id'] ?? 0);
-        $usuarioSistemaId = $_SESSION['id_usuario'] ?? $_SESSION['usuario_id'] ?? 0;
+        $usuarioSistemaId = $id_usuario_sesion;
         $direccion = $_POST['direccion'] ?? 'Entrega en Obra';
-        $tripulantes = $_POST['tripulantes'] ?? [];
+        $tripulantes = $_POST['tripulantes'] ?? []; // ✅ Array de IDs
 
         if (empty($ids)) {
-            throw new Exception("No se seleccionaron productos para el despacho masivo.");
+            throw new Exception("No se seleccionaron productos para asignar logística.");
         }
 
-        // A. PROCESO FÍSICO: Afectar inventario y lotes mediante el modelo
-        $resultadoDespacho = $repartoM->procesarDespachoFisicoMasivo($ids);
+        $folioViaje = "";
+        if ($tipoLogistica === 'ruta') {
+            $rutaActiva = $repartoM->buscarRutaAbierta($vehiculoId);
+            if ($rutaActiva) {
+                $folioViaje = $rutaActiva['viaje_folio'];
+            } else {
+                $folioViaje = "RUT-" . date('ymd') . "-" . str_pad($vehiculoId, 2, "0", STR_PAD_LEFT) . "-" . rand(10, 99);
+                if (method_exists($vehiculoM, 'actualizarEstado')) {
+                    $vehiculoM->actualizarEstado($vehiculoId, 'en_ruta');
+                }
+            }
+        }
 
-        if ($resultadoDespacho['success']) {
-            $folioViaje = "";
+        foreach ($ids as $idMov) {
+            $datosReparto = [
+                'movimiento_id'      => intval($idMov),
+                'vehiculo_id'        => $vehiculoId,
+                'chofer_id'          => $choferId,
+                'direccion_entrega'  => $direccion,
+                'tripulantes'        => $tripulantes, // ✅ Array pasa directo
+                'folio_viaje'        => $folioViaje,
+                'usuario_sistema_id' => $usuarioSistemaId,
+                'observaciones'      => 'Asignación Logística (Faltantes)'
+            ];
 
-            // B. LÓGICA DE LOGÍSTICA (Generación de folio y estado de unidad)
-            if ($tipoLogistica === 'ruta') {
-                $rutaActiva = $repartoM->buscarRutaAbierta($vehiculoId);
-                
-                if ($rutaActiva) {
-                    $folioViaje = $rutaActiva['viaje_folio'];
+            try {
+                if ($tipoLogistica === 'ruta') {
+                    $repartoM->iniciarReparto($datosReparto);
                 } else {
-                    // Generación de folio: RUT + Fecha + ID Camión con ceros + Aleatorio
-                    $folioViaje = "RUT-" . date('ymd') . "-" . str_pad($vehiculoId, 2, "0", STR_PAD_LEFT) . "-" . rand(10, 99);
-                    
-                    // Actualizar el estado del camión a 'en_ruta' si el método existe
-                    if (method_exists($vehiculoM, 'actualizarEstado')) {
-                        $vehiculoM->actualizarEstado($vehiculoId, 'en_ruta');
-                    }
+                    $datosReparto['vehiculo_id'] = 999;
+                    $repartoM->entregarEnPatioCliente($datosReparto);
                 }
+            } catch (Exception $e) {
+                error_log("Error MovID {$idMov}: " . $e->getMessage());
+                continue;
             }
-
-            // C. BUCLE DE INSERCIÓN: Procesar cada ID de movimiento recibido
-            foreach ($ids as $idMov) {
-                // Preparamos el array de datos con los nombres que los métodos del modelo esperan
-                $datosReparto = [
-                    'movimiento_id'      => $idMov,
-                    'vehiculo_id'        => $vehiculoId,
-                    'chofer_id'          => $choferId,
-                    'direccion_entrega'  => $direccion, 
-                    'tripulantes'        => $tripulantes,
-                    'folio_viaje'        => $folioViaje,
-                    'usuario_sistema_id' => $usuarioSistemaId,
-                    'observaciones'      => 'Entrega Directa en Patio (Despacho Masivo)'
-                ];
-
-                try {
-                    if ($tipoLogistica === 'ruta') {
-                        $repartoM->iniciarReparto($datosReparto);
-                    } else {
-                        // Para patio, el vehiculo_id se fuerza a 999 (Virtual)
-                        $datosReparto['vehiculo_id'] = 999;
-                        $repartoM->entregarEnPatioCliente($datosReparto);
-                    }
-                } catch (Exception $e) {
-                    // Si un registro individual falla, se loguea y se continúa con el siguiente
-                    error_log("Error en logística individual MovID {$idMov}: " . $e->getMessage());
-                    continue; 
-                }
-            }
-
-            echo json_encode([
-                'success' => true,
-                'message' => '¡Logística masiva confirmada!',
-                'folio'   => $folioViaje
-            ]);
-        } else {
-            // En caso de que el proceso físico (lotes) falle, devolvemos el error específico
-            echo json_encode($resultadoDespacho);
         }
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Logística de faltantes confirmada correctamente.',
+            'folio'   => $folioViaje
+        ]);
 
     } catch (Throwable $t) {
-        // Captura errores fatales o excepciones y devuelve un JSON limpio
         echo json_encode([
             'success' => false,
             'message' => "Error de servidor: " . $t->getMessage()
         ]);
     }
-    // Finalizamos la ejecución para evitar que se cargue cualquier HTML posterior
-    exit; 
+    exit;
+}
+
+        // 2. DESPACHO INDIVIDUAL (Lógica original)
+        elseif ($accion === 'despachar') {
+            $id_movimiento = intval($_POST['id_movimiento'] ?? 0);
+            if ($id_movimiento <= 0) {
+                throw new Exception("ID de movimiento no válido.");
+            }
+            echo json_encode($modelo->procesarDespachoFisico($id_movimiento));
+        } 
+        
+        // 3. LOGÍSTICA Y RUTAS DE REPARTO
+        elseif ($accion === 'guardar_reparto') {
+            if (empty($_POST['vehiculo_id']) || empty($_POST['chofer_id']) || empty($_POST['movimiento_id'])) {
+                throw new Exception("Faltan datos obligatorios para el reparto.");
+            }
+
+            $vehiculo_id = intval($_POST['vehiculo_id']);
+            $rutaActiva = $repartoM->buscarRutaAbierta($vehiculo_id);
+
+            if ($rutaActiva) {
+                $_POST['folio_viaje'] = $rutaActiva['viaje_folio'];
+            } else {
+                $_POST['folio_viaje'] = "RUT-" . date('ymd') . "-" . str_pad($vehiculo_id, 2, "0", STR_PAD_LEFT) . "-" . rand(10, 99);
+                if (method_exists($vehiculoM, 'actualizarEstado')) {
+                    $vehiculoM->actualizarEstado($vehiculo_id, 'en_ruta');
+                }
+            }
+
+            $repartoM->iniciarReparto($_POST);
+            echo json_encode([
+                'success' => true, 
+                'message' => '¡Logística confirmada!',
+                'folio'   => $_POST['folio_viaje']
+            ]);
+        }
+
+        // 4. ENTREGA DIRECTA AL CLIENTE (PATIO)
+        elseif ($accion === 'entregar_en_patio') {
+            if (empty($_POST['movimiento_id']) || empty($_POST['chofer_id'])) {
+                throw new Exception("Error: Debe indicar el movimiento y el personal responsable de la entrega.");
+            }
+
+            // Datos forzados para la consistencia de la base de datos
+            $_POST['usuario_sistema_id'] = $id_usuario_sesion;
+            $_POST['vehiculo_id'] = 999; // Vehículo virtual (Patio)
+
+            $resultado = $repartoM->entregarEnPatioCliente($_POST);
+            echo json_encode($resultado);
+        }
+
+        // 5. CANCELAR DESPACHO FÍSICO (REVERSA DE STOCK)
+        elseif ($accion === 'cancelarDespachoFisico') {
+            while (ob_get_level()) ob_end_clean();
+
+            $id_movimiento = intval($_POST['id_movimiento'] ?? 0);
+            
+            if ($id_movimiento <= 0) {
+                throw new Exception("ID de movimiento no válido para la reversa.");
+            }
+
+            $resultado = $modelo->cancelarDespachoFisico($id_movimiento);
+            
+            echo json_encode($resultado);
+            exit;
+        }
+
+        // CASO POR DEFECTO
+        else {
+            throw new Exception("Acción POST '$accion' no reconocida.");
+        }
+
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit;
 }
 if ($accion === 'despachar_venta_completaFaltantesEntrega') {
     // 1. Limpieza absoluta de salida para asegurar JSON puro
@@ -432,6 +575,24 @@ if ($accion === 'despachar_venta_completaFaltantesEntrega') {
 
             $resultado = $repartoM->entregarEnPatioCliente($_POST);
             echo json_encode($resultado);
+        }
+        // 5. CANCELAR DESPACHO FÍSICO (REVERSA DE STOCK)
+        elseif ($accion === 'cancelarDespachoFisico') {
+            // Limpieza absoluta para asegurar JSON puro
+            while (ob_get_level()) ob_end_clean();
+            header('Content-Type: application/json');
+
+            $id_movimiento = intval($_POST['id_movimiento'] ?? 0);
+            
+            if ($id_movimiento <= 0) {
+                throw new Exception("ID de movimiento no válido para la reversa.");
+            }
+
+            // Llamamos al método del modelo que devuelve el stock a los lotes
+            $resultado = $modelo->cancelarDespachoFisico($id_movimiento);
+            
+            echo json_encode($resultado);
+            exit;
         }
 
         // CASO POR DEFECTO

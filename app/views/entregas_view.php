@@ -212,7 +212,6 @@
     <?php require_once __DIR__ . '/entregasComponets/entregasPatioModal.php'; ?>
 <?php require_once __DIR__ . '/entregasComponets/modalVerDetalleEntregas.php'; ?>
 <?php require_once __DIR__ . '/entregasComponets/modalEntregaVentas.php'; ?>
-<?php require_once __DIR__ . '/entregasComponets/modalDespachosEntregaPorVentaId.php'; ?>
     <script>
 $(document).ready(function() {
     let movimientoActualID = null;
@@ -313,7 +312,21 @@ $(document).ready(function() {
             <i class="bi bi-check-circle-fill me-1"></i>Entregado
         </span>
     </div>
-</div>`;
+</div>
+<button type="button" 
+            class="btn btn-sm d-flex align-items-center transition-ios ms-2" 
+            style="background: transparent; 
+                   border: none; 
+                   color: #48484a; 
+                   font-weight: 600; 
+                   font-size: 0.8rem; 
+                   letter-spacing: -0.2px;
+                   padding: 8px 10px;"
+            onclick="verDetalleDespachoAlmacen(${m.venta_id})">
+        <i class="fas fa-boxes me-2" style="font-size: 0.9rem; opacity: 0.8;"></i>
+        Logística
+    </button>
+`;
                     } 
                     else if (algoEnRuta) {
                         // ESTADO: EN TRANSITO
@@ -331,7 +344,7 @@ $(document).ready(function() {
                         // ESTADO: YA DESPACHADO (Fisicamente fuera, pero sin destino asignado)
 accionHtml = `
     <div class="d-flex gap-2">
-        <button onclick="repartosDespachos(${m.venta_id}, ${m.almacen_origen_id})"
+        <button onclick="abrirModalDespachoVenta(${m.venta_id}, ${m.almacen_origen_id})"
                 class="btn rounded-pill px-3 shadow-sm d-flex align-items-center"
                 style="background: #007aff; color: #fff; border: none; height: 35px; font-size: 0.75rem; font-weight: 600; transition: all 0.3s ease;">
             <i class="bi bi-geo-alt-fill me-2"></i> Destino Entrega
@@ -342,7 +355,7 @@ accionHtml = `
                         accionHtml = `
              
                             <div class="text-end pe-3">
-                                <button class="btn btn-sm rounded-pill btn-dark px-4 shadow-sm" onclick="abrirModalDespachoVenta(${m.venta_id},${m.almacen_origen_id})">
+                                <button class="btn btn-sm rounded-pill btn-dark px-4 shadow-sm" onclick="abrirModalDespachoVentaTotal(${m.venta_id},${m.almacen_origen_id})">
                                     <i class="bi bi-list-check me-1"></i> GESTIONAR VENTA
                                 </button>
                             </div>`;
@@ -382,7 +395,13 @@ accionHtml = `
                             style="background: #1c1c1e; color: #fff; border: none; font-weight: 600; height: 38px; transition: 0.3s;">
                         <i class="bi bi-truck me-2"></i><span style="font-size: 0.75rem;">ASIGNAR A RUTA</span>
                     </button>
-                            </div>`;
+                            </div>
+                            <button type="button" 
+                class="btn btn-sm d-flex align-items-center transition-ios ms-2" 
+                style="background: transparent; border: none; color: #ff3b30; font-weight: 600; font-size: 0.8rem;"
+                onclick="confirmarReversaDespacho(${m.id})">
+            <i class="fas fa-undo-alt me-1"></i> Reversar
+        </button>`;
                     } 
                     else {
                         accionHtml = `
@@ -798,33 +817,178 @@ window.verDetalleGananciaVenta = function(idVenta) {
     cargarEntregas();
 });
 
+window.verDetalleDespachoAlmacen = function(idVenta) {
+    // UI Inicial
+    $('#loader').removeClass('d-none');
+    
+    $.getJSON('entregasController.php', { ajax: 'obtenerAuditoriaVenta', id_venta: idVenta }, function(res) {
+        if(res.success) {
+            const r = res.data;
 
+            // 1. Generar el HTML para cada producto (Enfoque Logístico)
+            let htmlProductos = r.productos.map(p => {
+                
+                // Procesar solo Lotes y Cantidades
+                let filasLotes = '';
+                if (p.detalle_financiero) {
+                    p.detalle_financiero.split('___').forEach(reg => {
+                        const c = reg.split('|');
+                        if (c.length === 4) {
+                            filasLotes += `
+                                <tr class="border-bottom">
+                                    <td class="py-2 ps-3 fw-bold text-dark" style="font-size: 0.9rem;">
+                                        <i class="fas fa-barcode me-2 text-muted"></i>${c[0]}
+                                    </td>
+                                    <td class="py-2 text-end pe-3">
+                                        <span class="badge bg-primary px-3 py-2" style="font-size: 0.85rem; border-radius: 4px;">
+                                            ${c[1]} pzas
+                                        </span>
+                                    </td>
+                                </tr>`;
+                        }
+                    });
+                }
 
+                return `
+                <div class="card mb-3 border-secondary shadow-none" style="border-radius: 4px; border: 2px solid #dee2e6;">
+                    <div class="card-header bg-dark border-0 py-2" style="border-radius: 0;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-white-50 d-block fw-bold" style="font-size: 0.6rem; letter-spacing: 1px;">SKU: ${p.sku}</small>
+                                <h5 class="mb-0 fw-bold text-white" style="font-size: 1.1rem;">${p.producto}</h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-3 border-0" style="font-size: 0.7rem; color: #6c757d;">UBICACIÓN / LOTE</th>
+                                    <th class="text-end pe-3 border-0" style="font-size: 0.7rem; color: #6c757d;">CANTIDAD A SACAR</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${filasLotes}
+                            </tbody>
+                        </table>
+                        <div class="bg-light p-2 border-top text-end">
+                            <small class="text-muted fw-bold">TOTAL ARTÍCULO: </small>
+                            <span class="h6 mb-0 fw-bold">${p.cantidad_total} ${p.unidad_reporte || 'pzas'}</span>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
 
+            // 2. Layout Principal (Hoja de Carga)
+            let htmlFinal = `
+                <div class="px-1">
+                    <div class="d-flex justify-content-between align-items-end mb-4 border-bottom pb-3 border-dark">
+                        <div>
+                            <h4 class="fw-bold mb-0 text-uppercase" style="letter-spacing: -0.5px;">Orden de Despacho</h4>
+                            <span class="badge bg-warning text-dark">LISTA DE CARGA</span>
+                        </div>
+                        <div class="text-end">
+                            <h5 class="mb-0 fw-bold">FOLIO: ${r.productos[0].folio || 'N/A'}</h5>
+                            <small class="text-muted">Fecha: ${new Date().toLocaleDateString()}</small>
+                        </div>
+                    </div>
 
-async function prepararModalRepartoMasivo(ventaId) {
-    try {
-        const response = await fetch(`entregasController.php?ajax=entregas_pendientes&venta_id=${ventaId}`);
-        const result = await response.json();
+                    ${htmlProductos}
 
-        if (result.success) {
-            console.log("Productos listos para despachar:", result.data);
-            
-            // Aquí podrías llenar tu tabla del modal masivo
-            // result.data.forEach(item => { ... });
-            
+                    <div class="row mt-5 pt-4 text-center">
+                        <div class="col-6">
+                            <div class="border-top mx-auto" style="width: 200px; border-color: #000 !important;"></div>
+                            <small class="text-uppercase fw-bold text-muted" style="font-size: 0.6rem;">Firma Almacenista</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="border-top mx-auto" style="width: 200px; border-color: #000 !important;"></div>
+                            <small class="text-uppercase fw-bold text-muted" style="font-size: 0.6rem;">Firma Chofer / Cliente</small>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            $('#documentoPatio').html(htmlFinal); 
+            $('#modalSimulacion').modal('show');
+
         } else {
-            alert(result.message);
+            Swal.fire('Atención', res.message, 'warning');
         }
-    } catch (error) {
-        console.error("Error al obtener pendientes:", error);
-    }
-}
+    }).always(() => $('#loader').addClass('d-none'));
+};
 
 
 
 
 
+
+
+
+window.confirmarReversaDespacho = function(idMovimiento) {
+    Swal.fire({
+        title: '<span style="font-weight:700; color:#1d1d1f;">¿Reversar Despacho?</span>',
+        html: '<p style="font-size:0.9rem; color:#86868b;">El material regresará a sus lotes originales y el registro de salida será eliminado permanentemente.</p>',
+        icon: 'warning',
+        iconColor: '#ff3b30',
+        showCancelButton: true,
+        confirmButtonColor: '#ff3b30', // Rojo Apple
+        cancelButtonColor: '#f5f5f7', // Gris Apple
+        confirmButtonText: 'Sí, devolver stock',
+        cancelButtonText: '<span style="color:#1d1d1f;">Cancelar</span>',
+        reverseButtons: true,
+        buttonsStyling: true,
+        padding: '2em',
+        background: '#ffffff',
+        borderRadius: '20px', // Bordes estilo iOS
+        customClass: {
+            popup: 'border-0 shadow-lg',
+            confirmButton: 'rounded-pill px-4 fw-bold',
+            cancelButton: 'rounded-pill px-4 fw-bold'
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Mostrar loader discreto
+            $('#loader').removeClass('d-none');
+
+            $.ajax({
+                url: '/cfsistem/app/controllers/entregasController.php',
+                type: 'POST',
+                data: { 
+                    ajax: 'cancelarDespachoFisico', 
+                    id_movimiento: idMovimiento 
+                },
+                dataType: 'json',
+                success: function(res) {
+                    if (res.success) {
+                        Swal.fire({
+                            title: '<span style="color:#1d1d1f;">Stock Restaurado</span>',
+                            text: res.message,
+                            icon: 'success',
+                            showConfirmButton: false,
+                            timer: 1800,
+                            borderRadius: '20px'
+                        });
+                        
+                        // Recargar la tabla o el componente
+                        if (typeof listarMovimientos === 'function') {
+                            listarMovimientos(); 
+                        } else {
+                            location.reload(); // Fallback si no hay función de refresco
+                        }
+                    } else {
+                        Swal.fire('Error', res.message, 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
+                },
+                complete: function() {
+                    $('#loader').addClass('d-none');
+                }
+            });
+        }
+    });
+};
 
 </script>
  <?php require_once __DIR__ . '/entregasComponets/repartoModalEntregas.php'; ?>
