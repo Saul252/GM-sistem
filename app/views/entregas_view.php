@@ -350,6 +350,10 @@ accionHtml = `
                 style="background: #007aff; color: #fff; border: none; height: 35px; font-size: 0.75rem; font-weight: 600; transition: all 0.3s ease;">
             <i class="bi bi-geo-alt-fill me-2"></i> Destino Entrega
         </button>
+        <button class="btn btn-link p-0 text-primary fw-semibold text-decoration-none" 
+                onclick="verDetalleGananciaVenta(${m.venta_id})">
+            <i class="bi bi-graph-up me-2"></i>Auditoría
+        </button>
     </div>`;}
                     else {
                         // ESTADO: PENDIENTE DE DESPACHO
