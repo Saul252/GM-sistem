@@ -248,4 +248,250 @@ public function cambiarEstado($id, $estado, $almacen_id = 0) {
         ];
     }
 }
+/**
+ * Obtiene el resumen actual de deuda o saldo a favor de un cliente
+ */
+/**
+ * Obtiene todos los movimientos registrados en el LOG de saldos de un cliente
+ * Ideal para el visor de estado de cuenta.
+ */
+public static function obtenerHistorialLog($conexion, $id_cliente) {
+    $sql = "SELECT 
+                l.id,
+                l.fecha_registro,
+                l.tipo_movimiento, 
+                l.monto AS monto_afectacion,
+                l.monto_operacion_total,
+                l.monto_pagado_momento,
+                l.referencia_tipo,
+                l.observaciones,
+                v.folio AS folio_venta,
+                u.usuario AS responsable
+            FROM clientes_saldos_log l
+            LEFT JOIN ventas v ON l.venta_id = v.id
+            LEFT JOIN usuarios u ON l.usuario_id = u.id
+            WHERE l.cliente_id = ?
+            ORDER BY l.fecha_registro DESC, l.id DESC";
+
+    $stmt = $conexion->prepare($sql);
+    $stmt->bind_param("i", $id_cliente);
+    $stmt->execute();
+    return $stmt->get_result();
+}
+/**
+ * Obtiene el historial completo de movimientos de la cuenta del cliente
+ */
+/**
+ * Obtiene el saldo total acumulado y la fecha del último movimiento
+ */
+public static function obtenerSaldoActual($conexion, $id_cliente) {
+    $sql = "SELECT 
+                c.nombre AS cliente_nombre,
+                COALESCE(s.saldo_en_contra, 0) AS saldo_total,
+                s.actualizado_en,
+                (SELECT folio FROM ventas WHERE id = s.ultima_venta_id) AS ultimo_folio
+            FROM clientes c
+            LEFT JOIN clientes_saldos s ON c.id = s.cliente_id
+            WHERE c.id = ?";
+
+    $stmt = $conexion->prepare($sql);
+    $stmt->bind_param("i", $id_cliente);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();
+}
+
+
+
+public static function obtenerEstatus($conexion, $id) {
+    // Consultamos directamente la tabla maestra unida con el nombre del cliente
+    $sql = "SELECT 
+        c.nombre_comercial,
+        s.saldo_a_favor,
+        s.saldo_en_contra,
+        -- Calculamos el saldo neto para que el JS siga funcionando igual
+        -- Si es positivo: debe (saldo_en_contra)
+        -- Si es negativo: tiene a favor (saldo_a_favor)
+        (s.saldo_en_contra - s.saldo_a_favor) AS saldo_neto,
+        
+        CASE 
+            WHEN s.saldo_en_contra > s.saldo_a_favor THEN 'CON DEUDA'
+            WHEN s.saldo_a_favor > s.saldo_en_contra THEN 'SALDO A FAVOR'
+            ELSE 'AL DIA'
+        END AS estatus_financiero
+    FROM clientes c
+    LEFT JOIN clientes_saldos s ON c.id = s.cliente_id
+    WHERE c.id = ?";
+
+    try {
+        $stmt = $conexion->prepare($sql);
+        if (!$stmt) {
+            error_log("Error preparando estatus simplificado: " . $conexion->error);
+            return null;
+        }
+
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $result = $stmt->get_result(); 
+        $data = $result->fetch_assoc();
+        
+        if ($data) {
+            // Valores por defecto si la fila en clientes_saldos aún no existe
+            $data['saldo_a_favor']  = floatval($data['saldo_a_favor'] ?? 0);
+            $data['saldo_en_contra'] = floatval($data['saldo_en_contra'] ?? 0);
+            $data['saldo_neto']      = floatval($data['saldo_neto'] ?? 0);
+            
+            // Para que tu Widget de iOS siga mostrando el monto sin signos raros
+            $data['saldo_neto_abs']  = abs($data['saldo_neto']);
+        } else {
+            // Si el cliente no tiene registro en la tabla de saldos todavía
+            return [
+                'nombre_comercial' => 'Cliente Nuevo',
+                'saldo_a_favor' => 0,
+                'saldo_en_contra' => 0,
+                'saldo_neto' => 0,
+                'saldo_neto_abs' => 0,
+                'estatus_financiero' => 'AL DIA'
+            ];
+        }
+        
+        return $data;
+
+    } catch (Exception $e) {
+        error_log("Excepción en obtenerEstatus (Tabla Maestra): " . $e->getMessage());
+        return null;
+    }
+}
+public function abono_saldos_log($cliente_id, $venta_id, $monto, $usuario_id, $metodo_pago, $fecha_pago) {
+    // 1. Definir la consulta SQL (12 columnas, 8 marcadores '?')
+    $sqlLog = "INSERT INTO `clientes_saldos_log` (
+        `id`, 
+        `cliente_id`, 
+        `venta_id`, 
+        `tipo_movimiento`, 
+        `monto`, 
+        `monto_operacion_total`, 
+        `monto_pagado_momento`, 
+        `referencia_tipo`, 
+        `referencia_id`, 
+        `observaciones`, 
+        `fecha_registro`, 
+        `usuario_id`
+    ) VALUES (
+        NULL, 
+        ?,        -- 1. cliente_id (i)
+        ?,        -- 2. venta_id (i)
+        'abono',  -- (Fijo)
+        ?,        -- 3. monto (d)
+        '0.00',   -- (Fijo)
+        ?,        -- 4. monto_pagado_momento (d)
+        'PAGO_MANUAL', -- (Fijo)
+        ?,        -- 5. referencia_id (i)
+        ?,        -- 6. observaciones (s)
+        ?,        -- 7. fecha_registro (s)
+        ?         -- 8. usuario_id (i)
+    )";
+
+    $stmtLog = $this->db->prepare($sqlLog);
+    $obs = "Abono manual vía $metodo_pago. Ref Venta: #$venta_id";
+
+    // 8 letras "iiddissi" para 8 variables
+    $stmtLog->bind_param("iiddissi", 
+        $cliente_id,   // 1
+        $venta_id,     // 2
+        $monto,        // 3
+        $monto,        // 4 (mismo que monto)
+        $venta_id,     // 5 (referencia_id)
+        $obs,          // 6
+        $fecha_pago,   // 7
+        $usuario_id    // 8
+    );
+
+    return $stmtLog->execute();
+}
+public function abono_saldos($cliente_id, $monto, $venta_id, $fecha_pago) {
+    // 1. Definir la consulta SQL (6 columnas, 4 marcadores '?')
+    $sqlMaestra = "INSERT INTO `clientes_saldos` (
+        `id`, 
+        `cliente_id`, 
+        `saldo_a_favor`, 
+        `saldo_en_contra`, 
+        `ultima_venta_id`, 
+        `ultima_actualizacion`
+    ) VALUES (
+        NULL, 
+        ?,        -- 1. cliente_id (i)
+        '0.00',   -- (Fijo)
+        ?,        -- 2. saldo_en_contra (d)
+        ?,        -- 3. ultima_venta_id (i)
+        ?         -- 4. ultima_actualizacion (s)
+    ) 
+    ON DUPLICATE KEY UPDATE 
+        `saldo_en_contra` = `saldo_en_contra` - VALUES(`saldo_en_contra`),
+        `ultima_venta_id` = VALUES(`ultima_venta_id`),
+        `ultima_actualizacion` = VALUES(`ultima_actualizacion`)";
+
+    $stmtMaestra = $this->db->prepare($sqlMaestra);
+
+    // 4 letras "idis" para 4 variables
+    $stmtMaestra->bind_param("idis", 
+        $cliente_id,   // 1
+        $monto,        // 2
+        $venta_id,     // 3
+        $fecha_pago    // 4
+    );
+
+    return $stmtMaestra->execute();
+}
+public function abono_saldosAFavor($cliente_id, $monto, $venta_id, $fecha_pago) {
+    /**
+     * LÓGICA DEL SQL:
+     * 1. Restamos el abono del saldo_en_contra actual.
+     * 2. Si el resultado es < 0, significa que hay saldo a favor.
+     * 3. Usamos GREATEST(..., 0) para que la deuda nunca sea negativa.
+     * 4. Usamos ABS(...) y LEAST(..., 0) para capturar el excedente como saldo a favor.
+     */
+    $sqlMaestra = "INSERT INTO `clientes_saldos` (
+        `cliente_id`, 
+        `saldo_a_favor`, 
+        `saldo_en_contra`, 
+        `ultima_venta_id`, 
+        `ultima_actualizacion`
+    ) VALUES (
+        ?,        -- 1. cliente_id
+        '0.00',   
+        ?,        -- 2. monto del abono (para la resta inicial)
+        ?,        -- 3. ultima_venta_id
+        ?         -- 4. ultima_actualizacion
+    ) 
+    ON DUPLICATE KEY UPDATE 
+        -- Primero calculamos el nuevo saldo temporalmente para decidir a dónde va
+        -- Si (saldo_en_contra - monto) es negativo, el exceso va a saldo_a_favor
+        `saldo_a_favor` = CASE 
+            WHEN (`saldo_en_contra` + `saldo_a_favor` - VALUES(`saldo_en_contra`)) < 0 
+            THEN ABS(`saldo_en_contra` + `saldo_a_favor` - VALUES(`saldo_en_contra`))
+            ELSE 0.00 
+        END,
+        
+        -- El saldo_en_contra queda en el resultado de la resta, pero mínimo 0
+        `saldo_en_contra` = CASE 
+            WHEN (`saldo_en_contra` + `saldo_a_favor` - VALUES(`saldo_en_contra`)) > 0 
+            THEN (`saldo_en_contra` + `saldo_a_favor` - VALUES(`saldo_en_contra`))
+            ELSE 0.00 
+        END,
+        
+        `ultima_venta_id` = VALUES(`ultima_venta_id`),
+        `ultima_actualizacion` = VALUES(`ultima_actualizacion`)";
+
+    $stmtMaestra = $this->db->prepare($sqlMaestra);
+
+    // Tipos de datos: i (int), d (double/decimal), i (int), s (string)
+    $stmtMaestra->bind_param("idis", 
+        $cliente_id,   // 1
+        $monto,        // 2 (Se usa para restar en el UPDATE)
+        $venta_id,     // 3
+        $fecha_pago    // 4
+    );
+
+    return $stmtMaestra->execute();
+}
     }

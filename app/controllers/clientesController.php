@@ -17,6 +17,38 @@ $almacen_id = $_SESSION['almacen_id'] ?? 0;
 $almacenModel = new AlmacenModel($conexion);
 $almacenes = $almacenModel->getAlmacenes($almacen_usuario);
 
+if (isset($_GET['action']) && $_GET['action'] === 'obtenerEstadoCuenta') {
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+    
+    try {
+        $id = intval($_GET['id'] ?? 0);
+        if ($id <= 0) throw new Exception("ID de cliente no válido.");
+
+        // 1. Obtener el resumen rápido (Saldo total)
+        $resumen = ClientesModel::obtenerSaldoActual($conexion, $id);
+        
+        // 2. Obtener el historial detallado desde el LOG
+        $historial_res = ClientesModel::obtenerHistorialLog($conexion, $id);
+        $movimientos = [];
+        
+        if ($historial_res) {
+            while ($row = $historial_res->fetch_assoc()) {
+                $movimientos[] = $row;
+            }
+        }
+
+        echo json_encode([
+            'success' => true,
+            'resumen' => $resumen,
+            'movimientos' => $movimientos
+        ]);
+
+    } catch (Throwable $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit;
+}
 // --- ACCIÓN: GUARDAR / ACTUALIZAR CLIENTE (AJAX) ---
 if (isset($_GET['action']) && $_GET['action'] === 'guardar') {
     if (ob_get_level()) ob_clean(); 

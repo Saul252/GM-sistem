@@ -221,5 +221,19 @@ public function registrarAbono($venta_id, $monto, $usuario_id, $metodo_pago, $fe
     
     return $stmt->execute();
 }
+public static function obtenerClientePorVenta($conexion,$venta_id) {
+    try {
+        $sql = "SELECT id_cliente FROM ventas WHERE id = ? LIMIT 1";
+        $stmt = $conexion->prepare($sql);
+        $stmt->bind_param("i", $venta_id);
+        $stmt->execute();
+        $resultado = $stmt->get_result()->fetch_assoc();
+        
+        return $resultado ? intval($resultado['id_cliente']) : false;
+    } catch (Exception $e) {
+        error_log("Error al obtener cliente de la venta $venta_id: " . $e->getMessage());
+        return false;
+    }
+}
 
 }

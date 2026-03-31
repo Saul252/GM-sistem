@@ -730,6 +730,40 @@ CREATE TABLE `ventas` (
   `observaciones` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+
+-- 1. Tabla de Saldos Maestros
+-- Aquí guardamos cuánto debe el cliente en tiempo real
+CREATE TABLE `clientes_saldos` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `cliente_id` int(11) NOT NULL,
+  `saldo_en_contra` decimal(12,2) NOT NULL DEFAULT 0.00 COMMENT 'Lo que el cliente debe actualmente',
+  `actualizado_en` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_cliente_unico` (`cliente_id`),
+  CONSTRAINT `fk_saldos_cliente` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- 2. Tabla de Log de Movimientos
+-- Aquí se registra CADA incremento o decremento (Ventas, Abonos, Ajustes)
+CREATE TABLE `clientes_saldos_log` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `cliente_id` int(11) NOT NULL,
+  `venta_id` int(11) DEFAULT NULL COMMENT 'Relación si el cargo viene de una venta',
+  `usuario_id` int(11) NOT NULL COMMENT 'Quién registró el movimiento',
+  `tipo_movimiento` enum('cargo','abono','ajuste') NOT NULL,
+  `monto` decimal(12,2) NOT NULL COMMENT 'Cantidad que afecta el saldo',
+  `monto_operacion_total` decimal(12,2) DEFAULT 0.00 COMMENT 'Total de la venta original',
+  `monto_pagado_momento` decimal(12,2) DEFAULT 0.00 COMMENT 'Lo que pagó en ese instante',
+  `referencia_tipo` varchar(50) DEFAULT 'VENTA' COMMENT 'VENTA, PAGO_MANUAL, DEVOLUCION',
+  `observaciones` text DEFAULT NULL,
+  `fecha_registro` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_log_cliente` (`cliente_id`),
+  KEY `idx_log_venta` (`venta_id`),
+  CONSTRAINT `fk_log_cliente` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`),
+  CONSTRAINT `fk_log_venta` FOREIGN KEY (`venta_id`) REFERENCES `ventas` (`id`),
+  CONSTRAINT `fk_log_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 --
 -- Índices para tablas volcadas
 --

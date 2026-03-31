@@ -10,8 +10,11 @@ require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../controllers/LayoutController.php';
 require_once __DIR__ . '/../models/ventasHistorialModel.php';
 require_once __DIR__ . '/../models/ventas_model.php';
+require_once __DIR__ . '/../models/clientesModel.php';
+
 protegerPagina('ventashistorial');
 $ventasModel = new VentaHistorialModel($conexion);
+$clientesModel = new ClientesModel($conexion);
 
 $paginaActual = 'ventashistorial';
 
@@ -74,32 +77,68 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardarAbono') {
     header('Content-Type: application/json');
 
     try {
-        $venta_id   = intval($_POST['venta_id']);
-        $monto      = floatval($_POST['monto']);
-        $metodo     = $_POST['metodo_pago'] ?? 'Efectivo'; 
-        $usuario_id = $_SESSION['usuario_id'] ?? $_SESSION['id_usuario'] ?? 1;
+        // --- CAPTURA INICIAL ---
+        $v_id = intval($_POST['venta_id']);
+        $amt  = floatval($_POST['monto']);
+        $met  = $_POST['metodo_pago'] ?? 'Efectivo'; 
+        $u_id = $_SESSION['usuario_id'] ?? $_SESSION['id_usuario'] ?? 1;
+        $fec  = !empty($_POST['fecha_pago']) ? $_POST['fecha_pago'] : date('Y-m-d H:i:s');
 
-        // --- CAPTURA DE FECHA ---
-        // Si el JS mandó 'fecha_pago', la usamos. Si no, usamos la del servidor.
-        $fecha_pago = !empty($_POST['fecha_pago']) ? $_POST['fecha_pago'] : date('Y-m-d H:i:s');
+        error_log("--- INICIO DE PROCESO DE ABONO --- Venta: $v_id");
 
-        // IMPORTANTE: Asegúrate de que tu modelo reciba este 5to parámetro ($fecha_pago)
-        $resultado = $ventasModel->registrarAbono($venta_id, $monto, $usuario_id, $metodo, $fecha_pago);
+        // --- PASO 0: OBTENER EL CLIENTE REAL (Tu nueva función) ---
+        // Pasamos $this->db como la conexión que requiere tu función
+        $c_id = $ventasModel->obtenerClientePorVenta($conexion, $v_id);
+
+        if (!$c_id) {
+            error_log("ERROR CRÍTICO: No se encontró un cliente para la venta $v_id en la base de datos.");
+            throw new Exception("La venta #$v_id no tiene un cliente válido asociado.");
+        }
+        error_log("CLIENTE DETECTADO: ID $c_id (Validado desde DB)");
+
+        // --- PASO 1: REGISTRAR EN CAJA (Tu función original) ---
+        $resOriginal = $ventasModel->registrarAbono($v_id, $amt, $u_id, $met, $fec);
         
-        if ($resultado) {
-            echo json_encode(['status' => 'success']);
+        if ($resOriginal) {
+            error_log("PASO 1 EXITOSO: Guardado en historial_pagos.");
+
+            // --- PASO 2: LOG DE SALDOS (La función abono_saldos_log) ---
+            $resLog = $clientesModel->abono_saldos_log($c_id, $v_id, $amt, $u_id, $met, $fec);
+
+            if ($resLog) {
+                error_log("PASO 2 EXITOSO: Guardado en clientes_saldos_log.");
+
+                // --- PASO 3: ACTUALIZAR SALDO MAESTRO (La función abono_saldos) ---
+                $resSaldos = $clientesModel->abono_saldos($c_id, $amt, $v_id, $fec);
+
+                if ($resSaldos) {
+                    error_log("PASO 3 EXITOSO: Saldo restado en clientes_saldos. PROCESO FINALIZADO.");
+                    echo json_encode([
+                        'status' => 'success', 
+                        'message' => '¡Abono registrado y saldo actualizado correctamente!'
+                    ]);
+                } else {
+                    error_log("ERROR PASO 3: Falló abono_saldos (Maestra).");
+                    echo json_encode(['status' => 'warning', 'message' => 'Pago guardado, pero falló la actualización del saldo neto.']);
+                }
+            } else {
+                error_log("ERROR PASO 2: Falló abono_saldos_log.");
+                echo json_encode(['status' => 'warning', 'message' => 'Pago en caja OK, pero falló el registro en el historial de saldos.']);
+            }
         } else {
-            echo json_encode(['status' => 'error', 'message' => 'No se pudo insertar el registro del abono']);
+            error_log("ERROR PASO 1: Falló registrarAbono en ventasModel.");
+            echo json_encode(['status' => 'error', 'message' => 'No se pudo registrar el pago en caja.']);
         }
 
     } catch (Throwable $e) {
-        // Logueamos el error interno para depuración
-        error_log("Error en guardarAbono: " . $e->getMessage());
-        echo json_encode(['status' => 'error', 'message' => 'Ocurrió un error: ' . $e->getMessage()]);
+        error_log("FALLO GENERAL EN GUARDAR ABONO: " . $e->getMessage());
+        echo json_encode([
+            'status' => 'error', 
+            'message' => 'Error de sistema: ' . $e->getMessage()
+        ]);
     }
     exit;
 }
-
 // --- ACCIÓN: OBTENER DETALLE ---
 if (isset($_GET['action']) && $_GET['action'] === 'obtenerDetalle') {
     if (ob_get_level()) ob_clean();
@@ -115,7 +154,9 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerDetalle') {
     exit;
 }
 // --- ACCIÓN: CANCELAR VENTA (POST) ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['action'] === 'cancelarVenta') {
+
+// --- ACCIÓN: CANCELAR VENTA (POST) ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['action'] === 'cancelarVentaSinSaldo') {
     if (ob_get_level()) ob_clean();
     header('Content-Type: application/json');
 
@@ -145,6 +186,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['ac
     exit;
 }
 
+// --- ACCIÓN: CANCELAR VENTA (POST) ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['action'] === 'cancelarVenta') {
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+
+    try {
+        $input = json_decode(file_get_contents("php://input"), true);
+        $venta_id   = intval($input['id_venta'] ?? 0);
+        $motivo     = trim($input['motivo'] ?? 'Cancelación de venta');
+        $usuario_id = $_SESSION['usuario_id'] ?? 1;
+        $fecha_act  = date('Y-m-d H:i:s');
+
+        if ($venta_id <= 0) throw new Exception("ID de venta no válido.");
+
+        // --- PASO 1: OBTENER DETALLE COMPLETO ---
+        // Aprovechamos tu función que ya suma los pagos automáticamente
+        $detalle = $ventasModel->obtenerDetalleCompleto($venta_id);
+        
+        if (!$detalle || empty($detalle['info'])) {
+            throw new Exception("No se encontró la información de la venta #$venta_id");
+        }
+
+        $infoVenta    = $detalle['info'];
+        $cliente_id   = intval($infoVenta['id_cliente']);
+        $total_pagado = floatval($infoVenta['total_pagado'] ?? 0);
+
+        error_log("Procesando cancelación - Venta: $venta_id, Cliente: $cliente_id, Monto a devolver: $total_pagado");
+
+        // --- PASO 2: ABONAR AL SALDO (Si la venta tuvo pagos) ---
+        // Si el cliente ya había dado dinero, se lo regresamos como saldo a favor
+        if ($total_pagado > 0) {
+            
+            // A) Registrar en el Log de Saldos para auditoría
+            $obs_log = "Saldo recuperado por cancelación de Venta #$venta_id. Motivo: $motivo";
+            $clientesModel->abono_saldos_log(
+                $cliente_id, 
+                $venta_id, 
+                $total_pagado, 
+                $usuario_id, 
+                'AJUSTE', // Lo marcamos como ajuste/devolución
+                $fecha_act
+            );
+            
+            // B) Impactar tabla maestra (clientes_saldos)
+            // Tu función abono_saldos restará este monto del 'saldo_en_contra'
+            $clientesModel->abono_saldosAFavor(
+                $cliente_id, 
+                $total_pagado, 
+                $venta_id, 
+                $fecha_act
+            );
+        }
+
+        // --- PASO 3: CANCELAR LA VENTA ---
+        // Cambiamos el estado a 'cancelada' en la tabla ventas
+        $resultado = VentasModel::cancelarVenta($conexion, $venta_id, $usuario_id, $motivo);
+
+        // Agregamos el monto devuelto a la respuesta para que el Front-end avise al usuario
+        if ($resultado['status'] === 'success') {
+            $resultado['monto_devuelto'] = $total_pagado;
+        }
+
+        echo json_encode($resultado);
+
+    } catch (Throwable $e) {
+        error_log("Error en cancelación de venta: " . $e->getMessage());
+        echo json_encode([
+            'status'  => 'error', 
+            'message' => 'Error al cancelar: ' . $e->getMessage()
+        ]);
+    }
+    exit;
+}
 // --- CARGA DE VISTA ---
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     $tituloPagina = "Control de Entregas";

@@ -1,5 +1,5 @@
 window.procesarVenta = function() {
-    // 1. Validar que haya productos en el carrito global
+    // 1. Validar carrito
     if (!window.carrito || window.carrito.length === 0) {
         Swal.fire('Carrito vacío', 'Debes agregar al menos un producto.', 'warning');
         return;
@@ -12,23 +12,24 @@ window.procesarVenta = function() {
         return;
     }
 
-    // 3. Capturar valores de pago y totales del modal
+    // 3. Capturar valores de pago y totales
     const totalTexto = document.getElementById('totalFinalModal').innerText.replace(/[$,]/g, '');
     const totalVenta = parseFloat(totalTexto) || 0;
     const montoPagado = parseFloat(document.getElementById('monto_pagar').value) || 0;
     const metodoPago = document.getElementById('metodo_pago').value;
     const observaciones = document.getElementById('obsVenta').value;
 
-    // 4. Confirmación visual
+    // 4. Confirmación visual con estética limpia
     Swal.fire({
         title: '¿Finalizar Venta?',
         html: `Total: <b>$${totalVenta.toFixed(2)}</b><br>Recibido: <b>$${montoPagado.toFixed(2)}</b>`,
         icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#28a745',
-        cancelButtonColor: '#d33',
+        confirmButtonColor: '#007aff', // Azul iOS
+        cancelButtonColor: '#8e8e93',
         confirmButtonText: 'Sí, finalizar',
-        cancelButtonText: 'Cancelar'
+        cancelButtonText: 'Cancelar',
+        customClass: { popup: 'rounded-4' }
     }).then((result) => {
         if (result.isConfirmed) {
             
@@ -37,12 +38,12 @@ window.procesarVenta = function() {
             
             Swal.fire({
                 title: 'Procesando...',
-                text: 'Guardando venta y actualizando stock...',
+                text: 'Validando saldos y actualizando stock...',
                 allowOutsideClick: false,
                 didOpen: () => { Swal.showLoading(); }
             });
 
-            // 5. MAPEO DEL CARRITO CON DATOS DE ENTREGA
+            // 5. Mapeo del carrito (Manteniendo tu lógica de entrega parcial)
             const carritoFinal = window.carrito.map((item, index) => {
                 const inputEntrega = document.querySelector(`.input-entrega-modal[data-index="${index}"]`);
                 let entregado = item.entrega_hoy; 
@@ -61,8 +62,9 @@ window.procesarVenta = function() {
                 };
             });
 
-            // 6. Preparar objeto de envío
+            // 6. Preparar objeto de envío (Añadimos 'accion' para el controlador)
             const datos = {
+                accion: 'guardar_venta', // <--- IMPORTANTE para tu controlador
                 id_cliente: parseInt(idCliente),
                 descuento: 0,
                 monto_pagado: montoPagado,
@@ -72,8 +74,8 @@ window.procesarVenta = function() {
                 carrito: carritoFinal
             };
 
-            // 7. Envío al servidor
-            fetch('/cfsistem/app/backend/ventas/procesar_venta.php', {
+            // 7. Envío al Controlador Central
+            fetch('/cfsistem/app/controllers/ventasController.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(datos)
@@ -83,29 +85,37 @@ window.procesarVenta = function() {
                 return res.json();
             })
             .then(res => {
-              if (res.status === 'success') {
-                    // 1. Determinar si es éxito total o parcial para el icono
-                    const iconoFinal = res.entregado_total ? 'success' : 'warning';
-                    const tituloFinal = res.entregado_total ? '¡Venta Exitosa!' : 'Atención: Entrega Incompleta';
+                if (res.status === 'success') {
+                    console.log("entro al controller")
+                    // Si el monto pagado fue menor al total, mostramos aviso de deuda en el éxito
+                    const tieneDeuda = montoPagado < totalVenta;
+                    const iconoFinal = res.total_entregado >= res.total_pedido ? 'success' : 'warning';
+                    
+                    let htmlExtra = `<p class="mb-1">Folio generado: <b>${res.folio}</b></p>`;
+                    if(tieneDeuda) {
+                        htmlExtra += `<div class="badge rounded-pill bg-danger-subtle text-danger border border-danger-child mb-2 px-3 py-2" style="font-size:0.75rem">
+                                        ⚠️ Saldo pendiente registrado en cuenta
+                                      </div>`;
+                    }
 
                     Swal.fire({
-                        title: tituloFinal,
-                        // 2. USAR EL MENSAJE DETALLADO DEL PHP (res.message)
+                        title: res.total_entregado >= res.total_pedido ? '¡Venta Exitosa!' : 'Entrega Parcial',
                         html: `
-                            <div class="alert ${res.entregado_total ? 'alert-success' : 'alert-warning'} border-0 small shadow-sm text-start">
-                                ${res.message}
+                            <div class="alert alert-light border-0 small shadow-sm text-start py-2">
+                                ${res.message || 'Operación realizada correctamente.'}
                             </div>
-                            <p class="mb-1">Folio generado: <b>${res.folio}</b></p>
-                            <p class="text-muted small">¿Deseas imprimir el ticket ahora?</p>
+                            ${htmlExtra}
+                            <p class="text-muted small">¿Deseas imprimir el ticket?</p>
                         `,
                         icon: iconoFinal,
                         showDenyButton: true,
                         showCancelButton: true,
-                        confirmButtonText: '<i class="bi bi-currency-dollar"></i> Con Precios',
-                        denyButtonText: '<i class="bi bi-hash"></i> Sin Precios',
+                        confirmButtonText: '<i class="bi bi-receipt"></i> Con Precios',
+                        denyButtonText: '<i class="bi bi-receipt"></i> Sin Precios',
                         cancelButtonText: 'Cerrar',
                         confirmButtonColor: '#198754',
                         denyButtonColor: '#0dcaf0',
+                        customClass: { popup: 'rounded-4' }
                     }).then((result) => {
                         let url = '';
                         if (result.isConfirmed) {
@@ -116,22 +126,18 @@ window.procesarVenta = function() {
 
                         if (url !== '') {
                             window.open(url, '_blank');
-                            location.reload(); 
-                        } else {
-                            location.reload();
                         }
+                        location.reload(); 
                     });
                 } else {
-                    // Error crítico (ej: stock 0 absoluto o error de SQL)
                     Swal.fire('Error al procesar', res.message || 'Error desconocido', 'error');
                     if(btnFinalizar) btnFinalizar.disabled = false;
                 }
             })
             .catch(err => {
                 console.error("Error en Fetch:", err);
-                Swal.fire('Error Crítico', 'No se pudo conectar con el servidor.', 'error');
-                const btnFinalizarBtn = document.querySelector('#modalFinalizarVenta .btn-primary');
-                if(btnFinalizarBtn) btnFinalizarBtn.disabled = false;
+                Swal.fire('Error Crítico', 'No se pudo conectar con el controlador.', 'error');
+                if(btnFinalizar) btnFinalizar.disabled = false;
             });
         }
     });

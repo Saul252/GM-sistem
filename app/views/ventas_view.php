@@ -180,122 +180,7 @@
         </div>
     </div>
 
-    <div class="modal fade" id="modalFinalizarVenta" tabindex="-1">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-receipt-cutoff me-2"></i>Finalizar Transacción</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <div class="row g-4">
-                        <div class="col-lg-7 border-end">
-                            <h6 class="text-uppercase fw-bold mb-3 text-primary">Detalle de Salida de Material</h6>
-                            <div class="table-responsive" style="max-height: 350px;">
-                                <table class="table table-hover align-middle">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Producto</th>
-                                            <th class="text-center">Venta</th>
-                                            <th class="text-center">Entregar Hoy</th>
-                                            <th class="text-end">Subtotal</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="tablaConfirmacion"></tbody>
-                                </table>
-                            </div>
-                            <div class="card bg-primary bg-opacity-10 border-0 mt-3">
-                                <div class="card-body p-3 text-end">
-                                    <input type="hidden" id="descuentoGeneral" value="0">
-                                    <span class="text-muted small d-block fw-bold text-uppercase">Total a Cobrar</span>
-                                    <h2 class="fw-bold mb-0 text-primary">$<span id="totalFinalModal">0.00</span></h2>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-5">
-                            <h6 class="text-uppercase fw-bold mb-3 text-primary">Información del Cliente</h6>
-                            <div class="input-group mb-3">
-                                <select id="selectCliente" class="form-select border-primary">
-                                    <?php foreach($clientes as $c): 
-    $almacen_usuario = $_SESSION['almacen_id'] ?? 0;
-        // Lógica de filtro doble en la vista
-        $esAdmin = ($almacen_usuario == 0);
-        $esSuAlmacen = ($c['almacen_id'] == $almacen_usuario);
-        $esGlobal = (is_null($c['almacen_id']) || $c['almacen_id'] == '');
-        $esPublicoGeneral = ($c['rfc'] === 'XAXX010101000');
-
-        // Solo mostramos si es admin O si cumple alguna condición de vendedor
-        if ($esAdmin || $esSuAlmacen || $esGlobal || $esPublicoGeneral): 
-    ?>
-                                    <option value="<?= $c['id'] ?>" data-rfc="<?= $c['rfc'] ?>"
-                                        data-rs="<?= $c['razon_social'] ?>" data-cp="<?= $c['codigo_postal'] ?>"
-                                        data-regimen="<?= $c['regimen_fiscal'] ?>">
-                                        <?= htmlspecialchars($c['nombre_comercial']) ?>
-                                    </option>
-                                    <?php 
-        endif; 
-    endforeach; 
-    ?>
-                                </select>
-                                <button class="btn btn-outline-primary" type="button"
-                                    onclick="abrirModalNuevoCliente()">
-                                    <i class="bi bi-person-plus"></i>
-                                </button>
-                            </div>
-
-                            <div class="p-3 border rounded mb-3 bg-white shadow-sm">
-                                <div class="row g-2">
-                                    <div class="col-12"><small class="text-muted d-block text-uppercase"
-                                            style="font-size: 0.7rem;">Razón Social:</small><span id="f_razon_social"
-                                            class="fw-bold small text-truncate d-block">---</span></div>
-                                    <div class="col-6"><small class="text-muted d-block text-uppercase"
-                                            style="font-size: 0.7rem;">RFC:</small><span id="f_rfc"
-                                            class="fw-bold">---</span></div>
-                                    <div class="col-6"><small class="text-muted d-block text-uppercase"
-                                            style="font-size: 0.7rem;">Régimen:</small><span id="f_regimen"
-                                            class="badge bg-info">---</span></div>
-                                </div>
-                            </div>
-
-                            <div class="p-3 border rounded mb-3 bg-light border-success border-opacity-25">
-                                <h6 class="text-uppercase fw-bold mb-3 small text-success"><i
-                                        class="bi bi-cash-coin"></i> Registro de Pago</h6>
-                                <div class="row g-2">
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-bold">Monto Recibido</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text bg-success text-white border-success">$</span>
-                                            <input type="number" id="monto_pagar"
-                                                class="form-control border-success fw-bold text-success" value="0"
-                                                step="0.01" min="0">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-bold">Método</label>
-                                        <select id="metodo_pago" class="form-select border-success">
-                                            <option value="Efectivo">Efectivo</option>
-                                            <option value="Transferencia">Transferencia</option>
-                                            <option value="Tarjeta">Tarjeta</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div id="pago_aviso" class="small mt-2 text-center fw-bold"></div>
-                            </div>
-                            <textarea id="obsVenta" class="form-control" rows="2"
-                                placeholder="Notas adicionales..."></textarea>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer bg-light border-0">
-                    <button class="btn btn-link text-muted me-auto" data-bs-dismiss="modal">Cerrar</button>
-                    <button class="btn btn-success btn-lg px-5 shadow fw-bold" onclick="procesarVenta()">
-                        <i class="bi bi-check-circle-fill"></i> FINALIZAR VENTA
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+    
 
     <div class="modal fade" id="modalNuevoCliente" tabindex="-1" aria-labelledby="modalNuevoClienteLabel"
         aria-hidden="true">
@@ -397,6 +282,7 @@
             </div>
         </div>
     </div>
+ <?php require_once __DIR__ . '/ventasModales/finalizarVenta.php'; ?>
 
     <?php cargarScripts(); ?>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -427,18 +313,6 @@
         else aviso.innerHTML = '';
     });
 
-    document.getElementById('selectCliente').addEventListener('change', function() {
-        const selected = this.options[this.selectedIndex];
-        document.getElementById('f_rfc').textContent = selected?.dataset.rfc || '---';
-        document.getElementById('f_razon_social').textContent = selected?.dataset.rs || '---';
-        document.getElementById('f_regimen').textContent = selected?.dataset.regimen || '---';
-    });
-
-    document.addEventListener('DOMContentLoaded', () => {
-        const select = document.getElementById('selectCliente');
-        if (select) select.dispatchEvent(new Event('change'));
-    });
-
     function validarYAgregar(btn) {
         const fila = btn.closest('tr');
         const modo = fila.querySelector('.select-modo-venta')?.value || 'individual';
@@ -459,7 +333,9 @@
         if (typeof agregarProducto === "function") agregarProducto(btn);
         inputCant.value = 1; // Reset
     }
+  
     </script>
+    
 </body>
 
 </html>
