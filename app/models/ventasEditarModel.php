@@ -220,14 +220,34 @@ class VentaHistorialModel {
                     $dv_id = $this->db->insert_id;
                 } else {
                     // Actualizar Existente
-                    $actual = $this->db->query("SELECT cantidad_entregada FROM detalle_venta WHERE id = $dv_id")->fetch_assoc();
-                    if ($n_cant < $actual['cantidad_entregada']) {
-                        throw new Exception("Error: No puedes reducir la cantidad por debajo de lo ya entregado.");
-                    }
-                    // IMPORTANTE: Se agrega tipo_precio y precio_unitario al UPDATE
-                    $stmtUpd = $this->db->prepare("UPDATE detalle_venta SET cantidad = ?, precio_unitario = ?, subtotal = ?, tipo_precio = ? WHERE id = ?");
-                    $stmtUpd->bind_param("ddssi", $n_cant, $precio, $subtotal_fila, $tipo_p, $dv_id);
-                    $stmtUpd->execute();
+                    // Consultamos lo que está en la DB antes de cambiarlo
+$resActual = $this->db->query("SELECT producto_id, cantidad_entregada FROM detalle_venta WHERE id = $dv_id")->fetch_assoc();
+$p_id = $resActual['producto_id'];
+$cant_entregada_db = floatval($resActual['cantidad_entregada']);
+
+// LÓGICA DE REINGRESO: Si la nueva cantidad total ($n_cant) es MENOR a lo que ya se entregó
+if ($n_cant < $cant_entregada_db) {
+    $diferencia_a_devolver = $cant_entregada_db - $n_cant;
+
+    // 1. Devolver al Stock
+    $stmtInv = $this->db->prepare("UPDATE inventario SET stock = stock + ? WHERE producto_id = ? AND almacen_id = ?");
+    $stmtInv->bind_param("dii", $diferencia_a_devolver, $p_id, $almacen_id);
+    $stmtInv->execute();
+
+    // 2. Registrar en Kardex
+    $obs = "AJUSTE EDICIÓN: Devolución de $diferencia_a_devolver unidades (Venta $v_id)";
+    $stmtMov = $this->db->prepare("INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_origen_id, usuario_registra_id, referencia_id, observaciones) VALUES (?, 'entrada', ?, ?, ?, ?, ?)");
+    $stmtMov->bind_param("idiiss", $p_id, $diferencia_a_devolver, $almacen_id, $u_id, $v_id, $obs);
+    $stmtMov->execute();
+
+    // 3. Ajustar la entrega en el detalle para que no supere a la nueva cantidad total
+    $this->db->query("UPDATE detalle_venta SET cantidad_entregada = $n_cant WHERE id = $dv_id");
+}
+
+// Finalmente, actualizar los datos generales de la fila (Precio, Subtotal, Cantidad Total)
+$stmtUpd = $this->db->prepare("UPDATE detalle_venta SET cantidad = ?, precio_unitario = ?, subtotal = ?, tipo_precio = ? WHERE id = ?");
+$stmtUpd->bind_param("ddssi", $n_cant, $precio, $subtotal_fila, $tipo_p, $dv_id);
+$stmtUpd->execute();
                 }
 
                 // 5. LÓGICA DE STOCK Y ENTREGAS HOY

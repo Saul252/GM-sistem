@@ -20,56 +20,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($data['accion'])) {
     try {
         $id_usuario = $_SESSION['usuario_id'] ?? 1;
 
-        if ($data['accion'] === 'guardar_venta') {
-            error_log("CF_SYSTEM_LOG: Iniciando guardado de venta");
-            error_log("CF_SYSTEM_LOG: Datos recibidos: " . json_encode($data));
+      if ($data['accion'] === 'guardar_venta') {
+    error_log("CF_SYSTEM_LOG: Iniciando guardado de venta");
+    
+    // 1. Capturamos el permiso del switch
+    $usar_check = isset($data['usar_saldo_favor']) ? intval($data['usar_saldo_favor']) : 0;
+    $monto_credito = isset($data['monto_usused_favor']) ? floatval($data['monto_usused_favor']) : 0;
 
-            // Cambiamos a guardarVentaRapida que es la función que revisamos antes
-           $resultado = VentasModel::procesarVenta($conexion, $data, $id_usuario);
+    // 2. SOLO sumar si el check está activo
+    // Si no está activo, el monto_pagado se queda tal cual llegó del input tecleado
+    if ($usar_check === 1 && $monto_credito > 0) {
+        $data['monto_pagado'] = floatval($data['monto_pagado']) + $monto_credito;
+    } else {
+        $data['monto_pagado'] = floatval($data['monto_pagado']);
+        // Forzamos a 0 el crédito usado para que no haya errores en cascada
+        $data['monto_usado_favor'] = 0; 
+    }
+
+    error_log("CF_SYSTEM_LOG: Monto final a procesar: " . $data['monto_pagado']);
+
+    // 3. Procesar la venta con el monto ya verificado
+    $resultado = VentasModel::procesarVenta($conexion, $data, $id_usuario);
+    
+    if ($resultado['status'] === 'success') {
+        $id_venta = $resultado['id_venta'] ?? 0;
+        $id_cliente = intval($data['id_cliente'] ?? 0);
+        $fecha_actual = date('Y-m-d H:i:s');
+
+        // 4. Lógica de afectación de tablas de saldo (Solo si se usó el check)
+        if ($usar_check === 1 && $monto_credito > 0 && $id_venta > 0) {
+            $modeloSaldos = new ClientesModel($conexion); 
+            $ajuste_negativo = $monto_credito * -1;
             
-            
-            error_log("CF_SYSTEM_LOG: Respuesta de VentasModel: " . json_encode($resultado));
-
-            if ($resultado['status'] === 'success') {
-                
-                $id_venta = $resultado['id_venta'] ?? 0; // Usamos el ID que viene del modelo
-                $id_cliente = intval($data['id_cliente'] ?? 0); // Ajustado a 'id_cliente' como en el JS
-                $fecha_actual = date('Y-m-d H:i:s');
-
-                // PASO 3: Validar datos de Saldo a Favor
-                $usar_check = isset($data['usar_saldo_favor']) ? intval($data['usar_saldo_favor']) : 0;
-                $monto_solicitado = isset($data['monto_usado_favor']) ? floatval($data['monto_usado_favor']) : 0;
-
-                error_log("CF_SYSTEM_LOG: Intento de uso de saldo -> Check: $usar_check, Monto: $monto_solicitado");
-
-                if ($usar_check === 1 && $monto_solicitado > 0 && $id_venta > 0) {
-                    error_log("CF_SYSTEM_LOG: Entrando a la lógica de descuento de saldo para cliente: $id_cliente");
-                    
-                    $modeloSaldos = new ClientesModel($conexion); 
-
-                    // Ajuste negativo para restar del saldo_a_favor
-                    $ajuste_negativo = $monto_solicitado * -1;
-                    
-                    // PASO 4: Ejecutar actualización maestra (Usando $id_cliente e $id_venta consistentes)
-                    $resMaestra = $modeloSaldos->abono_saldosAFavor($id_cliente, $ajuste_negativo, $id_venta, $fecha_actual);
-                    error_log("CF_SYSTEM_LOG: Resultado abono_saldosAFavor: " . ($resMaestra ? 'EXITO' : 'FALLO'));
-
-                    // PASO 5: Ejecutar Log
-                    $resLog = $modeloSaldos->abono_saldos_log(
-                        $id_cliente, 
-                        $id_venta, 
-                        $monto_solicitado, 
-                        $id_usuario, 
-                        'USO_SALDO_A_FAVOR', 
-                        $fecha_actual
-                    );
-                    error_log("CF_SYSTEM_LOG: Resultado abono_saldos_log: " . ($resLog ? 'EXITO' : 'FALLO'));
-                } else {
-                    error_log("CF_SYSTEM_LOG: Se saltó la lógica de saldo (Check: $usar_check, Monto: $monto_solicitado, ID Venta: $id_venta)");
-                }
-            }
-            echo json_encode($resultado);
+            $modeloSaldos->abono_saldosAFavor($id_cliente, $ajuste_negativo, $id_venta, $fecha_actual);
+            $modeloSaldos->abono_saldos_log($id_cliente, $id_venta, $monto_credito, $id_usuario, 'USO_SALDO_A_FAVOR', $fecha_actual);
         }
+    }
+    echo json_encode($resultado);
+}
     } catch (Exception $e) {
         error_log("CF_SYSTEM_LOG: ERROR CRÍTICO: " . $e->getMessage());
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);

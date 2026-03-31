@@ -109,7 +109,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardarAbono') {
                 error_log("PASO 2 EXITOSO: Guardado en clientes_saldos_log.");
 
                 // --- PASO 3: ACTUALIZAR SALDO MAESTRO (La función abono_saldos) ---
-                $resSaldos = $clientesModel->abono_saldos($c_id, $amt, $v_id, $fec);
+                $resSaldos = $clientesModel->abono_saldosAFavor($c_id, $amt, $v_id, $fec);
 
                 if ($resSaldos) {
                     error_log("PASO 3 EXITOSO: Saldo restado en clientes_saldos. PROCESO FINALIZADO.");

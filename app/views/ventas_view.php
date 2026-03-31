@@ -286,55 +286,13 @@
 
     <?php cargarScripts(); ?>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="/cfsistem/app/backend/js_ventas/carrito.js"></script>
+   
     <script src="/cfsistem/app/backend/js_ventas/filtros.js"></script>
     <script src="/cfsistem/app/backend/js_ventas/nuevo_cliente.js"></script>
     <script src="/cfsistem/app/backend/js_ventas/modal_finalizar.js"></script>
     
 
-    <script>
-    // Lógica de validación de pago y avisos
-
-    document.getElementById('monto_pagar').addEventListener('input', function() {
-        const totalTexto = document.getElementById('totalFinalModal').innerText.replace(/,/g, '');
-        const totalFinal = parseFloat(totalTexto) || 0;
-        let valor = parseFloat(this.value) || 0;
-        const aviso = document.getElementById('pago_aviso');
-
-        if (valor < 0) this.value = 0;
-        else if (valor > totalFinal) this.value = totalFinal;
-
-        if (valor === totalFinal && totalFinal > 0) aviso.innerHTML =
-            '<span class="text-success"><i class="bi bi-check-all"></i> PAGO COMPLETO</span>';
-        else if (valor > 0 && valor < totalFinal) aviso.innerHTML =
-            '<span class="text-warning"><i class="bi bi-pie-chart"></i> PAGO PARCIAL</span>';
-        else if (valor === 0 && totalFinal > 0) aviso.innerHTML =
-            '<span class="text-danger"><i class="bi bi-exclamation-triangle"></i> CRÉDITO</span>';
-        else aviso.innerHTML = '';
-    });
-
-    function validarYAgregar(btn) {
-        const fila = btn.closest('tr');
-        const modo = fila.querySelector('.select-modo-venta')?.value || 'individual';
-        const inputCant = fila.querySelector('.cantidad');
-        const factor = parseFloat(fila.dataset.factor) || 1;
-        const stockDisponible = parseFloat(fila.querySelector('.badge').innerText);
-
-        let cantidadUsuario = parseFloat(inputCant.value) || 0;
-        let cantidadReal = (modo === 'referencia') ? (cantidadUsuario * factor) : cantidadUsuario;
-
-        // if (cantidadReal > stockDisponible) {
-        //     Swal.fire('Stock insuficiente', `No puedes agregar ${cantidadReal} unidades. Stock: ${stockDisponible}`,
-        //         'error');
-        //     return;
-        // }
-
-        inputCant.value = cantidadReal; // Ajuste temporal para agregarProducto
-        if (typeof agregarProducto === "function") agregarProducto(btn);
-        inputCant.value = 1; // Reset
-    }
-  
-    </script>
+    
     
 </body>
 

@@ -257,10 +257,74 @@ public static function procesarVenta($conexion, $data, $id_usuario) {
         return ['status' => 'error', 'message' => $e->getMessage()];
     }
 }
-/**
- * Obtiene el ID del cliente asociado a una venta específica
- * @param int $venta_id
- * @return int|false Retorna el ID del cliente o false si no existe
- */
+public static function cancelarEntregaProductos($conexion, $id_venta, $productos, $id_usuario, $motivo = 'Devolución parcial') {
+    $conexion->begin_transaction();
+
+    try {
+        // 1. Obtener datos de la venta (Almacén y Folio)
+        $stmtV = $conexion->prepare("SELECT folio, almacen_id, estado_general FROM ventas WHERE id = ? FOR UPDATE");
+        $stmtV->bind_param("i", $id_venta);
+        $stmtV->execute();
+        $venta = $stmtV->get_result()->fetch_assoc();
+
+        if (!$venta) throw new Exception("La venta no existe.");
+        if ($venta['estado_general'] === 'cancelada') throw new Exception("No se puede ajustar una venta ya cancelada.");
+
+        $id_almacen = $venta['almacen_id'];
+        $folio = $venta['folio'];
+
+        // 2. Procesar el array de productos a devolver
+        // Estructura esperada: $productos = [ ['id' => 5, 'cant' => 2], ['id' => 8, 'cant' => 1] ]
+        foreach ($productos as $item) {
+            $p_id = intval($item['id']);
+            $cant_a_devolver = floatval($item['cant']);
+
+            if ($cant_a_devolver <= 0) continue;
+
+            // A. Verificar cuánto se ha entregado realmente en detalle_venta
+            $stmtD = $conexion->prepare("SELECT cantidad_entregada FROM detalle_venta WHERE venta_id = ? AND producto_id = ?");
+            $stmtD->bind_param("ii", $id_venta, $p_id);
+            $stmtD->execute();
+            $detalle = $stmtD->get_result()->fetch_assoc();
+
+            if (!$detalle) throw new Exception("Producto ID $p_id no encontrado en el detalle de esta venta.");
+            
+            $entregado_actual = floatval($detalle['cantidad_entregada']);
+
+            // Validación crítica: No devolver más de lo que salió
+            if ($cant_a_devolver > $entregado_actual) {
+                throw new Exception("Error: Intentas devolver $cant_a_devolver del producto $p_id, pero solo se entregaron $entregado_actual.");
+            }
+
+            // B. Restar de cantidad_entregada en el detalle
+            $stmtUpdDet = $conexion->prepare("UPDATE detalle_venta SET cantidad_entregada = cantidad_entregada - ? WHERE venta_id = ? AND producto_id = ?");
+            $stmtUpdDet->bind_param("dii", $cant_a_devolver, $id_venta, $p_id);
+            $stmtUpdDet->execute();
+
+            // C. Reingreso al Inventario
+            $stmtInv = $conexion->prepare("UPDATE inventario SET stock = stock + ? WHERE producto_id = ? AND almacen_id = ?");
+            $stmtInv->bind_param("dii", $cant_a_devolver, $p_id, $id_almacen);
+            $stmtInv->execute();
+
+            // D. Registro en Movimientos (Kardex)
+            $mov_obs = "DEVOLUCIÓN PARCIAL - Folio: $folio. Motivo: $motivo";
+            $stmtMov = $conexion->prepare("INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_origen_id, usuario_registra_id, referencia_id, observaciones) 
+                                           VALUES (?, 'entrada', ?, ?, ?, ?, ?)");
+            $stmtMov->bind_param("idiiss", $p_id, $cant_a_devolver, $id_almacen, $id_usuario, $id_venta, $mov_obs);
+            $stmtMov->execute();
+        }
+
+        // 3. Actualizar el estado de entrega de la venta (Opcional)
+        // Esto es para que si devolviste todo, la venta pase a 'pendiente' o 'parcial'
+        // Pero como mencionaste que hay ENUMS que dan error, solo lo haremos si es necesario.
+
+        $conexion->commit();
+        return ['status' => 'success', 'message' => "Se ajustaron las entregas del folio $folio correctamente."];
+
+    } catch (Exception $e) {
+        $conexion->rollback();
+        return ['status' => 'error', 'message' => $e->getMessage()];
+    }
+}
 
 }

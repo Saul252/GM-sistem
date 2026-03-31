@@ -311,7 +311,7 @@ public static function obtenerEstatus($conexion, $id) {
         -- Calculamos el saldo neto para que el JS siga funcionando igual
         -- Si es positivo: debe (saldo_en_contra)
         -- Si es negativo: tiene a favor (saldo_a_favor)
-        (s.saldo_en_contra - s.saldo_a_favor) AS saldo_neto,
+        ( s.saldo_a_favor) AS saldo_neto,
         
         CASE 
             WHEN s.saldo_en_contra > s.saldo_a_favor THEN 'CON DEUDA'
@@ -408,36 +408,61 @@ public function abono_saldos_log($cliente_id, $venta_id, $monto, $usuario_id, $m
 
     return $stmtLog->execute();
 }
-public function abono_saldos($cliente_id, $monto, $venta_id, $fecha_pago) {
-    // 1. Definir la consulta SQL (6 columnas, 4 marcadores '?')
+public function abono_saldos($cliente_id, $monto_ajuste, $venta_id, $fecha_pago) {
+    // 1. CONSULTAR SALDO ACTUAL
+    $stmtSelect = $this->db->prepare("SELECT saldo_a_favor, saldo_en_contra FROM clientes_saldos WHERE cliente_id = ?");
+    $stmtSelect->bind_param("i", $cliente_id);
+    $stmtSelect->execute();
+    $res = $stmtSelect->get_result()->fetch_assoc();
+
+    // Si no existe el registro, inicializamos en 0
+    $saldo_f_actual = floatval($res['saldo_a_favor'] ?? 0);
+    $saldo_c_actual = floatval($res['saldo_en_contra'] ?? 0);
+
+    /**
+     * 2. CALCULAR NUEVO ESTADO
+     * * Recordatorio: 
+     * - Si $monto_ajuste es POSITIVO (bajó el precio), es un abono/saldo a favor.
+     * - Si $monto_ajuste es NEGATIVO (subió el precio), es un cargo/deuda.
+     * * Neto actual = Saldo a favor - Saldo en contra
+     */
+    $neto_actual = $saldo_f_actual - $saldo_c_actual;
+    $nuevo_neto = $neto_actual + $monto_ajuste;
+
+    $nuevo_saldo_a_favor = 0;
+    $nuevo_saldo_en_contra = 0;
+
+    if ($nuevo_neto >= 0) {
+        // El cliente tiene dinero a su favor
+        $nuevo_saldo_a_favor = $nuevo_neto;
+        $nuevo_saldo_en_contra = 0;
+    } else {
+        // El cliente debe dinero (neto negativo)
+        $nuevo_saldo_a_favor = 0;
+        $nuevo_saldo_en_contra = abs($nuevo_neto);
+    }
+
+    // 3. ACTUALIZAR O INSERTAR (Upsert)
     $sqlMaestra = "INSERT INTO `clientes_saldos` (
-        `id`, 
         `cliente_id`, 
         `saldo_a_favor`, 
         `saldo_en_contra`, 
         `ultima_venta_id`, 
         `ultima_actualizacion`
-    ) VALUES (
-        NULL, 
-        ?,        -- 1. cliente_id (i)
-        '0.00',   -- (Fijo)
-        ?,        -- 2. saldo_en_contra (d)
-        ?,        -- 3. ultima_venta_id (i)
-        ?         -- 4. ultima_actualizacion (s)
-    ) 
+    ) VALUES (?, ?, ?, ?, ?) 
     ON DUPLICATE KEY UPDATE 
-        `saldo_en_contra` = `saldo_en_contra` - VALUES(`saldo_en_contra`),
+        `saldo_a_favor` = VALUES(`saldo_a_favor`),
+        `saldo_en_contra` = VALUES(`saldo_en_contra`),
         `ultima_venta_id` = VALUES(`ultima_venta_id`),
         `ultima_actualizacion` = VALUES(`ultima_actualizacion`)";
 
     $stmtMaestra = $this->db->prepare($sqlMaestra);
-
-    // 4 letras "idis" para 4 variables
-    $stmtMaestra->bind_param("idis", 
-        $cliente_id,   // 1
-        $monto,        // 2
-        $venta_id,     // 3
-        $fecha_pago    // 4
+    $stmtMaestra->bind_param("iddis", 
+        $cliente_id, 
+        $nuevo_saldo_a_favor, 
+        $nuevo_saldo_en_contra, 
+        $venta_id, 
+        $fecha_pago
     );
 
     return $stmtMaestra->execute();

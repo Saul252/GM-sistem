@@ -214,7 +214,7 @@ function crearFilaProducto(d) {
             </td>
             <td class="text-end fw-bold subtotal-fila">$0.00</td>
             <td class="text-center">
-                ${d.entregado_prev <= 0 ? `<button type="button" class="btn btn-sm text-danger" onclick="eliminarFila(this)"><i class="bi bi-trash"></i></button>` : `<i class="bi bi-lock-fill text-muted"></i>`}
+                 <button type="button" class="btn btn-sm text-danger" onclick="eliminarFila(this)"><i class="bi bi-trash"></i></button>
             </td>
         </tr>`;
 }

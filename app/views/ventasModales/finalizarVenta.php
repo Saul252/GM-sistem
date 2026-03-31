@@ -347,171 +347,489 @@
 </div>
 
 <script>
-    document.getElementById('selectCliente').addEventListener('change', function() {
+    // Cache de elementos DOM para evitar búsquedas repetidas
+    const elements = {
+        selectCliente: document.getElementById('selectCliente'),
+        f_rfc: document.getElementById('f_rfc'),
+        f_razon_social: document.getElementById('f_razon_social'),
+        f_regimen: document.getElementById('f_regimen'),
+        widgetEstadoCuenta: document.getElementById('widgetEstadoCuenta'),
+        listaMovimientos: document.getElementById('listaMovimientos'),
+        widgetHeader: document.getElementById('widgetHeader'),
+        contenedorSaldoFavor: document.getElementById('contenedorSaldoFavor'),
+        checkUsarSaldo: document.getElementById('checkUsarSaldo'),
+        lblSaldoTotal: document.getElementById('lblSaldoTotal'),
+        txtUltimaCarga: document.getElementById('txtUltimaCarga'),
+        widgetBadge: document.getElementById('widgetBadge'),
+        modalFinalizarVenta: document.getElementById('modalFinalizarVenta')
+    };
+
+    // Cache del formateador de moneda
+    const _fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+
+    // Debounce para evitar múltiples peticiones rápidas
+    let debounceTimer;
+    let currentController;
+
+    elements.selectCliente.addEventListener('change', function() {
         const selected = this.options[this.selectedIndex];
         
         // 1. Actualizar textos de la ficha fiscal
-        document.getElementById('f_rfc').textContent = selected?.dataset.rfc || '---';
-        document.getElementById('f_razon_social').textContent = selected?.dataset.rs || '---';
-        document.getElementById('f_regimen').textContent = selected?.dataset.regimen || '---';
+        elements.f_rfc.textContent = selected?.dataset.rfc || '---';
+        elements.f_razon_social.textContent = selected?.dataset.rs || '---';
+        elements.f_regimen.textContent = selected?.dataset.regimen || '---';
 
-        // 2. Ejecutar consulta de estatus financiero
+        // 2. Ejecutar consulta de estatus financiero con debounce
         const idCliente = this.value;
         if (idCliente) {
-            consultarEstatusFinanciero(idCliente);
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => consultarEstatusFinanciero(idCliente), 300);
         }
     });
 
     // Función para realizar la petición al servidor
-  function consultarEstatusFinanciero(id) {
-    const $widget = document.getElementById('widgetEstadoCuenta');
-    const $lista = document.getElementById('listaMovimientos');
-    const $header = document.getElementById('widgetHeader');
-    const _fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+    function consultarEstatusFinanciero(id) {
+        const $widget = elements.widgetEstadoCuenta;
+        const $lista = elements.listaMovimientos;
+        const $header = elements.widgetHeader;
 
-    if (!$widget || !$lista) return;
+        if (!$widget || !$lista) return;
 
-    $widget.style.display = 'block';
-    $lista.innerHTML = `<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-secondary"></div></div>`;
-
-   fetch(`/cfsistem/app/controllers/ventasController.php?action=obtenerEstatusCliente&id=${id}`)
-    .then(r => r.json())
-    .then(data => {
-        if (!data || data.nombre_comercial === undefined) throw new Error("Datos no encontrados");
-
-        const res = data; 
-        const saldo = parseFloat(res.saldo_neto || 0); 
-        const condicion = res.estatus_financiero || 'AL DIA';
-
-        // --- 1. LÓGICA DEL SWITCH DE SALDO A FAVOR ---
-        const saldoAFavor = parseFloat(res.saldo_a_favor || 0);
-        saldoDisponibleCliente = saldoAFavor; // Actualizamos la variable global
-
-        const $panelSaldo = document.getElementById('contenedorSaldoFavor');
-        const $chkSaldo = document.getElementById('checkUsarSaldo');
-
-        if (saldoAFavor > 0) {
-            $panelSaldo.style.display = 'block'; // Muestra el contenedor verde
-        } else {
-            $panelSaldo.style.display = 'none';  // Lo oculta si no hay saldo
-            $chkSaldo.checked = false;           // Resetea el switch
-            toggleSaldoInput();                  // Oculta el input de cantidad
-        }
-        // ----------------------------------------------
-
-        // --- Lógica de Colores del Header ---
-        $header.className = ''; 
-        if (condicion === 'CON DEUDA') {
-            $header.classList.add('widget-header-deuda');
-        } else if (condicion === 'SALDO A FAVOR') {
-            $header.classList.add('widget-header-ok'); 
-        } else {
-            $header.classList.add('widget-header-neutral');
+        // Cancelar petición anterior si existe
+        if (currentController) {
+            currentController.abort();
         }
 
-        // Actualizar montos principales
-        document.getElementById('lblSaldoTotal').textContent = _fmt.format(Math.abs(saldo));
-        document.getElementById('txtUltimaCarga').textContent = `Corte: ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+        $widget.style.display = 'block';
+        $lista.innerHTML = `<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-secondary"></div></div>`;
 
-        // Badge dinámico
-        let icon = 'bi-check-circle-fill';
-        if (condicion === 'CON DEUDA') icon = 'bi-exclamation-triangle-fill';
-        else if (condicion === 'SALDO A FAVOR') icon = 'bi-plus-circle-fill';
+        // Usar AbortController para cancelar peticiones
+        currentController = new AbortController();
 
-        document.getElementById('widgetBadge').innerHTML = `
-            <span style="background:rgba(255,255,255,0.2);color:white;font-size:0.6rem;font-weight:700;padding:3px 10px;border-radius:20px;">
-                <i class="bi ${icon} me-1"></i>${condicion}
-            </span>`;
+        fetch(`/cfsistem/app/controllers/ventasController.php?action=obtenerEstatusCliente&id=${id}`, { 
+            signal: currentController.signal 
+        })
+        .then(r => r.json())
+        .then(data => {
+            currentController = null;
+            if (!data || data.nombre_comercial === undefined) throw new Error("Datos no encontrados");
 
-        // Resumen en el cuerpo
-        $lista.innerHTML = `
-            <div class="p-2 small">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="text-muted">Por Pagar:</span>
-                    <span class="fw-bold text-danger">${_fmt.format(res.saldo_en_contra || 0)}</span>
-                </div>
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <span class="text-muted">A Favor:</span>
-                    <span class="fw-bold text-success">${_fmt.format(res.saldo_a_favor || 0)}</span>
-                </div>
-                <hr class="my-1" style="opacity:0.1">
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="text-muted">Estado:</span>
-                    <span class="fw-bold ${saldo > 0 ? 'text-danger' : 'text-success'}">
-                        ${condicion === 'CON DEUDA' ? 'Pendiente de Pago' : (condicion === 'SALDO A FAVOR' ? 'Crédito Disponible' : 'Sin Adeudos')}
-                    </span>
-                </div>
-            </div>`;
-    })
-    .catch(err => {
-        console.error("Error:", err);
-        $lista.innerHTML = `<div class="text-center p-2 text-danger small">Error al consultar estatus</div>`;
-    });
-}
+            const res = data; 
+            const saldo = parseFloat(res.saldo_neto || 0); 
+            const condicion = res.estatus_financiero || 'AL DIA';
+
+            // --- 1. LÓGICA DEL SWITCH DE SALDO A FAVOR ---
+            const saldoAFavor = parseFloat(res.saldo_a_favor || 0);
+            saldoDisponibleCliente = saldoAFavor; // Actualizamos la variable global
+
+            const $panelSaldo = elements.contenedorSaldoFavor;
+            const $chkSaldo = elements.checkUsarSaldo;
+
+            if (saldoAFavor > 0) {
+                $panelSaldo.style.display = 'block'; // Muestra el contenedor verde
+            } else {
+                $panelSaldo.style.display = 'none';  // Lo oculta si no hay saldo
+                $chkSaldo.checked = false;           // Resetea el switch
+                toggleSaldoInput();                  // Oculta el input de cantidad
+            }
+            // ----------------------------------------------
+
+            // --- Lógica de Colores del Header ---
+            $header.className = ''; 
+            if (condicion === 'CON DEUDA') {
+                $header.classList.add('widget-header-deuda');
+            } else if (condicion === 'SALDO A FAVOR') {
+                $header.classList.add('widget-header-ok'); 
+            } else {
+                $header.classList.add('widget-header-neutral');
+            }
+
+            // Actualizar montos principales
+            elements.lblSaldoTotal.textContent = _fmt.format(Math.abs(saldo));
+            elements.txtUltimaCarga.textContent = `Corte: ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+
+            // Badge dinámico - cache de iconos
+            const iconMap = {
+                'CON DEUDA': 'bi-exclamation-triangle-fill',
+                'SALDO A FAVOR': 'bi-plus-circle-fill',
+                'default': 'bi-check-circle-fill'
+            };
+            const icon = iconMap[condicion] || iconMap.default;
+
+            elements.widgetBadge.innerHTML = `
+                <span style="background:rgba(255,255,255,0.2);color:white;font-size:0.6rem;font-weight:700;padding:3px 10px;border-radius:20px;">
+                    <i class="bi ${icon} me-1"></i>${condicion}
+                </span>`;
+
+            // Resumen en el cuerpo - cache de strings
+            const saldoEnContra = _fmt.format(res.saldo_en_contra || 0);
+            const saldoAFavorFmt = _fmt.format(res.saldo_a_favor || 0);
+            const estadoColor = saldo > 0 ? 'text-danger' : 'text-success';
+            const estadoTexto = condicion === 'CON DEUDA' ? 'Pendiente de Pago' : 
+                              (condicion === 'SALDO A FAVOR' ? 'Crédito Disponible' : 'Sin Adeudos');
+
+            $lista.innerHTML = `
+                <div class="p-2 small">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-muted">Por Pagar:</span>
+                        <span class="fw-bold text-danger">${saldoEnContra}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-muted">A Favor:</span>
+                        <span class="fw-bold text-success">${saldoAFavorFmt}</span>
+                    </div>
+                    <hr class="my-1" style="opacity:0.1">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Estado:</span>
+                        <span class="fw-bold ${estadoColor}">${estadoTexto}</span>
+                    </div>
+                </div>`;
+        })
+        .catch(err => {
+            currentController = null;
+            if (err.name !== 'AbortError') {
+                console.error("Error:", err);
+                $lista.innerHTML = `<div class="text-center p-2 text-danger small">Error al consultar estatus</div>`;
+            }
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
-        const select = document.getElementById('selectCliente');
+        const select = elements.selectCliente;
         // Esto dispara el cambio inicial para el cliente seleccionado por defecto
         if (select) select.dispatchEvent(new Event('change'));
 
         // También forzamos el disparo cuando el modal de Bootstrap termina de abrirse
-        const modal = document.getElementById('modalFinalizarVenta');
+        const modal = elements.modalFinalizarVenta;
         if (modal) {
             modal.addEventListener('shown.bs.modal', () => {
                 if (select) select.dispatchEvent(new Event('change'));
             });
         }
     });
+
     let saldoDisponibleCliente = 0;
 
-function toggleSaldoInput() {
-    const chk = document.getElementById('checkUsarSaldo');
-    const container = document.getElementById('inputSaldoContainer');
-    const input = document.getElementById('monto_usar_favor');
-    
-    container.style.display = chk.checked ? 'block' : 'none';
-    if (!chk.checked) input.value = 0;
-}
-
-function validarMontoMaximo(input) {
-    const valor = parseFloat(input.value) || 0;
-    if (valor > saldoDisponibleCliente) {
-        input.value = saldoDisponibleCliente;
+    function toggleSaldoInput() {
+        const chk = elements.checkUsarSaldo;
+        const container = document.getElementById('inputSaldoContainer');
+        const input = document.getElementById('monto_usar_favor');
+        
+        container.style.display = chk.checked ? 'block' : 'none';
+        if (!chk.checked) input.value = 0;
     }
-}
+
+    function validarMontoMaximo(input) {
+        const valor = parseFloat(input.value) || 0;
+        if (valor > saldoDisponibleCliente) {
+            input.value = saldoDisponibleCliente;
+        }
+    }
+    // Escuchar cuando se activa/desactiva el switch de saldo
+document.getElementById('checkUsarSaldo')?.addEventListener('change', function() {
+    toggleSaldoInput(); // Muestra/oculta el input
+    actualizarTotalesUI(); // Recalcula todo
+});
+
+// Escuchar cuando el usuario escribe manualmente cuánto crédito usar
+document.getElementById('monto_usar_favor')?.addEventListener('input', function() {
+    validarMontoMaximo(this); // No dejar que use más de lo que tiene
+    actualizarTotalesUI(); // Recalcula todo
+});
 </script>
 <script>
-    window.procesarVenta = function() {
-    // 1. Validar carrito
-    if (!window.carrito || window.carrito.length === 0) {
-        Swal.fire('Carrito vacío', 'Debes agregar al menos un producto.', 'warning');
+    // Lógica de validación de pago y avisos
+document.getElementById('monto_pagar').addEventListener('input', function() {
+    const modal = document.getElementById('totalFinalModal');
+    const totalOriginal = parseFloat(modal.dataset.totalOriginal) || 0;
+    const totalVisual = parseFloat(modal.innerText.replace(/[$,]/g, '')) || 0;
+    const chkSaldo = document.getElementById('checkUsarSaldo');
+    const aviso = document.getElementById('pago_aviso');
+    
+    let valorTecleado = parseFloat(this.value) || 0;
+
+    // Validación de límites
+    if (valorTecleado < 0) this.value = 0;
+    if (valorTecleado > totalVisual) this.value = totalVisual.toFixed(2);
+    valorTecleado = parseFloat(this.value) || 0;
+
+    // Crear Leyenda si usa créditos
+    let leyenda = '';
+    if (chkSaldo?.checked) {
+        leyenda = `<div class="mt-2 p-2 bg-primary-subtle text-primary border rounded-3" style="font-size:0.8rem">
+            <i class="bi bi-info-circle-fill me-1"></i> Tu compra es de <b>${_fmtMXN.format(totalOriginal)}</b> porque estás usando tus créditos.
+        </div>`;
+    }
+
+    // Estado del pago (Completo, Parcial, etc)
+    let estado = '';
+    if (totalVisual === 0 && totalOriginal > 0) {
+        estado = '<span class="text-success fw-bold">CUBIERTO CON CRÉDITO</span>';
+    } else if (valorTecleado === totalVisual && totalVisual > 0) {
+        estado = '<span class="text-success fw-bold">PAGO COMPLETO</span>';
+    } else if (valorTecleado > 0) {
+        estado = '<span class="text-warning fw-bold">PAGO PARCIAL</span>';
+    } else {
+        estado = '<span class="text-danger fw-bold">CRÉDITO (DEUDA)</span>';
+    }
+
+    aviso.innerHTML = estado + leyenda;
+});
+    function validarYAgregar(btn) {
+        const fila = btn.closest('tr');
+        const modo = fila.querySelector('.select-modo-venta')?.value || 'individual';
+        const inputCant = fila.querySelector('.cantidad');
+        const factor = parseFloat(fila.dataset.factor) || 1;
+        const stockDisponible = parseFloat(fila.querySelector('.badge').innerText);
+
+        let cantidadUsuario = parseFloat(inputCant.value) || 0;
+        let cantidadReal = (modo === 'referencia') ? (cantidadUsuario * factor) : cantidadUsuario;
+
+        // if (cantidadReal > stockDisponible) {
+        //     Swal.fire('Stock insuficiente', `No puedes agregar ${cantidadReal} unidades. Stock: ${stockDisponible}`,
+        //         'error');
+        //     return;
+        // }
+
+        inputCant.value = cantidadReal; // Ajuste temporal para agregarProducto
+        if (typeof agregarProducto === "function") agregarProducto(btn);
+        inputCant.value = 1; // Reset
+    }
+  
+</script>
+   
+<script>
+/**
+ * SISTEMA DE VENTAS - Gestión de Carrito (Optimizado)
+ */
+window.carrito = window.carrito || [];
+
+// Formateador de moneda reutilizable
+const _fmtMXN = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+
+/**
+ * 1. AGREGAR PRODUCTO AL CARRITO
+ */
+window.agregarProducto = function(btn) {
+    const fila = btn.closest("tr");
+    const { productoId, almacenId, almacen } = btn.dataset;
+    const { factor: fStr, reporteNom } = fila.dataset;
+    
+    const producto_id = parseInt(productoId || btn.getAttribute("data-producto-id"));
+    const almacen_id = parseInt(almacenId);
+    const factor = parseFloat(fStr) || 1;
+
+    const nombre = fila.cells[1].innerText; 
+    const cantidadInput = fila.querySelector(".cantidad");
+    const modoVenta = fila.querySelector(".select-modo-venta")?.value || 'individual';
+    
+    let cantidadBase = (modoVenta === 'referencia') ? factor : (parseFloat(cantidadInput.value) || 0);
+
+    const selectPrecio = fila.querySelector(".select-precio");
+    const precioUnitario = parseFloat(selectPrecio.value) || 0;
+    const textoPrecio = selectPrecio.options[selectPrecio.selectedIndex].text.toLowerCase();
+    const tipo_p = textoPrecio.includes("dist") ? "distribuidor" : (textoPrecio.includes("may") ? "mayorista" : "minorista");
+
+    if (cantidadBase <= 0) {
+        Swal.fire('Atención', 'Ingresa una cantidad válida', 'warning');
         return;
     }
 
-    // 2. Validar Cliente
+    const itemExistente = window.carrito.find(item => 
+        item.producto_id === producto_id && item.almacen_id === almacen_id && item.tipo_precio === tipo_p
+    );
+
+    if (itemExistente) {
+        itemExistente.cantidad += cantidadBase;
+    } else {
+        window.carrito.push({
+            producto_id, 
+            almacen_id, 
+            almacen_nombre: almacen, 
+            nombre,
+            cantidad: cantidadBase,
+            entrega_hoy: cantidadBase,
+            precio_unitario: precioUnitario,
+            tipo_precio: tipo_p,
+            factor: factor,
+            unidad_reporte: reporteNom || 'Fact.'
+        });
+    }
+
+    window.renderCarrito();
+    cantidadInput.value = 1;
+};
+
+/**
+ * 2. RENDERIZAR TABLA
+ */
+window.renderCarrito = function() {
+    const tablaBody = document.querySelector("#tablaCarrito tbody");
+    if (!tablaBody) return;
+    
+    // Generamos el HTML en un array para un solo "paint" al final
+    const htmlCarrito = window.carrito.map((item, index) => {
+        const cantFactor = Math.floor(item.cantidad / item.factor);
+        const cantPza = Math.round((item.cantidad % item.factor) * 100) / 100;
+        item.subtotal = item.cantidad * item.precio_unitario;
+
+        return `
+            <tr data-index="${index}">
+                <td><small>${item.almacen_nombre}</small></td>
+                <td><div class="fw-bold" style="font-size: 0.8rem;">${item.nombre}</div></td>
+                <td>
+                    <input type="number" class="form-control form-control-sm text-center input-factor-cambio" 
+                        data-index="${index}" value="${cantFactor}" min="0" step="1">
+                </td>
+                <td>
+                    <input type="number" class="form-control form-control-sm text-center input-pza-cambio" 
+                        data-index="${index}" value="${cantPza}" min="0" step="any">
+                </td>
+                <td class="text-end fw-bold subtotal-celda">$${item.subtotal.toFixed(2)}</td>
+                <td>
+                    <button type="button" class="btn btn-link text-danger p-0 btn-remove-item" data-index="${index}">
+                        <i class="bi bi-x-circle"></i>
+                    </button>
+                </td>
+            </tr>`;
+    }).join('');
+
+    tablaBody.innerHTML = htmlCarrito;
+    actualizarTotalesUI();
+};
+
+/**
+ * 3. LÓGICA DE CÁLCULO SINCRONIZADA
+ */
+document.addEventListener('input', (e) => {
+    const target = e.target;
+    if (target.classList.contains('input-factor-cambio') || target.classList.contains('input-pza-cambio')) {
+        const index = target.dataset.index;
+        const item = window.carrito[index];
+        const tr = target.closest('tr');
+        
+        const valFactor = parseFloat(tr.querySelector('.input-factor-cambio').value) || 0;
+        const valPza = parseFloat(tr.querySelector('.input-pza-cambio').value) || 0;
+
+        item.cantidad = (valFactor * item.factor) + valPza;
+        item.subtotal = item.cantidad * item.precio_unitario;
+        item.entrega_hoy = item.cantidad;
+
+        tr.querySelector('.subtotal-celda').innerText = `$${item.subtotal.toFixed(2)}`;
+        actualizarTotalesUI();
+    }
+});
+
+/**
+ * 4. LÓGICA DE BRINCO
+ */
+document.addEventListener('change', (e) => {
+    if (e.target.matches('.input-factor-cambio, .input-pza-cambio')) {
+        window.renderCarrito();
+    }
+});
+
+/**
+ * FUNCIÓN PARA ACTUALIZAR TOTALES GLOBALES
+ */
+function actualizarTotalesUI() {
+    const totalVentaReal = window.carrito.reduce((acc, item) => acc + (item.cantidad * item.precio_unitario), 0);
+    
+    const elTotal = document.getElementById("total");
+    const elTotalModal = document.getElementById("totalFinalModal");
+    const elPago = document.getElementById("monto_pagar");
+    const elSaldoFavor = document.getElementById("monto_usar_favor");
+    const chkSaldo = document.getElementById("checkUsarSaldo");
+
+    // 1. Guardamos el total real de la mercancía (sin descuentos de crédito aún)
+    if (elTotalModal) elTotalModal.dataset.totalOriginal = totalVentaReal.toFixed(2);
+    if (elTotal) elTotal.innerText = totalVentaReal.toFixed(2);
+
+    let montoPorCobrar = totalVentaReal;
+    
+    // 2. Si el switch está activo, restamos el crédito del total visual
+    if (chkSaldo?.checked) {
+        const creditoAUsar = parseFloat(elSaldoFavor.value) || 0;
+        montoPorCobrar = Math.max(0, totalVentaReal - creditoAUsar);
+    }
+
+    // 3. Actualizamos el número que el usuario ve en el modal (lo que falta pagar)
+    if (elTotalModal) elTotalModal.innerText = montoPorCobrar.toFixed(2);
+
+    // 4. Ponemos por defecto el monto a pagar y disparamos el aviso de la leyenda
+    if (elPago) {
+        elPago.value = montoPorCobrar.toFixed(2);
+        elPago.dispatchEvent(new Event('input')); 
+    }
+}// Eliminar item
+document.addEventListener('click', (e) => {
+    const btnDelete = e.target.closest('.btn-remove-item');
+    if (btnDelete) {
+        window.carrito.splice(btnDelete.dataset.index, 1);
+        window.renderCarrito();
+    }
+});
+
+</script>
+
+<script>
+  window.procesarVenta = function() {
+    // 1. Validaciones de integridad
+    if (!window.carrito || window.carrito.length === 0) {
+        Swal.fire({
+            title: 'Carrito vacío',
+            text: 'Debes agregar al menos un producto.',
+            icon: 'warning',
+            customClass: { popup: 'rounded-4' }
+        });
+        return;
+    }
+
     const idCliente = document.getElementById('selectCliente').value;
     if (!idCliente) {
-        Swal.fire('Falta Cliente', 'Por favor selecciona un cliente para la venta.', 'warning');
+        Swal.fire({
+            title: 'Falta Cliente',
+            text: 'Por favor selecciona un cliente para la venta.',
+            icon: 'warning',
+            customClass: { popup: 'rounded-4' }
+        });
         return;
     }
 
-    // 3. Capturar valores de pago y totales
-    const totalTexto = document.getElementById('totalFinalModal').innerText.replace(/[$,]/g, '');
-    const totalVenta = parseFloat(totalTexto) || 0;
-    const montoPagado = parseFloat(document.getElementById('monto_pagar').value) || 0;
+    // 2. Captura de montos y estados
+    const elTotalModal = document.getElementById('totalFinalModal');
+    const totalOriginalVenta = parseFloat(elTotalModal.dataset.totalOriginal) || 0;
+    const efectivoRecibido = parseFloat(document.getElementById('monto_pagar').value) || 0;
+    const creditoAplicado = document.getElementById('checkUsarSaldo').checked 
+                            ? (parseFloat(document.getElementById('monto_usar_favor').value) || 0) 
+                            : 0;
+    
+    // La suma que enviamos como pago total al controlador
+    const pagoTotalEnviado = efectivoRecibido + creditoAplicado;
+
     const metodoPago = document.getElementById('metodo_pago').value;
     const observaciones = document.getElementById('obsVenta').value;
 
-    // 4. Confirmación visual con estética limpia
+    // 3. Confirmación Visual Estilo iOS
     Swal.fire({
         title: '¿Finalizar Venta?',
-        html: `Total: <b>$${totalVenta.toFixed(2)}</b><br>Recibido: <b>$${montoPagado.toFixed(2)}</b>`,
+        html: `
+            <div class="text-center mb-2">
+                <span class="text-muted d-block small">Total a registrar</span>
+                <h3 class="fw-bold" style="color: #007aff;">$${pagoTotalEnviado.toFixed(2)}</h3>
+            </div>
+            <div class="p-2 rounded-3 bg-light small text-start">
+                <div class="d-flex justify-content-between"><span>Efectivo:</span> <b>$${efectivoRecibido.toFixed(2)}</b></div>
+                <div class="d-flex justify-content-between"><span>Créditos:</span> <b>$${creditoAplicado.toFixed(2)}</b></div>
+            </div>
+        `,
         icon: 'question',
         showCancelButton: true,
         confirmButtonColor: '#007aff', // Azul iOS
         cancelButtonColor: '#8e8e93',
         confirmButtonText: 'Sí, finalizar',
         cancelButtonText: 'Cancelar',
-        customClass: { popup: 'rounded-4' }
+        customClass: { popup: 'rounded-4 border-0' }
     }).then((result) => {
         if (result.isConfirmed) {
             
@@ -520,19 +838,16 @@ function validarMontoMaximo(input) {
             
             Swal.fire({
                 title: 'Procesando...',
-                text: 'Validando saldos y actualizando stock...',
+                text: 'Sincronizando stock y saldos...',
                 allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading(); }
+                didOpen: () => { Swal.showLoading(); },
+                customClass: { popup: 'rounded-4' }
             });
 
-            // 5. Mapeo del carrito (Manteniendo tu lógica de entrega parcial)
+            // 4. Mapeo del carrito (Lógica de despacho)
             const carritoFinal = window.carrito.map((item, index) => {
                 const inputEntrega = document.querySelector(`.input-entrega-modal[data-index="${index}"]`);
-                let entregado = item.entrega_hoy; 
-                if (inputEntrega) {
-                    entregado = parseFloat(inputEntrega.value);
-                }
-
+                let entregado = inputEntrega ? parseFloat(inputEntrega.value) : item.cantidad;
                 return {
                     producto_id: parseInt(item.producto_id),
                     almacen_id: parseInt(item.almacen_id),
@@ -544,53 +859,49 @@ function validarMontoMaximo(input) {
                 };
             });
 
-            // 6. Preparar objeto de envío (Añadimos 'accion' para el controlador)
+            // 5. Envío al Controlador
             const datos = {
-                accion: 'guardar_venta', // <--- IMPORTANTE para tu controlador
+                accion: 'guardar_venta',
                 id_cliente: parseInt(idCliente),
-                descuento: 0,
-                monto_pagado: montoPagado,
+                monto_pagado: efectivoRecibido,
+                monto_usado_favor: creditoAplicado,
+                total_venta: pagoTotalEnviado, 
                 metodo_pago: metodoPago,
-                total_venta: totalVenta,
                 observaciones: observaciones,
                 carrito: carritoFinal,
-                   usar_saldo_favor: document.getElementById('checkUsarSaldo').checked ? 1 : 0,
-                monto_usado_favor: parseFloat(document.getElementById('monto_usar_favor').value) || 0
-           
+                usar_saldo_favor: creditoAplicado > 0 ? 1 : 0
             };
 
-            // 7. Envío al Controlador Central
             fetch('/cfsistem/app/controllers/ventasController.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(datos)
             })
-            .then(res => {
-                if (!res.ok) throw new Error('Error en la respuesta del servidor');
-                return res.json();
-            })
+            .then(res => res.json())
             .then(res => {
                 if (res.status === 'success') {
-                    console.log("entro al controller")
-                    // Si el monto pagado fue menor al total, mostramos aviso de deuda en el éxito
-                    const tieneDeuda = montoPagado < totalVenta;
-                    const iconoFinal = res.total_entregado >= res.total_pedido ? 'success' : 'warning';
+                    // Lógica de mensajes post-venta
+                    const tieneDeuda = pagoTotalEnviado < totalOriginalVenta;
+                    const esEntregaTotal = res.total_entregado >= res.total_pedido;
+                    const iconoFinal = esEntregaTotal ? 'success' : 'warning';
                     
-                    let htmlExtra = `<p class="mb-1">Folio generado: <b>${res.folio}</b></p>`;
+                    let htmlExtra = `<p class="mb-2">Folio: <span class="badge bg-light text-dark border">${res.folio}</span></p>`;
+                    
                     if(tieneDeuda) {
-                        htmlExtra += `<div class="badge rounded-pill bg-danger-subtle text-danger border border-danger-child mb-2 px-3 py-2" style="font-size:0.75rem">
-                                        ⚠️ Saldo pendiente registrado en cuenta
-                                      </div>`;
+                        htmlExtra += `
+                            <div class="alert alert-danger py-1 px-2 border-0 mb-2" style="font-size:0.75rem; border-radius:10px;">
+                                <i class="bi bi-exclamation-circle-fill me-1"></i> Saldo pendiente registrado en cuenta
+                            </div>`;
                     }
 
                     Swal.fire({
-                        title: res.total_entregado >= res.total_pedido ? '¡Venta Exitosa!' : 'Entrega Parcial',
+                        title: esEntregaTotal ? '¡Venta Exitosa Material Entregable Desde Despachos!' : 'Entrega Parcial Material Posiblemente Entregable Desde Despachos',
                         html: `
-                            <div class="alert alert-light border-0 small shadow-sm text-start py-2">
+                            <div class="alert alert-light border-0 small text-start py-2 mb-3" style="background:#f2f2f7; border-radius:12px;">
                                 ${res.message || 'Operación realizada correctamente.'}
                             </div>
                             ${htmlExtra}
-                            <p class="text-muted small">¿Deseas imprimir el ticket?</p>
+                            <p class="text-muted small mb-0">¿Deseas imprimir el comprobante?</p>
                         `,
                         icon: iconoFinal,
                         showDenyButton: true,
@@ -598,33 +909,32 @@ function validarMontoMaximo(input) {
                         confirmButtonText: '<i class="bi bi-receipt"></i> Con Precios',
                         denyButtonText: '<i class="bi bi-receipt"></i> Sin Precios',
                         cancelButtonText: 'Cerrar',
-                        confirmButtonColor: '#198754',
-                        denyButtonColor: '#0dcaf0',
-                        customClass: { popup: 'rounded-4' }
+                        confirmButtonColor: '#34c759', // Verde iOS
+                        denyButtonColor: '#5856d6',    // Indigo iOS
+                        customClass: { popup: 'rounded-4 border-0 shadow-lg' }
                     }).then((result) => {
                         let url = '';
-                        if (result.isConfirmed) {
-                            url = `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`;
-                        } else if (result.isDenied) {
-                            url = `/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=${res.id_venta}`;
-                        }
+                        if (result.isConfirmed) url = `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`;
+                        else if (result.isDenied) url = `/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=${res.id_venta}`;
 
-                        if (url !== '') {
-                            window.open(url, '_blank');
-                        }
+                        if (url !== '') window.open(url, '_blank');
                         location.reload(); 
                     });
                 } else {
-                    Swal.fire('Error al procesar', res.message || 'Error desconocido', 'error');
+                    Swal.fire({
+                        title: 'Error',
+                        text: res.message || 'Error desconocido',
+                        icon: 'error',
+                        customClass: { popup: 'rounded-4' }
+                    });
                     if(btnFinalizar) btnFinalizar.disabled = false;
                 }
             })
             .catch(err => {
-                console.error("Error en Fetch:", err);
-                Swal.fire('Error Crítico', 'No se pudo conectar con el controlador.', 'error');
+                console.error("Error:", err);
+                Swal.fire('Error Crítico', 'No se pudo conectar con el servidor.', 'error');
                 if(btnFinalizar) btnFinalizar.disabled = false;
             });
         }
     });
-}
-</script>
+}</script>
