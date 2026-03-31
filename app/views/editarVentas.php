@@ -307,9 +307,20 @@ function agregarFilaNueva(p) {
     recalculateAll();
 }
 
+let filasEliminadas = []; 
+
+// --- Reemplaza tu función eliminarFila por esta ---
 function eliminarFila(btn) {
+    let tr = $(btn).closest('tr');
+    let idDetalle = tr.data('id');
+
+    // Si la fila ya existía en la base de datos (id > 0), guardamos el ID
+    if (idDetalle > 0) {
+        filasEliminadas.push(idDetalle);
+    }
+
     huboEliminacion = true;
-    $(btn).closest('tr').remove(); 
+    tr.remove(); 
     recalculateAll();
 }
 
@@ -321,7 +332,8 @@ function enviarEdicion() {
         id_cliente: $('#edit_cliente_id').val(),
         nuevo_total: nuevoTotal,
         almacen_id: $('#formEditarVenta').data('almacen-id'),
-        productos: []
+        productos: [],
+        eliminados: filasEliminadas // <--- Agregamos los IDs a eliminar
     };
     
     $('#detallesEdicion tr').each(function() {

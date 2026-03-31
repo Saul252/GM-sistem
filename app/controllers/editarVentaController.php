@@ -187,6 +187,7 @@ public function guardarEdicionVentaSaldoAFavor() {
             echo json_encode(["status" => "error", "message" => $e->getMessage()]);
         }
     }
+    
 
 /**
      * Obtiene el catálogo de productos disponibles para el almacén de la venta.

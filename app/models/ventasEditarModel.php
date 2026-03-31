@@ -171,7 +171,43 @@ class VentaHistorialModel {
             $v_id = intval($data['venta_id']);
             $u_id = intval($data['usuario_id']);
             $almacen_id = intval($data['almacen_id']);
+// --- BLOQUE NUEVO: PROCESAR ELIMINACIONES ---
+        if (!empty($data['eliminados'])) {
+            foreach ($data['eliminados'] as $dv_id) {
+                $dv_id = intval($dv_id);
 
+                // 1. Obtener info del producto y cantidad entregada antes de borrar
+                $sqlInfo = "SELECT producto_id, cantidad_entregada FROM detalle_venta WHERE id = ?";
+                $stmtInfo = $this->db->prepare($sqlInfo);
+                $stmtInfo->bind_param("i", $dv_id);
+                $stmtInfo->execute();
+                $resDetalle = $stmtInfo->get_result()->fetch_assoc();
+
+                if ($resDetalle) {
+                    $p_id = $resDetalle['producto_id'];
+                    $cant_entregada = floatval($resDetalle['cantidad_entregada']);
+
+                    // A. ELIMINAR DEPENDENCIAS (Evita el Foreign Key Error)
+                    // Borramos los registros de salida física vinculados a esta fila
+                    $this->db->query("DELETE FROM detalle_entrega WHERE detalle_venta_id = $dv_id");
+
+                    // B. DEVOLVER STOCK (Si ya se había entregado algo)
+                    if ($cant_entregada > 0) {
+                        $this->db->query("UPDATE inventario SET stock = stock + $cant_entregada 
+                                         WHERE producto_id = $p_id AND almacen_id = $almacen_id");
+
+                        // C. REGISTRAR EN KARDEX
+                        $obs = "ELIMINACIÓN DE PRODUCTO EN EDICIÓN - Venta ID: $v_id";
+                        $stmtK = $this->db->prepare("INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_origen_id, usuario_registra_id, referencia_id, observaciones) VALUES (?, 'entrada', ?, ?, ?, ?, ?)");
+                        $stmtK->bind_param("idiiss", $p_id, $cant_entregada, $almacen_id, $u_id, $v_id, $obs);
+                        $stmtK->execute();
+                    }
+
+                    // D. BORRAR LA FILA DEL DETALLE DE VENTA
+                    $this->db->query("DELETE FROM detalle_venta WHERE id = $dv_id");
+                }
+            }
+        }
             // --- CAPTURAMOS EL TOTAL ANTERIOR ANTES DE ACTUALIZAR ---
             $v_prev = $this->db->query("SELECT folio, total, id_cliente FROM ventas WHERE id = $v_id")->fetch_assoc();
             $total_anterior = floatval($v_prev['total']);
@@ -219,35 +255,62 @@ class VentaHistorialModel {
                     $stmtIns->execute();
                     $dv_id = $this->db->insert_id;
                 } else {
-                    // Actualizar Existente
-                    // Consultamos lo que está en la DB antes de cambiarlo
+                    // 1. Consultar estado actual antes de cualquier cambio
 $resActual = $this->db->query("SELECT producto_id, cantidad_entregada FROM detalle_venta WHERE id = $dv_id")->fetch_assoc();
-$p_id = $resActual['producto_id'];
-$cant_entregada_db = floatval($resActual['cantidad_entregada']);
 
-// LÓGICA DE REINGRESO: Si la nueva cantidad total ($n_cant) es MENOR a lo que ya se entregó
-if ($n_cant < $cant_entregada_db) {
-    $diferencia_a_devolver = $cant_entregada_db - $n_cant;
+if ($resActual) {
+    $p_id = $resActual['producto_id'];
+    $cant_entregada_db = floatval($resActual['cantidad_entregada']);
 
-    // 1. Devolver al Stock
-    $stmtInv = $this->db->prepare("UPDATE inventario SET stock = stock + ? WHERE producto_id = ? AND almacen_id = ?");
-    $stmtInv->bind_param("dii", $diferencia_a_devolver, $p_id, $almacen_id);
-    $stmtInv->execute();
+    // --- CASO A: ELIMINACIÓN AUTOMÁTICA (Si la nueva cantidad es 0) ---
+    if (floatval($n_cant) <= 0) {
+        
+        // A.1 Eliminar dependencias de entrega (Evita el Foreign Key Error)
+        $this->db->query("DELETE FROM detalle_entrega WHERE detalle_venta_id = $dv_id");
 
-    // 2. Registrar en Kardex
-    $obs = "AJUSTE EDICIÓN: Devolución de $diferencia_a_devolver unidades (Venta $v_id)";
-    $stmtMov = $this->db->prepare("INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_origen_id, usuario_registra_id, referencia_id, observaciones) VALUES (?, 'entrada', ?, ?, ?, ?, ?)");
-    $stmtMov->bind_param("idiiss", $p_id, $diferencia_a_devolver, $almacen_id, $u_id, $v_id, $obs);
-    $stmtMov->execute();
+        // A.2 Si hubo entregas previas, devolver TODO al stock
+        if ($cant_entregada_db > 0) {
+            // Devolver al Stock
+            $this->db->query("UPDATE inventario SET stock = stock + $cant_entregada_db WHERE producto_id = $p_id AND almacen_id = $almacen_id");
 
-    // 3. Ajustar la entrega en el detalle para que no supere a la nueva cantidad total
-    $this->db->query("UPDATE detalle_venta SET cantidad_entregada = $n_cant WHERE id = $dv_id");
+            // Registrar en Kardex
+            $obs = "ELIMINACIÓN POR AJUSTE A CERO - Venta ID: $v_id";
+            $stmtK = $this->db->prepare("INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_origen_id, usuario_registra_id, referencia_id, observaciones) VALUES (?, 'entrada', ?, ?, ?, ?, ?)");
+            $stmtK->bind_param("idiiss", $p_id, $cant_entregada_db, $almacen_id, $u_id, $v_id, $obs);
+            $stmtK->execute();
+        }
+
+        // A.3 Borrar la fila del detalle definitivamente
+        $this->db->query("DELETE FROM detalle_venta WHERE id = $dv_id");
+
+    } 
+    // --- CASO B: ACTUALIZACIÓN / AJUSTE (Si la nueva cantidad es > 0) ---
+    else {
+        // LÓGICA DE REINGRESO PARCIAL: Si la nueva cantidad es MENOR a lo entregado
+        if ($n_cant < $cant_entregada_db) {
+            $diferencia_a_devolver = $cant_entregada_db - $n_cant;
+
+            // 1. Devolver la diferencia al Stock
+            $stmtInv = $this->db->prepare("UPDATE inventario SET stock = stock + ? WHERE producto_id = ? AND almacen_id = ?");
+            $stmtInv->bind_param("dii", $diferencia_a_devolver, $p_id, $almacen_id);
+            $stmtInv->execute();
+
+            // 2. Registrar en Kardex
+            $obs = "AJUSTE EDICIÓN (REDUCCIÓN): Devolución de $diferencia_a_devolver unidades (Venta $v_id)";
+            $stmtMov = $this->db->prepare("INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_origen_id, usuario_registra_id, referencia_id, observaciones) VALUES (?, 'entrada', ?, ?, ?, ?, ?)");
+            $stmtMov->bind_param("idiiss", $p_id, $diferencia_a_devolver, $almacen_id, $u_id, $v_id, $obs);
+            $stmtMov->execute();
+
+            // 3. Igualar la entrega a la nueva cantidad total
+            $this->db->query("UPDATE detalle_venta SET cantidad_entregada = $n_cant WHERE id = $dv_id");
+        }
+
+        // Finalmente, actualizar datos generales (Precio, Subtotal, Cantidad Total)
+        $stmtUpd = $this->db->prepare("UPDATE detalle_venta SET cantidad = ?, precio_unitario = ?, subtotal = ?, tipo_precio = ? WHERE id = ?");
+        $stmtUpd->bind_param("ddssi", $n_cant, $precio, $subtotal_fila, $tipo_p, $dv_id);
+        $stmtUpd->execute();
+    }
 }
-
-// Finalmente, actualizar los datos generales de la fila (Precio, Subtotal, Cantidad Total)
-$stmtUpd = $this->db->prepare("UPDATE detalle_venta SET cantidad = ?, precio_unitario = ?, subtotal = ?, tipo_precio = ? WHERE id = ?");
-$stmtUpd->bind_param("ddssi", $n_cant, $precio, $subtotal_fila, $tipo_p, $dv_id);
-$stmtUpd->execute();
                 }
 
                 // 5. LÓGICA DE STOCK Y ENTREGAS HOY
