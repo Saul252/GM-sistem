@@ -290,7 +290,7 @@
     <script src="/cfsistem/app/backend/js_ventas/filtros.js"></script>
     <script src="/cfsistem/app/backend/js_ventas/nuevo_cliente.js"></script>
     <script src="/cfsistem/app/backend/js_ventas/modal_finalizar.js"></script>
-    <script src="/cfsistem/app/backend/js_ventas/procesar_venta.js"></script>
+    
 
     <script>
     // Lógica de validación de pago y avisos
