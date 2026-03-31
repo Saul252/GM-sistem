@@ -8,14 +8,18 @@
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../config/conexion.php'; 
 require_once __DIR__ . '/../models/ventasEditarModel.php'; 
+require_once __DIR__ . '/../models/clientesModel.php'; 
 require_once __DIR__ . '/../controllers/LayoutController.php';
+
 protegerPagina('ventas'); 
 $paginaActual = 'ventas';
 class VentaHistorialController {
     private $model;
+    private $clientesModel;
 
     public function __construct($db) {
         $this->model = new VentaHistorialModel($db);
+        $this->clientesModel = new clientesModel($db);
     }
 
     /**
@@ -44,7 +48,7 @@ class VentaHistorialController {
      * Procesa la edición de cantidades y totales (Cambio de contrato).
      * Invocado por: enviarEdicion() en el JS
      */
-    public function guardarEdicionVenta() {
+     public function guardarEdicionVenta() {
         header('Content-Type: application/json');
         try {
             $json = file_get_contents('php://input');
@@ -61,7 +65,77 @@ class VentaHistorialController {
             echo json_encode(["status" => "error", "message" => $e->getMessage()]);
         }
     }
+public function guardarEdicionVentaSaldoAFavor() {
+    if (ob_get_level()) ob_clean(); 
+    header('Content-Type: application/json');
+    
+    try {
+        $json = file_get_contents('php://input');
+        $data = json_decode($json, true);
 
+        if (!$data) throw new Exception("JSON_DECODE_ERROR: No se recibió un JSON válido.");
+
+        if (session_status() === PHP_SESSION_NONE) { session_start(); }
+        $u_id = $_SESSION['usuario_id'] ?? 1;
+        $data['usuario_id'] = $u_id;
+
+        // 1. Ejecutamos la edición
+        $res = $this->model->recalcularYEditarVenta($data);
+
+        if ($res['status'] !== 'success') {
+            throw new Exception("MODEL_EDIT_ERROR: " . ($res['message'] ?? 'Error desconocido en el modelo de edición.'));
+        }
+
+        // 2. Afectamos los saldos
+        if (isset($res['financiero'])) {
+            $fin   = $res['financiero'];
+            $dif   = floatval($fin['diferencia']);
+            $v_id  = intval($fin['venta_id']);
+            $c_id  = intval($fin['id_cliente']);
+            $fecha = date('Y-m-d H:i:s');
+
+            if ($dif != 0) {
+                $monto_ajuste = ($dif * -1);
+                $tipo_log = ($dif > 0) ? 'CARGO_EDICION' : 'ABONO_EDICION';
+
+                // PRUEBA DE EXISTENCIA DE MODELO
+                if (!isset($this->clientesModel)) {
+                    throw new Exception("OBJETO_NULL: \$this->clientesModel no está instanciado en el constructor.");
+                }
+
+                // PRUEBA DE LOG
+                if (!method_exists($this->clientesModel, 'abono_saldos_log')) {
+                    throw new Exception("METODO_MISSING: No existe abono_saldos_log en ClientesModel.");
+                }
+                $this->clientesModel->abono_saldos_log($c_id, $v_id, abs($dif), $u_id, $tipo_log, $fecha);
+
+                // PRUEBA DE SALDOS A FAVOR
+                if (!method_exists($this->clientesModel, 'abono_saldosAFavor')) {
+                    throw new Exception("METODO_MISSING: No existe abono_saldosAFavor en ClientesModel.");
+                }
+                
+                $ejecutado = $this->clientesModel->abono_saldosAFavor($c_id, $monto_ajuste, $v_id, $fecha);
+
+                if (!$ejecutado) {
+                    throw new Exception("DB_EXECUTE_ERROR: La consulta de saldos devolvió false.");
+                }
+
+                $res['mensaje_financiero'] = "Saldo actualizado correctamente.";
+            }
+        }
+
+        echo json_encode($res);
+
+    } catch (Exception $e) {
+        // Devolvemos el error detallado para el console.log
+        echo json_encode([
+            "status" => "error", 
+            "message" => $e->getMessage(),
+            "debug_trace" => "Error en línea " . $e->getLine() . " de " . $e->getFile()
+        ]);
+    }
+    exit;
+}
     /**
      * Registra un nuevo pago/abono a la venta.
      */
@@ -157,6 +231,9 @@ if (isset($_GET['action'])) {
             break;
         case 'guardarEdicion': 
             $controller->guardarEdicionVenta();
+            break;
+          case 'guardarEdicionVentaSaldoAFavor': 
+            $controller->guardarEdicionVentaSaldoAFavor();
             break;
         case 'guardarAbono':
             $controller->registrarAbono();

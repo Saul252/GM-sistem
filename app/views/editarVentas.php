@@ -111,6 +111,10 @@ const VENTA_ID = <?= $id_venta ?>;
 const URL_API = 'editarVentaController.php';
 let catalogoProductos = [];
 
+// Variables de control para lógica financiera
+let totalOriginal = 0;
+let huboEliminacion = false;
+
 $(document).ready(() => { 
     if(VENTA_ID > 0) cargarDatosVenta(); 
     $(document).on('click', (e) => {
@@ -128,6 +132,9 @@ function cargarDatosVenta() {
         $('#edit_cliente_id').val(res.info.id_cliente);
         $('#formEditarVenta').data('almacen-id', res.info.almacen_id);
         
+        // Guardamos el total original para comparar al final
+        totalOriginal = parseFloat(res.info.total) || 0;
+        
         cargarCatalogo(res.info.almacen_id);
         
         let html = '';
@@ -139,7 +146,7 @@ function cargarDatosVenta() {
                 precio_actual: p.precio_unitario,
                 tipo_actual: p.tipo_precio,
                 factor: parseFloat(p.factor_conversion),
-                u_mayor: p.u_menor, // Siguiendo tu lógica de normalización
+                u_mayor: p.u_menor, 
                 u_menor: p.u_mayor, 
                 entregado_prev: parseFloat(p.cantidad_entregada) || 0, 
                 cantidad_ref: p.cantidad,   
@@ -244,7 +251,6 @@ function corregirAlMinimo(el) {
 
     if (vtaTotal < entregadoPrev) {
         vtaTotal = entregadoPrev;
-        // Aquí podrías disparar actualizarInputs si quieres reflejar el cambio en mayor/menor
     }
 
     if (entHoy > stock) entHoy = stock;
@@ -302,14 +308,18 @@ function agregarFilaNueva(p) {
 }
 
 function eliminarFila(btn) {
-    $(btn).closest('tr').remove(); recalculateAll();
+    huboEliminacion = true;
+    $(btn).closest('tr').remove(); 
+    recalculateAll();
 }
 
 function enviarEdicion() {
+    const nuevoTotal = parseFloat($('#txt_total').text().replace(/[^0-9.-]+/g, ""));
+    
     const data = {
         venta_id: VENTA_ID,
         id_cliente: $('#edit_cliente_id').val(),
-        nuevo_total: parseFloat($('#txt_total').text().replace(/[^0-9.-]+/g,"")),
+        nuevo_total: nuevoTotal,
         almacen_id: $('#formEditarVenta').data('almacen-id'),
         productos: []
     };
@@ -325,24 +335,56 @@ function enviarEdicion() {
         });
     });
 
-    Swal.fire({
-        title: '¿Confirmar cambios?',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Actualizar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            $.ajax({
-                url: URL_API + '?action=guardarEdicion', 
-                type: 'POST',
-                data: JSON.stringify(data),
-                contentType: 'application/json',
-                success: (res) => {
-                    if (res.status === 'success') Swal.fire('Éxito', 'Venta actualizada', 'success').then(() => location.reload());
-                    else Swal.fire('Error', res.message, 'error');
-                }
-            });
-        }
+    if (nuevoTotal < totalOriginal || huboEliminacion) {
+        Swal.fire({
+            title: '¿Detectamos un saldo a favor?',
+            text: `El total ha disminuido (Original: $${totalOriginal.toFixed(2)} -> Nuevo: $${nuevoTotal.toFixed(2)}). ¿Deseas aplicar la diferencia al saldo del cliente?`,
+            icon: 'warning',
+            showCancelButton: true,
+            showDenyButton: true,
+            confirmButtonColor: '#28a745',
+            denyButtonColor: '#3085d6',
+            confirmButtonText: '<i class="bi bi-piggy-bank"></i> Sí, Saldo a Favor',
+            denyButtonText: '<i class="bi bi-x-circle"></i> No, solo editar',
+            cancelButtonText: 'Regresar',
+            customClass: { confirmButton: 'rounded-pill px-3', denyButton: 'rounded-pill px-3', cancelButton: 'rounded-pill' }
+        }).then((result) => {
+            if (result.isConfirmed) ejecutarPeticion('guardarEdicionVentaSaldoAFavor', data);
+            else if (result.isDenied) ejecutarPeticion('guardarEdicion', data);
+        });
+    } else {
+        Swal.fire({
+            title: '¿Confirmar actualización?',
+            text: "Se guardarán los cambios y se actualizarán existencias.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            confirmButtonText: 'Actualizar Venta',
+            cancelButtonText: 'Cancelar',
+            customClass: { confirmButton: 'rounded-pill px-3', cancelButton: 'rounded-pill' }
+        }).then((result) => {
+            if (result.isConfirmed) ejecutarPeticion('guardarEdicionVentaSaldoAFavor', data);
+        });
+    }
+}
+
+function ejecutarPeticion(accion, data) {
+    Swal.fire({ title: 'Procesando...', didOpen: () => { Swal.showLoading(); }, allowOutsideClick: false });
+    $.ajax({
+        url: `${URL_API}?action=${accion}`, 
+        type: 'POST',
+        data: JSON.stringify(data),
+        contentType: 'application/json',
+        success: (res) => {
+            if (res.status === 'success') {
+                let infoExtra = res.mensaje_financiero ? `<br><small class="text-muted">${res.mensaje_financiero}</small>` : '';
+                Swal.fire({ icon: 'success', title: '¡Éxito!', html: `La operación se completó con éxito.${infoExtra}`, timer: 2500, showConfirmButton: false })
+                .then(() => location.reload());
+            } else {
+                Swal.fire('Error', res.message, 'error');
+            }
+        },
+        error: () => { Swal.fire('Error', 'Error de red o servidor no disponible', 'error'); }
     });
 }
 </script>

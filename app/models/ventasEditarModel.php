@@ -172,7 +172,10 @@ class VentaHistorialModel {
             $u_id = intval($data['usuario_id']);
             $almacen_id = intval($data['almacen_id']);
 
-            $v_prev = $this->db->query("SELECT folio FROM ventas WHERE id = $v_id")->fetch_assoc();
+            // --- CAPTURAMOS EL TOTAL ANTERIOR ANTES DE ACTUALIZAR ---
+            $v_prev = $this->db->query("SELECT folio, total, id_cliente FROM ventas WHERE id = $v_id")->fetch_assoc();
+            $total_anterior = floatval($v_prev['total']);
+            $cliente_id = intval($v_prev['id_cliente']);
 
             // 1. ELIMINACIÓN de productos quitados
             $ids_enviados = array_filter(array_column($data['productos'], 'detalle_id'));
@@ -250,8 +253,18 @@ class VentaHistorialModel {
             // 7. SINCRONIZAR ESTADOS DE ENTREGA
             $this->sincronizarEstadosEntrega($v_id);
 
+            // --- CALCULAMOS LA DIFERENCIA PARA EL CONTROLLER ---
+            $diferencia = floatval($data['nuevo_total']) - $total_anterior;
+
             $this->db->commit();
-            return ["status" => "success"];
+            return [
+                "status" => "success",
+                "financiero" => [
+                    "diferencia" => $diferencia,
+                    "id_cliente" => $cliente_id,
+                    "venta_id"   => $v_id
+                ]
+            ];
         } catch (Exception $e) {
             $this->db->rollback();
             return ["status" => "error", "message" => $e->getMessage()];

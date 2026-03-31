@@ -264,14 +264,26 @@
                             </div>
 
                             <!-- Footer con botón de abono -->
-                            <div class="widget-footer">
-                                <button class="btn btn-dark w-100 fw-bold rounded-pill"
-                                    style="font-size:0.78rem;padding:8px;" onclick="abrirModalAbono()">
-                                    <i class="bi bi-plus-circle me-1"></i> Registrar Abono
-                                </button>
-                            </div>
+                            
                         </div>
-
+<div id="contenedorSaldoFavor" class="p-3 mb-3" style="display:none; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px;">
+    <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" id="checkUsarSaldo" onchange="toggleSaldoInput()">
+        <label class="form-check-label fw-bold text-success" for="checkUsarSaldo">
+            ¿Usar saldo a favor en esta compra?
+        </label>
+    </div>
+    
+    <div id="inputSaldoContainer" class="mt-2" style="display:none;">
+        <label class="small text-muted">Cantidad a descontar:</label>
+        <div class="input-group">
+            <span class="input-group-text bg-success text-white border-success">$</span>
+            <input type="number" id="monto_usar_favor" class="form-control border-success fw-bold" 
+                   value="0" step="0.01" min="0" oninput="validarMontoMaximo(this)">
+        </div>
+        <div id="msgMaximo" class="text-muted" style="font-size: 0.7rem;"></div>
+    </div>
+</div>
                         <!-- Ficha fiscal del cliente -->
                         <div class="ficha-cliente mt-3">
                             <div class="row g-2">
@@ -362,64 +374,79 @@
     $widget.style.display = 'block';
     $lista.innerHTML = `<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-secondary"></div></div>`;
 
-    fetch(`/cfsistem/app/controllers/ventasController.php?action=obtenerEstatusCliente&id=${id}`)
-        .then(r => r.json())
-        .then(data => {
-            // Ajuste: Ahora data es el objeto directo que devuelve obtenerEstatus
-            if (!data || data.nombre_comercial === undefined) throw new Error("Datos no encontrados");
+   fetch(`/cfsistem/app/controllers/ventasController.php?action=obtenerEstatusCliente&id=${id}`)
+    .then(r => r.json())
+    .then(data => {
+        if (!data || data.nombre_comercial === undefined) throw new Error("Datos no encontrados");
 
-            const res = data; 
-            const saldo = parseFloat(res.saldo_neto || 0); // (saldo_en_contra - saldo_a_favor)
-            const condicion = res.estatus_financiero || 'AL DIA';
+        const res = data; 
+        const saldo = parseFloat(res.saldo_neto || 0); 
+        const condicion = res.estatus_financiero || 'AL DIA';
 
-            // --- Lógica de Colores del Header (Sin romper tus clases CSS) ---
-            $header.className = ''; // Limpiamos para evitar duplicados
-            if (condicion === 'CON DEUDA') {
-                $header.classList.add('widget-header-deuda');
-            } else if (condicion === 'SALDO A FAVOR') {
-                $header.classList.add('widget-header-ok'); 
-            } else {
-                $header.classList.add('widget-header-neutral');
-            }
+        // --- 1. LÓGICA DEL SWITCH DE SALDO A FAVOR ---
+        const saldoAFavor = parseFloat(res.saldo_a_favor || 0);
+        saldoDisponibleCliente = saldoAFavor; // Actualizamos la variable global
 
-            // Actualizar montos principales
-            document.getElementById('lblSaldoTotal').textContent = _fmt.format(Math.abs(saldo));
-            document.getElementById('txtUltimaCarga').textContent = `Corte: ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+        const $panelSaldo = document.getElementById('contenedorSaldoFavor');
+        const $chkSaldo = document.getElementById('checkUsarSaldo');
 
-            // Badge dinámico con nuevos iconos para Saldo a Favor
-            let icon = 'bi-check-circle-fill';
-            if (condicion === 'CON DEUDA') icon = 'bi-exclamation-triangle-fill';
-            else if (condicion === 'SALDO A FAVOR') icon = 'bi-plus-circle-fill';
+        if (saldoAFavor > 0) {
+            $panelSaldo.style.display = 'block'; // Muestra el contenedor verde
+        } else {
+            $panelSaldo.style.display = 'none';  // Lo oculta si no hay saldo
+            $chkSaldo.checked = false;           // Resetea el switch
+            toggleSaldoInput();                  // Oculta el input de cantidad
+        }
+        // ----------------------------------------------
 
-            document.getElementById('widgetBadge').innerHTML = `
-                <span style="background:rgba(255,255,255,0.2);color:white;font-size:0.6rem;font-weight:700;padding:3px 10px;border-radius:20px;">
-                    <i class="bi ${icon} me-1"></i>${condicion}
-                </span>`;
+        // --- Lógica de Colores del Header ---
+        $header.className = ''; 
+        if (condicion === 'CON DEUDA') {
+            $header.classList.add('widget-header-deuda');
+        } else if (condicion === 'SALDO A FAVOR') {
+            $header.classList.add('widget-header-ok'); 
+        } else {
+            $header.classList.add('widget-header-neutral');
+        }
 
-            // Resumen en el cuerpo: Ajustado a los campos de la tabla maestra
-            $lista.innerHTML = `
-                <div class="p-2 small">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="text-muted">Por Pagar:</span>
-                        <span class="fw-bold text-danger">${_fmt.format(res.saldo_en_contra || 0)}</span>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="text-muted">A Favor:</span>
-                        <span class="fw-bold text-success">${_fmt.format(res.saldo_a_favor || 0)}</span>
-                    </div>
-                    <hr class="my-1" style="opacity:0.1">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Estado:</span>
-                        <span class="fw-bold ${saldo > 0 ? 'text-danger' : 'text-success'}">
-                            ${condicion === 'CON DEUDA' ? 'Pendiente de Pago' : (condicion === 'SALDO A FAVOR' ? 'Crédito Disponible' : 'Sin Adeudos')}
-                        </span>
-                    </div>
-                </div>`;
-        })
-        .catch(err => {
-            console.error("Error:", err);
-            $lista.innerHTML = `<div class="text-center p-2 text-danger small">Error al consultar estatus</div>`;
-        });
+        // Actualizar montos principales
+        document.getElementById('lblSaldoTotal').textContent = _fmt.format(Math.abs(saldo));
+        document.getElementById('txtUltimaCarga').textContent = `Corte: ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+
+        // Badge dinámico
+        let icon = 'bi-check-circle-fill';
+        if (condicion === 'CON DEUDA') icon = 'bi-exclamation-triangle-fill';
+        else if (condicion === 'SALDO A FAVOR') icon = 'bi-plus-circle-fill';
+
+        document.getElementById('widgetBadge').innerHTML = `
+            <span style="background:rgba(255,255,255,0.2);color:white;font-size:0.6rem;font-weight:700;padding:3px 10px;border-radius:20px;">
+                <i class="bi ${icon} me-1"></i>${condicion}
+            </span>`;
+
+        // Resumen en el cuerpo
+        $lista.innerHTML = `
+            <div class="p-2 small">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="text-muted">Por Pagar:</span>
+                    <span class="fw-bold text-danger">${_fmt.format(res.saldo_en_contra || 0)}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="text-muted">A Favor:</span>
+                    <span class="fw-bold text-success">${_fmt.format(res.saldo_a_favor || 0)}</span>
+                </div>
+                <hr class="my-1" style="opacity:0.1">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted">Estado:</span>
+                    <span class="fw-bold ${saldo > 0 ? 'text-danger' : 'text-success'}">
+                        ${condicion === 'CON DEUDA' ? 'Pendiente de Pago' : (condicion === 'SALDO A FAVOR' ? 'Crédito Disponible' : 'Sin Adeudos')}
+                    </span>
+                </div>
+            </div>`;
+    })
+    .catch(err => {
+        console.error("Error:", err);
+        $lista.innerHTML = `<div class="text-center p-2 text-danger small">Error al consultar estatus</div>`;
+    });
 }
     document.addEventListener('DOMContentLoaded', () => {
         const select = document.getElementById('selectCliente');
@@ -434,4 +461,21 @@
             });
         }
     });
+    let saldoDisponibleCliente = 0;
+
+function toggleSaldoInput() {
+    const chk = document.getElementById('checkUsarSaldo');
+    const container = document.getElementById('inputSaldoContainer');
+    const input = document.getElementById('monto_usar_favor');
+    
+    container.style.display = chk.checked ? 'block' : 'none';
+    if (!chk.checked) input.value = 0;
+}
+
+function validarMontoMaximo(input) {
+    const valor = parseFloat(input.value) || 0;
+    if (valor > saldoDisponibleCliente) {
+        input.value = saldoDisponibleCliente;
+    }
+}
 </script>

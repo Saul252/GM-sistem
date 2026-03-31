@@ -442,54 +442,61 @@ public function abono_saldos($cliente_id, $monto, $venta_id, $fecha_pago) {
 
     return $stmtMaestra->execute();
 }
-public function abono_saldosAFavor($cliente_id, $monto, $venta_id, $fecha_pago) {
+public function abono_saldosAFavor($cliente_id, $monto_ajuste, $venta_id, $fecha_pago) {
+    // 1. CONSULTAR SALDO ACTUAL
+    $stmtSelect = $this->db->prepare("SELECT saldo_a_favor, saldo_en_contra FROM clientes_saldos WHERE cliente_id = ?");
+    $stmtSelect->bind_param("i", $cliente_id);
+    $stmtSelect->execute();
+    $res = $stmtSelect->get_result()->fetch_assoc();
+
+    // Si no existe el registro, inicializamos en 0
+    $saldo_f_actual = floatval($res['saldo_a_favor'] ?? 0);
+    $saldo_c_actual = floatval($res['saldo_en_contra'] ?? 0);
+
     /**
-     * LÓGICA DEL SQL:
-     * 1. Restamos el abono del saldo_en_contra actual.
-     * 2. Si el resultado es < 0, significa que hay saldo a favor.
-     * 3. Usamos GREATEST(..., 0) para que la deuda nunca sea negativa.
-     * 4. Usamos ABS(...) y LEAST(..., 0) para capturar el excedente como saldo a favor.
+     * 2. CALCULAR NUEVO ESTADO
+     * * Recordatorio: 
+     * - Si $monto_ajuste es POSITIVO (bajó el precio), es un abono/saldo a favor.
+     * - Si $monto_ajuste es NEGATIVO (subió el precio), es un cargo/deuda.
+     * * Neto actual = Saldo a favor - Saldo en contra
      */
+    $neto_actual = $saldo_f_actual - $saldo_c_actual;
+    $nuevo_neto = $neto_actual + $monto_ajuste;
+
+    $nuevo_saldo_a_favor = 0;
+    $nuevo_saldo_en_contra = 0;
+
+    if ($nuevo_neto >= 0) {
+        // El cliente tiene dinero a su favor
+        $nuevo_saldo_a_favor = $nuevo_neto;
+        $nuevo_saldo_en_contra = 0;
+    } else {
+        // El cliente debe dinero (neto negativo)
+        $nuevo_saldo_a_favor = 0;
+        $nuevo_saldo_en_contra = abs($nuevo_neto);
+    }
+
+    // 3. ACTUALIZAR O INSERTAR (Upsert)
     $sqlMaestra = "INSERT INTO `clientes_saldos` (
         `cliente_id`, 
         `saldo_a_favor`, 
         `saldo_en_contra`, 
         `ultima_venta_id`, 
         `ultima_actualizacion`
-    ) VALUES (
-        ?,        -- 1. cliente_id
-        '0.00',   
-        ?,        -- 2. monto del abono (para la resta inicial)
-        ?,        -- 3. ultima_venta_id
-        ?         -- 4. ultima_actualizacion
-    ) 
+    ) VALUES (?, ?, ?, ?, ?) 
     ON DUPLICATE KEY UPDATE 
-        -- Primero calculamos el nuevo saldo temporalmente para decidir a dónde va
-        -- Si (saldo_en_contra - monto) es negativo, el exceso va a saldo_a_favor
-        `saldo_a_favor` = CASE 
-            WHEN (`saldo_en_contra` + `saldo_a_favor` - VALUES(`saldo_en_contra`)) < 0 
-            THEN ABS(`saldo_en_contra` + `saldo_a_favor` - VALUES(`saldo_en_contra`))
-            ELSE 0.00 
-        END,
-        
-        -- El saldo_en_contra queda en el resultado de la resta, pero mínimo 0
-        `saldo_en_contra` = CASE 
-            WHEN (`saldo_en_contra` + `saldo_a_favor` - VALUES(`saldo_en_contra`)) > 0 
-            THEN (`saldo_en_contra` + `saldo_a_favor` - VALUES(`saldo_en_contra`))
-            ELSE 0.00 
-        END,
-        
+        `saldo_a_favor` = VALUES(`saldo_a_favor`),
+        `saldo_en_contra` = VALUES(`saldo_en_contra`),
         `ultima_venta_id` = VALUES(`ultima_venta_id`),
         `ultima_actualizacion` = VALUES(`ultima_actualizacion`)";
 
     $stmtMaestra = $this->db->prepare($sqlMaestra);
-
-    // Tipos de datos: i (int), d (double/decimal), i (int), s (string)
-    $stmtMaestra->bind_param("idis", 
-        $cliente_id,   // 1
-        $monto,        // 2 (Se usa para restar en el UPDATE)
-        $venta_id,     // 3
-        $fecha_pago    // 4
+    $stmtMaestra->bind_param("iddis", 
+        $cliente_id, 
+        $nuevo_saldo_a_favor, 
+        $nuevo_saldo_en_contra, 
+        $venta_id, 
+        $fecha_pago
     );
 
     return $stmtMaestra->execute();
