@@ -8,6 +8,8 @@ $paginaActual = 'Inicio';
 // OPTIMIZACIÓN: Centralizamos los módulos en un array para evitar repetir HTML
 $modulos = [
     ['id' => 'ventas', 'url' => '/cfsistem/app/controllers/ventasController.php', 'icon' => 'bi-cart-check', 'class' => 'icon-ventas', 'label' => 'Ventas', 'desc' => 'Salidas'],
+   ['id' => 'cajaRapida', 'url' => '/cfsistem/app/controllers/cajaRapidaController.php', 'icon' => 'bi-cart-check', 'class' => 'icon-ventas', 'label' => 'Caja Rapida', 'desc' => 'Salidas en existencia'],
+   
     ['id' => 'compras', 'url' => '/cfsistem/app/controllers/egresosController.php', 'icon' => 'bi-bag-check', 'class' => 'icon-compras', 'label' => 'Compras', 'desc' => 'Entradas'],
     ['id' => 'proveedores', 'url' => '/cfsistem/app/controllers/proveedoresController.php', 'icon' => 'bi-person-vcard', 'class' => 'icon-proveedores', 'label' => 'Proveedores', 'desc' => 'Gestión'],
     ['id' => 'almacenes', 'url' => '/cfsistem/app/controllers/almacenes.php', 'icon' => 'bi-box-seam', 'class' => 'icon-almacen', 'label' => 'Almacenes', 'desc' => 'Inventario'],

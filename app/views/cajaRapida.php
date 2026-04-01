@@ -459,11 +459,238 @@
 
     <?php cargarScripts(); ?>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="/cfsistem/app/backend/js_ventas/carrito.js"></script>
+   
     <script src="/cfsistem/app/backend/js_ventas/filtros.js"></script>
     <script src="/cfsistem/app/backend/js_ventas/nuevo_cliente.js"></script>
 <?php require_once __DIR__ . '/cajaRapida/ModalFinalizarVenta.php'; ?>
+<script>/**
+ * SISTEMA DE VENTAS CF SYSTEM - Gestión de Carrito con Validación de Stock
+ */
 
+window.carrito = window.carrito || [];
+
+/**
+ * 1. AGREGAR PRODUCTO AL CARRITO
+ */
+window.validarYAgregar = function(btn) {
+    const fila = btn.closest("tr");
+    const producto_id = parseInt(btn.dataset.productoId || btn.getAttribute("data-producto-id"));
+    const almacen_id = parseInt(btn.dataset.almacenId);
+    const almacen_nombre = btn.dataset.almacen;
+    
+    // Captura de Stock y Factores
+    const stockMaximo = parseFloat(fila.querySelector(".badge.bg-success").innerText) || 0;
+    const factor = parseFloat(fila.dataset.factor) || 1;
+    const unidadReporte = fila.dataset.reporteNom || 'Fact.';
+    const nombre = fila.cells[1].innerText; 
+    
+    const cantidadInput = fila.querySelector(".cantidad");
+    let cantidadAAgregar = parseFloat(cantidadInput.value) || 0;
+    
+    const modoVenta = fila.querySelector(".select-modo-venta")?.value || 'individual';
+    
+    // Si se agrega en modo "Referencia/Reporte" (ej. Tonelada), convertimos a piezas
+    if(modoVenta === 'referencia') {
+        cantidadAAgregar = cantidadAAgregar * factor; 
+    }
+
+    const selectPrecio = fila.querySelector(".select-precio");
+    const precioUnitario = parseFloat(selectPrecio.value) || 0;
+    
+    let textoPrecio = selectPrecio.options[selectPrecio.selectedIndex].text.toLowerCase();
+    let tipo_p = textoPrecio.includes("dist") ? "distribuidor" : (textoPrecio.includes("may") ? "mayorista" : "minorista");
+
+    if (cantidadAAgregar <= 0) {
+        Swal.fire('Atención', 'Ingresa una cantidad válida', 'warning');
+        return;
+    }
+
+    // Buscar si ya existe en el carrito para validar stock acumulado
+    let itemExistente = window.carrito.find(item => 
+        item.producto_id === producto_id && item.almacen_id === almacen_id && item.tipo_precio === tipo_p
+    );
+
+    let cantidadTotalFutura = (itemExistente ? itemExistente.cantidad : 0) + cantidadAAgregar;
+
+    // VALIDACIÓN DE STOCK FÍSICO
+    if (cantidadTotalFutura > stockMaximo) {
+        Swal.fire('Stock Insuficiente', `No puedes agregar esa cantidad. Stock disponible: ${stockMaximo}`, 'error');
+        return;
+    }
+
+    if (itemExistente) {
+        itemExistente.cantidad = cantidadTotalFutura;
+    } else {
+        window.carrito.push({
+            producto_id, 
+            almacen_id, 
+            almacen_nombre, 
+            nombre,
+            cantidad: cantidadAAgregar,
+            stock_max: stockMaximo, // Guardamos el límite físico
+            entrega_hoy: cantidadAAgregar,
+            precio_unitario: precioUnitario,
+            tipo_precio: tipo_p,
+            factor: factor,
+            unidad_reporte: unidadReporte
+        });
+    }
+
+    window.renderCarrito();
+    cantidadInput.value = 1;
+};
+
+/**
+ * 2. RENDERIZAR TABLA (Ajuste de inputs con MAX)
+ */
+window.renderCarrito = function() {
+    const tablaBody = document.querySelector("#tablaCarrito tbody");
+    if (!tablaBody) return;
+    
+    tablaBody.innerHTML = "";
+    
+    window.carrito.forEach((item, index) => {
+        const cantFactor = Math.floor(item.cantidad / item.factor);
+        const cantPza = Math.round((item.cantidad % item.factor) * 100) / 100;
+
+        item.subtotal = item.cantidad * item.precio_unitario;
+
+        const tr = document.createElement("tr");
+        tr.dataset.index = index;
+        tr.innerHTML = `
+            <td><small>${item.almacen_nombre}</small></td>
+            <td><div class="fw-bold" style="font-size: 0.8rem;">${item.nombre}</div></td>
+            <td>
+                <input type="number" class="form-control form-control-sm text-center input-factor-cambio" 
+                    data-index="${index}" value="${cantFactor}" min="0" 
+                    max="${Math.floor(item.stock_max / item.factor)}" step="1">
+            </td>
+            <td>
+                <input type="number" class="form-control form-control-sm text-center input-pza-cambio" 
+                    data-index="${index}" value="${cantPza}" min="0" step="any">
+            </td>
+            <td class="text-end fw-bold subtotal-celda">$${item.subtotal.toFixed(2)}</td>
+            <td>
+                <button type="button" class="btn btn-link text-danger p-0 btn-remove-item" data-index="${index}">
+                    <i class="bi bi-x-circle"></i>
+                </button>
+            </td>
+        `;
+        tablaBody.appendChild(tr);
+    });
+
+    actualizarTotalesUI();
+};
+
+/**
+ * 3. LÓGICA DE CONTROL DE STOCK DINÁMICO (input)
+ */
+document.addEventListener('input', function(e) {
+    if (e.target.classList.contains('input-factor-cambio') || e.target.classList.contains('input-pza-cambio')) {
+        const index = e.target.dataset.index;
+        const item = window.carrito[index];
+        const tr = e.target.closest('tr');
+        
+        const inputFactor = tr.querySelector('.input-factor-cambio');
+        const inputPza = tr.querySelector('.input-pza-cambio');
+
+        let valFactor = parseFloat(inputFactor.value) || 0;
+        let valPza = parseFloat(inputPza.value) || 0;
+
+        // Validar primero el Factor contra el stock total
+        let maxFactoresPosibles = Math.floor(item.stock_max / item.factor);
+        if (valFactor > maxFactoresPosibles) {
+            valFactor = maxFactoresPosibles;
+            inputFactor.value = valFactor;
+        }
+
+        // Calcular piezas restantes permitidas basándose en los factores ya puestos
+        let stockRestantePzas = item.stock_max - (valFactor * item.factor);
+        
+        if (valPza > stockRestantePzas) {
+            valPza = stockRestantePzas;
+            inputPza.value = valPza;
+            // Feedback visual rápido
+            inputPza.style.borderColor = "#ff3b30"; 
+            setTimeout(() => inputPza.style.borderColor = "#d2d2d7", 500);
+        }
+
+        // Actualización del objeto
+        item.cantidad = (valFactor * item.factor) + valPza;
+        item.subtotal = item.cantidad * item.precio_unitario;
+        item.entrega_hoy = item.cantidad;
+
+        tr.querySelector('.subtotal-celda').innerText = `$${item.subtotal.toFixed(2)}`;
+        actualizarTotalesUI();
+    }
+});
+
+/**
+ * 4. LÓGICA DE NORMALIZACIÓN (change)
+ */
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('input-factor-cambio') || e.target.classList.contains('input-pza-cambio')) {
+        // Redibujamos para que si puso piezas equivalentes a 1 factor, se "brinde" al campo correcto
+        window.renderCarrito();
+    }
+});
+
+/**
+ * 5. ACTUALIZAR INTERFAZ
+ */
+function actualizarTotalesUI() {
+    let totalAcumulado = window.carrito.reduce((acc, item) => acc + (item.cantidad * item.precio_unitario), 0);
+    const totalStr = totalAcumulado.toFixed(2);
+
+    const elTotal = document.getElementById("total");
+    const elTotalModal = document.getElementById("totalFinalModal");
+    const elPago = document.getElementById("monto_pagar");
+
+    if (elTotal) elTotal.innerText = totalStr;
+    if (elTotalModal) elTotalModal.innerText = totalStr;
+    if (elPago) {
+        elPago.value = totalStr;
+        elPago.dispatchEvent(new Event('input'));
+    }
+}
+
+// Eliminar producto
+document.addEventListener('click', function(e) {
+    const btnDelete = e.target.closest('.btn-remove-item');
+    if (btnDelete) {
+        const index = btnDelete.dataset.index;
+        window.carrito.splice(index, 1);
+        window.renderCarrito();
+    }
+});
+
+/**
+ * Soporte para agregar productos al presionar ENTER
+ */
+document.addEventListener('keydown', function(e) {
+    // 1. Verificamos que la tecla sea Enter y que el foco esté en un input de cantidad
+    if (e.key === 'Enter' && e.target.classList.contains('cantidad')) {
+        
+        // Evitamos que el Enter haga un submit accidental del formulario principal
+        e.preventDefault(); 
+
+        // 2. Localizamos la fila (tr) donde se presionó Enter
+        const fila = e.target.closest('tr');
+        
+        // 3. Buscamos el botón de "Agregar" (+) en esa misma fila
+        const btnAgregar = fila.querySelector('button.btn-success');
+
+        if (btnAgregar) {
+            // 4. Ejecutamos la función de agregar que ya tienes definida
+            validarYAgregar(btnAgregar);
+            
+            // Opcional: Feedback visual rápido para el usuario
+            btnAgregar.style.transform = "scale(0.9)";
+            setTimeout(() => btnAgregar.style.transform = "scale(1)", 100);
+        }
+    }
+});
+</script>
 
 </body>
 

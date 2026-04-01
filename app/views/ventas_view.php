@@ -293,7 +293,34 @@
     
 
     
-    
+ <script>
+    /**
+ * Soporte para agregar productos al presionar ENTER
+ */
+document.addEventListener('keydown', function(e) {
+    // 1. Verificamos que la tecla sea Enter y que el foco esté en un input de cantidad
+    if (e.key === 'Enter' && e.target.classList.contains('cantidad')) {
+        
+        // Evitamos que el Enter haga un submit accidental del formulario principal
+        e.preventDefault(); 
+
+        // 2. Localizamos la fila (tr) donde se presionó Enter
+        const fila = e.target.closest('tr');
+        
+        // 3. Buscamos el botón de "Agregar" (+) en esa misma fila
+        const btnAgregar = fila.querySelector('button.btn-success');
+
+        if (btnAgregar) {
+            // 4. Ejecutamos la función de agregar que ya tienes definida
+            validarYAgregar(btnAgregar);
+            
+            // Opcional: Feedback visual rápido para el usuario
+            btnAgregar.style.transform = "scale(0.9)";
+            setTimeout(() => btnAgregar.style.transform = "scale(1)", 100);
+        }
+    }
+});
+ </script>   
 </body>
 
 </html>

@@ -13,8 +13,8 @@ require_once __DIR__ . '/../models/vehiculos_model.php';
 require_once __DIR__ . '/../models/trabajadores_model.php';
 require_once __DIR__ . '/../models/RepartosModel.php'; 
 
-protegerPagina('ventas'); 
-$paginaActual = 'ventas';
+protegerPagina('cajaRapida'); 
+$paginaActual = 'cajaRapida';
 
 // Instancias
 $modeloEntrega    = new EntregaModel($conexion);
