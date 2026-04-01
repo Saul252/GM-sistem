@@ -353,7 +353,7 @@
                         <a class="btn btn-sm btn-info text-white shadow-sm" href="/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=${v.id}" target="_blank" title="Imprimir Remisión sin Precios">
                             <i class="bi bi-file-earmark-text"></i> Remisión
                         </a>
-                        <button class="btn btn-sm btn-danger shadow-sm" onclick="confirmarCancelacion(${v.id}, '${v.folio}')" title="Cancelar Venta">
+                        <button class="btn btn-sm btn-danger shadow-sm" onclick="confirmarCancelacion('${v.id}', '${v.folio}','${v.total}','${v.cobro},')" title="Cancelar Venta">
                 <i class="bi bi-x-circle-fill"></i> Cancelar
             </button>
                     </div>
@@ -575,7 +575,8 @@ $('#tbodyHistorial').html(data.historial.length > 0 ? data.historial.map(h => {
 });
     </script>
 <script>
-    async function confirmarCancelacion(idVenta, folio) {
+    async function confirmarCancelacion(idVenta, folio,total,pagado) {
+      
     // 1. Lanzamos el SweetAlert con las 3 opciones
     const result = await Swal.fire({
         title: `¿Cancelar Venta ${folio}?`,

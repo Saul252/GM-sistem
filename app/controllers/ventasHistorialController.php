@@ -77,7 +77,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardarAbono') {
     header('Content-Type: application/json');
 
     try {
-        // --- CAPTURA INICIAL ---
         $v_id = intval($_POST['venta_id']);
         $amt  = floatval($_POST['monto']);
         $met  = $_POST['metodo_pago'] ?? 'Efectivo'; 
@@ -86,56 +85,70 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardarAbono') {
 
         error_log("--- INICIO DE PROCESO DE ABONO --- Venta: $v_id");
 
-        // --- PASO 0: OBTENER EL CLIENTE REAL (Tu nueva función) ---
-        // Pasamos $this->db como la conexión que requiere tu función
         $c_id = $ventasModel->obtenerClientePorVenta($conexion, $v_id);
+        if (!$c_id) throw new Exception("La venta #$v_id no tiene un cliente válido.");
 
-        if (!$c_id) {
-            error_log("ERROR CRÍTICO: No se encontró un cliente para la venta $v_id en la base de datos.");
-            throw new Exception("La venta #$v_id no tiene un cliente válido asociado.");
-        }
-        error_log("CLIENTE DETECTADO: ID $c_id (Validado desde DB)");
-
-        // --- PASO 1: REGISTRAR EN CAJA (Tu función original) ---
+        // --- PASO 1: REGISTRAR EN CAJA ---
         $resOriginal = $ventasModel->registrarAbono($v_id, $amt, $u_id, $met, $fec);
         
         if ($resOriginal) {
-            error_log("PASO 1 EXITOSO: Guardado en historial_pagos.");
+            // --- PASO 2: LOG DE SALDOS ---
+            $clientesModel->abono_saldos_log($c_id, $v_id, $amt, $u_id, $met, $fec);
 
-            // --- PASO 2: LOG DE SALDOS (La función abono_saldos_log) ---
-            $resLog = $clientesModel->abono_saldos_log($c_id, $v_id, $amt, $u_id, $met, $fec);
+            // --- PASO 3: ACTUALIZAR SALDO MAESTRO (Lógica de Bolsas Separadas) ---
+            
+            // A) Consultar saldos actuales sin mezclarlos
+            $stmt = $conexion->prepare("SELECT saldo_a_favor, saldo_en_contra FROM clientes_saldos WHERE cliente_id = ?");
+            $stmt->bind_param("i", $c_id);
+            $stmt->execute();
+            $resSaldosActuales = $stmt->get_result()->fetch_assoc();
 
-            if ($resLog) {
-                error_log("PASO 2 EXITOSO: Guardado en clientes_saldos_log.");
+            $favor_actual  = floatval($resSaldosActuales['saldo_a_favor'] ?? 0);
+            $contra_actual = floatval($resSaldosActuales['saldo_en_contra'] ?? 0);
 
-                // --- PASO 3: ACTUALIZAR SALDO MAESTRO (La función abono_saldos) ---
-                $resSaldos = $clientesModel->abono_saldosAFavor($c_id, $amt, $v_id, $fec);
+            $nuevo_favor  = $favor_actual;
+            $nuevo_contra = $contra_actual;
 
-                if ($resSaldos) {
-                    error_log("PASO 3 EXITOSO: Saldo restado en clientes_saldos. PROCESO FINALIZADO.");
-                    echo json_encode([
-                        'status' => 'success', 
-                        'message' => '¡Abono registrado y saldo actualizado correctamente!'
-                    ]);
+            // B) Lógica: El abono solo afecta a la deuda actual de este proceso
+            if ($contra_actual > 0) {
+                if ($amt <= $contra_actual) {
+                    // El abono solo reduce la deuda, el saldo a favor no se toca
+                    $nuevo_contra = $contra_actual - $amt;
                 } else {
-                    error_log("ERROR PASO 3: Falló abono_saldos (Maestra).");
-                    echo json_encode(['status' => 'warning', 'message' => 'Pago guardado, pero falló la actualización del saldo neto.']);
+                    // El abono mata la deuda y el sobrante se suma al saldo a favor previo
+                    $sobrante = $amt - $contra_actual;
+                    $nuevo_contra = 0;
+                    $nuevo_favor  = $favor_actual + $sobrante;
                 }
             } else {
-                error_log("ERROR PASO 2: Falló abono_saldos_log.");
-                echo json_encode(['status' => 'warning', 'message' => 'Pago en caja OK, pero falló el registro en el historial de saldos.']);
+                // Si no debía nada, todo el abono va directo al saldo a favor
+                $nuevo_favor = $favor_actual + $amt;
             }
-        } else {
-            error_log("ERROR PASO 1: Falló registrarAbono en ventasModel.");
-            echo json_encode(['status' => 'error', 'message' => 'No se pudo registrar el pago en caja.']);
+
+            // C) Hacer el Upsert con los nuevos valores independientes
+            $sqlMaestra = "INSERT INTO `clientes_saldos` (
+                `cliente_id`, `saldo_a_favor`, `saldo_en_contra`, `ultima_venta_id`, `ultima_actualizacion`
+            ) VALUES (?, ?, ?, ?, ?) 
+            ON DUPLICATE KEY UPDATE 
+                `saldo_a_favor` = VALUES(`saldo_a_favor`),
+                `saldo_en_contra` = VALUES(`saldo_en_contra`),
+                `ultima_venta_id` = VALUES(`ultima_venta_id`),
+                `ultima_actualizacion` = VALUES(`ultima_actualizacion`)";
+
+            $stmtM = $conexion->prepare($sqlMaestra);
+            $stmtM->bind_param("iddis", $c_id, $nuevo_favor, $nuevo_contra, $v_id, $fec);
+            $resFinal = $stmtM->execute();
+
+            if ($resFinal) {
+                echo json_encode(['status' => 'success', 'message' => '¡Abono registrado! Deuda: $'.$nuevo_contra.' | Favor: $'.$nuevo_favor]);
+            } else {
+                throw new Exception("Error al actualizar la tabla maestra de saldos.");
+            }
         }
 
     } catch (Throwable $e) {
-        error_log("FALLO GENERAL EN GUARDAR ABONO: " . $e->getMessage());
-        echo json_encode([
-            'status' => 'error', 
-            'message' => 'Error de sistema: ' . $e->getMessage()
-        ]);
+        error_log("FALLO EN GUARDAR ABONO: " . $e->getMessage());
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }
     exit;
 }
@@ -208,36 +221,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['ac
             throw new Exception("No se encontró la información de la venta #$venta_id");
         }
 
-        $infoVenta    = $detalle['info'];
-        $cliente_id   = intval($infoVenta['id_cliente']);
-        $total_pagado = floatval($infoVenta['total_pagado'] ?? 0);
+       // 1. Datos base
+$infoVenta      = $detalle['info'];
+$cliente_id     = intval($infoVenta['id_cliente']);
+$total_venta    = floatval($infoVenta['total'] ?? 0);        // Ej: 20
+$total_pagado   = floatval($infoVenta['total_pagado'] ?? 0); // Ej: 10
+$pendiente_pago = $total_venta - $total_pagado;            // Ej: 10 (Lo que aún debe)
 
-        error_log("Procesando cancelación - Venta: $venta_id, Cliente: $cliente_id, Monto a devolver: $total_pagado");
+error_log("Cancelación Especial - Venta: $venta_id. Pagado: $total_pagado, Deuda a limpiar: $pendiente_pago");
 
-        // --- PASO 2: ABONAR AL SALDO (Si la venta tuvo pagos) ---
-        // Si el cliente ya había dado dinero, se lo regresamos como saldo a favor
-        if ($total_pagado > 0) {
-            
-            // A) Registrar en el Log de Saldos para auditoría
-            $obs_log = "Saldo recuperado por cancelación de Venta #$venta_id. Motivo: $motivo";
-            $clientesModel->abono_saldos_log(
-                $cliente_id, 
-                $venta_id, 
-                $total_pagado, 
-                $usuario_id, 
-                'AJUSTE', // Lo marcamos como ajuste/devolución
-                $fecha_act
-            );
-            
-            // B) Impactar tabla maestra (clientes_saldos)
-            // Tu función abono_saldos restará este monto del 'saldo_en_contra'
-            $clientesModel->abono_saldosAFavor(
-                $cliente_id, 
-                $total_pagado, 
-                $venta_id, 
-                $fecha_act
-            );
-        }
+// --- PASO A: DEVOLVER LO PAGADO AL SALDO A FAVOR ---
+if ($total_pagado > 0) {
+    $clientesModel->abono_saldos_log(
+        $cliente_id, 
+        $venta_id, 
+        $total_pagado, 
+        $usuario_id, 
+        'DEVOLUCION_PAGO_CANCELACION', 
+        $fecha_act
+    );
+
+    // Sumamos lo pagado: tu función lo pondrá en saldo_a_favor (o reducirá otras deudas)
+    $clientesModel->abono_saldosAFavor($cliente_id, $total_pagado, $venta_id, $fecha_act);
+}
+
+// --- PASO B: LIMPIAR LA DEUDA PENDIENTE DE ESTA VENTA ---
+if ($pendiente_pago > 0) {
+    $clientesModel->abono_saldos_log(
+        $cliente_id, 
+        $venta_id, 
+        $pendiente_pago, 
+        $usuario_id, 
+        'LIMPIEZA_DEUDA_CANCELACION', 
+        $fecha_act
+    );
+
+    /**
+     * Al sumar el 'pendiente_pago' como positivo, tu función abono_saldosAFavor 
+     * subirá el Neto exactamente lo necesario para que la deuda de ESTA venta
+     * en el Saldo en Contra global se vuelva 0.
+     */
+    $clientesModel->abono_saldosAFavor($cliente_id, $pendiente_pago, $venta_id, $fecha_act);
+}
 
         // --- PASO 3: CANCELAR LA VENTA ---
         // Cambiamos el estado a 'cancelada' en la tabla ventas

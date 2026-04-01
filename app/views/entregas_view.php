@@ -106,9 +106,9 @@
                         <div class="col-md-3">
                             <label class="form-label small fw-bold text-muted">PERIODO</label>
                             <select id="selectorPeriodo" class="form-select border-0 bg-light">
-                                <option value="hoy">Hoy</option>
+                                <option value="hoy" selected>Hoy</option>
                                 <option value="ayer">Ayer</option>
-                                <option value="semana" selected>Últimos 7 días</option>
+                                <option value="semana">Últimos 7 días</option>
                                 <option value="mes">Este Mes</option>
                                 <option value="personalizado">📅 Rango Manual</option>
                             </select>

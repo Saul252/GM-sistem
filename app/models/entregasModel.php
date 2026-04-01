@@ -10,32 +10,55 @@ class EntregaModel {
 
     // MANTIENE TU FUNCIÓN ORIGINAL DE LISTADO
 public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_admin) {
+    // 1. Configurar Zona Horaria de Ciudad de México
+    date_default_timezone_set('America/Mexico_City');
+
     $periodo = $filtros['periodo'] ?? 'semana';
     $f_inicio_user = $filtros['f_inicio'] ?? '';
     $f_fin_user = $filtros['f_fin'] ?? '';
-    $hoy = date('Y-m-d');
     
+    // Obtenemos la fecha actual con la zona horaria ya aplicada
+    $hoy = date('Y-m-d');
     $inicio = $hoy; 
     $fin = $hoy;
 
+    // 2. Lógica de Periodos corregida
     if ($periodo !== 'personalizado') {
         switch ($periodo) {
-            case 'ayer':   $inicio = date('Y-m-d', strtotime('-1 day')); $fin = $inicio; break;
-            case 'semana': $inicio = date('Y-m-d', strtotime('-7 days')); break;
-            case 'mes':    $inicio = date('Y-m-01'); break;
-            case 'hoy':    $inicio = $hoy; $fin = $hoy; break;
+            case 'hoy':
+                $inicio = $hoy;
+                $fin = $hoy;
+                break;
+            case 'ayer':
+                $inicio = date('Y-m-d', strtotime('-1 day'));
+                $fin = $inicio;
+                break;
+            case 'semana':
+                $inicio = date('Y-m-d', strtotime('-7 days'));
+                $fin = $hoy;
+                break;
+            case 'mes':
+                $inicio = date('Y-m-01');
+                $fin = date('Y-m-t'); 
+                break;
+            default:
+                $inicio = date('Y-m-d', strtotime('-7 days'));
+                $fin = $hoy;
+                break;
         }
     } else {
-        $inicio = !empty($f_inicio_user) ? $f_inicio_user : $hoy;
-        $fin = !empty($f_fin_user) ? $f_fin_user : $hoy;
+        // Validación de fechas personalizadas
+        $inicio = !empty($f_inicio_user) ? date('Y-m-d', strtotime($f_inicio_user)) : $hoy;
+        $fin = !empty($f_fin_user) ? date('Y-m-d', strtotime($f_fin_user)) : $hoy;
     }
 
     $almacen_filtro = intval($filtros['almacen_id'] ?? 0);
     $target_almacen = ($almacen_usuario_sesion > 0) ? $almacen_usuario_sesion : $almacen_filtro;
 
+    // 3. Consulta SQL con rango completo de horas (00:00:00 a 23:59:59)
     $where = "WHERE m.tipo = 'salida' 
               AND (m.usuario_recibe_id IS NULL OR m.usuario_recibe_id = 0)
-              AND DATE(m.fecha) BETWEEN '$inicio' AND '$fin'
+              AND m.fecha BETWEEN '$inicio 00:00:00' AND '$fin 23:59:59'
               AND (v.id IS NULL OR v.estado_general = 'activa')
               AND td.id IS NULL"; 
     
@@ -43,7 +66,6 @@ public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_a
         $where .= " AND m.almacen_origen_id = $target_almacen"; 
     }
 
-    // CAMBIO: Se agregó IFNULL(trm.estado_reparto, 'pendiente') y el LEFT JOIN con transporte_repartos_maestro
     $sql = "SELECT 
                 m.*, 
                 v.id as venta_id,
@@ -62,8 +84,7 @@ public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_a
             LEFT JOIN transmutacion_detalle td ON m.id = td.movimiento_id
             LEFT JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id
             $where 
-            GROUP BY m.id 
-            ORDER BY m.id DESC";
+            ORDER BY m.fecha DESC"; // Ordenar por fecha (más reciente arriba)
 
     $resultado = $this->db->query($sql);
     $data = [];
@@ -75,6 +96,7 @@ public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_a
                 'id'                => $row['id'], 
                 'almacen_origen_id' => $row['almacen_origen_id'],
                 'folio_venta'       => $row['folio_venta'] ?? '---',
+                'fecha_raw'         => $row['fecha'], // Para que el JS pueda comparar fechas puras
                 'fecha_format'      => date('d/m/Y H:i', strtotime($row['fecha'])),
                 'producto'          => $row['prod_nombre'],
                 'sku'               => $row['sku'],
@@ -84,13 +106,12 @@ public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_a
                 'origen'            => $row['origen_nombre'] ?? '---',
                 'u_reg'             => $row['usuario_nombre'] ?? 'Sist.',
                 'ya_despachado'     => intval($row['ya_despachado']),
-                'estado_reparto'    => $row['estado_reparto'] // CAMBIO: Se envía al JS
+                'estado_reparto'    => $row['estado_reparto']
             ];
         }
     }
     return $data;
-}
-    // MANTIENE TU FUNCIÓN ORIGINAL DE PROCESO DE STOCK
+}// MANTIENE TU FUNCIÓN ORIGINAL DE PROCESO DE STOCK
     public function procesarDespachoFisico($idMovimiento) {
         $this->db->begin_transaction();
 
