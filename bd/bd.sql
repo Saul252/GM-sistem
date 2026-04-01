@@ -764,7 +764,25 @@ CREATE TABLE `clientes_saldos_log` (
   CONSTRAINT `fk_log_venta` FOREIGN KEY (`venta_id`) REFERENCES `ventas` (`id`),
   CONSTRAINT `fk_log_usuario` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
---
+
+CREATE TABLE `confirmacion_reparto_viaje` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `id_movimiento` INT NOT NULL,          -- El ID del registro en el carrito/ruta
+    `id_venta` INT NOT NULL,               -- Referencia a la venta maestra
+    `trabajador_id` INT NOT NULL,          -- El chofer que entrega (tu tabla empleados/usuarios)
+    `vehiculo_id` INT NOT NULL,            -- El camión/unidad que llevó el material
+    `fecha` DATE NOT NULL,                 -- Fecha de la entrega física
+    `hora` TIME NOT NULL,                  -- Hora exacta del clic/entrega
+    `fotografia_entrega` VARCHAR(255),     -- Ruta del archivo: foto del material en obra
+    `fotografia_nota` VARCHAR(255),        -- Ruta del archivo: foto de la nota firmada
+    `estatus` ENUM('Entregado', 'Parcial', 'Rechazado') DEFAULT 'Entregado',
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Índices para que las consultas de reportes sean veloces
+    INDEX (id_movimiento),
+    INDEX (id_venta),
+    INDEX (trabajador_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- Índices para tablas volcadas
 --
 

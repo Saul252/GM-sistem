@@ -46,17 +46,53 @@ if ($resultado && $resultado->num_rows === 1) {
 
     // 3. Verificar Contraseña
     if (password_verify($password, $row['password'])) {
-        session_regenerate_id(true);
+    session_regenerate_id(true);
 
-        // Guardamos las variables globales en la sesión
-        $_SESSION['usuario_id'] = $row['id'];
-        $_SESSION['username']   = $row['username'];
-        $_SESSION['nombre']     = $row['nombre'];
-        $_SESSION['rol_id']     = $row['rol_id'];
-        $_SESSION['rol']        = $row['rol'];
-        $_SESSION['almacen_id'] = $row['almacen_id'] ?? 0;
-        $_SESSION['login']      = true;
+    // Guardamos las variables globales en la sesión
+    $_SESSION['usuario_id'] = $row['id'];
+    $_SESSION['username']   = $row['username']; // Ej: "ManuelTrabajador"
+    $_SESSION['nombre']     = $row['nombre'];
+    $_SESSION['rol_id']     = $row['rol_id'];
+    $_SESSION['rol']        = $row['rol'];
+    $_SESSION['almacen_id'] = $row['almacen_id'] ?? 0;
+    $_SESSION['login']      = true;
 
+    /**
+     * ── VINCULACIÓN AUTOMÁTICA DE PERFIL TRABAJADOR ──
+     * Condición: El username debe contener la palabra "Trabajador"
+     */
+    if (strpos($_SESSION['username'], 'Trabajador') !== false) {
+        
+        // 1. Extraemos el nombre limpio (quitamos "Trabajador")
+        // ManuelTrabajador -> Manuel
+        $nombreLimpio = str_replace('Trabajador', '', $_SESSION['username']);
+
+        // 2. Buscamos en la tabla trabajadores por coincidencia de nombre
+        $sqlT = "SELECT id, almacen_id FROM trabajadores WHERE nombre LIKE ? LIMIT 1";
+        $stmtT = $conexion->prepare($sqlT);
+        
+        // Usamos el nombre limpio para buscar (ej. "Manuel")
+        $busqueda = $nombreLimpio . "%"; 
+        $stmtT->bind_param("s", $busqueda);
+        $stmtT->execute();
+        $resT = $stmtT->get_result()->fetch_assoc();
+
+        if ($resT) {
+            // Si lo encuentra, guardamos su ID de la tabla trabajadores
+            $_SESSION['trabajador_id'] = $resT['id'];
+            
+            // Opcional: Si el trabajador tiene un almacén asignado distinto, lo actualizamos
+            if (!empty($resT['almacen_id'])) {
+                $_SESSION['almacen_id'] = $resT['almacen_id'];
+            }
+        } else {
+            // Si el nombre de usuario dice "Trabajador" pero no existe en la tabla
+            $_SESSION['trabajador_id'] = 0;
+        }
+    } else {
+        // Para administradores o vendedores que no usan el sufijo
+        $_SESSION['trabajador_id'] = 0;
+    }
         echo json_encode(["status" => "success", "message" => "¡Bienvenido, " . $row['nombre'] . "!"]);
     } else {
         echo json_encode(["status" => "error", "message" => "La contraseña es incorrecta"]);

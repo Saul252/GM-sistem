@@ -963,7 +963,69 @@ public function obtenerViajesLogistica($folio_folio = null) {
         throw new Exception("Error en la base de datos: " . $e->getMessage());
     }
 }
-public function quitarEntregaDeRuta($entrega_venta_id) {
+public function obtenerViajesLogisticaParaEntrega($folio_folio = null) {
+    try {
+        $sql = "SELECT 
+                      trp.id AS id_movimiento,   -- ID crucial para identificar la parada/punto
+                    v.id AS id_venta,            -- ID para la relación de la evidencia
+                    trm.vehiculo_id,             -- ID del vehículo asignado
+                    tc.viaje_folio AS folio_viaje,
+                    tc.fecha_creacion AS fecha_viaje,
+                    trm.hora_llegada_real AS fecha_llegada,
+                    trm.estado_reparto AS estatus_logistico,
+                    tv.nombre AS unidad_nombre,
+                    tv.placas AS unidad_placas,
+                    u_chofer.nombre AS nombre_chofer,
+                    (SELECT GROUP_CONCAT(u_ayu.nombre SEPARATOR ' / ') 
+                     FROM transporte_tripulantes_detalle ttd
+                     INNER JOIN usuarios u_ayu ON ttd.usuario_id = u_ayu.id
+                     WHERE ttd.reparto_id = tc.reparto_id) AS ayudantes,
+                    trp.orden_visita,
+                    trp.descripcion_punto AS direccion_entrega,
+                    trp.estado_punto AS estatus_parada,
+                    trp.latitud, 
+                    trp.longitud,
+                    v.folio AS folio_venta,
+                    c.nombre_comercial AS cliente,
+                    c.telefono AS tel_cliente,
+                    p.nombre AS producto_nombre,
+                   
+                    m.cantidad,
+                    p.unidad_medida AS um,
+                    p.sku AS SKU
+                FROM transporte_consolidacion tc
+                INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
+                INNER JOIN transporte_vehiculos tv ON tc.vehiculo_id = tv.id
+                INNER JOIN transporte_rutas_puntos trp ON trm.id = trp.reparto_id 
+                INNER JOIN movimientos m ON trm.entrega_venta_id = m.id
+                INNER JOIN productos p ON m.producto_id = p.id
+                LEFT JOIN ventas v ON m.referencia_id = v.id
+                LEFT JOIN clientes c ON v.id_cliente = c.id
+                LEFT JOIN trabajadores u_chofer ON trm.usuario_encargado_id = u_chofer.id";
+
+        if (!empty($folio_folio)) {
+            $sql .= " WHERE tc.viaje_folio = ?";
+        }
+
+        $sql .= " ORDER BY tc.fecha_creacion DESC, tc.viaje_folio ASC, trp.orden_visita ASC";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!empty($folio_folio)) {
+            $stmt->bind_param("s", $folio_folio);
+        }
+
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+        
+        // Retornamos los datos con los nuevos IDs incluidos
+        return $resultado->fetch_all(MYSQLI_ASSOC);
+
+    } catch (Exception $e) {
+        error_log("Error CF System (obtenerViajesLogistica): " . $e->getMessage());
+        throw new Exception("Error en la base de datos: " . $e->getMessage());
+    }
+}public function quitarEntregaDeRuta($entrega_venta_id) {
     try {
         $this->db->begin_transaction();
 
@@ -1296,5 +1358,202 @@ ORDER BY m.id ASC;";
     }
     
     return $pendientes;
+}
+public function getViajesLogistica($trabajador_id = null) {
+    // Si hay ID, filtramos. Si no (Admin), 1=1 para traer todo.
+    $where = ($trabajador_id !== null) 
+        ? "WHERE (rm.usuario_encargado_id = ? OR td.usuario_id = ?)" 
+        : "WHERE 1=1";
+
+    $sql = "SELECT 
+                rm.id, 
+                tc.viaje_folio, 
+                rm.fecha_programada, 
+                rm.estado_reparto,
+                v.nombre AS vehiculo,
+                v.placas,
+                CASE 
+                    WHEN rm.usuario_encargado_id = ? THEN 'Chofer'
+                    WHEN td.usuario_id = ? THEN 'Ayudante'
+                    ELSE 'Supervisor'
+                END as rol_en_viaje
+            FROM transporte_repartos_maestro rm
+            INNER JOIN transporte_vehiculos v ON rm.vehiculo_id = v.id
+            LEFT JOIN transporte_consolidacion tc ON rm.id = tc.reparto_id
+            LEFT JOIN transporte_tripulantes_detalle td ON rm.id = td.reparto_id
+            $where
+            GROUP BY rm.id
+            ORDER BY rm.fecha_programada DESC, rm.id DESC";
+
+    $stmt = $this->db->prepare($sql);
+    
+    // Pasamos los parámetros para el CASE y el WHERE
+    if ($trabajador_id !== null) {
+        $stmt->bind_param("iiii", $trabajador_id, $trabajador_id, $trabajador_id, $trabajador_id);
+    } else {
+        // Para Admin, solo pasamos ceros o valores nulos al CASE
+        $zero = 0;
+        $stmt->bind_param("ii", $zero, $zero);
+    }
+    
+    $stmt->execute();
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+public function getCargaPendienteChofer($trabajador_id = null, $reparto_id_especifico = null) {
+    // Filtro dinámico: Por trabajador (Chofer/Ayudante) o por ID de viaje directo (Admin)
+    $where = "WHERE tc.estatus_consolidado = 'abierto'";
+    
+    if ($reparto_id_especifico) {
+        $where .= " AND rm.id = " . intval($reparto_id_especifico);
+    } elseif ($trabajador_id) {
+        $where .= " AND (rm.usuario_encargado_id = $trabajador_id OR td.usuario_id = $trabajador_id)";
+    }
+
+    $sql = "SELECT 
+                tc.viaje_folio,
+                rm.id AS reparto_id,
+                v.id AS venta_id,
+                v.folio AS folio_venta,
+                m.id AS movimiento_id,
+                m.cantidad,
+                p.nombre AS producto_nombre,
+                p.unidad_medida,
+                c.nombre_comercial AS cliente,
+                rp.descripcion_punto AS destino,
+                rp.estado_punto
+            FROM transporte_consolidacion tc
+            INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
+            INNER JOIN movimientos m ON trm.entrega_venta_id = m.id
+            INNER JOIN productos p ON m.producto_id = p.id
+            INNER JOIN ventas v ON m.referencia_id = v.id
+            LEFT JOIN clientes c ON v.id_cliente = c.id
+            LEFT JOIN transporte_rutas_puntos rp ON trm.id = rp.reparto_id
+            LEFT JOIN transporte_tripulantes_detalle td ON trm.id = td.reparto_id
+            $where
+            AND rp.estado_punto = 'pendiente'
+            GROUP BY m.id
+            ORDER BY rp.orden_visita ASC";
+
+    return $this->db->query($sql)->fetch_all(MYSQLI_ASSOC);
+}
+public function registrarEntregaMovimiento($datos) {
+    try {
+        if (!$this->db) throw new Exception("Sin conexión a BD.");
+        $this->db->begin_transaction();
+
+        // 1. Insertar o actualizar evidencia
+        $sqlEv = "INSERT INTO confirmacion_reparto_viaje (
+                    id_movimiento, id_venta, trabajador_id, vehiculo_id, 
+                    fecha, hora, fotografia_entrega, estatus, comentario
+                ) VALUES (?, ?, ?, ?, CURDATE(), CURTIME(), ?, ?, ?)
+                ON DUPLICATE KEY UPDATE 
+                    fotografia_entrega = VALUES(fotografia_entrega),
+                    estatus            = VALUES(estatus),
+                    comentario         = VALUES(comentario),
+                    hora               = CURTIME()";
+        
+        $stmtEv = $this->db->prepare($sqlEv);
+        if (!$stmtEv) throw new Exception("Error Prepare Evidencia: " . $this->db->error);
+
+        $id_mov   = intval($datos['id_movimiento']);
+        $id_ven   = intval($datos['id_venta']);
+        $id_tra   = intval($datos['trabajador_id']);
+        $id_veh   = intval($datos['vehiculo_id']);
+        $foto_ent = $datos['fotografia_entrega'] ?? '';
+        $estatus  = $datos['estatus_entrega'] ?? 'Entregado'; 
+        $coment   = $datos['comentario'] ?? '';
+
+        $stmtEv->bind_param("iiiisss", 
+            $id_mov, $id_ven, $id_tra, $id_veh, $foto_ent, $estatus, $coment
+        );
+        
+        if (!$stmtEv->execute()) {
+            throw new Exception("Error MySQL Evidencia: " . $stmtEv->error);
+        }
+
+        // 2. Marcar punto como visitado
+        $sqlPunto = "UPDATE transporte_rutas_puntos SET estado_punto = 'visitado', llegada_real = NOW() WHERE id = ?";
+        $stmtP = $this->db->prepare($sqlPunto);
+        if (!$stmtP) throw new Exception("Error Prepare Puntos: " . $this->db->error);
+
+        $stmtP->bind_param("i", $id_mov);
+        if (!$stmtP->execute()) {
+            throw new Exception("Error MySQL Puntos: " . $stmtP->error);
+        }
+
+        $this->db->commit();
+        return true;
+
+    } catch (Exception $e) {
+        if ($this->db && $this->db->in_transaction) $this->db->rollback();
+        // Lanzamos el error real para que aparezca en el SweetAlert
+        throw new Exception($e->getMessage());
+    }
+}
+public function getMonitorEntregasRuta($almacen_id = 0, $inicio = 0, $limite = 25) {
+    if (ob_get_level()) ob_clean();
+
+    $where = " WHERE m.tipo = 'salida' AND tc.viaje_folio IS NOT NULL ";
+    if ($almacen_id > 0) {
+        $where .= " AND m.almacen_origen_id = ? ";
+    }
+
+    $sql = "SELECT 
+                m.id AS movimiento_id, 
+                trm.id AS reparto_id,
+                trm.estado_reparto AS estado_reparto,
+                tc.viaje_folio AS grupo_id,
+                v.id AS venta_id,
+                tc.viaje_folio AS numero_ruta,
+                'RUTA' AS tipo_salida,
+                tc.viaje_folio AS identificador_visual,
+                'VARIOS CLIENTES (RUTA)' AS cliente_display,
+                'MATERIALES DIVERSOS (CARGA CONSOLIDADA)' AS producto_nombre,
+                SUM(m.cantidad) as total_bultos,
+                p.unidad_reporte,
+                p.unidad_medida,
+                p.factor_conversion,
+                IFNULL(tv.nombre, 'POR ASIGNAR') AS vehiculo,
+                COALESCE(t_chofer.nombre, t_patio.nombre, u_reg.nombre, 'POR ASIGNAR') AS responsable,
+                (SELECT GROUP_CONCAT(DISTINCT ls.codigo_lote SEPARATOR ', ')
+                 FROM lotes_movimientos_salida lms
+                 INNER JOIN lotes_stock ls ON lms.lote_id = ls.id
+                 WHERE lms.entrega_venta_id = m.id 
+                ) AS lotes_involucrados,
+                DATE_FORMAT(MAX(IFNULL(rsl.fecha_despacho, m.fecha)), '%d/%m/%Y %H:%i') AS fecha_evento
+            FROM movimientos m
+            INNER JOIN productos p ON m.producto_id = p.id
+            INNER JOIN ventas v ON m.referencia_id = v.id
+            INNER JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id 
+            INNER JOIN transporte_consolidacion tc ON trm.id = tc.reparto_id
+            LEFT JOIN transporte_vehiculos tv ON trm.vehiculo_id = tv.id
+            LEFT JOIN trabajadores t_chofer ON trm.usuario_encargado_id = t_chofer.id
+            LEFT JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
+            LEFT JOIN trabajadores t_patio ON rsl.usuario_despacho_id = t_patio.id 
+            LEFT JOIN usuarios u_reg ON m.usuario_registra_id = u_reg.id
+            $where
+            AND trm.estado_reparto != 'cancelado'
+            GROUP BY tc.viaje_folio
+            ORDER BY 
+                (CASE WHEN trm.estado_reparto = 'en_ruta' THEN 1 ELSE 2 END) ASC, 
+                MAX(m.fecha) DESC 
+            LIMIT ?, ?";
+
+    $stmt = $this->db->prepare($sql);
+    if ($almacen_id > 0) {
+        $stmt->bind_param("iii", $almacen_id, $inicio, $limite);
+    } else {
+        $stmt->bind_param("ii", $inicio, $limite);
+    }
+
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $data = [];
+    while ($row = $result->fetch_assoc()) {
+        $row['lectura_fisica'] = "CARGA CONSOLIDADA";
+        $row['lotes_involucrados'] = $row['lotes_involucrados'] ?? 'SIN LOTE';
+        $data[] = $row;
+    }
+    return $data;
 }
 }
