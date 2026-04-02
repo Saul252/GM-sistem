@@ -234,7 +234,7 @@ function cargarEntregas() {
             });
         })
         .catch(err => {
-            console.error("Error al cargar:", err);
+            console.error(err);
             document.getElementById('contenedor-entregas').innerHTML = '<div class="alert alert-danger">Error de conexión.</div>';
         });
 }
@@ -243,10 +243,10 @@ function abrirModalPorIndex(index) {
     const data = datosTemporales[index];
     if(!data) return;
 
-    // Detectamos el ID (trp.id es el que necesitamos para el update del punto)
+    // BUSCAMOS EL ID (Prioridad al ID de la tabla de puntos TRP)
     const idReal = data.id_movimiento || data.id_punto || data.id || 0;
 
-    // Asignación a campos ocultos y visuales
+    // Asignación a campos ocultos y visibles
     document.getElementById('m_mov_id').value = idReal;
     document.getElementById('m_id_visible').innerText = idReal;
     
@@ -255,21 +255,20 @@ function abrirModalPorIndex(index) {
     document.getElementById('m_cliente_full').innerText = `${data.cliente || 'S/N'} (${data.folio_venta || 'S/F'})`;
     document.getElementById('m_direccion_full').innerText = data.direccion_entrega || 'Sin dirección';
     
-    // Limpieza de formulario
+    // Reset Form
     document.getElementById('formEvidencia').reset();
     document.getElementById('img-preview').style.display = 'none';
     
-    // Verificación de ID válido
+    // Bloqueo de seguridad
     const btn = document.getElementById('btnGuardar');
-    if(idReal == 0 || idReal === undefined) {
+    if(idReal == 0) {
         btn.disabled = true;
-        Swal.fire('Error de Datos', 'Esta parada no tiene un ID de ruta válido.', 'error');
+        Swal.fire('Error', 'ID de movimiento no encontrado en la base de datos.', 'error');
     } else {
         btn.disabled = false;
     }
 
-    const myModal = new bootstrap.Modal(document.getElementById('modalEvidencia'));
-    myModal.show();
+    new bootstrap.Modal(document.getElementById('modalEvidencia')).show();
 }
 
 function previewImagen(input) {
@@ -289,58 +288,37 @@ document.getElementById('formEvidencia').onsubmit = function(e) {
     const btn = document.getElementById('btnGuardar');
     const formData = new FormData(this);
 
-    // --- DEBUG: Ver que estamos mandando realmente ---
-    console.log("--- ENVIANDO DATOS AL SERVIDOR ---");
-    for (let [key, value] of formData.entries()) {
-        console.log(`${key}: ${value instanceof File ? value.name : value}`);
-    }
-
     // Validación de foto
     if(!document.getElementById('input-foto').files[0]) {
-        Swal.fire('Foto Necesaria', 'Por favor, captura la evidencia de entrega.', 'warning');
+        Swal.fire('Atención', 'Debes capturar la fotografía de evidencia.', 'warning');
         return;
     }
 
-    // Validación de ID
-    if(!formData.get('id_movimiento') || formData.get('id_movimiento') == "0") {
-        Swal.fire('Error de ID', 'No se detectó un ID de movimiento válido.', 'error');
+    // Validación de ID final
+    if(formData.get('id_movimiento') == "0" || !formData.get('id_movimiento')) {
+        Swal.fire('Error', 'El ID de movimiento es 0. No se puede guardar.', 'error');
         return;
     }
 
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Procesando...';
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Guardando...';
 
-    // CORRECCIÓN: Inyectamos la acción en la URL para que el controlador no se pierda
-    fetch(`${API_URL}?action=subir_evidencia_reparto`, {
+    fetch(API_URL, {
         method: 'POST',
         body: formData
     })
     .then(async res => {
-        const text = await res.text();
-        try {
-            return JSON.parse(text);
-        } catch(e) {
-            console.error("Respuesta no válida del servidor:", text);
-            throw new Error("El servidor respondió algo que no es JSON. Revisa la consola.");
-        }
+        const data = await res.json();
+        if(!res.ok) throw new Error(data.message || "Error en el servidor");
+        return data;
     })
     .then(res => {
-        if(res.success) {
-            Swal.fire({ icon: 'success', title: '¡Hecho!', text: res.message, timer: 1500, showConfirmButton: false });
-            
-            // Cerrar modal limpiamente
-            const modalEl = document.getElementById('modalEvidencia');
-            const instance = bootstrap.Modal.getInstance(modalEl);
-            if(instance) instance.hide();
-            
-            cargarEntregas(); // Recargar la lista
-        } else {
-            throw new Error(res.message || "Error desconocido");
-        }
+        Swal.fire({ icon: 'success', title: '¡Guardado!', text: res.message, timer: 2000, showConfirmButton: false });
+        bootstrap.Modal.getInstance(document.getElementById('modalEvidencia')).hide();
+        cargarEntregas();
     })
     .catch(err => {
-        console.error("Error en Fetch:", err);
-        Swal.fire('Error', err.message, 'error');
+        Swal.fire('Error al guardar', err.message, 'error');
     })
     .finally(() => {
         btn.disabled = false;

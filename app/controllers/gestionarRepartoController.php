@@ -42,45 +42,42 @@ if (isset($_REQUEST['action'])) {
         }
 
         // ACCIÓN: GUARDAR EVIDENCIA
-   if ($action === 'subir_evidencia_reparto') {
+  if ($action === 'subir_evidencia_reparto') {
     try {
         $movimiento_id = intval($_POST['id_movimiento'] ?? 0);
-        
-        if ($movimiento_id <= 0) throw new Exception("ID de movimiento no válido.");
-
-        // Procesar Carpeta
         $relPath = "uploads/evidencias/" . date('Y/m/d') . "/";
         $targetDir = dirname(__DIR__, 2) . "/" . $relPath;
         
-        if (!is_dir($targetDir)) {
-            mkdir($targetDir, 0777, true);
-        }
+        if (!is_dir($targetDir)) mkdir($targetDir, 0777, true);
 
-        // Procesar Foto
-        $foto_url = "";
-        if (isset($_FILES['evidencia_foto']) && $_FILES['evidencia_foto']['error'] === UPLOAD_ERR_OK) {
-            $ext = strtolower(pathinfo($_FILES['evidencia_foto']['name'], PATHINFO_EXTENSION));
-            $nombreArchivo = "EVI_" . $movimiento_id . "_" . time() . "." . $ext;
-            
-            if (move_uploaded_file($_FILES['evidencia_foto']['tmp_name'], $targetDir . $nombreArchivo)) {
-                $foto_url = $relPath . $nombreArchivo;
-            } else {
-                throw new Exception("No se pudo guardar el archivo en el servidor.");
+        // Función auxiliar interna para procesar cada imagen
+        $procesarFoto = function($inputName, $prefijo) use ($movimiento_id, $targetDir, $relPath) {
+            if (isset($_FILES[$inputName]) && $_FILES[$inputName]['error'] === UPLOAD_ERR_OK) {
+                $ext = strtolower(pathinfo($_FILES[$inputName]['name'], PATHINFO_EXTENSION));
+                $nombre = $prefijo . "_" . $movimiento_id . "_" . bin2hex(random_bytes(4)) . "." . $ext;
+                if (move_uploaded_file($_FILES[$inputName]['tmp_name'], $targetDir . $nombre)) {
+                    return $relPath . $nombre;
+                }
             }
-        }
+            return null;
+        };
+
+        $foto_entrega = $procesarFoto('evidencia_foto', 'MAT'); // MAT de Material
+        $foto_nota    = $procesarFoto('evidencia_nota', 'NOT');  // NOT de Nota
 
         $datos = [
             'id_movimiento'      => $movimiento_id,
             'id_venta'           => intval($_POST['id_venta'] ?? 0),
             'trabajador_id'      => $id_ejecutor,
             'vehiculo_id'        => intval($_POST['vehiculo_id'] ?? 0),
-            'fotografia_entrega' => $foto_url,
+            'fotografia_entrega' => $foto_entrega,
+            'fotografia_nota'    => $foto_nota,
             'estatus_entrega'    => $_POST['estatus_entrega'] ?? 'Entregado',
             'comentario'         => $_POST['comentario'] ?? ''
         ];
 
         if ($repartoM->registrarEntregaMovimiento($datos)) {
-            echo json_encode(["success" => true, "message" => "¡Entrega registrada!"]);
+            echo json_encode(["success" => true, "message" => "Evidencias guardadas correctamente"]);
         }
 
     } catch (Exception $e) {

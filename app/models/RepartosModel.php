@@ -966,9 +966,9 @@ public function obtenerViajesLogistica($folio_folio = null) {
 public function obtenerViajesLogisticaParaEntrega($folio_folio = null) {
     try {
         $sql = "SELECT 
-                      trp.id AS id_movimiento,   -- ID crucial para identificar la parada/punto
-                    v.id AS id_venta,            -- ID para la relación de la evidencia
-                    trm.vehiculo_id,             -- ID del vehículo asignado
+                    trp.id AS id_movimiento,
+                    v.id AS id_venta,
+                    trm.vehiculo_id,
                     tc.viaje_folio AS folio_viaje,
                     tc.fecha_creacion AS fecha_viaje,
                     trm.hora_llegada_real AS fecha_llegada,
@@ -989,10 +989,13 @@ public function obtenerViajesLogisticaParaEntrega($folio_folio = null) {
                     c.nombre_comercial AS cliente,
                     c.telefono AS tel_cliente,
                     p.nombre AS producto_nombre,
-                   
                     m.cantidad,
                     p.unidad_medida AS um,
-                    p.sku AS SKU
+                    p.sku AS SKU,
+                    -- CAMPOS DE EVIDENCIA --
+                    crv.id AS id_evidencia,
+                    IF(crv.id IS NOT NULL, 1, 0) AS ya_entregado,
+                    crv.fotografia_entrega AS foto_registrada
                 FROM transporte_consolidacion tc
                 INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
                 INNER JOIN transporte_vehiculos tv ON tc.vehiculo_id = tv.id
@@ -1001,31 +1004,28 @@ public function obtenerViajesLogisticaParaEntrega($folio_folio = null) {
                 INNER JOIN productos p ON m.producto_id = p.id
                 LEFT JOIN ventas v ON m.referencia_id = v.id
                 LEFT JOIN clientes c ON v.id_cliente = c.id
-                LEFT JOIN trabajadores u_chofer ON trm.usuario_encargado_id = u_chofer.id";
+                LEFT JOIN trabajadores u_chofer ON trm.usuario_encargado_id = u_chofer.id
+                LEFT JOIN confirmacion_reparto_viaje crv ON trp.id = crv.id_movimiento";
 
         if (!empty($folio_folio)) {
             $sql .= " WHERE tc.viaje_folio = ?";
         }
 
-        $sql .= " ORDER BY tc.fecha_creacion DESC, tc.viaje_folio ASC, trp.orden_visita ASC";
+        $sql .= " ORDER BY trp.orden_visita ASC";
 
         $stmt = $this->db->prepare($sql);
-
         if (!empty($folio_folio)) {
             $stmt->bind_param("s", $folio_folio);
         }
 
         $stmt->execute();
-        $resultado = $stmt->get_result();
-        
-        // Retornamos los datos con los nuevos IDs incluidos
-        return $resultado->fetch_all(MYSQLI_ASSOC);
-
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     } catch (Exception $e) {
-        error_log("Error CF System (obtenerViajesLogistica): " . $e->getMessage());
-        throw new Exception("Error en la base de datos: " . $e->getMessage());
+        error_log("Error en obtenerViajesLogistica: " . $e->getMessage());
+        return []; // Retornar array vacío para evitar que el JS rompa
     }
-}public function quitarEntregaDeRuta($entrega_venta_id) {
+}
+public function quitarEntregaDeRuta($entrega_venta_id) {
     try {
         $this->db->begin_transaction();
 
@@ -1436,60 +1436,7 @@ public function getCargaPendienteChofer($trabajador_id = null, $reparto_id_espec
 
     return $this->db->query($sql)->fetch_all(MYSQLI_ASSOC);
 }
-public function registrarEntregaMovimiento($datos) {
-    try {
-        if (!$this->db) throw new Exception("Sin conexión a BD.");
-        $this->db->begin_transaction();
 
-        // 1. Insertar o actualizar evidencia
-        $sqlEv = "INSERT INTO confirmacion_reparto_viaje (
-                    id_movimiento, id_venta, trabajador_id, vehiculo_id, 
-                    fecha, hora, fotografia_entrega, estatus, comentario
-                ) VALUES (?, ?, ?, ?, CURDATE(), CURTIME(), ?, ?, ?)
-                ON DUPLICATE KEY UPDATE 
-                    fotografia_entrega = VALUES(fotografia_entrega),
-                    estatus            = VALUES(estatus),
-                    comentario         = VALUES(comentario),
-                    hora               = CURTIME()";
-        
-        $stmtEv = $this->db->prepare($sqlEv);
-        if (!$stmtEv) throw new Exception("Error Prepare Evidencia: " . $this->db->error);
-
-        $id_mov   = intval($datos['id_movimiento']);
-        $id_ven   = intval($datos['id_venta']);
-        $id_tra   = intval($datos['trabajador_id']);
-        $id_veh   = intval($datos['vehiculo_id']);
-        $foto_ent = $datos['fotografia_entrega'] ?? '';
-        $estatus  = $datos['estatus_entrega'] ?? 'Entregado'; 
-        $coment   = $datos['comentario'] ?? '';
-
-        $stmtEv->bind_param("iiiisss", 
-            $id_mov, $id_ven, $id_tra, $id_veh, $foto_ent, $estatus, $coment
-        );
-        
-        if (!$stmtEv->execute()) {
-            throw new Exception("Error MySQL Evidencia: " . $stmtEv->error);
-        }
-
-        // 2. Marcar punto como visitado
-        $sqlPunto = "UPDATE transporte_rutas_puntos SET estado_punto = 'visitado', llegada_real = NOW() WHERE id = ?";
-        $stmtP = $this->db->prepare($sqlPunto);
-        if (!$stmtP) throw new Exception("Error Prepare Puntos: " . $this->db->error);
-
-        $stmtP->bind_param("i", $id_mov);
-        if (!$stmtP->execute()) {
-            throw new Exception("Error MySQL Puntos: " . $stmtP->error);
-        }
-
-        $this->db->commit();
-        return true;
-
-    } catch (Exception $e) {
-        if ($this->db && $this->db->in_transaction) $this->db->rollback();
-        // Lanzamos el error real para que aparezca en el SweetAlert
-        throw new Exception($e->getMessage());
-    }
-}
 public function getMonitorEntregasRuta($almacen_id = 0, $inicio = 0, $limite = 25) {
     if (ob_get_level()) ob_clean();
 
