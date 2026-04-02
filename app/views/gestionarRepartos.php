@@ -18,14 +18,17 @@ $folio_viaje = $_GET['folio'] ?? '';
             --ios-blue: #007AFF;
             --ios-bg: #F2F2F7;
             --card-shadow: 0 8px 20px rgba(0,0,0,0.08);
+            --ios-green: #34C759;
         }
 
         body {
             background-color: var(--ios-bg);
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
             padding-bottom: 30px;
+            color: #1c1c1e;
         }
 
+        /* --- HEADER ESTILO IOS --- */
         .header-ios {
             background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(20px);
@@ -37,6 +40,7 @@ $folio_viaje = $_GET['folio'] ?? '';
             padding: 12px 16px;
         }
 
+        /* --- TARJETAS DE ENTREGA --- */
         .card-entrega {
             background: #fff;
             border-radius: 20px;
@@ -47,21 +51,28 @@ $folio_viaje = $_GET['folio'] ?? '';
         }
 
         .card-entrega.visitado {
-            border-left: 8px solid #34C759;
-            opacity: 0.8;
+            border-left: 8px solid var(--ios-green);
+            opacity: 0.9;
         }
 
+        /* --- BOTONES Y CÁMARA --- */
         .btn-camera {
-            background-color: #fff;
+            background-color: #f8f9fa;
             color: var(--ios-blue);
             border: 2px dashed #d1d1d6;
             border-radius: 18px;
-            padding: 15px;
+            padding: 20px;
             width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .btn-camera:hover {
+            background-color: #f0f0f5;
+            border-color: var(--ios-blue);
         }
 
         .preview-img {
@@ -69,7 +80,7 @@ $folio_viaje = $_GET['folio'] ?? '';
             border-radius: 18px;
             margin-top: 10px;
             display: none;
-            max-height: 150px;
+            height: 160px;
             object-fit: cover;
             border: 1px solid #ddd;
         }
@@ -77,17 +88,36 @@ $folio_viaje = $_GET['folio'] ?? '';
         .btn-primary-ios {
             background: var(--ios-blue);
             border: none;
-            border-radius: 14px;
-            padding: 14px;
+            border-radius: 16px;
+            padding: 16px;
             font-weight: 600;
             color: white;
+            transition: background 0.2s;
+        }
+
+        .btn-primary-ios:hover {
+            background: #0066d6;
         }
 
         .info-label {
-            font-size: 0.7rem;
+            font-size: 0.72rem;
             color: #8e8e93;
             text-transform: uppercase;
-            font-weight: 600;
+            font-weight: 700;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        /* --- AJUSTES DEL MODAL PARA PC --- */
+        .modal-ios-style {
+            border-radius: 28px !important;
+            border: none !important;
+        }
+
+        @media (min-width: 768px) {
+            .modal-dialog {
+                max-width: 750px; /* Ancho cómodo en computadora */
+            }
         }
     </style>
 </head>
@@ -115,9 +145,9 @@ $folio_viaje = $_GET['folio'] ?? '';
 </div>
 
 <div class="modal fade" id="modalEvidencia" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered mx-3">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 25px;">
-            <div class="modal-header border-0 pb-0">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg modal-ios-style">
+            <div class="modal-header border-0 pb-0 px-4 pt-4">
                 <div class="d-flex justify-content-between w-100 align-items-center">
                     <h5 class="modal-title fw-bold" id="tituloModal">Finalizar Entrega</h5>
                     <span class="badge bg-light text-muted border rounded-pill px-3 py-2" style="font-size: 0.7rem;">
@@ -133,12 +163,12 @@ $folio_viaje = $_GET['folio'] ?? '';
                 <input type="hidden" name="vehiculo_id" id="m_vehiculo_id">
                 <input type="hidden" name="action" value="subir_evidencia_reparto">
 
-                <div class="modal-body">
+                <div class="modal-body px-4">
                     <div id="alertaEdicion" class="alert alert-warning py-2 small mb-3 rounded-4 d-none">
                         <i class="bi bi-pencil-square me-2"></i> Estás editando una entrega existente.
                     </div>
 
-                    <div class="mb-3 p-3 rounded-4" style="background-color: #f2f2f7;">
+                    <div class="mb-3 p-3 rounded-4" style="background-color: #f2f2f7; border: 1px solid #e5e5ea;">
                         <div class="info-label">Cliente / Folio de Venta</div>
                         <div id="m_cliente_full" class="fw-bold mb-2"></div>
                         <div class="info-label">Dirección de Entrega</div>
@@ -147,43 +177,45 @@ $folio_viaje = $_GET['folio'] ?? '';
 
                     <div class="mb-3">
                         <label class="info-label">Estado de la Visita</label>
-                        <select name="estatus_entrega" id="m_estatus_select" class="form-select border-0 bg-light rounded-3">
+                        <select name="estatus_entrega" id="m_estatus_select" class="form-select border-0 bg-light rounded-3 shadow-none">
                             <option value="Entregado">Entregado Total</option>
                             <option value="Parcial">Entrega Parcial</option>
                             <option value="Rechazado">Rechazado por Cliente</option>
                         </select>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="info-label">1. Foto del Material</label>
-                        <button type="button" class="btn-camera" onclick="document.getElementById('input-foto').click()">
-                            <i class="bi bi-box-seam fs-2"></i>
-                            <span class="fw-bold small">Material en Obra</span>
-                        </button>
-                        <input type="file" name="evidencia_foto" id="input-foto" accept="image/*" capture="environment" class="d-none" onchange="previewImagen(this, 'img-preview')">
-                        <img id="img-preview" class="preview-img">
-                        <div id="txt-material-actual" class="small text-primary mt-1 d-none"><i class="bi bi-check-all"></i> Ya hay una foto guardada</div>
-                    </div>
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-md-6">
+                            <label class="info-label">1. Foto del Material</label>
+                            <button type="button" class="btn-camera" onclick="document.getElementById('input-foto').click()">
+                                <i class="bi bi-box-seam fs-2"></i>
+                                <span class="fw-bold small">Material en Obra</span>
+                            </button>
+                            <input type="file" name="evidencia_foto" id="input-foto" accept="image/*" capture="environment" class="d-none" onchange="previewImagen(this, 'img-preview')">
+                            <img id="img-preview" class="preview-img">
+                            <div id="txt-material-actual" class="small text-primary mt-1 d-none text-center"><i class="bi bi-check-all"></i> Imagen guardada</div>
+                        </div>
 
-                    <div class="mb-3">
-                        <label class="info-label">2. Foto de Nota Firmada</label>
-                        <button type="button" class="btn-camera" onclick="document.getElementById('input-foto-nota').click()">
-                            <i class="bi bi-file-earmark-text fs-2"></i>
-                            <span class="fw-bold small">Capturar Nota</span>
-                        </button>
-                        <input type="file" name="evidencia_nota" id="input-foto-nota" accept="image/*" capture="environment" class="d-none" onchange="previewImagen(this, 'img-preview-nota')">
-                        <img id="img-preview-nota" class="preview-img">
-                        <div id="txt-nota-actual" class="small text-primary mt-1 d-none"><i class="bi bi-check-all"></i> Ya hay una foto guardada</div>
+                        <div class="col-12 col-md-6">
+                            <label class="info-label">2. Foto de Nota Firmada</label>
+                            <button type="button" class="btn-camera" onclick="document.getElementById('input-foto-nota').click()">
+                                <i class="bi bi-file-earmark-text fs-2"></i>
+                                <span class="fw-bold small">Capturar Nota</span>
+                            </button>
+                            <input type="file" name="evidencia_nota" id="input-foto-nota" accept="image/*" capture="environment" class="d-none" onchange="previewImagen(this, 'img-preview-nota')">
+                            <img id="img-preview-nota" class="preview-img">
+                            <div id="txt-nota-actual" class="small text-primary mt-1 d-none text-center"><i class="bi bi-check-all"></i> Imagen guardada</div>
+                        </div>
                     </div>
 
                     <div class="mb-2">
                         <label class="info-label">Observaciones</label>
-                        <textarea name="comentario" id="m_comentario" class="form-control border-0 bg-light rounded-3" rows="2" placeholder="Notas opcionales..."></textarea>
+                        <textarea name="comentario" id="m_comentario" class="form-control border-0 bg-light rounded-3 shadow-none" rows="2" placeholder="Notas opcionales..."></textarea>
                     </div>
                 </div>
 
-                <div class="modal-footer border-0 pt-0">
-                    <button type="submit" class="btn btn-primary-ios w-100" id="btnGuardar">Guardar y Finalizar</button>
+                <div class="modal-footer border-0 px-4 pb-4">
+                    <button type="submit" class="btn btn-primary-ios w-100 py-3" id="btnGuardar">Guardar y Finalizar</button>
                 </div>
             </form>
         </div>
@@ -223,7 +255,7 @@ function cargarEntregas() {
                 
                 container.innerHTML += `
                     <div class="card card-entrega ${esVisitado ? 'visitado' : ''} animate__animated animate__fadeIn">
-                        <div class="card-body">
+                        <div class="card-body p-4">
                             <div class="d-flex justify-content-between mb-2">
                                 <span class="badge rounded-pill ${esVisitado ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary'}">
                                     ${esVisitado ? 'ENTREGADO' : estado.toUpperCase()}
@@ -233,16 +265,17 @@ function cargarEntregas() {
                             <h6 class="fw-bold mb-1">${item.cliente || 'Cliente'}</h6>
                             <p class="small text-muted mb-3"><i class="bi bi-geo-alt me-1"></i>${item.direccion_entrega || 'Sin dirección'}</p>
                             
-                            <div class="p-2 rounded-3 mb-3 bg-light" style="font-size: 0.85rem;">
-                                <strong>Material:</strong> ${item.producto_nombre} <br>
-                                <strong>Cantidad:</strong> ${item.cantidad} ${item.um || ''}
+                            <div class="p-3 rounded-4 mb-3 bg-light" style="font-size: 0.85rem; border: 1px solid #f2f2f7;">
+                                <div class="info-label">Material a entregar:</div>
+                                <div class="fw-bold text-dark">${item.producto_nombre}</div>
+                                <div class="text-secondary mt-1">Cantidad: ${item.cantidad} ${item.um || ''}</div>
                             </div>
 
                             ${!esVisitado ? 
                                 `<button class="btn btn-primary-ios w-100" onclick="abrirModalPorIndex(${index})">
                                     Reportar Entrega
                                  </button>` : 
-                                `<button class="btn btn-outline-success w-100 border-2" onclick="abrirModalPorIndex(${index})" style="border-radius: 14px; font-size: 0.85rem;">
+                                `<button class="btn btn-outline-success w-100 border-2 py-2" onclick="abrirModalPorIndex(${index})" style="border-radius: 14px; font-weight: 600;">
                                     <i class="bi bi-pencil-square me-1"></i> Modificar Evidencia
                                  </button>`
                             }
@@ -252,45 +285,31 @@ function cargarEntregas() {
         })
         .catch(err => {
             console.error(err);
-            container.innerHTML = '<div class="alert alert-danger">Error de conexión.</div>';
+            container.innerHTML = '<div class="alert alert-danger mx-3">Error de conexión.</div>';
         });
 }
 
-/**
- * Abre el modal y carga la información de la parada.
- * Si ya existe evidencia (ya_entregado == 1), rellena los campos para edición.
- * @param {number} index - El índice del arreglo datosTemporales
- */
 function abrirModalPorIndex(index) {
     const data = datosTemporales[index];
-    if (!data) {
-        Swal.fire('Error', 'No se encontraron datos para esta parada.', 'error');
-        return;
-    }
+    if (!data) return;
 
-    // 1. Referencias a elementos del DOM
     const modalEl      = document.getElementById('modalEvidencia');
     const form         = document.getElementById('formEvidencia');
     const titulo       = document.getElementById('tituloModal');
     const btnGuardar   = document.getElementById('btnGuardar');
     const alertaEdicion = document.getElementById('alertaEdicion');
     
-    // Contenedores de previsualización
     const previewMat   = document.getElementById('img-preview');
     const previewNota  = document.getElementById('img-preview-nota');
     const txtMat       = document.getElementById('txt-material-actual');
     const txtNota      = document.getElementById('txt-nota-actual');
 
-    // 2. Limpiar el formulario y estados previos
     form.reset();
     previewMat.style.display = 'none';
     previewNota.style.display = 'none';
     txtMat.classList.add('d-none');
     txtNota.classList.add('d-none');
-    previewMat.src = "";
-    previewNota.src = "";
 
-    // 3. Sincronizar IDs y Textos Informativos
     const idMovimiento = data.id_movimiento || 0;
     document.getElementById('m_mov_id').value = idMovimiento;
     document.getElementById('m_id_visible').innerText = idMovimiento;
@@ -299,56 +318,40 @@ function abrirModalPorIndex(index) {
     document.getElementById('m_cliente_full').innerText = `${data.cliente || 'S/N'} (${data.folio_venta || 'S/F'})`;
     document.getElementById('m_direccion_full').innerText = data.direccion_entrega || 'Sin dirección';
 
-    // 4. Lógica de "Modo Edición" vs "Modo Nuevo"
     const esEdicion = parseInt(data.ya_entregado) === 1;
 
     if (esEdicion) {
-        // --- CONFIGURACIÓN PARA EDITAR ---
         titulo.innerText = "Modificar Entrega";
         alertaEdicion.classList.remove('d-none');
         btnGuardar.innerText = "Actualizar Cambios";
-        btnGuardar.className = "btn btn-success w-100 py-3 rounded-4 fw-bold"; // Color verde para indicar edición
+        btnGuardar.className = "btn btn-success w-100 py-3 rounded-4 fw-bold";
 
-        // Cargar Estatus y Comentario desde los alias del SQL
         document.getElementById('m_estatus_select').value = data.estatus_evidencia || "Entregado";
         document.getElementById('m_comentario').value = data.comentario_evidencia || "";
 
-        // Cargar Foto del Material (si existe)
         if (data.foto_registrada && data.foto_registrada.length > 5) {
-            // Agregamos un parámetro aleatorio (?t=...) para forzar al navegador a refrescar la imagen
             previewMat.src = data.foto_registrada + "?t=" + new Date().getTime();
             previewMat.style.display = 'block';
             txtMat.classList.remove('d-none');
         }
-
-        // Cargar Foto de la Nota (si existe)
         if (data.nota_registrada && data.nota_registrada.length > 5) {
             previewNota.src = data.nota_registrada + "?t=" + new Date().getTime();
             previewNota.style.display = 'block';
             txtNota.classList.remove('d-none');
         }
-
     } else {
-        // --- CONFIGURACIÓN PARA NUEVA ENTREGA ---
         titulo.innerText = "Finalizar Entrega";
         alertaEdicion.classList.add('d-none');
         btnGuardar.innerText = "Guardar y Finalizar";
-        btnGuardar.className = "btn btn-primary-ios w-100"; // Color azul original
-        
-        // Valores por defecto
+        btnGuardar.className = "btn btn-primary-ios w-100 py-3";
         document.getElementById('m_estatus_select').value = "Entregado";
     }
 
-    // 5. Bloqueo de seguridad: Si no hay ID de movimiento, no se puede guardar
     btnGuardar.disabled = (idMovimiento === 0);
-    if (idMovimiento === 0) {
-        console.error("Error: La parada seleccionada no tiene un id_movimiento válido.");
-    }
-
-    // 6. Mostrar el modal
     const myModal = new bootstrap.Modal(modalEl);
     myModal.show();
 }
+
 function previewImagen(input, idDestino) {
     const preview = document.getElementById(idDestino);
     const labelOk = idDestino === 'img-preview' ? 'txt-material-actual' : 'txt-nota-actual';
@@ -358,7 +361,7 @@ function previewImagen(input, idDestino) {
         reader.onload = (e) => {
             preview.src = e.target.result;
             preview.style.display = 'block';
-            document.getElementById(labelOk).classList.add('d-none'); // Ocultamos el aviso de "ya existe" porque el usuario cargó una nueva
+            document.getElementById(labelOk).classList.add('d-none');
         }
         reader.readAsDataURL(input.files[0]);
     }
@@ -370,16 +373,15 @@ document.getElementById('formEvidencia').onsubmit = function(e) {
     const formData = new FormData(this);
     const esEdicion = document.getElementById('tituloModal').innerText.includes("Modificar");
 
-    // Si es nuevo, fotos obligatorias
     if(!esEdicion) {
         if(!document.getElementById('input-foto').files[0] || !document.getElementById('input-foto-nota').files[0]) {
-            Swal.fire('Atención', 'Es obligatorio capturar ambas fotos para finalizar.', 'warning');
+            Swal.fire('Atención', 'Es obligatorio capturar ambas fotos.', 'warning');
             return;
         }
     }
 
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Procesando...';
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Guardando...';
 
     fetch(API_URL, { method: 'POST', body: formData })
     .then(async res => {
@@ -388,7 +390,7 @@ document.getElementById('formEvidencia').onsubmit = function(e) {
         return data;
     })
     .then(res => {
-        Swal.fire({ icon: 'success', title: 'Listo', text: res.message, timer: 1500, showConfirmButton: false });
+        Swal.fire({ icon: 'success', title: 'Éxito', text: res.message, timer: 1500, showConfirmButton: false });
         bootstrap.Modal.getInstance(document.getElementById('modalEvidencia')).hide();
         cargarEntregas();
     })
