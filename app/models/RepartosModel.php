@@ -1432,8 +1432,7 @@ public function registrarEntregaMovimiento($datos) {
     }
 }
 public function getMonitorEntregasRuta($almacen_id = 0, $inicio = 0, $limite = 25) {
-    if (ob_get_level()) ob_clean();
-
+    // Filtro de almacén
     $where = " WHERE m.tipo = 'salida' AND tc.viaje_folio IS NOT NULL ";
     if ($almacen_id > 0) {
         $where .= " AND m.almacen_origen_id = ? ";
@@ -1444,43 +1443,27 @@ public function getMonitorEntregasRuta($almacen_id = 0, $inicio = 0, $limite = 2
                 trm.id AS reparto_id,
                 trm.estado_reparto AS estado_reparto,
                 tc.viaje_folio AS grupo_id,
-                v.id AS venta_id,
                 tc.viaje_folio AS numero_ruta,
                 'RUTA' AS tipo_salida,
-                tc.viaje_folio AS identificador_visual,
                 'VARIOS CLIENTES (RUTA)' AS cliente_display,
-                'MATERIALES DIVERSOS (CARGA CONSOLIDADA)' AS producto_nombre,
+                'MATERIALES DIVERSOS' AS producto_nombre,
                 SUM(m.cantidad) as total_bultos,
-                p.unidad_reporte,
-                p.unidad_medida,
-                p.factor_conversion,
-                IFNULL(tv.nombre, 'POR ASIGNAR') AS vehiculo,
-                COALESCE(t_chofer.nombre, t_patio.nombre, u_reg.nombre, 'POR ASIGNAR') AS responsable,
-                (SELECT GROUP_CONCAT(DISTINCT ls.codigo_lote SEPARATOR ', ')
-                 FROM lotes_movimientos_salida lms
-                 INNER JOIN lotes_stock ls ON lms.lote_id = ls.id
-                 WHERE lms.entrega_venta_id = m.id 
-                ) AS lotes_involucrados,
+                COALESCE(t_chofer.nombre, 'POR ASIGNAR') AS responsable,
                 DATE_FORMAT(MAX(IFNULL(rsl.fecha_despacho, m.fecha)), '%d/%m/%Y %H:%i') AS fecha_evento
             FROM movimientos m
-            INNER JOIN productos p ON m.producto_id = p.id
-            INNER JOIN ventas v ON m.referencia_id = v.id
             INNER JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id 
             INNER JOIN transporte_consolidacion tc ON trm.id = tc.reparto_id
-            LEFT JOIN transporte_vehiculos tv ON trm.vehiculo_id = tv.id
             LEFT JOIN trabajadores t_chofer ON trm.usuario_encargado_id = t_chofer.id
             LEFT JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
-            LEFT JOIN trabajadores t_patio ON rsl.usuario_despacho_id = t_patio.id 
-            LEFT JOIN usuarios u_reg ON m.usuario_registra_id = u_reg.id
             $where
             AND trm.estado_reparto != 'cancelado'
             GROUP BY tc.viaje_folio
-            ORDER BY 
-                (CASE WHEN trm.estado_reparto = 'en_ruta' THEN 1 ELSE 2 END) ASC, 
-                MAX(m.fecha) DESC 
-            LIMIT ?, ?";
+            ORDER BY (CASE WHEN trm.estado_reparto = 'en_ruta' THEN 1 ELSE 2 END) ASC, MAX(m.fecha) DESC 
+            LIMIT ?, ?"; // IMPORTANTE: Los parámetros de límite
 
     $stmt = $this->db->prepare($sql);
+    
+    // Vinculación dinámica de parámetros según el almacén
     if ($almacen_id > 0) {
         $stmt->bind_param("iii", $almacen_id, $inicio, $limite);
     } else {
@@ -1488,14 +1471,31 @@ public function getMonitorEntregasRuta($almacen_id = 0, $inicio = 0, $limite = 2
     }
 
     $stmt->execute();
-    $result = $stmt->get_result();
-    $data = [];
-    while ($row = $result->fetch_assoc()) {
-        $row['lectura_fisica'] = "CARGA CONSOLIDADA";
-        $row['lotes_involucrados'] = $row['lotes_involucrados'] ?? 'SIN LOTE';
-        $data[] = $row;
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+public function contarTotalEntregasRuta($almacen_id = 0) {
+    $where = " WHERE m.tipo = 'salida' AND tc.viaje_folio IS NOT NULL ";
+    if ($almacen_id > 0) {
+        $where .= " AND m.almacen_origen_id = ? ";
     }
-    return $data;
+
+    // Contamos los grupos únicos de viaje_folio
+    $sql = "SELECT COUNT(DISTINCT tc.viaje_folio) as total 
+            FROM movimientos m
+            INNER JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id 
+            INNER JOIN transporte_consolidacion tc ON trm.id = tc.reparto_id
+            $where
+            AND trm.estado_reparto != 'cancelado'";
+
+    $stmt = $this->db->prepare($sql);
+    
+    if ($almacen_id > 0) {
+        $stmt->bind_param("i", $almacen_id);
+    }
+
+    $stmt->execute();
+    $result = $stmt->get_result()->fetch_assoc();
+    return intval($result['total'] ?? 0);
 }
 
 public function obtenerViajesLogisticaParaEntrega($folio_viaje = null) {

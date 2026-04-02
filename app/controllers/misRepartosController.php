@@ -55,26 +55,34 @@ if (isset($_REQUEST['action'])) {
             ]);
             exit;
         }
-  if ($action === 'get_monitor_entregas') {
-    header('Content-Type: application/json'); // Importante declarar el tipo de contenido al inicio
+if ($action === 'get_monitor_entregas') {
+    header('Content-Type: application/json');
 
-    // 1. Obtenemos el almacén (del filtro o de la sesión)
+    // 1. Almacén
     $almacen_id = isset($_GET['almacen_id']) ? intval($_GET['almacen_id']) : intval($_SESSION['almacen_id'] ?? 0);
     
-    // 2. Parámetros de paginación (opcionales, por defecto 0 y 25)
-    $inicio = isset($_GET['inicio']) ? intval($_GET['inicio']) : 0;
-    $limite = isset($_GET['limite']) ? intval($_GET['limite']) : 25;
+    // 2. Lógica de Paginación (Conversión de página a offset)
+    $limite = isset($_GET['limite']) ? intval($_GET['limite']) : 15;
+    $pagina = isset($_GET['pagina']) ? intval($_GET['pagina']) : 1;
     
-    // 3. Llamamos a la función pasando los 3 parámetros requeridos
+    // Calculamos dónde empezar: (Página 1 - 1) * 15 = 0 | (Página 2 - 1) * 15 = 15
+    $inicio = ($pagina - 1) * $limite;
+    
+    // 3. Datos y Conteo Total (Vital para los numeritos 1,2,3)
     $registros = $repartoM->getMonitorEntregasRuta($almacen_id, $inicio, $limite);
+    $total_records = $repartoM->contarTotalEntregasRuta($almacen_id); // Esta es la función que agregamos al modelo
     
-    // 4. Verificamos si es un array (aunque esté vacío, el modelo debería devolver [])
     if (is_array($registros)) {
+        // Calculamos cuántas páginas hay en total
+        $total_pages = ceil($total_records / $limite);
+
         echo json_encode([
-            "success" => true, 
-            "data" => $registros,
-            "count" => count($registros),
-            "offset" => $inicio
+            "success"       => true, 
+            "data"          => $registros,
+            "total_records" => $total_records,
+            "total_pages"   => $total_pages,
+            "current_page"  => $pagina,
+            "limite"        => $limite
         ]);
     } else {
         echo json_encode([
@@ -84,6 +92,7 @@ if (isset($_REQUEST['action'])) {
     }
     exit;
 }
+
   
   if ($action === 'listar_viajes_activos') {
     // 1. Limpiamos cualquier salida previa para evitar JSON corrupto
