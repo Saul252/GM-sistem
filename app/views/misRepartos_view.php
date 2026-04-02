@@ -1,7 +1,7 @@
 <?php
 /**
  * CF SYSTEM - Logística Híbrida
- * Vista con segmentación de viajes Activos vs Terminados.
+ * Vista con filtrado dinámico por identidad de trabajador.
  */
 ?>
 <!DOCTYPE html>
@@ -9,7 +9,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Logística | cfsistem</title>
+    <title><?= $es_supervisor ? 'Monitor Global' : 'Mis Repartos' ?> | cfsistem</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
@@ -22,7 +22,7 @@
             --apple-bg: #f5f5f7;
             --accent-blue: #007aff;
             --accent-green: #34c759;
-            --sidebar-width: 260px; /* Ajusta según el ancho real de tu sidebar */
+            --sidebar-width: 260px;
         }
 
         body { 
@@ -32,7 +32,6 @@
             overflow-x: hidden;
         }
 
-        /* --- ESTRUCTURA PRINCIPAL --- */
         .main-wrapper { 
             margin-left: var(--sidebar-width); 
             padding: 30px; 
@@ -41,7 +40,6 @@
             transition: all 0.3s ease;
         }
 
-        /* --- CARDS ESTILO IOS --- */
         .card-ios {
             background: #ffffff;
             border-radius: 18px;
@@ -58,7 +56,6 @@
             padding: 15px 20px;
         }
 
-        /* --- TABLAS OPTIMIZADAS --- */
         .table-monitor {
             width: 100%;
             margin: 0;
@@ -99,7 +96,6 @@
             color: #424245;
         }
 
-        /* --- RESPONSIVE --- */
         @media (max-width: 992px) {
             .main-wrapper { margin-left: 0; padding: 15px; padding-top: 80px; }
         }
@@ -137,7 +133,8 @@
         <div class="card-ios">
             <div class="header-premium d-flex justify-content-between align-items-center">
                 <h6 class="mb-0 fw-bold text-uppercase small">
-                    <i class="bi bi-broadcast me-2 text-primary"></i> Unidades en Tránsito
+                    <i class="bi bi-broadcast me-2 text-primary"></i> 
+                    <?= $es_supervisor ? 'Unidades en Tránsito' : 'Mi Ruta Activa' ?>
                 </h6>
                 <button class="btn btn-sm btn-outline-light rounded-pill px-3 border-0 bg-white bg-opacity-10" onclick="cargarMonitorViajes()">
                     <i class="bi bi-arrow-repeat me-1"></i> Actualizar
@@ -162,13 +159,21 @@
 
         <div class="card-ios p-3">
             <div class="d-flex justify-content-between align-items-center">
-                <h6 class="m-0 fw-bold"><i class="bi bi-list-check me-2"></i>Monitor de Entregas</h6>
+                <h6 class="m-0 fw-bold">
+                    <i class="bi bi-list-check me-2"></i>
+                    <?= $es_supervisor ? 'Monitor de Entregas' : 'Mis Entregas Recientes' ?>
+                </h6>
+                
+                <?php if ($es_supervisor): ?>
                 <select id="filtro_almacen_monitor" class="form-select form-select-sm border-0 bg-light rounded-3" style="width: auto;" onchange="cargarMonitor()">
                     <option value="0">Todos los Almacenes</option>
                     <?php if(isset($listaAlmacenes)) foreach ($listaAlmacenes as $alm): ?>
                         <option value="<?= $alm['id'] ?>"><?= $alm['nombre'] ?></option>
                     <?php endforeach; ?>
                 </select>
+                <?php else: ?>
+                    <input type="hidden" id="filtro_almacen_monitor" value="0">
+                <?php endif; ?>
             </div>
         </div>
 
@@ -202,8 +207,15 @@
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <?php require_once __DIR__ . '/misRepartosComponents/repartoEvidenciaModal.php' ?>
 
 <script>
+// --- VARIABLES DE IDENTIDAD ---
+const esSupervisor = <?= json_encode($es_supervisor) ?>;
+const usernamePHP = <?= json_encode($_SESSION['username'] ?? '') ?>;
+// Extraemos el nombre limpio (ManuelTrabajador -> MANUEL)
+const filtroNombre = usernamePHP.replace('Trabajador', '').toUpperCase();
+
 let offsetActual = 0;
 const limiteCarga = 25;
 
@@ -224,9 +236,13 @@ function cargarMonitor() {
         data: { action: 'get_monitor_entregas', almacen_id: idAlmacen, inicio: offsetActual, limite: limiteCarga },
         dataType: 'json',
         success: function(response) {
-            if(response.success && response.data.length > 0) { renderizarFilas(response.data, false); }
+            if(response.success && response.data.length > 0) { 
+                renderizarFilas(response.data, false); 
+                if(response.data.length < limiteCarga) $('#btnCargarMas').hide();
+                else $('#btnCargarMas').show();
+            }
             else { 
-                $('#tbodyMonitor').html('<tr><td colspan="8" class="text-center text-muted py-5">No hay movimientos pendientes.</td></tr>'); 
+                $('#tbodyMonitor').html('<tr><td colspan="8" class="text-center text-muted py-5">No hay movimientos registrados.</td></tr>'); 
                 $('#btnCargarMas').hide();
             }
         }
@@ -236,6 +252,12 @@ function cargarMonitor() {
 function renderizarFilas(data, append) {
     let html = '';
     data.forEach(row => {
+        // --- FILTRO POR NOMBRE DE TRABAJADOR ---
+        if (!esSupervisor) {
+            const responsable = (row.responsable || '').toUpperCase();
+            if (!responsable.includes(filtroNombre)) return; // Si no es él, saltamos la fila
+        }
+
         const esEnRuta = (row.estado_reparto === 'en_ruta');
         const icon = (row.tipo_salida === 'RUTA') ? '🚚' : '🏬';
         
@@ -248,17 +270,26 @@ function renderizarFilas(data, append) {
                 </td>
                 <td data-label="Cliente"><div class="text-truncate" style="max-width:140px;">${row.cliente_display}</div></td>
                 <td data-label="Producto"><div class="text-truncate" style="max-width:140px;">${row.producto_nombre}</div></td>
-                <td data-label="Cantidad"><b>${row.lectura_fisica}</b></td>
+                <td data-label="Cantidad"><b>${row.total_bultos || row.lectura_fisica}</b></td>
                 <td data-label="Responsable"><small>${row.responsable || '---'}</small></td>
                 <td data-label="Fecha" class="text-center"><small>${row.fecha_evento || '---'}</small></td>
                 <td class="text-end pe-3">
-                    <button class="btn btn-sm btn-light rounded-circle shadow-sm" onclick="verDetalleEntrega('${row.tipo_salida}', ${row.reparto_id || row.movimiento_id})">
-                        <i class="bi bi-chevron-right text-primary"></i>
-                    </button>
+                  <td class="text-end pe-3">
+    <button class="btn btn-sm btn-dark rounded-pill px-3 shadow-sm fw-bold" 
+        onclick="verEvidenciasPorFolio('${row.numero_ruta}')" 
+        style="font-size: 0.65rem;">
+        <i class="bi bi-images me-1"></i> VER EVIDENCIAS
+    </button>
+</td>
                 </td>
             </tr>`;
     });
-    append ? $('#tbodyMonitor').append(html) : $('#tbodyMonitor').html(html);
+
+    if (!append) {
+        $('#tbodyMonitor').html(html || '<tr><td colspan="8" class="text-center text-muted py-5">No tienes entregas registradas.</td></tr>');
+    } else {
+        $('#tbodyMonitor').append(html);
+    }
 }
 
 // --- CARGAR MONITOR DE VIAJES (ACTIVOS) ---
@@ -268,36 +299,46 @@ window.cargarMonitorViajes = async function() {
         body.html('<tr><td colspan="5" class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary"></div></td></tr>');
         const resp = await fetch(`/cfsistem/app/controllers/misRepartosController.php?action=listar_viajes_activos`);
         const result = await resp.json();
-        const data = result.data || result;
+        const data = result.data || [];
 
-        if (!data || data.length === 0) {
-            body.html('<tr><td colspan="5" class="text-center py-5 text-muted">No hay unidades activas en ruta</td></tr>');
+        // --- FILTRO POR NOMBRE DE TRABAJADOR ---
+        let filtrados = data;
+        if (!esSupervisor) {
+            filtrados = data.filter(v => {
+                const chofer = (v.chofer || '').toUpperCase();
+                const tripulantes = (v.tripulantes || '').toUpperCase();
+                return chofer.includes(filtroNombre) || tripulantes.includes(filtroNombre);
+            });
+        }
+
+        if (filtrados.length === 0) {
+            body.html('<tr><td colspan="5" class="text-center py-5 text-muted">No tienes unidades activas asignadas actualmente.</td></tr>');
             return;
         }
 
         body.empty();
-        data.forEach(v => {
+        filtrados.forEach(v => {
             body.append(`
                 <tr class="animate__animated animate__fadeIn">
-                    <td class="ps-4">
+                    <td class="ps-4" data-label="Unidad / Folio">
                         <div class="fw-bold">${v.unidad}</div>
                         <div class="badge bg-dark-subtle text-dark" style="font-size:0.65rem">#${v.viaje_folio}</div>
                     </td>
-                    <td>
+                    <td data-label="Chofer">
                         <div class="d-flex align-items-center">
                             <div class="avatar-chofer me-2"><i class="bi bi-person"></i></div>
                             <div class="fw-bold small text-uppercase">${v.chofer}</div>
                         </div>
                     </td>
-                    <td><small class="text-muted">${v.tripulantes || 'Solo Conductor'}</small></td>
-                    <td><div class="carga-scroll">${v.detalles_carga}</div></td>
+                    <td data-label="Tripulación"><small class="text-muted">${v.tripulantes || 'Solo Conductor'}</small></td>
+                    <td data-label="Carga"><div class="carga-scroll">${v.detalles_carga}</div></td>
                     <td class="text-end pe-4">
                         <div class="d-flex justify-content-end gap-2">
                             <a href="/cfsistem/app/controllers/gestionarRepartoController.php?folio=${v.viaje_folio}" 
-   class="btn btn-sm rounded-pill px-3 fw-bold d-inline-flex align-items-center shadow-sm" 
-   style="background-color: #007aff; color: #fff; font-size: 0.7rem; border: none; transition: all 0.2s ease;">
-    <i class="bi bi-camera-fill me-1"></i> GESTIONAR
-</a>
+                               class="btn btn-sm rounded-pill px-3 fw-bold d-inline-flex align-items-center shadow-sm" 
+                               style="background-color: #007aff; color: #fff; font-size: 0.7rem; border: none; transition: all 0.2s ease;">
+                                <i class="bi bi-camera-fill me-1"></i> GESTIONAR
+                            </a>
                         </div>
                     </td>
                 </tr>
@@ -306,9 +347,6 @@ window.cargarMonitorViajes = async function() {
     } catch (e) { body.html('<tr><td colspan="5" class="text-center text-danger">Error de conexión</td></tr>'); }
 };
 
-
-
 </script>
-
 </body>
 </html>

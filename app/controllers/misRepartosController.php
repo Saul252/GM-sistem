@@ -10,7 +10,7 @@ error_reporting(E_ALL);
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../controllers/LayoutController.php';
-
+require_once __DIR__ . '/../models/almacen_model.php';
 // Modelos necesarios
 require_once __DIR__ . '/../models/RepartosModel.php';
 
@@ -18,7 +18,7 @@ require_once __DIR__ . '/../models/RepartosModel.php';
 $username      = $_SESSION['username'] ?? '';
 $trabajador_id = intval($_SESSION['trabajador_id'] ?? 0);
 $rol_nombre    = $_SESSION['rol'] ?? '';
-
+$almacenModel = new AlmacenModel($conexion);
 /**
  * Lógica de Supervisor:
  * Es supervisor si el rol es 'administrador' O si el username NO contiene 'Trabajador'.
@@ -26,7 +26,7 @@ $rol_nombre    = $_SESSION['rol'] ?? '';
 $es_supervisor = ($rol_nombre === 'administrador' || strpos($username, 'Trabajador') === false);
 
 // Protegemos la página: usa el permiso que ya tienes configurado
-protegerPagina('repartos'); 
+
 
 $repartoM = new RepartoModel($conexion);
 
@@ -120,7 +120,35 @@ if (isset($_REQUEST['action'])) {
         ]
     ]);
     exit;
-}    
+}  // ... dentro de tu switch o bloques if de action ...
+
+if ($action === 'get_evidencias_por_folio') {
+    $folio = $_GET['folio'] ?? '';
+    
+    if (!empty($folio)) {
+        // IMPORTANTE: Usamos $repartoM que es tu instancia
+        $data = $repartoM->getEvidenciasPorFolioRuta($folio); 
+        $res = [];
+        
+        foreach ($data as $r) {
+            $res[] = [
+                "cliente"     => $r['cliente'] ?? 'Cliente General',
+                "venta_folio" => $r['venta_folio'] ?? 'S/F',
+                "direccion"   => $r['direccion'] ?? 'Dirección no registrada',
+                "comentario"  => $r['comentario'] ?? 'Sin observaciones',
+                "fecha"       => $r['fecha'] . " " . $r['hora'],
+                "estado"      => $r['estatus_entrega'] ?? 'Entregado',
+                "foto_1"      => $r['foto_1'], // Ya trae la ruta desde el modelo
+                "foto_2"      => $r['foto_2']  // Ya trae la ruta desde el modelo
+            ];
+        }
+        
+        echo json_encode(["success" => true, "data" => $res]);
+    } else {
+        echo json_encode(["success" => false, "message" => "Folio de viaje no proporcionado"]);
+    }
+    exit;
+}
   // --- ACCIÓN: OBTENER DETALLE DE TRAZABILIDAD (MONITOR) ---
 if ($action === 'get_detalle_trazabilidad') {
     if (ob_get_level()) ob_clean();
@@ -213,6 +241,7 @@ function subirEvidencia($file, $prefijo, $destino) {
 
 // --- CARGA DE VISTA ---
 $paginaActual = 'misRepartos';
+protegerPagina('misRepartos'); 
 $tituloPagina = $es_supervisor ? "Monitor Global de Logística" : "Mis Repartos";
-
+$listaAlmacenes = $almacenModel->getAlmacenes($_SESSION['almacen_id']); 
 require_once __DIR__ . '/../views/misRepartos_view.php';

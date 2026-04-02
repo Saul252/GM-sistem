@@ -1552,4 +1552,42 @@ public function obtenerViajesLogisticaParaEntrega($folio_viaje = null) {
         return [];
     }
 }
+public function getEvidenciasPorFolioRuta($folio_viaje) {
+    try {
+        // Ruta base para tus imágenes
+        $base_path = "/cfsistem/"; 
+
+        $sql = "SELECT 
+                    v.folio AS venta_folio,
+                    c.nombre_comercial AS cliente,
+                    trp.descripcion_punto AS direccion,
+                    crv.estatus AS estatus_entrega,
+                    crv.fecha,
+                    crv.hora,
+                    crv.comentario,
+                    -- Construimos la URL completa si existe la foto
+                    IF(crv.fotografia_entrega IS NOT NULL AND crv.fotografia_entrega != '', 
+                       CONCAT('$base_path', crv.fotografia_entrega), NULL) AS foto_1,
+                    IF(crv.fotografia_nota IS NOT NULL AND crv.fotografia_nota != '', 
+                       CONCAT('$base_path', crv.fotografia_nota), NULL) AS foto_2
+                FROM transporte_consolidacion tc
+                INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
+                INNER JOIN transporte_rutas_puntos trp ON trm.id = trp.reparto_id 
+                INNER JOIN movimientos m ON trm.entrega_venta_id = m.id
+                LEFT JOIN ventas v ON m.referencia_id = v.id
+                LEFT JOIN clientes c ON v.id_cliente = c.id
+                INNER JOIN confirmacion_reparto_viaje crv ON trp.id = crv.id_movimiento
+                WHERE tc.viaje_folio = ?
+                GROUP BY trp.id 
+                ORDER BY crv.fecha DESC, crv.hora DESC";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("s", $folio_viaje);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    } catch (Exception $e) {
+        error_log("Error getEvidenciasPorFolioRuta: " . $e->getMessage());
+        return [];
+    }
+}
 }

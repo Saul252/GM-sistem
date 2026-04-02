@@ -8,7 +8,7 @@ $paginaActual = 'Inicio';
 // OPTIMIZACIÓN: Centralizamos los módulos en un array para evitar repetir HTML
 $modulos = [
     ['id' => 'ventas', 'url' => '/cfsistem/app/controllers/ventasController.php', 'icon' => 'bi-cart-check', 'class' => 'icon-ventas', 'label' => 'Ventas', 'desc' => 'Salidas'],
-   ['id' => 'cajaRapida', 'url' => '/cfsistem/app/controllers/cajaRapidaController.php', 'icon' => 'bi-cart-check', 'class' => 'icon-ventas', 'label' => 'Caja Rapida', 'desc' => 'Salidas en existencia'],
+   ['id' => 'cajaRapida', 'url' => '/cfsistem/app/controllers/cajaRapidaController.php', 'icon' => 'bi-lightning-charge', 'class' => 'icon-ventas', 'label' => 'Caja Rapida', 'desc' => 'Salidas en existencia'],
    
     ['id' => 'compras', 'url' => '/cfsistem/app/controllers/egresosController.php', 'icon' => 'bi-bag-check', 'class' => 'icon-compras', 'label' => 'Compras', 'desc' => 'Entradas'],
     ['id' => 'proveedores', 'url' => '/cfsistem/app/controllers/proveedoresController.php', 'icon' => 'bi-person-vcard', 'class' => 'icon-proveedores', 'label' => 'Proveedores', 'desc' => 'Gestión'],
@@ -22,12 +22,15 @@ $modulos = [
     ['id' => 'finanzas', 'url' => '/cfsistem/app/controllers/finanzasController.php', 'icon' => 'bi-graph-up-arrow', 'class' => 'text-primary', 'label' => 'Finanzas', 'desc' => 'Estado financiero'],
     ['id' => 'entregas', 'url' => '/cfsistem/app/controllers/entregasController.php', 'icon' => 'bi-truck', 'class' => 'text-warning', 'label' => 'Despachos', 'desc' => 'Salida física'],
     ['id' => 'clientesEstatus', 'url' => '/cfsistem/app/controllers/clientesEstatusController.php', 'icon' => 'bi-person-check', 'class' => 'text-success', 'label' => 'Estatus', 'desc' => 'Créditos'],
-    // Módulo agregado y estilizado
+   
     ['id' => 'corteCaja', 'url' => '/cfsistem/app/controllers/corteCajaController.php', 'icon' => 'bi-cash-stack', 'class' => 'text-success', 'label' => 'Corte Caja', 'desc' => 'Cierres diarios'],
     ['id' => 'solicitudesCompra', 'url' => '/cfsistem/app/controllers/solicitudesCompraController.php', 'icon' => 'bi-cart-check-fill', 'class' => 'text-info', 'label' => 'Requisiciones', 'desc' => 'Sol. Compra'],
     ['id' => 'trabajadores', 'url' => '/cfsistem/app/controllers/trabajadoresController.php', 'icon' => 'bi-people-fill', 'class' => 'text-primary', 'label' => 'Trabajadores', 'desc' => 'Recursos H.'],
     ['id' => 'vehiculos', 'url' => '/cfsistem/app/controllers/vehiculosController.php', 'icon' => 'bi-truck-front-fill', 'class' => 'text-secondary', 'label' => 'Vehículos', 'desc' => 'Control Flota'],
     ['id' => 'repartos', 'url' => '/cfsistem/app/controllers/repartosController.php', 'icon' => 'bi-truck-flatbed', 'class' => 'text-info', 'label' => 'Repartos', 'desc' => 'Monitor Ruta'],
+   
+     ['id' => 'misRepartos', 'url' => '/cfsistem/app/controllers/misRepartosController.php', 'icon' => 'bi-map-fill', 'label' => 'Mis repartos', 'desc' => 'Repartos activos Y Evidencias de Entrega'],
+  
     ['id' => 'pedidosVendedor', 'url' => '/cfsistem/app/controllers/pedidosVendedorController.php', 'icon' => 'bi-person-badge-fill', 'class' => 'text-warning', 'label' => 'Pedidos Vendedor', 'desc' => 'Preventa'],
     ];
 ?>
