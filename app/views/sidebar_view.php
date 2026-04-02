@@ -99,171 +99,187 @@ $modulos = [
 </aside>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>';
 <script>
-// --- 1. LÓGICA DEL SIDEBAR ---
-document.addEventListener('click', function(e) {
-    if (e.target.closest('#toggleSidebar')) {
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar) {
+   /**
+ * CF SYSTEM - LÓGICA GLOBAL DE INTERFAZ Y NOTIFICACIONES
+ * Versión: 2.0 (Optimizado para Móvil y Escritorio)
+ */
+
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // --- 1. VARIABLES DE ELEMENTOS ---
+    const toggleBtn = document.getElementById('toggleSidebar');
+    const sidebar = document.getElementById('sidebar');
+    const btnNotif = document.getElementById('btnNotif');
+    const menuNotif = document.getElementById('menuNotif');
+    
+    // Crear el overlay para móvil si no existe
+    let overlay = document.querySelector('.sidebar-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'sidebar-overlay';
+        document.body.appendChild(overlay);
+    }
+
+    // --- 2. LÓGICA DEL SIDEBAR (RESPONSIVO) ---
+    function toggleMenu() {
+        const isMobile = window.innerWidth <= 992;
+        
+        if (isMobile) {
+            // Comportamiento en Móvil: Usa la clase .show definida en tu CSS
+            sidebar.classList.toggle('show');
+            overlay.classList.toggle('active');
+        } else {
+            // Comportamiento en Escritorio: Usa la clase .hidden definida en tu CSS
             sidebar.classList.toggle('hidden');
             document.body.classList.toggle('sidebar-hidden');
         }
     }
-});
-</script>
-<script>
-/**
- * SISTEMA DE NOTIFICACIONES DE TRASPASOS - VERSIÓN FINAL
- * - Manejo de unidades inteligentes (Millares + Piezas)
- * - Forzado de visibilidad para evitar errores de "no pintado"
- * - Actualización en tiempo real cada 30 segundos
- */
 
-let ultimoConteoTraspasos = 0;
-let primeraCarga = true;
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleMenu();
+        });
+    }
 
-function verificarNotificaciones() {
-    // Agregamos timestamp para evitar caché del navegador
-    const url = '/cfsistem/app/backend/movimientos/get_notificaciones_traspaso.php?t=' + Date.now();
+    // Cerrar menú al tocar el overlay (Solo móvil)
+    overlay.addEventListener('click', () => {
+        sidebar.classList.remove('show');
+        overlay.classList.remove('active');
+    });
 
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            const badge = document.getElementById('notif-badge');
-            const lista = document.getElementById('lista-notificaciones');
-            const cantidadActual = parseInt(data.cantidad) || 0;
+    // Cerrar dropdown de notificaciones al hacer clic fuera
+    document.addEventListener('click', (e) => {
+        if (menuNotif && !menuNotif.contains(e.target) && !btnNotif.contains(e.target)) {
+            menuNotif.style.display = 'none';
+        }
+    });
 
-            // 1. ACTUALIZAR BADGE DE LA CAMPANA
-            if (badge) {
-                if (cantidadActual > 0) {
-                    badge.innerText = cantidadActual;
-                    badge.classList.remove('d-none');
-                    badge.style.display = 'inline-block';
-                } else {
-                    badge.classList.add('d-none');
-                    badge.style.display = 'none';
+    // --- 3. SISTEMA DE NOTIFICACIONES DE TRASPASOS ---
+    let ultimoConteoTraspasos = 0;
+    let primeraCarga = true;
+
+    function verificarNotificaciones() {
+        // Timestamp para evitar caché del navegador
+        const url = '/cfsistem/app/backend/movimientos/get_notificaciones_traspaso.php?t=' + Date.now();
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                const badge = document.getElementById('notif-badge');
+                const lista = document.getElementById('lista-notificaciones');
+                const cantidadActual = parseInt(data.cantidad) || 0;
+
+                // Actualizar Badge en la Navbar
+                if (badge) {
+                    if (cantidadActual > 0) {
+                        badge.innerText = cantidadActual;
+                        badge.classList.remove('d-none');
+                        badge.style.display = 'inline-block';
+                    } else {
+                        badge.classList.add('d-none');
+                        badge.style.display = 'none';
+                    }
                 }
-            }
 
-            // 2. ALERTA FLOTANTE (TOASTIFY)
-            if (cantidadActual > 0 && (primeraCarga || cantidadActual > ultimoConteoTraspasos)) {
-                if (typeof Toastify === "function") {
-                    const u = data.items[0] || {};
-                    const textoCant = u.cantidad_texto || (u.cantidad + ' PZA');
+                // Disparar Alerta Toastify si hay nuevos traspasos
+                if (cantidadActual > 0 && (primeraCarga || cantidadActual > ultimoConteoTraspasos)) {
+                    if (typeof Toastify === "function") {
+                        const u = data.items[0] || {};
+                        const textoCant = u.cantidad_texto || (u.cantidad + ' PZA');
 
-                    Toastify({
-                        text: `📦 ¡SOLICITUD DE TRASPASO RECIBIDA!\n${u.emisor} envió ${textoCant} de ${u.producto}`,
-                        duration: 6000,
-                        close: true,
-                        gravity: "top",
-                        position: "right",
-                        style: {
-                            background: "linear-gradient(to right, #1e3c72, #2a5298)",
-                            borderRadius: "12px",
-                            boxShadow: "0 5px 15px rgba(0,0,0,0.3)"
-                        },
-                        onClick: function() {
-                            window.location.href = "/cfsistem/app/controllers/almacenes.php";
-                        }
-                    }).showToast();
+                        Toastify({
+                            text: `📦 TRASPASO RECIBIDO\n${u.emisor} envió ${textoCant} de ${u.producto}`,
+                            duration: 6000,
+                            close: true,
+                            gravity: "top",
+                            position: "right",
+                            stopOnFocus: true,
+                            style: {
+                                background: "linear-gradient(to right, #0f172a, #1e293b)",
+                                borderRadius: "12px",
+                                boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)"
+                            },
+                            onClick: function() { window.location.href = "/cfsistem/app/controllers/almacenes.php"; }
+                        }).showToast();
+                    }
+                    primeraCarga = false;
                 }
-                primeraCarga = false;
-            }
 
-            ultimoConteoTraspasos = cantidadActual;
+                ultimoConteoTraspasos = cantidadActual;
 
-            // 3. RENDERIZADO DEL MENÚ DESPLEGABLE (TARJETAS)
-            if (lista && data.items) {
-                if (cantidadActual === 0) {
-                    lista.innerHTML =
-                        '<div style="padding: 20px; text-align: center; color: #999; font-size: 0.8rem;">Sin traspasos pendientes</div>';
-                } else {
-                    lista.innerHTML = data.items.map(item => {
-                        // Aseguramos que mostrarCantidad tenga el valor procesado del PHP
-                        const mostrarCantidad = item.cantidad_texto ? item.cantidad_texto : (item.cantidad +
-                            ' PZA');
-
-                        return `
-                        <div style="padding: 12px 15px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; background: #ffffff !important; color: #333 !important; min-height: 80px;">
-                            <div style="flex: 1; padding-right: 10px; line-height: 1.3;">
-                                <b style="color: #1e3c72; font-size: 0.85rem; display: block; text-transform: uppercase; margin-bottom: 2px;">${item.producto}</b>
-                                <div style="font-size: 0.75rem; color: #555;">De: <strong>${item.emisor}</strong></div>
-                                
-                                <div style="margin-top: 6px; background: #f8f9fa; padding: 3px 8px; border-radius: 5px; display: inline-block; border: 1px solid #ddd;">
-                                    <span style="color: #000000 !important; font-weight: 900 !important; font-size: 0.9rem !important; display: inline-block !important; visibility: visible !important;">
-                                        CANT: ${mostrarCantidad}
-                                    </span>
+                // Renderizar lista en el Dropdown
+                if (lista && data.items) {
+                    if (cantidadActual === 0) {
+                        lista.innerHTML = '<div class="p-4 text-center text-muted small">Sin traspasos pendientes</div>';
+                    } else {
+                        lista.innerHTML = data.items.map(item => {
+                            const mostrarCantidad = item.cantidad_texto ? item.cantidad_texto : (item.cantidad + ' PZA');
+                            return `
+                            <div class="d-flex align-items-center justify-content-between p-3 border-bottom bg-white hover-notif">
+                                <div style="flex: 1; line-height: 1.4;">
+                                    <b class="text-primary d-block small text-uppercase">${item.producto}</b>
+                                    <span class="d-block text-muted" style="font-size: 0.75rem;">De: ${item.emisor}</span>
+                                    <div class="mt-1">
+                                        <span class="badge bg-light text-dark border fw-bold">${mostrarCantidad}</span>
+                                    </div>
                                 </div>
-
-                                <div style="font-size: 0.65rem; color: #999; margin-top: 6px;">
-                                    <i class="bi bi-clock"></i> ${item.hora} • ${item.origen}
-                                </div>
-                            </div>
-                            <button onclick="procesarRecepcion(${item.id})" 
-                                    title="Confirmar Recepción"
-                                    style="background: #198754; color: white; border: none; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.2); flex-shrink: 0;">
-                                <i class="bi bi-check-lg" style="font-size: 1.2rem;"></i>
-                            </button>
-                        </div>`;
-                    }).join('');
+                                <button onclick="procesarRecepcionRapida(${item.id})" 
+                                        class="btn btn-success btn-sm rounded-circle shadow-sm d-flex align-items-center justify-content-center" 
+                                        style="width: 32px; height: 32px;">
+                                    <i class="bi bi-check-lg"></i>
+                                </button>
+                            </div>`;
+                        }).join('');
+                    }
                 }
-            }
-        })
-        .catch(err => console.error("❌ Error en Notificaciones:", err));
-}
+            })
+            .catch(err => console.error("❌ Error fetch notificaciones:", err));
+    }
 
-/**
- * Función para procesar la recepción rápida mediante AJAX
- */
-function procesarRecepcion(id) {
-    if (!confirm("¿Deseas confirmar la recepción de este producto? El stock se actualizará de inmediato.")) return;
+    // --- 4. ACCIONES DE NOTIFICACIÓN ---
+    window.procesarRecepcionRapida = function(id) {
+        if (!confirm("¿Confirmar recepción de material?")) return;
 
-    const formData = new FormData();
-    formData.append('id', id);
+        const formData = new FormData();
+        formData.append('id', id);
 
-    fetch('/cfsistem/app/backend/movimientos/procesar_transaccion_rapida.php', {
+        fetch('/cfsistem/app/backend/movimientos/procesar_transaccion_rapida.php', {
             method: 'POST',
             body: formData
         })
         .then(res => res.json())
         .then(data => {
             if (data.success || data.status === 'success') {
-                // Recarga la página para actualizar inventarios visibles
                 location.reload();
             } else {
-                alert("Error: " + (data.message || "No se pudo procesar la recepción"));
+                alert("Error: " + (data.message || "No se pudo procesar"));
             }
         })
-        .catch(err => {
-            console.error("Error en fetch:", err);
-            alert("Error de conexión al servidor.");
+        .catch(err => console.error("Error en recepción:", err));
+    };
+
+    // Control del Dropdown de la campana
+    if (btnNotif && menuNotif) {
+        btnNotif.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const isVisible = (menuNotif.style.display === 'block');
+            menuNotif.style.display = isVisible ? 'none' : 'block';
         });
-}
-
-/**
- * CONTROL MANUAL DEL MENÚ DESPLEGABLE (Dropdown)
- */
-document.addEventListener('click', function(e) {
-    const btn = document.getElementById('btnNotif');
-    const menu = document.getElementById('menuNotif');
-    if (!btn || !menu) return;
-
-    if (btn.contains(e.target)) {
-        const isVisible = (menu.style.display === 'block');
-        menu.style.display = isVisible ? 'none' : 'block';
-        e.preventDefault();
-        e.stopPropagation();
-    } else if (!menu.contains(e.target)) {
-        menu.style.display = 'none';
     }
-});
 
-/**
- * INICIALIZACIÓN AL CARGAR LA PÁGINA
- */
-document.addEventListener('DOMContentLoaded', () => {
-    // Ejecución inmediata al cargar
+    // --- 5. INICIALIZACIÓN ---
     verificarNotificaciones();
-    // Ciclo de autorefresco cada 30 segundos
-    setInterval(verificarNotificaciones, 30000);
-});
+    setInterval(verificarNotificaciones, 35000); // Revisar cada 35 segundos
+
+    // Limpiar estados al redimensionar pantalla
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 992) {
+            sidebar.classList.remove('show');
+            overlay.classList.remove('active');
+        }
+    });
+}); 
 </script>

@@ -26,7 +26,6 @@ $folio_viaje = $_GET['folio'] ?? '';
             padding-bottom: 30px;
         }
 
-        /* Header con efecto Blur */
         .header-ios {
             background: rgba(255, 255, 255, 0.8);
             backdrop-filter: blur(20px);
@@ -38,7 +37,6 @@ $folio_viaje = $_GET['folio'] ?? '';
             padding: 12px 16px;
         }
 
-        /* Cards Estilizadas */
         .card-entrega {
             background: #fff;
             border-radius: 20px;
@@ -53,13 +51,12 @@ $folio_viaje = $_GET['folio'] ?? '';
             opacity: 0.8;
         }
 
-        /* Botón de Cámara */
         .btn-camera {
             background-color: #fff;
             color: var(--ios-blue);
             border: 2px dashed #d1d1d6;
             border-radius: 18px;
-            padding: 25px;
+            padding: 15px;
             width: 100%;
             display: flex;
             flex-direction: column;
@@ -70,10 +67,11 @@ $folio_viaje = $_GET['folio'] ?? '';
         .preview-img {
             width: 100%;
             border-radius: 18px;
-            margin-top: 15px;
+            margin-top: 10px;
             display: none;
-            max-height: 200px;
+            max-height: 150px;
             object-fit: cover;
+            border: 1px solid #ddd;
         }
 
         .btn-primary-ios {
@@ -121,7 +119,7 @@ $folio_viaje = $_GET['folio'] ?? '';
         <div class="modal-content border-0 shadow-lg" style="border-radius: 25px;">
             <div class="modal-header border-0 pb-0">
                 <div class="d-flex justify-content-between w-100 align-items-center">
-                    <h5 class="modal-title fw-bold">Finalizar Entrega</h5>
+                    <h5 class="modal-title fw-bold" id="tituloModal">Finalizar Entrega</h5>
                     <span class="badge bg-light text-muted border rounded-pill px-3 py-2" style="font-size: 0.7rem;">
                         ID MOV: <span id="m_id_visible">0</span>
                     </span>
@@ -136,6 +134,10 @@ $folio_viaje = $_GET['folio'] ?? '';
                 <input type="hidden" name="action" value="subir_evidencia_reparto">
 
                 <div class="modal-body">
+                    <div id="alertaEdicion" class="alert alert-warning py-2 small mb-3 rounded-4 d-none">
+                        <i class="bi bi-pencil-square me-2"></i> Estás editando una entrega existente.
+                    </div>
+
                     <div class="mb-3 p-3 rounded-4" style="background-color: #f2f2f7;">
                         <div class="info-label">Cliente / Folio de Venta</div>
                         <div id="m_cliente_full" class="fw-bold mb-2"></div>
@@ -145,7 +147,7 @@ $folio_viaje = $_GET['folio'] ?? '';
 
                     <div class="mb-3">
                         <label class="info-label">Estado de la Visita</label>
-                        <select name="estatus_entrega" class="form-select border-0 bg-light rounded-3">
+                        <select name="estatus_entrega" id="m_estatus_select" class="form-select border-0 bg-light rounded-3">
                             <option value="Entregado">Entregado Total</option>
                             <option value="Parcial">Entrega Parcial</option>
                             <option value="Rechazado">Rechazado por Cliente</option>
@@ -153,18 +155,30 @@ $folio_viaje = $_GET['folio'] ?? '';
                     </div>
 
                     <div class="mb-3">
-                        <label class="info-label">Fotografía de Evidencia</label>
+                        <label class="info-label">1. Foto del Material</label>
                         <button type="button" class="btn-camera" onclick="document.getElementById('input-foto').click()">
-                            <i class="bi bi-camera-fill fs-1"></i>
-                            <span class="fw-bold small">Tomar Foto</span>
+                            <i class="bi bi-box-seam fs-2"></i>
+                            <span class="fw-bold small">Material en Obra</span>
                         </button>
-                        <input type="file" name="evidencia_foto" id="input-foto" accept="image/*" capture="environment" class="d-none" onchange="previewImagen(this)">
+                        <input type="file" name="evidencia_foto" id="input-foto" accept="image/*" capture="environment" class="d-none" onchange="previewImagen(this, 'img-preview')">
                         <img id="img-preview" class="preview-img">
+                        <div id="txt-material-actual" class="small text-primary mt-1 d-none"><i class="bi bi-check-all"></i> Ya hay una foto guardada</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="info-label">2. Foto de Nota Firmada</label>
+                        <button type="button" class="btn-camera" onclick="document.getElementById('input-foto-nota').click()">
+                            <i class="bi bi-file-earmark-text fs-2"></i>
+                            <span class="fw-bold small">Capturar Nota</span>
+                        </button>
+                        <input type="file" name="evidencia_nota" id="input-foto-nota" accept="image/*" capture="environment" class="d-none" onchange="previewImagen(this, 'img-preview-nota')">
+                        <img id="img-preview-nota" class="preview-img">
+                        <div id="txt-nota-actual" class="small text-primary mt-1 d-none"><i class="bi bi-check-all"></i> Ya hay una foto guardada</div>
                     </div>
 
                     <div class="mb-2">
                         <label class="info-label">Observaciones</label>
-                        <textarea name="comentario" class="form-control border-0 bg-light rounded-3" rows="2" placeholder="Notas opcionales..."></textarea>
+                        <textarea name="comentario" id="m_comentario" class="form-control border-0 bg-light rounded-3" rows="2" placeholder="Notas opcionales..."></textarea>
                     </div>
                 </div>
 
@@ -190,10 +204,10 @@ $(document).ready(() => {
 });
 
 function cargarEntregas() {
+    const container = document.getElementById('contenedor-entregas');
     fetch(`${API_URL}?action=get_entregas_folio&folio=${FOLIO}`)
         .then(res => res.json())
         .then(res => {
-            const container = document.getElementById('contenedor-entregas');
             container.innerHTML = '';
             datosTemporales = res.data || [];
 
@@ -203,15 +217,16 @@ function cargarEntregas() {
             }
 
             datosTemporales.forEach((item, index) => {
+                const entregadoReal = parseInt(item.ya_entregado) === 1;
                 const estado = (item.estado_punto || 'pendiente').toLowerCase();
-                const esVisitado = estado === 'visitado';
+                const esVisitado = estado === 'visitado' || entregadoReal;
                 
                 container.innerHTML += `
                     <div class="card card-entrega ${esVisitado ? 'visitado' : ''} animate__animated animate__fadeIn">
                         <div class="card-body">
                             <div class="d-flex justify-content-between mb-2">
                                 <span class="badge rounded-pill ${esVisitado ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary'}">
-                                    ${estado}
+                                    ${esVisitado ? 'ENTREGADO' : estado.toUpperCase()}
                                 </span>
                                 <span class="small text-muted">Venta: ${item.folio_venta || 'S/F'}</span>
                             </div>
@@ -227,7 +242,9 @@ function cargarEntregas() {
                                 `<button class="btn btn-primary-ios w-100" onclick="abrirModalPorIndex(${index})">
                                     Reportar Entrega
                                  </button>` : 
-                                `<div class="text-center text-success fw-bold small"><i class="bi bi-check-circle-fill"></i> Completado</div>`
+                                `<button class="btn btn-outline-success w-100 border-2" onclick="abrirModalPorIndex(${index})" style="border-radius: 14px; font-size: 0.85rem;">
+                                    <i class="bi bi-pencil-square me-1"></i> Modificar Evidencia
+                                 </button>`
                             }
                         </div>
                     </div>`;
@@ -235,49 +252,113 @@ function cargarEntregas() {
         })
         .catch(err => {
             console.error(err);
-            document.getElementById('contenedor-entregas').innerHTML = '<div class="alert alert-danger">Error de conexión.</div>';
+            container.innerHTML = '<div class="alert alert-danger">Error de conexión.</div>';
         });
 }
 
+/**
+ * Abre el modal y carga la información de la parada.
+ * Si ya existe evidencia (ya_entregado == 1), rellena los campos para edición.
+ * @param {number} index - El índice del arreglo datosTemporales
+ */
 function abrirModalPorIndex(index) {
     const data = datosTemporales[index];
-    if(!data) return;
+    if (!data) {
+        Swal.fire('Error', 'No se encontraron datos para esta parada.', 'error');
+        return;
+    }
 
-    // BUSCAMOS EL ID (Prioridad al ID de la tabla de puntos TRP)
-    const idReal = data.id_movimiento || data.id_punto || data.id || 0;
-
-    // Asignación a campos ocultos y visibles
-    document.getElementById('m_mov_id').value = idReal;
-    document.getElementById('m_id_visible').innerText = idReal;
+    // 1. Referencias a elementos del DOM
+    const modalEl      = document.getElementById('modalEvidencia');
+    const form         = document.getElementById('formEvidencia');
+    const titulo       = document.getElementById('tituloModal');
+    const btnGuardar   = document.getElementById('btnGuardar');
+    const alertaEdicion = document.getElementById('alertaEdicion');
     
+    // Contenedores de previsualización
+    const previewMat   = document.getElementById('img-preview');
+    const previewNota  = document.getElementById('img-preview-nota');
+    const txtMat       = document.getElementById('txt-material-actual');
+    const txtNota      = document.getElementById('txt-nota-actual');
+
+    // 2. Limpiar el formulario y estados previos
+    form.reset();
+    previewMat.style.display = 'none';
+    previewNota.style.display = 'none';
+    txtMat.classList.add('d-none');
+    txtNota.classList.add('d-none');
+    previewMat.src = "";
+    previewNota.src = "";
+
+    // 3. Sincronizar IDs y Textos Informativos
+    const idMovimiento = data.id_movimiento || 0;
+    document.getElementById('m_mov_id').value = idMovimiento;
+    document.getElementById('m_id_visible').innerText = idMovimiento;
     document.getElementById('m_venta_id').value = data.id_venta || 0;
     document.getElementById('m_vehiculo_id').value = data.vehiculo_id || 0; 
     document.getElementById('m_cliente_full').innerText = `${data.cliente || 'S/N'} (${data.folio_venta || 'S/F'})`;
     document.getElementById('m_direccion_full').innerText = data.direccion_entrega || 'Sin dirección';
-    
-    // Reset Form
-    document.getElementById('formEvidencia').reset();
-    document.getElementById('img-preview').style.display = 'none';
-    
-    // Bloqueo de seguridad
-    const btn = document.getElementById('btnGuardar');
-    if(idReal == 0) {
-        btn.disabled = true;
-        Swal.fire('Error', 'ID de movimiento no encontrado en la base de datos.', 'error');
+
+    // 4. Lógica de "Modo Edición" vs "Modo Nuevo"
+    const esEdicion = parseInt(data.ya_entregado) === 1;
+
+    if (esEdicion) {
+        // --- CONFIGURACIÓN PARA EDITAR ---
+        titulo.innerText = "Modificar Entrega";
+        alertaEdicion.classList.remove('d-none');
+        btnGuardar.innerText = "Actualizar Cambios";
+        btnGuardar.className = "btn btn-success w-100 py-3 rounded-4 fw-bold"; // Color verde para indicar edición
+
+        // Cargar Estatus y Comentario desde los alias del SQL
+        document.getElementById('m_estatus_select').value = data.estatus_evidencia || "Entregado";
+        document.getElementById('m_comentario').value = data.comentario_evidencia || "";
+
+        // Cargar Foto del Material (si existe)
+        if (data.foto_registrada && data.foto_registrada.length > 5) {
+            // Agregamos un parámetro aleatorio (?t=...) para forzar al navegador a refrescar la imagen
+            previewMat.src = data.foto_registrada + "?t=" + new Date().getTime();
+            previewMat.style.display = 'block';
+            txtMat.classList.remove('d-none');
+        }
+
+        // Cargar Foto de la Nota (si existe)
+        if (data.nota_registrada && data.nota_registrada.length > 5) {
+            previewNota.src = data.nota_registrada + "?t=" + new Date().getTime();
+            previewNota.style.display = 'block';
+            txtNota.classList.remove('d-none');
+        }
+
     } else {
-        btn.disabled = false;
+        // --- CONFIGURACIÓN PARA NUEVA ENTREGA ---
+        titulo.innerText = "Finalizar Entrega";
+        alertaEdicion.classList.add('d-none');
+        btnGuardar.innerText = "Guardar y Finalizar";
+        btnGuardar.className = "btn btn-primary-ios w-100"; // Color azul original
+        
+        // Valores por defecto
+        document.getElementById('m_estatus_select').value = "Entregado";
     }
 
-    new bootstrap.Modal(document.getElementById('modalEvidencia')).show();
-}
+    // 5. Bloqueo de seguridad: Si no hay ID de movimiento, no se puede guardar
+    btnGuardar.disabled = (idMovimiento === 0);
+    if (idMovimiento === 0) {
+        console.error("Error: La parada seleccionada no tiene un id_movimiento válido.");
+    }
 
-function previewImagen(input) {
-    const preview = document.getElementById('img-preview');
+    // 6. Mostrar el modal
+    const myModal = new bootstrap.Modal(modalEl);
+    myModal.show();
+}
+function previewImagen(input, idDestino) {
+    const preview = document.getElementById(idDestino);
+    const labelOk = idDestino === 'img-preview' ? 'txt-material-actual' : 'txt-nota-actual';
+    
     if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = (e) => {
             preview.src = e.target.result;
             preview.style.display = 'block';
+            document.getElementById(labelOk).classList.add('d-none'); // Ocultamos el aviso de "ya existe" porque el usuario cargó una nueva
         }
         reader.readAsDataURL(input.files[0]);
     }
@@ -287,42 +368,34 @@ document.getElementById('formEvidencia').onsubmit = function(e) {
     e.preventDefault();
     const btn = document.getElementById('btnGuardar');
     const formData = new FormData(this);
+    const esEdicion = document.getElementById('tituloModal').innerText.includes("Modificar");
 
-    // Validación de foto
-    if(!document.getElementById('input-foto').files[0]) {
-        Swal.fire('Atención', 'Debes capturar la fotografía de evidencia.', 'warning');
-        return;
-    }
-
-    // Validación de ID final
-    if(formData.get('id_movimiento') == "0" || !formData.get('id_movimiento')) {
-        Swal.fire('Error', 'El ID de movimiento es 0. No se puede guardar.', 'error');
-        return;
+    // Si es nuevo, fotos obligatorias
+    if(!esEdicion) {
+        if(!document.getElementById('input-foto').files[0] || !document.getElementById('input-foto-nota').files[0]) {
+            Swal.fire('Atención', 'Es obligatorio capturar ambas fotos para finalizar.', 'warning');
+            return;
+        }
     }
 
     btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Guardando...';
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Procesando...';
 
-    fetch(API_URL, {
-        method: 'POST',
-        body: formData
-    })
+    fetch(API_URL, { method: 'POST', body: formData })
     .then(async res => {
         const data = await res.json();
         if(!res.ok) throw new Error(data.message || "Error en el servidor");
         return data;
     })
     .then(res => {
-        Swal.fire({ icon: 'success', title: '¡Guardado!', text: res.message, timer: 2000, showConfirmButton: false });
+        Swal.fire({ icon: 'success', title: 'Listo', text: res.message, timer: 1500, showConfirmButton: false });
         bootstrap.Modal.getInstance(document.getElementById('modalEvidencia')).hide();
         cargarEntregas();
     })
-    .catch(err => {
-        Swal.fire('Error al guardar', err.message, 'error');
-    })
+    .catch(err => Swal.fire('Error', err.message, 'error'))
     .finally(() => {
         btn.disabled = false;
-        btn.innerHTML = 'Guardar y Finalizar';
+        btn.innerText = esEdicion ? "Actualizar Cambios" : "Guardar y Finalizar";
     });
 };
 </script>

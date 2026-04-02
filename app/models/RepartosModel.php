@@ -963,68 +963,7 @@ public function obtenerViajesLogistica($folio_folio = null) {
         throw new Exception("Error en la base de datos: " . $e->getMessage());
     }
 }
-public function obtenerViajesLogisticaParaEntrega($folio_folio = null) {
-    try {
-        $sql = "SELECT 
-                    trp.id AS id_movimiento,
-                    v.id AS id_venta,
-                    trm.vehiculo_id,
-                    tc.viaje_folio AS folio_viaje,
-                    tc.fecha_creacion AS fecha_viaje,
-                    trm.hora_llegada_real AS fecha_llegada,
-                    trm.estado_reparto AS estatus_logistico,
-                    tv.nombre AS unidad_nombre,
-                    tv.placas AS unidad_placas,
-                    u_chofer.nombre AS nombre_chofer,
-                    (SELECT GROUP_CONCAT(u_ayu.nombre SEPARATOR ' / ') 
-                     FROM transporte_tripulantes_detalle ttd
-                     INNER JOIN usuarios u_ayu ON ttd.usuario_id = u_ayu.id
-                     WHERE ttd.reparto_id = tc.reparto_id) AS ayudantes,
-                    trp.orden_visita,
-                    trp.descripcion_punto AS direccion_entrega,
-                    trp.estado_punto AS estatus_parada,
-                    trp.latitud, 
-                    trp.longitud,
-                    v.folio AS folio_venta,
-                    c.nombre_comercial AS cliente,
-                    c.telefono AS tel_cliente,
-                    p.nombre AS producto_nombre,
-                    m.cantidad,
-                    p.unidad_medida AS um,
-                    p.sku AS SKU,
-                    -- CAMPOS DE EVIDENCIA --
-                    crv.id AS id_evidencia,
-                    IF(crv.id IS NOT NULL, 1, 0) AS ya_entregado,
-                    crv.fotografia_entrega AS foto_registrada
-                FROM transporte_consolidacion tc
-                INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
-                INNER JOIN transporte_vehiculos tv ON tc.vehiculo_id = tv.id
-                INNER JOIN transporte_rutas_puntos trp ON trm.id = trp.reparto_id 
-                INNER JOIN movimientos m ON trm.entrega_venta_id = m.id
-                INNER JOIN productos p ON m.producto_id = p.id
-                LEFT JOIN ventas v ON m.referencia_id = v.id
-                LEFT JOIN clientes c ON v.id_cliente = c.id
-                LEFT JOIN trabajadores u_chofer ON trm.usuario_encargado_id = u_chofer.id
-                LEFT JOIN confirmacion_reparto_viaje crv ON trp.id = crv.id_movimiento";
 
-        if (!empty($folio_folio)) {
-            $sql .= " WHERE tc.viaje_folio = ?";
-        }
-
-        $sql .= " ORDER BY trp.orden_visita ASC";
-
-        $stmt = $this->db->prepare($sql);
-        if (!empty($folio_folio)) {
-            $stmt->bind_param("s", $folio_folio);
-        }
-
-        $stmt->execute();
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {
-        error_log("Error en obtenerViajesLogistica: " . $e->getMessage());
-        return []; // Retornar array vacío para evitar que el JS rompa
-    }
-}
 public function quitarEntregaDeRuta($entrega_venta_id) {
     try {
         $this->db->begin_transaction();
@@ -1437,6 +1376,61 @@ public function getCargaPendienteChofer($trabajador_id = null, $reparto_id_espec
     return $this->db->query($sql)->fetch_all(MYSQLI_ASSOC);
 }
 
+public function registrarEntregaMovimiento($datos) {
+    try {
+        $this->db->begin_transaction();
+
+        $id_mov   = intval($datos['id_movimiento']);
+        $id_ven   = intval($datos['id_venta']);
+        $id_tra   = intval($datos['trabajador_id'] ?? 0);
+        $id_veh   = intval($datos['vehiculo_id']);
+        $foto_ent = !empty($datos['fotografia_entrega']) ? $datos['fotografia_entrega'] : null;
+        $foto_not = !empty($datos['fotografia_nota']) ? $datos['fotografia_nota'] : null;
+        $estatus  = $datos['estatus_entrega']; 
+        $coment   = $datos['comentario'] ?? '';
+
+        // CONSTRUCCIÓN DINÁMICA DEL UPDATE
+        // Solo actualizamos las fotos si el string NO está vacío.
+        $updateFields = [
+            "estatus = VALUES(estatus)",
+            "comentario = VALUES(comentario)",
+            "hora = CURTIME()"
+        ];
+
+        if ($foto_ent !== null) {
+            $updateFields[] = "fotografia_entrega = VALUES(fotografia_entrega)";
+        }
+        if ($foto_not !== null) {
+            $updateFields[] = "fotografia_nota = VALUES(fotografia_nota)";
+        }
+
+        $sqlEv = "INSERT INTO confirmacion_reparto_viaje (
+                    id_movimiento, id_venta, trabajador_id, vehiculo_id, 
+                    fecha, hora, fotografia_entrega, fotografia_nota, estatus, comentario
+                ) VALUES (?, ?, ?, ?, CURDATE(), CURTIME(), ?, ?, ?, ?)
+                ON DUPLICATE KEY UPDATE " . implode(", ", $updateFields);
+        
+        $stmtEv = $this->db->prepare($sqlEv);
+        $stmtEv->bind_param("iiiissss", 
+            $id_mov, $id_ven, $id_tra, $id_veh, $foto_ent, $foto_not, $estatus, $coment
+        );
+        
+        if (!$stmtEv->execute()) throw new Exception("Error al guardar evidencia: " . $stmtEv->error);
+
+        // Actualizar estatus del punto de ruta a visitado
+        $sqlPunto = "UPDATE transporte_rutas_puntos SET estado_punto = 'visitado', llegada_real = NOW() WHERE id = ?";
+        $stmtP = $this->db->prepare($sqlPunto);
+        $stmtP->bind_param("i", $id_mov);
+        $stmtP->execute();
+
+        $this->db->commit();
+        return true;
+    } catch (Exception $e) {
+        if ($this->db->in_transaction) $this->db->rollback();
+        error_log("Error registrarEntregaMovimiento: " . $e->getMessage());
+        throw new Exception($e->getMessage());
+    }
+}
 public function getMonitorEntregasRuta($almacen_id = 0, $inicio = 0, $limite = 25) {
     if (ob_get_level()) ob_clean();
 
@@ -1502,5 +1496,60 @@ public function getMonitorEntregasRuta($almacen_id = 0, $inicio = 0, $limite = 2
         $data[] = $row;
     }
     return $data;
+}
+
+public function obtenerViajesLogisticaParaEntrega($folio_viaje = null) {
+    try {
+        // Ruta base para tus imágenes (ajusta según tu carpeta real)
+        $base_path = "/cfsistem/"; 
+
+        $sql = "SELECT 
+                    trp.id AS id_movimiento,
+                    v.id AS id_venta,
+                    trm.vehiculo_id,
+                    tc.viaje_folio AS folio_viaje,
+                    trp.descripcion_punto AS direccion_entrega,
+                    trp.estado_punto AS estatus_parada,
+                    v.folio AS folio_venta,
+                    c.nombre_comercial AS cliente,
+                    p.nombre AS producto_nombre,
+                    m.cantidad,
+                    p.unidad_medida AS um,
+                    crv.id AS id_evidencia,
+                    IF(crv.id IS NOT NULL, 1, 0) AS ya_entregado,
+                    -- Concatenamos la ruta si existe la foto
+                    IF(crv.fotografia_entrega IS NOT NULL AND crv.fotografia_entrega != '', CONCAT('$base_path', crv.fotografia_entrega), NULL) AS foto_registrada,
+                    IF(crv.fotografia_nota IS NOT NULL AND crv.fotografia_nota != '', CONCAT('$base_path', crv.fotografia_nota), NULL) AS nota_registrada,
+                    crv.estatus AS estatus_evidencia,
+                    crv.comentario AS comentario_evidencia
+                FROM transporte_consolidacion tc
+                INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
+                INNER JOIN transporte_rutas_puntos trp ON trm.id = trp.reparto_id 
+                INNER JOIN movimientos m ON trm.entrega_venta_id = m.id
+                INNER JOIN productos p ON m.producto_id = p.id
+                LEFT JOIN ventas v ON m.referencia_id = v.id
+                LEFT JOIN clientes c ON v.id_cliente = c.id
+                LEFT JOIN confirmacion_reparto_viaje crv ON trp.id = crv.id_movimiento";
+
+        if (!empty($folio_viaje)) {
+            $sql .= " WHERE tc.viaje_folio = ?";
+        }
+
+        $sql .= " GROUP BY trp.id ORDER BY trp.orden_visita ASC";
+
+        $stmt = $this->db->prepare($sql);
+        if (!empty($folio_viaje)) {
+            $stmt->bind_param("s", $folio_viaje);
+        }
+
+        $stmt->execute();
+        $res = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        
+        if (ob_get_level()) ob_clean();
+        return $res;
+    } catch (Exception $e) {
+        error_log("Error CF System: " . $e->getMessage());
+        return [];
+    }
 }
 }
