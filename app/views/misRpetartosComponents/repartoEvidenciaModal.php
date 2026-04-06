@@ -73,7 +73,8 @@ function verEvidenciasPorFolio(viajeFolio) {
         </div>
     `);
 
-    const modalInstance = new bootstrap.Modal(document.getElementById('modalEvidenciasRuta'));
+  const modalElement = document.getElementById('modalEvidenciasRuta');
+    const modalInstance = bootstrap.Modal.getOrCreateInstance(modalElement);
     modalInstance.show();
 
     // 2. Petición AJAX al controlador
@@ -88,10 +89,14 @@ function verEvidenciasPorFolio(viajeFolio) {
         success: function(response) {
             if (response.success && response.data.length > 0) {
                 let html = '';
-   console.log(response.data);
+                console.log(response.data);
                 response.data.forEach((entrega, index) => {
                    
                     const entregaJson = JSON.stringify(entrega).replace(/"/g, '&quot;');
+                    
+                    // Verificamos si existe la evidencia
+                  // Si alguna de las dos fotos tiene contenido, consideramos que ya existe evidencia
+const existeEvidencia = (entrega.foto_1 || entrega.foto_2);
                     html += `
                     <div class="entrega-item-card animate__animated animate__fadeInUp mb-4 p-3 border rounded-4 bg-white shadow-sm">
                         <div class="d-flex justify-content-between align-items-start mb-2">
@@ -102,19 +107,26 @@ function verEvidenciasPorFolio(viajeFolio) {
                                 </p>
                             </div>
                             <div class="d-flex flex-column align-items-end gap-1">
-                                <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3" style="font-size: 0.65rem;">
-                                    ${entrega.estatus_entrega || 'ENTREGADO'}
+                                <span class="badge rounded-pill ${existeEvidencia ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'} border px-3" style="font-size: 0.65rem;">
+                                    ${entrega.estatus_entrega || 'PENDIENTE'}
                                 </span>
                                 ${esSupervisor ? `
                                     <div class="btn-group mt-1">
-                                        <button class="btn btn-sm btn-outline-primary border-0 p-1" 
-                    onclick="abrirModalPorIndex(${index}, '${entregaJson}')">
-                <i class="bi bi-pencil-square"></i>
-            </button>
-                                        
-                                        <button class="btn btn-sm btn-outline-danger border-0 p-1" onclick="confirmarEliminarEvidencia(${entrega.evidencia_id}, '${viajeFolio}')" title="Eliminar evidencia">
-                                            <i class="bi bi-trash3-fill"></i>
-                                        </button>
+                                        ${existeEvidencia ? `
+                                            <button class="btn btn-sm btn-outline-primary border-0 p-1" 
+                                                onclick="abrirModalPorIndex(${index}, '${entregaJson}')">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </button>
+                                            
+                                            <button class="btn btn-sm btn-outline-danger border-0 p-1" onclick="confirmarEliminarEvidencia(${entrega.id_movimiento})" title="Eliminar evidencia">
+                                                <i class="bi bi-trash3-fill"></i>
+                                            </button>
+                                        ` : `
+                                            <button class="btn btn-sm btn-primary rounded-pill px-3 fw-bold" style="font-size: 0.6rem;"
+                                                onclick="abrirModalPorIndex(${index}, '${entregaJson}')">
+                                                <i class="bi bi-plus-circle me-1"></i> SUBIR
+                                            </button>
+                                        `}
                                     </div>
                                 ` : ''}
                             </div>
@@ -122,7 +134,7 @@ function verEvidenciasPorFolio(viajeFolio) {
 
                         <div class="my-3 p-2 rounded-3 bg-light" style="border-left: 3px solid #007aff;">
                             <p class="mb-0 text-dark italic" style="font-size: 0.8rem;">
-                                <i class="bi bi-chat-left-text me-1 text-muted"></i> "${entrega.comentario}"
+                                <i class="bi bi-chat-left-text me-1 text-muted"></i> "${entrega.comentario || 'Sin comentarios'}"
                             </p>
                         </div>
 
@@ -142,7 +154,7 @@ function verEvidenciasPorFolio(viajeFolio) {
 
                         <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center">
                             <small class="text-muted" style="font-size: 0.65rem;">
-                                <i class="bi bi-calendar3 me-1"></i> ${entrega.fecha} ${entrega.hora}
+                                <i class="bi bi-calendar3 me-1"></i> ${entrega.fecha || '--'} ${entrega.hora || '--'}
                             </small>
                             <small class="fw-bold text-primary" style="font-size: 0.7rem;">
                                 Venta: #${entrega.venta_folio || 'S/F'}
@@ -158,36 +170,83 @@ function verEvidenciasPorFolio(viajeFolio) {
                         <p class="text-muted">No se encontraron evidencias cargadas para esta ruta.</p>
                     </div>
                 `);
+                
             }
         }
     });
 }
-
 /**
  * Funciones de Acción para el Supervisor
  */
-function confirmarEliminarEvidencia(id, folioRuta) {
+/**
+ * Confirma y elimina una evidencia usando el ID del movimiento (punto de ruta)
+ * @param {number} id - El id_movimiento (proviene de transporte_rutas_puntos)
+ */
+function confirmarEliminarEvidencia(id) {
+    // 1. Validamos que el ID sea correcto
+    console.log("ID de movimiento a eliminar:", id);
+    
+    if (!id || id === 0) {
+        Swal.fire('Error', 'No se identificó un movimiento válido para eliminar.', 'error');
+        return;
+    }
+
+    // 2. Rescatamos el folio de la ruta desde el texto del modal para poder recargar después
+    const folioRuta = $('#txtFolioRuta').text();
+
+    // 3. Alerta de confirmación
     Swal.fire({
         title: '¿Eliminar evidencia?',
-        text: "Esta acción borrará las fotos y el registro de entrega permanentemente.",
+        text: "Esta acción borrará las fotos y el registro. El punto de entrega volverá a quedar como 'PENDIENTE'.",
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
-        cancelButtonColor: '#6e7881',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="bi bi-trash"></i> Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true
     }).then((result) => {
         if (result.isConfirmed) {
-            $.post('/cfsistem/app/controllers/misRepartosController.php', {
-                action: 'eliminar_evidencia',
-                evidencia_id: id
-            }, function(res) {
-                if(res.success) {
-                    Swal.fire('Eliminado', 'La evidencia ha sido removida.', 'success');
-                    verEvidenciasPorFolio(folioRuta); // Recargamos el modal
+            
+            // Mostramos estado de carga
+            Swal.fire({
+                title: 'Procesando...',
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            // 4. Petición AJAX al controlador
+            $.ajax({
+                url: '/cfsistem/app/controllers/misRepartosController.php',
+                type: 'POST',
+                data: {
+                    action: 'eliminar_evidencia',
+                    id_movimiento: id // Enviamos el ID que recibiste por parámetro
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Eliminado',
+                            text: response.message,
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+
+                        // 5. RECARGA AUTOMÁTICA: 
+                        // Volvemos a llamar a la función que pinta el listado 
+                        // para que el botón cambie de "Editar" a "SUBIR"
+                        verEvidenciasPorFolio(folioRuta);
+                    } else {
+                        Swal.fire('Error', response.message, 'error');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'No se pudo conectar con el servidor para eliminar el registro.', 'error');
                 }
-            }, 'json');
+            });
         }
     });
-}</script>
+}
+</script>
 <?php require_once __DIR__ . '/editarEvidenciaModal.php' ?>

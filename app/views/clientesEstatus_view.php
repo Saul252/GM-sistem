@@ -155,10 +155,11 @@
                                     ? `<span class="badge bg-warning-subtle text-warning-dark border border-warning-subtle rounded-pill px-3">PENDIENTE (${pEntregas})</span>` 
                                     : '<span class="badge bg-light text-muted border rounded-pill px-3 text-uppercase small">Completo</span>';
                                 
-                                btnAccion = `<a href="/cfsistem/app/controllers/clientesEstatusController.php?id=${c.id}"" 
-                                                class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm">
-                                                <i class="bi bi-eye-fill"></i> Analizar
-                                             </a>`;
+                                // CORRECCIÓN AQUÍ: Apuntamos al controlador del expediente con el ID del cliente
+    btnAccion = `<a href="/cfsistem/app/controllers/clienteExpedienteController.php?id=${c.id}" 
+                    class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">
+                    <i class="bi bi-graph-up-arrow me-1"></i> Analizar
+                 </a>`;
                             }
 
                             html += `

@@ -286,6 +286,40 @@ if ($action === 'get_detalle_trazabilidad') {
     }
     exit;
 }
+/**
+         * ACCIÓN: eliminar_evidencia
+         * Borra el registro de confirmación y permite que el punto de ruta quede pendiente de nuevo.
+         */
+        if ($action === 'eliminar_evidencia') {
+            header('Content-Type: application/json');
+            
+            // Validamos que sea supervisor, ya que un chofer no debería borrar evidencias
+            if (!$es_supervisor) {
+                echo json_encode(["success" => false, "message" => "No tiene permisos para eliminar evidencias."]);
+                exit;
+            }
+
+            $id_movimiento = intval($_POST['id_movimiento'] ?? 0);
+
+            if ($id_movimiento <= 0) {
+                echo json_encode(["success" => false, "message" => "ID de evidencia no válido."]);
+                exit;
+            }
+
+            // Llamamos al modelo (la función que ya ajustamos)
+            if ($repartoM->eliminarEvidencia($id_movimiento)) {
+                echo json_encode([
+                    "success" => true, 
+                    "message" => "Evidencia eliminada correctamente. El punto de ruta ahora está pendiente."
+                ]);
+            } else {
+                echo json_encode([
+                    "success" => false, 
+                    "message" => "No se pudo eliminar la evidencia de la base de datos."
+                ]);
+            }
+            exit;
+        }
 
     } catch (Exception $e) {
         if (ob_get_level()) ob_clean();

@@ -102,9 +102,52 @@ public function obtenerProductosPendientes($id_cliente) {
 /**
  * Obtiene el expediente 360: Ventas -> Productos (con Lotes y Costos) + Pagos (con Usuario)
  */
+
+
+/**
+ * Función mejorada para obtener datos del cliente (incluye estatus)
+ */
+public function obtenerDatosBasicos($id) {
+    $stmt = $this->db->prepare("SELECT * FROM clientes WHERE id = ? AND activo = 1");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    return $stmt->get_result()->fetch_assoc();
+}
+public function registrarAbono($venta_id, $monto, $usuario_id) {
+    $this->db->begin_transaction();
+    try {
+        // 1. Insertar el pago
+        $stmt = $this->db->prepare("INSERT INTO historial_pagos (venta_id, monto, usuario_id, fecha) VALUES (?, ?, ?, NOW())");
+        $stmt->bind_param("idi", $venta_id, $monto, $usuario_id);
+        $stmt->execute();
+
+        // 2. Verificar si la venta se liquidó para cambiar estatus
+        $sqlVerif = "SELECT total, (SELECT SUM(monto) FROM historial_pagos WHERE venta_id = ?) as pagado FROM ventas WHERE id = ?";
+        $st = $this->db->prepare($sqlVerif);
+        $st->bind_param("ii", $venta_id, $venta_id);
+        $st->execute();
+        $v = $st->get_result()->fetch_assoc();
+
+        $nuevoEstado = ($v['pagado'] >= $v['total']) ? 'pagada' : 'parcial';
+        
+        $upd = $this->db->prepare("UPDATE ventas SET estado_pago = ? WHERE id = ?");
+        $upd->bind_param("si", $nuevoEstado, $venta_id);
+        $upd->execute();
+
+        $this->db->commit();
+        return true;
+    } catch (Exception $e) {
+        $this->db->rollback();
+        throw $e;
+    }
+}
+/**
+ * Obtiene el comparativo mensual de Ventas vs Pagos de los últimos 6 meses
+ * Ideal para alimentar gráficas de barras o líneas.
+ */
 public function obtenerExpedienteCompleto($id_cliente) {
-    // 1. Obtenemos todas las ventas activas del cliente
-    $sqlVentas = "SELECT v.id, v.folio, v.fecha, v.total, v.estado_pago,
+    // 1. Obtenemos todas las ventas (Mantenemos tu alias venta_id igual)
+    $sqlVentas = "SELECT v.id as venta_id, v.folio, v.fecha, v.total, v.estado_pago, v.id_cliente as cliente_id, v.estado_general,
                          (SELECT IFNULL(SUM(monto), 0) FROM historial_pagos WHERE venta_id = v.id) as total_pagado
                   FROM ventas v
                   WHERE v.id_cliente = ? AND v.estado_general = 'activa'
@@ -118,43 +161,39 @@ public function obtenerExpedienteCompleto($id_cliente) {
     $expediente = [];
 
     foreach ($ventas as $venta) {
-        $venta_id = $venta['id'];
+        // --- ESTA ES LA CLAVE ---
+        // Como en el SELECT pediste "v.id as venta_id", en el array la llave es 'venta_id'
+        $v_id_para_querys = $venta['venta_id']; 
 
-        // 2. Detalle de productos AJUSTADO para mostrar la cantidad REAL por lote
+        // 2. Detalle de productos (Usa la variable corregida)
         $sqlDetalle = "SELECT 
-                            /* Si hay registro en movimientos de salida de lotes, usamos esa cantidad, 
-                               de lo contrario, usamos la del detalle de venta */
                             IFNULL(lms.cantidad_salida, dv.cantidad) as cantidad, 
                             dv.cantidad_entregada,
                             dv.precio_unitario as precio_venta,
                             p.nombre as producto, 
                             p.sku,
-                            IFNULL(ls.codigo_lote, 'S/L') as lote_codigo,
-                            IFNULL(ls.precio_compra_unitario, 0) as precio_lote_compra
+                            IFNULL(ls.codigo_lote, 'S/L') as lote_codigo
                        FROM detalle_venta dv
                        INNER JOIN productos p ON dv.producto_id = p.id
-                       /* Vinculamos con la salida específica del lote */
                        LEFT JOIN lotes_movimientos_salida lms ON dv.id = lms.detalle_venta_id
                        LEFT JOIN lotes_stock ls ON lms.lote_id = ls.id
                        WHERE dv.venta_id = ?";
         
         $stmtDet = $this->db->prepare($sqlDetalle);
-        $stmtDet->bind_param("i", $venta_id);
+        $stmtDet->bind_param("i", $v_id_para_querys); // <--- Aquí ya no es null
         $stmtDet->execute();
         $venta['productos'] = $stmtDet->get_result()->fetch_all(MYSQLI_ASSOC);
 
-        // 3. Detalle de pagos
+        // 3. Detalle de pagos (Usa la variable corregida)
         $sqlPagos = "SELECT 
-                        hp.monto, 
-                        hp.fecha, 
-                        u.nombre as usuario_recibio
+                        hp.monto, hp.fecha, u.nombre as usuario_recibio
                      FROM historial_pagos hp
                      INNER JOIN usuarios u ON hp.usuario_id = u.id
                      WHERE hp.venta_id = ?
                      ORDER BY hp.fecha ASC";
         
         $stmtPagos = $this->db->prepare($sqlPagos);
-        $stmtPagos->bind_param("i", $venta_id);
+        $stmtPagos->bind_param("i", $v_id_para_querys); // <--- Aquí ya no es null
         $stmtPagos->execute();
         $venta['pagos'] = $stmtPagos->get_result()->fetch_all(MYSQLI_ASSOC);
 
@@ -163,14 +202,35 @@ public function obtenerExpedienteCompleto($id_cliente) {
 
     return $expediente;
 }
+public function obtenerEstadisticasMensuales($id_cliente) {
+    $sql = "SELECT 
+                MESES.mes_nombre,
+                IFNULL(SUM(V.total), 0) AS total_ventas,
+                IFNULL((
+                    SELECT SUM(hp.monto) 
+                    FROM historial_pagos hp 
+                    INNER JOIN ventas v2 ON hp.venta_id = v2.id 
+                    WHERE v2.id_cliente = ? 
+                    AND MONTH(hp.fecha) = MESES.mes_num
+                    AND YEAR(hp.fecha) = YEAR(CURDATE())
+                ), 0) AS total_pagos
+            FROM (
+                SELECT 1 AS mes_num, 'Ene' AS mes_nombre UNION SELECT 2, 'Feb' UNION 
+                SELECT 3, 'Mar' UNION SELECT 4, 'Abr' UNION SELECT 5, 'May' UNION 
+                SELECT 6, 'Jun' UNION SELECT 7, 'Jul' UNION SELECT 8, 'Ago' UNION 
+                SELECT 9, 'Sep' UNION SELECT 10, 'Oct' UNION SELECT 11, 'Nov' UNION 
+                SELECT 12, 'Dic'
+            ) AS MESES
+            LEFT JOIN ventas V ON MONTH(V.fecha) = MESES.mes_num 
+                AND V.id_cliente = ? 
+                AND V.estado_general = 'activa'
+                AND YEAR(V.fecha) = YEAR(CURDATE())
+            GROUP BY MESES.mes_num
+            ORDER BY MESES.mes_num ASC";
 
-/**
- * Función mejorada para obtener datos del cliente (incluye estatus)
- */
-public function obtenerDatosBasicos($id) {
-    $stmt = $this->db->prepare("SELECT * FROM clientes WHERE id = ? AND activo = 1");
-    $stmt->bind_param("i", $id);
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param("ii", $id_cliente, $id_cliente);
     $stmt->execute();
-    return $stmt->get_result()->fetch_assoc();
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 }

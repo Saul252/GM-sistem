@@ -1557,19 +1557,21 @@ public function getEvidenciasPorFolioRuta($folio_viaje) {
         $base_path = "/cfsistem/"; 
 
         $sql = "SELECT 
-                    crv.id AS evidencia_id, -- Cambiado de registro_id a evidencia_id
-                    trp.id AS id_movimiento, -- Mantenemos este para procesos internos
+                    crv.id AS evidencia_id, 
+                    trp.id AS id_movimiento, 
                     v.folio AS venta_folio,
+                    v.id AS id_venta,          -- Agregado para nuevas inserciones
+                    trm.vehiculo_id,           -- Agregado para nuevas inserciones
                     c.nombre_comercial AS cliente,
                     trp.descripcion_punto AS direccion,
                     crv.estatus AS estatus_entrega,
                     crv.fecha,
                     crv.hora,
                     crv.comentario,
-                    -- URL completa para mostrar (Usamos foto_1 y foto_2 que busca tu JS)
-                    IF(crv.fotografia_entrega != '' AND crv.fotografia_entrega IS NOT NULL, 
+                    -- URL completa para mostrar
+                    IF(crv.fotografia_entrega IS NOT NULL AND crv.fotografia_entrega != '', 
                        CONCAT('$base_path', crv.fotografia_entrega), NULL) AS foto_1,
-                    IF(crv.fotografia_nota != '' AND crv.fotografia_nota IS NOT NULL, 
+                    IF(crv.fotografia_nota IS NOT NULL AND crv.fotografia_nota != '', 
                        CONCAT('$base_path', crv.fotografia_nota), NULL) AS foto_2
                 FROM transporte_consolidacion tc
                 INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
@@ -1577,10 +1579,12 @@ public function getEvidenciasPorFolioRuta($folio_viaje) {
                 INNER JOIN movimientos m ON trm.entrega_venta_id = m.id
                 LEFT JOIN ventas v ON m.referencia_id = v.id
                 LEFT JOIN clientes c ON v.id_cliente = c.id
-                INNER JOIN confirmacion_reparto_viaje crv ON trp.id = crv.id_movimiento
+                -- CAMBIO CRÍTICO: LEFT JOIN para traer puntos sin evidencia aún
+                LEFT JOIN confirmacion_reparto_viaje crv ON trp.id = crv.id_movimiento
                 WHERE tc.viaje_folio = ?
                 GROUP BY trp.id 
-                ORDER BY crv.fecha DESC, crv.hora DESC";
+                -- Ordenamos por el orden de visita para que el supervisor vea la ruta lógica
+                ORDER BY trp.orden_visita ASC";
 
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param("s", $folio_viaje);
@@ -1615,11 +1619,49 @@ public function actualizarEvidencia($id, $comentario, $foto_entrega = null, $fot
     $stmt->bind_param($types, ...$params);
     return $stmt->execute();
 }
-public function eliminarEvidencia($id) {
-    // Es recomendable borrar también los archivos físicos del servidor antes de borrar el registro
-    $sql = "DELETE FROM confirmacion_reparto_viaje WHERE id = ?";
-    $stmt = $this->db->prepare($sql);
-    $stmt->bind_param("i", $id);
-    return $stmt->execute();
+public function eliminarEvidencia($id_movimiento) { // Cambiamos el nombre conceptual de la variable
+    try {
+        $this->db->begin_transaction();
+
+        // 1. Opcional: Borrar archivos físicos antes de borrar el registro
+        $sqlFotos = "SELECT fotografia_entrega, fotografia_nota FROM confirmacion_reparto_viaje WHERE id_movimiento = ?";
+        $stmtF = $this->db->prepare($sqlFotos);
+        $stmtF->bind_param("i", $id_movimiento);
+        $stmtF->execute();
+        $fotos = $stmtF->get_result()->fetch_assoc();
+
+        if ($fotos) {
+            $base = $_SERVER['DOCUMENT_ROOT'] . "/cfsistem/";
+            if (!empty($fotos['fotografia_entrega'])) @unlink($base . $fotos['fotografia_entrega']);
+            if (!empty($fotos['fotografia_nota'])) @unlink($base . $fotos['fotografia_nota']);
+        }
+
+        // 2. Borramos la evidencia usando el id_movimiento
+        $sqlDel = "DELETE FROM confirmacion_reparto_viaje WHERE id_movimiento = ?";
+        $stmtDel = $this->db->prepare($sqlDel);
+        $stmtDel->bind_param("i", $id_movimiento);
+        $stmtDel->execute();
+
+        // 3. Regresamos el punto de ruta a 'pendiente'
+        // Esto es lo que habilitará el botón "SUBIR" nuevamente
+        $sqlPunto = "UPDATE transporte_rutas_puntos 
+                     SET estado_punto = 'pendiente', 
+                         llegada_real = NULL 
+                     WHERE id = ?";
+        $stmtP = $this->db->prepare($sqlPunto);
+        $stmtP->bind_param("i", $id_movimiento);
+        $stmtP->execute();
+
+        $this->db->commit();
+        return true;
+
+    } catch (Exception $e) {
+        if ($this->db->connect_errno) { // Verificación de conexión
+            error_log("Error de conexión: " . $this->db->connect_error);
+        }
+        if ($this->db->in_transaction) $this->db->rollback();
+        error_log("Error al eliminar evidencia: " . $e->getMessage());
+        return false;
+    }
 }
 }

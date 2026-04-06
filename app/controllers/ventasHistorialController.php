@@ -97,47 +97,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardarAbono') {
 
             // --- PASO 3: ACTUALIZAR SALDO MAESTRO (Lógica de Bolsas Separadas) ---
             
-            // A) Consultar saldos actuales sin mezclarlos
-            $stmt = $conexion->prepare("SELECT saldo_a_favor, saldo_en_contra FROM clientes_saldos WHERE cliente_id = ?");
-            $stmt->bind_param("i", $c_id);
-            $stmt->execute();
-            $resSaldosActuales = $stmt->get_result()->fetch_assoc();
-
-            $favor_actual  = floatval($resSaldosActuales['saldo_a_favor'] ?? 0);
-            $contra_actual = floatval($resSaldosActuales['saldo_en_contra'] ?? 0);
-
-            $nuevo_favor  = $favor_actual;
-            $nuevo_contra = $contra_actual;
-
-            // B) Lógica: El abono solo afecta a la deuda actual de este proceso
-            if ($contra_actual > 0) {
-                if ($amt <= $contra_actual) {
-                    // El abono solo reduce la deuda, el saldo a favor no se toca
-                    $nuevo_contra = $contra_actual - $amt;
-                } else {
-                    // El abono mata la deuda y el sobrante se suma al saldo a favor previo
-                    $sobrante = $amt - $contra_actual;
-                    $nuevo_contra = 0;
-                    $nuevo_favor  = $favor_actual + $sobrante;
-                }
-            } else {
-                // Si no debía nada, todo el abono va directo al saldo a favor
-                $nuevo_favor = $favor_actual + $amt;
-            }
-
-            // C) Hacer el Upsert con los nuevos valores independientes
-            $sqlMaestra = "INSERT INTO `clientes_saldos` (
-                `cliente_id`, `saldo_a_favor`, `saldo_en_contra`, `ultima_venta_id`, `ultima_actualizacion`
-            ) VALUES (?, ?, ?, ?, ?) 
-            ON DUPLICATE KEY UPDATE 
-                `saldo_a_favor` = VALUES(`saldo_a_favor`),
-                `saldo_en_contra` = VALUES(`saldo_en_contra`),
-                `ultima_venta_id` = VALUES(`ultima_venta_id`),
-                `ultima_actualizacion` = VALUES(`ultima_actualizacion`)";
-
-            $stmtM = $conexion->prepare($sqlMaestra);
-            $stmtM->bind_param("iddis", $c_id, $nuevo_favor, $nuevo_contra, $v_id, $fec);
-            $resFinal = $stmtM->execute();
+            $resFinal = $ventasModel->actualizarSaldosMaestros($c_id, $v_id, $amt, $fec);
 
             if ($resFinal) {
                 echo json_encode(['status' => 'success', 'message' => '¡Abono registrado! Deuda: $'.$nuevo_contra.' | Favor: $'.$nuevo_favor]);

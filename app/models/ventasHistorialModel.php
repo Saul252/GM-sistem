@@ -235,5 +235,61 @@ public static function obtenerClientePorVenta($conexion,$venta_id) {
         return false;
     }
 }
+/**
+ * Actualiza la tabla maestra de saldos calculando las bolsas de saldo a favor y en contra.
+ * Esta función es independiente de la lógica de ventas.
+ */
+public function actualizarSaldosMaestros($c_id, $v_id, $amt, $fec) {
+    // A) Consultar saldos actuales sin mezclarlos
+    $stmt = $this->db->prepare("SELECT saldo_a_favor, saldo_en_contra FROM clientes_saldos WHERE cliente_id = ?");
+    $stmt->bind_param("i", $c_id);
+    $stmt->execute();
+    $resSaldosActuales = $stmt->get_result()->fetch_assoc();
+
+    $favor_actual  = floatval($resSaldosActuales['saldo_a_favor'] ?? 0);
+    $contra_actual = floatval($resSaldosActuales['saldo_en_contra'] ?? 0);
+
+    $nuevo_favor  = $favor_actual;
+    $nuevo_contra = $contra_actual;
+
+    // B) Lógica de Bolsas: El abono solo afecta a la deuda actual de este proceso
+    if ($contra_actual > 0) {
+        if ($amt <= $contra_actual) {
+            // El abono solo reduce la deuda
+            $nuevo_contra = $contra_actual - $amt;
+        } else {
+            // El abono liquida la deuda y el sobrante genera saldo a favor
+            $sobrante = $amt - $contra_actual;
+            $nuevo_contra = 0;
+            $nuevo_favor  = $favor_actual + $sobrante;
+        }
+    } else {
+        // Si no debía nada, todo el abono va directo al saldo a favor
+        $nuevo_favor = $favor_actual + $amt;
+    }
+
+    // C) Hacer el Upsert con los nuevos valores independientes
+    $sqlMaestra = "INSERT INTO `clientes_saldos` (
+        `cliente_id`, `saldo_a_favor`, `saldo_en_contra`, `ultima_venta_id`, `ultima_actualizacion`
+    ) VALUES (?, ?, ?, ?, ?) 
+    ON DUPLICATE KEY UPDATE 
+        `saldo_a_favor` = VALUES(`saldo_a_favor`),
+        `saldo_en_contra` = VALUES(`saldo_en_contra`),
+        `ultima_venta_id` = VALUES(`ultima_venta_id`),
+        `ultima_actualizacion` = VALUES(`ultima_actualizacion`)";
+
+    $stmtM = $this->db->prepare($sqlMaestra);
+    $stmtM->bind_param("iddis", $c_id, $nuevo_favor, $nuevo_contra, $v_id, $fec);
+    
+    if (!$stmtM->execute()) {
+        throw new Exception("Error al actualizar la tabla maestra de saldos.");
+    }
+
+    // Retornamos los nuevos valores por si el controlador los necesita para el JSON
+    return [
+        'nuevo_favor' => $nuevo_favor,
+        'nuevo_contra' => $nuevo_contra
+    ];
+}
 
 }
