@@ -60,12 +60,12 @@
  * Función principal para ver evidencias de un viaje específico
  * @param {string} viajeFolio - El folio de la ruta (Ej: RUT-2026-0203)
  */
+ let datosTemporales = []; 
 function verEvidenciasPorFolio(viajeFolio) {
     // 1. Preparar el modal y la interfaz
     $('#txtFolioRuta').text(viajeFolio);
     const contenedor = $('#contenedorEvidenciasRuta');
     
-    // Spinner de carga con estilo limpio
     contenedor.html(`
         <div class="text-center py-5">
             <div class="spinner-border text-primary mb-3" role="status"></div>
@@ -73,7 +73,6 @@ function verEvidenciasPorFolio(viajeFolio) {
         </div>
     `);
 
-    // Mostrar el modal
     const modalInstance = new bootstrap.Modal(document.getElementById('modalEvidenciasRuta'));
     modalInstance.show();
 
@@ -89,10 +88,12 @@ function verEvidenciasPorFolio(viajeFolio) {
         success: function(response) {
             if (response.success && response.data.length > 0) {
                 let html = '';
-
-                response.data.forEach(entrega => {
+   console.log(response.data);
+                response.data.forEach((entrega, index) => {
+                   
+                    const entregaJson = JSON.stringify(entrega).replace(/"/g, '&quot;');
                     html += `
-                    <div class="entrega-item-card animate__animated animate__fadeInUp">
+                    <div class="entrega-item-card animate__animated animate__fadeInUp mb-4 p-3 border rounded-4 bg-white shadow-sm">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div>
                                 <h6 class="fw-bold mb-0" style="color: #1d1d1f;">${entrega.cliente}</h6>
@@ -100,9 +101,23 @@ function verEvidenciasPorFolio(viajeFolio) {
                                     <i class="bi bi-geo-alt-fill text-danger"></i> ${entrega.direccion}
                                 </p>
                             </div>
-                            <span class="badge-estado-entrega bg-success-subtle text-success border border-success-subtle">
-                                ${entrega.estado}
-                            </span>
+                            <div class="d-flex flex-column align-items-end gap-1">
+                                <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3" style="font-size: 0.65rem;">
+                                    ${entrega.estatus_entrega || 'ENTREGADO'}
+                                </span>
+                                ${esSupervisor ? `
+                                    <div class="btn-group mt-1">
+                                        <button class="btn btn-sm btn-outline-primary border-0 p-1" 
+                    onclick="abrirModalPorIndex(${index}, '${entregaJson}')">
+                <i class="bi bi-pencil-square"></i>
+            </button>
+                                        
+                                        <button class="btn btn-sm btn-outline-danger border-0 p-1" onclick="confirmarEliminarEvidencia(${entrega.evidencia_id}, '${viajeFolio}')" title="Eliminar evidencia">
+                                            <i class="bi bi-trash3-fill"></i>
+                                        </button>
+                                    </div>
+                                ` : ''}
+                            </div>
                         </div>
 
                         <div class="my-3 p-2 rounded-3 bg-light" style="border-left: 3px solid #007aff;">
@@ -114,20 +129,20 @@ function verEvidenciasPorFolio(viajeFolio) {
                         <div class="row g-2">
                             ${entrega.foto_1 ? `
                                 <div class="col-6">
-                                    <span class="label-foto">Material Entregado</span>
-                                    <img src="${entrega.foto_1}" class="img-evidencia-thumb shadow-sm" onclick="window.open(this.src, '_blank')">
+                                    <span class="d-block mb-1 text-muted fw-bold" style="font-size: 0.6rem; text-transform: uppercase;">Material</span>
+                                    <img src="${entrega.foto_1}" class="img-fluid rounded-3 shadow-sm border" style="height: 100px; width: 100%; object-fit: cover; cursor: pointer;" onclick="window.open(this.src, '_blank')">
                                 </div>` : ''}
                             
                             ${entrega.foto_2 ? `
                                 <div class="col-6">
-                                    <span class="label-foto">Nota de Remisión</span>
-                                    <img src="${entrega.foto_2}" class="img-evidencia-thumb shadow-sm" onclick="window.open(this.src, '_blank')">
+                                    <span class="d-block mb-1 text-muted fw-bold" style="font-size: 0.6rem; text-transform: uppercase;">Nota</span>
+                                    <img src="${entrega.foto_2}" class="img-fluid rounded-3 shadow-sm border" style="height: 100px; width: 100%; object-fit: cover; cursor: pointer;" onclick="window.open(this.src, '_blank')">
                                 </div>` : ''}
                         </div>
 
                         <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center">
                             <small class="text-muted" style="font-size: 0.65rem;">
-                                <i class="bi bi-calendar3 me-1"></i> ${entrega.fecha}
+                                <i class="bi bi-calendar3 me-1"></i> ${entrega.fecha} ${entrega.hora}
                             </small>
                             <small class="fw-bold text-primary" style="font-size: 0.7rem;">
                                 Venta: #${entrega.venta_folio || 'S/F'}
@@ -140,19 +155,39 @@ function verEvidenciasPorFolio(viajeFolio) {
                 contenedor.html(`
                     <div class="text-center py-5">
                         <i class="bi bi-camera-video-off display-4 text-muted mb-3"></i>
-                        <p class="text-muted">No se encontraron evidencias físicas cargadas para esta ruta aún.</p>
+                        <p class="text-muted">No se encontraron evidencias cargadas para esta ruta.</p>
                     </div>
                 `);
             }
-        },
-        error: function() {
-            contenedor.html(`
-                <div class="alert alert-danger rounded-4 p-4 text-center">
-                    <i class="bi bi-exclamation-triangle-fill mb-2 d-block"></i>
-                    Error de conexión con el servidor.
-                </div>
-            `);
         }
     });
 }
-</script>
+
+/**
+ * Funciones de Acción para el Supervisor
+ */
+function confirmarEliminarEvidencia(id, folioRuta) {
+    Swal.fire({
+        title: '¿Eliminar evidencia?',
+        text: "Esta acción borrará las fotos y el registro de entrega permanentemente.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6e7881',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.post('/cfsistem/app/controllers/misRepartosController.php', {
+                action: 'eliminar_evidencia',
+                evidencia_id: id
+            }, function(res) {
+                if(res.success) {
+                    Swal.fire('Eliminado', 'La evidencia ha sido removida.', 'success');
+                    verEvidenciasPorFolio(folioRuta); // Recargamos el modal
+                }
+            }, 'json');
+        }
+    });
+}</script>
+<?php require_once __DIR__ . '/editarEvidenciaModal.php' ?>

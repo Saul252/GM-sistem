@@ -1554,10 +1554,11 @@ public function obtenerViajesLogisticaParaEntrega($folio_viaje = null) {
 }
 public function getEvidenciasPorFolioRuta($folio_viaje) {
     try {
-        // Ruta base para tus imágenes
         $base_path = "/cfsistem/"; 
 
         $sql = "SELECT 
+                    crv.id AS evidencia_id, -- Cambiado de registro_id a evidencia_id
+                    trp.id AS id_movimiento, -- Mantenemos este para procesos internos
                     v.folio AS venta_folio,
                     c.nombre_comercial AS cliente,
                     trp.descripcion_punto AS direccion,
@@ -1565,10 +1566,10 @@ public function getEvidenciasPorFolioRuta($folio_viaje) {
                     crv.fecha,
                     crv.hora,
                     crv.comentario,
-                    -- Construimos la URL completa si existe la foto
-                    IF(crv.fotografia_entrega IS NOT NULL AND crv.fotografia_entrega != '', 
+                    -- URL completa para mostrar (Usamos foto_1 y foto_2 que busca tu JS)
+                    IF(crv.fotografia_entrega != '' AND crv.fotografia_entrega IS NOT NULL, 
                        CONCAT('$base_path', crv.fotografia_entrega), NULL) AS foto_1,
-                    IF(crv.fotografia_nota IS NOT NULL AND crv.fotografia_nota != '', 
+                    IF(crv.fotografia_nota != '' AND crv.fotografia_nota IS NOT NULL, 
                        CONCAT('$base_path', crv.fotografia_nota), NULL) AS foto_2
                 FROM transporte_consolidacion tc
                 INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
@@ -1589,5 +1590,36 @@ public function getEvidenciasPorFolioRuta($folio_viaje) {
         error_log("Error getEvidenciasPorFolioRuta: " . $e->getMessage());
         return [];
     }
+}
+public function actualizarEvidencia($id, $comentario, $foto_entrega = null, $foto_nota = null) {
+    $set = "comentario = ?";
+    $params = [$comentario];
+    $types = "s";
+
+    if ($foto_entrega) {
+        $set .= ", fotografia_entrega = ?";
+        $params[] = $foto_entrega;
+        $types .= "s";
+    }
+    if ($foto_nota) {
+        $set .= ", fotografia_nota = ?";
+        $params[] = $foto_nota;
+        $types .= "s";
+    }
+
+    $params[] = $id;
+    $types .= "i";
+
+    $sql = "UPDATE confirmacion_reparto_viaje SET $set WHERE id = ?";
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param($types, ...$params);
+    return $stmt->execute();
+}
+public function eliminarEvidencia($id) {
+    // Es recomendable borrar también los archivos físicos del servidor antes de borrar el registro
+    $sql = "DELETE FROM confirmacion_reparto_viaje WHERE id = ?";
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param("i", $id);
+    return $stmt->execute();
 }
 }

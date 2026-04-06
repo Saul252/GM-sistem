@@ -141,6 +141,7 @@ if ($action === 'get_evidencias_por_folio') {
         
         foreach ($data as $r) {
             $res[] = [
+                "id_movimiento"     => $r['id_movimiento'] ?? '0',
                 "cliente"     => $r['cliente'] ?? 'Cliente General',
                 "venta_folio" => $r['venta_folio'] ?? 'S/F',
                 "direccion"   => $r['direccion'] ?? 'Dirección no registrada',
@@ -228,6 +229,63 @@ if ($action === 'get_detalle_trazabilidad') {
             ]);
             exit;
         }
+        if ($action === 'subir_evidencia_reparto') {
+    // Forzamos que la salida sea JSON desde el inicio
+    header('Content-Type: application/json');
+    
+    try {
+        $movimiento_id = intval($_POST['id_movimiento'] ?? 0);
+        
+        // Validación básica de ID
+        if ($movimiento_id <= 0) {
+            throw new Exception("ID de movimiento no válido.");
+        }
+
+        $relPath = "uploads/evidencias/" . date('Y/m/d') . "/";
+        $targetDir = dirname(__DIR__, 2) . "/" . $relPath;
+        
+        if (!is_dir($targetDir)) {
+            mkdir($targetDir, 0777, true);
+        }
+
+        $procesarFoto = function($inputName, $prefijo) use ($movimiento_id, $targetDir, $relPath) {
+            if (isset($_FILES[$inputName]) && $_FILES[$inputName]['error'] === UPLOAD_ERR_OK) {
+                $ext = strtolower(pathinfo($_FILES[$inputName]['name'], PATHINFO_EXTENSION));
+                $nombre = $prefijo . "_" . $movimiento_id . "_" . bin2hex(random_bytes(4)) . "." . $ext;
+                if (move_uploaded_file($_FILES[$inputName]['tmp_name'], $targetDir . $nombre)) {
+                    return $relPath . $nombre;
+                }
+            }
+            return null;
+        };
+
+        $foto_entrega = $procesarFoto('evidencia_foto', 'MAT'); 
+        $foto_nota    = $procesarFoto('evidencia_nota', 'NOT');
+
+        $datos = [
+            'id_movimiento'      => $movimiento_id,
+            'id_venta'           => intval($_POST['id_venta'] ?? 0),
+            'trabajador_id'      => $id_ejecutor ?? 0, // Asegúrate que esta variable exista
+            'vehiculo_id'        => intval($_POST['vehiculo_id'] ?? 0),
+            'fotografia_entrega' => $foto_entrega,
+            'fotografia_nota'    => $foto_nota,
+            'estatus_entrega'    => $_POST['estatus_entrega'] ?? 'Entregado',
+            'comentario'         => $_POST['comentario'] ?? ''
+        ];
+
+        if ($repartoM->registrarEntregaMovimiento($datos)) {
+            echo json_encode(["success" => true, "message" => "Evidencias guardadas correctamente"]);
+        } else {
+            // ERROR CRÍTICO: Si el modelo falla, hay que avisar
+            echo json_encode(["success" => false, "message" => "Error al insertar en la base de datos."]);
+        }
+
+    } catch (Exception $e) {
+        // No enviamos 400 para que el fetch no truene antes de leer el JSON si prefieres manejarlo por success:false
+        echo json_encode(["success" => false, "message" => "Error: " . $e->getMessage()]);
+    }
+    exit;
+}
 
     } catch (Exception $e) {
         if (ob_get_level()) ob_clean();
@@ -236,17 +294,6 @@ if ($action === 'get_detalle_trazabilidad') {
     exit;
 }
 
-/**
- * FUNCIÓN AUXILIAR: Subida de archivos
- */
-function subirEvidencia($file, $prefijo, $destino) {
-    $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-    $nombreArchivo = $prefijo . "_" . uniqid() . "." . $ext;
-    if (move_uploaded_file($file['tmp_name'], $destino . $nombreArchivo)) {
-        return $nombreArchivo;
-    }
-    return null;
-}
 
 // --- CARGA DE VISTA ---
 $paginaActual = 'misRepartos';
