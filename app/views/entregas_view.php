@@ -81,8 +81,16 @@
     width: 2.5em;
     cursor: pointer;
 }
-    </style>
-   
+
+/* Clase para el efecto de presión suave al hacer clic */
+.transition-ios:active {
+    transform: scale(0.95);
+    opacity: 0.8;
+}
+.opacity-75-hover:hover {
+    opacity: 0.7;
+}
+</style> 
    
 </head>
 <body>
@@ -303,30 +311,61 @@ $(document).ready(function() {
 
                     if (todoCompletado) {
                         // ESTADO: ENTREGADO
-                      accionHtml = `<div class="card border-0 shadow-sm rounded-3 p-3 mb-0 bg-light">
+                      accionHtml = `
+                      <div class="card border-0 shadow-sm mb-3" 
+     style="border-radius: 18px; 
+            background: rgba(255, 255, 255, 0.8); 
+            backdrop-filter: blur(15px); 
+            -webkit-backdrop-filter: blur(15px); 
+            border: 1px solid rgba(255, 255, 255, 0.4) !important;
+            padding: 12px 16px;">
+    
     <div class="d-flex align-items-center justify-content-between">
-        <button class="btn btn-link p-0 text-primary fw-semibold text-decoration-none" 
-                onclick="verDetalleGananciaVenta(${m.venta_id})">
-            <i class="bi bi-graph-up me-2"></i>Auditoría
-        </button>
-        <span class="badge bg-success text-white px-3 py-2 fs-6">
-            <i class="bi bi-check-circle-fill me-1"></i>Entregado
-        </span>
+        
+        <div class="d-flex align-items-center" style="gap: 15px;">
+            <button class="btn d-flex align-items-center p-0 transition-ios" 
+                    style="background: transparent; border: none; color: #8e8e93; font-weight: 600; font-size: 0.65rem; letter-spacing: 0.5px;"
+                    onclick="verDetalleGananciaVenta(${m.venta_id})">
+                <i class="bi bi-shield-check me-1" style="font-size: 0.9rem;"></i> AUDITORÍA
+            </button>
+
+            <button class="btn d-flex align-items-center p-0 transition-ios" 
+                    style="background: transparent; border: none; color: #007aff; font-weight: 600; font-size: 0.65rem; letter-spacing: 0.5px;"
+                    onclick="verDetalleDespachoAlmacen(${m.venta_id})">
+                <i class="bi bi-box-seam me-1" style="font-size: 0.9rem;"></i> LOGÍSTICA
+            </button>
+        </div>
+
+        <div class="d-flex align-items-center px-3" 
+             style="background: rgba(52, 199, 89, 0.12); 
+                    color: #248a3d; 
+                    border: 1px solid rgba(52, 199, 89, 0.2); 
+                    border-radius: 20px; 
+                    height: 28px;
+                    box-shadow: inset 0 1px 1px rgba(255,255,255,0.5);">
+            <i class="bi bi-check-circle-fill me-1" style="font-size: 0.75rem;"></i>
+            <span style="font-size: 0.6rem; font-weight: 800; letter-spacing: 0.5px;">ENTREGADO</span>
+        </div>
+
     </div>
 </div>
-<button type="button" 
-            class="btn btn-sm d-flex align-items-center transition-ios ms-2" 
-            style="background: transparent; 
-                   border: none; 
-                   color: #48484a; 
-                   font-weight: 600; 
-                   font-size: 0.8rem; 
-                   letter-spacing: -0.2px;
-                   padding: 8px 10px;"
-            onclick="verDetalleDespachoAlmacen(${m.venta_id})">
-        <i class="fas fa-boxes me-2" style="font-size: 0.9rem; opacity: 0.8;"></i>
-        Logística
-    </button>
+
+<style>
+/* Refinamiento de interacciones */
+.transition-ios {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-ios:hover {
+    opacity: 0.7;
+    transform: translateY(-1px);
+}
+
+.transition-ios:active {
+    transform: scale(0.95);
+    opacity: 1;
+}
+</style>
 `;
                     } 
                     else if (algoEnRuta) {
@@ -344,17 +383,34 @@ $(document).ready(function() {
                     else if (todoDespachado) {
                         // ESTADO: YA DESPACHADO (Fisicamente fuera, pero sin destino asignado)
 accionHtml = `
-    <div class="d-flex gap-2">
-        <button onclick="abrirModalDespachoVentaGfin(${m.venta_id}, ${m.almacen_origen_id})"
-                class="btn rounded-pill px-3 shadow-sm d-flex align-items-center"
-                style="background: #007aff; color: #fff; border: none; height: 35px; font-size: 0.75rem; font-weight: 600; transition: all 0.3s ease;">
-            <i class="bi bi-geo-alt-fill me-2"></i> Destino Entrega
-        </button>
-        <button class="btn btn-link p-0 text-primary fw-semibold text-decoration-none" 
-                onclick="verDetalleGananciaVenta(${m.venta_id})">
-            <i class="bi bi-graph-up me-2"></i>Auditoría
-        </button>
-    </div>`;}
+   <div class="d-flex align-items-center gap-2 py-1">
+    
+    <button onclick="abrirModalDespachoVentaGfin(${m.venta_id}, ${m.almacen_origen_id})"
+            class="btn d-flex align-items-center justify-content-center shadow-sm transition-ios"
+            style="background: rgba(0, 122, 255, 0.1); color: #007aff; border: 1px solid rgba(0, 122, 255, 0.2); border-radius: 12px; font-weight: 700; height: 32px; padding: 0 15px; transition: 0.3s;">
+        <i class="bi bi-geo-alt-fill me-2" style="font-size: 0.8rem;"></i>
+        <span style="font-size: 0.65rem; letter-spacing: 0.3px; text-transform: uppercase;">Destino Entrega</span>
+    </button>
+
+    <button class="btn d-flex align-items-center opacity-75-hover" 
+            style="background: transparent; border: none; color: #8e8e93; font-weight: 600; font-size: 0.7rem; letter-spacing: 0.5px; transition: 0.2s;"
+            onclick="verDetalleGananciaVenta(${m.venta_id})">
+        <i class="bi bi-shield-check me-1" style="font-size: 0.9rem;"></i> AUDITORÍA
+    </button>
+
+</div>
+
+<style>
+/* Efectos de interacción iOS */
+.transition-ios:active {
+    transform: scale(0.96);
+    opacity: 0.85;
+}
+.opacity-75-hover:hover {
+    color: #007aff !important; /* Cambia a azul al pasar el mouse para indicar acción */
+    opacity: 1;
+}
+</style>`;}
                     else {
                         // ESTADO: PENDIENTE DE DESPACHO
                         accionHtml = `
@@ -388,33 +444,66 @@ accionHtml = `
                     } 
                     else if (yaDespachado) {
                         accionHtml = `
-                            <div class="d-flex align-items-center justify-content-end pe-3 py-1" style="gap: 8px;">
-                               <button onclick="prepararModalPatio(${m.id}, ${m.almacen_origen_id})"
-                            class="btn rounded-pill px-3 d-flex align-items-center justify-content-center"
-                            style="background: #007aff; color: #fff; border: none; font-weight: 600; height: 38px; transition: 0.3s;">
-                        <i class="bi bi-box-seam me-2"></i><span style="font-size: 0.75rem;">ENTREGAR EN PATIO</span>
-                    </button>
+                          <div class="d-flex align-items-center justify-content-end pe-3 py-1" style="gap: 10px;">
+    
+    <button type="button" 
+            class="btn btn-sm d-flex align-items-center opacity-75-hover" 
+            style="background: transparent; border: none; color: #ff3b30; font-weight: 600; font-size: 0.7rem; letter-spacing: 0.5px; transition: 0.2s;"
+            onclick="confirmarReversaDespacho(${m.id})">
+        <i class="bi bi-arrow-counterclockwise me-1" style="font-size: 0.9rem;"></i> REVERSAR
+    </button>
 
-                    <button onclick="prepararModalReparto(${m.id}, ${m.almacen_origen_id})"
-                            class="btn rounded-pill px-3 d-flex align-items-center justify-content-center"
-                            style="background: #1c1c1e; color: #fff; border: none; font-weight: 600; height: 38px; transition: 0.3s;">
-                        <i class="bi bi-truck me-2"></i><span style="font-size: 0.75rem;">ASIGNAR A RUTA</span>
-                    </button>
-                            </div>
-                            <button type="button" 
-                class="btn btn-sm d-flex align-items-center transition-ios ms-2" 
-                style="background: transparent; border: none; color: #ff3b30; font-weight: 600; font-size: 0.8rem;"
-                onclick="confirmarReversaDespacho(${m.id})">
-            <i class="fas fa-undo-alt me-1"></i> Reversar
-        </button>`;
+    <button onclick="prepararModalPatio(${m.id}, ${m.almacen_origen_id})"
+            class="btn d-flex align-items-center justify-content-center shadow-sm transition-ios"
+            style="background: rgba(0, 122, 255, 0.1); color: #007aff; border: 1px solid rgba(0, 122, 255, 0.2); border-radius: 12px; font-weight: 700; height: 32px; padding: 0 15px; transition: 0.3s;">
+        <i class="bi bi-box-seam me-2" style="font-size: 0.8rem;"></i>
+        <span style="font-size: 0.65rem; letter-spacing: 0.3px;">PATIO</span>
+    </button>
+
+    <button onclick="prepararModalReparto(${m.id}, ${m.almacen_origen_id})"
+            class="btn d-flex align-items-center justify-content-center shadow-sm transition-ios"
+            style="background: #1c1c1e; color: #fff; border: none; border-radius: 12px; font-weight: 700; height: 32px; padding: 0 15px; transition: 0.3s;">
+        <i class="bi bi-truck me-2" style="font-size: 0.8rem;"></i>
+        <span style="font-size: 0.65rem; letter-spacing: 0.3px;">RUTA</span>
+    </button>
+
+</div>
+
+`;
                     } 
                     else {
                         accionHtml = `
                             <div class="pe-3 text-end py-1">
-                                <button onclick="prepararDespacho(${m.id})" class="btn btn-sm rounded-pill shadow-sm px-4" style="background: #5856d6; color: white; font-weight: 600;">
-                                    <i class="bi bi-file-earmark-check me-1"></i> DESPACHAR
-                                </button>
-                            </div>`;
+    <button onclick="prepararDespacho(${m.id})" 
+            class="btn d-inline-flex align-items-center justify-content-center shadow-sm transition-ios" 
+            style="background: rgba(88, 86, 214, 0.12); 
+                   color: #5856d6; 
+                   border: 1px solid rgba(88, 86, 214, 0.25); 
+                   border-radius: 12px; 
+                   height: 32px; 
+                   padding: 0 18px; 
+                   font-weight: 700; 
+                   transition: 0.3s;
+                   box-shadow: 0 4px 12px rgba(88, 86, 214, 0.1) !important;">
+        
+        <i class="bi bi-file-earmark-check-fill me-2" style="font-size: 0.85rem;"></i> 
+        <span style="font-size: 0.65rem; letter-spacing: 0.6px; text-transform: uppercase;">Despachar</span>
+    </button>
+</div>
+
+<style>
+/* Efecto de presión táctil iOS */
+.transition-ios:active {
+    transform: scale(0.96);
+    background: rgba(88, 86, 214, 0.2) !important;
+}
+
+/* Efecto Hover sutil */
+.transition-ios:hover {
+    background: rgba(88, 86, 214, 0.18);
+    box-shadow: 0 6px 15px rgba(88, 86, 214, 0.15) !important;
+}
+</style>`;
                     }
                     prodCol = `<b>${m.producto}</b><br><small class="text-primary font-monospace">${m.sku}</small>`;
                     cantCol = `<div class="text-center">${formatQty(m.cantidad, m.factor_conversion, m.unidad_reporte)}</div>`;
