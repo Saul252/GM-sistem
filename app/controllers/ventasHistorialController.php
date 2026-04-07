@@ -78,36 +78,60 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardarAbono') {
     header('Content-Type: application/json');
 
     try {
-        $v_id = intval($_POST['venta_id']);
-        $amt  = floatval($_POST['monto']);
+        $conexion->begin_transaction(); // <--- INICIO DE PROTECCIÓN
+
+        // --- 0. CAPTURA DE DATOS ---
+        $v_id = intval($_POST['venta_id'] ?? 0);
+        $amt  = floatval($_POST['monto'] ?? 0);
         $met  = $_POST['metodo_pago'] ?? 'Efectivo'; 
-        $u_id = $_SESSION['usuario_id'] ?? $_SESSION['id_usuario'] ?? 1;
+        $u_id = $_SESSION['usuario_id'] ?? 1;
         $fec  = !empty($_POST['fecha_pago']) ? $_POST['fecha_pago'] : date('Y-m-d H:i:s');
+        $c_id = intval($_POST['cliente_id'] ?? 0);
 
-        error_log("--- INICIO DE PROCESO DE ABONO --- Venta: $v_id");
-
-        $c_id = $ventasModel->obtenerClientePorVenta($conexion, $v_id);
-        if (!$c_id) throw new Exception("La venta #$v_id no tiene un cliente válido.");
-
-        // --- PASO 1: REGISTRAR EN CAJA ---
-        $resOriginal = $ventasModel->registrarAbono($v_id, $amt, $u_id, $met, $fec);
+        // --- 1. VALIDACIÓN ---
+        if ($amt <= 0) throw new Exception("El monto debe ser mayor a 0.");
         
-        if ($resOriginal) {
-            // --- PASO 2: LOG DE SALDOS ---
-            $clientesModel->abono_saldos_log($c_id, $v_id, $amt, $u_id, $met, $fec);
+        if (!$c_id && $v_id > 0) {
+            $c_id = $ventasModel->obtenerClientePorVenta($conexion, $v_id);
+        }
+        if (!$c_id) throw new Exception("No se halló cliente para procesar el abono.");
 
-            // --- PASO 3: ACTUALIZAR SALDO MAESTRO (Lógica de Bolsas Separadas) ---
-            
-            $resFinal = $ventasModel->actualizarSaldosMaestros($c_id, $v_id, $amt, $fec);
+        // --- 2. LÓGICA DE SALDOS ---
+        if ($met === 'Saldo a Favor') {
+            // [Opcional] Validar aquí si el cliente tiene saldo suficiente en la BD 
+            // antes de proceder, para mayor seguridad.
 
-            if ($resFinal) {
-                echo json_encode(['status' => 'success', 'message' => '¡Abono registrado! Deuda: $'.$nuevo_contra.' | Favor: $'.$nuevo_favor]);
-            } else {
-                throw new Exception("Error al actualizar la tabla maestra de saldos.");
-            }
+            // Restar del "Ahorro" y de la "Deuda"
+            $clientesModel->agregar_saldo_a_favor($c_id, ($amt * -1), $v_id, $fec);
+            $clientesModel->agregar_saldo_en_contra($c_id, ($amt * -1), $v_id, $fec);
+
+            $clientesModel->abono_saldos_log($c_id, $v_id, $amt, $u_id, 'USO_SALDO_A_FAVOR', $fec);
+        } else {
+            // Abono normal: solo resta de la deuda
+            $clientesModel->agregar_saldo_en_contra($c_id, ($amt * -1), $v_id, $fec);
+            $clientesModel->abono_saldos_log($c_id, $v_id, $amt, $u_id, "ABONO_" . str_replace(' ', '_', $met), $fec);
         }
 
+        // --- 3. REGISTRO EN HISTORIAL ---
+        if (!$ventasModel->registrarAbono($v_id, $amt, $u_id, $met, $fec)) {
+            throw new Exception("Error al registrar el movimiento en el historial.");
+        }
+
+        // --- 4. ÉXITO ---
+        $conexion->commit(); // <--- SE GUARDAN LOS CAMBIOS REALMENTE
+
+        echo json_encode([
+            'status'   => 'success', 
+            'message'  => 'Abono procesado correctamente.',
+            'detalles' => ['monto' => number_format($amt, 2), 'metodo' => $met]
+        ]);
+
     } catch (Throwable $e) {
+        // SI ALGO FALLA, DESHACEMOS TODO LO QUE SE HIZO EN LAS TABLAS
+        if ($conexion->connect_errno == 0) { 
+            $conexion->rollback(); 
+        }
+        
         error_log("FALLO EN GUARDAR ABONO: " . $e->getMessage());
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }
@@ -120,8 +144,24 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerDetalle') {
 
     try {
         $id = intval($_GET['id'] ?? 0);
+        
+        // 1. Obtener el detalle completo de la venta
         $detalle = $ventasModel->obtenerDetalleCompleto($id);
+        
+        // 2. Extraer el id_cliente de la información obtenida
+        // Accedemos a ['info'] y luego a ['id_cliente']
+        $id_cliente = intval($detalle['info']['id_cliente'] ?? 0);
+
+        // 3. Consultar el estatus del cliente usando ese ID
+        if ($id_cliente > 0) {
+            $estatusCliente = $clientesModel->obtenerEstatus($conexion, $id_cliente);
+            // Agregamos el estatus al objeto detalle para que viaje al frontend
+            $detalle['info']['estatus_cliente'] = $estatusCliente;
+        }
+
+        // 4. Imprimir el JSON final
         echo json_encode($detalle);
+
     } catch (Throwable $e) {
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }

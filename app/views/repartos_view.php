@@ -160,7 +160,7 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
             <div class="bg-white rounded-4 p-3 shadow-sm border d-flex align-items-center gap-3" style="min-width: 200px;">
                 <div class="text-primary fs-3"><i class="bi bi-truck-flatbed"></i></div>
                 <div>
-                    <small class="text-muted fw-bold d-block" style="font-size: 0.6rem; letter-spacing: 0.05em;">ÓRDENES PENDIENTES</small>
+                    <small class="text-muted fw-bold d-block" style="font-size: 0.6rem; letter-spacing: 0.05em;">ÓRDENES DE ENTREGA</small>
                     <span class="fs-4 fw-bold" id="count_pendientes">0</span>
                 </div>
             </div>
