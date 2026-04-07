@@ -361,53 +361,7 @@ public static function obtenerEstatus($conexion, $id) {
         return null;
     }
 }
-public function abono_saldos_log($cliente_id, $venta_id, $monto, $usuario_id, $metodo_pago, $fecha_pago) {
-    // 1. Definir la consulta SQL (12 columnas, 8 marcadores '?')
-    $sqlLog = "INSERT INTO `clientes_saldos_log` (
-        `id`, 
-        `cliente_id`, 
-        `venta_id`, 
-        `tipo_movimiento`, 
-        `monto`, 
-        `monto_operacion_total`, 
-        `monto_pagado_momento`, 
-        `referencia_tipo`, 
-        `referencia_id`, 
-        `observaciones`, 
-        `fecha_registro`, 
-        `usuario_id`
-    ) VALUES (
-        NULL, 
-        ?,        -- 1. cliente_id (i)
-        ?,        -- 2. venta_id (i)
-        'abono',  -- (Fijo)
-        ?,        -- 3. monto (d)
-        '0.00',   -- (Fijo)
-        ?,        -- 4. monto_pagado_momento (d)
-        'PAGO_MANUAL', -- (Fijo)
-        ?,        -- 5. referencia_id (i)
-        ?,        -- 6. observaciones (s)
-        ?,        -- 7. fecha_registro (s)
-        ?         -- 8. usuario_id (i)
-    )";
 
-    $stmtLog = $this->db->prepare($sqlLog);
-    $obs = "Abono manual vía $metodo_pago. Ref Venta: #$venta_id";
-
-    // 8 letras "iiddissi" para 8 variables
-    $stmtLog->bind_param("iiddissi", 
-        $cliente_id,   // 1
-        $venta_id,     // 2
-        $monto,        // 3
-        $monto,        // 4 (mismo que monto)
-        $venta_id,     // 5 (referencia_id)
-        $obs,          // 6
-        $fecha_pago,   // 7
-        $usuario_id    // 8
-    );
-
-    return $stmtLog->execute();
-}
 public function abono_saldos($cliente_id, $monto_ajuste, $venta_id, $fecha_pago) {
     // 1. CONSULTAR SALDO ACTUAL
     $stmtSelect = $this->db->prepare("SELECT saldo_a_favor, saldo_en_contra FROM clientes_saldos WHERE cliente_id = ?");
@@ -526,4 +480,110 @@ public function abono_saldosAFavor($cliente_id, $monto_ajuste, $venta_id, $fecha
 
     return $stmtMaestra->execute();
 }
-    }
+  public function abono_saldos_log($cliente_id, $venta_id, $monto, $usuario_id, $metodo_pago, $fecha_pago) {
+    // 1. Definir la consulta SQL (12 columnas, 8 marcadores '?')
+    $sqlLog = "INSERT INTO `clientes_saldos_log` (
+        `id`, 
+        `cliente_id`, 
+        `venta_id`, 
+        `tipo_movimiento`, 
+        `monto`, 
+        `monto_operacion_total`, 
+        `monto_pagado_momento`, 
+        `referencia_tipo`, 
+        `referencia_id`, 
+        `observaciones`, 
+        `fecha_registro`, 
+        `usuario_id`
+    ) VALUES (
+        NULL, 
+        ?,        -- 1. cliente_id (i)
+        ?,        -- 2. venta_id (i)
+        'abono',  -- (Fijo)
+        ?,        -- 3. monto (d)
+        '0.00',   -- (Fijo)
+        ?,        -- 4. monto_pagado_momento (d)
+        'PAGO_MANUAL', -- (Fijo)
+        ?,        -- 5. referencia_id (i)
+        ?,        -- 6. observaciones (s)
+        ?,        -- 7. fecha_registro (s)
+        ?         -- 8. usuario_id (i)
+    )";
+
+    $stmtLog = $this->db->prepare($sqlLog);
+    $obs = "Abono manual vía $metodo_pago. Ref Venta: #$venta_id";
+
+    // 8 letras "iiddissi" para 8 variables
+    $stmtLog->bind_param("iiddissi", 
+        $cliente_id,   // 1
+        $venta_id,     // 2
+        $monto,        // 3
+        $monto,        // 4 (mismo que monto)
+        $venta_id,     // 5 (referencia_id)
+        $obs,          // 6
+        $fecha_pago,   // 7
+        $usuario_id    // 8
+    );
+
+    return $stmtLog->execute();
+}
+/**
+ * Afecta una sola columna de saldo sin realizar cruces automáticos (Netos).
+ * * @param int    $cliente_id  ID del cliente
+ * @param float  $monto       Monto a sumar (positivo) o restar (negativo)
+ * @param int    $venta_id    Referencia de la venta
+ * @param string $fecha       Fecha del movimiento
+ * @param string $columna     'favor' para saldo_a_favor, 'contra' para saldo_en_contra
+ */
+public function agregar_saldo_a_favor($cliente_id, $monto, $venta_id, $fecha) {
+    $sql = "INSERT INTO `clientes_saldos` (
+                `cliente_id`, 
+                `saldo_a_favor`, 
+                `ultima_venta_id`, 
+                `ultima_actualizacion`
+            ) VALUES (?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE 
+                `saldo_a_favor` = `saldo_a_favor` + ?, 
+                `ultima_venta_id` = ?, 
+                `ultima_actualizacion` = ?";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param("idisdis", 
+        $cliente_id, // 1 - i
+        $monto,      // 2 - d  INSERT
+        $venta_id,   // 3 - i  INSERT
+        $fecha,      // 4 - s  INSERT
+        $monto,      // 5 - d  UPDATE
+        $venta_id,   // 6 - i  UPDATE
+        $fecha       // 7 - s  UPDATE
+    );
+
+    return $stmt->execute();
+}
+
+public function agregar_saldo_en_contra($cliente_id, $monto, $venta_id, $fecha) {
+    $sql = "INSERT INTO `clientes_saldos` (
+                `cliente_id`, 
+                `saldo_en_contra`, 
+                `ultima_venta_id`, 
+                `ultima_actualizacion`
+            ) VALUES (?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE 
+                `saldo_en_contra` = `saldo_en_contra` + ?, 
+                `ultima_venta_id` = ?, 
+                `ultima_actualizacion` = ?";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param("idisdis", 
+        $cliente_id, // 1 - i
+        $monto,      // 2 - d  INSERT
+        $venta_id,   // 3 - i  INSERT
+        $fecha,      // 4 - s  INSERT
+        $monto,      // 5 - d  UPDATE
+        $venta_id,   // 6 - i  UPDATE
+        $fecha       // 7 - s  UPDATE
+    );
+
+    return $stmt->execute();
+}
+  }

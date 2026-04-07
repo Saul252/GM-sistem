@@ -61,6 +61,7 @@
     </div>
 </header>
 
+
 <div class="container-fluid px-4">
 
     <?php if ($resumen['saldo_total'] < -0.01): ?>
@@ -72,46 +73,49 @@
         </div>
     </div>
     <?php endif; ?>
-    
     <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="kpi-widget border-left-primary">
-                <div class="kpi-label text-primary">Compras Totales</div>
-                <div class="kpi-value">$ <?= number_format($resumen['total_comprado'], 2) ?></div>
-            </div>
+    <div class="col-md-3">
+        <div class="kpi-widget border-left-primary">
+            <div class="kpi-label text-primary">Compras Totales</div>
+            <div class="kpi-value">$ <?= number_format($resumen['total_comprado'], 2) ?></div>
         </div>
-        <div class="col-md-3">
-            <div class="kpi-widget border-left-success">
-                <div class="kpi-label text-success">Total Pagado</div>
-                <div class="kpi-value">$ <?= number_format($resumen['total_pagado'], 2) ?></div>
-            </div>
-        </div>
-        
-        <?php 
-            $saldoReal = $resumen['saldo_total']; 
-            $esSaldoAFavor = $saldoReal < -0.01;
-            $claseColor = $esSaldoAFavor ? 'border-left-info' : 'border-left-danger';
-        ?>
-        
-        <div class="col-md-3">
-            <div class="kpi-widget <?= $claseColor ?>">
-                <div class="kpi-label <?= $esSaldoAFavor ? 'text-info' : 'text-danger' ?>"><?= $esSaldoAFavor ? 'A Favor' : 'Saldo Pendiente' ?></div>
-                <div class="kpi-value <?= $esSaldoAFavor ? 'text-info' : 'text-danger' ?>">
-                    $ <?= number_format(abs($saldoReal), 2) ?>
-                </div>
-            </div>
-        </div>
+    </div>
 
-        <div class="col-md-3">
-            <div class="kpi-widget d-flex align-items-center justify-content-between border-left-primary">
-                <div style="width: 60px; height: 60px;"><canvas id="chartDona"></canvas></div>
-                <div class="text-end">
-                    <div class="kpi-label">Estatus</div>
-                    <div class="fw-bold text-dark"><?= round(($resumen['total_pagado'] / max($resumen['total_comprado'], 1)) * 100) ?>%</div>
-                </div>
+    <div class="col-md-3">
+        <div class="kpi-widget border-left-success">
+            <div class="kpi-label text-success">Total Pagado</div>
+            <div class="kpi-value">$ <?= number_format($resumen['total_pagado'], 2) ?></div>
+        </div>
+    </div>
+
+    <?php 
+        $saldoReal = $resumen['saldo_total']; 
+        $esSaldoAFavor = $saldoReal < -0.01;
+        $claseColor = $esSaldoAFavor ? 'border-left-info' : 'border-left-danger';
+    ?>
+
+    <div class="col-md-3">
+        <div class="kpi-widget <?= $claseColor ?>">
+            <div class="kpi-label <?= $esSaldoAFavor ? 'text-info' : 'text-danger' ?>"><?= $esSaldoAFavor ? 'A Favor' : 'Saldo Pendiente' ?></div>
+            <div class="kpi-value <?= $esSaldoAFavor ? 'text-info' : 'text-danger' ?>">
+                $ <?= number_format(abs($saldoReal), 2) ?>
             </div>
         </div>
     </div>
+
+    <div class="col-md-3">
+        <div class="kpi-widget d-flex align-items-center justify-content-between border-left-primary">
+            <div style="width: 60px; height: 60px;"><canvas id="chartDona"></canvas></div>
+            <div class="text-end">
+                <div class="kpi-label">Estatus</div>
+                <div class="fw-bold text-dark"><?= round(($resumen['total_pagado'] / max($resumen['total_comprado'], 1)) * 100) ?>%</div>
+            </div>
+        </div>
+    </div>
+
+    
+  
+ 
 
     <h5 class="fw-bold mb-3 text-dark">Folios Detallados</h5>
 
@@ -244,6 +248,85 @@ function renderCharts() {
             responsive: true,
             maintainAspectRatio: false
         }
+    });
+}
+function abrirModalSaldarFavor(favorDisponible, deudaPendiente) {
+    // Calculamos el límite: no podemos usar más de lo que hay, ni pagar más de lo que se debe
+    const montoMaximo = Math.min(favorDisponible, deudaPendiente);
+
+    Swal.fire({
+        title: 'Compensación de Saldos',
+        icon: 'info',
+        html: `
+            <div class="text-start border-bottom pb-2 mb-3" style="font-size: 0.9rem;">
+                <div class="d-flex justify-content-between mb-1">
+                    <span>Saldo a Favor:</span>
+                    <b class="text-success">$ ${favorDisponible.toLocaleString('es-MX', {minimumFractionDigits: 2})}</b>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Deuda en Contra:</span>
+                    <b class="text-danger">$ ${deudaPendiente.toLocaleString('es-MX', {minimumFractionDigits: 2})}</b>
+                </div>
+            </div>
+            <div class="text-start">
+                <label class="form-label fw-bold small">Monto a compensar:</label>
+                <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <input type="number" id="monto_cruce" class="form-control form-control-lg fw-bold" 
+                           value="${montoMaximo.toFixed(2)}" 
+                           max="${montoMaximo}" min="0.01" step="0.01">
+                </div>
+                <p class="text-muted mt-2" style="font-size: 0.75rem;">
+                    <i class="bi bi-info-circle"></i> Este ajuste restará el monto de ambas cuentas para limpiar el historial del cliente.
+                </p>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonText: 'Aplicar Ajuste',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#f6c23e',
+        reverseButtons: true,
+        preConfirm: () => {
+            const monto = document.getElementById('monto_cruce').value;
+            if (!monto || monto <= 0 || monto > montoMaximo) {
+                Swal.showValidationMessage(`Monto inválido. Máximo permitido: $${montoMaximo.toFixed(2)}`);
+            }
+            return monto;
+        }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            procesarAjusteContable(result.value);
+        }
+    });
+}
+
+function procesarAjusteContable(monto) {
+    Swal.fire({ 
+        title: 'Procesando ajuste...', 
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading() 
+    });
+
+    // Ajustamos la llamada para que coincida con tu estructura de 'accion'
+    $.post('/cfsistem/app/controllers/clienteExpedienteController.php', {
+        accion: 'saldar_deuda_con_favor', // El nombre del case que definimos
+        id_cliente: <?= $id_cliente ?>,
+        monto_a_usar: monto
+    }, function(res) {
+        if(res.status === 'success') {
+            Swal.fire({
+                title: '¡Éxito!',
+                text: res.message,
+                icon: 'success',
+                confirmButtonColor: '#007aff'
+            }).then(() => {
+                location.reload(); // Recarga para actualizar los KPIs con los nuevos saldos
+            });
+        } else {
+            Swal.fire('Error', res.message || 'Error al procesar el ajuste.', 'error');
+        }
+    }, 'json').fail(function() {
+        Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
     });
 }
 </script>

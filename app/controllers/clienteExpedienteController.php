@@ -18,47 +18,57 @@ if (isset($_GET['action'])) {
     
     try {
         switch ($_GET['action']) {
-          
-       case 'guardarAbono':
+        
+  case 'guardarAbono':
     if (ob_get_level()) ob_clean();
     header('Content-Type: application/json');
 
     $conexion->begin_transaction();
 
     try {
-        // --- 0. CAPTURA DE DATOS ---
+        // --- 0. CAPTURA DE DATOS (Lo que escribiste en el input del modal) ---
         $v_id = intval($_POST['venta_id'] ?? 0);
-        $amt  = floatval($_POST['monto'] ?? 0);
+        $amt  = floatval($_POST['monto'] ?? 0); // Este es el monto que quieres usar
         $met  = $_POST['metodo_pago'] ?? 'Efectivo'; 
         $u_id = $_SESSION['usuario_id'] ?? $_SESSION['id_usuario'] ?? 1;
         $fec  = !empty($_POST['fecha_pago']) ? $_POST['fecha_pago'] : date('Y-m-d H:i:s');
+        $c_id = intval($_POST['cliente_id'] ?? 0);
 
-        // --- 1. CLIENTE ---
-        $c_id = $ventasModel->obtenerClientePorVenta($conexion, $v_id);
-        if (!$c_id) throw new Exception("Paso 1: No se halló cliente para la venta #$v_id");
+        // --- 1. VALIDACIÓN DEL CLIENTE ---
+        if (!$c_id) {
+            $c_id = $ventasModel->obtenerClientePorVenta($conexion, $v_id);
+        }
+        if (!$c_id) throw new Exception("No se halló cliente para la venta #$v_id");
 
-        // --- 2. CAJA (HISTORIAL) ---
+        // --- 2. LÓGICA DE AFECTACIÓN DE SALDOS (COMO EN VENTAS) ---
+        // Solo si el método es "Saldo a Favor" y hay un monto válido
+        if ($met === 'Saldo a Favor' && $amt > 0) {
+            
+            // Usamos el monto que escribiste en el input como ajuste negativo
+            $ajuste_negativo = $amt * -1;
+            
+            // Afectamos la tabla maestra de saldos (Bolsa de Favor vs Contra)
+            $clientesModel->abono_saldosAFavor($c_id, $ajuste_negativo, $v_id, $fec);
+            
+            // Registramos el log de uso específico (USO_SALDO_A_FAVOR)
+            $clientesModel->abono_saldos_log($c_id, $v_id, $amt, $u_id, 'USO_SALDO_A_FAVOR', $fec);
+            
+        } else {
+            // Si es Efectivo, Transferencia, etc., solo registramos el log del abono normal
+            $clientesModel->abono_saldos_log($c_id, $v_id, $amt, $u_id, "ABONO_$met", $fec);
+        }
+
+        // --- 3. REGISTRO EN HISTORIAL DE PAGOS (CAJA DE LA VENTA) ---
+        // Esto asienta que la venta recibió el dinero por el método seleccionado
         if (!$ventasModel->registrarAbono($v_id, $amt, $u_id, $met, $fec)) {
-            throw new Exception("Paso 2: Falló registrarAbono en la tabla historial_pagos.");
+            throw new Exception("Error al registrar abono en historial.");
         }
 
-        // --- 3. LOG DE SALDOS (EL QUE TE FALLA) ---
-        // Envolvemos solo esta llamada para capturar el error exacto
-        try {
-            $resLog = $clientesModel->abono_saldos_log($c_id, $v_id, $amt, $u_id, $met, $fec);
-            if (!$resLog) {
-                // Si la función devuelve false pero no lanza excepción, forzamos el error
-                throw new Exception("La función abono_saldos_log devolvió FALSE.");
-            }
-        } catch (Throwable $e_log) {
-            // Aquí atrapamos si hay error de SQL, de parámetros o de conexión en esa función
-            throw new Exception("Paso 3 Detenido: " . $e_log->getMessage());
-        }
-
-        // --- 4. BOLSAS MAESTRAS ---
+        // --- 4. ACTUALIZAR SALDO EN CONTRA DE LA VENTA ---
+        // Esta función resta el monto ($amt) de la deuda de esta factura específica
         $resFinal = $ventasModel->actualizarSaldosMaestros($c_id, $v_id, $amt, $fec);
         if (!$resFinal) {
-            throw new Exception("Paso 4: Error en la lógica de bolsas (actualizarSaldosMaestros).");
+            throw new Exception("Error al actualizar deuda de la venta.");
         }
 
         // --- 5. ÉXITO ---
@@ -68,23 +78,21 @@ if (isset($_GET['action'])) {
             'status' => 'success', 
             'message' => 'Abono procesado correctamente.',
             'detalles' => [
-                'deuda' => number_format($resFinal['nuevo_contra'], 2),
-                'favor' => number_format($resFinal['nuevo_favor'], 2)
+                'monto' => number_format($amt, 2),
+                'metodo' => $met
             ]
         ]);
 
     } catch (Throwable $e) {
         if (isset($conexion)) $conexion->rollback();
-        
-        error_log("DETALLE ERROR ABONO: " . $e->getMessage());
-        
+        error_log("CF_SYSTEM_LOG: ERROR CRÍTICO EN ABONO: " . $e->getMessage());
         echo json_encode([
             'status' => 'error',
-            'message' => $e->getMessage() // Aquí SweetAlert te dirá "Paso 3 Detenido: ..."
+            'message' => $e->getMessage()
         ]);
     }
     exit;
-    break;     
+    break;
         }
     } catch (Exception $e) {
         error_log("Error AJAX CF System: " . $e->getMessage());

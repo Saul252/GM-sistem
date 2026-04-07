@@ -13,6 +13,8 @@ $clientesModel = new ClientesModel($conexion);
 // --- ACCIONES POST (Guardar Venta) ---
 $input = file_get_contents("php://input");
 $data = json_decode($input, true);
+
+// ... (Tus require_once y la instancia de $clientesModel se quedan igual arriba) ...
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($data['accion'])) {
     header('Content-Type: application/json');
     if (ob_get_level()) ob_clean(); 
@@ -20,44 +22,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($data['accion'])) {
     try {
         $id_usuario = $_SESSION['usuario_id'] ?? 1;
 
-      if ($data['accion'] === 'guardar_venta') {
-    error_log("CF_SYSTEM_LOG: Iniciando guardado de venta");
-    
-    // 1. Capturamos el permiso del switch
-    $usar_check = isset($data['usar_saldo_favor']) ? intval($data['usar_saldo_favor']) : 0;
-    $monto_credito = isset($data['monto_usused_favor']) ? floatval($data['monto_usused_favor']) : 0;
-
-    // 2. SOLO sumar si el check está activo
-    // Si no está activo, el monto_pagado se queda tal cual llegó del input tecleado
-    if ($usar_check === 1 && $monto_credito > 0) {
-        $data['monto_pagado'] = floatval($data['monto_pagado']) + $monto_credito;
-    } else {
-        $data['monto_pagado'] = floatval($data['monto_pagado']);
-        // Forzamos a 0 el crédito usado para que no haya errores en cascada
-        $data['monto_usado_favor'] = 0; 
-    }
-
-    error_log("CF_SYSTEM_LOG: Monto final a procesar: " . $data['monto_pagado']);
-
-    // 3. Procesar la venta con el monto ya verificado
-    $resultado = VentasModel::procesarVenta($conexion, $data, $id_usuario);
-    
-    if ($resultado['status'] === 'success') {
-        $id_venta = $resultado['id_venta'] ?? 0;
-        $id_cliente = intval($data['id_cliente'] ?? 0);
-        $fecha_actual = date('Y-m-d H:i:s');
-
-        // 4. Lógica de afectación de tablas de saldo (Solo si se usó el check)
-        if ($usar_check === 1 && $monto_credito > 0 && $id_venta > 0) {
-            $modeloSaldos = new ClientesModel($conexion); 
-            $ajuste_negativo = $monto_credito * -1;
+        if ($data['accion'] === 'guardar_venta') {
+            error_log("CF_SYSTEM_LOG: Iniciando guardado de venta");
             
-            $modeloSaldos->abono_saldosAFavor($id_cliente, $ajuste_negativo, $id_venta, $fecha_actual);
-            $modeloSaldos->abono_saldos_log($id_cliente, $id_venta, $monto_credito, $id_usuario, 'USO_SALDO_A_FAVOR', $fecha_actual);
+            // 1. CAPTURA DE VALORES
+            $usar_check  = isset($data['usar_saldo_favor']) ? intval($data['usar_saldo_favor']) : 0;
+            $monto_favor = isset($data['monto_usado_favor']) ? floatval($data['monto_usado_favor']) : 0;
+            $efectivo    = floatval($data['monto_pagado'] ?? 0); 
+            $total_nota  = floatval($data['total_venta'] ?? 0); 
+
+            // 2. CONSOLIDACIÓN PARA EL MODELO DE VENTAS
+            if ($usar_check === 1 && $monto_favor > 0) {
+                $data['monto_pagado'] = $efectivo + $monto_favor;
+            } else {
+                $data['monto_pagado'] = $efectivo;
+                $monto_favor = 0; 
+            }
+
+            error_log("CF_SYSTEM_LOG: Pago total reportado: " . $data['monto_pagado']);
+
+            // 3. PROCESAR LA VENTA
+            $resultado = VentasModel::procesarVenta($conexion, $data, $id_usuario);
+            
+            if ($resultado['status'] === 'success') {
+                $id_venta     = $resultado['id_venta'] ?? 0;
+                $id_cliente   = intval($data['id_cliente'] ?? 0);
+                $fecha_actual = date('Y-m-d H:i:s');
+
+                // --- ACCIÓN A: RESTAR DEL FAVOR (Bolsa Ahorro) ---
+                if ($usar_check === 1 && $monto_favor > 0) {
+                    $clientesModel->agregar_saldo_a_favor($id_cliente, ($monto_favor * -1), $id_venta, $fecha_actual);
+                    $clientesModel->abono_saldos_log($id_cliente, $id_venta, $monto_favor, $id_usuario, 'USO_SALDO_A_FAVOR', $fecha_actual);
+                    error_log("CF_SYSTEM_LOG: Saldo a favor restado: {$monto_favor}");
+                }
+
+                // --- ACCIÓN B: AUMENTAR DEUDA (Bolsa Contra) ---
+                $pago_total_entregado = $efectivo + ($usar_check === 1 ? $monto_favor : 0);
+
+                if ($pago_total_entregado < $total_nota) {
+                    $falta_pagar = $total_nota - $pago_total_entregado;
+                    $clientesModel->agregar_saldo_en_contra($id_cliente, $falta_pagar, $id_venta, $fecha_actual);
+                    $clientesModel->abono_saldos_log($id_cliente, $id_venta, $falta_pagar, $id_usuario, 'CARGO_DEUDA_VENTA', $fecha_actual);
+                    error_log("CF_SYSTEM_LOG: Deuda generada: {$falta_pagar}");
+                }
+            }
+
+            echo json_encode($resultado);
         }
-    }
-    echo json_encode($resultado);
-}
     } catch (Exception $e) {
         error_log("CF_SYSTEM_LOG: ERROR CRÍTICO: " . $e->getMessage());
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);

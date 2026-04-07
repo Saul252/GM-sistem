@@ -87,46 +87,7 @@ public static function procesarVenta($conexion, $data, $id_usuario) {
         $stmtV->execute();
         $id_venta = $conexion->insert_id;
 
-        // --- LÓGICA DEL MÓDULO DE SALDOS (VISOR GENERAL) ---
-        $deuda_generada = $total - $monto_pagado;
-
-        // A. Actualizar resumen de saldo del cliente
-        $stmtSld = $conexion->prepare("INSERT INTO clientes_saldos (cliente_id, saldo_en_contra, ultima_venta_id) 
-                                      VALUES (?, ?, ?) 
-                                      ON DUPLICATE KEY UPDATE 
-                                      saldo_en_contra = saldo_en_contra + ?, 
-                                      ultima_venta_id = ?");
-        $stmtSld->bind_param("ididi", $id_cliente, $deuda_generada, $id_venta, $deuda_generada, $id_venta);
-        $stmtSld->execute();
-
-        // B. Registrar Log para el Visor (Corregido el error de truncado de tipo_movimiento)
-        $tipo_mov = ($deuda_generada > 0) ? 'cargo' : 'abono';
-        $obs_log  = ($deuda_generada > 0) ? "Venta con saldo pendiente" : "Venta liquidada";
-
-        $stmtLog = $conexion->prepare("INSERT INTO clientes_saldos_log (
-            cliente_id, 
-            venta_id, 
-            tipo_movimiento, 
-            monto, 
-            monto_operacion_total, 
-            monto_pagado_momento, 
-            referencia_tipo, 
-            observaciones, 
-            usuario_id
-        ) VALUES (?, ?, ?, ?, ?, ?, 'venta', ?, ?)");
-
-        // Cadena: i(int), i(int), s(string), d(double), d(double), d(double), s(string), i(int)
-        $stmtLog->bind_param("iisdddsi", 
-            $id_cliente, 
-            $id_venta, 
-            $tipo_mov, 
-            $deuda_generada, 
-            $total, 
-            $monto_pagado, 
-            $obs_log, 
-            $id_usuario
-        );
-        $stmtLog->execute();
+       
 
         // 4. REGISTRAR PAGO (Si existe)
         if ($monto_pagado > 0) {

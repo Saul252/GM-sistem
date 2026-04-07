@@ -773,8 +773,8 @@ document.addEventListener('click', (e) => {
 </script>
 
 <script>
-  window.procesarVenta = function() {
-    // 1. Validaciones de integridad
+    window.procesarVenta = function() {
+    // 1. Validaciones de integridad (Sin cambios)
     if (!window.carrito || window.carrito.length === 0) {
         Swal.fire({
             title: 'Carrito vacío',
@@ -798,13 +798,19 @@ document.addEventListener('click', (e) => {
 
     // 2. Captura de montos y estados
     const elTotalModal = document.getElementById('totalFinalModal');
+    
+    // El COSTO REAL de la mercancía (lo que vale la nota)
     const totalOriginalVenta = parseFloat(elTotalModal.dataset.totalOriginal) || 0;
+    
+    // Lo que el cliente paga en efectivo/bancos
     const efectivoRecibido = parseFloat(document.getElementById('monto_pagar').value) || 0;
+    
+    // Lo que el cliente decide usar de su "bolsa" de saldo a favor
     const creditoAplicado = document.getElementById('checkUsarSaldo').checked 
                             ? (parseFloat(document.getElementById('monto_usar_favor').value) || 0) 
                             : 0;
     
-    // La suma que enviamos como pago total al controlador
+    // La suma que cubre la nota (Efectivo + Crédito)
     const pagoTotalEnviado = efectivoRecibido + creditoAplicado;
 
     const metodoPago = document.getElementById('metodo_pago').value;
@@ -815,17 +821,28 @@ document.addEventListener('click', (e) => {
         title: '¿Finalizar Venta?',
         html: `
             <div class="text-center mb-2">
-                <span class="text-muted d-block small">Total a registrar</span>
-                <h3 class="fw-bold" style="color: #007aff;">$${pagoTotalEnviado.toFixed(2)}</h3>
+                <span class="text-muted d-block small">Total de la Nota</span>
+                <h3 class="fw-bold" style="color: #007aff;">$${totalOriginalVenta.toFixed(2)}</h3>
             </div>
-            <div class="p-2 rounded-3 bg-light small text-start">
-                <div class="d-flex justify-content-between"><span>Efectivo:</span> <b>$${efectivoRecibido.toFixed(2)}</b></div>
-                <div class="d-flex justify-content-between"><span>Créditos:</span> <b>$${creditoAplicado.toFixed(2)}</b></div>
+            <div class="p-2 rounded-3 bg-light small text-start border">
+                <div class="d-flex justify-content-between text-dark">
+                    <span>Efectivo/Bancos:</span> <b>$${efectivoRecibido.toFixed(2)}</b>
+                </div>
+                <div class="d-flex justify-content-between text-primary">
+                    <span>Uso Saldo Favor:</span> <b>$${creditoAplicado.toFixed(2)}</b>
+                </div>
+                <hr class="my-1">
+                <div class="d-flex justify-content-between fw-bold">
+                    <span>Total Cubierto:</span> <span>$${pagoTotalEnviado.toFixed(2)}</span>
+                </div>
             </div>
+            ${pagoTotalEnviado < totalOriginalVenta ? 
+                `<div class="mt-2 badge bg-danger-subtle text-danger w-100 py-2">Quedará deuda de $${(totalOriginalVenta - pagoTotalEnviado).toFixed(2)}</div>` 
+                : ''}
         `,
         icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#007aff', // Azul iOS
+        confirmButtonColor: '#007aff', 
         cancelButtonColor: '#8e8e93',
         confirmButtonText: 'Sí, finalizar',
         cancelButtonText: 'Cancelar',
@@ -863,9 +880,9 @@ document.addEventListener('click', (e) => {
             const datos = {
                 accion: 'guardar_venta',
                 id_cliente: parseInt(idCliente),
-                monto_pagado: efectivoRecibido,
-                monto_usado_favor: creditoAplicado,
-                total_venta: pagoTotalEnviado, 
+                monto_pagado: efectivoRecibido,       // Dinero real
+                monto_usado_favor: creditoAplicado,   // Lo que se resta de la bolsa
+                total_venta: totalOriginalVenta,      // El costo real (Para calcular deuda)
                 metodo_pago: metodoPago,
                 observaciones: observaciones,
                 carrito: carritoFinal,
@@ -880,7 +897,7 @@ document.addEventListener('click', (e) => {
             .then(res => res.json())
             .then(res => {
                 if (res.status === 'success') {
-                    // Lógica de mensajes post-venta
+                    // Lógica de mensajes post-venta (Compara contra el costo real)
                     const tieneDeuda = pagoTotalEnviado < totalOriginalVenta;
                     const esEntregaTotal = res.total_entregado >= res.total_pedido;
                     const iconoFinal = esEntregaTotal ? 'success' : 'warning';
@@ -895,7 +912,7 @@ document.addEventListener('click', (e) => {
                     }
 
                     Swal.fire({
-                        title: esEntregaTotal ? '¡Venta Exitosa Material Entregable Desde Despachos!' : 'Entrega Parcial Material Posiblemente Entregable Desde Despachos',
+                        title: esEntregaTotal ? '¡Venta Exitosa!' : 'Entrega Parcial Registrada',
                         html: `
                             <div class="alert alert-light border-0 small text-start py-2 mb-3" style="background:#f2f2f7; border-radius:12px;">
                                 ${res.message || 'Operación realizada correctamente.'}
@@ -909,8 +926,8 @@ document.addEventListener('click', (e) => {
                         confirmButtonText: '<i class="bi bi-receipt"></i> Con Precios',
                         denyButtonText: '<i class="bi bi-receipt"></i> Sin Precios',
                         cancelButtonText: 'Cerrar',
-                        confirmButtonColor: '#34c759', // Verde iOS
-                        denyButtonColor: '#5856d6',    // Indigo iOS
+                        confirmButtonColor: '#34c759', 
+                        denyButtonColor: '#5856d6',    
                         customClass: { popup: 'rounded-4 border-0 shadow-lg' }
                     }).then((result) => {
                         let url = '';
@@ -937,4 +954,5 @@ document.addEventListener('click', (e) => {
             });
         }
     });
-}</script>
+}
+ </script>
