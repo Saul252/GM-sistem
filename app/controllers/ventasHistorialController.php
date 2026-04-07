@@ -11,11 +11,12 @@ require_once __DIR__ . '/../controllers/LayoutController.php';
 require_once __DIR__ . '/../models/ventasHistorialModel.php';
 require_once __DIR__ . '/../models/ventas_model.php';
 require_once __DIR__ . '/../models/clientesModel.php';
+require_once __DIR__ . '/../models/RepartosModel.php';
 
 protegerPagina('ventashistorial');
 $ventasModel = new VentaHistorialModel($conexion);
 $clientesModel = new ClientesModel($conexion);
-
+$repartosModel = new RepartoModel($conexion);
 $paginaActual = 'ventashistorial';
 
 // --- ACCIÓN: LISTADO AJAX (Con filtros) ---
@@ -144,6 +145,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['ac
         if ($venta_id <= 0) {
             throw new Exception("ID de venta no proporcionado o inválido.");
         }
+       $repartosactivos = $repartosModel->contarEntregasActivasPorVenta($venta_id);
+
+if ($repartosactivos > 0) {
+    // Mensaje descriptivo y real
+    throw new Exception("No es posible procesar la solicitud: Esta venta cuenta con $repartosactivos despacho(s) activo(s) en el módulo de logística.");
+}
 
         // Ejecutamos la lógica en el modelo
         $resultado = VentasModel::cancelarVenta($conexion, $venta_id, $usuario_id, $motivo);
@@ -172,7 +179,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['ac
         $fecha_act  = date('Y-m-d H:i:s');
 
         if ($venta_id <= 0) throw new Exception("ID de venta no válido.");
+       $repartosactivos = $repartosModel->contarEntregasActivasPorVenta($venta_id);
 
+if ($repartosactivos > 0) {
+    // Mensaje descriptivo y real
+    throw new Exception("No es posible procesar la solicitud: Esta venta cuenta con $repartosactivos despacho(s) activo(s) en el módulo de logística.");
+}
         // --- PASO 1: OBTENER DETALLE COMPLETO ---
         // Aprovechamos tu función que ya suma los pagos automáticamente
         $detalle = $ventasModel->obtenerDetalleCompleto($venta_id);

@@ -1201,6 +1201,38 @@ public function listarIdsPendientesPorVenta($venta_id) {
     // Retorna algo como: [193, 194, 198]
     return $ids;
 }
+/**
+ * Cuenta cuántos movimientos de salida de una venta ya están 
+ * asignados a un transporte y no han sido cancelados.
+ * * @param int $venta_id El ID de la referencia (venta)
+ * @return int Cantidad de entregas activas encontradas
+ */
+public function contarEntregasActivasPorVenta($venta_id) {
+    // Forzamos entero para seguridad extra
+    $venta_id = intval($venta_id);
+
+    $sql = "SELECT COUNT(DISTINCT m.id) AS total_entregas_activas
+            FROM movimientos m
+            INNER JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id
+            WHERE m.referencia_id = ? 
+              AND m.tipo = 'salida'
+              -- Filtramos solo los que tienen transporte real y NO están cancelados
+              AND trm.id IS NOT NULL 
+              AND trm.estado_reparto != 'cancelado'";
+
+    try {
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("i", $venta_id);
+        $stmt->execute();
+        $resultado = $stmt->get_result()->fetch_assoc();
+
+        return intval($resultado['total_entregas_activas'] ?? 0);
+
+    } catch (Exception $e) {
+        error_log("CF_SYSTEM_LOG: Error al contar entregas activas: " . $e->getMessage());
+        return 0;
+    }
+}
 public function simularDespachoLotesMasivo($idsMovimientos) {
     try {
         if (empty($idsMovimientos)) throw new Exception("No hay IDs para procesar.");
@@ -1281,7 +1313,7 @@ FROM movimientos m
 INNER JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
 -- Unimos con transporte (trm) para filtrar los que ya tienen ruta
 LEFT JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id
-WHERE m.referencia_id = 92
+WHERE m.referencia_id = $venta_id
   AND m.tipo = 'salida'
   -- CLAVE: Que NO tenga registro en transporte (trm.id es NULL)
   AND trm.id IS NULL

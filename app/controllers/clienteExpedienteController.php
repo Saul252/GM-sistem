@@ -26,60 +26,74 @@ if (isset($_GET['action'])) {
     $conexion->begin_transaction();
 
     try {
-        // --- 0. CAPTURA DE DATOS (Lo que escribiste en el input del modal) ---
+        // --- 0. CAPTURA DE DATOS ---
+        // Usamos floatval y intval para asegurar limpieza de datos
         $v_id = intval($_POST['venta_id'] ?? 0);
-        $amt  = floatval($_POST['monto'] ?? 0); // Este es el monto que quieres usar
+        $amt  = floatval($_POST['monto'] ?? 0); // Este es el monto que el usuario tecleó
         $met  = $_POST['metodo_pago'] ?? 'Efectivo'; 
-        $u_id = $_SESSION['usuario_id'] ?? $_SESSION['id_usuario'] ?? 1;
+        $u_id = $_SESSION['usuario_id'] ?? 1;
         $fec  = !empty($_POST['fecha_pago']) ? $_POST['fecha_pago'] : date('Y-m-d H:i:s');
         $c_id = intval($_POST['cliente_id'] ?? 0);
 
-        // --- 1. VALIDACIÓN DEL CLIENTE ---
-        if (!$c_id) {
+        // --- 1. VALIDACIÓN ---
+        if ($amt <= 0) throw new Exception("El monto del abono debe ser mayor a 0.");
+        
+        // Si no viene el cliente, lo buscamos
+        if (!$c_id && $v_id > 0) {
             $c_id = $ventasModel->obtenerClientePorVenta($conexion, $v_id);
         }
-        if (!$c_id) throw new Exception("No se halló cliente para la venta #$v_id");
+        if (!$c_id) throw new Exception("No se halló cliente para procesar el abono.");
 
-        // --- 2. LÓGICA DE AFECTACIÓN DE SALDOS (COMO EN VENTAS) ---
-        // Solo si el método es "Saldo a Favor" y hay un monto válido
-        if ($met === 'Saldo a Favor' && $amt > 0) {
+        // --- 2. LÓGICA DE SALDOS QUIRÚRGICA ---
+        
+        if ($met === 'Saldo a Favor') {
+            /**
+             * ESCENARIO A: EL CLIENTE PAGA USANDO SU "AHORRO"
+             * 1. Restamos de su bolsa de FAVOR (Monto negativo)
+             * 2. Restamos de su bolsa de CONTRA (Monto negativo)
+             */
             
-            // Usamos el monto que escribiste en el input como ajuste negativo
-            $ajuste_negativo = $amt * -1;
+            // Restar del "Ahorro" (Bolsa Favor)
+            $clientesModel->agregar_saldo_a_favor($c_id, ($amt * -1), $v_id, $fec);
             
-            // Afectamos la tabla maestra de saldos (Bolsa de Favor vs Contra)
-            $clientesModel->abono_saldosAFavor($c_id, $ajuste_negativo, $v_id, $fec);
-            
-            // Registramos el log de uso específico (USO_SALDO_A_FAVOR)
+            // Restar de la "Deuda" (Bolsa Contra)
+            $clientesModel->agregar_saldo_en_contra($c_id, ($amt * -1), $v_id, $fec);
+
+            // Log específico para rastreo
             $clientesModel->abono_saldos_log($c_id, $v_id, $amt, $u_id, 'USO_SALDO_A_FAVOR', $fec);
-            
+            error_log("CF_SYSTEM_LOG: Abono con Saldo a Favor. Cliente: $c_id, Monto: $amt");
+
         } else {
-            // Si es Efectivo, Transferencia, etc., solo registramos el log del abono normal
-            $clientesModel->abono_saldos_log($c_id, $v_id, $amt, $u_id, "ABONO_$met", $fec);
+            /**
+             * ESCENARIO B: ABONO NORMAL (Efectivo, Transferencia, etc.)
+             * Solo restamos de la bolsa de CONTRA (Deuda). El saldo a favor NO se toca.
+             */
+            
+            $clientesModel->agregar_saldo_en_contra($c_id, ($amt * -1), $v_id, $fec);
+
+            // Log del abono según el método (Ej: ABONO_Efectivo)
+            $clientesModel->abono_saldos_log($c_id, $v_id, $amt, $u_id, "ABONO_" . str_replace(' ', '_', $met), $fec);
+            error_log("CF_SYSTEM_LOG: Abono normal ($met). Cliente: $c_id, Monto: $amt");
         }
 
-        // --- 3. REGISTRO EN HISTORIAL DE PAGOS (CAJA DE LA VENTA) ---
-        // Esto asienta que la venta recibió el dinero por el método seleccionado
+        // --- 3. REGISTRO EN HISTORIAL Y ACTUALIZACIÓN DE NOTA ---
+        
+        // Registrar en la tabla de pagos/abonos de la venta
         if (!$ventasModel->registrarAbono($v_id, $amt, $u_id, $met, $fec)) {
-            throw new Exception("Error al registrar abono en historial.");
+            throw new Exception("Error al registrar el movimiento en el historial de pagos.");
         }
 
-        // --- 4. ACTUALIZAR SALDO EN CONTRA DE LA VENTA ---
-        // Esta función resta el monto ($amt) de la deuda de esta factura específica
-        $resFinal = $ventasModel->actualizarSaldosMaestros($c_id, $v_id, $amt, $fec);
-        if (!$resFinal) {
-            throw new Exception("Error al actualizar deuda de la venta.");
-        }
-
-        // --- 5. ÉXITO ---
+        
+        // --- 4. ÉXITO ---
         $conexion->commit();
 
         echo json_encode([
-            'status' => 'success', 
-            'message' => 'Abono procesado correctamente.',
+            'status'   => 'success', 
+            'message'  => 'Abono procesado correctamente.',
             'detalles' => [
-                'monto' => number_format($amt, 2),
-                'metodo' => $met
+                'monto'  => number_format($amt, 2),
+                'metodo' => $met,
+                'cliente' => $c_id
             ]
         ]);
 
@@ -87,8 +101,8 @@ if (isset($_GET['action'])) {
         if (isset($conexion)) $conexion->rollback();
         error_log("CF_SYSTEM_LOG: ERROR CRÍTICO EN ABONO: " . $e->getMessage());
         echo json_encode([
-            'status' => 'error',
-            'message' => $e->getMessage()
+            'status'  => 'error',
+            'message' => "Error al procesar: " . $e->getMessage()
         ]);
     }
     exit;

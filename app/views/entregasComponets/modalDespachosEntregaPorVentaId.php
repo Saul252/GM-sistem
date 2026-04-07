@@ -4,7 +4,7 @@
 
             <div class="modal-header bg-dark text-white py-3">
                 <div class="d-flex align-items-center">
-                    <div class="bg-primary p-2 rounded-3 me-3">
+                    <div class="bg-primary p-2 rounded-3 me-3" style="border-radius: 10px !important;">
                         <i class="bi bi-calculator fs-4"></i>
                     </div>
                     <div>
@@ -30,53 +30,55 @@
                                 </div>
                             </div>
                         </div>
-
                         <div id="gfin_listaItems" style="max-height:500px; overflow-y:auto; padding:20px;"></div>
                     </div>
 
                     <div class="col-lg-5 bg-white">
                         <div class="p-4">
                             <div class="d-flex align-items-center mb-4">
-                                <i class="bi bi-truck text-primary fs-5 me-2"></i>
-                                <h6 class="fw-bold mb-0">Logística de Salida</h6>
+                                <i id="gfin_header_icon" class="bi bi-truck text-primary fs-5 me-2"></i>
+                                <h6 id="gfin_header_title" class="fw-bold mb-0">Logística de Salida</h6>
                             </div>
 
                             <div class="mb-4">
-                                <label class="small fw-bold text-muted text-uppercase mb-2 d-block">Modo de Entrega</label>
+                                <label class="small fw-bold text-muted text-uppercase mb-2 d-block" style="font-size: 0.65rem;">Modo de Entrega</label>
                                 <div class="btn-group w-100 shadow-sm">
                                     <input type="radio" class="btn-check" name="gfin_tipo_logistica" id="gfin_optPatio" value="patio" checked onchange="gfin_toggleRuta(false)">
-                                    <label class="btn btn-outline-primary py-2 fw-bold" for="gfin_optPatio">
+                                    <label class="btn btn-outline-success py-2 fw-bold" for="gfin_optPatio">
                                         <i class="bi bi-shop me-2"></i>PATIO
                                     </label>
 
                                     <input type="radio" class="btn-check" name="gfin_tipo_logistica" id="gfin_optRuta" value="ruta" onchange="gfin_toggleRuta(true)">
-                                    <label class="btn btn-outline-dark py-2 fw-bold" for="gfin_optRuta">
+                                    <label class="btn btn-outline-primary py-2 fw-bold" for="gfin_optRuta">
                                         <i class="bi bi-map me-2"></i>RUTA
                                     </label>
                                 </div>
                             </div>
 
-                            <div id="gfin_formRuta" class="d-none animate__animated animate__fadeIn">
-                                <div class="card border-0 bg-light p-3 rounded-4 mb-3">
+                            <div id="gfin_formRuta" class="animate__animated animate__fadeIn">
+                                <div id="gfin_wrapper_logistica" class="card border-0 p-3 rounded-4 mb-3" style="transition: all 0.3s ease;">
                                     <div class="mb-3">
-                                        <label class="small fw-bold text-primary">DIRECCIÓN / DESTINO</label>
-                                        <textarea id="gfin_direccion" class="form-control border-0 shadow-sm" rows="2"></textarea>
+                                        <label id="gfin_lbl_direccion" class="small fw-bold text-primary">DIRECCIÓN / DESTINO</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-white border-0 shadow-sm"><i id="gfin_icon_dir" class="bi bi-geo-alt text-danger"></i></span>
+                                            <textarea id="gfin_direccion" class="form-control border-0 shadow-sm" rows="2" placeholder="..."></textarea>
+                                        </div>
                                     </div>
 
                                     <div class="row g-2 mb-3">
-                                        <div class="col-md-6">
+                                        <div class="col-md-6" id="gfin_col_vehiculo">
                                             <label class="small fw-bold text-muted">UNIDAD</label>
                                             <select id="gfin_vehiculo_id" class="form-select border-0 shadow-sm"></select>
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="small fw-bold text-muted">CHOFER</label>
+                                            <label id="gfin_lbl_chofer" class="small fw-bold text-muted">CHOFER</label>
                                             <select id="gfin_chofer_id" class="form-select border-0 shadow-sm"></select>
                                         </div>
                                     </div>
 
                                     <div class="mb-0">
                                         <label class="small fw-bold text-muted">AYUDANTES</label>
-                                        <select id="gfin_tripulantes" class="form-select border-0 shadow-sm" multiple size="3"></select>
+                                        <select id="gfin_tripulantes" class="form-select border-0 shadow-sm" multiple size="3" style="font-size: 0.85rem;"></select>
                                     </div>
                                 </div>
                             </div>
@@ -99,13 +101,40 @@
         </div>
     </div>
 </div>
+
 <script>
-    /**
+/**
  * Alterna el formulario de ruta (Namespace Gfin)
  */
-function gfin_toggleRuta(mostrar) {
-    const form = document.getElementById('gfin_formRuta');
-    mostrar ? form.classList.remove('d-none') : form.classList.add('d-none');
+function gfin_toggleRuta(esRuta) {
+    const wrapper = $('#gfin_wrapper_logistica');
+    const iconHeader = $('#gfin_header_icon');
+    const titleHeader = $('#gfin_header_title');
+    const btnConfirmar = $('#gfin_btnConfirmar');
+
+    if (esRuta) {
+        // MODO RUTA (Azul)
+        wrapper.css({'background': '#eef6ff', 'border': '1px solid #cfe2ff'});
+        iconHeader.removeClass('bi-shop text-success').addClass('bi-truck text-primary');
+        titleHeader.text('Logística de Salida (Ruta)');
+        $('#gfin_lbl_direccion').text('DIRECCIÓN / DESTINO');
+        $('#gfin_icon_dir').removeClass('bi-person-badge text-success').addClass('bi-geo-alt text-danger');
+        $('#gfin_direccion').attr('placeholder', 'Dirección exacta de entrega...');
+        $('#gfin_lbl_chofer').text('CHOFER RESPONSABLE');
+        $('#gfin_col_vehiculo').fadeIn();
+        btnConfirmar.removeClass('btn-success').addClass('btn-primary');
+    } else {
+        // MODO PATIO (Verde)
+        wrapper.css({'background': '#f6fff8', 'border': '1px solid #c1e7c1'});
+        iconHeader.removeClass('bi-truck text-primary').addClass('bi-shop text-success');
+        titleHeader.text('Entrega Directa en Patio');
+        $('#gfin_lbl_direccion').text('NOTAS / QUIÉN RECIBE');
+        $('#gfin_icon_dir').removeClass('bi-geo-alt text-danger').addClass('bi-person-badge text-success');
+        $('#gfin_direccion').attr('placeholder', 'Ej. Cliente recoge en su unidad...');
+        $('#gfin_lbl_chofer').text('DESPACHADOR (PATIO)');
+        $('#gfin_col_vehiculo').hide();
+        btnConfirmar.removeClass('btn-primary').addClass('btn-success');
+    }
 }
 
 /**
@@ -114,7 +143,6 @@ function gfin_toggleRuta(mostrar) {
 async function abrirModalDespachoVentaGfin(venta_id, almacenId) {
     const URL_ENTREGAS = '/cfsistem/app/controllers/entregasController.php'; 
     
-    // Referencias a elementos con IDs nuevos
     const contenedor = document.getElementById('gfin_listaItems');
     const txtFolio = document.getElementById('gfin_txtFolioVenta');
     const btnConfirmar = document.getElementById('gfin_btnConfirmar');
@@ -127,20 +155,22 @@ async function abrirModalDespachoVentaGfin(venta_id, almacenId) {
     contenedor.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-success opacity-25"></div><p class="text-muted mt-2">Analizando costos y lotes...</p></div>`;
     loader.classList.remove('d-none');
     btnConfirmar.disabled = true;
-    window.gfin_data_tickets = []; // Variable global renombrada
+    window.gfin_data_tickets = [];
+
+    // Inicializar visual en Patio por defecto
+    $('#gfin_optPatio').prop('checked', true);
+    gfin_toggleRuta(false);
 
     const modalInstance = new bootstrap.Modal(document.getElementById('modalDespachoVentaGfin'));
     modalInstance.show();
 
     try {
-        // 1. Obtener IDs pendientes
         const respIds = await fetch(`${URL_ENTREGAS}?ajax=entregas_pendientes&venta_id=${venta_id}`);
         const dataIds = await respIds.json();
         
         if (!dataIds.success || !dataIds.ids?.length) throw new Error("Sin artículos pendientes.");
         const idsParaProcesar = dataIds.ids;
 
-        // 2. Cargar ganancias en paralelo
         const promesas = idsParaProcesar.map(id => 
             fetch(`${URL_ENTREGAS}?ajax=imprimirGanancia&id=${id}`).then(r => r.json())
         );
@@ -150,7 +180,7 @@ async function abrirModalDespachoVentaGfin(venta_id, almacenId) {
         let htmlFinal = '';
         let sumaUtilidad = 0;
         
-        resultados.forEach((res, index) => {
+        resultados.forEach((res) => {
             if (res.success && res.data) {
                 const d = res.data;
                 window.gfin_data_tickets.push(d);
@@ -193,7 +223,6 @@ async function abrirModalDespachoVentaGfin(venta_id, almacenId) {
         labelTotal.innerText = idsParaProcesar.length;
         labelUtilidad.innerText = `$${sumaUtilidad.toLocaleString('en-US', {minimumFractionDigits:2})}`;
 
-        // 3. Recursos Logísticos (Carga igual, IDs de destino diferentes)
         const [resLog, resCat] = await Promise.all([
             fetch(`${URL_ENTREGAS}?ajax=get_recursos_reparto&id=${idsParaProcesar[0]}`).then(r => r.json()),
             fetch(`${URL_ENTREGAS}?ajax=get_recursos_sucursal&almacen_id=${almacenId}`).then(r => r.json())
@@ -222,7 +251,6 @@ async function abrirModalDespachoVentaGfin(venta_id, almacenId) {
             btnConfirmar.disabled = false;
             btnConfirmar.onclick = () => gfin_ejecutarDespachoFinal(idsParaProcesar, btnConfirmar);
         }
-
     } catch (err) {
         contenedor.innerHTML = `<div class="alert alert-danger m-2 small">${err.message}</div>`;
     }
@@ -245,7 +273,7 @@ async function gfin_ejecutarDespachoFinal(ids, btn) {
         const fd = new FormData();
         fd.append('ajax', 'despachar_venta_completaFaltantesEntrega'); 
         fd.append('tipo_logistica', tipo);
-        fd.append('vehiculo_id', $('#gfin_vehiculo_id').val() || 0);
+        fd.append('vehiculo_id', tipo === 'ruta' ? $('#gfin_vehiculo_id').val() : 0);
         fd.append('chofer_id', $('#gfin_chofer_id').val() || 0);
         fd.append('direccion', $('#gfin_direccion').val() || '');
         
@@ -263,7 +291,7 @@ async function gfin_ejecutarDespachoFinal(ids, btn) {
     } catch (e) {
         Swal.fire('Error', e.message, 'error');
         btn.disabled = false;
-        btn.innerHTML = 'EJECUTAR DESPACHO';
+        btn.innerHTML = '<i class="bi bi-check-circle me-2"></i>EJECUTAR DESPACHO';
     }
 }
 </script>
