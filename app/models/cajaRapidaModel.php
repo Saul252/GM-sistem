@@ -97,7 +97,7 @@ class cajaRapidaModel {
             $sqlV = "INSERT INTO ventas (folio, id_cliente, almacen_id, usuario_id, subtotal, descuento, total, estado_pago, estado_entrega, estado_general, observaciones) 
                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activa', ?)";
             $stmtV = $conexion->prepare($sqlV);
-            $stmtV->bind_param("siiidddsss", $folio, $id_cliente, $id_almacen_vta, $id_usuario, $subtotal, $descuento, $total, $estado_pago, $estado_entrega_vta, $obs);
+            $stmtV->bind_param("siiidddsss", $folio, $id_cliente, $id_almacen_vta, $id_usuario, $monto_pagado, $descuento, $monto_pagado, $estado_pago, $estado_entrega_vta, $obs);
             $stmtV->execute();
             $id_venta = $conexion->insert_id;
 
@@ -134,7 +134,7 @@ class cajaRapidaModel {
                 $tp = (strpos($raw_tp, 'dist') !== false) ? 'distribuidor' : ((strpos($raw_tp, 'may') !== false) ? 'mayorista' : 'minorista');
 
                 $stmtD = $conexion->prepare("INSERT INTO detalle_venta (venta_id, producto_id, cantidad, cantidad_entregada, precio_unitario, tipo_precio, subtotal, estado_entrega) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmtD->bind_param("iiddssds", $id_venta, $p_id, $cant_ped, $cant_real, $prec, $tp, $subt, $st_fila);
+                $stmtD->bind_param("iiddssds", $id_venta, $p_id, $cant_ped, $cant_real, $prec, $tp, $monto_pagado, $st_fila);
                 $stmtD->execute();
                 $id_detalle_venta = $conexion->insert_id;
 

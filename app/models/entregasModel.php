@@ -69,6 +69,7 @@ public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_a
     $sql = "SELECT 
                 m.*, 
                 v.id as venta_id,
+                c.nombre_comercial as cliente,
                 v.folio as folio_venta,
                 p.nombre as prod_nombre, p.sku, p.factor_conversion, p.unidad_reporte,
                 a1.nombre as origen_nombre,
@@ -78,6 +79,7 @@ public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_a
             FROM movimientos m 
             INNER JOIN productos p ON m.producto_id = p.id
             LEFT JOIN ventas v ON m.referencia_id = v.id
+            LEFT JOIN clientes c ON v.id_cliente = c.id
             LEFT JOIN almacenes a1 ON m.almacen_origen_id = a1.id
             LEFT JOIN usuarios u1 ON m.usuario_registra_id = u1.id
             LEFT JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
@@ -92,6 +94,7 @@ public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_a
     if ($resultado) {
         while ($row = $resultado->fetch_assoc()) {
             $data[] = [
+                'cliente'  => $row['cliente'],
                 'venta_id'          => $row['venta_id'],
                 'id'                => $row['id'], 
                 'almacen_origen_id' => $row['almacen_origen_id'],
@@ -378,6 +381,7 @@ public function listarSoloDespachadosPatio($almacen_id = 0) {
                 m.id as movimiento_id,
                 v.folio as folio_venta,
                 m.fecha as fecha_movimiento,
+                c.nombre_comercial as cliente,
                 p.nombre as producto,
                 p.sku,
                 p.unidad_medida,       -- Agregado: necesario para el cálculo
@@ -394,6 +398,7 @@ public function listarSoloDespachadosPatio($almacen_id = 0) {
             INNER JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
             INNER JOIN productos p ON m.producto_id = p.id
             LEFT JOIN ventas v ON m.referencia_id = v.id
+            LEFT JOIN clientes c ON  v.id_cliente =c.id
             LEFT JOIN almacenes a ON m.almacen_origen_id = a.id
             LEFT JOIN usuarios u ON rsl.usuario_patio_id = u.id
             LEFT JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id

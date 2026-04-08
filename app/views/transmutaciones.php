@@ -159,12 +159,17 @@
                                         <i class="fas fa-minus-circle text-danger me-1"></i>
                                         <?= htmlspecialchars($t['producto_origen'] ?? 'N/A') ?>
                                     </td>
-                                    <td class="fw-bold"><?= number_format($t['cant_origen'], 2) ?></td>
+                                    <td class="fw-bold"><?= number_format($t['cant_origen'], 2) ?>
+                                    <?= htmlspecialchars($t['unidad_origen'] ?? 'N/A') ?>
+                                </td>
                                     <td>
                                         <i class="fas fa-plus-circle text-success me-1"></i>
                                         <?= htmlspecialchars($t['producto_destino'] ?? 'N/A') ?>
+                                         <?= htmlspecialchars($t['unidad_destino'] ?? 'N/A') ?>
                                     </td>
-                                    <td class="fw-bold"><?= number_format($t['cant_destino'], 2) ?></td>
+                                    <td class="fw-bold"><?= number_format($t['cant_destino'], 2) ?>
+                                    <?= htmlspecialchars($t['unidad_destino'] ?? 'N/A') ?>
+                                </td>
                                     <td>
                                         <i class="fas fa-user-circle me-1 text-muted"></i>
                                         <small><?= htmlspecialchars($t['usuario_nombre'] ?? 'Sistema') ?></small>

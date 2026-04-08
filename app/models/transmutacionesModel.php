@@ -190,30 +190,44 @@ public function listarTransmutaciones($almacen_id) {
     
     $sql = "SELECT 
                 t.id, 
-                t.fecha as fecha_registro, -- <-- CAMBIADO t.fecha
+                t.fecha as fecha_registro,
                 t.observaciones,
                 u.nombre as usuario_nombre,
+                
                 -- Producto de salida (origen)
-                (SELECT p1.nombre FROM transmutacion_detalle td1 
-                 JOIN productos p1 ON td1.producto_id = p1.id 
-                 WHERE td1.transmutacion_id = t.id AND td1.tipo = 'salida' LIMIT 1) as producto_origen,
-                (SELECT td1.cantidad FROM transmutacion_detalle td1 
-                 WHERE td1.transmutacion_id = t.id AND td1.tipo = 'salida' LIMIT 1) as cant_origen,
+                p1.nombre as producto_origen,
+                p1.unidad_medida as unidad_origen,
+                td1.cantidad as cant_origen,
+                
                 -- Producto de entrada (destino)
-                (SELECT p2.nombre FROM transmutacion_detalle td2 
-                 JOIN productos p2 ON td2.producto_id = p2.id 
-                 WHERE td2.transmutacion_id = t.id AND td2.tipo = 'entrada' LIMIT 1) as producto_destino,
-                (SELECT td2.cantidad FROM transmutacion_detalle td2 
-                 WHERE td2.transmutacion_id = t.id AND td2.tipo = 'entrada' LIMIT 1) as cant_destino
+                p2.nombre as producto_destino,
+                p2.unidad_medida as unidad_destino,
+                td2.cantidad as cant_destino
+
             FROM transmutaciones t
             LEFT JOIN usuarios u ON t.usuario_id = u.id
+            
+            -- Unión para obtener el producto que SALE (origen)
+            LEFT JOIN transmutacion_detalle td1 ON t.id = td1.transmutacion_id AND td1.tipo = 'salida'
+            LEFT JOIN productos p1 ON td1.producto_id = p1.id
+            
+            -- Unión para obtener el producto que ENTRA (destino)
+            LEFT JOIN transmutacion_detalle td2 ON t.id = td2.transmutacion_id AND td2.tipo = 'entrada'
+            LEFT JOIN productos p2 ON td2.producto_id = p2.id
+            
             $where
-            ORDER BY t.fecha DESC LIMIT 100";
+            
+            -- Agrupamos por el ID de transmutación para asegurar una fila por registro
+            GROUP BY t.id
+            ORDER BY t.fecha DESC 
+            LIMIT 100";
     
     $stmt = $this->db->prepare($sql);
+    
     if ($almacen_id > 0) {
         $stmt->bind_param("i", $almacen_id);
     }
+    
     $stmt->execute();
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }

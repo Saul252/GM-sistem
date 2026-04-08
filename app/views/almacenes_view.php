@@ -613,143 +613,184 @@
             </div>
         </div>
     </div>
+<div class="modal fade" id="modalEditarProducto" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+            
+            <div class="modal-header border-0 bg-warning bg-gradient p-4">
+                <h5 class="modal-title fw-bold text-dark d-flex align-items-center">
+                    <i class="bi bi-pencil-square fs-4 me-2"></i> 
+                    <span>Editar Producto:</span>
+                    <span id="edit_nombre_titulo" class="ms-2 opacity-75 fw-normal"></span>
+                </h5>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
 
-    <div class="modal fade" id="modalEditarProducto" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content">
-                <div class="modal-header bg-warning text-dark">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square"></i> Editar Producto: <span
-                            id="edit_nombre_titulo"></span></h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form id="formEditarProducto">
-                    <input type="hidden" name="producto_id" id="edit_id">
-                    <input type="hidden" name="almacen_actual_id" id="edit_almacen_id">
+            <form id="formEditarProducto">
+                <input type="hidden" name="producto_id" id="edit_id">
+                <input type="hidden" name="almacen_actual_id" id="edit_almacen_id">
 
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-md-4 border-end">
-                                <h6 class="fw-bold text-primary mb-3">Datos Generales</h6>
-                                <div class="mb-2">
-                                    <label class="small fw-bold">SKU</label>
-                                    <input type="text" name="sku" id="edit_sku" class="form-control" required>
+                <div class="modal-body p-4 bg-white">
+                    <div class="row g-4">
+                        
+                        <div class="col-md-4">
+                            <div class="p-3 rounded-4 bg-light border border-opacity-10 h-100">
+                                <h6 class="fw-bold text-primary mb-3 d-flex align-items-center">
+                                    <i class="bi bi-info-circle me-2"></i> Datos Generales
+                                </h6>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold text-secondary">SKU / Código</label>
+                                    <input type="text" name="sku" id="edit_sku" class="form-control border-0 shadow-sm" style="border-radius: 10px;" required>
                                 </div>
-                                <div class="mb-2">
-                                    <label class="small fw-bold">Nombre</label>
-                                    <input type="text" name="nombre" id="edit_nombre" class="form-control" required>
-                                </div>
-                                <div class="mb-2">
-                                    <label class="small fw-bold">Categoría</label>
 
-                                    <div class="input-group">
-                                        <select name="categoria_id" id="edit_categoria" class="form-select">
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold text-secondary">Nombre del Producto</label>
+                                    <input type="text" name="nombre" id="edit_nombre" class="form-control border-0 shadow-sm" style="border-radius: 10px;" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold text-secondary">Categoría</label>
+                                    <div class="input-group shadow-sm" style="border-radius: 10px; overflow: hidden;">
+                                        <select name="categoria_id" id="edit_categoria_idx" class="form-select border-0">
+                                            <option value="">Seleccione...</option>
                                             <?php foreach($categorias as $cat): ?>
-                                            <option value="<?= $cat['id'] ?>"><?= $cat['nombre'] ?></option>
+                                                <option value="<?= trim($cat['id']) ?>"><?= htmlspecialchars($cat['nombre']) ?></option>
                                             <?php endforeach; ?>
                                         </select>
-                                        <button class="btn btn-outline-success" type="button"
-                                            onclick="abrirSubModalCategoria()">
-                                            <i class="bi bi-plus-lg"></i>
+                                        <button class="btn btn-white border-0 text-success" type="button" onclick="abrirSubModalCategoria()">
+                                            <i class="bi bi-plus-circle-fill"></i>
                                         </button>
                                     </div>
                                 </div>
-                                <div class="mb-2">
-                                    <label class="small fw-bold">Descripción</label>
-                                    <textarea name="descripcion" id="edit_descripcion" class="form-control"
-                                        rows="2"></textarea>
+
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold text-secondary">Descripción</label>
+                                    <textarea name="descripcion" id="edit_descripcion" class="form-control border-0 shadow-sm" style="border-radius: 10px;" rows="3"></textarea>
                                 </div>
 
-                                <h6 class="fw-bold text-info mt-3 mb-2">Datos SAT</h6>
+                                <h6 class="fw-bold text-info mt-4 mb-3 d-flex align-items-center">
+                                    <i class="bi bi-shield-check me-2"></i> Datos SAT
+                                </h6>
                                 <div class="row g-2">
                                     <div class="col-6">
-                                        <label class="small">Clave Prod.</label>
-                                        <input type="text" name="fiscal_clave_prod" id="edit_fiscal_clave_prod"
-                                            class="form-control form-control-sm">
+                                        <label class="small text-muted">Clave Prod.</label>
+                                        <input type="text" name="fiscal_clave_prod" id="edit_fiscal_clave_prod" class="form-control form-control-sm border-0 shadow-sm">
                                     </div>
                                     <div class="col-6">
-                                        <label class="small">Clave Unidad</label>
-                                        <input type="text" name="fiscal_clave_unidad" id="edit_fiscal_clave_unidad"
-                                            class="form-control form-control-sm">
+                                        <label class="small text-muted">Clave Unidad</label>
+                                        <input type="text" name="fiscal_clave_unidad" id="edit_fiscal_clave_unidad" class="form-control form-control-sm border-0 shadow-sm">
                                     </div>
-                                    <div class="col-12">
-                                        <label class="small">IVA (%)</label>
-                                        <input type="number" step="0.01" name="impuesto_iva" id="edit_impuesto_iva"
-                                            class="form-control form-control-sm">
+                                    <div class="col-12 mt-2">
+                                        <label class="small text-muted">IVA (%)</label>
+                                        <input type="number" step="0.01" name="impuesto_iva" id="edit_impuesto_iva" class="form-control form-control-sm border-0 shadow-sm">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-8">
+                            
+                            <div class="d-flex justify-content-between align-items-center p-3 mb-4 rounded-4 bg-dark text-white shadow-sm">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-geo-alt-fill text-warning me-2"></i>
+                                    <span class="small opacity-75 me-2">Editando en:</span>
+                                    <span id="edit_almacen_nombre" class="fw-bold"></span>
+                                </div>
+                                  <?php if($almacen_usuario == 0): ?>
+                       <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="check_todos_almacenes" name="aplicar_global">
+                                    <label class="form-check-label small fw-bold" for="check_todos_almacenes">¿Aplicar a todos los almacenes?</label>
+                                </div>
+                        <?php endif; ?>
+                                
+                            </div>
+
+                            <h6 class="fw-bold text-success mb-3">Gestión de Precios</h6>
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-4">
+                                    <div class="card border-0 shadow-sm p-3 rounded-4">
+                                        <label class="small fw-bold text-muted mb-2">P. Minorista</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-transparent border-0 text-success fw-bold">$</span>
+                                            <input type="number" step="0.01" name="precio_minorista" id="edit_p_min" class="form-control border-0 fw-bold fs-5 p-0 shadow-none">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card border-0 shadow-sm p-3 rounded-4">
+                                        <label class="small fw-bold text-muted mb-2">P. Mayorista</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-transparent border-0 text-success fw-bold">$</span>
+                                            <input type="number" step="0.01" name="precio_mayorista" id="edit_p_may" class="form-control border-0 fw-bold fs-5 p-0 shadow-none">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card border-0 shadow-sm p-3 rounded-4">
+                                        <label class="small fw-bold text-muted mb-2">P. Distribuidor</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-transparent border-0 text-success fw-bold">$</span>
+                                            <input type="number" step="0.01" name="precio_distribuidor" id="edit_p_dist" class="form-control border-0 fw-bold fs-5 p-0 shadow-none">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="col-md-8">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h6 class="fw-bold text-success m-0">Precios en: <span id="edit_almacen_nombre"
-                                            class="badge bg-light text-dark"></span></h6>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="check_todos_almacenes"
-                                            name="aplicar_global">
-                                        <label class="form-check-label fw-bold text-danger small"
-                                            for="check_todos_almacenes">¿Actualizar precios en TODOS los
-                                            almacenes?</label>
+                            <h6 class="fw-bold text-dark mb-3">Configuración de Unidades</h6>
+                            <div class="row g-3 p-3 rounded-4 bg-light border mb-4">
+                                <div class="col-md-4">
+                                    <label class="small fw-bold text-secondary">Unidad Compra</label>
+                                    <input type="text" name="unidad_reporte" id="edit_unidad_reporte" class="form-control border-0 shadow-sm text-center fw-bold" placeholder="CAJA">
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <label class="small fw-bold text-primary">Unidades que componen Unidad de Compra</label>
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <i class="bi bi-arrow-repeat fs-4 text-primary me-2"></i>
+                                        <input type="number" step="0.01" name="factor_conversion" id="edit_factor_conversion" class="form-control border-0 shadow-sm text-center fw-bold fs-5 text-primary" style="width: 100px;">
                                     </div>
                                 </div>
-
-                                <div class="row">
-                                    <div class="col-md-4 mb-3"><label class="small fw-bold">Minorista</label><input
-                                            type="number" step="0.01" name="precio_minorista" id="edit_p_min"
-                                            class="form-control"></div>
-                                    <div class="col-md-4 mb-3"><label class="small fw-bold">Mayorista</label><input
-                                            type="number" step="0.01" name="precio_mayorista" id="edit_p_may"
-                                            class="form-control"></div>
-                                    <div class="col-md-4 mb-3"><label
-                                            class="small fw-bold text-truncate">Distribuidor</label><input type="number"
-                                            step="0.01" name="precio_distribuidor" id="edit_p_dist"
-                                            class="form-control"></div>
+                                <div class="col-md-4">
+                                    <label class="small fw-bold text-secondary">Unidad Venta (Base)</label>
+                                    <input type="text" name="unidad_medida" id="edit_unidad_medida" class="form-control border-0 shadow-sm text-center fw-bold" placeholder="PIEZA">
                                 </div>
+                            </div>
 
-                                <hr>
-                                <h6 class="fw-bold text-dark">Unidades y Conversión</h6>
-                                <div class="row">
-                                    <div class="col-md-4">
-                                        <label class="small fw-bold">Unidad Compra</label>
-                                        <input type="text" name="unidad_reporte" id="edit_unidad_reporte"
-                                            class="form-control" placeholder="Ej: CAJA">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="small fw-bold">Factor (Contenido)</label>
-                                        <input type="number" step="0.01" name="factor_conversion"
-                                            id="edit_factor_conversion" class="form-control border-primary fw-bold">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="small fw-bold">Unidad Base</label>
-                                        <input type="text" name="unidad_medida" id="edit_unidad_medida"
-                                            class="form-control" placeholder="Ej: PIEZA">
+                            <h6 class="fw-bold text-secondary mb-3">Control de Inventario</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="p-3 rounded-4 border-start border-4 border-success bg-white shadow-sm">
+                                        <label class="small fw-bold text-muted">Stock Actual</label>
+                                        <div class="d-flex align-items-center mt-1">
+                                            <i class="bi bi-box-fill text-success me-2"></i>
+                                            <input type="number" step="0.01" name="stock" id="edit_stock" class="form-control border-0 fw-bold fs-4 p-0 shadow-none" readonly>
+                                        </div>
                                     </div>
                                 </div>
-
-                                <hr>
-                                <h6 class="fw-bold text-secondary">Ajuste de Inventario (Este Almacén)</h6>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <label class="small fw-bold">Stock Actual</label>
-                                        <input type="number" step="0.01" name="stock" id="edit_stock"
-                                            class="form-control"readonly>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="small fw-bold">Stock Mínimo</label>
-                                        <input type="number" step="0.01" name="stock_minimo" id="edit_s_min"
-                                            class="form-control" readonly>
+                                <div class="col-md-6">
+                                    <div class="p-3 rounded-4 border-start border-4 border-danger bg-white shadow-sm">
+                                        <label class="small fw-bold text-muted">Mínimo Permitido</label>
+                                        <div class="d-flex align-items-center mt-1">
+                                            <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+                                            <input type="number" step="0.01" name="stock_minimo" id="edit_s_min" class="form-control border-0 fw-bold fs-4 p-0 shadow-none">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer bg-light">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-warning fw-bold">Guardar Cambios</button>
-                    </div>
-                </form>
-            </div>
+                </div>
+
+                <div class="modal-footer border-0 p-4 bg-light d-flex justify-content-between">
+                    <button type="button" class="btn btn-link text-secondary text-decoration-none fw-bold" data-bs-dismiss="modal">Descartar</button>
+                    <button type="submit" class="btn btn-warning px-5 fw-bold shadow-sm" style="border-radius: 12px;">
+                        Actualizar Producto <i class="bi bi-check-lg ms-1"></i>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
+</div>
     <div class="modal fade" id="modalNuevaCategoria" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-sm modal-dialog-centered">
             <div class="modal-content">

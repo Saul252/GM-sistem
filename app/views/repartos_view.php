@@ -17,135 +17,9 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
      <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
+       <link href="/cfsistem/css/repartos.css" rel="stylesheet">
    
-    <style>
-        :root { 
-            --sidebar-width: 260px; 
-            --navbar-height: 65px;
-            --glass-bg: rgba(255, 255, 255, 0.95);
-            --accent-color: #007aff;
-            --ios-gray: #f2f2f7;
-            --text-main: #1d1d1f;
-            --apple-dark: #1d1d1f;
-        }
 
-        body { 
-            background: #f5f5f7;
-            min-height: 100vh;
-            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            color: var(--text-main);
-            letter-spacing: -0.015em;
-        }
-
-        .main-content { 
-            margin-left: var(--sidebar-width); 
-            padding: 40px; 
-            padding-top: calc(var(--navbar-height) + 20px); 
-        }
-
-        /* --- CONTENEDORES PREMIUM --- */
-        .card-premium {
-            background: var(--glass-bg);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255,255,255,0.7);
-            border-radius: 24px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.04);
-            overflow: hidden;
-            margin-bottom: 2rem;
-            transition: transform 0.3s ease;
-        }
-
-        .card-header-ios {
-            background: rgba(255, 255, 255, 0.5);
-            border-bottom: 1px solid rgba(0,0,0,0.04);
-            padding: 1.2rem 1.5rem;
-        }
-
-        /* --- MONITOR DE VIAJES (CABECERA OSCURA) --- */
-        .header-monitor {
-            background: var(--apple-dark);
-            color: white;
-            padding: 1.2rem 1.5rem;
-            border: none;
-        }
-
-        .table-monitor thead th {
-            font-size: 0.72rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            color: #86868b;
-            font-weight: 600;
-            padding: 1.2rem;
-            border-bottom: 2px solid #f2f2f7;
-        }
-
-        /* --- TABLAS Y ELEMENTOS --- */
-        .table thead th {
-            background: #fbfbfd;
-            font-size: 0.75rem;
-            color: #86868b;
-            text-transform: uppercase;
-            font-weight: 600;
-            padding: 1rem;
-            border-bottom: 1px solid #f2f2f7;
-        }
-
-        .avatar-chofer {
-            width: 38px; height: 38px;
-            background: var(--accent-color);
-            color: white; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.1rem; box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
-        }
-
-        .badge-premium {
-            padding: 6px 14px; border-radius: 10px;
-            font-weight: 700; font-size: 0.65rem;
-            display: inline-flex; align-items: center; gap: 6px;
-            text-transform: uppercase; letter-spacing: 0.3px;
-        }
-        .st-disponible { background: #f2f2f7; color: #1d1d1f; border: 1px solid #d1d1d6; }
-        .st-ruta { background: rgba(0, 122, 255, 0.1); color: #007aff; border: 1px solid rgba(0, 122, 255, 0.1); }
-        .st-completado { background: rgba(52, 199, 89, 0.1); color: #28a745; border: 1px solid rgba(52, 199, 89, 0.1); }
-
-        .carga-scroll {
-            background: #f5f5f7; border-radius: 14px; padding: 12px;
-            font-size: 0.82rem; color: #424245; max-height: 110px;
-            overflow-y: auto; border: 1px solid rgba(0,0,0,0.03);
-        }
-
-        /* --- BOTONES --- */
-        .btn-finish {
-            background: #34c759; color: white; border: none; border-radius: 12px;
-            padding: 8px 20px; font-weight: 600; transition: all 0.3s;
-        }
-        .btn-finish:hover { background: #28a745; transform: scale(1.02); box-shadow: 0 4px 15px rgba(52, 199, 89, 0.3); }
-
-        .btn-gradient {
-            background: var(--accent-color); color: white; border: none; border-radius: 12px;
-            padding: 10px 24px; font-weight: 600; font-size: 0.75rem; transition: all 0.3s;
-        }
-        .btn-gradient:hover { background: #0066cc; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0, 122, 255, 0.25); }
-
-        .form-select-ios {
-            border-radius: 14px; border: 1px solid rgba(0,0,0,0.05);
-            background-color: white; padding: 10px 18px; font-weight: 500;
-        }
-
-        .badge-folio {
-            background: #e8f4ff; color: #007aff;
-            font-family: 'SF Mono', monospace; font-weight: 700;
-            padding: 4px 10px; border-radius: 8px; font-size: 0.68rem;
-        }
-
-        @keyframes pulse-soft {
-            0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; }
-        }
-        .animate-pulse-soft { animation: pulse-soft 2s infinite ease-in-out; }
-
-        @media (max-width: 768px) { .main-content { margin-left: 0; padding: 20px; } }
-    </style>
 </head>
 <body>
     <?php if (function_exists('renderizarLayout')) { renderizarLayout($paginaActual); } ?>
@@ -225,6 +99,7 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
                     <thead>
                         <tr>
                             <th class="ps-4">Folio / Fecha</th>
+                            <th>Cliente</th>
                             <th>Producto / Detalle</th>
                             <th>Almacén Origen</th>
                             <th class="text-center">Estatus</th> 
@@ -398,19 +273,8 @@ async function cancelarTodoElViaje(vehiculoId, folioViaje) {
             renderTable();
         } catch (e) { console.error(e); }
     };
-
-
-
-
-
-
-
-
-
-
-
-
-
+    </script>
+    <script>
 function renderTable() {
     const body = $('#bodyPendientes');
     body.empty();
@@ -470,6 +334,11 @@ function renderTable() {
                     <div class="fw-bold text-dark" style="font-size: 0.9rem;">#${item.folio_venta || 'S/F'}</div>
                     <div class="text-muted" style="font-size: 0.75rem;">${item.fecha_format || ''}</div>
                 </td>
+                <td >
+                    <div class="fw-bold text-dark" style="font-size: 0.9rem;">${item.cliente || 'S/F'}</div>
+                   
+                    
+                </td>
                 <td>
                     <div class="fw-bold text-dark" style="font-size: 0.85rem;">${item.producto}</div>
                     <div class="text-muted small">${displayEntrega}</div>
@@ -482,23 +351,6 @@ function renderTable() {
     });
     renderPagination();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     function renderPagination() {
         const totalPages = Math.ceil(filteredData.length / rowsPerPage);
         const container = $('#paginationBootstrap');

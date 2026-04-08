@@ -367,15 +367,15 @@ document.addEventListener('change', function(e) {
 
         const totalTexto = document.getElementById('totalFinalModal').innerText.replace(/[$,]/g, '');
         const totalVenta = parseFloat(totalTexto) || 0;
-        const montoPagado = parseFloat(document.getElementById('monto_pagar').value) || 0;
-        
+        const montoPagado = totalVenta; 
+        console.log(totalVenta);
         const btnFinalizar = document.querySelector('#modalFinalizarVenta .btn-success');
 
         // Preparación de datos para enviar al controlador
         const datosVenta = {
             id_cliente: parseInt(idCliente),
-            monto_pagado: montoPagado,
-            total_venta: totalVenta,
+            monto_pagado:montoPagado,
+            total_venta: montoPagado,
             metodo_pago: document.getElementById('metodo_pago').value,
             observaciones: document.getElementById('obsVenta').value,
             carrito: window.carrito
@@ -463,7 +463,7 @@ document.addEventListener('change', function(e) {
     
     // Obtenemos los ayudantes del select múltiple (jQuery)
     const ayudantesIds = $('#patio_tripulantes').val() || []; 
-
+console.log(montoPagado);
     // 3. Confirmación
     Swal.fire({
         title: '¿Finalizar Transacción?',

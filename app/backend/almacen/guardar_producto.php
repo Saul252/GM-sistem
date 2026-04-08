@@ -99,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $conexion->commit();
         echo "<script>
             Swal.fire({ icon: 'success', title: '¡Éxito!', text: 'Producto guardado correctamente en los almacenes seleccionados.', confirmButtonColor: '#198754' })
-            .then(() => { window.location.href = '/cfsistem/app/views/almacen/productos.php'; }); 
+            .then(() => { window.location.href = '/cfsistem/app/controllers/almacenes.php'; }); 
         </script>";
 
     } catch (Exception $e) {
