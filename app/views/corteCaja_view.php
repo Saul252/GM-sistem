@@ -10,94 +10,104 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     
-    <style>
-        :root {
-            --sidebar-width: 260px;
-            --navbar-height: 70px;
-            --primary-gradient: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
-        }
+   <style>
+    :root {
+        --sidebar-width: 260px;
+        --navbar-height: 70px;
+        --primary-gradient: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+        --glass-bg: rgba(255, 255, 255, 0.15);
+    }
 
-        body { 
-            background-color: #f0f2f5; 
-            margin: 0; 
-            overflow-x: hidden;
-            font-family: 'Inter', sans-serif;
-        }
+    body { 
+        background-color: #f0f2f5; 
+        margin: 0; 
+        overflow-x: hidden;
+        font-family: 'Inter', sans-serif;
+    }
 
-        .main-content {
-            margin-left: var(--sidebar-width);
-            padding-top: var(--navbar-height);
-            min-height: 100vh;
-            transition: all 0.3s ease;
-        }
+    .main-content {
+        margin-left: var(--sidebar-width);
+        padding-top: var(--navbar-height);
+        min-height: 100vh;
+        transition: all 0.3s ease;
+    }
 
-        .page-content { padding: 2rem; }
+    .page-content { padding: 2rem; }
 
-        .card-custom {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
-            background: #fff;
-            margin-bottom: 1.5rem;
-        }
+    .card-custom {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05);
+        background: #fff;
+        margin-bottom: 1.5rem;
+    }
 
-        .stat-card {
-            background: var(--primary-gradient);
-            color: white;
-            border-radius: 15px;
-            position: relative;
-            overflow: hidden;
-        }
+    .stat-card {
+        background: var(--primary-gradient);
+        color: white;
+        border-radius: 20px;
+        position: relative;
+        overflow: hidden;
+        border: none;
+    }
 
-        .stat-card i {
-            position: absolute;
-            right: -10px;
-            bottom: -10px;
-            font-size: 5rem;
-            opacity: 0.2;
-        }
+    /* Icono de fondo decorativo */
+    .stat-card .bg-icon {
+        position: absolute;
+        right: -15px;
+        top: -15px;
+        font-size: 8rem;
+        color: rgba(255, 255, 255, 0.1);
+        transform: rotate(-15deg);
+        pointer-events: none;
+    }
 
-        .live-indicator {
-            padding: 5px 12px; font-size: 0.75rem; font-weight: 700;
-            display: inline-flex; align-items: center;
-        }
+    .stat-card h6 {
+        letter-spacing: 1px;
+        font-size: 0.75rem;
+    }
 
-        .dot {
-            height: 8px; width: 8px; background-color: #fff;
-            border-radius: 50%; display: inline-block; margin-right: 8px;
-        }
+    .indicator-container {
+        background: var(--glass-bg);
+        backdrop-filter: blur(5px);
+        border-radius: 12px;
+        padding: 12px 5px;
+    }
 
-        .table thead th {
-            background-color: #f8f9fc; text-transform: uppercase;
-            font-size: 0.75rem; font-weight: 700; color: #4e73df;
-            border-bottom: 1px solid #e3e6f0;
-        }
+    .indicator-item {
+        flex: 1;
+        text-align: center;
+    }
 
-        @media (max-width: 991.98px) {
-            .main-content { margin-left: 0; }
-        }
+    .indicator-item:not(:last-child) {
+        border-right: 1px solid rgba(255, 255, 255, 0.2);
+    }
 
-        @media print {
-            header, nav, aside, .sidebar, #sidebar, .navbar, .no-print, 
-            #formFiltros, .btn, .live-indicator, #loader, .card-header,
-            .row.mb-4 {
-                display: none !important;
-            }
-            .main-content { margin: 0 !important; padding: 0 !important; width: 100% !important; }
-            .page-content { padding: 0 !important; }
-            .card {
-                border: 1px solid #000 !important;
-                box-shadow: none !important;
-                border-radius: 0 !important;
-                margin-bottom: 5px !important;
-                break-inside: avoid;
-            }
-            .h5, .h4, .fw-bold { color: #000 !important; font-size: 11pt !important; }
-            .table td, .table th { border: 1px solid #ddd !important; padding: 4px !important; font-size: 9pt !important; }
-            .rounded-circle { display: none !important; }
-            .bg-light, .bg-opacity-10, .bg-opacity-50 { background: none !important; }
+    @media (max-width: 991.98px) {
+        .main-content { margin-left: 0; }
+    }
+
+    @media print {
+        header, nav, aside, .sidebar, #sidebar, .navbar, .no-print, 
+        #formFiltros, .btn, .live-indicator, #loader, .card-header,
+        .row.mb-4 {
+            display: none !important;
         }
-    </style>
+        .main-content { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+        .page-content { padding: 0 !important; }
+        .card {
+            border: 1px solid #000 !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            margin-bottom: 5px !important;
+            break-inside: avoid;
+        }
+        .h5, .h4, .fw-bold { color: #000 !important; font-size: 11pt !important; }
+        .table td, .table th { border: 1px solid #ddd !important; padding: 4px !important; font-size: 9pt !important; }
+        .rounded-circle { display: none !important; }
+        .bg-light, .bg-opacity-10, .bg-opacity-50 { background: none !important; }
+    }
+</style>
 </head>
 <body>
 
@@ -186,23 +196,32 @@
                     </div>
                 </div>
                 <div class="col-lg-4">
-                    <div class="card card-custom stat-card h-100 shadow-lg">
-                        <div class="card-body d-flex flex-column justify-content-center text-center py-5">
-                            <h6 class="text-uppercase opacity-75 fw-bold mb-1 small">Venta Bruta (Suma de Ventas)</h6>
-                            <h2 class="fw-bold mb-3" id="totalVentaTxt">$0.00</h2>
-                            <div class="d-flex justify-content-around border-top pt-3 bg-white bg-opacity-10 rounded">
-                                <div>
-                                    <small class="d-block opacity-75">Cobrado Real</small>
-                                    <span class="fw-bold text-success" id="txtTotalCobrado">$0.00</span>
-                                </div>
-                                <div>
-                                    <small class="d-block opacity-75">Por Cobrar (Deuda)</small>
-                                    <span class="fw-bold text-danger" id="txtTotalDeuda">$0.00</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+    <div class="card stat-card h-100 shadow-lg">
+        <i class="bi bi-wallet2 bg-icon"></i>
+        
+        <div class="card-body d-flex flex-column justify-content-center text-center py-4 px-3" style="position: relative; z-index: 1;">
+            <h6 class="text-uppercase fw-bold mb-2 opacity-75">Venta Bruta Total</h6>
+            <h1 class="fw-extrabold mb-4 display-6" id="totalVentaTxt">$0.00</h1>
+            
+            <div class="indicator-container d-flex align-items-center">
+                <div class="indicator-item">
+                    <small class="d-block opacity-75 smaller mb-1">Cobrado</small>
+                    <span class="fw-bold" id="txtTotalCobrado" style="color: #00ff88;">$0.00</span>
                 </div>
+                
+                <div class="indicator-item">
+                    <small class="d-block opacity-75 smaller mb-1">Saldo Usado</small>
+                    <span class="fw-bold text-warning" id="txtTotalSaldoFavor">$0.00</span>
+                </div>
+
+                <div class="indicator-item">
+                    <small class="d-block opacity-75 smaller mb-1">Pendiente</small>
+                    <span class="fw-bold text-danger" id="txtTotalDeuda" style="color: #ff6b6b !important;">$0.00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
             </div>
 
             <div class="card card-custom overflow-hidden">
@@ -245,7 +264,6 @@
 let chartPagos, chartEntregas;
 let ultimoFolio = '';
 let datosActualesReporte = []; 
-
 function fetchCorteData(isSilent = false) {
     if (!isSilent) $('#loader').removeClass('d-none');
 
@@ -368,8 +386,15 @@ function fetchCorteData(isSilent = false) {
                                             </tbody>
                                         </table>
                                     </div>
-                                    <div class="card-footer bg-white py-3 px-4 d-flex justify-content-between">
-                                        <div class="small text-muted">${v.fecha} | <strong>${v.metodo}</strong></div>
+                                    <div class="card-footer bg-white py-3 px-4 d-flex justify-content-between align-items-center">
+                                        <div class="small text-muted">
+                                            ${v.fecha} | <strong>${v.metodo}</strong>
+                                            ${venta.saldoFavorFolio > 0 
+                                                ? `<span class="ms-2 badge bg-warning text-dark border border-warning">
+                                                    <i class="bi bi-star-fill me-1"></i>Saldo a Favor aplicado: $${venta.saldoFavorFolio.toLocaleString('es-MX', {minimumFractionDigits: 2})}
+                                                   </span>` 
+                                                : ''}
+                                        </div>
                                         <div class="text-end"><span class="h4 fw-bold text-primary">$${venta.subtotalFolio.toLocaleString('es-MX', {minimumFractionDigits: 2})}</span></div>
                                     </div>
                                 </div>
@@ -379,16 +404,19 @@ function fetchCorteData(isSilent = false) {
                 });
 
                 let deudaFinal = Math.max(0, sumaVentaBruta - totalCobrado);
+                 let dineroRealEfectivo = totalCobrado - saldoAFavor;
                 $('#tablaCorte tbody').html(html || '<tr><td colspan="7" class="text-center py-5">No hay datos para este filtro</td></tr>');
                 $('#totalVentaTxt').text('$' + sumaVentaBruta.toLocaleString('es-MX', {minimumFractionDigits: 2}));
-                $('#txtTotalCobrado').text('$' + totalCobrado.toLocaleString('es-MX', {minimumFractionDigits: 2}));
+                $('#txtTotalCobrado').text('$' + dineroRealEfectivo.toLocaleString('es-MX', {minimumFractionDigits: 2}));
                 $('#txtTotalDeuda').text('$' + deudaFinal.toLocaleString('es-MX', {minimumFractionDigits: 2}));
                 updateAuditCharts(totalCobrado, deudaFinal, ent_ok, ent_pend);
-                let dineroRealEfectivo = totalCobrado - saldoAFavor;
+               
 
                 console.log("Cobrado Total:", totalCobrado);
                 console.log("De lo cual fue Saldo a Favor:", saldoAFavor);
                 console.log("Dinero Físico esperado:", dineroRealEfectivo);
+                // ... al final de fetchCorteData, después de los otros .text()
+$('#txtTotalSaldoFavor').text('$' + saldoAFavor.toLocaleString('es-MX', {minimumFractionDigits: 2}));
             }
         },
         complete: () => $('#loader').addClass('d-none')
