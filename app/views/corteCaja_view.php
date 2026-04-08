@@ -7,7 +7,6 @@
       <?php require_once __DIR__ . '/layout/icono.php' ?>
     <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
     
-    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     
@@ -74,44 +73,30 @@
             border-bottom: 1px solid #e3e6f0;
         }
 
-        .badge-audit { font-size: 0.7rem; padding: 4px 8px; }
-
         @media (max-width: 991.98px) {
             .main-content { margin-left: 0; }
         }
-       @media print {
-    /* 1. Ocultar todo lo que no es la tabla de datos */
-    header, nav, aside, .sidebar, #sidebar, .navbar, .no-print, 
-    #formFiltros, .btn, .live-indicator, #loader, .card-header,
-    .row.mb-4 /* Oculta las gráficas y los cuadros de arriba */ {
-        display: none !important;
-    }
 
-    /* 2. Ajuste de página */
-    .main-content { margin: 0 !important; padding: 0 !important; width: 100% !important; }
-    .page-content { padding: 0 !important; }
-    
-    /* 3. Formato "Seco" (Sin sombras, sin bordes redondeados) */
-    .card {
-        border: 1px solid #000 !important;
-        box-shadow: none !important;
-        border-radius: 0 !important;
-        margin-bottom: 5px !important;
-        break-inside: avoid;
-    }
-
-    /* 4. Texto más denso y claro para lectura rápida */
-    .h5, .h4, .fw-bold { color: #000 !important; font-size: 11pt !important; }
-    .text-muted, .smaller { color: #333 !important; }
-    
-    /* 5. Forzar visualización de tablas internas */
-    .table { width: 100% !important; border-collapse: collapse !important; }
-    .table td, .table th { border: 1px solid #ddd !important; padding: 4px !important; font-size: 9pt !important; }
-    
-    /* Quitar los círculos de colores y poner texto simple */
-    .rounded-circle { display: none !important; }
-    .bg-light, .bg-opacity-10, .bg-opacity-50 { background: none !important; }
-}
+        @media print {
+            header, nav, aside, .sidebar, #sidebar, .navbar, .no-print, 
+            #formFiltros, .btn, .live-indicator, #loader, .card-header,
+            .row.mb-4 {
+                display: none !important;
+            }
+            .main-content { margin: 0 !important; padding: 0 !important; width: 100% !important; }
+            .page-content { padding: 0 !important; }
+            .card {
+                border: 1px solid #000 !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                margin-bottom: 5px !important;
+                break-inside: avoid;
+            }
+            .h5, .h4, .fw-bold { color: #000 !important; font-size: 11pt !important; }
+            .table td, .table th { border: 1px solid #ddd !important; padding: 4px !important; font-size: 9pt !important; }
+            .rounded-circle { display: none !important; }
+            .bg-light, .bg-opacity-10, .bg-opacity-50 { background: none !important; }
+        }
     </style>
 </head>
 <body>
@@ -136,7 +121,7 @@
 
             <div class="card card-custom p-3">
                 <form id="formFiltros" class="row g-3 align-items-end">
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <label class="form-label fw-bold small">RANGO TEMPORAL</label>
                         <select name="periodo" id="periodo" class="form-select border-0 bg-light shadow-none">
                             <option value="hoy">Hoy (Tiempo Real)</option>
@@ -146,7 +131,7 @@
                             <option value="personalizado">Personalizado</option>
                         </select>
                     </div>
-                    <div class="col-md-5">
+                    <div class="col-md-3">
                         <label class="form-label fw-bold small">ALMACÉN</label>
                         <select name="almacen_id" id="almacen_id" class="form-select border-0 bg-light shadow-none" <?= $almacen_usuario > 0 ? 'disabled' : '' ?>>
                             <option value="0">Todos los puntos de venta</option>
@@ -157,6 +142,16 @@
                                 echo "<option value='{$a['id']}' $sel>{$a['nombre']}</option>";
                             endwhile; 
                             ?>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold small">MÉTODO DE PAGO</label>
+                        <select id="filtro_pago" class="form-select border-0 bg-light shadow-none">
+                            <option value="TODOS">Todos los métodos</option>
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Transferencia">Transferencia</option>
+                            <option value="Tarjeta">Tarjeta</option>
+                            <option value="Crédito">Crédito / Deuda</option>
                         </select>
                     </div>
                     <div class="col-md-4">
@@ -214,13 +209,13 @@
                 <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
                     <h6 class="m-0 fw-bold text-dark">Detalle de Operaciones y Auditoría</h6>
                     <div class="d-flex justify-content-end gap-2 mb-4 no-print">
-    <button onclick="exportarCSV()" class="btn btn-outline-success rounded-pill px-3">
-        <i class="bi bi-file-earmark-spreadsheet me-1"></i> Exportar a Excel (CSV)
-    </button>
-    <button onclick="imprimirReporte()" class="btn btn-primary rounded-pill px-4">
-        <i class="bi bi-printer me-1"></i> Imprimir / Guardar PDF
-    </button>
-</div>
+                        <button onclick="exportarCSV()" class="btn btn-outline-success rounded-pill px-3">
+                            <i class="bi bi-file-earmark-spreadsheet me-1"></i> Exportar a Excel (CSV)
+                        </button>
+                        <button onclick="imprimirReporte()" class="btn btn-primary rounded-pill px-4">
+                            <i class="bi bi-printer me-1"></i> Imprimir / Guardar PDF
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
@@ -248,9 +243,7 @@
     <?php cargarScripts(); ?>
 <script>
 let chartPagos, chartEntregas;
-let autoRefreshInterval;
 let ultimoFolio = '';
-// VARIABLE CLAVE: Guardará los datos para el Excel
 let datosActualesReporte = []; 
 
 function fetchCorteData(isSilent = false) {
@@ -270,26 +263,36 @@ function fetchCorteData(isSilent = false) {
         success: function(res) {
             if (isSilent && res.data.length > 0 && res.data[0].folio === ultimoFolio) return;
             
-            // Guardamos los datos puros para exportar a CSV sin errores
             datosActualesReporte = res.data || [];
 
             let sumaVentaBruta = 0;
             let totalCobrado = 0;
+            let saldoAFavor=0;
             let ent_ok = 0, ent_pend = 0;
             const soloPendientes = $('#solo_pendientes').is(':checked');
+            const metodoFiltro = $('#filtro_pago').val(); // Obtener filtro seleccionado
 
             if (res.data && res.data.length > 0) {
                 ultimoFolio = res.data[0].folio;
                 
                 const ventasPorFolio = {};
                 res.data.forEach(v => {
+                    // Lógica de filtro por Método de Pago
+                    if (metodoFiltro !== 'TODOS' && !v.metodo.includes(metodoFiltro)) return;
+
                     const f = v.folio;
                     if (!ventasPorFolio[f]) {
                         ventasPorFolio[f] = {
-                            info: v, productos: [], subtotalFolio: 0,
-                            pagoParcialFolio: 0, deudaFolio: 0, pendMat: 0
+                            info: v, 
+                            productos: [], 
+                            subtotalFolio: 0,
+                            pagoParcialFolio: 0, 
+                            deudaFolio: 0, 
+                            pendMat: 0,
+                            saldoFavorFolio: 0 // <--- Inicializar
                         };
                     }
+                    ventasPorFolio[f].saldoFavorFolio = parseFloat(v.saldo_favor_usado) || 0;
                     ventasPorFolio[f].productos.push({
                         nombre: v.producto, cant: v.cantidad_texto,
                         monto: parseFloat(v.monto) || 0
@@ -305,9 +308,18 @@ function fetchCorteData(isSilent = false) {
                     const v = venta.info;
                     const esPagado = venta.deudaFolio <= 0.01;
                     if (soloPendientes && esPagado && venta.pendMat <= 0) return;
+                    
+                    // CORRECCIÓN: Se usa la propiedad acumulada en el objeto 'venta'
+                    saldoAFavor += venta.saldoFavorFolio;
 
                     sumaVentaBruta += venta.subtotalFolio;
+                    
+                    // CORRECCIÓN: Se usa pagoParcialFolio para no duplicar sumas
                     totalCobrado += esPagado ? venta.subtotalFolio : venta.pagoParcialFolio;
+                    
+                    // Mantenemos esta línea por tu instrucción, aunque el total ya incluya el saldo
+                    // totalCobrado += venta.saldoFavorFolio; 
+
                     if (venta.pendMat > 0) ent_pend++; else ent_ok++;
 
                     html += `
@@ -367,23 +379,29 @@ function fetchCorteData(isSilent = false) {
                 });
 
                 let deudaFinal = Math.max(0, sumaVentaBruta - totalCobrado);
-                $('#tablaCorte tbody').html(html);
+                $('#tablaCorte tbody').html(html || '<tr><td colspan="7" class="text-center py-5">No hay datos para este filtro</td></tr>');
                 $('#totalVentaTxt').text('$' + sumaVentaBruta.toLocaleString('es-MX', {minimumFractionDigits: 2}));
                 $('#txtTotalCobrado').text('$' + totalCobrado.toLocaleString('es-MX', {minimumFractionDigits: 2}));
                 $('#txtTotalDeuda').text('$' + deudaFinal.toLocaleString('es-MX', {minimumFractionDigits: 2}));
                 updateAuditCharts(totalCobrado, deudaFinal, ent_ok, ent_pend);
+                let dineroRealEfectivo = totalCobrado - saldoAFavor;
+
+                console.log("Cobrado Total:", totalCobrado);
+                console.log("De lo cual fue Saldo a Favor:", saldoAFavor);
+                console.log("Dinero Físico esperado:", dineroRealEfectivo);
             }
         },
         complete: () => $('#loader').addClass('d-none')
     });
 }
-
-// FUNCIONES DE EXPORTACIÓN REALES
 function exportarCSV() {
     if (datosActualesReporte.length === 0) return alert("No hay datos para exportar");
+    const metodoFiltro = $('#filtro_pago').val();
 
-    // Agrupamos por folio para que solo salga UNA fila con el TOTAL real
     const agrupado = datosActualesReporte.reduce((acc, v) => {
+        // Respetar el filtro también en la exportación
+        if (metodoFiltro !== 'TODOS' && !v.metodo.includes(metodoFiltro)) return acc;
+
         if (!acc[v.folio]) {
             acc[v.folio] = {
                 folio: v.folio,
@@ -402,31 +420,30 @@ function exportarCSV() {
     }, {});
 
     let csv = "\ufeffFolio,Fecha,Vendedor,Almacen,Metodo,Productos,Total Venta,Saldo Pendiente,Estatus\n";
-    
     Object.values(agrupado).forEach(v => {
-        const listaProductos = v.productos.join(" / "); // Todos los productos en una celda
+        const listaProductos = v.productos.join(" / ");
         const estatus = v.deuda > 0.01 ? "PENDIENTE" : "LIQUIDADO";
-        
         csv += `"${v.folio}","${v.fecha}","${v.vendedor}","${v.almacen}","${v.metodo}","${listaProductos}","${v.total.toFixed(2)}","${v.deuda.toFixed(2)}","${estatus}"\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `Corte_Resumido_${new Date().toISOString().slice(0,10)}.csv`;
+    link.download = `Corte_Caja_${new Date().toISOString().slice(0,10)}.csv`;
     link.click();
 }
 
 function imprimirReporte() {
     window.print();
 }
+
 function updateAuditCharts(pagado, deuda, ok, pend) {
     const common = { cutout: '82%', plugins: { legend: { position: 'bottom' } } };
     if (chartPagos) chartPagos.destroy();
     chartPagos = new Chart(document.getElementById('chartPagos'), {
         type: 'doughnut',
         data: {
-            labels: ['Efectivo', 'Deuda'],
+            labels: ['Cobrado', 'Deuda'],
             datasets: [{ data: [pagado, deuda], backgroundColor: ['#198754', '#dc3545'], borderWidth: 0 }]
         },
         options: common
@@ -444,7 +461,8 @@ function updateAuditCharts(pagado, deuda, ok, pend) {
 
 $(document).ready(function() {
     fetchCorteData();
-    $('#btnFiltrar, #solo_pendientes').on('click', () => fetchCorteData());
+    // Escuchar cambios en el nuevo filtro
+    $('#btnFiltrar, #solo_pendientes, #filtro_pago').on('click change', () => fetchCorteData());
     $('#periodo').on('change', () => fetchCorteData());
 });
 </script>

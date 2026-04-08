@@ -195,31 +195,49 @@ public function obtenerDetalleCompleto($id) {
     }
 }
 
-public function registrarAbono($venta_id, $monto, $usuario_id, $metodo_pago, $fecha_pago) {
-    // 1. Definimos el INSERT (5 columnas)
-    $sql = "INSERT INTO historial_pagos (venta_id, monto, fecha, usuario_id, metodo_pago) 
-            VALUES (?, ?, ?, ?, ?)";
+public function registrarAbono($venta_id, $monto, $usuario_id, $metodo_pago, $fecha_pago, $referencia = null) {
+    // 1. Lógica para la referencia: cadena vacía por defecto
+    $ref_final = (!empty($referencia)) ? $referencia : "";
+
+    // 2. Lógica para saldo_favor: 
+    // Si es "Saldo a Favor", copiamos el monto. Si no, 0.00.
+    $saldo_favor_valor = ($metodo_pago === 'Saldo a Favor') ? floatval($monto) : 0.00;
+
+    // 3. Definimos el INSERT (7 columnas)
+    $sql = "INSERT INTO historial_pagos (venta_id, monto, saldo_favor, fecha, usuario_id, metodo_pago, referencia) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)";
     
     $stmt = $this->db->prepare($sql);
     
-    // 2. CORRECCIÓN DE BIND_PARAM:
-    // El orden DEBE ser el mismo que en el INSERT:
-    // 1. venta_id (i)
-    // 2. monto (d)
-    // 3. fecha (s)
-    // 4. usuario_id (i)
-    // 5. metodo_pago (s)
-    
-    // Tu error era que el orden de las letras "idiss" no coincidía con las variables.
-    $stmt->bind_param("idsis", 
-        $venta_id,    // (i)
-        $monto,       // (d)
-        $fecha_pago,  // (s)
-        $usuario_id,  // (i)
-        $metodo_pago  // (s)
+    // 4. BIND_PARAM CORREGIDO ("iddsiss")
+    /**
+     * EXPLICACIÓN DEL ORDEN:
+     * 1. venta_id      -> (i) Integer
+     * 2. monto         -> (d) Double
+     * 3. saldo_favor   -> (d) Double
+     * 4. fecha         -> (s) String
+     * 5. usuario_id    -> (i) Integer
+     * 6. metodo_pago   -> (s) String
+     * 7. referencia    -> (s) String
+     */
+    $stmt->bind_param("iddsiss", 
+        $venta_id,          // 1
+        $monto,             // 2
+        $saldo_favor_valor, // 3
+        $fecha_pago,        // 4
+        $usuario_id,        // 5
+        $metodo_pago,       // 6
+        $ref_final          // 7
     );
     
-    return $stmt->execute();
+    $resultado = $stmt->execute();
+    
+    if (!$resultado) {
+        error_log("Error en registrarAbono: " . $stmt->error);
+    }
+
+    $stmt->close();
+    return $resultado;
 }
 public static function obtenerClientePorVenta($conexion,$venta_id) {
     try {
@@ -234,62 +252,6 @@ public static function obtenerClientePorVenta($conexion,$venta_id) {
         error_log("Error al obtener cliente de la venta $venta_id: " . $e->getMessage());
         return false;
     }
-}
-/**
- * Actualiza la tabla maestra de saldos calculando las bolsas de saldo a favor y en contra.
- * Esta función es independiente de la lógica de ventas.
- */
-public function actualizarSaldosMaestros($c_id, $v_id, $amt, $fec) {
-    // A) Consultar saldos actuales sin mezclarlos
-    $stmt = $this->db->prepare("SELECT saldo_a_favor, saldo_en_contra FROM clientes_saldos WHERE cliente_id = ?");
-    $stmt->bind_param("i", $c_id);
-    $stmt->execute();
-    $resSaldosActuales = $stmt->get_result()->fetch_assoc();
-
-    $favor_actual  = floatval($resSaldosActuales['saldo_a_favor'] ?? 0);
-    $contra_actual = floatval($resSaldosActuales['saldo_en_contra'] ?? 0);
-
-    $nuevo_favor  = $favor_actual;
-    $nuevo_contra = $contra_actual;
-
-    // B) Lógica de Bolsas: El abono solo afecta a la deuda actual de este proceso
-    if ($contra_actual > 0) {
-        if ($amt <= $contra_actual) {
-            // El abono solo reduce la deuda
-            $nuevo_contra = $contra_actual - $amt;
-        } else {
-            // El abono liquida la deuda y el sobrante genera saldo a favor
-            $sobrante = $amt - $contra_actual;
-            $nuevo_contra = 0;
-            $nuevo_favor  = $favor_actual + $sobrante;
-        }
-    } else {
-        // Si no debía nada, todo el abono va directo al saldo a favor
-        $nuevo_favor = $favor_actual + $amt;
-    }
-
-    // C) Hacer el Upsert con los nuevos valores independientes
-    $sqlMaestra = "INSERT INTO `clientes_saldos` (
-        `cliente_id`, `saldo_a_favor`, `saldo_en_contra`, `ultima_venta_id`, `ultima_actualizacion`
-    ) VALUES (?, ?, ?, ?, ?) 
-    ON DUPLICATE KEY UPDATE 
-        `saldo_a_favor` = VALUES(`saldo_a_favor`),
-        `saldo_en_contra` = VALUES(`saldo_en_contra`),
-        `ultima_venta_id` = VALUES(`ultima_venta_id`),
-        `ultima_actualizacion` = VALUES(`ultima_actualizacion`)";
-
-    $stmtM = $this->db->prepare($sqlMaestra);
-    $stmtM->bind_param("iddis", $c_id, $nuevo_favor, $nuevo_contra, $v_id, $fec);
-    
-    if (!$stmtM->execute()) {
-        throw new Exception("Error al actualizar la tabla maestra de saldos.");
-    }
-
-    // Retornamos los nuevos valores por si el controlador los necesita para el JSON
-    return [
-        'nuevo_favor' => $nuevo_favor,
-        'nuevo_contra' => $nuevo_contra
-    ];
 }
 
 }

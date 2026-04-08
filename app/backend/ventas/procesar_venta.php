@@ -63,6 +63,8 @@ try {
         $total_vendido_global += floatval($item['cantidad']);
         $total_entregado_global += $carrito[$key]['entrega_hoy'];
     }
+    $saldo_favor=0;
+    $ref="";
 
     $total = $subtotal - $descuento;
     // Obtener el último ID para el folio (V01, V02, etc.)
@@ -88,9 +90,11 @@ $folio = "V-" . str_pad($proximo_id, 2, "0", STR_PAD_LEFT);
     $id_venta = $conexion->insert_id;
 
     // 3. REGISTRAR PAGO (Si existe)
+    $saldo_favor=0;
+    $ref="";
     if ($monto_pagado > 0) {
-        $stmtP = $conexion->prepare("INSERT INTO historial_pagos (venta_id, usuario_id, monto, metodo_pago) VALUES (?, ?, ?, ?)");
-        $stmtP->bind_param("iids", $id_venta, $id_usuario, $monto_pagado, $metodo_pago);
+        $stmtP = $conexion->prepare("INSERT INTO historial_pagos (venta_id, usuario_id, monto, saldo_favor, metodo_pago, referencia) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmtP->bind_param("iids", $id_venta, $id_usuario, $monto_pagado,$saldo_favor, $metodo_pago,$ref);
         $stmtP->execute();
     }
 

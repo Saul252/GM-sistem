@@ -115,10 +115,15 @@ public function obtenerDatosBasicos($id) {
 }
 public function registrarAbono($venta_id, $monto, $usuario_id) {
     $this->db->begin_transaction();
+    $metodo_pago="Saldo a Favor";
+    $referencia="";
+    
+
     try {
         // 1. Insertar el pago
-        $stmt = $this->db->prepare("INSERT INTO historial_pagos (venta_id, monto, usuario_id, fecha) VALUES (?, ?, ?, NOW())");
-        $stmt->bind_param("idi", $venta_id, $monto, $usuario_id);
+        $stmt = $this->db->prepare("INSERT INTO historial_pagos (venta_id, usuario_id, monto, saldo_favor, metodo_pago, referencia) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("iiddss", $venta_id, $usuario_id, $monto, $monto, $metodo_pago, $referencia
+      );
         $stmt->execute();
 
         // 2. Verificar si la venta se liquidó para cambiar estatus

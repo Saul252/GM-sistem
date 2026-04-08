@@ -36,12 +36,24 @@ public static function procesarVenta($conexion, $data, $id_usuario) {
     $conexion->begin_transaction();
 
     try {
-        $id_cliente   = intval($data['id_cliente']);
-        $descuento    = floatval($data['descuento']);
-        $obs          = $data['observaciones'] ?? '';
-        $carrito      = $data['carrito'];
-        $monto_pagado = floatval($data['monto_pagado']);
-        $metodo_pago  = $data['metodo_pago'] ?? 'Efectivo';
+       $id_cliente   = intval($data['id_cliente']);
+$descuento    = floatval($data['descuento']);
+$obs          = $data['observaciones'] ?? '';
+$carrito      = $data['carrito'];
+$monto_pagado = floatval($data['monto_pagado']);
+
+// 1. Corregida la asignación (usa minúsculas para evitar confusiones)
+$monto_favor  = floatval($data['monto_usado_favor'] ?? 0);
+
+// 2. Corregida la sintaxis del IF (requiere paréntesis)
+// 3. Corregida la comparación de variables (deben coincidir en mayúsculas/minúsculas)
+if ($monto_favor > 0 && $monto_favor == $monto_pagado) {
+    $metodo_pago = 'Saldo a Favor';
+} else {
+    // Si no es saldo a favor total, toma el método enviado o por defecto Efectivo
+    $metodo_pago = $data['metodo_pago'] ?? 'Efectivo';
+}
+       
 
         // 1. VALIDACIÓN DE STOCK Y CÁLCULO DE TOTALES
         $subtotal = 0;
@@ -90,11 +102,30 @@ public static function procesarVenta($conexion, $data, $id_usuario) {
        
 
         // 4. REGISTRAR PAGO (Si existe)
-        if ($monto_pagado > 0) {
-            $stmtP = $conexion->prepare("INSERT INTO historial_pagos (venta_id, usuario_id, monto, metodo_pago) VALUES (?, ?, ?, ?)");
-            $stmtP->bind_param("iids", $id_venta, $id_usuario, $monto_pagado, $metodo_pago);
-            $stmtP->execute();
-        }
+       if ($monto_pagado > 0) {
+    // 1. Validar el monto de saldo a favor (si está vacío o no existe, poner 0)
+    $monto_favor_valor = (isset($monto_favor) && !empty($monto_favor)) ? floatval($monto_favor) : 0.00;
+    
+    // 2. Capturar la referencia (vacío por defecto si no existe)
+    $referencia = $data['referencia'] ?? '';
+
+    // 3. Consulta preparada con las 6 columnas
+    $stmtP = $conexion->prepare("INSERT INTO historial_pagos (venta_id, usuario_id, monto, saldo_favor, metodo_pago, referencia) VALUES (?, ?, ?, ?, ?, ?)");
+    
+    // 4. bind_param ajustado:
+    // i = venta_id (int)
+    // i = usuario_id (int)
+    // d = monto (double)
+    // d = saldo_favor (double) <--- El nuevo valor validado
+    // s = metodo_pago (string)
+    // s = referencia (string)
+    $stmtP->bind_param("iiddss", $id_venta, $id_usuario, $monto_pagado, $monto_favor_valor, $metodo_pago, $referencia);
+    
+    if (!$stmtP->execute()) {
+        // Opcional: registrar error si falla la ejecución
+        error_log("Error en historial_pagos: " . $stmtP->error);
+    }
+}
 
         // 5. PROCESAR ENTREGAS FÍSICAS E INVENTARIO
         $id_entrega_maestro = null;

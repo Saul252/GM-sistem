@@ -85,9 +85,14 @@ class VentaHistorialModel {
 
     // --- FUNCIONES ORIGINALES SIN CAMBIOS ---
 
+    
+
+   
     public function registrarAbono($venta_id, $monto, $usuario_id) {
-        $stmt = $this->db->prepare("INSERT INTO historial_pagos (venta_id, monto, usuario_id, fecha) VALUES (?, ?, ?, NOW())");
-        $stmt->bind_param("idi", $venta_id, $monto, $usuario_id);
+         $metodo_pago="";
+    $referencia="";
+        $stmt = $this->db->prepare("INSERT INTO historial_pagos (venta_id, usuario_id, monto, saldo_favor, metodo_pago, referencia) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("iiddss", $venta_id, $usuario_id, $monto, $monto, $metodo_pago, $referencia);
         if ($stmt->execute()) {
             $v = $this->db->query("SELECT total FROM ventas WHERE id = $venta_id")->fetch_assoc();
             $p = $this->db->query("SELECT SUM(monto) as pagado FROM historial_pagos WHERE venta_id = $venta_id")->fetch_assoc();

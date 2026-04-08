@@ -102,11 +102,31 @@ class cajaRapidaModel {
             $id_venta = $conexion->insert_id;
 
             // 4. REGISTRAR PAGO
-            if ($monto_pagado > 0) {
-                $stmtP = $conexion->prepare("INSERT INTO historial_pagos (venta_id, usuario_id, monto, metodo_pago) VALUES (?, ?, ?, ?)");
-                $stmtP->bind_param("iids", $id_venta, $id_usuario, $monto_pagado, $metodo_pago);
-                $stmtP->execute();
-            }
+         
+   if ($monto_pagado > 0) {
+    // 1. Validar el monto de saldo a favor (si está vacío o no existe, poner 0)
+    $monto_favor_valor = (isset($monto_favor) && !empty($monto_favor)) ? floatval($monto_favor) : 0.00;
+    
+    // 2. Capturar la referencia (vacío por defecto si no existe)
+    $referencia = $data['referencia'] ?? '';
+
+    // 3. Consulta preparada con las 6 columnas
+    $stmtP = $conexion->prepare("INSERT INTO historial_pagos (venta_id, usuario_id, monto, saldo_favor, metodo_pago, referencia) VALUES (?, ?, ?, ?, ?, ?)");
+    
+    // 4. bind_param ajustado:
+    // i = venta_id (int)
+    // i = usuario_id (int)
+    // d = monto (double)
+    // d = saldo_favor (double) <--- El nuevo valor validado
+    // s = metodo_pago (string)
+    // s = referencia (string)
+    $stmtP->bind_param("iiddss", $id_venta, $id_usuario, $monto_pagado, $monto_favor_valor, $metodo_pago, $referencia);
+    
+    if (!$stmtP->execute()) {
+        // Opcional: registrar error si falla la ejecución
+        error_log("Error en historial_pagos: " . $stmtP->error);
+    }
+}
 
             // 5. CABECERA DE ENTREGA FÍSICA
             $id_entrega_maestro = null;

@@ -813,8 +813,14 @@ document.addEventListener('click', (e) => {
     // La suma que cubre la nota (Efectivo + Crédito)
     const pagoTotalEnviado = efectivoRecibido + creditoAplicado;
 
-    const metodoPago = document.getElementById('metodo_pago').value;
-    const observaciones = document.getElementById('obsVenta').value;
+   let metodoPago = document.getElementById('metodo_pago').value; // Cambia const por let
+const observaciones = document.getElementById('obsVenta').value;
+   
+    if (creditoAplicado==totalOriginalVenta){
+        const metodoPago ="Saldo_a_Favor";
+console.log(metodoPago);
+    }
+    
 
     // 3. Confirmación Visual Estilo iOS
     Swal.fire({
