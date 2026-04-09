@@ -1,74 +1,66 @@
 <?php
-// 1. Reporte de errores para desarrollo (quitar en producción)
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-
-// 2. Seguridad y Sesión
-require_once __DIR__ . '/../../../includes/auth.php';
-require_once __DIR__ . '/../../../config/conexion.php';
-require_once __DIR__ . '/../../models/corteCajaModel.php';
-
+ob_start();
 header('Content-Type: application/json');
 
-// IMPORTANTE: Hora de CDMX
-date_default_timezone_set('America/Mexico_City');
+try {
+    require_once __DIR__ . '/../../../includes/auth.php';
+    require_once __DIR__ . '/../../../config/conexion.php';
+    require_once __DIR__ . '/../../models/corteCajaModel.php';
 
-$action = $_GET['action'] ?? '';
-
-if ($action === 'check_sistema') {
+    date_default_timezone_set('America/Mexico_City');
     $corteModel = new CorteCajaModel($conexion);
     
     $hoy = date('Y-m-d');
-    $hora_actual = (int)date('H'); // Formato 24h
+    $hora_actual = date('H:i');
+    $action = $_GET['action'] ?? 'check_sistema';
+    $es_forzado = ($action === 'forzar_corte');
 
-    $respuesta = [
-        'status' => 'idle',
-        'corte_status' => 'pendiente',
-        'detalles' => []
-    ];
+    $almacen_sesion = isset($_SESSION['almacen_id']) ? intval($_SESSION['almacen_id']) : 0;
+    $es_admin = ($almacen_sesion === 0);
+    $hora_cierre_config = $es_admin ? '23:59' : ($_SESSION['hora_cierre'] ?? '18:00');
 
-    // CAMBIO: Ahora validamos que sean las 18:00 (6 PM) o más
-    if ($hora_actual >= 18) {
+    if ($es_forzado || $hora_actual >= $hora_cierre_config) {
         
-        // 1. Obtener almacenes activos
-        $sql_alm = "SELECT id, nombre FROM almacenes WHERE estado = 1";
-        $res_alm = $conexion->query($sql_alm);
-        
-        $resumen = [];
+        $almacenesAProcesar = [];
+        if ($es_forzado && !$es_admin) {
+            $almacenesAProcesar = [['id' => $almacen_sesion, 'nombre' => 'Tu Almacén']];
+        } else {
+            // Buscamos almacenes que tengan movimientos y no hayan cerrado hoy
+            $almacenesAProcesar = $corteModel->obtenerAlmacenesPendientes($almacen_sesion, $es_admin, $hoy);
+        }
 
-        while ($alm = $res_alm->fetch_assoc()) {
-            $id_alm = $alm['id'];
-            $nombre_alm = $alm['nombre'];
+        $procesados = [];
+        $errores = [];
 
-            // 2. ¿Ya existe corte para ESTE almacén hoy?
-            if (!$corteModel->existeCorte($hoy, $id_alm)) {
-                
-                // 3. Ejecutar el registro individual
-                $ejecucion = $corteModel->registrarCortePorAlmacen($id_alm);
-                
-                $resumen[] = [
-                    'almacen' => $nombre_alm,
-                    'status'  => $ejecucion['status'],
-                    'accion'  => 'NUEVO_CORTE_GENERADO'
-                ];
-            } else {
-                $resumen[] = [
-                    'almacen' => $nombre_alm,
-                    'status'  => 'success',
-                    'accion'  => 'YA_EXISTIA'
-                ];
+        foreach ($almacenesAProcesar as $alm) {
+            try {
+                // registrarCortePorAlmacen usará obtenerSumasCorte con todas las restas de saldo a favor
+                $corteModel->registrarCortePorAlmacen($alm['id']);
+                $procesados[] = $alm['nombre'];
+            } catch (Exception $innerEx) {
+                $errores[] = "Error en {$alm['nombre']}: " . $innerEx->getMessage();
             }
         }
 
-        $respuesta['status'] = 'success';
-        $respuesta['corte_status'] = 'realizado';
-        $respuesta['detalles'] = $resumen;
-        $respuesta['mensaje'] = 'Proceso de cierre de las 18:00 finalizado.';
+        ob_clean();
+        echo json_encode([
+            'status' => (count($procesados) > 0) ? 'success' : 'idle',
+            'procesados' => $procesados,
+            'errores' => $errores,
+            'mensaje' => $es_forzado ? 'Corte actualizado correctamente' : (count($procesados) > 0 ? 'Cierre de día completado' : 'No hay movimientos pendientes de cierre')
+        ]);
 
     } else {
-        $respuesta['mensaje'] = 'Esperando a las 18:00 para el cierre automático.';
-        $respuesta['hora_servidor'] = date('H:i:s');
+        ob_clean();
+        echo json_encode([
+            'status' => 'idle', 
+            'mensaje' => 'Esperando hora de cierre: ' . $hora_cierre_config
+        ]);
     }
 
-    echo json_encode($respuesta);
+} catch (Exception $e) {
+    ob_clean();
+    http_response_code(500);
+    echo json_encode(['status' => 'error', 'mensaje' => $e->getMessage()]);
 }
+exit;

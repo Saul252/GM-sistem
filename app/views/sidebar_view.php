@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('America/Mexico_City');
 /**
  * CONFIGURACIÓN DE MÓDULOS
  * Optimizamos la renderización mediante un bucle para evitar repetir HTML.
@@ -99,9 +100,9 @@ $modulos = [
 </aside>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>';
 <script>
-   /**
+/**
  * CF SYSTEM - LÓGICA GLOBAL DE INTERFAZ Y NOTIFICACIONES
- * Versión: 2.0 (Optimizado para Móvil y Escritorio)
+ * Versión: 2.0 (Optimizado para Móvil y Escritorio - No jQuery)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -125,11 +126,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const isMobile = window.innerWidth <= 992;
         
         if (isMobile) {
-            // Comportamiento en Móvil: Usa la clase .show definida en tu CSS
             sidebar.classList.toggle('show');
             overlay.classList.toggle('active');
         } else {
-            // Comportamiento en Escritorio: Usa la clase .hidden definida en tu CSS
             sidebar.classList.toggle('hidden');
             document.body.classList.toggle('sidebar-hidden');
         }
@@ -143,25 +142,23 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Cerrar menú al tocar el overlay (Solo móvil)
     overlay.addEventListener('click', () => {
         sidebar.classList.remove('show');
         overlay.classList.remove('active');
     });
 
-    // Cerrar dropdown de notificaciones al hacer clic fuera
     document.addEventListener('click', (e) => {
         if (menuNotif && !menuNotif.contains(e.target) && !btnNotif.contains(e.target)) {
             menuNotif.style.display = 'none';
         }
     });
 
-    // --- 3. SISTEMA DE NOTIFICACIONES DE TRASPASOS ---
+  // --- 3. SISTEMA DE NOTIFICACIONES DE TRASPASOS ---
     let ultimoConteoTraspasos = 0;
     let primeraCarga = true;
+    let corteProcesadoHoy = false;
 
     function verificarNotificaciones() {
-        // Timestamp para evitar caché del navegador
         const url = '/cfsistem/app/backend/movimientos/get_notificaciones_traspaso.php?t=' + Date.now();
 
         fetch(url)
@@ -171,7 +168,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const lista = document.getElementById('lista-notificaciones');
                 const cantidadActual = parseInt(data.cantidad) || 0;
 
-                // Actualizar Badge en la Navbar
                 if (badge) {
                     if (cantidadActual > 0) {
                         badge.innerText = cantidadActual;
@@ -183,7 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
-                // Disparar Alerta Toastify si hay nuevos traspasos
                 if (cantidadActual > 0 && (primeraCarga || cantidadActual > ultimoConteoTraspasos)) {
                     if (typeof Toastify === "function") {
                         const u = data.items[0] || {};
@@ -196,20 +191,34 @@ document.addEventListener('DOMContentLoaded', () => {
                             gravity: "top",
                             position: "right",
                             stopOnFocus: true,
+                            className: "toast-traspaso",
                             style: {
-                                background: "linear-gradient(to right, #0f172a, #1e293b)",
-                                borderRadius: "12px",
-                                boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)"
+                                background: "#ffffff",
+                                color: "#000000",
+                                borderRadius: "14px",
+                                border: "1px solid #e2e8f0",
+                                boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
+                                fontFamily: "'Segoe UI', Roboto, sans-serif",
+                                fontSize: "14px",
+                                fontWeight: "500",
+                                padding: "16px 20px"
                             },
+                            offset: { x: 15, y: 15 },
                             onClick: function() { window.location.href = "/cfsistem/app/controllers/almacenes.php"; }
                         }).showToast();
+
+                        if (!document.getElementById('style-toast-red-close')) {
+                            const style = document.createElement('style');
+                            style.id = 'style-toast-red-close';
+                            style.innerHTML = `.toast-traspaso .toast-close { color: #ff0000 !important; opacity: 1; font-weight: bold; font-size: 20px; margin-left: 10px; }`;
+                            document.head.appendChild(style);
+                        } 
                     }
                     primeraCarga = false;
                 }
 
                 ultimoConteoTraspasos = cantidadActual;
 
-                // Renderizar lista en el Dropdown
                 if (lista && data.items) {
                     if (cantidadActual === 0) {
                         lista.innerHTML = '<div class="p-4 text-center text-muted small">Sin traspasos pendientes</div>';
@@ -238,10 +247,78 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(err => console.error("❌ Error fetch notificaciones:", err));
     }
 
-    // --- 4. ACCIONES DE NOTIFICACIÓN ---
+function verificarCorteCaja() {
+    const hoy = new Date().toISOString().split('T')[0];
+    const corteYaHecho = localStorage.getItem('corte_finalizado_fecha') === hoy;
+    const estaProcesando = localStorage.getItem('corte_en_progreso') === 'true';
+
+    if (corteYaHecho || estaProcesando) return;
+
+    const ahora = new Date();
+    const horaActual = ahora.getHours().toString().padStart(2, '0') + ":" + ahora.getMinutes().toString().padStart(2, '0');
+    const horaCierreConfig = localStorage.getItem('config_hora_cierre') || '12:01';
+
+    console.log("corte de caja", horaCierreConfig);
+    if (horaActual >= horaCierreConfig) {
+        ejecutarRondaDeCorte();
+    }
+}
+
+function ejecutarRondaDeCorte() {
+    localStorage.setItem('corte_en_progreso', 'true');
+    console.log("🚀 Procesando bloque de almacenes...");
+
+    fetch('/cfsistem/app/backend/funciones/corteApi.php?action=check_sistema', {
+        method: 'POST'
+    })
+    .then(response => {
+        // Si la respuesta no es 200-299, extraemos el texto para ver el error de PHP
+        if (!response.ok) {
+            return response.text().then(text => { 
+                throw new Error(`Servidor respondió con ${response.status}: ${text}`); 
+            });
+        }
+        return response.json();
+    })
+    .then(res => {
+        if (res.status === 'success') {
+            if (res.hay_mas) {
+                console.log("⏳ Bloque completado, solicitando siguiente...");
+                ejecutarRondaDeCorte(); 
+            } else {
+                const hoy = new Date().toISOString().split('T')[0];
+                localStorage.setItem('corte_finalizado_fecha', hoy);
+                localStorage.setItem('corte_en_progreso', 'false');
+                console.log("✅ Proceso completo.");
+                actualizarInterfazCorte(true);
+            }
+        } else {
+            console.error("❌ El servidor devolvió un error de lógica:", res.mensaje);
+            localStorage.setItem('corte_en_progreso', 'false');
+        }
+    })
+    .catch(err => {
+        localStorage.setItem('corte_en_progreso', 'false');
+        // Aquí es donde verás el fallo real en la consola de F12
+        console.error("🚨 FALLO CRÍTICO EN LA COMUNICACIÓN:");
+        console.error(err.message); 
+    });
+}
+    function actualizarInterfazCorte(estado) {
+        const hoy = new Date().toISOString().split('T')[0];
+        if (localStorage.getItem('corte_finalizado_fecha') === hoy) {
+            estado = true; 
+        }
+        const badgeCorte = document.getElementById('badgeCorte');
+        if(badgeCorte && estado) {
+            badgeCorte.classList.remove('bg-secondary', 'opacity-50');
+            badgeCorte.classList.add('bg-success', 'shadow-sm');
+            badgeCorte.innerHTML = '<i class="bi bi-check-circle-fill"></i> Caja Cerrada';
+        }
+    }
+
     window.procesarRecepcionRapida = function(id) {
         if (!confirm("¿Confirmar recepción de material?")) return;
-
         const formData = new FormData();
         formData.append('id', id);
 
@@ -260,7 +337,6 @@ document.addEventListener('DOMContentLoaded', () => {
         .catch(err => console.error("Error en recepción:", err));
     };
 
-    // Control del Dropdown de la campana
     if (btnNotif && menuNotif) {
         btnNotif.addEventListener('click', (e) => {
             e.preventDefault();
@@ -269,66 +345,19 @@ document.addEventListener('DOMContentLoaded', () => {
             menuNotif.style.display = isVisible ? 'none' : 'block';
         });
     }
-    function verificarCorteCaja() {
-    // Variable global para evitar repeticiones en la misma sesión
-let corteProcesadoHoy = false;
 
-function verificarCorteCaja() {
-    const ahora = new Date();
-    const hora = ahora.getHours();
-    
-    // 1. Verificamos si ya son las 19:00 (7 PM) o más
-    // 2. Y verificamos que no hayamos enviado la petición ya
-    if (hora >= 19 && !corteProcesadoHoy) {
-        
-        console.log("Iniciando proceso de cierre automático...");
-
-        $.ajax({
-            url: 'api.php?action=ejecutar_corte_diario',
-            type: 'POST',
-            dataType: 'json',
-            success: function(res) {
-                if (res.status === 'success' || res.mensaje === 'ya_existia') {
-                    // Ponemos el "candado" para no volver a enviar hasta que recargue
-                    corteProcesadoHoy = true;
-                    actualizarInterfazCorte(true);
-                }
-            },
-            error: function() {
-                console.error("Error al conectar con el controlador de corte.");
-            }
-        });
+    function mantenimientoSistema() {
+        verificarNotificaciones();
+        verificarCorteCaja();
     }
-}
-}
 
-// Función auxiliar para cambiar el look del sidebar
-function actualizarInterfazCorte(estado) {
-    if(estado) {
-        $('#badgeCorte')
-            .removeClass('bg-secondary opacity-50')
-            .addClass('bg-success shadow-sm')
-            .html('<i class="bi bi-check-circle-fill"></i> Caja Cerrada (19:00)');
-    }
-}
-function mantenimientoSistema() {
-    // 1. Ejecutamos notificaciones
-    verificarNotificaciones();
-    
-    // 2. Ejecutamos la lógica del corte
-    verificarCorte();
-}
+    mantenimientoSistema();
+    setInterval(mantenimientoSistema, 35000);
 
-// Un solo intervalo para controlar todo el pulso del sistema
-setInterval(mantenimientoSistema, 35000);
-    // --- 5. INICIALIZACIÓN ---
-     // Revisar cada 35 segundos
-
-    // Limpiar estados al redimensionar pantalla
     window.addEventListener('resize', () => {
         if (window.innerWidth > 992) {
-            sidebar.classList.remove('show');
-            overlay.classList.remove('active');
+            if (sidebar) sidebar.classList.remove('show');
+            if (overlay) overlay.classList.remove('active');
         }
     });
 }); 

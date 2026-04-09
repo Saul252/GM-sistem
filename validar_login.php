@@ -57,7 +57,7 @@ if ($resultado && $resultado->num_rows === 1) {
     $_SESSION['almacen_id'] = $row['almacen_id'] ?? 0;
     $_SESSION['login']      = true;
     $id_almacen_usuario = $row['almacen_id'] ?? 0;
-    $hora_cierre_config = "18:00"; // Valor por defecto
+    $hora_cierre_config = "11:58"; // Valor por defecto
     if ($id_almacen_usuario > 0) {
         $sqlA = "SELECT hora_cierre_programada FROM almacenes WHERE id = ? LIMIT 1";
         $stmtA = $conexion->prepare($sqlA);

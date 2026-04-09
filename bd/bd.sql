@@ -785,7 +785,71 @@ CREATE TABLE `confirmacion_reparto_viaje` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- Índices para tablas volcadas
 --
+/* =============================================================
+   SISTEMA DE CONTROL TOTAL INDEPENDIENTE - CF SYSTEM
+   Estructura 100% segmentada por Almacén
+   ============================================================= */
 
+-- A. TIPOS DE ARQUEO (Salidas locales)
+CREATE TABLE IF NOT EXISTS arqueos_tipos (
+    id_tipo_arqueo INT AUTO_INCREMENT PRIMARY KEY,
+    id_almacen INT NOT NULL, 
+    nombre_tipo VARCHAR(100) NOT NULL,
+    descripcion VARCHAR(255),
+    estatus TINYINT DEFAULT 1,
+    INDEX (id_almacen)
+) ENGINE=InnoDB;
+
+-- B. TIPOS DE INGRESO (Entradas locales)
+CREATE TABLE IF NOT EXISTS ingresos_tipos (
+    id_tipo_ingreso INT AUTO_INCREMENT PRIMARY KEY,
+    id_almacen INT NOT NULL,
+    nombre_tipo VARCHAR(100) NOT NULL,
+    descripcion VARCHAR(255),
+    estatus TINYINT DEFAULT 1,
+    INDEX (id_almacen)
+) ENGINE=InnoDB;
+
+-- C. CUENTAS Y CAJAS (Recipientes de dinero locales)
+CREATE TABLE IF NOT EXISTS cuentas_bancarias (
+    id_cuenta INT AUTO_INCREMENT PRIMARY KEY,
+    id_almacen INT NOT NULL,
+    nombre_cuenta VARCHAR(100) NOT NULL,
+    tipo_cuenta ENUM('Efectivo', 'Banco', 'Caja Fuerte') NOT NULL,
+    estatus TINYINT DEFAULT 1,
+    INDEX (id_almacen)
+) ENGINE=InnoDB;
+
+-- D. REGISTRO DE ARQUEOS (Movimientos de salida)
+CREATE TABLE IF NOT EXISTS caja_arqueos (
+    id_arqueo INT AUTO_INCREMENT PRIMARY KEY,
+    id_almacen INT NOT NULL,
+    id_tipo_arqueo INT NOT NULL,
+    monto DECIMAL(10,2) NOT NULL,
+    comentario TEXT,
+    id_usuario INT NOT NULL,
+    fecha_hora DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_tipo_arqueo) REFERENCES arqueos_tipos(id_tipo_arqueo),
+    INDEX (id_almacen)
+) ENGINE=InnoDB;
+
+-- E. REGISTRO DE INGRESOS (Movimientos de entrada)
+CREATE TABLE IF NOT EXISTS caja_ingresos (
+    id_ingreso INT AUTO_INCREMENT PRIMARY KEY,
+    id_almacen INT NOT NULL,
+    id_tipo_ingreso INT NOT NULL,
+    id_cuenta_destino INT NOT NULL,
+    monto DECIMAL(10,2) NOT NULL,
+    metodo_pago ENUM('Efectivo', 'Tarjeta', 'Transferencia') NOT NULL,
+    referencia VARCHAR(150),
+    quien_dio VARCHAR(150) NOT NULL,
+    id_usuario_recibio INT NOT NULL,
+    comentario TEXT,
+    fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_tipo_ingreso) REFERENCES ingresos_tipos(id_tipo_ingreso),
+    FOREIGN KEY (id_cuenta_destino) REFERENCES cuentas_bancarias(id_cuenta),
+    INDEX (id_almacen)
+) ENGINE=InnoDB;
 --
 -- Indices de la tabla `almacenes`
 --

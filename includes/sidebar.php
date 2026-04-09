@@ -4,6 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if (!isset($_SESSION['usuario_id'])) {
+    
     header("Location: /cfsistem/index.php");
     exit;
 }
@@ -16,6 +17,7 @@ function renderSidebar(string $paginaActual = '')
 ?>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+    date.timezone = "America/Mexico_City"
     const toggleBtn = document.getElementById('toggleSidebar');
     const sidebar = document.getElementById('sidebar');
     if (!toggleBtn || !sidebar) return;
