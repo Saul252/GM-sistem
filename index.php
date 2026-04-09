@@ -14,162 +14,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="/cfsistem/css/index.css" rel="stylesheet">
 
 
-    <style>
-    :root {
-        --primary-color: #02aa02;
-        --accent-color: #a80909;
-        --hover-color: #128606;
-    }
-
-    body {
-        font-family: 'Inter', sans-serif;
-        margin: 0;
-        height: 100vh;
-        background: #f4f7fb;
-        overflow: hidden;
-    }
-
-    .split-container {
-        display: flex;
-        height: 100vh;
-    }
-
-    /* LADO IZQUIERDO */
-    .left-side {
-        width: 50%;
-        position: relative;
-        overflow: hidden;
-    }
-
-    .carousel-item img {
-        height: 100vh;
-        object-fit: cover;
-        filter: brightness(0.7);
-    }
-
-    .carousel-overlay {
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(45deg, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.2) 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10;
-    }
-
-    /* LADO DERECHO */
-    .right-side {
-        width: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        padding: 20px;
-    }
-
-    .login-card {
-        background: #ffffff;
-        padding: 40px;
-        border-radius: 24px;
-        width: 100%;
-        max-width: 420px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease;
-    }
-
-    .logo-title {
-        font-weight: 800;
-        font-size: 32px;
-        letter-spacing: -1px;
-        color: var(--primary-color);
-        margin-bottom: 5px;
-    }
-
-    .logo-subtitle {
-        color: #6b7280;
-        font-size: 14px;
-        margin-bottom: 35px;
-    }
-
-    /* INPUTS */
-    .input-group-text {
-        background: #f9fafb;
-        border-right: none;
-        color: #9ca3af;
-        border-radius: 12px 0 0 12px;
-    }
-
-    /* Ajuste para el input del medio (usuario y password) */
-    .form-control {
-        background: #f9fafb;
-        border-left: none;
-        padding: 12px;
-        font-size: 15px;
-    }
-
-    /* El input de usuario mantiene su radio derecho */
-    .user-input {
-        border-radius: 0 12px 12px 0;
-    }
-
-    /* El botón de ver contraseña */
-    .btn-show-pass {
-        background: #f9fafb;
-        border: 1px solid #dee2e6;
-        border-left: none;
-        color: #9ca3af;
-        border-radius: 0 12px 12px 0;
-        transition: color 0.2s;
-    }
-
-    .btn-show-pass:hover {
-        color: var(--primary-color);
-    }
-
-    .form-control:focus {
-        background: #fff;
-        box-shadow: none;
-        border-color: #dee2e6;
-    }
-
-    .input-group:focus-within {
-        box-shadow: 0 0 0 4px rgba(2, 170, 2, 0.1);
-        border-radius: 12px;
-    }
-
-    /* BOTÓN LOGIN */
-    .btn-login {
-        border-radius: 12px;
-        padding: 14px;
-        font-weight: 600;
-        background: var(--accent-color);
-        border: none;
-        transition: all 0.3s ease;
-        margin-top: 10px;
-    }
-
-    .btn-login:hover {
-        background: var(--hover-color);
-        transform: translateY(-1px);
-    }
-
-    .login-footer {
-        font-size: 13px;
-        color: #9ca3af;
-        margin-top: 30px;
-    }
-
-    @media(max-width: 992px) {
-        .left-side {
-            display: none;
-        }
-
-        .right-side {
-            width: 100%;
-        }
-    }
-    </style>
+   
 </head>
 
 <body>
@@ -271,6 +119,8 @@
             const res = await response.json();
 
             if (res.status === 'success') {
+                localStorage.setItem('config_hora_cierre', res.hora_cierre || '18:00');
+
                 Swal.fire({
                     icon: 'success',
                     title: '¡Acceso Correcto!',
@@ -279,7 +129,7 @@
                     timer: 1500,
                     timerProgressBar: true
                 }).then(() => {
-                    window.location.href = 'app/views/inicio.php';
+                    window.location.href = res.redirect;;
                 });
             } else {
                 Swal.fire({

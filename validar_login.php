@@ -56,6 +56,22 @@ if ($resultado && $resultado->num_rows === 1) {
     $_SESSION['rol']        = $row['rol'];
     $_SESSION['almacen_id'] = $row['almacen_id'] ?? 0;
     $_SESSION['login']      = true;
+    $id_almacen_usuario = $row['almacen_id'] ?? 0;
+    $hora_cierre_config = "18:00"; // Valor por defecto
+    if ($id_almacen_usuario > 0) {
+        $sqlA = "SELECT hora_cierre_programada FROM almacenes WHERE id = ? LIMIT 1";
+        $stmtA = $conexion->prepare($sqlA);
+        $stmtA->bind_param("i", $id_almacen_usuario);
+        $stmtA->execute();
+        $resA = $stmtA->get_result()->fetch_assoc();
+        
+        if ($resA) {
+            // Guardamos la hora en sesión (ej: "16:30:00")
+            $hora_cierre_config = $resA['hora_cierre_programada'];
+        }
+    }
+    $_SESSION['hora_cierre'] = $hora_cierre_config;
+    $urlRedireccion = 'app/views/inicio.php';
 
     /**
      * ── VINCULACIÓN AUTOMÁTICA DE PERFIL TRABAJADOR ──
@@ -93,7 +109,12 @@ if ($resultado && $resultado->num_rows === 1) {
         // Para administradores o vendedores que no usan el sufijo
         $_SESSION['trabajador_id'] = 0;
     }
-        echo json_encode(["status" => "success", "message" => "¡Bienvenido, " . $row['nombre'] . "!"]);
+     echo json_encode([
+        "status" => "success", 
+        "message" => "¡Bienvenido, " . $row['nombre'] . "!",
+        "hora_cierre" => $_SESSION['hora_cierre'], // La hora que ya extrajimos
+        "redirect" => $urlRedireccion           // <--- NUEVA DIRECCIÓN
+    ]);
     } else {
         echo json_encode(["status" => "error", "message" => "La contraseña es incorrecta"]);
     }

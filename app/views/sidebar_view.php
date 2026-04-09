@@ -269,10 +269,60 @@ document.addEventListener('DOMContentLoaded', () => {
             menuNotif.style.display = isVisible ? 'none' : 'block';
         });
     }
+    function verificarCorteCaja() {
+    // Variable global para evitar repeticiones en la misma sesión
+let corteProcesadoHoy = false;
 
-    // --- 5. INICIALIZACIÓN ---
+function verificarCorteCaja() {
+    const ahora = new Date();
+    const hora = ahora.getHours();
+    
+    // 1. Verificamos si ya son las 19:00 (7 PM) o más
+    // 2. Y verificamos que no hayamos enviado la petición ya
+    if (hora >= 19 && !corteProcesadoHoy) {
+        
+        console.log("Iniciando proceso de cierre automático...");
+
+        $.ajax({
+            url: 'api.php?action=ejecutar_corte_diario',
+            type: 'POST',
+            dataType: 'json',
+            success: function(res) {
+                if (res.status === 'success' || res.mensaje === 'ya_existia') {
+                    // Ponemos el "candado" para no volver a enviar hasta que recargue
+                    corteProcesadoHoy = true;
+                    actualizarInterfazCorte(true);
+                }
+            },
+            error: function() {
+                console.error("Error al conectar con el controlador de corte.");
+            }
+        });
+    }
+}
+}
+
+// Función auxiliar para cambiar el look del sidebar
+function actualizarInterfazCorte(estado) {
+    if(estado) {
+        $('#badgeCorte')
+            .removeClass('bg-secondary opacity-50')
+            .addClass('bg-success shadow-sm')
+            .html('<i class="bi bi-check-circle-fill"></i> Caja Cerrada (19:00)');
+    }
+}
+function mantenimientoSistema() {
+    // 1. Ejecutamos notificaciones
     verificarNotificaciones();
-    setInterval(verificarNotificaciones, 35000); // Revisar cada 35 segundos
+    
+    // 2. Ejecutamos la lógica del corte
+    verificarCorte();
+}
+
+// Un solo intervalo para controlar todo el pulso del sistema
+setInterval(mantenimientoSistema, 35000);
+    // --- 5. INICIALIZACIÓN ---
+     // Revisar cada 35 segundos
 
     // Limpiar estados al redimensionar pantalla
     window.addEventListener('resize', () => {
