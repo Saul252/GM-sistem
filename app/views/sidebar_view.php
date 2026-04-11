@@ -348,7 +348,7 @@ function ejecutarRondaDeCorte() {
 
     function mantenimientoSistema() {
         verificarNotificaciones();
-        verificarCorteCaja();
+        // verificarCorteCaja();
     }
 
     mantenimientoSistema();
