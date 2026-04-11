@@ -37,14 +37,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
             throw new Exception("Error al calcular montos para la fecha seleccionada.");
         }
 
-        // Definimos las variables con el ajuste de Venta Bruta que pediste
+        // Definimos las variables con el ajuste de Venta Bruta
         $efectivo_real       = floatval($resumen['total_efectivo']);
         $transferencia       = floatval($resumen['total_transferencia']);
         $tarjeta             = floatval($resumen['total_tarjeta']);
         $deuda_pendiente     = floatval($resumen['deuda_pendiente']);
         $abonos_totales      = floatval($resumen['abonos_totales']);
         
-        // Aplicamos tu fórmula: (Efectivo + Tarjeta + Transferencia + Deuda) - Abonos
         $venta_bruta_calculada = ($efectivo_real + $tarjeta + $transferencia + $deuda_pendiente) - $abonos_totales;
 
         $datosParaGuardar = [
@@ -71,12 +70,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
         // 3. Ejecutamos el insert del corte
         $resultado = $modelo->agregarCorteManual($datosParaGuardar);
 
-        // 4. SI EL CORTE SE GUARDÓ, REGISTRAMOS EL SALDO INICIAL EN EL HISTORIAL
+        // 4. SI EL CORTE SE GUARDÓ, REGISTRAMOS EL SALDO INICIAL DESGLOSADO EN EL HISTORIAL
         if ($resultado['status'] === 'success') {
-            $saldo_para_apertura = $resumen['gran_total_ingresos'];
+            /**
+             * Preparamos el desglose dinámico. 
+             * Usamos 'gran_total_ingresos' para el efectivo porque ya resta gastos/compras,
+             * asegurando que lo que se siembra es lo que REALMENTE quedó en caja.
+             */
+            $desglose_para_historial = [
+                'efectivo'      => floatval($resumen['gran_total_ingresos']), 
+                'tarjeta'       => $tarjeta,
+                'transferencia' => $transferencia
+            ];
             
-            // Llamamos a la función del historial (Categoría 1: Apertura)
-            $modelo->registrarAperturaDesdeCierre($target_save, $usuario_id, $saldo_para_apertura, $fecha_corte);
+            // Llamamos a la función actualizada que recibe el array de desgloses
+            $modelo->registrarAperturaDesdeCierre(
+                $target_save, 
+                $usuario_id, 
+                $desglose_para_historial, 
+                $fecha_corte
+            );
         }
 
         echo json_encode($resultado);
@@ -96,18 +109,42 @@ if (isset($_GET['ajax'])) {
     $f_fin    = $_GET['f_fin'] ?? date('Y-m-d');
     $almacen_id_req = isset($_GET['almacen_id']) ? intval($_GET['almacen_id']) : 0;
 
+    // 1. Normalización estricta de fechas para que el modelo no se pierda
+    if ($periodo === 'hoy') {
+        $f_inicio = $f_fin = date('Y-m-d');
+    } elseif ($periodo === 'ayer') {
+        $f_inicio = $f_fin = date('Y-m-d', strtotime("-1 day"));
+    }
+
     $target = ($almacen_sesion != 0) ? $almacen_sesion : $almacen_id_req;
 
+    /**
+     * 2. LÓGICA DE VISIBILIDAD
+     * Solo mostramos el saldo inicial si la consulta es de UN SOLO DÍA.
+     * Si f_inicio es igual a f_fin, significa que es Hoy, Ayer o un solo día del calendario.
+     */
+    $esUnSoloDia = ($f_inicio === $f_fin);
+
+    // 3. Ejecutar consultas principales
     $detalles = $modelo->obtenerVentasDetalladas($periodo, $f_inicio, $f_fin, $target);
     $totales  = $modelo->obtenerSumasCorte($periodo, $f_inicio, $f_fin, $target);
     
+    // 4. Saldo Inicial: Solo si es un solo día, llamamos al modelo.
+    $saldo_data = null;
+    if ($esUnSoloDia) {
+        $saldo_data = $modelo->obtenerSaldoInicialMonitor($target, $f_inicio, $f_fin);
+    }
+    
     echo json_encode([
-        'detalles' => $detalles,
-        'totales'  => $totales
+        'status'         => 'success',
+        'detalles'       => $detalles,
+        'totales'        => $totales,
+        'saldo_inicial'  => $saldo_data,
+        'es_lista'       => ($target == 0),
+        'mostrar_saldo'  => $esUnSoloDia // Enviamos esta bandera al JS
     ]);
     exit;
 }
-
 // --- CARGA INICIAL DE LA VISTA ---
 $listaAlmacenes = $almacenModel->getAlmacenes($almacen_sesion); 
 $paginaActual = 'Corte de Caja';

@@ -66,15 +66,18 @@
 </div>
 
 <script>
+const url = "/cfsistem/app/controllers/corteCajaController.php";
+
 document.addEventListener('DOMContentLoaded', function() {
     const modalElement = document.getElementById('modalCorteCaja');
     const myModal = new bootstrap.Modal(modalElement);
     const btnGuardar = document.getElementById('btnConfirmarCorte');
     const formCorte = document.getElementById('formGuardarCorte');
 
-    // 1. Al abrir el modal, actualizamos los textos con lo que hay en pantalla actualmente
+    // 1. Al abrir el modal, actualizamos los textos visuales
     modalElement.addEventListener('show.bs.modal', function () {
-        const efectivoActual = document.getElementById('res-total').innerText; // El ID del HTML anterior
+        // Obtenemos los valores de las tarjetas de la vista principal
+        const efectivoActual = document.getElementById('res-total').innerText; 
         const totalActual = document.getElementById('res-cobrado-total').innerText;
 
         document.getElementById('modal-efectivo-txt').innerText = efectivoActual;
@@ -85,11 +88,37 @@ document.addEventListener('DOMContentLoaded', function() {
     btnGuardar.addEventListener('click', function() {
         const formData = new FormData(formCorte);
 
+        // FUNCIÓN AUXILIAR: Extrae números limpios de los textos (quita $, comas, etc)
+        const limpiarNumero = (id) => {
+            const el = document.getElementById(id);
+            return el ? parseFloat(el.innerText.replace(/[^0-9.-]+/g, "")) : 0;
+        };
+
+        /* IMPORTANTE: Agregamos manualmente los datos que el controlador 
+           necesita para la fórmula de Venta Bruta y Saldo Inicial.
+           Asegúrate de que estos IDs existan en tus etiquetas <span> o <div> de la vista principal.
+        */
+        formData.append('total_efectivo',      limpiarNumero('res-total')); // El que usas para modal-efectivo
+        formData.append('total_transferencia', limpiarNumero('res-transferencia'));
+        formData.append('total_tarjeta',       limpiarNumero('res-tarjeta'));
+        formData.append('abonos_totales',      limpiarNumero('res-abonos-totales'));
+        formData.append('deuda_pendiente',     limpiarNumero('res-deuda-pendiente'));
+        
+        // Otros datos del resumen necesarios
+        formData.append('abono_efectivo',      limpiarNumero('res-abono-efectivo'));
+        formData.append('abono_tarjeta',       limpiarNumero('res-abono-tarjeta'));
+        formData.append('abono_transferencia', limpiarNumero('res-abono-transferencia'));
+        formData.append('saldo_favor_usado',   limpiarNumero('res-saldo-favor'));
+        formData.append('cobrado_total',       limpiarNumero('res-cobrado-total'));
+        formData.append('gastos_totales',      limpiarNumero('res-gastos'));
+        formData.append('compras_totales',     limpiarNumero('res-compras'));
+        formData.append('gran_total_ingresos', limpiarNumero('res-gran-total'));
+
         // Bloqueamos botón para evitar doble clic
         btnGuardar.disabled = true;
         btnGuardar.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Guardando...';
 
-        fetch('/cfsistem/app/controllers/corteCajaController.php', { // Ajusta a la ruta real de tu controlador
+        fetch(url, {
             method: 'POST',
             body: formData
         })
@@ -99,14 +128,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 Swal.fire({
                     icon: 'success',
                     title: '¡Corte Exitoso!',
-                    text: 'El cierre de caja ha sido registrado correctamente.',
+                    text: 'El cierre de caja ha sido registrado y el saldo inicial de mañana ha sido sembrado.',
                     confirmButtonColor: '#0d6efd'
                 }).then(() => {
                     myModal.hide();
-                    location.reload(); // Recargamos para ver los cambios o limpiar
+                    location.reload(); 
                 });
             } else {
-                throw new Exception(data.message);
+                // Cambiado de Exception a Error (JavaScript style)
+                throw new Error(data.message || 'Error desconocido en el servidor');
             }
         })
         .catch(error => {

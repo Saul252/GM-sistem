@@ -176,65 +176,63 @@ public function obtenerSumasCorte($periodo, $f_inicio, $f_fin, $almacen_id)
     $filtroG  = ($target > 0) ? " AND almacen_id    = $target" : "";
 
     $sql = "SELECT 
-                (base.ingreso_real + base.favor_usado)                                    AS cobrado_total,
-                base.ingreso_real                                                          AS gran_total_ingresos,
-                base.favor_usado                                                           AS saldo_favor_usado,
-                -- DEUDA REAL: Total de ventas del periodo menos lo que se ha pagado de ESAS ventas
-                (base.venta_bruta - base.pagos_de_ventas_periodo)                         AS deuda_pendiente,
-                base.total_efectivo,
-                base.total_tarjeta,
-                base.total_transferencia,
-                base.abono_efectivo,
-                base.abono_tarjeta,
-                base.abono_transferencia,
-                (base.abono_efectivo + base.abono_tarjeta + base.abono_transferencia)     AS abonos_totales,
-                base.gastos_totales,
-                base.compras_totales
+                base.*,
+                (base.venta_bruta_periodo - base.pagos_realizados_de_ventas_periodo) AS deuda_pendiente,
+                (base.ingreso_total_efectivo + base.ingreso_total_tarjeta + base.ingreso_total_transferencia) AS gran_total_ingresos
             FROM (
                 SELECT
-                    -- Suma de todas las ventas del periodo (incluye las que no tienen pago)
+                    -- 1. SUMA TOTAL DE VENTAS (Lo que se vendió, paguen o deban)
                     (SELECT IFNULL(SUM(total), 0) FROM ventas v 
                      WHERE v.fecha BETWEEN '$inicio' AND '$fin' 
-                       AND v.estado_general = 'activa' $filtroV) AS venta_bruta,
+                       AND v.estado_general = 'activa' $filtroV) AS venta_bruta_periodo,
 
-                    -- Cuánto se ha pagado específicamente de las ventas de este periodo
+                    -- Subconsulta Crítica: ¿Cuánto se ha pagado (dinero + saldo favor) de las ventas de ESTE periodo?
                     (SELECT IFNULL(SUM(hp.monto), 0) FROM historial_pagos hp 
                      INNER JOIN ventas v2 ON hp.venta_id = v2.id 
                      WHERE v2.fecha BETWEEN '$inicio' AND '$fin' 
-                       AND v2.estado_general = 'activa' $filtroHP) AS pagos_de_ventas_periodo,
+                       AND v2.estado_general = 'activa' $filtroHP) AS pagos_realizados_de_ventas_periodo,
 
-                    -- Dinero real que entró HOY (independientemente de cuándo fue la venta)
-                    (SELECT IFNULL(SUM(monto - saldo_favor), 0) FROM historial_pagos hp 
-                     INNER JOIN ventas v2 ON hp.venta_id = v2.id 
-                     WHERE hp.fecha BETWEEN '$inicio' AND '$fin' 
-                       AND v2.estado_general = 'activa' $filtroHP) AS ingreso_real,
-
-                    (SELECT IFNULL(SUM(saldo_favor), 0) FROM historial_pagos hp 
-                     INNER JOIN ventas v2 ON hp.venta_id = v2.id 
-                     WHERE hp.fecha BETWEEN '$inicio' AND '$fin' 
-                       AND v2.estado_general = 'activa' $filtroHP) AS favor_usado,
-
-                    -- Desglose por método de dinero entrante hoy
+                    -- 2. INGRESO TOTAL (Ventas de hoy + Abonos de deudas anteriores)
                     (SELECT IFNULL(SUM(monto - saldo_favor), 0) FROM historial_pagos hp INNER JOIN ventas v2 ON hp.venta_id = v2.id 
-                     WHERE hp.fecha BETWEEN '$inicio' AND '$fin' AND v2.estado_general = 'activa' AND hp.metodo_pago = 'Efectivo' $filtroHP) AS total_efectivo,
+                     WHERE hp.fecha BETWEEN '$inicio' AND '$fin' AND v2.estado_general = 'activa' AND hp.metodo_pago = 'Efectivo' $filtroHP) AS ingreso_total_efectivo,
 
                     (SELECT IFNULL(SUM(monto - saldo_favor), 0) FROM historial_pagos hp INNER JOIN ventas v2 ON hp.venta_id = v2.id 
-                     WHERE hp.fecha BETWEEN '$inicio' AND '$fin' AND v2.estado_general = 'activa' AND hp.metodo_pago = 'Tarjeta' $filtroHP) AS total_tarjeta,
+                     WHERE hp.fecha BETWEEN '$inicio' AND '$fin' AND v2.estado_general = 'activa' AND hp.metodo_pago = 'Tarjeta' $filtroHP) AS ingreso_total_tarjeta,
 
                     (SELECT IFNULL(SUM(monto - saldo_favor), 0) FROM historial_pagos hp INNER JOIN ventas v2 ON hp.venta_id = v2.id 
-                     WHERE hp.fecha BETWEEN '$inicio' AND '$fin' AND v2.estado_general = 'activa' AND hp.metodo_pago = 'Transferencia' $filtroHP) AS total_transferencia,
+                     WHERE hp.fecha BETWEEN '$inicio' AND '$fin' AND v2.estado_general = 'activa' AND hp.metodo_pago = 'Transferencia' $filtroHP) AS ingreso_total_transferencia,
 
-                    -- Abonos (Ventas de antes, pagadas hoy)
+                    -- 3. SOLO VENTAS DEL DÍA (Dinero que entró de ventas creadas hoy)
                     (SELECT IFNULL(SUM(hp.monto - hp.saldo_favor), 0) FROM historial_pagos hp INNER JOIN ventas v2 ON hp.venta_id = v2.id 
-                     WHERE hp.fecha BETWEEN '$inicio' AND '$fin' AND v2.fecha < '$inicio' AND hp.metodo_pago = 'Efectivo' $filtroHP) AS abono_efectivo,
-
-                    (SELECT IFNULL(SUM(hp.monto - hp.saldo_favor), 0) FROM historial_pagos hp INNER JOIN ventas v2 ON hp.venta_id = v2.id 
-                     WHERE hp.fecha BETWEEN '$inicio' AND '$fin' AND v2.fecha < '$inicio' AND hp.metodo_pago = 'Tarjeta' $filtroHP) AS abono_tarjeta,
+                     WHERE hp.fecha BETWEEN '$inicio' AND '$fin' AND v2.fecha BETWEEN '$inicio' AND '$fin' 
+                       AND v2.estado_general = 'activa' AND hp.metodo_pago = 'Efectivo' $filtroHP) AS solo_venta_efectivo,
 
                     (SELECT IFNULL(SUM(hp.monto - hp.saldo_favor), 0) FROM historial_pagos hp INNER JOIN ventas v2 ON hp.venta_id = v2.id 
-                     WHERE hp.fecha BETWEEN '$inicio' AND '$fin' AND v2.fecha < '$inicio' AND hp.metodo_pago = 'Transferencia' $filtroHP) AS abono_transferencia,
+                     WHERE hp.fecha BETWEEN '$inicio' AND '$fin' AND v2.fecha BETWEEN '$inicio' AND '$fin' 
+                       AND v2.estado_general = 'activa' AND hp.metodo_pago = 'Tarjeta' $filtroHP) AS solo_venta_tarjeta,
 
-                    -- Gastos y Compras
+                    (SELECT IFNULL(SUM(hp.monto - hp.saldo_favor), 0) FROM historial_pagos hp INNER JOIN ventas v2 ON hp.venta_id = v2.id 
+                     WHERE hp.fecha BETWEEN '$inicio' AND '$fin' AND v2.fecha BETWEEN '$inicio' AND '$fin' 
+                       AND v2.estado_general = 'activa' AND hp.metodo_pago = 'Transferencia' $filtroHP) AS solo_venta_transferencia,
+
+                    -- 4. SOLO ABONOS (Dinero de ventas anteriores que pagaron hoy)
+                    (SELECT IFNULL(SUM(hp.monto - hp.saldo_favor), 0) FROM historial_pagos hp INNER JOIN ventas v2 ON hp.venta_id = v2.id 
+                     WHERE hp.fecha BETWEEN '$inicio' AND '$fin' AND v2.fecha < '$inicio' 
+                       AND v2.estado_general = 'activa' AND hp.metodo_pago = 'Efectivo' $filtroHP) AS abono_efectivo,
+
+                    (SELECT IFNULL(SUM(hp.monto - hp.saldo_favor), 0) FROM historial_pagos hp INNER JOIN ventas v2 ON hp.venta_id = v2.id 
+                     WHERE hp.fecha BETWEEN '$inicio' AND '$fin' AND v2.fecha < '$inicio' 
+                       AND v2.estado_general = 'activa' AND hp.metodo_pago = 'Tarjeta' $filtroHP) AS abono_tarjeta,
+
+                    (SELECT IFNULL(SUM(hp.monto - hp.saldo_favor), 0) FROM historial_pagos hp INNER JOIN ventas v2 ON hp.venta_id = v2.id 
+                     WHERE hp.fecha BETWEEN '$inicio' AND '$fin' AND v2.fecha < '$inicio' 
+                       AND v2.estado_general = 'activa' AND hp.metodo_pago = 'Transferencia' $filtroHP) AS abono_transferencia,
+
+                    -- 5. SALDO A FAVOR (Aparte)
+                    (SELECT IFNULL(SUM(saldo_favor), 0) FROM historial_pagos hp INNER JOIN ventas v2 ON hp.venta_id = v2.id 
+                     WHERE hp.fecha BETWEEN '$inicio' AND '$fin' AND v2.estado_general = 'activa' $filtroHP) AS saldo_favor_usado,
+
+                    -- Extras
                     (SELECT IFNULL(SUM(total), 0) FROM gastos 
                      WHERE fecha_registro BETWEEN '$inicio' AND '$fin' AND estado = 'pagado' $filtroG) AS gastos_totales,
 
@@ -243,25 +241,25 @@ public function obtenerSumasCorte($periodo, $f_inicio, $f_fin, $almacen_id)
             ) AS base";
 
     $res = $this->db->query($sql);
-    if (!$res) return ['error' => $this->db->error];
-
     $row = $res->fetch_assoc();
 
     return [
-        'cobrado_total'       => (float)$row['cobrado_total'],
-        'total_efectivo'      => (float)$row['total_efectivo'],
-        'total_tarjeta'       => (float)$row['total_tarjeta'],
-        'total_transferencia' => (float)$row['total_transferencia'],
-        'abono_efectivo'      => (float)$row['abono_efectivo'],
-        'abono_tarjeta'       => (float)$row['abono_tarjeta'],
-        'abono_transferencia' => (float)$row['abono_transferencia'],
-        'abonos_totales'      => (float)$row['abonos_totales'],
-        'saldo_favor_usado'   => (float)$row['saldo_favor_usado'],
-        'gran_total_ingresos' => (float)$row['gran_total_ingresos'],
-        'deuda_pendiente'     => (float)$row['deuda_pendiente'],
-        'gastos_totales'      => (float)$row['gastos_totales'],
-        'compras_totales'     => (float)$row['compras_totales'],
-        'diadehoy'            => $hoy,
+        'venta_bruta'          => (float)$row['venta_bruta_periodo'],
+        'ingreso_total_efectivo' => (float)$row['ingreso_total_efectivo'],
+        'ingreso_total_tarjeta'  => (float)$row['ingreso_total_tarjeta'],
+        'ingreso_total_transfer' => (float)$row['ingreso_total_transferencia'],
+        'gran_total_ingresos'    => (float)$row['gran_total_ingresos'],
+        'solo_venta_efectivo'    => (float)$row['solo_venta_efectivo'],
+        'solo_venta_tarjeta'     => (float)$row['solo_venta_tarjeta'],
+        'solo_venta_transfer'    => (float)$row['solo_venta_transferencia'],
+        'abono_efectivo'         => (float)$row['abono_efectivo'],
+        'abono_tarjeta'          => (float)$row['abono_tarjeta'],
+        'abono_transferencia'    => (float)$row['abono_transferencia'],
+        'saldo_favor_usado'      => (float)$row['saldo_favor_usado'],
+        'deuda_pendiente'        => (float)$row['deuda_pendiente'], // Ya regresa con el valor correcto
+        'gastos_totales'         => (float)$row['gastos_totales'],
+        'compras_totales'        => (float)$row['compras_totales'],
+        'diadehoy'               => $hoy,
     ];
 }
 
@@ -520,23 +518,19 @@ public function existeCorte($fecha, $id_almacen) {
 public function agregarCorteManual($datos) {
     date_default_timezone_set('America/Mexico_City');
     
-    // --- PARÁMETROS SEPARADOS PARA VISIBILIDAD ---
-    // Usamos la fecha que viene del modal, si no existe, usamos hoy
-   $fecha_corte         = $datos['fecha_corte'] ?? date('Y-m-d'); 
+    $fecha_corte         = $datos['fecha_corte'] ?? date('Y-m-d'); 
     $hora_cierre         = date('H:i:s');
     $almacen_id          = intval($datos['almacen_id']);
     
-    // Primero extraemos los valores necesarios para el cálculo
     $efectivo_real       = floatval($datos['total_efectivo']);
     $transferencia       = floatval($datos['total_transferencia']);
     $tarjeta             = floatval($datos['total_tarjeta']);
     $abonos_totales      = floatval($datos['abonos_totales']);
     $deuda_pendiente     = floatval($datos['deuda_pendiente']);
 
-    // Ahora calculamos la venta bruta siguiendo tu orden
+    // Venta bruta: (Efectivo + Tarjeta + Transferencia + Deuda) - Abonos
     $venta_bruta         = ($efectivo_real + $tarjeta + $transferencia + $deuda_pendiente) - $abonos_totales;
 
-    // Continuamos con el resto de las variables en su posición original
     $abono_efectivo      = floatval($datos['abono_efectivo']);
     $abono_tarjeta       = floatval($datos['abono_tarjeta']);
     $abono_transferencia = floatval($datos['abono_transferencia']);
@@ -549,70 +543,160 @@ public function agregarCorteManual($datos) {
     $observaciones       = $datos['observaciones'] ?? '';
     $created_at          = date('Y-m-d H:i:s');
 
-    /* OPCIONAL: Descomenta la siguiente línea para ver los datos en la consola 
-       de red del navegador (Network tab) antes de que se inserten.
-    */
-    // var_dump($fecha_corte, $almacen_id, $cobrado_total); die();
-
+    // Usamos ON DUPLICATE KEY UPDATE para actualizar si la dupla fecha/almacen ya existe
     $sql = "INSERT INTO `corte_de_caja` (
-                `fecha_corte`, 
-                `hora_cierre`, 
-                `almacen_id`, 
-                `venta_bruta`, 
-                `efectivo_real`, 
-                `transferencia`, 
-                `tarjeta`, 
-                `abono_efectivo`,
-                `abono_tarjeta`,
-                `abono_transferencia`,
-                `abonos_totales`,
-                `saldo_favor_usado`, 
-                `cobrado_total`, 
-                `gastos_totales`,
-                `compras_totales`,
-                `gran_total_ingresos`,
-                `deuda_pendiente`, 
-                `usuario_id`, 
-                `observaciones`, 
-                `created_at`
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                `fecha_corte`, `hora_cierre`, `almacen_id`, `venta_bruta`, `efectivo_real`, 
+                `transferencia`, `tarjeta`, `abono_efectivo`, `abono_tarjeta`, 
+                `abono_transferencia`, `abonos_totales`, `saldo_favor_usado`, 
+                `cobrado_total`, `gastos_totales`, `compras_totales`, 
+                `gran_total_ingresos`, `deuda_pendiente`, `usuario_id`, 
+                `observaciones`, `created_at`
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE 
+                `hora_cierre` = VALUES(`hora_cierre`),
+                `venta_bruta` = VALUES(`venta_bruta`),
+                `efectivo_real` = VALUES(`efectivo_real`),
+                `transferencia` = VALUES(`transferencia`),
+                `tarjeta` = VALUES(`tarjeta`),
+                `abono_efectivo` = VALUES(`abono_efectivo`),
+                `abono_tarjeta` = VALUES(`abono_tarjeta`),
+                `abono_transferencia` = VALUES(`abono_transferencia`),
+                `abonos_totales` = VALUES(`abonos_totales`),
+                `saldo_favor_usado` = VALUES(`saldo_favor_usado`),
+                `cobrado_total` = VALUES(`cobrado_total`),
+                `gastos_totales` = VALUES(`gastos_totales`),
+                `compras_totales` = VALUES(`compras_totales`),
+                `gran_total_ingresos` = VALUES(`gran_total_ingresos`),
+                `deuda_pendiente` = VALUES(`deuda_pendiente`),
+                `usuario_id` = VALUES(`usuario_id`),
+                `observaciones` = VALUES(`observaciones`),
+                `updated_at` = NOW()";
 
     $stmt = $this->db->prepare($sql);
-
-    // Ajustamos el string de tipos (20 parámetros)
-    // s = string, i = integer, d = double (float)
-    // Orden: s, s, i, d, d, d, d, d, d, d, d, d, d, d, d, d, d, i, s, s
     $tipos = "ssiddddddddddddddiss";
 
     $stmt->bind_param(
         $tipos, 
-        $fecha_corte,
-        $hora_cierre,
-        $almacen_id,
-        $venta_bruta,
-        $efectivo_real,
-        $transferencia,
-        $tarjeta,
-        $abono_efectivo,
-        $abono_tarjeta,
-        $abono_transferencia,
-        $abonos_totales,
-        $saldo_favor_usado,
-        $cobrado_total,
-        $gastos_totales,
-        $compras_totales,
-        $gran_total_ingresos,
-        $deuda_pendiente,
-        $usuario_id,
-        $observaciones,
-        $created_at
+        $fecha_corte, $hora_cierre, $almacen_id, $venta_bruta, $efectivo_real,
+        $transferencia, $tarjeta, $abono_efectivo, $abono_tarjeta, $abono_transferencia,
+        $abonos_totales, $saldo_favor_usado, $cobrado_total, $gastos_totales, $compras_totales,
+        $gran_total_ingresos, $deuda_pendiente, $usuario_id, $observaciones, $created_at
     );
 
     if ($stmt->execute()) {
-        return ['status' => 'success', 'id' => $this->db->insert_id];
+        // insert_id devolverá el ID del registro creado o actualizado
+        $final_id = ($stmt->insert_id > 0) ? $stmt->insert_id : "Actualizado";
+        return ['status' => 'success', 'id' => $final_id];
     } else {
         return ['status' => 'error', 'message' => $this->db->error];
     }
 }
+public function registrarAperturaDesdeCierre($almacen_id, $usuario_id, $desglose, $fecha_corte) {
+    /**
+     * $desglose es un array esperado: 
+     * ['efectivo' => 0.00, 'tarjeta' => 0.00, 'transferencia' => 0.00]
+     */
+    
+    // Calculamos el monto total para la columna general 'monto'
+    $monto_total = array_sum($desglose);
+    
+    // Definimos la fecha contable (mañana al primer segundo)
+    $fecha_apertura = date('Y-m-d', strtotime($fecha_corte . ' +1 day')) . ' 00:00:01';
+    
+    $concepto = "Saldo inicial automático (Corte: " . $fecha_corte . ")";
 
+    $sql = "INSERT INTO historial_capital (
+                categoria_id, 
+                almacen_origen_id, 
+                monto, 
+                monto_efectivo,
+                monto_tarjeta,
+                monto_transferencia,
+                usuario_registro_id, 
+                concepto, 
+                fecha_movimiento
+            ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)";
+    
+    $stmt = $this->db->prepare($sql);
+    
+    // Ejecución con el desglose mapeado
+    return $stmt->execute([
+        $almacen_id, 
+        $monto_total,
+        $desglose['efectivo'] ?? 0,
+        $desglose['tarjeta'] ?? 0,
+        $desglose['transferencia'] ?? 0,
+        $usuario_id, 
+        $concepto, 
+        $fecha_apertura
+    ]);
+}
+/**
+ * Obtiene el saldo inicial basándose en el nivel de acceso.
+ * Si $almacen_id es 0, actúa como Admin y devuelve un array de todos los almacenes.
+ * Si $almacen_id > 0, devuelve el monto único de esa sucursal.
+ */
+public function obtenerSaldoInicialMonitor($almacen_id, $f_inicio, $f_fin) {
+    // Ajustamos las horas para cubrir el día completo
+    $inicio_periodo = $f_inicio . ' 00:00:00';
+    $fin_periodo    = $f_fin . ' 23:59:59';
+
+    if ($almacen_id == 0) {
+        /**
+         * VISTA ADMINISTRADOR:
+         * Trae todas las sucursales activas y pega el último saldo 
+         * de apertura SOLO si existe en el rango de fechas.
+         */
+        $sql = "SELECT 
+                    a.nombre AS almacen, 
+                    IFNULL(h.monto, 0.00) AS monto, 
+                    IFNULL(h.monto_efectivo, 0.00) AS monto_efectivo, 
+                    IFNULL(h.monto_tarjeta, 0.00) AS monto_tarjeta, 
+                    IFNULL(h.monto_transferencia, 0.00) AS monto_transferencia
+                FROM almacenes a
+                LEFT JOIN historial_capital h ON h.id = (
+                    SELECT MAX(id) 
+                    FROM historial_capital 
+                    WHERE categoria_id = 1 
+                      AND almacen_origen_id = a.id 
+                      AND fecha_movimiento BETWEEN ? AND ?
+                )
+                WHERE a.activo = 1 
+                ORDER BY a.nombre ASC";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("ss", $inicio_periodo, $fin_periodo);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    } else {
+        /**
+         * VISTA SUCURSAL:
+         * Misma lógica estricta pero filtrada para un solo almacén.
+         */
+        $sql = "SELECT 
+                    IFNULL(monto, 0.00) as monto, 
+                    IFNULL(monto_efectivo, 0.00) as monto_efectivo, 
+                    IFNULL(monto_tarjeta, 0.00) as monto_tarjeta, 
+                    IFNULL(monto_transferencia, 0.00) as monto_transferencia
+                FROM historial_capital 
+                WHERE categoria_id = 1 
+                  AND almacen_origen_id = ? 
+                  AND fecha_movimiento BETWEEN ? AND ? 
+                ORDER BY id DESC LIMIT 1";
+                
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("iss", $almacen_id, $inicio_periodo, $fin_periodo);
+        $stmt->execute();
+        $res = $stmt->get_result()->fetch_assoc();
+        
+        // Si la sucursal no tiene apertura hoy, devolvemos el molde de ceros
+        return $res ?: [
+            'monto' => 0.00, 
+            'monto_efectivo' => 0.00, 
+            'monto_tarjeta' => 0.00, 
+            'monto_transferencia' => 0.00
+        ];
+    }
+}
 }
