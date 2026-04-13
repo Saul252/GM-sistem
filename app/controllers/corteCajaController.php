@@ -19,9 +19,20 @@ $usuario_id     = $_SESSION['id_usuario'] ?? 0;
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['accion'] === 'guardarCorte') {
     header('Content-Type: application/json');
 
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+
+    $usuario_id = isset($_SESSION['usuario_id']) ? intval($_SESSION['usuario_id']) : 0;
+
+    if ($usuario_id <= 0) {
+        echo json_encode(['status' => 'error', 'message' => 'Usuario no válido en sesión']);
+        exit;
+    }
+
     $fecha_corte   = $_POST['fecha_corte'] ?? date('Y-m-d');
     $almacen_req   = isset($_POST['almacen_id']) ? intval($_POST['almacen_id']) : 0;
-    $observaciones = isset($_POST['observaciones']) ? trim($_POST['observaciones']) : 'Corte manual';
+    $observaciones = $_POST['observaciones'] ?? 'Corte manual';
 
     $target_save = ($almacen_sesion != 0) ? $almacen_sesion : $almacen_req;
 
@@ -31,21 +42,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
     }
 
     try {
-        $resumen = $modelo->obtenerSumasCorte('personalizado', $fecha_corte, $fecha_corte, $target_save);
 
-        if (!$resumen || isset($resumen['error'])) {
-            throw new Exception("Error al calcular montos para la fecha seleccionada.");
-        }
+        // ===============================
+        // 🔥 DATOS DESDE FRONTEND (CORRECTO)
+        // ===============================
+        $efectivo_real   = floatval($_POST['total_efectivo'] ?? 0);
+        $tarjeta         = floatval($_POST['total_tarjeta'] ?? 0);
+        $transferencia   = floatval($_POST['total_transferencia'] ?? 0);
 
-        // Definimos las variables con el ajuste de Venta Bruta
-        $efectivo_real       = floatval($resumen['total_efectivo']);
-        $transferencia       = floatval($resumen['total_transferencia']);
-        $tarjeta             = floatval($resumen['total_tarjeta']);
-        $deuda_pendiente     = floatval($resumen['deuda_pendiente']);
-        $abonos_totales      = floatval($resumen['abonos_totales']);
-        
+        $abono_efectivo      = floatval($_POST['abono_efectivo'] ?? 0);
+        $abono_tarjeta       = floatval($_POST['abono_tarjeta'] ?? 0);
+        $abono_transferencia = floatval($_POST['abono_transferencia'] ?? 0);
+
+        $abonos_totales = $abono_efectivo + $abono_tarjeta + $abono_transferencia;
+
+        $saldo_favor_usado = floatval($_POST['saldo_favor_usado'] ?? 0);
+        $deuda_pendiente   = floatval($_POST['deuda_pendiente'] ?? 0);
+
+        $gastos_totales  = floatval($_POST['gastos_totales'] ?? 0);
+        $compras_totales = floatval($_POST['compras_totales'] ?? 0);
+
+        $gran_total_ingresos = floatval($_POST['gran_total_ingresos'] ?? 0);
+
+        // ===============================
+        // 🔥 TU FÓRMULA (SE RESPETA)
+        // ===============================
         $venta_bruta_calculada = ($efectivo_real + $tarjeta + $transferencia + $deuda_pendiente) - $abonos_totales;
 
+        // ===============================
+        // 🔥 PREPARAR DATOS
+        // ===============================
         $datosParaGuardar = [
             'fecha_corte'         => $fecha_corte,
             'almacen_id'          => $target_save,
@@ -54,40 +80,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
             'total_efectivo'      => $efectivo_real,
             'total_transferencia' => $transferencia,
             'total_tarjeta'       => $tarjeta,
-            'abono_efectivo'      => $resumen['abono_efectivo'],
-            'abono_tarjeta'       => $resumen['abono_tarjeta'],
-            'abono_transferencia' => $resumen['abono_transferencia'],
+            'abono_efectivo'      => $abono_efectivo,
+            'abono_tarjeta'       => $abono_tarjeta,
+            'abono_transferencia' => $abono_transferencia,
             'abonos_totales'      => $abonos_totales,
-            'saldo_favor_usado'   => $resumen['saldo_favor_usado'],
-            'cobrado_total'       => $resumen['cobrado_total'],
-            'gastos_totales'      => $resumen['gastos_totales'],
-            'compras_totales'     => $resumen['compras_totales'],
-            'gran_total_ingresos' => $resumen['gran_total_ingresos'],
+            'saldo_favor_usado'   => $saldo_favor_usado,
+            'cobrado_total'       => $efectivo_real + $tarjeta + $transferencia,
+            'gastos_totales'      => $gastos_totales,
+            'compras_totales'     => $compras_totales,
+            'gran_total_ingresos' => $gran_total_ingresos,
             'deuda_pendiente'     => $deuda_pendiente,
             'observaciones'       => $observaciones
         ];
 
-        // 3. Ejecutamos el insert del corte
         $resultado = $modelo->agregarCorteManual($datosParaGuardar);
 
-        // 4. SI EL CORTE SE GUARDÓ, REGISTRAMOS EL SALDO INICIAL DESGLOSADO EN EL HISTORIAL
+        // ===============================
+        // 🔥 APERTURA AUTOMÁTICA
+        // ===============================
         if ($resultado['status'] === 'success') {
-            /**
-             * Preparamos el desglose dinámico. 
-             * Usamos 'gran_total_ingresos' para el efectivo porque ya resta gastos/compras,
-             * asegurando que lo que se siembra es lo que REALMENTE quedó en caja.
-             */
+
             $desglose_para_historial = [
-                'efectivo'      => floatval($resumen['gran_total_ingresos']), 
+                
+                'efectivo'      => $efectivo_real,
                 'tarjeta'       => $tarjeta,
                 'transferencia' => $transferencia
             ];
-            
-            // Llamamos a la función actualizada que recibe el array de desgloses
+
             $modelo->registrarAperturaDesdeCierre(
-                $target_save, 
-                $usuario_id, 
-                $desglose_para_historial, 
+                $target_save,
+                $usuario_id,
+                $desglose_para_historial,
                 $fecha_corte
             );
         }
@@ -95,8 +118,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
         echo json_encode($resultado);
 
     } catch (Exception $e) {
-        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+        echo json_encode([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
     }
+
     exit;
 }
 

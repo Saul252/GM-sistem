@@ -597,7 +597,7 @@ public function registrarAperturaDesdeCierre($almacen_id, $usuario_id, $desglose
      * ['efectivo' => 0.00, 'tarjeta' => 0.00, 'transferencia' => 0.00]
      */
     
-    // Calculamos el monto total para la columna general 'monto'
+    // Calculamos el monto total
     $monto_total = array_sum($desglose);
     
     // Definimos la fecha contable (mañana al primer segundo)
@@ -605,9 +605,14 @@ public function registrarAperturaDesdeCierre($almacen_id, $usuario_id, $desglose
     
     $concepto = "Saldo inicial automático (Corte: " . $fecha_corte . ")";
 
+    // Agregamos las columnas de destino aunque vayan como NULL 
+    // para que coincida con la estructura actual de historial_capital
     $sql = "INSERT INTO historial_capital (
                 categoria_id, 
                 almacen_origen_id, 
+                almacen_destino_id, 
+                caja_fuerte_destino_id,
+                banco_destino_id,
                 monto, 
                 monto_efectivo,
                 monto_tarjeta,
@@ -615,21 +620,25 @@ public function registrarAperturaDesdeCierre($almacen_id, $usuario_id, $desglose
                 usuario_registro_id, 
                 concepto, 
                 fecha_movimiento
-            ) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)";
+            ) VALUES (1, ?, NULL, NULL, NULL, ?, ?, ?, ?, ?, ?, ?)";
     
-    $stmt = $this->db->prepare($sql);
-    
-    // Ejecución con el desglose mapeado
-    return $stmt->execute([
-        $almacen_id, 
-        $monto_total,
-        $desglose['efectivo'] ?? 0,
-        $desglose['tarjeta'] ?? 0,
-        $desglose['transferencia'] ?? 0,
-        $usuario_id, 
-        $concepto, 
-        $fecha_apertura
-    ]);
+    try {
+        $stmt = $this->db->prepare($sql);
+        
+        return $stmt->execute([
+            $almacen_id, 
+            $monto_total,
+            $desglose['efectivo'] ?? 0,
+            $desglose['tarjeta'] ?? 0,
+            $desglose['transferencia'] ?? 0,
+            $usuario_id, 
+            $concepto, 
+            $fecha_apertura
+        ]);
+    } catch (Exception $e) {
+        error_log("Error en registrarAperturaDesdeCierre: " . $e->getMessage());
+        return false;
+    }
 }
 /**
  * Obtiene el saldo inicial basándose en el nivel de acceso.

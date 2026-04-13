@@ -1,32 +1,40 @@
-<div class="modal fade" id="modalCorteCaja" tabindex="-1" aria-labelledby="modalCorteCajaLabel" aria-hidden="true">
+<div class="modal fade" id="modalCorteCaja" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 15px; overflow: hidden;">
+
+            <!-- HEADER -->
             <div class="modal-header bg-dark text-white border-0 py-3">
                 <div class="d-flex align-items-center">
-                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3"
+                         style="width: 40px; height: 40px;">
                         <i class="fas fa-cash-register text-white"></i>
                     </div>
                     <div>
-                        <h5 class="modal-title fw-bold mb-0" id="modalCorteCajaLabel">Finalizar Corte de Caja</h5>
+                        <h5 class="modal-title fw-bold mb-0">Finalizar Corte de Caja</h5>
                         <small class="text-light opacity-75">Confirma los totales antes de guardar</small>
                     </div>
                 </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
+            <!-- BODY -->
             <div class="modal-body p-4 bg-light">
+
                 <form id="formGuardarCorte">
+
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
-                            <label class="form-label text-muted small fw-bold">FECHA DEL CORTE</label>
-                            <input type="date" class="form-control form-control-sm shadow-sm border-0" 
-                                   id="fecha_corte_modal" name="fecha_corte" value="<?php echo date('Y-m-d'); ?>" required>
+                            <label class="form-label small fw-bold">FECHA</label>
+                            <input type="date" class="form-control form-control-sm"
+                                   name="fecha_corte"
+                                   value="<?php echo date('Y-m-d'); ?>">
                         </div>
+
                         <div class="col-md-6">
-                            <label class="form-label text-muted small fw-bold">ALMACÉN</label>
-                            <select class="form-select form-select-sm shadow-sm border-0 bg-white" id="almacen_id_modal" name="almacen_id" required>
+                            <label class="form-label small fw-bold">ALMACÉN</label>
+                            <select id="almacen_id_modal" class="form-select form-select-sm">
                                 <?php foreach ($listaAlmacenes as $almacen): ?>
-                                    <option value="<?= $almacen['id'] ?>" <?= ($target == $almacen['id']) ? 'selected' : '' ?>>
+                                    <option value="<?= $almacen['id'] ?>">
                                         <?= $almacen['nombre'] ?>
                                     </option>
                                 <?php endforeach; ?>
@@ -34,122 +42,183 @@
                         </div>
                     </div>
 
-                    <div class="glass-card p-3 mb-4 bg-white border-start border-primary border-4">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="text-muted small">Efectivo esperado:</span>
-                            <span class="fw-bold text-dark" id="modal-efectivo-txt">$0.00</span>
+                    <!-- RESUMEN -->
+                    <div class="bg-white p-3 rounded shadow-sm mb-3">
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Efectivo</span>
+                            <strong id="modal-efectivo-txt">$0.00</strong>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="text-muted small">Total Ingresos (Real):</span>
-                            <span class="fw-bold text-primary h5 mb-0" id="modal-total-txt">$0.00</span>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tarjeta</span>
+                            <strong id="modal-tarjeta-txt">$0.00</strong>
                         </div>
+
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Transferencia</span>
+                            <strong id="modal-transferencia-txt">$0.00</strong>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-flex justify-content-between">
+                            <span class="fw-bold">TOTAL</span>
+                            <strong class="text-primary" id="modal-total-txt">$0.00</strong>
+                        </div>
+
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label text-muted small fw-bold">NOTAS / OBSERVACIONES</label>
-                        <textarea class="form-control border-0 shadow-sm" name="observaciones" rows="2" 
-                                  placeholder="Ej. Todo cuadrado, faltante de $10, etc..." style="border-radius: 10px;"></textarea>
-                    </div>
+                    <textarea name="observaciones" class="form-control" rows="2"
+                              placeholder="Observaciones..."></textarea>
 
                     <input type="hidden" name="accion" value="guardarCorte">
+
                 </form>
+
             </div>
 
-            <div class="modal-footer border-0 bg-light p-4 pt-0">
-                <button type="button" class="btn btn-link text-muted text-decoration-none fw-bold" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" id="btnConfirmarCorte" class="btn btn-primary px-4 shadow-sm" style="border-radius: 10px;">
-                    <i class="fas fa-check-circle me-2"></i> Confirmar y Cerrar Caja
+            <!-- FOOTER -->
+            <div class="modal-footer border-0">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button id="btnConfirmarCorte" class="btn btn-primary">
+                    Guardar Corte
                 </button>
             </div>
+
         </div>
     </div>
 </div>
-
 <script>
 const url = "/cfsistem/app/controllers/corteCajaController.php";
 
 document.addEventListener('DOMContentLoaded', function() {
+
     const modalElement = document.getElementById('modalCorteCaja');
-    const myModal = new bootstrap.Modal(modalElement);
-    const btnGuardar = document.getElementById('btnConfirmarCorte');
-    const formCorte = document.getElementById('formGuardarCorte');
+    const myModal      = new bootstrap.Modal(modalElement);
+    const btnGuardar   = document.getElementById('btnConfirmarCorte');
 
-    // 1. Al abrir el modal, actualizamos los textos visuales
+    const selectPrincipal = document.getElementById('almacen_id');
+    const selectModal     = document.getElementById('almacen_id_modal');
+
+    // ===============================
+    // 🔥 LIMPIAR NUMEROS
+    // ===============================
+    const limpiarNumero = (id) => {
+        const el = document.getElementById(id);
+        if (!el) return 0;
+        return parseFloat((el.innerText || '0').replace(/[^0-9.-]+/g, "")) || 0;
+    };
+
+    // ===============================
+    // 🔥 ACTUALIZAR MODAL
+    // ===============================
+    function actualizarModal() {
+
+        const efectivo      = limpiarNumero('res-total-efectivoMasSaldo');
+        const tarjeta       = limpiarNumero('res-total-tarjetaMasSaldo');
+        const transferencia = limpiarNumero('res-total-transMasSaldo');
+
+        const total = efectivo + tarjeta + transferencia;
+
+        document.getElementById('modal-efectivo-txt').innerText =
+            '$' + efectivo.toLocaleString('es-MX');
+
+        document.getElementById('modal-tarjeta-txt').innerText =
+            '$' + tarjeta.toLocaleString('es-MX');
+
+        document.getElementById('modal-transferencia-txt').innerText =
+            '$' + transferencia.toLocaleString('es-MX');
+
+        document.getElementById('modal-total-txt').innerText =
+            '$' + total.toLocaleString('es-MX');
+
+        console.log("📊 MODAL:", {efectivo, tarjeta, transferencia, total});
+    }
+
+    // ===============================
+    // 🔥 AL ABRIR MODAL
+    // ===============================
     modalElement.addEventListener('show.bs.modal', function () {
-        // Obtenemos los valores de las tarjetas de la vista principal
-        const efectivoActual = document.getElementById('res-total').innerText; 
-        const totalActual = document.getElementById('res-cobrado-total').innerText;
 
-        document.getElementById('modal-efectivo-txt').innerText = efectivoActual;
-        document.getElementById('modal-total-txt').innerText = totalActual;
+        selectModal.value = selectPrincipal.value;
+
+        actualizarModal();
     });
 
-    // 2. Función para guardar vía AJAX
+    // ===============================
+    // 🔥 CAMBIO DE ALMACÉN EN MODAL
+    // ===============================
+    selectModal.addEventListener('change', function() {
+
+        selectPrincipal.value = this.value;
+
+        // 🔥 dispara recarga del sistema
+        $('#almacen_id').trigger('change');
+
+        setTimeout(() => {
+            actualizarModal();
+        }, 400);
+    });
+
+    // ===============================
+    // 🔥 GUARDAR
+    // ===============================
     btnGuardar.addEventListener('click', function() {
-        const formData = new FormData(formCorte);
 
-        // FUNCIÓN AUXILIAR: Extrae números limpios de los textos (quita $, comas, etc)
-        const limpiarNumero = (id) => {
-            const el = document.getElementById(id);
-            return el ? parseFloat(el.innerText.replace(/[^0-9.-]+/g, "")) : 0;
-        };
+        const formData = new FormData(document.getElementById('formGuardarCorte'));
 
-        /* IMPORTANTE: Agregamos manualmente los datos que el controlador 
-           necesita para la fórmula de Venta Bruta y Saldo Inicial.
-           Asegúrate de que estos IDs existan en tus etiquetas <span> o <div> de la vista principal.
-        */
-        formData.append('total_efectivo',      limpiarNumero('res-total')); // El que usas para modal-efectivo
-        formData.append('total_transferencia', limpiarNumero('res-transferencia'));
-        formData.append('total_tarjeta',       limpiarNumero('res-tarjeta'));
-        formData.append('abonos_totales',      limpiarNumero('res-abonos-totales'));
-        formData.append('deuda_pendiente',     limpiarNumero('res-deuda-pendiente'));
-        
-        // Otros datos del resumen necesarios
-        formData.append('abono_efectivo',      limpiarNumero('res-abono-efectivo'));
-        formData.append('abono_tarjeta',       limpiarNumero('res-abono-tarjeta'));
-        formData.append('abono_transferencia', limpiarNumero('res-abono-transferencia'));
-        formData.append('saldo_favor_usado',   limpiarNumero('res-saldo-favor'));
-        formData.append('cobrado_total',       limpiarNumero('res-cobrado-total'));
-        formData.append('gastos_totales',      limpiarNumero('res-gastos'));
-        formData.append('compras_totales',     limpiarNumero('res-compras'));
-        formData.append('gran_total_ingresos', limpiarNumero('res-gran-total'));
+        const almacenId = selectModal.value;
 
-        // Bloqueamos botón para evitar doble clic
+        formData.append('accion', 'guardarCorte');
+        formData.append('almacen_id', almacenId);
+
+        // 🔥 DATOS
+        formData.append('total_efectivo', limpiarNumero('res-total-efectivoMasSaldo'));
+        formData.append('total_tarjeta', limpiarNumero('es-total-tarjetaMasSaldo'));
+        formData.append('total_transferencia', limpiarNumero('res-total-transMasSaldo'));
+
+        formData.append('gran_total_ingresos',
+            limpiarNumero('res-total-efectivoMasSaldo') +
+            limpiarNumero('res-total-tarjetaMasSaldo') +
+            limpiarNumero('res-total-transMasSaldo')
+        );
+
+        // 🔥 DEBUG
+        console.log("🧾 ENVIANDO:");
+        for (let [k,v] of formData.entries()) {
+            console.log(k, v);
+        }
+
         btnGuardar.disabled = true;
-        btnGuardar.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Guardando...';
+        btnGuardar.innerHTML = "Guardando...";
 
         fetch(url, {
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
+        .then(r => r.json())
         .then(data => {
+
+            console.log("📦 RESPUESTA:", data);
+
             if (data.status === 'success') {
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Corte Exitoso!',
-                    text: 'El cierre de caja ha sido registrado y el saldo inicial de mañana ha sido sembrado.',
-                    confirmButtonColor: '#0d6efd'
-                }).then(() => {
-                    myModal.hide();
-                    location.reload(); 
-                });
+                Swal.fire("OK", "Corte guardado", "success")
+                .then(() => location.reload());
             } else {
-                // Cambiado de Exception a Error (JavaScript style)
-                throw new Error(data.message || 'Error desconocido en el servidor');
+                throw new Error(data.message);
             }
+
         })
-        .catch(error => {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error al guardar',
-                text: error.message || 'Ocurrió un problema en el servidor.'
-            });
+        .catch(err => {
+            Swal.fire("Error", err.message, "error");
         })
         .finally(() => {
             btnGuardar.disabled = false;
-            btnGuardar.innerHTML = '<i class="fas fa-check-circle me-2"></i> Confirmar y Cerrar Caja';
+            btnGuardar.innerHTML = "Guardar Corte";
         });
+
     });
+
 });
 </script>

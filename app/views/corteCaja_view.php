@@ -20,6 +20,30 @@
         .badge-metodo { font-size: 10px; padding: 5px 10px; border-radius: 8px; font-weight: 600; }
         .origen-tag { font-size: 9px; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; margin-top: 4px; display: inline-block; }
         @media (max-width: 992px) { .main-content { margin-left: 0; } }
+            .glass-card {
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        transition: transform 0.2s;
+        border: 1px solid #eef0f2;
+    }
+    .glass-card:hover {
+        transform: translateY(-5px);
+    }
+    .icon-box {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+    }
+    .text-xs { font-size: 0.7rem; letter-spacing: 0.5px; }
+    .bg-soft-success { background-color: #e8f5e9; color: #2e7d32; }
+    .bg-soft-primary { background-color: #e3f2fd; color: #1565c0; }
+    .bg-soft-warning { background-color: #fff3e0; color: #ef6c00; }
+    .bg-soft-danger { background-color: #ffebee; color: #c62828; }
     </style>
 </head>
 <body>
@@ -79,7 +103,17 @@ echo "<br>Zona horaria configurada: " . date_default_timezone_get();?>
                             <?php endforeach; ?>
                         </select>
                     </div>
-
+<div class="col-md-2">
+    <label class="small fw-bold text-muted text-uppercase text-xs">Método de Pago</label>
+    <select id="metodo_pago_filtro" class="form-select ios-input">
+        <option value="todos">💳 Todos</option>
+        <option value="EFECTIVO">💵 Efectivo</option>
+        <option value="TARJETA">💳 Tarjeta</option>
+        <option value="TRANSFERENCIA">🏦 Transferencia</option>
+         <option value="Saldo a Favor"> Saldo a Favor</option>
+         <option value="Null">Deuda</option>
+    </select>
+</div>
                     <div class="col-md-2">
                         <button type="button" onclick="AppCaja.update()" class="btn btn-primary w-100 fw-bold rounded-3 py-2" style="background: var(--apple-blue);">
                             Actualizar
@@ -88,138 +122,100 @@ echo "<br>Zona horaria configurada: " . date_default_timezone_get();?>
                 </form>
             </div>
 
-      <style>
-    .glass-card {
-        background: #ffffff;
-        border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        transition: transform 0.2s;
-        border: 1px solid #eef0f2;
-    }
-    .glass-card:hover {
-        transform: translateY(-5px);
-    }
-    .icon-box {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 10px;
-    }
-    .text-xs { font-size: 0.7rem; letter-spacing: 0.5px; }
-    .bg-soft-success { background-color: #e8f5e9; color: #2e7d32; }
-    .bg-soft-primary { background-color: #e3f2fd; color: #1565c0; }
-    .bg-soft-warning { background-color: #fff3e0; color: #ef6c00; }
-    .bg-soft-danger { background-color: #ffebee; color: #c62828; }
-</style>
 
 <div class="row mb-4 g-3">
     <!-- CONTENEDOR DEL SALDO INICIAL: empieza visible, JS lo controla -->
     <div id="contenedor-saldo-inicial" class="mb-4 animate__animated animate__fadeIn">
     </div>
 
-   <div class="row g-3">
-    <div class="col-md-4">
-        <div class="glass-card p-3 border-bottom border-dark border-4 h-100 text-center">
-            <small class="text-muted fw-bold d-block mb-1 text-xs">VENTA TOTAL (BRUTA)</small>
-            <h3 class="fw-bold text-dark mb-0" id="res-venta-bruta">$0.00</h3>
-            <small class="text-muted" style="font-size: 10px;">Todo lo vendido (Pagado + Deuda)</small>
-        </div>
-    </div>
-    
-    <div class="col-md-4">
-        <div class="glass-card p-3 border-bottom border-danger border-4 h-100 text-center">
-            <small class="text-muted fw-bold d-block mb-1 text-xs">NOS DEBEN (DE HOY)</small>
-            <h3 class="fw-bold text-danger mb-0" id="res-deuda">$0.00</h3>
-            <small class="text-danger" style="font-size: 10px;">Ventas a crédito de este periodo</small>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="glass-card p-3 border-bottom border-warning border-4 h-100 text-center">
-            <small class="text-muted fw-bold d-block mb-1 text-xs">SALDO A FAVOR USADO</small>
-            <h3 class="fw-bold text-warning mb-0" id="res-saldo-favor">$0.00</h3>
-            <small class="text-warning" style="font-size: 10px;">Crédito de clientes aplicado</small>
+ <div class="row g-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm bg-dark text-white p-4" style="border-radius: 15px;">
+            <div class="row align-items-center">
+                <div class="col-md-4 text-center border-end border-secondary">
+                    <small class="text-uppercase opacity-75 fw-bold">Venta Bruta Total</small>
+                    <h2 class="display-6 fw-bold mb-0" id="res-venta-bruta">$0.00</h2>
+                </div>
+                <div class="col-md-4 text-center border-end border-secondary">
+                    <small class="text-uppercase opacity-75 fw-bold text-danger">Pendiente de Cobro</small>
+                    <h2 class="display-6 fw-bold mb-0 text-danger" id="res-deuda">$0.00</h2>
+                </div>
+                <div class="col-md-4 text-center">
+                    <small class="text-uppercase opacity-75 fw-bold text-warning">Saldo Favor Usado</small>
+                    <h2 class="display-6 fw-bold mb-0 text-warning" id="res-saldo-favor">$0.00</h2>
+                </div>
+            </div>
         </div>
     </div>
 
-    <hr class="my-3 opacity-0"> <div class="col-md-4">
-        <div class="glass-card p-3 border-start border-success border-4 h-100">
-            <small class="text-muted fw-bold d-block mb-2 text-xs text-center">TOTAL EFECTIVO (CAJA)</small>
-            <h4 class="fw-bold text-center mb-0" id="res-total-efectivo">$0.00</h4>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="glass-card p-3 border-start border-primary border-4 h-100">
-            <small class="text-muted fw-bold d-block mb-2 text-xs text-center">TOTAL TARJETA</small>
-            <h4 class="fw-bold text-center mb-0" id="res-total-tarjeta">$0.00</h4>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="glass-card p-3 border-start border-info border-4 h-100">
-            <small class="text-muted fw-bold d-block mb-2 text-xs text-center">TOTAL TRANSFERENCIA</small>
-            <h4 class="fw-bold text-center mb-0" id="res-total-trans">$0.00</h4>
-        </div>
-    </div>
-
-    <hr class="my-3 opacity-0"> <div class="col-md-4">
-        <div class="glass-card p-3 border-start border-success border-4 h-100">
-            <small class="text-muted fw-bold d-block mb-2 text-xs text-center">TOTAL EFECTIVO MAS SALDO INICIAL</small>
-            <h4 class="fw-bold text-center mb-0" id="res-total-efectivoMasSaldo">$0.00</h4>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="glass-card p-3 border-start border-primary border-4 h-100">
-            <small class="text-muted fw-bold d-block mb-2 text-xs text-center">TOTAL TARJETA MAS SALDO INICIAL</small>
-            <h4 class="fw-bold text-center mb-0" id="res-total-tarjetaMasSaldo">$0.00</h4>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="glass-card p-3 border-start border-info border-4 h-100">
-            <small class="text-muted fw-bold d-block mb-2 text-xs text-center">TOTAL TRANSFERENCIA MAS SALDO INICIAL</small>
-            <h4 class="fw-bold text-center mb-0" id="res-total-transMasSaldo">$0.00</h4>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100" style="border-radius: 15px;">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-4 text-muted"><i class="fas fa-money-bill-wave me-2"></i>FLUJO DE DINERO (HOY)</h6>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-secondary">Efectivo en Caja</span>
+                    <h4 class="fw-bold mb-0 text-success" id="res-total-efectivo">$0.00</h4>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-secondary">Terminal Tarjeta</span>
+                    <h4 class="fw-bold mb-0 text-primary" id="res-total-tarjeta">$0.00</h4>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-secondary">Transferencias Bancarias</span>
+                    <h4 class="fw-bold mb-0 text-info" id="res-total-trans">$0.00</h4>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="col-12 mt-4"><h6 class="fw-bold text-muted">¿Cuánto entró por Ventas de Hoy?</h6></div>
-    <div class="col-md-4">
-        <div class="glass-card p-3 h-100 bg-soft-info">
-            <small class="text-xs d-block">Efectivo de Ventas</small>
-            <span class="h5 fw-bold" id="res-v-efectivo">$0.00</span>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="glass-card p-3 h-100 bg-soft-info">
-            <small class="text-xs d-block">Tarjeta de Ventas</small>
-            <span class="h5 fw-bold" id="res-v-tarjeta">$0.00</span>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="glass-card p-3 h-100 bg-soft-info">
-            <small class="text-xs d-block">Transf. de Ventas</small>
-            <span class="h5 fw-bold" id="res-v-trans">$0.00</span>
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100 bg-light" style="border-radius: 15px;">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-4 text-muted"><i class="fas fa-vault me-2"></i>CAJA FINAL (+ INICIAL)</h6>
+                <div class="p-3 bg-white rounded-3 shadow-sm mb-2 d-flex justify-content-between align-items-center">
+                    <small class="fw-bold text-muted">EFECTIVO TOTAL</small>
+                    <span class="h5 fw-bold mb-0" id="res-total-efectivoMasSaldo">$0.00</span>
+                </div>
+                <div class="p-3 bg-white rounded-3 shadow-sm mb-2 d-flex justify-content-between align-items-center">
+                    <small class="fw-bold text-muted">TARJETA TOTAL</small>
+                    <span class="h5 fw-bold mb-0" id="res-total-tarjetaMasSaldo">$0.00</span>
+                </div>
+                <div class="p-3 bg-white rounded-3 shadow-sm d-flex justify-content-between align-items-center">
+                    <small class="fw-bold text-muted">TRANSF. TOTAL</small>
+                    <span class="h5 fw-bold mb-0" id="res-total-transMasSaldo">$0.00</span>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="col-12 mt-4"><h6 class="fw-bold text-muted">¿Cuánto entró por Abonos (Deudas Viejas)?</h6></div>
-    <div class="col-md-4">
-        <div class="glass-card p-3 h-100 bg-soft-warning">
-            <small class="text-xs d-block">Efectivo de Abonos</small>
-            <span class="h5 fw-bold" id="res-a-efectivo">$0.00</span>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="glass-card p-3 h-100 bg-soft-warning">
-            <small class="text-xs d-block">Tarjeta de Abonos</small>
-            <span class="h5 fw-bold" id="res-a-tarjeta">$0.00</span>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="glass-card p-3 h-100 bg-soft-warning">
-            <small class="text-xs d-block">Transf. de Abonos</small>
-            <span class="h5 fw-bold" id="res-a-trans">$0.00</span>
+    <div class="col-12 mt-2">
+        <div class="card border-0 shadow-sm" style="border-radius: 15px;">
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0 text-center">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="py-3 border-0 text-muted small">CONCEPTO</th>
+                            <th class="py-3 border-0 text-muted small">EFECTIVO</th>
+                            <th class="py-3 border-0 text-muted small">TARJETA</th>
+                            <th class="py-3 border-0 text-muted small">TRANSFERENCIA</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="py-3 text-start ps-4 fw-bold text-secondary">Ventas de Hoy</td>
+                            <td class="py-3" id="res-v-efectivo">$0.00</td>
+                            <td class="py-3" id="res-v-tarjeta">$0.00</td>
+                            <td class="py-3" id="res-v-trans">$0.00</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 text-start ps-4 fw-bold text-secondary">Abonos Recibidos</td>
+                            <td class="py-3" id="res-a-efectivo">$0.00</td>
+                            <td class="py-3" id="res-a-tarjeta">$0.00</td>
+                            <td class="py-3" id="res-a-trans">$0.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -316,12 +312,10 @@ const AppCaja = {
         $('#periodo').on('change', function() {
             const periodo = $(this).val();
 
-            // Si el periodo NO requiere saldo, ocultamos y vaciamos el contenedor de inmediato
             if (!periodoRequiereSaldo(periodo)) {
                 $('#contenedor-saldo-inicial').empty().hide();
             }
 
-            // Manejo del selector de fechas personalizadas
             if (periodo === 'personalizado') {
                 $('#div-fechas').removeClass('d-none').addClass('animate__animated animate__fadeIn');
             } else {
@@ -332,6 +326,11 @@ const AppCaja = {
 
         $('#almacen_id').on('change', function() {
             self.update();
+        });
+
+        // 🔥 filtro por método de pago
+        $('#metodo_pago_filtro').on('change', function() {
+            self.renderTabla(self.lastData || []);
         });
     },
 
@@ -348,11 +347,13 @@ const AppCaja = {
 
         $.getJSON(this.config.url, params, (res) => {
             if (res.status === 'success' || res.totales) {
-                // La decisión de mostrar el saldo la toma el CLIENTE según el periodo
-                // No se usa res.mostrar_saldo para evitar que el servidor sobreescriba la lógica
                 const mostrar = periodoRequiereSaldo(params.periodo);
                 this.renderSaldoInicial(res.saldo_inicial, res.es_lista, mostrar);
                 this.renderTotales(res.totales, res.saldo_inicial, res.es_lista, mostrar);
+
+                // guardar data original
+                this.lastData = res.detalles;
+
                 this.renderTabla(res.detalles);
             }
         }).always(() => {
@@ -364,13 +365,11 @@ const AppCaja = {
         const $contenedor = $('#contenedor-saldo-inicial');
         if (!$contenedor.length) return;
 
-        // Si el periodo no requiere saldo: limpiar, ocultar y salir
         if (!mostrar) {
             $contenedor.empty().hide();
             return;
         }
 
-        // El periodo requiere saldo: renderizar y mostrar
         if (esLista) {
             let filas = (data && data.length > 0)
                 ? data.map(s => `
@@ -421,7 +420,7 @@ const AppCaja = {
                     <div class="card-body p-3">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div>
-                                <small class="text-white-50 fw-bold d-block text-xs text-uppercase" style="letter-spacing:1px;">Saldo Inicial (Total)</small>
+                                <small class="text-white-50 fw-bold d-block text-xs text-uppercase">Saldo Inicial (Total)</small>
                                 <h2 class="fw-bold mb-0">${total}</h2>
                             </div>
                             <i class="bi bi-safe2 fs-4 bg-white bg-opacity-20 p-2 rounded-circle"></i>
@@ -446,81 +445,107 @@ const AppCaja = {
         }
     },
 
-  renderTotales: function(s, saldoIni, esLista, mostrar) {
-    if (!s) return;
-    const dIni = saldoIni || {};
+    renderTotales: function(s, saldoIni, esLista, mostrar) {
+        if (!s) return;
+        const dIni = saldoIni || {};
 
-    // Saldo inicial (si aplica)
-    const iniEfec = (mostrar && !esLista) ? parseFloat(dIni.monto_efectivo || 0) : 0;
-    const iniTar  = (mostrar && !esLista) ? parseFloat(dIni.monto_tarjeta || 0) : 0;
-    const iniTra  = (mostrar && !esLista) ? parseFloat(dIni.monto_transferencia || 0) : 0;
+        const iniEfec = (mostrar && !esLista) ? parseFloat(dIni.monto_efectivo || 0) : 0;
+        const iniTar  = (mostrar && !esLista) ? parseFloat(dIni.monto_tarjeta || 0) : 0;
+        const iniTra  = (mostrar && !esLista) ? parseFloat(dIni.monto_transferencia || 0) : 0;
 
-    // --- 1. TOTALES GENERALES ---
-    $('#res-venta-bruta').text(this.formatMoney(s.venta_bruta || 0));
-    $('#res-deuda').text(this.formatMoney(s.deuda_pendiente || 0));
-    $('#res-saldo-favor').text(this.formatMoney(s.saldo_favor_usado || 0));
+        $('#res-venta-bruta').text(this.formatMoney(s.venta_bruta || 0));
+        $('#res-deuda').text(this.formatMoney(s.deuda_pendiente || 0));
+        $('#res-saldo-favor').text(this.formatMoney(s.saldo_favor_usado || 0));
 
-   // --- 2. CAJA TOTAL (Independiente de dónde venga) ---
-// Usamos directamente las propiedades que ya vienen sumadas del PHP
+        $('#res-total-efectivo').text(this.formatMoney(parseFloat(s.ingreso_total_efectivo || 0)));
+        $('#res-total-tarjeta').text(this.formatMoney(parseFloat(s.ingreso_total_tarjeta || 0)));
+        $('#res-total-trans').text(this.formatMoney(parseFloat(s.ingreso_total_transfer || 0)));
 
-// Totales de lo que entró HOY (Venta + Abono)
-$('#res-total-efectivo').text(this.formatMoney(parseFloat(s.ingreso_total_efectivo || 0)));
-$('#res-total-tarjeta').text(this.formatMoney(parseFloat(s.ingreso_total_tarjeta || 0)));
-$('#res-total-trans').text(this.formatMoney(parseFloat(s.ingreso_total_transfer || 0)));
+        $('#res-total-efectivoMasSaldo').text(this.formatMoney(iniEfec + parseFloat(s.ingreso_total_efectivo || 0)));
+        $('#res-total-tarjetaMasSaldo').text(this.formatMoney(iniTar + parseFloat(s.ingreso_total_tarjeta || 0)));
+        $('#res-total-transMasSaldo').text(this.formatMoney(iniTra + parseFloat(s.ingreso_total_transfer || 0)));
 
-// Totales incluyendo el Saldo Inicial (Caja Real al momento)
-$('#res-total-efectivoMasSaldo').text(this.formatMoney(parseFloat(iniEfec || 0) + parseFloat(s.ingreso_total_efectivo || 0)));
-$('#res-total-tarjetaMasSaldo').text(this.formatMoney(parseFloat(iniTar || 0) + parseFloat(s.ingreso_total_tarjeta || 0)));
-$('#res-total-transMasSaldo').text(this.formatMoney(parseFloat(iniTra || 0) + parseFloat(s.ingreso_total_transfer || 0)));
+        $('#res-v-efectivo').text(this.formatMoney(parseFloat(s.solo_venta_efectivo || 0)));
+        $('#res-v-tarjeta').text(this.formatMoney(parseFloat(s.solo_venta_tarjeta || 0)));
+        $('#res-v-trans').text(this.formatMoney(parseFloat(s.solo_venta_transfer || 0)));
 
-// --- 3. SOLO VENTAS DE HOY ---
-$('#res-v-efectivo').text(this.formatMoney(parseFloat(s.solo_venta_efectivo || 0)));
-$('#res-v-tarjeta').text(this.formatMoney(parseFloat(s.solo_venta_tarjeta || 0)));
-$('#res-v-trans').text(this.formatMoney(parseFloat(s.solo_venta_transfer || 0)));
+        $('#res-a-efectivo').text(this.formatMoney(parseFloat(s.abono_efectivo || 0)));
+        $('#res-a-tarjeta').text(this.formatMoney(parseFloat(s.abono_tarjeta || 0)));
+        $('#res-a-trans').text(this.formatMoney(parseFloat(s.abono_transferencia || 0)));
+    },
 
-// --- 4. SOLO ABONOS (RECUPERACIÓN) ---
-$('#res-a-efectivo').text(this.formatMoney(parseFloat(s.abono_efectivo || 0)));
-$('#res-a-tarjeta').text(this.formatMoney(parseFloat(s.abono_tarjeta || 0)));
-$('#res-a-trans').text(this.formatMoney(parseFloat(s.abono_transferencia || 0)));
-},
     renderTabla: function(data) {
         let html = '';
-        if (data && data.length > 0) {
-            data.forEach(v => {
-                const dReal  = parseFloat(v.dinero_real || 0);
-                const sFavor = parseFloat(v.uso_saldo_favor || 0);
-                const dViva  = parseFloat(v.deuda_viva || 0);
+        const metodoFiltro = $('#metodo_pago_filtro').val();
 
-                let productosHtml = '';
-                if (v.productos && Array.isArray(v.productos)) {
-                    v.productos.forEach(p => {
-                        productosHtml += `
-                            <div class="d-flex flex-column mb-1">
-                                <span class="small fw-semibold text-dark text-truncate" style="max-width:180px">${p.producto}</span>
-                                <small class="text-muted" style="font-size:9px;">Cant: ${p.cantidad}</small>
-                            </div>`;
-                    });
+        if (data && data.length > 0) {
+
+            const dataFiltrada = data.filter(v => {
+
+                const metodo = (v.metodo_pago || '').toUpperCase();
+                const deuda = parseFloat(v.deuda_viva || 0);
+                const saldo = parseFloat(v.uso_saldo_favor || 0);
+
+                if (metodoFiltro === 'todos') return true;
+
+                if (metodoFiltro === 'EFECTIVO') return metodo === 'EFECTIVO';
+                if (metodoFiltro === 'TARJETA') return metodo === 'TARJETA';
+                if (metodoFiltro === 'TRANSFERENCIA') return metodo === 'TRANSFERENCIA';
+
+                if (metodoFiltro === 'Saldo a Favor') {
+                    return metodo.includes('SALDO') || saldo > 0;
                 }
 
-                html += `
-                    <tr class="border-bottom animate__animated animate__fadeInUp">
-                        <td class="ps-4">
-                            <span class="fw-bold d-block text-dark">${v.folio || 'S/F'}</span>
-                            <span class="origen-tag ${v.tipo === 'VENTA DÍA' ? 'bg-primary-subtle text-primary' : 'bg-warning-subtle text-warning'}">${v.tipo}</span>
-                        </td>
-                        <td><span class="fw-semibold d-block small">${v.cliente || 'Público General'}</span></td>
-                        <td>${productosHtml}</td>
-                        <td><span class="badge bg-white text-dark border shadow-sm badge-metodo">${v.metodo_pago}</span></td>
-                        <td class="text-end fw-bold text-success">${this.formatMoney(dReal)}</td>
-                        <td class="text-end fw-semibold text-warning">${sFavor > 0 ? this.formatMoney(sFavor) : '-'}</td>
-                        <td class="text-end pe-4 ${dViva > 0 ? 'text-danger fw-bold' : 'text-muted small'}">
-                            ${dViva > 0 ? this.formatMoney(dViva) : '<i class="bi bi-check-circle-fill text-success me-1"></i>PAGADO'}
-                        </td>
-                    </tr>`;
+                if (metodoFiltro === 'Null') {
+                    return deuda > 0;
+                }
+
+                return true;
             });
+
+            if (dataFiltrada.length === 0) {
+                html = '<tr><td colspan="7" class="text-center py-5 text-muted">No hay resultados para este filtro</td></tr>';
+            } else {
+
+                dataFiltrada.forEach(v => {
+                    const dReal  = parseFloat(v.dinero_real || 0);
+                    const sFavor = parseFloat(v.uso_saldo_favor || 0);
+                    const dViva  = parseFloat(v.deuda_viva || 0);
+
+                    let productosHtml = '';
+                    if (v.productos && Array.isArray(v.productos)) {
+                        v.productos.forEach(p => {
+                            productosHtml += `
+                                <div class="d-flex flex-column mb-1">
+                                    <span class="small fw-semibold text-dark text-truncate" style="max-width:180px">${p.producto}</span>
+                                    <small class="text-muted" style="font-size:9px;">Cant: ${p.cantidad}</small>
+                                </div>`;
+                        });
+                    }
+
+                    html += `
+                        <tr class="border-bottom animate__animated animate__fadeInUp">
+                            <td class="ps-4">
+                                <span class="fw-bold d-block text-dark">${v.folio || 'S/F'}</span>
+                                <span class="origen-tag ${v.tipo === 'VENTA DÍA' ? 'bg-primary-subtle text-primary' : 'bg-warning-subtle text-warning'}">${v.tipo}</span>
+                            </td>
+                            <td><span class="fw-semibold d-block small">${v.cliente || 'Público General'}</span></td>
+                            <td>${productosHtml}</td>
+                            <td><span class="badge bg-white text-dark border shadow-sm badge-metodo">${v.metodo_pago}</span></td>
+                            <td class="text-end fw-bold text-success">${this.formatMoney(dReal)}</td>
+                            <td class="text-end fw-semibold text-warning">${sFavor > 0 ? this.formatMoney(sFavor) : '-'}</td>
+                            <td class="text-end pe-4 ${dViva > 0 ? 'text-danger fw-bold' : 'text-muted small'}">
+                                ${dViva > 0 ? this.formatMoney(dViva) : '<i class="bi bi-check-circle-fill text-success me-1"></i>PAGADO'}
+                            </td>
+                        </tr>`;
+                });
+
+            }
+
         } else {
             html = '<tr><td colspan="7" class="text-center py-5 text-muted">No se encontraron movimientos</td></tr>';
         }
+
         $('#tablaDetalles tbody').html(html);
     },
 
