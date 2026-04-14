@@ -60,9 +60,6 @@
                 </div>
             </div>
 
-<?php echo "Fecha y hora del servidor: " . date('Y-m-d H:i:s');
-echo "<br>Zona horaria configurada: " . date_default_timezone_get();?>
-
             <div class="glass-card p-4 mb-4">
                 <form id="formFiltros" class="row g-3 align-items-end">
                     <div class="col-md-3">
@@ -220,29 +217,7 @@ echo "<br>Zona horaria configurada: " . date_default_timezone_get();?>
     </div>
 </div>
 
-<div class="row mb-4 g-3">
-    <div class="col-md-6">
-        <div class="glass-card p-3 border-start border-danger border-4">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <small class="text-muted fw-bold d-block text-xs">EGRESOS TOTALES (SALIDAS)</small>
-                    <div class="d-flex gap-4 mt-2">
-                        <div>
-                            <small class="d-block text-secondary">Compras</small>
-                            <h4 class="fw-bold text-danger mb-0" id="rescompras-totales">$0.00</h4>
-                        </div>
-                        <div class="border-start ps-4">
-                            <small class="d-block text-secondary">Gastos</small>
-                            <h4 class="fw-bold text-danger mb-0" id="resgastos-totales">$0.00</h4>
-                        </div>
-                    </div>
-                </div>
-                <div class="text-end">
-                    <i class="fas fa-file-invoice-dollar fa-2x text-light"></i>
-                </div>
-            </div>
-        </div>
-    </div>
+<div id="contenedor-resumen-egresos" style="display:none;"></div>
 
    
 </div>
@@ -360,7 +335,31 @@ const AppCaja = {
             $('#tabla-loader').hide();
         });
     },
+// Añadir al objeto AppCaja
+renderEgresosTotales: function(gastosTotal, comprasTotal) {
+    const $contenedor = $('#contenedor-resumen-egresos'); // Asegúrate de tener este ID en tu HTML
+    if (!$contenedor.length) return;
 
+    const total = parseFloat(gastosTotal || 0) + parseFloat(comprasTotal || 0);
+
+    $contenedor.html(`
+        <div class="card border-0 shadow-sm mb-4 animate__animated animate__fadeIn" style="border-radius:15px;">
+            <div class="row g-0 text-center">
+                <div class="col-6 p-3 border-end">
+                    <small class="text-muted d-block text-uppercase" style="font-size:10px;">Gastos</small>
+                    <span class="fw-bold text-danger" style="font-size:1.1rem;">${this.formatMoney(gastosTotal)}</span>
+                </div>
+                <div class="col-6 p-3">
+                    <small class="text-muted d-block text-uppercase" style="font-size:10px;">Compras</small>
+                    <span class="fw-bold text-warning" style="font-size:1.1rem;">${this.formatMoney(comprasTotal)}</span>
+                </div>
+            </div>
+            <div class="bg-light py-1 text-center" style="border-bottom-left-radius:15px; border-bottom-right-radius:15px;">
+                <small class="text-muted" style="font-size:10px;">Total Egresos: <b>${this.formatMoney(total)}</b></small>
+            </div>
+        </div>
+    `).show();
+},
     renderSaldoInicial: function(data, esLista, mostrar) {
         const $contenedor = $('#contenedor-saldo-inicial');
         if (!$contenedor.length) return;

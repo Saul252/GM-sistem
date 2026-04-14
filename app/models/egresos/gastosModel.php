@@ -16,12 +16,12 @@ class GastoModel {
      */
     public function generarSiguienteFolioGasto() {
     // Buscamos el ID más alto de la tabla gastos
-    $sql = "SELECT MAX(folio) AS ultimo_id FROM gastos";
+    $sql = "SELECT (MAX(CAST(folio AS UNSIGNED)) + 1) AS ultimo_id FROM gastos";
     $resultado = $this->db->query($sql);
     $fila = $resultado->fetch_assoc();
     
     $ultimoId = $fila['ultimo_id'] ?? 0;
-    $nuevoId = $ultimoId + 1;
+    $nuevoId = $ultimoId ;
 
     // Retornamos solo el número puro
     return $nuevoId;

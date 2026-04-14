@@ -314,5 +314,44 @@ $response['items'] = $stmtDet->get_result()->fetch_all(MYSQLI_ASSOC);
     }
     return $response;
 }
-    
+public function obtenerSumaEgresos($desde, $hasta, $almacen_id = 0, $tipo_filtro = 'todos', $categoria_gasto_id = 0) {
+    $whereAlmacenC = ($almacen_id > 0) ? " AND almacen_id = ?" : "";
+    $whereAlmacenG = ($almacen_id > 0) ? " AND almacen_id = ?" : "";
+    $whereCatG = ($categoria_gasto_id > 0) ? " AND categoria_id = ?" : "";
+
+    // Queries simplificadas solo para sumar el total
+    $sqlCompra = "SELECT IFNULL(SUM(total), 0) FROM compras WHERE (fecha_compra BETWEEN ? AND ?) AND estado != 'cancelada' $whereAlmacenC";
+    $sqlGasto = "SELECT IFNULL(SUM(total), 0) FROM gastos WHERE (fecha_gasto BETWEEN ? AND ?) AND estado != 'cancelado' $whereAlmacenG $whereCatG";
+
+    $total = 0;
+    $params = [];
+    $types = "";
+
+    // Sumar Compras
+    if ($tipo_filtro === 'todos' || $tipo_filtro === 'compra') {
+        $stmtC = $this->db->prepare($sqlCompra);
+        $pC = [$desde, $hasta];
+        $tC = "ss";
+        if ($almacen_id > 0) { $tC .= "i"; $pC[] = $almacen_id; }
+        $stmtC->bind_param($tC, ...$pC);
+        $stmtC->execute();
+        $resC = $stmtC->get_result()->fetch_row();
+        $total += $resC[0];
+    }
+
+    // Sumar Gastos
+    if ($tipo_filtro === 'todos' || $tipo_filtro === 'gasto') {
+        $stmtG = $this->db->prepare($sqlGasto);
+        $pG = [$desde, $hasta];
+        $tG = "ss";
+        if ($almacen_id > 0) { $tG .= "i"; $pG[] = $almacen_id; }
+        if ($categoria_gasto_id > 0) { $tG .= "i"; $pG[] = $categoria_gasto_id; }
+        $stmtG->bind_param($tG, ...$pG);
+        $stmtG->execute();
+        $resG = $stmtG->get_result()->fetch_row();
+        $total += $resG[0];
+    }
+
+    return $total;
+}
 }
