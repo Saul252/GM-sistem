@@ -310,57 +310,86 @@ const AppCaja = {
     },
 
     update: function() {
-        $('#tabla-loader').css('display', 'flex');
+    $('#tabla-loader').css('display', 'flex');
 
-        const params = {
-            ajax: 1,
-            periodo: $('#periodo').val(),
-            f_inicio: $('#f_inicio').val(),
-            f_fin: $('#f_fin').val(),
-            almacen_id: $('#almacen_id').val()
-        };
+    const params = {
+        ajax: 1,
+        periodo: $('#periodo').val(),
+        f_inicio: $('#f_inicio').val(),
+        f_fin: $('#f_fin').val(),
+        almacen_id: $('#almacen_id').val()
+    };
 
-        $.getJSON(this.config.url, params, (res) => {
-            if (res.status === 'success' || res.totales) {
-                const mostrar = periodoRequiereSaldo(params.periodo);
-                this.renderSaldoInicial(res.saldo_inicial, res.es_lista, mostrar);
-                this.renderTotales(res.totales, res.saldo_inicial, res.es_lista, mostrar);
+    $.getJSON(this.config.url, params, (res) => {
+        if (res.status === 'success' || res.totales) {
+            const mostrar = periodoRequiereSaldo(params.periodo);
+            
+            // 1. Render de Saldos e Ingresos (Ventas/Abonos)
+            this.renderSaldoInicial(res.saldo_inicial, res.es_lista, mostrar);
+            this.renderTotales(res.totales, res.saldo_inicial, res.es_lista, mostrar);
 
-                // guardar data original
-                this.lastData = res.detalles;
-
-                this.renderTabla(res.detalles);
+            // 2. Render de la Tarjeta Resumen de Egresos (Gastos vs Compras)
+            // Aquí usamos los totales que mencionaste que ya envía el controlador
+            console.log(res.gastosTotales);
+            console.log(res.comprasTotales);
+            if (this.renderEgresosTotales) {
+                this.renderEgresosTotales(res.gastosTotales, res.comprasTotales);
             }
-        }).always(() => {
-            $('#tabla-loader').hide();
-        });
-    },
+
+            // 3. Render de las Tablas de Detalles
+            // Guardamos la data original de ventas para los filtros de método de pago
+            this.lastData = res.detalles;
+            this.renderTabla(res.detalles); // Tabla de ventas detallada
+
+            // 4. Render de Detalles de Egresos (Si los envías en el JSON)
+            // Es importante que el controlador envíe 'res.gastos' y 'res.compras'
+            if (res.gastos && this.renderEgresos) {
+                this.renderEgresos('body_gastos', res.gastos);
+            }
+            if (res.compras && this.renderEgresos) {
+                this.renderEgresos('body_compras', res.compras);
+            }
+        }
+    }).fail((error) => {
+        console.error("Error al actualizar la caja:", error);
+    }).always(() => {
+        $('#tabla-loader').hide();
+    });
+},
 // Añadir al objeto AppCaja
 renderEgresosTotales: function(gastosTotal, comprasTotal) {
-    const $contenedor = $('#contenedor-resumen-egresos'); // Asegúrate de tener este ID en tu HTML
+    const $contenedor = $('#contenedor-resumen-egresos');
     if (!$contenedor.length) return;
 
-    const total = parseFloat(gastosTotal || 0) + parseFloat(comprasTotal || 0);
+    // ✅ FORZAR a número (AQUÍ ESTÁ LA CLAVE)
+    const gastos = parseFloat(gastosTotal) || 0;
+    const compras = parseFloat(comprasTotal) || 0;
+    const total = gastos + compras;
 
     $contenedor.html(`
         <div class="card border-0 shadow-sm mb-4 animate__animated animate__fadeIn" style="border-radius:15px;">
             <div class="row g-0 text-center">
                 <div class="col-6 p-3 border-end">
                     <small class="text-muted d-block text-uppercase" style="font-size:10px;">Gastos</small>
-                    <span class="fw-bold text-danger" style="font-size:1.1rem;">${this.formatMoney(gastosTotal)}</span>
+                    <span class="fw-bold text-danger" style="font-size:1.1rem;">
+                        ${this.formatMoney(gastos)}
+                    </span>
                 </div>
                 <div class="col-6 p-3">
                     <small class="text-muted d-block text-uppercase" style="font-size:10px;">Compras</small>
-                    <span class="fw-bold text-warning" style="font-size:1.1rem;">${this.formatMoney(comprasTotal)}</span>
+                    <span class="fw-bold text-warning" style="font-size:1.1rem;">
+                        ${this.formatMoney(compras)}
+                    </span>
                 </div>
             </div>
             <div class="bg-light py-1 text-center" style="border-bottom-left-radius:15px; border-bottom-right-radius:15px;">
-                <small class="text-muted" style="font-size:10px;">Total Egresos: <b>${this.formatMoney(total)}</b></small>
+                <small class="text-muted" style="font-size:10px;">
+                    Total Egresos: <b>${this.formatMoney(total)}</b>
+                </small>
             </div>
         </div>
     `).show();
-},
-    renderSaldoInicial: function(data, esLista, mostrar) {
+},  renderSaldoInicial: function(data, esLista, mostrar) {
         const $contenedor = $('#contenedor-saldo-inicial');
         if (!$contenedor.length) return;
 

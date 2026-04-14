@@ -354,4 +354,100 @@ public function obtenerSumaEgresos($desde, $hasta, $almacen_id = 0, $tipo_filtro
 
     return $total;
 }
+public function obtenerSumaEgresosPorMetodo($desde, $hasta, $almacen_id = 0, $tipo_filtro = 'todos', $categoria_gasto_id = 0) {
+
+    $data = [
+        'EFECTIVO' => 0,
+        'TARJETA' => 0,
+        'TRANSFERENCIA' => 0
+    ];
+
+    $whereAlmacenC = ($almacen_id > 0) ? " AND almacen_id = ?" : "";
+    $whereAlmacenG = ($almacen_id > 0) ? " AND almacen_id = ?" : "";
+    $whereCatG     = ($categoria_gasto_id > 0) ? " AND categoria_id = ?" : "";
+
+    // ========================
+    // 🔵 COMPRAS
+    // ========================
+    if ($tipo_filtro === 'todos' || $tipo_filtro === 'compra') {
+
+        $sql = "
+            SELECT metodo_pago, IFNULL(SUM(total),0) as total
+            FROM compras
+            WHERE fecha_compra BETWEEN ? AND ?
+            AND estado != 'cancelada'
+            $whereAlmacenC
+            GROUP BY metodo_pago
+        ";
+
+        if ($stmt = $this->db->prepare($sql)) {
+
+            $params = [$desde, $hasta];
+            $types = "ss";
+
+            if ($almacen_id > 0) {
+                $types .= "i";
+                $params[] = $almacen_id;
+            }
+
+            $stmt->bind_param($types, ...$params);
+            $stmt->execute();
+
+            $res = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+            foreach ($res as $row) {
+                $metodo = strtoupper(trim($row['metodo_pago'] ?? ''));
+                if (isset($data[$metodo])) {
+                    $data[$metodo] += floatval($row['total']);
+                }
+            }
+        }
+    }
+
+    // ========================
+    // 🔴 GASTOS
+    // ========================
+    if ($tipo_filtro === 'todos' || $tipo_filtro === 'gasto') {
+
+        $sql = "
+            SELECT metodo_pago, IFNULL(SUM(total),0) as total
+            FROM gastos
+            WHERE fecha_gasto BETWEEN ? AND ?
+            AND estado != 'cancelado'
+            $whereAlmacenG
+            $whereCatG
+            GROUP BY metodo_pago
+        ";
+
+        if ($stmt = $this->db->prepare($sql)) {
+
+            $params = [$desde, $hasta];
+            $types = "ss";
+
+            if ($almacen_id > 0) {
+                $types .= "i";
+                $params[] = $almacen_id;
+            }
+
+            if ($categoria_gasto_id > 0) {
+                $types .= "i";
+                $params[] = $categoria_gasto_id;
+            }
+
+            $stmt->bind_param($types, ...$params);
+            $stmt->execute();
+
+            $res = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+            foreach ($res as $row) {
+                $metodo = strtoupper(trim($row['metodo_pago'] ?? ''));
+                if (isset($data[$metodo])) {
+                    $data[$metodo] += floatval($row['total']);
+                }
+            }
+        }
+    }
+
+    return $data;
+}
 }

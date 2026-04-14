@@ -3,10 +3,11 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../controllers/LayoutController.php';
 require_once __DIR__ . '/../models/corteCajaModel.php'; 
+require_once __DIR__ . '/../models/egresos_model.php';
 require_once __DIR__ . '/../models/almacen_model.php';
 
 protegerPagina('corteCaja');
-
+$egresoModel = new EgresoModel($conexion);
 $modelo = new CorteCajaModel($conexion);
 $almacenModel = new AlmacenModel($conexion);
 date_default_timezone_set('America/Mexico_City');
@@ -130,46 +131,64 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
 // --- LÓGICA DE CONSULTA AJAX (GET) ---
 if (isset($_GET['ajax'])) {
     header('Content-Type: application/json');
-    
-    $periodo  = $_GET['periodo'] ?? 'hoy';
-    $f_inicio = $_GET['f_inicio'] ?? date('Y-m-d');
-    $f_fin    = $_GET['f_fin'] ?? date('Y-m-d');
-    $almacen_id_req = isset($_GET['almacen_id']) ? intval($_GET['almacen_id']) : 0;
 
-    // 1. Normalización estricta de fechas para que el modelo no se pierda
-    if ($periodo === 'hoy') {
-        $f_inicio = $f_fin = date('Y-m-d');
-    } elseif ($periodo === 'ayer') {
-        $f_inicio = $f_fin = date('Y-m-d', strtotime("-1 day"));
+    try {
+
+        $periodo  = $_GET['periodo'] ?? 'hoy';
+        $f_inicio = $_GET['f_inicio'] ?? date('Y-m-d');
+        $f_fin    = $_GET['f_fin'] ?? date('Y-m-d');
+        $almacen_id_req = isset($_GET['almacen_id']) ? intval($_GET['almacen_id']) : 0;
+
+        if ($periodo === 'hoy') {
+            $f_inicio = $f_fin = date('Y-m-d');
+        } elseif ($periodo === 'ayer') {
+            $f_inicio = $f_fin = date('Y-m-d', strtotime("-1 day"));
+        }
+
+        $target = ($almacen_sesion != 0) ? $almacen_sesion : $almacen_id_req;
+
+        $esUnSoloDia = ($f_inicio === $f_fin);
+
+        $detalles = $modelo->obtenerVentasDetalladas($periodo, $f_inicio, $f_fin, $target);
+        $totales  = $modelo->obtenerSumasCorte($periodo, $f_inicio, $f_fin, $target);
+
+        // 🔥 DEBUG REAL
+        $comprasTotales = $egresoModel->obtenerSumaEgresos($f_inicio, $f_fin, $target, 'compra');
+        $gastosTotales  = $egresoModel->obtenerSumaEgresos($f_inicio, $f_fin, $target, 'gasto');
+        
+
+        // 🔥 FORZAR VALOR CORRECTO
+        $comprasTotales = is_array($comprasTotales) ? ($comprasTotales['total'] ?? 0) : $comprasTotales;
+        $gastosTotales  = is_array($gastosTotales) ? ($gastosTotales['total'] ?? 0) : $gastosTotales;
+
+        $comprasTotales = floatval($comprasTotales);
+        $gastosTotales  = floatval($gastosTotales);
+
+        $saldo_data = null;
+        if ($esUnSoloDia) {
+            $saldo_data = $modelo->obtenerSaldoInicialMonitor($target, $f_inicio, $f_fin);
+        }
+
+        echo json_encode([
+            'status'          => 'success',
+            'detalles'        => $detalles,
+            'totales'         => $totales,
+            'saldo_inicial'   => $saldo_data,
+            'es_lista'        => ($target == 0),
+            'mostrar_saldo'   => $esUnSoloDia,
+            'comprasTotales'  => $comprasTotales,
+            'gastosTotales'   => $gastosTotales
+        ]);
+
+    } catch (Exception $e) {
+
+        // 🔥 AQUÍ VAS A VER EL ERROR REAL
+        echo json_encode([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
     }
 
-    $target = ($almacen_sesion != 0) ? $almacen_sesion : $almacen_id_req;
-
-    /**
-     * 2. LÓGICA DE VISIBILIDAD
-     * Solo mostramos el saldo inicial si la consulta es de UN SOLO DÍA.
-     * Si f_inicio es igual a f_fin, significa que es Hoy, Ayer o un solo día del calendario.
-     */
-    $esUnSoloDia = ($f_inicio === $f_fin);
-
-    // 3. Ejecutar consultas principales
-    $detalles = $modelo->obtenerVentasDetalladas($periodo, $f_inicio, $f_fin, $target);
-    $totales  = $modelo->obtenerSumasCorte($periodo, $f_inicio, $f_fin, $target);
-    
-    // 4. Saldo Inicial: Solo si es un solo día, llamamos al modelo.
-    $saldo_data = null;
-    if ($esUnSoloDia) {
-        $saldo_data = $modelo->obtenerSaldoInicialMonitor($target, $f_inicio, $f_fin);
-    }
-    
-    echo json_encode([
-        'status'         => 'success',
-        'detalles'       => $detalles,
-        'totales'        => $totales,
-        'saldo_inicial'  => $saldo_data,
-        'es_lista'       => ($target == 0),
-        'mostrar_saldo'  => $esUnSoloDia // Enviamos esta bandera al JS
-    ]);
     exit;
 }
 // --- CARGA INICIAL DE LA VISTA ---
