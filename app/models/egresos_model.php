@@ -15,35 +15,64 @@ public function obtenerAlmacenesActivos() {
      * Usa un UNION para juntar ambas tablas en una sola lista para la tabla principal
      */
 public function obtenerTodosLosEgresos($desde, $hasta, $almacen_id = 0, $tipo_filtro = 'todos', $categoria_gasto_id = 0) {
-    // 1. Fragmentos de WHERE para el almacén y categoría
+
+    // 1. Fragmentos de WHERE
     $whereAlmacenC = ($almacen_id > 0) ? " AND c.almacen_id = ?" : "";
     $whereAlmacenG = ($almacen_id > 0) ? " AND g.almacen_id = ?" : "";
-    
-    // Filtro específico para gastos (Si se selecciona categoría)
-    $whereCatG = ($categoria_gasto_id > 0) ? " AND g.categoria_id = ?" : "";
+    $whereCatG     = ($categoria_gasto_id > 0) ? " AND g.categoria_id = ?" : "";
 
-    // 2. Query de Compras
+    // 2. COMPRAS
     $queryCompra = "
         SELECT 
-            c.id, c.folio, c.fecha_compra AS fecha, c.proveedor AS entidad, 
-            c.total, 'compra' AS tipo, c.tiene_faltantes, c.documento_url, 0 AS categoria_id,
-            IFNULL((SELECT SUM(cantidad_pendiente) FROM faltantes_ingreso WHERE compra_id = c.id), 0) AS piezas_faltantes,
-            a.nombre AS almacen_nombre, c.estado
+            c.id,
+            c.folio,
+            c.fecha_compra AS fecha,
+            c.proveedor AS entidad,
+            c.total,
+            COALESCE(c.metodo_pago, 'Efectivo') AS metodo_pago,
+            'compra' AS tipo,
+            c.tiene_faltantes,
+            c.documento_url,
+            0 AS categoria_id,
+            IFNULL(
+                (SELECT SUM(cantidad_pendiente) 
+                 FROM faltantes_ingreso 
+                 WHERE compra_id = c.id), 
+            0) AS piezas_faltantes,
+            a.nombre AS almacen_nombre,
+            c.estado
         FROM compras c
         JOIN almacenes a ON c.almacen_id = a.id
-        WHERE (c.fecha_compra BETWEEN ? AND ?) AND c.estado != 'cancelada' $whereAlmacenC";
+        WHERE (c.fecha_compra BETWEEN ? AND ?)
+        AND c.estado != 'cancelada'
+        $whereAlmacenC
+    ";
 
-    // 3. Query de Gastos (Incluyendo la categoría)
+    // 3. GASTOS
     $queryGasto = "
         SELECT 
-            g.id, g.folio, g.fecha_gasto AS fecha, g.beneficiario AS entidad, 
-            g.total, 'gasto' AS tipo, 0 AS tiene_faltantes, g.documento_url, g.categoria_id,
-            0 AS piezas_faltantes, a.nombre AS almacen_nombre, g.estado
+            g.id,
+            g.folio,
+            g.fecha_gasto AS fecha,
+            g.beneficiario AS entidad,
+            g.total,
+            COALESCE(g.metodo_pago, 'Efectivo') AS metodo_pago,
+            'gasto' AS tipo,
+            0 AS tiene_faltantes,
+            g.documento_url,
+            g.categoria_id,
+            0 AS piezas_faltantes,
+            a.nombre AS almacen_nombre,
+            g.estado
         FROM gastos g
         JOIN almacenes a ON g.almacen_id = a.id
-        WHERE (g.fecha_gasto BETWEEN ? AND ?) AND g.estado != 'cancelado' $whereAlmacenG $whereCatG";
+        WHERE (g.fecha_gasto BETWEEN ? AND ?)
+        AND g.estado != 'cancelado'
+        $whereAlmacenG
+        $whereCatG
+    ";
 
-    // 4. Construcción de la SQL final
+    // 4. SQL FINAL
     if ($tipo_filtro === 'compra') {
         $sql = $queryCompra . " ORDER BY fecha DESC, id DESC";
     } elseif ($tipo_filtro === 'gasto') {
@@ -54,29 +83,45 @@ public function obtenerTodosLosEgresos($desde, $hasta, $almacen_id = 0, $tipo_fi
 
     $stmt = $this->db->prepare($sql);
 
-    // 5. Bindeo dinámico de parámetros (Para evitar errores de conteo)
+    // 5. PARAMETROS DINÁMICOS
     $params = [];
-    $types = "";
+    $types  = "";
 
-    // Lógica para COMPRAS (Si aplica)
+    // COMPRAS
     if ($tipo_filtro === 'todos' || $tipo_filtro === 'compra') {
-        $types .= "ss"; 
-        $params[] = $desde; $params[] = $hasta;
-        if ($almacen_id > 0) { $types .= "i"; $params[] = $almacen_id; }
+        $types .= "ss";
+        $params[] = $desde;
+        $params[] = $hasta;
+
+        if ($almacen_id > 0) {
+            $types .= "i";
+            $params[] = $almacen_id;
+        }
     }
 
-    // Lógica para GASTOS (Si aplica)
+    // GASTOS
     if ($tipo_filtro === 'todos' || $tipo_filtro === 'gasto') {
-        $types .= "ss"; 
-        $params[] = $desde; $params[] = $hasta;
-        if ($almacen_id > 0) { $types .= "i"; $params[] = $almacen_id; }
-        if ($categoria_gasto_id > 0) { $types .= "i"; $params[] = $categoria_gasto_id; }
+        $types .= "ss";
+        $params[] = $desde;
+        $params[] = $hasta;
+
+        if ($almacen_id > 0) {
+            $types .= "i";
+            $params[] = $almacen_id;
+        }
+
+        if ($categoria_gasto_id > 0) {
+            $types .= "i";
+            $params[] = $categoria_gasto_id;
+        }
     }
 
     $stmt->bind_param($types, ...$params);
     $stmt->execute();
+
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
+
     /**
      * 2. REGISTRA UN GASTO (CON EVIDENCIA Y DESCRIPCIÓN)
      * Según tu tabla 'gastos' y 'detalle_gasto'

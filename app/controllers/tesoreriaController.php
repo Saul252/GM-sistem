@@ -37,15 +37,21 @@ if (!empty($action)) {
     try {
         switch ($action) {
            case 'registrar':
-    // 1. Datos básicos
+    // 1. Recolección de datos básicos del POST
     $categoria_id   = intval($_POST['categoria_id'] ?? 0);
     $almacen_id     = intval($_POST['almacen_id'] ?? 0);
     $usuario_id     = intval($_SESSION['usuario_id'] ?? 0);
     $monto_input    = floatval($_POST['monto'] ?? 0);
+    $concepto       = trim($_POST['conceptos'] ?? '');
     $metodo         = $_POST['metodo_pago'] ?? 'efectivo';
     $fecha_sel      = $_POST['fecha_movimiento'] ?? date('Y-m-d');
+    
+    // Destinos opcionales
+    $almacen_destino_id = intval($_POST['almacen_destino_id'] ?? 0);
+    $caja_fuerte_id     = intval($_POST['caja_fuerte_id'] ?? 0);
+    $banco_id           = intval($_POST['banco_id'] ?? 0);
 
-    // 2. Obtener Tipo de Operación (viene de la base de datos para seguridad)
+    // 2. OBTENER TIPO DE OPERACIÓN (Crucial para los cálculos siguientes)
     $sql_cat = "SELECT tipo_operacion FROM capital_categorias WHERE id = ?";
     $stmt_c = $db_conn->prepare($sql_cat);
     $stmt_c->bind_param("i", $categoria_id);
@@ -53,42 +59,46 @@ if (!empty($action)) {
     $cat_info = $stmt_c->get_result()->fetch_assoc();
     $tipo_op = $cat_info['tipo_operacion'] ?? 'entrada';
 
-    /**
-     * 3. REVISIÓN DE SALDOS (Usando tu función obtenerSaldoInicialMonitor)
-     * Buscamos el saldo acumulado hasta la fecha seleccionada.
-     */
+    // 3. REVISIÓN DE SALDOS ACTUALES
     $saldos_actuales = $corteCaja->obtenerSaldoInicialMonitor($almacen_id, '2000-01-01', $fecha_sel);
 
-    // 4. LÓGICA DE SUMA O RESTA
-    // Si el tipo en el modal es salida o traspaso, restamos. Si es entrada, sumamos.
+    // 4. LÓGICA DE CÁLCULO DE MOVIMIENTO
     $operador = ($tipo_op === 'salida' || $tipo_op === 'traspaso') ? -1 : 1;
     $cambio = $monto_input * $operador;
 
     // 5. CALCULAR NUEVO DESGLOSE
-    // Mantenemos los saldos de los otros métodos y solo afectamos el seleccionado.
     $nuevo_desglose = [
         'efectivo'       => $saldos_actuales['monto_efectivo'],
         'tarjeta'        => $saldos_actuales['monto_tarjeta'],
         'transferencia'  => $saldos_actuales['monto_transferencia']
     ];
 
-    // Aplicamos el cambio al método correspondiente
-    if (isset($nuevo_desglose[$metodo])) {
+    // Aplicamos el cambio al método correspondiente si existe en el array
+    if (array_key_exists($metodo, $nuevo_desglose)) {
         $nuevo_desglose[$metodo] += $cambio;
     }
 
-    // 6. GUARDAR USANDO TU FUNCIÓN DE APERTURA
-    // Compensación de fecha para que el registro caiga en el día correcto
-    $fecha_param = ($categoria_id == 1) 
-        ? $fecha_sel 
-        : date('Y-m-d', strtotime($fecha_sel . ' -1 day'));
+    // 6. PREPARACIÓN DE DATA (Ahora que ya tenemos $tipo_op y $nuevo_desglose)
+    $data = [
+        'almacen_id'         => $almacen_id,
+        'usuario_id'         => $usuario_id,
+        'categoria_id'       => $categoria_id,
+        'monto'              => $monto_input,
+        'metodo_pago'        => $metodo,
+        'fecha_movimiento'   => $fecha_sel, // Usamos la fecha seleccionada
+        'concepto'           => $concepto,
+        'tipo_operacion'     => $tipo_op,
+        'monto_efectivo'     => $nuevo_desglose['efectivo'],
+        'monto_tarjeta'      => $nuevo_desglose['tarjeta'],
+        'monto_transferencia'=> $nuevo_desglose['transferencia'],
+        'almacen_destino_id' => $almacen_destino_id ?: null,
+        'caja_fuerte_id'     => $caja_fuerte_id ?: null,
+        'banco_id'           => $banco_id ?: null
+    ];
 
-    $res = $corteCaja->registrarAperturaDesdeCierre(
-        $almacen_id, 
-        $usuario_id, 
-        $nuevo_desglose, 
-        $fecha_param
-    );
+    // 7. GUARDAR EL REGISTRO
+    // Nota: Asegúrate que $fecha_param esté definida o usa $fecha_sel
+    $res = $corteCaja->registrarAperturaDesdeCierreConcepto($data );
 
     echo json_encode([
         "status" => $res ? "success" : "error", 
@@ -122,7 +132,7 @@ case 'obtener_saldos_sucursal':
 
     // Usamos tu función existente para traer la "foto" de los saldos a esa fecha
     // Ponemos una fecha de inicio muy antigua para asegurar que traiga el acumulado
-    $saldos = $corteCaja->obtenerSaldoInicialMonitor($almacen_id, '2000-01-01', $fecha_sel);
+    $saldos = $corteCaja->obtenerSaldoInicialMonitor($almacen_id, $f_inicio, $fecha_sel);
 
     echo json_encode([
         'status' => 'success',

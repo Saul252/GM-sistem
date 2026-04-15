@@ -654,21 +654,82 @@ public function registrarAperturaDesdeCierre($almacen_id, $usuario_id, $desglose
         return false;
     }
 }
+public function registrarAperturaDesdeCierreConcepto($data) {
+    /**
+     * $data es el array completo construido en el case 'registrar'
+     */
+    
+    // 1. Extraer y validar valores mínimos necesarios
+    $almacen_id   = $data['almacen_id'] ?? 0;
+    $usuario_id   = $data['usuario_id'] ?? 0;
+    $categoria_id = $data['categoria_id'] ?? 1; // Por defecto 1 si no viene
+    $concepto_raw = $data['concepto'] ?? 'Sin concepto';
+    
+    // 2. Manejo de montos (Desglose)
+    $efectivo      = $data['monto_efectivo'] ?? 0;
+    $tarjeta       = $data['monto_tarjeta'] ?? 0;
+    $transferencia = $data['monto_transferencia'] ?? 0;
+    $monto_total   =  ($efectivo + $tarjeta + $transferencia);
+    
+    // 3. Fecha Contable (Mantenemos tu lógica de +1 día)
+    $fecha_base     = $data['fecha_movimiento'] ?? date('Y-m-d');
+    $fecha_apertura = date('Y-m-d', strtotime($fecha_base . ' +1 day')) . ' 00:00:01';
+    
+    $concepto_final = "Saldo inicial modificado por: " . $concepto_raw;
+
+    // 4. SQL Dinámico con todos los campos de destino
+    $sql = "INSERT INTO historial_capital (
+                categoria_id, 
+                almacen_origen_id, 
+                almacen_destino_id, 
+                caja_fuerte_destino_id,
+                banco_destino_id,
+                monto, 
+                monto_efectivo,
+                monto_tarjeta,
+                monto_transferencia,
+                usuario_registro_id, 
+                concepto, 
+                fecha_movimiento
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    
+    try {
+        $stmt = $this->db->prepare($sql);
+        
+        // Ejecutamos pasando los valores en orden
+        return $stmt->execute([
+            $categoria_id,
+            $almacen_id, 
+            $data['almacen_destino_id'] ?? null,
+            $data['caja_fuerte_id'] ?? null,
+            $data['banco_id'] ?? null,
+            $monto_total,
+            $efectivo,
+            $tarjeta,
+            $transferencia,
+            $usuario_id, 
+            $concepto_final, 
+            $fecha_apertura
+        ]);
+    } catch (Exception $e) {
+        error_log("Error en registrarAperturaDesdeCierre: " . $e->getMessage());
+        return false;
+    }
+}
 /**
  * Obtiene el saldo inicial basándose en el nivel de acceso.
  * Si $almacen_id es 0, actúa como Admin y devuelve un array de todos los almacenes.
  * Si $almacen_id > 0, devuelve el monto único de esa sucursal.
  */
 public function obtenerSaldoInicialMonitor($almacen_id, $f_inicio, $f_fin) {
-    // Ajustamos las horas para cubrir el día completo
-    $inicio_periodo = $f_inicio . ' 00:00:00';
-    $fin_periodo    = $f_fin . ' 23:59:59';
+    // Solo necesitamos la fecha final del rango
+    $fecha_corte = $f_fin . ' 23:59:59';
 
     if ($almacen_id == 0) {
         /**
-         * VISTA ADMINISTRADOR:
-         * Trae todas las sucursales activas y pega el último saldo 
-         * de apertura SOLO si existe en el rango de fechas.
+         * VISTA ADMIN:
+         * Trae todas las sucursales y su último saldo registrado
+         * ANTES o igual a la fecha seleccionada
          */
         $sql = "SELECT 
                     a.nombre AS almacen, 
@@ -678,24 +739,37 @@ public function obtenerSaldoInicialMonitor($almacen_id, $f_inicio, $f_fin) {
                     IFNULL(h.monto_transferencia, 0.00) AS monto_transferencia
                 FROM almacenes a
                 LEFT JOIN historial_capital h ON h.id = (
-                    SELECT MAX(id) 
+                    SELECT id 
                     FROM historial_capital 
                     WHERE categoria_id = 1 
                       AND almacen_origen_id = a.id 
-                      AND fecha_movimiento BETWEEN ? AND ?
+                      AND fecha_movimiento <= ?
+                    ORDER BY id DESC 
+                    LIMIT 1
                 )
                 WHERE a.activo = 1 
                 ORDER BY a.nombre ASC";
-        
+
         $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("ss", $inicio_periodo, $fin_periodo);
+        $stmt->bind_param("s", $fecha_corte);
         $stmt->execute();
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        // 🔥 Asegurar estructura consistente (por si acaso)
+        foreach ($result as &$r) {
+            $r['monto'] = floatval($r['monto'] ?? 0);
+            $r['monto_efectivo'] = floatval($r['monto_efectivo'] ?? 0);
+            $r['monto_tarjeta'] = floatval($r['monto_tarjeta'] ?? 0);
+            $r['monto_transferencia'] = floatval($r['monto_transferencia'] ?? 0);
+        }
+
+        return $result;
 
     } else {
         /**
          * VISTA SUCURSAL:
-         * Misma lógica estricta pero filtrada para un solo almacén.
+         * Último saldo antes o igual a la fecha
          */
         $sql = "SELECT 
                     IFNULL(monto, 0.00) as monto, 
@@ -705,15 +779,17 @@ public function obtenerSaldoInicialMonitor($almacen_id, $f_inicio, $f_fin) {
                 FROM historial_capital 
                 WHERE categoria_id = 1 
                   AND almacen_origen_id = ? 
-                  AND fecha_movimiento BETWEEN ? AND ? 
-                ORDER BY id DESC LIMIT 1";
-                
+                  AND fecha_movimiento <= ?
+                ORDER BY id DESC 
+                LIMIT 1";
+
         $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("iss", $almacen_id, $inicio_periodo, $fin_periodo);
+        $stmt->bind_param("is", $almacen_id, $fecha_corte);
         $stmt->execute();
+
         $res = $stmt->get_result()->fetch_assoc();
-        
-        // Si la sucursal no tiene apertura hoy, devolvemos el molde de ceros
+
+        // ✅ Si no hay historial → regresar ceros
         return $res ?: [
             'monto' => 0.00, 
             'monto_efectivo' => 0.00, 

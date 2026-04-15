@@ -10,7 +10,7 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
         <div class="modal-content border-0 shadow-lg">
             <div class="modal-header bg-success text-white">
                 <h5 class="modal-title" id="modalNuevaCompraLabel">
-                    <i class="bi bi-box-seam-fill me-2"></i> Registrar Compra / Entrada de Inventario
+                    <i class="bi bi-box-seam-fill me-2"></i> Registrar Compra / Entrada de Inventario 2
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                     aria-label="Close"></button>
@@ -82,11 +82,20 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
                                 <label class="form-label small fw-bold">Evidencia (PDF/IMG)</label>
                                 <input type="file" name="evidencia_compra" class="form-control" accept="image/*,.pdf">
                             </div>
-                            <div class="col-md-3 text-end">
+                            <div class="col-md-3 ">
                                 <label class="form-label small fw-bold text-muted">TOTAL FACTURA</label>
                                 <div class="h3 text-success fw-bold" id="granTotalCompra">$ 0.00</div>
                             </div>
+                            <div class="col-md-3 text-end">
+                                          <select name="metodo_pago" id="metodo_pago" class="form-select" required>
+    <option value="">Seleccione método de pago...</option>
+    <option value="Efectivo">Efectivo</option>
+    <option value="Transferencia">Transferencia</option>
+    <option value="Tarjeta">Tarjeta</option>
+</select> </div>
+                            
                         </div>
+              
                     </div>
 
                     <h6 class="fw-bold mb-3 d-flex justify-content-between align-items-center">
