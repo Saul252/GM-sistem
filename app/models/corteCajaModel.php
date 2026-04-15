@@ -544,7 +544,7 @@ public function agregarCorteManual($datos) {
     // 🔥 OTROS MOVIMIENTOS
     // ===============================
     $deuda_pendiente     = floatval($datos['deuda_pendiente']);
-    $saldo_favor_usado   = floatval($datos['saldo_favor_usado'] ?? 0);
+    $saldo_favor_usado   = floatval($datos['saldo_favor'] ?? 0);
     $cobrado_total       = floatval($datos['cobrado_total']);
 
     // ===============================

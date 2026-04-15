@@ -434,4 +434,71 @@ public function obtenerGastosPorMetodo($desde, $hasta, $almacen_id = 0) {
 
     return $data;
 }
+public function obtenerComprasPorMetodo($desde, $hasta, $almacen_id = 0) {
+
+    // 🔥 Estructura base SIEMPRE completa
+    $data = [
+        'EFECTIVO'      => 0,
+        'TARJETA'       => 0,
+        'TRANSFERENCIA' => 0
+    ];
+
+    $whereAlmacen = ($almacen_id > 0) ? " AND almacen_id = ?" : "";
+
+    // 🔥 CONSULTA A COMPRAS
+    $sql = "
+        SELECT metodo_pago, total
+        FROM compras
+        WHERE DATE(fecha_compra) BETWEEN ? AND ?
+        AND estado != 'cancelada'
+        $whereAlmacen
+    ";
+
+    $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) {
+        error_log("SQL ERROR: " . $this->db->error);
+        return $data;
+    }
+
+    // 🔥 Bind dinámico
+    $types  = "ss";
+    $params = [$desde, $hasta];
+
+    if ($almacen_id > 0) {
+        $types .= "i";
+        $params[] = $almacen_id;
+    }
+
+    $stmt->bind_param($types, ...$params);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+
+    // 🔥 SUMA SEGURA EN PHP
+    while ($row = $result->fetch_assoc()) {
+
+        $metodo = strtoupper(trim($row['metodo_pago'] ?? 'EFECTIVO'));
+        $total  = (float)$row['total'];
+
+        if (str_contains($metodo, 'EFECT')) {
+            $data['EFECTIVO'] += $total;
+
+        } elseif (str_contains($metodo, 'TARJ')) {
+            $data['TARJETA'] += $total;
+
+        } elseif (str_contains($metodo, 'TRANS')) {
+            $data['TRANSFERENCIA'] += $total;
+
+        } else {
+            // fallback seguro
+            $data['EFECTIVO'] += $total;
+        }
+    }
+
+    $result->free();
+    $stmt->close();
+
+    return $data;
+}
 }

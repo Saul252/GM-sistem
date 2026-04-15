@@ -102,6 +102,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!el) return 0;
         return parseFloat((el.innerText || '0').replace(/[^0-9.-]+/g, "")) || 0;
     };
+      window._efectivo = 0;
+    window._tarjeta = 0;
+    window._transferencia = 0;
+
+    window._saldoInicialEfectivo = 0;
+    window._saldoInicialTarjeta = 0;
+    window._saldoInicialTransferencia = 0;
 
     // ==========================================
     // 🔥 FUNCIÓN PRINCIPAL DE CÁLCULO
@@ -110,7 +117,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // --- 1. RECUPERACIÓN DE DATOS (Variables Globales window) ---
         const saldoI = window._saldoInicialDesglose || { efectivo: 0, tarjeta: 0, transferencia: 0, total: 0 };
         const gastos = window._gastosMetodo || { EFECTIVO: 0, TARJETA: 0, TRANSFERENCIA: 0 };
-        
+        const compras = window._comprasMetodo || { EFECTIVO: 0, TARJETA: 0, TRANSFERENCIA: 0 };
         // Asignación a variables globales del script
         _saldoInicialEfectivo      = saldoI.efectivo;
         _saldoInicialTarjeta       = saldoI.tarjeta;
@@ -120,7 +127,10 @@ document.addEventListener('DOMContentLoaded', function() {
         _gastoEfectivo      = parseFloat(gastos.EFECTIVO || 0);
         _gastoTarjeta       = parseFloat(gastos.TARJETA || 0);
         _gastoTransferencia = parseFloat(gastos.TRANSFERENCIA || 0);
-        _compras            = parseFloat(window._comprasTotales || 0);
+
+        _comprasEfectivo      = parseFloat(compras.EFECTIVO || 0);
+        _comprasTarjeta       = parseFloat(compras.TARJETA || 0);
+        _comprasTransferencia = parseFloat(compras.TRANSFERENCIA || 0);
 
         // Ventas y Abonos (desde el HTML de la interfaz principal)
         const vEfec = limpiarNumero('res-v-efectivo');
@@ -129,6 +139,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const aTarj = limpiarNumero('res-a-tarjeta');
         const vTran = limpiarNumero('res-v-trans');
         const aTran = limpiarNumero('res-a-trans');
+        const saldofavor = limpiarNumero('res-saldo-favor');
 
         // Totales calculados para envío (Ingresos brutos del turno)
         _efectivo      = vEfec + aEfec;
@@ -136,11 +147,12 @@ document.addEventListener('DOMContentLoaded', function() {
         _transferencia = vTran + aTran;
 
         const totalGastos = _gastoEfectivo + _gastoTarjeta + _gastoTransferencia;
+        const totalCompras = _comprasEfectivo + _comprasTarjeta + _comprasTransferencia;
 
         // --- 2. CÁLCULOS DE BALANCE (Neto Final) ---
-        const balanceEfectivo = (_saldoInicialEfectivo + _efectivo) - _gastoEfectivo - _compras;
-        const balanceTarjeta  = (_saldoInicialTarjeta + _tarjeta) - _gastoTarjeta;
-        const balanceTrans    = (_saldoInicialTransferencia + _transferencia) - _gastoTransferencia;
+        const balanceEfectivo = (_saldoInicialEfectivo + _efectivo) -( _gastoEfectivo + _comprasEfectivo);
+        const balanceTarjeta  = (_saldoInicialTarjeta + _tarjeta) - (_gastoTarjeta + _comprasTarjeta);
+        const balanceTrans    = (_saldoInicialTransferencia + _transferencia) - (_gastoTransferencia + _comprasTransferencia ) ;
         const totalFinal      = balanceEfectivo + balanceTarjeta + balanceTrans;
 
         // ==================================================
@@ -164,6 +176,7 @@ document.addEventListener('DOMContentLoaded', function() {
             "Abono Tarj": { Monto: aTarj },
             "Venta Tran": { Monto: vTran },
             "Abono Tran": { Monto: aTran },
+             "saldo favor": { Monto: saldofavor },
             "TOTAL ENVIAR": { Monto: (_efectivo + _tarjeta + _transferencia) }
         });
 
@@ -172,8 +185,16 @@ document.addEventListener('DOMContentLoaded', function() {
             "Gastos (Efec)":  { Monto: _gastoEfectivo },
             "Gastos (Tarj)":  { Monto: _gastoTarjeta },
             "Gastos (Tran)":  { Monto: _gastoTransferencia },
+           
+            "TOTAL SALIDAS":  { Monto: totalGastos  }
+        });
+        console.log("%c[3] COMPRAS", "font-weight: bold; color: #ff3b30;");
+        console.table({
+            "Compras (Efec)":  { Monto: _comprasEfectivo },
+            "Compras (Tarj)":  { Monto: _comprasTarjeta },
+            "Compras (Tran)":  { Monto: _comprasTransferencia },
             "Compras":        { Monto: _compras },
-            "TOTAL SALIDAS":  { Monto: totalGastos + _compras }
+            "TOTAL SALIDAS":  { Monto: totalCompras}
         });
 
         console.log("%c[4] RESULTADO FINAL:", "font-weight: bold; color: #ff9500;");
@@ -211,7 +232,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="p-2 mb-2 border-bottom bg-danger bg-opacity-10 rounded text-danger">
                     <small class="text-uppercase fw-bold" style="font-size: 10px;">3. Salidas (Gastos + Compras)</small>
                     <div class="d-flex justify-content-between small"><span>Gastos Totales</span><span>-$${totalGastos.toLocaleString('es-MX')}</span></div>
-                    <div class="d-flex justify-content-between small"><span>Compras</span><span>-$${_compras.toLocaleString('es-MX')}</span></div>
+                    <div class="d-flex justify-content-between small"><span>Compras</span><span>-$${totalCompras.toLocaleString('es-MX')}</span></div>
                 </div>
 
                 <div class="p-2 bg-dark text-white rounded shadow-sm">
@@ -220,6 +241,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         <h4 class="m-0 fw-bold text-warning">$${totalFinal.toLocaleString('es-MX')}</h4>
                     </div>
                 </div>
+                
+                
             `;
         }
     }
@@ -262,8 +285,11 @@ document.addEventListener('DOMContentLoaded', function() {
         formData.set('gasto_efectivo', _gastoEfectivo);
         formData.set('gasto_tarjeta', _gastoTarjeta);
         formData.set('gasto_transferencia', _gastoTransferencia);
-        formData.set('compras_totales', _compras);
+        formData.set('compras_efectivo', _comprasEfectivo);
+        formData.set('compras_tarjeta', _comprasTarjeta);
+        formData.set('compras_transferencia', _comprasTransferencia);
         formData.set('deuda_pendiente', limpiarNumero('res-deuda'));
+        formData.set('saldo_favor', limpiarNumero('res-saldo-favor'));
 
         // ==================================================
         // 📤 LOG 1: VER QUÉ ESTÁ SALIENDO (CLIENTE)

@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
         $s_ini_tarj = floatval($_POST['saldo_inicial_tarjeta'] ?? 0);
         $s_ini_tran = floatval($_POST['saldo_inicial_transferencia'] ?? 0);
         $saldo_inicial_total = $s_ini_efec + $s_ini_tarj + $s_ini_tran;
-
+       $total_efectivo= floatval($_POST['total_efectivo'] ?? 0);
         $efectivo_real = floatval($_POST['total_efectivo'] ?? 0);
         $tarjeta       = floatval($_POST['total_tarjeta'] ?? 0);
         $transferencia = floatval($_POST['total_transferencia'] ?? 0);
@@ -40,8 +40,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
         $g_efec = floatval($_POST['gasto_efectivo'] ?? 0);
         $g_tarj = floatval($_POST['gasto_tarjeta'] ?? 0);
         $g_tran = floatval($_POST['gasto_transferencia'] ?? 0);
-        $compras_totales = floatval($_POST['compras_totales'] ?? 0);
+      $c_efec = floatval($_POST['compras_efectivo'] ?? 0);
+        $c_tarj = floatval($_POST['compras_tarjeta'] ?? 0);
+        $c_tran = floatval($_POST['compras_transferencia'] ?? 0);
+        $saldo_favor=floatval($_POST['saldo_favor']??0);
+       
         $gastos_totales  = $g_efec + $g_tarj + $g_tran;
+        $compras_totales  = $c_efec + $c_tarj + $c_tran;
         $egresos_dia     = $gastos_totales + $compras_totales;
 
         // 2. Cálculos Finales
@@ -53,9 +58,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
         $abonos_totales = floatval($_POST['abono_efectivo'] ?? 0) + floatval($_POST['abono_tarjeta'] ?? 0) + floatval($_POST['abono_transferencia'] ?? 0);
         $deuda_pendiente = floatval($_POST['deuda_pendiente'] ?? 0);
         $venta_bruta_calculada = ($ingresos_dia + $deuda_pendiente) - $abonos_totales;
-        $efectivoEnCaja = ($efectivo_real + $s_ini_efec + $abonoEfectivo)-$g_efec;
-        $TarjetaEnCaja= ($tarjeta+$s_ini_tarj+$abonoTarjeta)-$g_tarj;
-        $TransferencianCaja= ($transferencia+$s_ini_tran+$abonoTransferencia)-$g_tran;
+        $efectivoEnCaja = ($efectivo_real + $s_ini_efec + $abonoEfectivo)-($g_efec + $c_efec+$saldo_favor);
+        $TarjetaEnCaja= ($tarjeta+$s_ini_tarj+$abonoTarjeta)-($g_tarj + $c_tarj);
+        $TransferencianCaja= ($transferencia+$s_ini_tran+$abonoTransferencia)-($g_tran+$c_tran);
 
 
         // ===============================================
@@ -75,6 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
             'almacen_id'          => $target_save,
             'usuario_id'          => $usuario_id,
             'venta_bruta'         => $venta_bruta_calculada,
+
             'total_efectivo'      => $efectivoEnCaja,
             'total_transferencia' => $TransferencianCaja,
             'total_tarjeta'       => $TarjetaEnCaja,
@@ -82,6 +88,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
             'abono_tarjeta'       => floatval($_POST['abono_tarjeta'] ?? 0),
             'abono_transferencia' => floatval($_POST['abono_transferencia'] ?? 0),
             'abonos_totales'      => $abonos_totales,
+            'saldo_favor'         => $saldo_favor,
             'cobrado_total'       => $ingresos_dia,
             'gastos_totales'      => $gastos_totales,
             'compras_totales'     => $compras_totales,
@@ -94,9 +101,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
 
         if ($resultado['status'] === 'success') {
             $desglose_historial = [
-                'efectivo'      => ($s_ini_efec + $efectivo_real) - $g_efec - $compras_totales,
-                'tarjeta'       => ($s_ini_tarj + $tarjeta) - $g_tarj,
-                'transferencia' => ($s_ini_tran + $transferencia) - $g_tran
+                'efectivo'      => $efectivoEnCaja,
+                'tarjeta'       => $TarjetaEnCaja,
+                'transferencia' => $TransferencianCaja
             ];
             $modelo->registrarAperturaDesdeCierre($target_save, $usuario_id, $desglose_historial, $fecha_corte);
         }
@@ -137,7 +144,7 @@ if (isset($_GET['ajax'])) {
         $gastosTotales  = $egresoModel->obtenerSumaEgresos($f_inicio, $f_fin, $target, 'gasto');
         
          $gastosTotaleM  = $egresoModel->obtenerGastosPorMetodo($f_inicio, $f_fin, $target);
-         
+         $comprasTotaleM  = $egresoModel->obtenerComprasPorMetodo($f_inicio, $f_fin, $target);
 
         
 
@@ -164,7 +171,8 @@ if (isset($_GET['ajax'])) {
     'gastosTotales'   => $gastosTotales,
 
     // ✅ CORRECTO
-    'gastosMetodo'    => $gastosTotaleM
+    'gastosMetodo'    => $gastosTotaleM,
+    'comprasMetodo'    => $comprasTotaleM
 ]);
 
     } catch (Exception $e) {

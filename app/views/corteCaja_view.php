@@ -327,6 +327,8 @@ const AppCaja = {
         if (res.status === 'success' || res.totales) {
 
             const mostrar = periodoRequiereSaldo(params.periodo);
+            console.log("compras");
+            console.log(res.comprasMetodo)
 
             // 1. Saldos e ingresos
             this.renderSaldoInicial(res.saldo_inicial, res.es_lista, mostrar);
@@ -350,17 +352,27 @@ const AppCaja = {
                 TARJETA: 0,
                 TRANSFERENCIA: 0
             });
+             this.renderComprasPorMetodo(res.comprasMetodo || {
+                EFECTIVO: 0,
+                TARJETA: 0,
+                TRANSFERENCIA: 0
+            });
 
             // 5. 🔥 DESGLOSE COMPRAS (si también lo tienes por método o lista)
-            this.renderCompras(res.compras || []);
+           
              // 🔥 GUARDAR GASTOS Y COMPRAS GLOBALMENTE
         window._gastosMetodo = res.gastosMetodo || {
             EFECTIVO: 0,
             TARJETA: 0,
             TRANSFERENCIA: 0
         };
+         window._comprasMetodo = res.comprasMetodo || {
+            EFECTIVO: 0,
+            TARJETA: 0,
+            TRANSFERENCIA: 0
+        };
 
-        window._comprasTotales = res.comprasTotales || 0;
+       
 
         console.log("🔥 DATOS CARGADOS:", window._gastosMetodo, window._comprasTotales);
         // ... dentro de $.getJSON(this.config.url, params, (res) => { ...
@@ -423,34 +435,48 @@ renderGastosPorMetodo: function(data) {
         </div>
     `).show();
 },
-renderCompras: function(data) {
+renderComprasPorMetodo: function(data) {
 
-    let total = 0;
+    const efec = parseFloat(data.EFECTIVO || 0);
+    const tar  = parseFloat(data.TARJETA || 0);
+    const tra  = parseFloat(data.TRANSFERENCIA || 0);
 
-    if (Array.isArray(data)) {
-        data.forEach(v => {
-            total += parseFloat(v.total || 0);
-        });
-    } else {
-        total = parseFloat(data || 0);
-    }
+    const total = efec + tar + tra;
 
     $('#contenedor-egresosCompras').html(`
         <div class="card shadow-sm border-0 mb-3 animate__animated animate__fadeIn" style="border-radius:15px;">
-            <div class="card-header bg-warning">
-                <strong>Compras</strong>
+            <div class="card-header bg-warning text-dark">
+                <strong>Compras por Método</strong>
             </div>
 
-            <div class="card-body text-center">
-                <h3 class="fw-bold text-dark">
-                    ${this.formatMoney(total)}
-                </h3>
-                <small class="text-muted">Total de compras registradas</small>
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between">
+                    <span>Efectivo</span>
+                    <strong>${this.formatMoney(efec)}</strong>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <span>Tarjeta</span>
+                    <strong>${this.formatMoney(tar)}</strong>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <span>Transferencia</span>
+                    <strong>${this.formatMoney(tra)}</strong>
+                </div>
+
+                <hr>
+
+                <div class="d-flex justify-content-between fw-bold">
+                    <span>Total</span>
+                    <span>${this.formatMoney(total)}</span>
+                </div>
+
             </div>
         </div>
     `).show();
-},
-  renderSaldoInicial: function(data, esLista, mostrar) {
+},  renderSaldoInicial: function(data, esLista, mostrar) {
         const $contenedor = $('#contenedor-saldo-inicial');
         if (!$contenedor.length) return;
 
