@@ -190,12 +190,25 @@ public function registrarGasto($cabecera, $descripciones, $cantidades, $precios)
         $this->db->begin_transaction();
         try {
             // 1. Insertar Cabecera Compra
-            $sqlCompra = "INSERT INTO compras (folio, proveedor, fecha_compra, almacen_id, total, usuario_registra_id, estado) 
-                          VALUES (?, ?, ?, ?, ?, ?, 'confirmada')";
-            $stmt = $this->db->prepare($sqlCompra);
-            $stmt->bind_param("sssdis", $cabecera['folio'], $cabecera['proveedor'], $cabecera['fecha'], $cabecera['almacen_id'], $cabecera['total'], $cabecera['usuario_id']);
-            $stmt->execute();
-            $compra_id = $this->db->insert_id;
+            $sqlCompra = "INSERT INTO compras 
+(folio, proveedor, fecha_compra, almacen_id, total, metodo_pago, usuario_registra_id, estado) 
+VALUES (?, ?, ?, ?, ?, ?, ?, 'confirmada')";
+
+$stmt = $this->db->prepare($sqlCompra);
+
+$stmt->bind_param(
+    "sssdisi",
+    $cabecera['folio'],
+    $cabecera['proveedor'],
+    $cabecera['fecha'],
+    $cabecera['almacen_id'],
+    $cabecera['total'],
+    $cabecera['metodo_pago'],
+    $cabecera['usuario_id']
+);
+
+$stmt->execute();
+$compra_id = $this->db->insert_id;
 
             // 2. Detalle y Actualización de Stock
             $sqlDetalle = "INSERT INTO detalle_compra (compra_id, producto_id, cantidad, precio_unitario, subtotal) VALUES (?, ?, ?, ?, ?)";
@@ -354,99 +367,70 @@ public function obtenerSumaEgresos($desde, $hasta, $almacen_id = 0, $tipo_filtro
 
     return $total;
 }
-public function obtenerSumaEgresosPorMetodo($desde, $hasta, $almacen_id = 0, $tipo_filtro = 'todos', $categoria_gasto_id = 0) {
 
+public function obtenerGastosPorMetodo($desde, $hasta, $almacen_id = 0) {
+
+    // 🔥 Estructura base SIEMPRE completa
     $data = [
-        'EFECTIVO' => 0,
-        'TARJETA' => 0,
+        'EFECTIVO'      => 0,
+        'TARJETA'       => 0,
         'TRANSFERENCIA' => 0
     ];
 
-    $whereAlmacenC = ($almacen_id > 0) ? " AND almacen_id = ?" : "";
-    $whereAlmacenG = ($almacen_id > 0) ? " AND almacen_id = ?" : "";
-    $whereCatG     = ($categoria_gasto_id > 0) ? " AND categoria_id = ?" : "";
+    $whereAlmacen = ($almacen_id > 0) ? " AND almacen_id = ?" : "";
 
-    // ========================
-    // 🔵 COMPRAS
-    // ========================
-    if ($tipo_filtro === 'todos' || $tipo_filtro === 'compra') {
+    // 🔥 SOLO TRAEMOS CRUDOS
+    $sql = "
+        SELECT metodo_pago, total
+        FROM gastos
+        WHERE DATE(fecha_gasto) BETWEEN ? AND ?
+        AND estado != 'cancelado'
+        $whereAlmacen
+    ";
 
-        $sql = "
-            SELECT metodo_pago, IFNULL(SUM(total),0) as total
-            FROM compras
-            WHERE fecha_compra BETWEEN ? AND ?
-            AND estado != 'cancelada'
-            $whereAlmacenC
-            GROUP BY metodo_pago
-        ";
+    $stmt = $this->db->prepare($sql);
 
-        if ($stmt = $this->db->prepare($sql)) {
+    if (!$stmt) {
+        error_log("SQL ERROR: " . $this->db->error);
+        return $data;
+    }
 
-            $params = [$desde, $hasta];
-            $types = "ss";
+    $types  = "ss";
+    $params = [$desde, $hasta];
 
-            if ($almacen_id > 0) {
-                $types .= "i";
-                $params[] = $almacen_id;
-            }
+    if ($almacen_id > 0) {
+        $types .= "i";
+        $params[] = $almacen_id;
+    }
 
-            $stmt->bind_param($types, ...$params);
-            $stmt->execute();
+    $stmt->bind_param($types, ...$params);
+    $stmt->execute();
 
-            $res = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    $result = $stmt->get_result();
 
-            foreach ($res as $row) {
-                $metodo = strtoupper(trim($row['metodo_pago'] ?? ''));
-                if (isset($data[$metodo])) {
-                    $data[$metodo] += floatval($row['total']);
-                }
-            }
+    // 🔥 SUMA REAL EN PHP (sin MySQL raro)
+    while ($row = $result->fetch_assoc()) {
+
+        $metodo = strtoupper(trim($row['metodo_pago'] ?? 'EFECTIVO'));
+        $total  = (float)$row['total'];
+
+        if (str_contains($metodo, 'EFECT')) {
+            $data['EFECTIVO'] += $total;
+
+        } elseif (str_contains($metodo, 'TARJ')) {
+            $data['TARJETA'] += $total;
+
+        } elseif (str_contains($metodo, 'TRANS')) {
+            $data['TRANSFERENCIA'] += $total;
+
+        } else {
+            // fallback seguro
+            $data['EFECTIVO'] += $total;
         }
     }
 
-    // ========================
-    // 🔴 GASTOS
-    // ========================
-    if ($tipo_filtro === 'todos' || $tipo_filtro === 'gasto') {
-
-        $sql = "
-            SELECT metodo_pago, IFNULL(SUM(total),0) as total
-            FROM gastos
-            WHERE fecha_gasto BETWEEN ? AND ?
-            AND estado != 'cancelado'
-            $whereAlmacenG
-            $whereCatG
-            GROUP BY metodo_pago
-        ";
-
-        if ($stmt = $this->db->prepare($sql)) {
-
-            $params = [$desde, $hasta];
-            $types = "ss";
-
-            if ($almacen_id > 0) {
-                $types .= "i";
-                $params[] = $almacen_id;
-            }
-
-            if ($categoria_gasto_id > 0) {
-                $types .= "i";
-                $params[] = $categoria_gasto_id;
-            }
-
-            $stmt->bind_param($types, ...$params);
-            $stmt->execute();
-
-            $res = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-
-            foreach ($res as $row) {
-                $metodo = strtoupper(trim($row['metodo_pago'] ?? ''));
-                if (isset($data[$metodo])) {
-                    $data[$metodo] += floatval($row['total']);
-                }
-            }
-        }
-    }
+    $result->free();
+    $stmt->close();
 
     return $data;
 }

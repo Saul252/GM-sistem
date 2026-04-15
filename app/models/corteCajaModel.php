@@ -516,30 +516,44 @@ public function existeCorte($fecha, $id_almacen) {
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
 public function agregarCorteManual($datos) {
-    date_default_timezone_set('America/Mexico_City');
-    
-    $fecha_corte         = $datos['fecha_corte'] ?? date('Y-m-d'); 
-    $hora_cierre         = date('H:i:s');
-    $almacen_id          = intval($datos['almacen_id']);
-    
+   date_default_timezone_set('America/Mexico_City');
+
+    $fecha_corte     = $datos['fecha_corte'] ?? date('Y-m-d');
+    $hora_cierre     = date('H:i:s');
+    $almacen_id      = intval($datos['almacen_id']);
+    $usuario_id      = intval($datos['usuario_id']);
+
+    // ===============================
+    // 🔥 INGRESOS YA PROCESADOS (NO RECALCULAR)
+    // ===============================
+    $venta_bruta         = floatval($datos['venta_bruta']);
+
     $efectivo_real       = floatval($datos['total_efectivo']);
     $transferencia       = floatval($datos['total_transferencia']);
     $tarjeta             = floatval($datos['total_tarjeta']);
-    $abonos_totales      = floatval($datos['abonos_totales']);
-    $deuda_pendiente     = floatval($datos['deuda_pendiente']);
 
-    // Venta bruta: (Efectivo + Tarjeta + Transferencia + Deuda) - Abonos
-    $venta_bruta         = ($efectivo_real + $tarjeta + $transferencia + $deuda_pendiente) - $abonos_totales;
-
+    // ===============================
+    // 🔥 ABONOS
+    // ===============================
     $abono_efectivo      = floatval($datos['abono_efectivo']);
     $abono_tarjeta       = floatval($datos['abono_tarjeta']);
     $abono_transferencia = floatval($datos['abono_transferencia']);
-    $saldo_favor_usado   = floatval($datos['saldo_favor_usado']);
+    $abonos_totales      = floatval($datos['abonos_totales']);
+
+    // ===============================
+    // 🔥 OTROS MOVIMIENTOS
+    // ===============================
+    $deuda_pendiente     = floatval($datos['deuda_pendiente']);
+    $saldo_favor_usado   = floatval($datos['saldo_favor_usado'] ?? 0);
     $cobrado_total       = floatval($datos['cobrado_total']);
+
+    // ===============================
+    // 🔥 EGRESOS
+    // ===============================
     $gastos_totales      = floatval($datos['gastos_totales']);
     $compras_totales     = floatval($datos['compras_totales']);
     $gran_total_ingresos = floatval($datos['gran_total_ingresos']);
-    $usuario_id          = intval($datos['usuario_id']);
+
     $observaciones       = $datos['observaciones'] ?? '';
     $created_at          = date('Y-m-d H:i:s');
 

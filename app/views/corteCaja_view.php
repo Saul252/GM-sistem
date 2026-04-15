@@ -217,7 +217,9 @@
     </div>
 </div>
 
-<div id="contenedor-resumen-egresos" style="display:none;"></div>
+<div id="contenedor-egresos-gastos" style="display:none;"></div>
+
+<div id="contenedor-egresosCompras" style="display:none;"></div>
 
    
 </div>
@@ -309,7 +311,7 @@ const AppCaja = {
         });
     },
 
-    update: function() {
+   update: function() {
     $('#tabla-loader').css('display', 'flex');
 
     const params = {
@@ -321,34 +323,59 @@ const AppCaja = {
     };
 
     $.getJSON(this.config.url, params, (res) => {
+
         if (res.status === 'success' || res.totales) {
+
             const mostrar = periodoRequiereSaldo(params.periodo);
-            
-            // 1. Render de Saldos e Ingresos (Ventas/Abonos)
+
+            // 1. Saldos e ingresos
             this.renderSaldoInicial(res.saldo_inicial, res.es_lista, mostrar);
             this.renderTotales(res.totales, res.saldo_inicial, res.es_lista, mostrar);
 
-            // 2. Render de la Tarjeta Resumen de Egresos (Gastos vs Compras)
-            // Aquí usamos los totales que mencionaste que ya envía el controlador
-            console.log(res.gastosTotales);
-            console.log(res.comprasTotales);
+            // 2. Totales egresos (cards generales)
             if (this.renderEgresosTotales) {
-                this.renderEgresosTotales(res.gastosTotales, res.comprasTotales);
+                this.renderEgresosTotales(
+                    res.gastosTotales || 0,
+                    res.comprasTotales || 0
+                );
             }
 
-            // 3. Render de las Tablas de Detalles
-            // Guardamos la data original de ventas para los filtros de método de pago
+            // 3. Tabla principal
             this.lastData = res.detalles;
-            this.renderTabla(res.detalles); // Tabla de ventas detallada
+            this.renderTabla(res.detalles);
 
-            // 4. Render de Detalles de Egresos (Si los envías en el JSON)
-            // Es importante que el controlador envíe 'res.gastos' y 'res.compras'
-            if (res.gastos && this.renderEgresos) {
-                this.renderEgresos('body_gastos', res.gastos);
-            }
-            if (res.compras && this.renderEgresos) {
-                this.renderEgresos('body_compras', res.compras);
-            }
+            // 4. 🔥 DESGLOSE GASTOS POR MÉTODO
+            this.renderGastosPorMetodo(res.gastosMetodo || {
+                EFECTIVO: 0,
+                TARJETA: 0,
+                TRANSFERENCIA: 0
+            });
+
+            // 5. 🔥 DESGLOSE COMPRAS (si también lo tienes por método o lista)
+            this.renderCompras(res.compras || []);
+             // 🔥 GUARDAR GASTOS Y COMPRAS GLOBALMENTE
+        window._gastosMetodo = res.gastosMetodo || {
+            EFECTIVO: 0,
+            TARJETA: 0,
+            TRANSFERENCIA: 0
+        };
+
+        window._comprasTotales = res.comprasTotales || 0;
+
+        console.log("🔥 DATOS CARGADOS:", window._gastosMetodo, window._comprasTotales);
+        // ... dentro de $.getJSON(this.config.url, params, (res) => { ...
+
+
+// Agrega esto para capturar el desglose del saldo inicial:
+window._saldoInicialDesglose = {
+    efectivo: parseFloat(res.saldo_inicial?.monto_efectivo || 0),
+    tarjeta: parseFloat(res.saldo_inicial?.monto_tarjeta || 0),
+    transferencia: parseFloat(res.saldo_inicial?.monto_transferencia || 0),
+    total: parseFloat(res.saldo_inicial?.monto || 0)
+};
+
+console.log("🔥 DATOS CARGADOS:", window._gastosMetodo, window._saldoInicialDesglose);
+            
         }
     }).fail((error) => {
         console.error("Error al actualizar la caja:", error);
@@ -356,40 +383,74 @@ const AppCaja = {
         $('#tabla-loader').hide();
     });
 },
-// Añadir al objeto AppCaja
-renderEgresosTotales: function(gastosTotal, comprasTotal) {
-    const $contenedor = $('#contenedor-resumen-egresos');
-    if (!$contenedor.length) return;
+renderGastosPorMetodo: function(data) {
 
-    // ✅ FORZAR a número (AQUÍ ESTÁ LA CLAVE)
-    const gastos = parseFloat(gastosTotal) || 0;
-    const compras = parseFloat(comprasTotal) || 0;
-    const total = gastos + compras;
+    const efec = parseFloat(data.EFECTIVO || 0);
+    const tar  = parseFloat(data.TARJETA || 0);
+    const tra  = parseFloat(data.TRANSFERENCIA || 0);
 
-    $contenedor.html(`
-        <div class="card border-0 shadow-sm mb-4 animate__animated animate__fadeIn" style="border-radius:15px;">
-            <div class="row g-0 text-center">
-                <div class="col-6 p-3 border-end">
-                    <small class="text-muted d-block text-uppercase" style="font-size:10px;">Gastos</small>
-                    <span class="fw-bold text-danger" style="font-size:1.1rem;">
-                        ${this.formatMoney(gastos)}
-                    </span>
-                </div>
-                <div class="col-6 p-3">
-                    <small class="text-muted d-block text-uppercase" style="font-size:10px;">Compras</small>
-                    <span class="fw-bold text-warning" style="font-size:1.1rem;">
-                        ${this.formatMoney(compras)}
-                    </span>
-                </div>
+    const total = efec + tar + tra;
+
+    $('#contenedor-egresos-gastos').html(`
+        <div class="card shadow-sm border-0 mb-3 animate__animated animate__fadeIn" style="border-radius:15px;">
+            <div class="card-header bg-danger text-white">
+                <strong>Gastos por Método</strong>
             </div>
-            <div class="bg-light py-1 text-center" style="border-bottom-left-radius:15px; border-bottom-right-radius:15px;">
-                <small class="text-muted" style="font-size:10px;">
-                    Total Egresos: <b>${this.formatMoney(total)}</b>
-                </small>
+
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <span>Efectivo</span>
+                    <strong>${this.formatMoney(efec)}</strong>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <span>Tarjeta</span>
+                    <strong>${this.formatMoney(tar)}</strong>
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <span>Transferencia</span>
+                    <strong>${this.formatMoney(tra)}</strong>
+                </div>
+
+                <hr>
+
+                <div class="d-flex justify-content-between fw-bold">
+                    <span>Total</span>
+                    <span>${this.formatMoney(total)}</span>
+                </div>
             </div>
         </div>
     `).show();
-},  renderSaldoInicial: function(data, esLista, mostrar) {
+},
+renderCompras: function(data) {
+
+    let total = 0;
+
+    if (Array.isArray(data)) {
+        data.forEach(v => {
+            total += parseFloat(v.total || 0);
+        });
+    } else {
+        total = parseFloat(data || 0);
+    }
+
+    $('#contenedor-egresosCompras').html(`
+        <div class="card shadow-sm border-0 mb-3 animate__animated animate__fadeIn" style="border-radius:15px;">
+            <div class="card-header bg-warning">
+                <strong>Compras</strong>
+            </div>
+
+            <div class="card-body text-center">
+                <h3 class="fw-bold text-dark">
+                    ${this.formatMoney(total)}
+                </h3>
+                <small class="text-muted">Total de compras registradas</small>
+            </div>
+        </div>
+    `).show();
+},
+  renderSaldoInicial: function(data, esLista, mostrar) {
         const $contenedor = $('#contenedor-saldo-inicial');
         if (!$contenedor.length) return;
 

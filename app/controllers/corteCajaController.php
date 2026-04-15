@@ -19,112 +19,92 @@ $usuario_id     = $_SESSION['id_usuario'] ?? 0;
 // --- LÓGICA DE GUARDADO (POST) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['accion'] === 'guardarCorte') {
     header('Content-Type: application/json');
+    if (session_status() === PHP_SESSION_NONE) session_start();
 
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
-
-    $usuario_id = isset($_SESSION['usuario_id']) ? intval($_SESSION['usuario_id']) : 0;
-
-    if ($usuario_id <= 0) {
-        echo json_encode(['status' => 'error', 'message' => 'Usuario no válido en sesión']);
-        exit;
-    }
-
-    $fecha_corte   = $_POST['fecha_corte'] ?? date('Y-m-d');
-    $almacen_req   = isset($_POST['almacen_id']) ? intval($_POST['almacen_id']) : 0;
-    $observaciones = $_POST['observaciones'] ?? 'Corte manual';
-
-    $target_save = ($almacen_sesion != 0) ? $almacen_sesion : $almacen_req;
-
-    if ($target_save <= 0) {
-        echo json_encode(['status' => 'error', 'message' => 'Almacén no válido']);
-        exit;
-    }
+    $usuario_id = $_SESSION['usuario_id'] ?? 0;
+    $fecha_corte = $_POST['fecha_corte'] ?? date('Y-m-d');
+    $target_save = intval($_POST['almacen_id'] ?? 0);
 
     try {
+        // 1. Recepción de Datos
+        $s_ini_efec = floatval($_POST['saldo_inicial_efectivo'] ?? 0);
+        $s_ini_tarj = floatval($_POST['saldo_inicial_tarjeta'] ?? 0);
+        $s_ini_tran = floatval($_POST['saldo_inicial_transferencia'] ?? 0);
+        $saldo_inicial_total = $s_ini_efec + $s_ini_tarj + $s_ini_tran;
 
-        // ===============================
-        // 🔥 DATOS DESDE FRONTEND (CORRECTO)
-        // ===============================
-        $efectivo_real   = floatval($_POST['total_efectivo'] ?? 0);
-        $tarjeta         = floatval($_POST['total_tarjeta'] ?? 0);
-        $transferencia   = floatval($_POST['total_transferencia'] ?? 0);
+        $efectivo_real = floatval($_POST['total_efectivo'] ?? 0);
+        $tarjeta       = floatval($_POST['total_tarjeta'] ?? 0);
+        $transferencia = floatval($_POST['total_transferencia'] ?? 0);
+        $ingresos_dia  = $efectivo_real + $tarjeta + $transferencia;
 
-        $abono_efectivo      = floatval($_POST['abono_efectivo'] ?? 0);
-        $abono_tarjeta       = floatval($_POST['abono_tarjeta'] ?? 0);
-        $abono_transferencia = floatval($_POST['abono_transferencia'] ?? 0);
-
-        $abonos_totales = $abono_efectivo + $abono_tarjeta + $abono_transferencia;
-
-        $saldo_favor_usado = floatval($_POST['saldo_favor_usado'] ?? 0);
-        $deuda_pendiente   = floatval($_POST['deuda_pendiente'] ?? 0);
-
-        $gastos_totales  = floatval($_POST['gastos_totales'] ?? 0);
+        $g_efec = floatval($_POST['gasto_efectivo'] ?? 0);
+        $g_tarj = floatval($_POST['gasto_tarjeta'] ?? 0);
+        $g_tran = floatval($_POST['gasto_transferencia'] ?? 0);
         $compras_totales = floatval($_POST['compras_totales'] ?? 0);
+        $gastos_totales  = $g_efec + $g_tarj + $g_tran;
+        $egresos_dia     = $gastos_totales + $compras_totales;
 
-        $gran_total_ingresos = floatval($_POST['gran_total_ingresos'] ?? 0);
+        // 2. Cálculos Finales
+        $gran_total_ingresos = ($saldo_inicial_total + $ingresos_dia) - $egresos_dia;
+        $abonoEfectivo=floatval($_POST['abono_efectivo'] ?? 0);
+         $abonoTarjeta=floatval($_POST['abono_tarjeta']?? 0);
+         $abonoTransferencia=floatval($_POST['abono_transferencia'] ?? 0);
+        
+        $abonos_totales = floatval($_POST['abono_efectivo'] ?? 0) + floatval($_POST['abono_tarjeta'] ?? 0) + floatval($_POST['abono_transferencia'] ?? 0);
+        $deuda_pendiente = floatval($_POST['deuda_pendiente'] ?? 0);
+        $venta_bruta_calculada = ($ingresos_dia + $deuda_pendiente) - $abonos_totales;
+        $efectivoEnCaja = ($efectivo_real + $s_ini_efec + $abonoEfectivo)-$g_efec;
+        $TarjetaEnCaja= ($tarjeta+$s_ini_tarj+$abonoTarjeta)-$g_tarj;
+        $TransferencianCaja= ($transferencia+$s_ini_tran+$abonoTransferencia)-$g_tran;
 
-        // ===============================
-        // 🔥 TU FÓRMULA (SE RESPETA)
-        // ===============================
-        $venta_bruta_calculada = ($efectivo_real + $tarjeta + $transferencia + $deuda_pendiente) - $abonos_totales;
 
-        // ===============================
-        // 🔥 PREPARAR DATOS
-        // ===============================
+        // ===============================================
+        // 🔴 ERROR LOG DE SEGURIDAD
+        // ===============================================
+        error_log("---------- DEBUG CORTE CAJA ----------");
+        error_log("Almacen: $target_save | Usuario: $usuario_id");
+        error_log("Saldos Iniciales: EF:$s_ini_efec, TJ:$s_ini_tarj, TR:$s_ini_tran (Total: $saldo_inicial_total)");
+        error_log("Ingresos Turno: EF:$efectivo_real, TJ:$tarjeta, TR:$transferencia (Total: $ingresos_dia)");
+        error_log("Gastos: EF:$g_efec, TJ:$g_tarj, TR:$g_tran, Compras: $compras_totales");
+        error_log("RESULTADO FINAL CAJA: $gran_total_ingresos");
+        error_log("---------------------------------------");
+
+        // 3. Preparar array para el Modelo
         $datosParaGuardar = [
             'fecha_corte'         => $fecha_corte,
             'almacen_id'          => $target_save,
             'usuario_id'          => $usuario_id,
             'venta_bruta'         => $venta_bruta_calculada,
-            'total_efectivo'      => $efectivo_real,
-            'total_transferencia' => $transferencia,
-            'total_tarjeta'       => $tarjeta,
-            'abono_efectivo'      => $abono_efectivo,
-            'abono_tarjeta'       => $abono_tarjeta,
-            'abono_transferencia' => $abono_transferencia,
+            'total_efectivo'      => $efectivoEnCaja,
+            'total_transferencia' => $TransferencianCaja,
+            'total_tarjeta'       => $TarjetaEnCaja,
+            'abono_efectivo'      => floatval($_POST['abono_efectivo'] ?? 0),
+            'abono_tarjeta'       => floatval($_POST['abono_tarjeta'] ?? 0),
+            'abono_transferencia' => floatval($_POST['abono_transferencia'] ?? 0),
             'abonos_totales'      => $abonos_totales,
-            'saldo_favor_usado'   => $saldo_favor_usado,
-            'cobrado_total'       => $efectivo_real + $tarjeta + $transferencia,
+            'cobrado_total'       => $ingresos_dia,
             'gastos_totales'      => $gastos_totales,
             'compras_totales'     => $compras_totales,
             'gran_total_ingresos' => $gran_total_ingresos,
             'deuda_pendiente'     => $deuda_pendiente,
-            'observaciones'       => $observaciones
+            'observaciones'       => $_POST['observaciones'] ?? 'Corte manual'
         ];
 
         $resultado = $modelo->agregarCorteManual($datosParaGuardar);
 
-        // ===============================
-        // 🔥 APERTURA AUTOMÁTICA
-        // ===============================
         if ($resultado['status'] === 'success') {
-
-            $desglose_para_historial = [
-                
-                'efectivo'      => $efectivo_real,
-                'tarjeta'       => $tarjeta,
-                'transferencia' => $transferencia
+            $desglose_historial = [
+                'efectivo'      => ($s_ini_efec + $efectivo_real) - $g_efec - $compras_totales,
+                'tarjeta'       => ($s_ini_tarj + $tarjeta) - $g_tarj,
+                'transferencia' => ($s_ini_tran + $transferencia) - $g_tran
             ];
-
-            $modelo->registrarAperturaDesdeCierre(
-                $target_save,
-                $usuario_id,
-                $desglose_para_historial,
-                $fecha_corte
-            );
+            $modelo->registrarAperturaDesdeCierre($target_save, $usuario_id, $desglose_historial, $fecha_corte);
         }
 
         echo json_encode($resultado);
-
     } catch (Exception $e) {
-        echo json_encode([
-            'status' => 'error',
-            'message' => $e->getMessage()
-        ]);
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }
-
     exit;
 }
 
@@ -156,6 +136,10 @@ if (isset($_GET['ajax'])) {
         $comprasTotales = $egresoModel->obtenerSumaEgresos($f_inicio, $f_fin, $target, 'compra');
         $gastosTotales  = $egresoModel->obtenerSumaEgresos($f_inicio, $f_fin, $target, 'gasto');
         
+         $gastosTotaleM  = $egresoModel->obtenerGastosPorMetodo($f_inicio, $f_fin, $target);
+         
+
+        
 
         // 🔥 FORZAR VALOR CORRECTO
         $comprasTotales = is_array($comprasTotales) ? ($comprasTotales['total'] ?? 0) : $comprasTotales;
@@ -170,15 +154,18 @@ if (isset($_GET['ajax'])) {
         }
 
         echo json_encode([
-            'status'          => 'success',
-            'detalles'        => $detalles,
-            'totales'         => $totales,
-            'saldo_inicial'   => $saldo_data,
-            'es_lista'        => ($target == 0),
-            'mostrar_saldo'   => $esUnSoloDia,
-            'comprasTotales'  => $comprasTotales,
-            'gastosTotales'   => $gastosTotales
-        ]);
+    'status'          => 'success',
+    'detalles'        => $detalles,
+    'totales'         => $totales,
+    'saldo_inicial'   => $saldo_data,
+    'es_lista'        => ($target == 0),
+    'mostrar_saldo'   => $esUnSoloDia,
+    'comprasTotales'  => $comprasTotales,
+    'gastosTotales'   => $gastosTotales,
+
+    // ✅ CORRECTO
+    'gastosMetodo'    => $gastosTotaleM
+]);
 
     } catch (Exception $e) {
 

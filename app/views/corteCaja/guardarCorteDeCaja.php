@@ -45,21 +45,8 @@
                     <!-- RESUMEN -->
                     <div class="bg-white p-3 rounded shadow-sm mb-3">
 
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Efectivo</span>
-                            <strong id="modal-efectivo-txt">$0.00</strong>
-                        </div>
-
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Tarjeta</span>
-                            <strong id="modal-tarjeta-txt">$0.00</strong>
-                        </div>
-
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>Transferencia</span>
-                            <strong id="modal-transferencia-txt">$0.00</strong>
-                        </div>
-
+                      
+<div id="contenedor-egresos"></div>
                         <hr>
 
                         <div class="d-flex justify-content-between">
@@ -101,124 +88,228 @@ document.addEventListener('DOMContentLoaded', function() {
     const selectPrincipal = document.getElementById('almacen_id');
     const selectModal     = document.getElementById('almacen_id_modal');
 
-    // ===============================
-    // 🔥 LIMPIAR NUMEROS
-    // ===============================
+    // ==========================================
+    // 🔥 VARIABLES GLOBALES (Scope del archivo)
+    // ==========================================
+    let _efectivo = 0, _tarjeta = 0, _transferencia = 0;
+    let _gastoEfectivo = 0, _gastoTarjeta = 0, _gastoTransferencia = 0;
+    let _compras = 0;
+    let _saldoInicialEfectivo = 0, _saldoInicialTarjeta = 0, _saldoInicialTransferencia = 0;
+    let _saldoTotal = 0;
+
     const limpiarNumero = (id) => {
         const el = document.getElementById(id);
         if (!el) return 0;
         return parseFloat((el.innerText || '0').replace(/[^0-9.-]+/g, "")) || 0;
     };
 
-    // ===============================
-    // 🔥 ACTUALIZAR MODAL
-    // ===============================
+    // ==========================================
+    // 🔥 FUNCIÓN PRINCIPAL DE CÁLCULO
+    // ==========================================
     function actualizarModal() {
+        // --- 1. RECUPERACIÓN DE DATOS (Variables Globales window) ---
+        const saldoI = window._saldoInicialDesglose || { efectivo: 0, tarjeta: 0, transferencia: 0, total: 0 };
+        const gastos = window._gastosMetodo || { EFECTIVO: 0, TARJETA: 0, TRANSFERENCIA: 0 };
+        
+        // Asignación a variables globales del script
+        _saldoInicialEfectivo      = saldoI.efectivo;
+        _saldoInicialTarjeta       = saldoI.tarjeta;
+        _saldoInicialTransferencia = saldoI.transferencia;
+        _saldoTotal                = saldoI.total;
 
-        const efectivo      = limpiarNumero('res-total-efectivoMasSaldo');
-        const tarjeta       = limpiarNumero('res-total-tarjetaMasSaldo');
-        const transferencia = limpiarNumero('res-total-transMasSaldo');
+        _gastoEfectivo      = parseFloat(gastos.EFECTIVO || 0);
+        _gastoTarjeta       = parseFloat(gastos.TARJETA || 0);
+        _gastoTransferencia = parseFloat(gastos.TRANSFERENCIA || 0);
+        _compras            = parseFloat(window._comprasTotales || 0);
 
-        const total = efectivo + tarjeta + transferencia;
+        // Ventas y Abonos (desde el HTML de la interfaz principal)
+        const vEfec = limpiarNumero('res-v-efectivo');
+        const aEfec = limpiarNumero('res-a-efectivo');
+        const vTarj = limpiarNumero('res-v-tarjeta');
+        const aTarj = limpiarNumero('res-a-tarjeta');
+        const vTran = limpiarNumero('res-v-trans');
+        const aTran = limpiarNumero('res-a-trans');
 
-        document.getElementById('modal-efectivo-txt').innerText =
-            '$' + efectivo.toLocaleString('es-MX');
+        // Totales calculados para envío (Ingresos brutos del turno)
+        _efectivo      = vEfec + aEfec;
+        _tarjeta       = vTarj + aTarj;
+        _transferencia = vTran + aTran;
 
-        document.getElementById('modal-tarjeta-txt').innerText =
-            '$' + tarjeta.toLocaleString('es-MX');
+        const totalGastos = _gastoEfectivo + _gastoTarjeta + _gastoTransferencia;
 
-        document.getElementById('modal-transferencia-txt').innerText =
-            '$' + transferencia.toLocaleString('es-MX');
+        // --- 2. CÁLCULOS DE BALANCE (Neto Final) ---
+        const balanceEfectivo = (_saldoInicialEfectivo + _efectivo) - _gastoEfectivo - _compras;
+        const balanceTarjeta  = (_saldoInicialTarjeta + _tarjeta) - _gastoTarjeta;
+        const balanceTrans    = (_saldoInicialTransferencia + _transferencia) - _gastoTransferencia;
+        const totalFinal      = balanceEfectivo + balanceTarjeta + balanceTrans;
 
-        document.getElementById('modal-total-txt').innerText =
-            '$' + total.toLocaleString('es-MX');
+        // ==================================================
+        // 🔥 BLOQUE DE CONSOLA (AUDITORÍA TÉCNICA)
+        // ==================================================
+        console.group("%c📊 REPORTE TÉCNICO DE CORTE", "background: #222; color: #bada55; padding: 5px; border-radius: 5px;");
+        
+        console.log("%c[1] APERTURA:", "font-weight: bold; color: #5856d6;");
+        console.table({
+            "Efectivo Inicial": { Monto: _saldoInicialEfectivo },
+            "Tarjeta Inicial":  { Monto: _saldoInicialTarjeta },
+            "Transf. Inicial":  { Monto: _saldoInicialTransferencia },
+            "TOTAL APERTURA":   { Monto: _saldoTotal }
+        });
 
-        console.log("📊 MODAL:", {efectivo, tarjeta, transferencia, total});
+        console.log("%c[2] ENTRADAS (DETALLE):", "font-weight: bold; color: #28a745;");
+        console.table({
+            "Venta Efec": { Monto: vEfec },
+            "Abono Efec": { Monto: aEfec },
+            "Venta Tarj": { Monto: vTarj },
+            "Abono Tarj": { Monto: aTarj },
+            "Venta Tran": { Monto: vTran },
+            "Abono Tran": { Monto: aTran },
+            "TOTAL ENVIAR": { Monto: (_efectivo + _tarjeta + _transferencia) }
+        });
+
+        console.log("%c[3] SALIDAS:", "font-weight: bold; color: #ff3b30;");
+        console.table({
+            "Gastos (Efec)":  { Monto: _gastoEfectivo },
+            "Gastos (Tarj)":  { Monto: _gastoTarjeta },
+            "Gastos (Tran)":  { Monto: _gastoTransferencia },
+            "Compras":        { Monto: _compras },
+            "TOTAL SALIDAS":  { Monto: totalGastos + _compras }
+        });
+
+        console.log("%c[4] RESULTADO FINAL:", "font-weight: bold; color: #ff9500;");
+        console.log(`%cTOTAL NETO EN CAJA: $${totalFinal.toFixed(2)}`, "font-size: 14px; font-weight: bold; color: #fff; background: #007aff; padding: 2px 5px;");
+        console.groupEnd();
+
+        // --- 3. ACTUALIZAR INTERFAZ DEL MODAL ---
+        const safeSetText = (id, text) => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = text;
+        };
+
+        safeSetText('modal-efectivo-txt', '$' + balanceEfectivo.toLocaleString('es-MX', {minimumFractionDigits:2}));
+        safeSetText('modal-tarjeta-txt',  '$' + balanceTarjeta.toLocaleString('es-MX', {minimumFractionDigits:2}));
+        safeSetText('modal-transferencia-txt', '$' + balanceTrans.toLocaleString('es-MX', {minimumFractionDigits:2}));
+        safeSetText('modal-total-txt',    '$' + totalFinal.toLocaleString('es-MX', {minimumFractionDigits:2}));
+
+        const $egresoBox = document.getElementById('contenedor-egresos');
+        if ($egresoBox) {
+            $egresoBox.innerHTML = `
+                <div class="p-2 mb-2 border-bottom">
+                    <small class="text-uppercase fw-bold text-secondary" style="font-size: 10px;">1. Saldo Inicial (Apertura)</small>
+                    <div class="d-flex justify-content-between"><span>Efectivo Inicial</span><span class="fw-bold">$${_saldoInicialEfectivo.toLocaleString('es-MX')}</span></div>
+                    <div class="d-flex justify-content-between"><span>Tarjeta Inicial</span><span class="fw-bold">$${_saldoInicialTarjeta.toLocaleString('es-MX')}</span></div>
+                    <div class="d-flex justify-content-between"><span>Trans Inicial</span><span class="fw-bold">$${_saldoInicialTransferencia.toLocaleString('es-MX')}</span></div>
+                </div>
+
+                <div class="p-2 mb-2 border-bottom">
+                    <small class="text-uppercase fw-bold text-success" style="font-size: 10px;">2. Entradas (Ventas + Abonos)</small>
+                    <div class="d-flex justify-content-between small text-muted"><span>Total Efectivo</span><span>+$${_efectivo.toLocaleString('es-MX')}</span></div>
+                    <div class="d-flex justify-content-between small text-muted"><span>Total Tarjeta</span><span>+$${_tarjeta.toLocaleString('es-MX')}</span></div>
+                    <div class="d-flex justify-content-between small text-muted"><span>Total Transf.</span><span>+$${_transferencia.toLocaleString('es-MX')}</span></div>
+                </div>
+
+                <div class="p-2 mb-2 border-bottom bg-danger bg-opacity-10 rounded text-danger">
+                    <small class="text-uppercase fw-bold" style="font-size: 10px;">3. Salidas (Gastos + Compras)</small>
+                    <div class="d-flex justify-content-between small"><span>Gastos Totales</span><span>-$${totalGastos.toLocaleString('es-MX')}</span></div>
+                    <div class="d-flex justify-content-between small"><span>Compras</span><span>-$${_compras.toLocaleString('es-MX')}</span></div>
+                </div>
+
+                <div class="p-2 bg-dark text-white rounded shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="small fw-bold">FINAL EN CAJA:</span>
+                        <h4 class="m-0 fw-bold text-warning">$${totalFinal.toLocaleString('es-MX')}</h4>
+                    </div>
+                </div>
+            `;
+        }
     }
 
-    // ===============================
-    // 🔥 AL ABRIR MODAL
-    // ===============================
+    // ==========================================
+    // 🔥 EVENTOS DEL MODAL
+    // ==========================================
     modalElement.addEventListener('show.bs.modal', function () {
-
         selectModal.value = selectPrincipal.value;
-
         actualizarModal();
     });
 
-    // ===============================
-    // 🔥 CAMBIO DE ALMACÉN EN MODAL
-    // ===============================
     selectModal.addEventListener('change', function() {
-
         selectPrincipal.value = this.value;
-
-        // 🔥 dispara recarga del sistema
         $('#almacen_id').trigger('change');
-
-        setTimeout(() => {
-            actualizarModal();
-        }, 400);
+        setTimeout(() => actualizarModal(), 600);
     });
 
-    // ===============================
-    // 🔥 GUARDAR
-    // ===============================
+    // ==========================================
+    // 🔥 GUARDAR CORTE (ENVÍO AL PHP)
+    // ==========================================
     btnGuardar.addEventListener('click', function() {
+        actualizarModal(); 
 
-        const formData = new FormData(document.getElementById('formGuardarCorte'));
+        const formElement = document.getElementById('formGuardarCorte');
+        const formData = new FormData(formElement);
 
-        const almacenId = selectModal.value;
+        // Seteamos los valores calculados
+        formData.set('accion', 'guardarCorte');
+        formData.set('almacen_id', selectModal.value);
+        formData.set('total_efectivo', _efectivo);
+        formData.set('total_tarjeta', _tarjeta);
+        formData.set('total_transferencia', _transferencia);
+        formData.set('abono_efectivo', limpiarNumero('res-a-efectivo'));
+        formData.set('abono_tarjeta', limpiarNumero('res-a-tarjeta'));
+        formData.set('abono_transferencia', limpiarNumero('res-a-trans'));
+        formData.set('saldo_inicial_efectivo', _saldoInicialEfectivo);
+        formData.set('saldo_inicial_tarjeta', _saldoInicialTarjeta);
+        formData.set('saldo_inicial_transferencia', _saldoInicialTransferencia);
+        formData.set('gasto_efectivo', _gastoEfectivo);
+        formData.set('gasto_tarjeta', _gastoTarjeta);
+        formData.set('gasto_transferencia', _gastoTransferencia);
+        formData.set('compras_totales', _compras);
+        formData.set('deuda_pendiente', limpiarNumero('res-deuda'));
 
-        formData.append('accion', 'guardarCorte');
-        formData.append('almacen_id', almacenId);
-
-        // 🔥 DATOS
-        formData.append('total_efectivo', limpiarNumero('res-total-efectivoMasSaldo'));
-        formData.append('total_tarjeta', limpiarNumero('es-total-tarjetaMasSaldo'));
-        formData.append('total_transferencia', limpiarNumero('res-total-transMasSaldo'));
-
-        formData.append('gran_total_ingresos',
-            limpiarNumero('res-total-efectivoMasSaldo') +
-            limpiarNumero('res-total-tarjetaMasSaldo') +
-            limpiarNumero('res-total-transMasSaldo')
-        );
-
-        // 🔥 DEBUG
-        console.log("🧾 ENVIANDO:");
-        for (let [k,v] of formData.entries()) {
-            console.log(k, v);
+        // ==================================================
+        // 📤 LOG 1: VER QUÉ ESTÁ SALIENDO (CLIENTE)
+        // ==================================================
+        console.group("%c📤 ENVIANDO DATOS AL CONTROLADOR", "color: #fff; background: #007aff; padding: 5px;");
+        for (let [key, value] of formData.entries()) {
+            console.log(`${key}: %c${value}`, "font-weight: bold; color: #000;");
         }
+        console.groupEnd();
 
         btnGuardar.disabled = true;
-        btnGuardar.innerHTML = "Guardando...";
+        btnGuardar.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Guardando...`;
 
         fetch(url, {
             method: 'POST',
             body: formData
         })
-        .then(r => r.json())
+        .then(response => {
+            // Verificamos si la respuesta del servidor es OK (200)
+            console.log(`%cStatus de Red: ${response.status} ${response.statusText}`, "color: gray; italic;");
+            return response.json();
+        })
         .then(data => {
-
-            console.log("📦 RESPUESTA:", data);
+            // ==================================================
+            // 📥 LOG 2: VER QUÉ RESPONDIÓ PHP (SERVIDOR)
+            // ==================================================
+            console.group("%c📥 RESPUESTA RECIBIDA DEL SERVIDOR", "color: #fff; background: #28a745; padding: 5px;");
+            console.log("Datos crudos retornados:", data);
+            console.groupEnd();
 
             if (data.status === 'success') {
-                Swal.fire("OK", "Corte guardado", "success")
+                Swal.fire("¡Éxito!", "El corte de caja se ha guardado correctamente", "success")
                 .then(() => location.reload());
             } else {
-                throw new Error(data.message);
+                // Si el status es error, el log de arriba nos dirá por qué según PHP
+                throw new Error(data.message || "Error en el servidor");
             }
-
         })
         .catch(err => {
+            console.error("%c❌ ERROR EN LA PETICIÓN:", "font-weight: bold; color: red;", err);
             Swal.fire("Error", err.message, "error");
         })
         .finally(() => {
             btnGuardar.disabled = false;
-            btnGuardar.innerHTML = "Guardar Corte";
+            btnGuardar.innerHTML = "Confirmar y Guardar Corte";
         });
-
     });
-
 });
 </script>

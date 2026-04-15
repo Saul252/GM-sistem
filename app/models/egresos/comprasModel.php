@@ -29,14 +29,30 @@ public function guardarCompraCompleta($items, $folio, $proveedor, $evidencia, $a
                 $total_final += floatval($item['total_item']);
                 if (floatval($item['cantidad_faltante'] ?? 0) > 0) $tiene_faltantes_global = 1;
             }
-
+$metodo_pago = $_POST['metodo_pago'] ?? 'Efectivo';
             // --- 3. Insertar Cabecera ---
-            $sqlC = "INSERT INTO compras (folio, proveedor, fecha_compra, almacen_id, total, estado, usuario_registra_id, documento_url, tiene_faltantes) 
-                     VALUES (?, ?, NOW(), ?, ?, 'confirmada', ?, ?, ?)";
-            $stmtC = $this->db->prepare($sqlC);
-            $stmtC->bind_param("ssidisi", $folio, $proveedor, $almacen_id, $total_final, $user_id, $documento_url, $tiene_faltantes_global);
-            if (!$stmtC->execute()) throw new Exception("Error en cabecera: " . $stmtC->error);
-            $compra_id = $stmtC->insert_id;
+            $sqlC = "INSERT INTO compras 
+(folio, proveedor, fecha_compra, almacen_id, total, metodo_pago, estado, usuario_registra_id, documento_url, tiene_faltantes) 
+VALUES (?, ?, NOW(), ?, ?, ?, 'confirmada', ?, ?, ?)";
+
+$stmtC = $this->db->prepare($sqlC);
+$stmtC->bind_param(
+    "ssidsisi",
+    $folio,                  // s
+    $proveedor,             // s
+    $almacen_id,            // i
+    $total_final,           // d
+    $metodo_pago,           // s
+    $user_id,               // i
+    $documento_url,         // s
+    $tiene_faltantes_global // i
+);
+
+if (!$stmtC->execute()) {
+    throw new Exception("Error en cabecera: " . $stmtC->error);
+}
+
+$compra_id = $stmtC->insert_id;
 
             // --- 4. Procesar Items ---
             foreach ($items as $item) {
