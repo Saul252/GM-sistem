@@ -655,66 +655,114 @@ public function registrarAperturaDesdeCierre($almacen_id, $usuario_id, $desglose
     }
 }
 public function registrarAperturaDesdeCierreConcepto($data) {
-    /**
-     * $data es el array completo construido en el case 'registrar'
-     */
+    // 1. Datos base
+    $almacen_id   = intval($data['almacen_id'] ?? 0);
+    $usuario_id   = intval($data['usuario_id'] ?? 0);
+    $categoria_id = intval($data['categoria_id'] ?? 1);
+    $monto_mov    = floatval($data['monto'] ?? 0);
+    $tipo_op      = $data['tipo_operacion'] ?? 'entrada';
+    $metodo       = $data['metodo_pago'] ?? 'efectivo'; // Importante para el destino
     
-    // 1. Extraer y validar valores mínimos necesarios
-    $almacen_id   = $data['almacen_id'] ?? 0;
-    $usuario_id   = $data['usuario_id'] ?? 0;
-    $categoria_id = $data['categoria_id'] ?? 1; // Por defecto 1 si no viene
-    $concepto_raw = $data['concepto'] ?? 'Sin concepto';
-    
-    // 2. Manejo de montos (Desglose)
-    $efectivo      = $data['monto_efectivo'] ?? 0;
-    $tarjeta       = $data['monto_tarjeta'] ?? 0;
-    $transferencia = $data['monto_transferencia'] ?? 0;
-    $monto_total   =  ($efectivo + $tarjeta + $transferencia);
-    
-    // 3. Fecha Contable (Mantenemos tu lógica de +1 día)
-    $fecha_base     = $data['fecha_movimiento'] ?? date('Y-m-d');
-    $fecha_apertura = date('Y-m-d', strtotime($fecha_base . ' +1 day')) . ' 00:00:01';
-    
-    $concepto_final = "Saldo inicial modificado por: " . $concepto_raw;
+    // 2. Lógica para Caja/Banco (Inversa)
+    if ($tipo_op === 'salida' || $tipo_op === 'traspaso') {
+        $operador = 1; // Sube el saldo en Caja/Banco
+    } else {
+        $operador = -1; // Baja el saldo en Caja/Banco
+    }
+    $ajuste_saldo = $monto_mov * $operador;
 
-    // 4. SQL Dinámico con todos los campos de destino
-    $sql = "INSERT INTO historial_capital (
-                categoria_id, 
-                almacen_origen_id, 
-                almacen_destino_id, 
-                caja_fuerte_destino_id,
-                banco_destino_id,
-                monto, 
-                monto_efectivo,
-                monto_tarjeta,
-                monto_transferencia,
-                usuario_registro_id, 
-                concepto, 
-                fecha_movimiento
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    // 3. Preparación de variables
+    $efectivo      = floatval($data['monto_efectivo'] ?? 0);
+    $tarjeta       = floatval($data['monto_tarjeta'] ?? 0);
+    $transferencia = floatval($data['monto_transferencia'] ?? 0);
     
+    $fecha_base     = $data['fecha_movimiento'] ?? date('Y-m-d');
+    $fecha_apertura = date('Y-m-d', strtotime($fecha_base)) . ' 00:00:01';
+    $concepto_final = "Movimiento de " . $tipo_op . ": " . ($data['concepto'] ?? '');
+
     try {
-        $stmt = $this->db->prepare($sql);
+        $this->db->begin_transaction();
+
+        // --- PASO A: Registro del ORIGEN (El movimiento actual) ---
+        $sql = "INSERT INTO historial_capital (
+                    categoria_id, almacen_origen_id, almacen_destino_id, 
+                    caja_fuerte_destino_id, banco_destino_id, monto, 
+                    monto_efectivo, monto_tarjeta, monto_transferencia,
+                    usuario_registro_id, concepto, fecha_movimiento
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
-        // Ejecutamos pasando los valores en orden
-        return $stmt->execute([
-            $categoria_id,
-            $almacen_id, 
-            $data['almacen_destino_id'] ?? null,
-            $data['caja_fuerte_id'] ?? null,
-            $data['banco_id'] ?? null,
-            $monto_total,
-            $efectivo,
-            $tarjeta,
-            $transferencia,
-            $usuario_id, 
-            $concepto_final, 
-            $fecha_apertura
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            $categoria_id, $almacen_id, 
+            $data['almacen_destino_id'] ?: null,
+            $data['caja_fuerte_id'] ?: null,
+            $data['banco_id'] ?: null,
+            $monto_mov, $efectivo, $tarjeta, $transferencia,
+            $usuario_id, $concepto_final, $fecha_apertura
         ]);
+
+        // --- PASO B: Lógica de Traspaso entre ALMACENES ---
+        // Si hay un almacén destino, creamos la "Entrada" automática para ese almacén
+        $almacen_dest_id = intval($data['almacen_destino_id'] ?? 0);
+        if ($tipo_op === 'traspaso' && $almacen_dest_id > 0) {
+            
+            // Consultamos el saldo actual del almacén DESTINO para sumarle el dinero
+            $saldos_dest = $this->obtenerSaldoInicialMonitor($almacen_dest_id, '2000-01-01', $fecha_base);
+            
+            $nuevo_desglose_dest = [
+                'efectivo'      => floatval($saldos_dest['monto_efectivo']),
+                'tarjeta'       => floatval($saldos_dest['monto_tarjeta']),
+                'transferencia' => floatval($saldos_dest['monto_transferencia'])
+            ];
+
+            // Sumamos el monto al método correspondiente en el destino
+            if (isset($nuevo_desglose_dest[$metodo])) {
+                $nuevo_desglose_dest[$metodo] += $monto_mov;
+            }
+
+            // Insertamos el registro de entrada en el almacén destino
+            $stmt->execute([
+                $categoria_id, 
+                $almacen_dest_id, // Ahora él es el origen de su propia apertura
+                null, null, null,
+                $monto_mov,
+                $nuevo_desglose_dest['efectivo'],
+                $nuevo_desglose_dest['tarjeta'],
+                $nuevo_desglose_dest['transferencia'],
+                $usuario_id,
+                "Entrada por traspaso desde Almacén ID: " . $almacen_id,
+                $fecha_apertura
+            ]);
+        }
+
+        // --- PASO C: Afectar Caja Fuerte / Banco ---
+        if (!empty($data['caja_fuerte_id']) && $data['caja_fuerte_id'] > 0) {
+            $this->actualizarSaldoCajaFuerte($data['caja_fuerte_id'], $ajuste_saldo);
+        }
+        if (!empty($data['banco_id']) && $data['banco_id'] > 0) {
+            $this->actualizarSaldoBanco($data['banco_id'], $ajuste_saldo);
+        }
+
+        $this->db->commit();
+        return true;
+
     } catch (Exception $e) {
-        error_log("Error en registrarAperturaDesdeCierre: " . $e->getMessage());
+        $this->db->rollback();
+        error_log("Error en flujo de fondos: " . $e->getMessage());
         return false;
     }
+}
+/**
+ * Métodos auxiliares para la actualización de saldos reales
+ */
+private function actualizarSaldoCajaFuerte($id, $monto) {
+    $sql = "UPDATE cajas_fuertes SET Saldo = Saldo + ? WHERE id = ?";
+    return $this->db->prepare($sql)->execute([$monto, $id]);
+}
+
+private function actualizarSaldoBanco($id, $monto) {
+    $sql = "UPDATE bancos SET saldo = saldo + ? WHERE id_cuenta = ?"; 
+    return $this->db->prepare($sql)->execute([$monto, $id]);
 }
 /**
  * Obtiene el saldo inicial basándose en el nivel de acceso.
@@ -741,8 +789,7 @@ public function obtenerSaldoInicialMonitor($almacen_id, $f_inicio, $f_fin) {
                 LEFT JOIN historial_capital h ON h.id = (
                     SELECT id 
                     FROM historial_capital 
-                    WHERE categoria_id = 1 
-                      AND almacen_origen_id = a.id 
+                    WHERE almacen_origen_id = a.id 
                       AND fecha_movimiento <= ?
                     ORDER BY id DESC 
                     LIMIT 1
@@ -777,8 +824,82 @@ public function obtenerSaldoInicialMonitor($almacen_id, $f_inicio, $f_fin) {
                     IFNULL(monto_tarjeta, 0.00) as monto_tarjeta, 
                     IFNULL(monto_transferencia, 0.00) as monto_transferencia
                 FROM historial_capital 
-                WHERE categoria_id = 1 
-                  AND almacen_origen_id = ? 
+                WHERE  almacen_origen_id = ? 
+                  AND fecha_movimiento <= ?
+                ORDER BY id DESC 
+                LIMIT 1";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("is", $almacen_id, $fecha_corte);
+        $stmt->execute();
+
+        $res = $stmt->get_result()->fetch_assoc();
+
+        // ✅ Si no hay historial → regresar ceros
+        return $res ?: [
+            'monto' => 0.00, 
+            'monto_efectivo' => 0.00, 
+            'monto_tarjeta' => 0.00, 
+            'monto_transferencia' => 0.00
+        ];
+    }
+}
+public function obtenerSaldoInicialMonitorTabla($almacen_id, $f_inicio, $f_fin) {
+    // Solo necesitamos la fecha final del rango
+    $fecha_corte = $f_fin . ' 23:59:59';
+
+    if ($almacen_id == 0) {
+        /**
+         * VISTA ADMIN:
+         * Trae todas las sucursales y su último saldo registrado
+         * ANTES o igual a la fecha seleccionada
+         */
+        $sql = "SELECT 
+                    a.nombre AS almacen, 
+                    IFNULL(h.monto, 0.00) AS monto, 
+                    IFNULL(h.monto_efectivo, 0.00) AS monto_efectivo, 
+                    IFNULL(h.monto_tarjeta, 0.00) AS monto_tarjeta, 
+                    IFNULL(h.monto_transferencia, 0.00) AS monto_transferencia
+                FROM almacenes a
+                LEFT JOIN historial_capital h ON h.id = (
+                    SELECT id 
+                    FROM historial_capital 
+                    WHERE almacen_origen_id = a.id 
+                      AND fecha_movimiento <= ?
+                    ORDER BY id DESC 
+                    
+                )
+                WHERE a.activo = 1 
+                ORDER BY a.nombre ASC";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("s", $fecha_corte);
+        $stmt->execute();
+
+        $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        // 🔥 Asegurar estructura consistente (por si acaso)
+        foreach ($result as &$r) {
+            $r['monto'] = floatval($r['monto'] ?? 0);
+            $r['monto_efectivo'] = floatval($r['monto_efectivo'] ?? 0);
+            $r['monto_tarjeta'] = floatval($r['monto_tarjeta'] ?? 0);
+            $r['monto_transferencia'] = floatval($r['monto_transferencia'] ?? 0);
+        }
+
+        return $result;
+
+    } else {
+        /**
+         * VISTA SUCURSAL:
+         * Último saldo antes o igual a la fecha
+         */
+        $sql = "SELECT 
+                    IFNULL(monto, 0.00) as monto, 
+                    IFNULL(monto_efectivo, 0.00) as monto_efectivo, 
+                    IFNULL(monto_tarjeta, 0.00) as monto_tarjeta, 
+                    IFNULL(monto_transferencia, 0.00) as monto_transferencia
+                FROM historial_capital 
+                WHERE  almacen_origen_id = ? 
                   AND fecha_movimiento <= ?
                 ORDER BY id DESC 
                 LIMIT 1";

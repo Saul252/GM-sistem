@@ -118,10 +118,12 @@ if (!empty($action)) {
 
                 // 2. Obtener Saldo Inicial (Apertura) con tu función personalizada
                 $movimientos = $corteCaja->obtenerSaldoInicialMonitor($almacen_id, $f_inicio, $f_fin);
+                 $movimientosHistorial = $corteCaja->obtenerSaldoInicialMonitorTabla($almacen_id, $f_inicio, $f_fin);
 
                 echo json_encode([
                     'status'        => 'success',
                     'data'          => $movimientos,
+                    'tablaHistorial'=> $movimientosHistorial,
                     'saldo_inicial' => $saldo_inicial,
                     'es_lista'      => ($almacen_id == 0)
                 ]);

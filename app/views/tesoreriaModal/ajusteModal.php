@@ -134,8 +134,8 @@ const ModalMovimiento = {
             if (tipoOp) {
                 $('#badge_tipo_operacion').text(tipoOp.toUpperCase()).show()
                     .removeClass('bg-success bg-danger bg-warning text-white text-dark');
-                if(tipoOp === 'entrada') $('#badge_tipo_operacion').addClass('bg-success text-white');
-                else if(tipoOp === 'salida') $('#badge_tipo_operacion').addClass('bg-danger text-white');
+                if(tipoOp === 'entrada') $('#badge_tipo_operacion').addClass('bg-success text-success');
+                else if(tipoOp === 'salida') $('#badge_tipo_operacion').addClass('bg-danger text-danger');
                 else $('#badge_tipo_operacion').addClass('bg-warning text-dark');
             }
 
@@ -167,12 +167,22 @@ const ModalMovimiento = {
             $btn.prop('disabled', true).html('Procesando...');
 
             $.post(self.url, $(this).serialize() + '&action=registrar', (res) => {
-                if(res.status === 'success') {
-                    Swal.fire({ icon: 'success', title: '¡Éxito!', text: res.message, timer: 1500, showConfirmButton: false });
-                    $('#modalMovimiento').modal('hide');
-                    $('#formNuevoMovimiento')[0].reset();
-                    if (typeof Tesoreria !== 'undefined') Tesoreria.init();
-                } else {
+               if (res.status === 'success') {
+    Swal.fire({ 
+        icon: 'success', 
+        title: '¡Éxito!', 
+        text: res.message, 
+        timer: 1500, 
+        showConfirmButton: false 
+    }).then(() => {
+        // Este bloque se ejecuta cuando el timer termina o la alerta se cierra
+        location.reload(); 
+    });
+
+    // Opcional: Esto ayuda a que el UI se vea limpio mientras recarga
+    $('#modalMovimiento').modal('hide');
+    $('#formNuevoMovimiento')[0].reset();
+} else {
                     Swal.fire('Error', res.message, 'error');
                 }
             }, 'json').always(() => {
