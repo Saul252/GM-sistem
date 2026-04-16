@@ -262,6 +262,7 @@
                                 <th>Tipo</th>
                                 <th>Entidad</th>
                                 <th class="text-end">Total</th>
+                                 <th class="text-end">Metodo de Pago</th>
                                 <th class="text-center">Faltantes</th>
                                 <th class="text-center">Evidencia</th>
                                 <th class="text-end pe-3">Acciones</th>
@@ -296,8 +297,26 @@
                 </td>
 
                 <td><?= htmlspecialchars($e['entidad']) ?></td>
-                <td class="fw-bold text-end">$<?= number_format($e['total'], 2) ?></td>
+                 <td class="fw-bold text-end">$<?= number_format($e['total'], 2) ?></td>
+                <?php
+$metodo = strtoupper($e['metodo_pago'] ?? 'EFECTIVO');
 
+$clase = 'bg-secondary';
+
+if (str_contains($metodo, 'EFECT')) {
+    $clase = 'bg-dark';        // verde
+} elseif (str_contains($metodo, 'TARJ')) {
+    $clase = 'bg-primary';        // azul
+} elseif (str_contains($metodo, 'TRANS')) {
+    $clase = 'bg-warning text-dark'; // amarillo
+}
+?>
+
+<td class="text-end">
+    <span class="badge <?= $clase ?> px-3 py-2 rounded-pill">
+        <?= $metodo ?>
+    </span>
+</td>
                 <td class="text-center">
                     <?php if($e['tipo'] == 'compra'): ?>
                         <?php if($e['piezas_faltantes'] > 0): ?>

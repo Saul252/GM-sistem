@@ -111,7 +111,8 @@ if ($action === 'guardarCompraInventario') {
             $_POST['proveedor'] ?? 'Sin Proveedor',
             (isset($_FILES['evidencia_compra']) && $_FILES['evidencia_compra']['error'] === UPLOAD_ERR_OK) ? $_FILES['evidencia_compra'] : null,
             $almacen_principal,
-            $user_id
+            $user_id,
+            $_POST['metodo_pago'] ?? 'Efectivo',
         );
         echo json_encode($resultado ?? ['success' => false, 'message' => 'El modelo no respondió']);
     } catch (Throwable $e) {
