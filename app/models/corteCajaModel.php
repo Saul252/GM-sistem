@@ -655,6 +655,7 @@ public function registrarAperturaDesdeCierre($almacen_id, $usuario_id, $desglose
     }
 }
 public function registrarAperturaDesdeCierreConcepto($data) {
+     date_default_timezone_set('America/Mexico_City');
     // 1. Datos base
     $almacen_id   = intval($data['almacen_id'] ?? 0);
     $usuario_id   = intval($data['usuario_id'] ?? 0);
@@ -677,9 +678,16 @@ public function registrarAperturaDesdeCierreConcepto($data) {
     $transferencia = floatval($data['monto_transferencia'] ?? 0);
     
     $fecha_base     = $data['fecha_movimiento'] ?? date('Y-m-d');
+   
+// Comparamos solo la fecha (Año-mes-día)
+if (date('Y-m-d', strtotime($fecha_base)) == date('Y-m-d')) {
+    // Si es hoy, usamos la hora, minuto y segundo actual
+    $fecha_apertura = date('Y-m-d H:i:s');
+} else {
+    // Si es una fecha distinta (pasada o futura), usamos el primer segundo del día
     $fecha_apertura = date('Y-m-d', strtotime($fecha_base)) . ' 00:00:01';
-    $concepto_final = "Movimiento de " . $tipo_op . ": " . ($data['concepto'] ?? '');
-
+}
+   $concepto_final = "Movimiento de " . $tipo_op . ": " . ($data['concepto'] ?? '') . " : " . date('Y-m-d H:i:s');
     try {
         $this->db->begin_transaction();
 
@@ -722,17 +730,18 @@ public function registrarAperturaDesdeCierreConcepto($data) {
 
             // Insertamos el registro de entrada en el almacén destino
             $stmt->execute([
-                $categoria_id, 
-                $almacen_dest_id, // Ahora él es el origen de su propia apertura
-                null, null, null,
-                $monto_mov,
-                $nuevo_desglose_dest['efectivo'],
-                $nuevo_desglose_dest['tarjeta'],
-                $nuevo_desglose_dest['transferencia'],
-                $usuario_id,
-                "Entrada por traspaso desde Almacén ID: " . $almacen_id,
-                $fecha_apertura
-            ]);
+    $categoria_id, 
+    $almacen_dest_id, 
+    null, null, null,
+    $monto_mov,
+    $nuevo_desglose_dest['efectivo'],
+    $nuevo_desglose_dest['tarjeta'],
+    $nuevo_desglose_dest['transferencia'],
+    $usuario_id,
+    // Añadimos un espacio o separador antes de la fecha
+    "Entrada por traspaso desde Almacén ID: " . $almacen_id . " | " . date('Y-m-d H:i:s'),
+    $fecha_apertura
+]);
         }
 
         // --- PASO C: Afectar Caja Fuerte / Banco ---
@@ -845,78 +854,64 @@ public function obtenerSaldoInicialMonitor($almacen_id, $f_inicio, $f_fin) {
     }
 }
 public function obtenerSaldoInicialMonitorTabla($almacen_id, $f_inicio, $f_fin) {
-    // Solo necesitamos la fecha final del rango
-    $fecha_corte = $f_fin . ' 23:59:59';
+    // Definimos el rango completo de tiempo
+    $fecha_inicio = $f_inicio . ' 00:00:00';
+    $fecha_final  = $f_fin . ' 23:59:59';
 
     if ($almacen_id == 0) {
         /**
          * VISTA ADMIN:
-         * Trae todas las sucursales y su último saldo registrado
-         * ANTES o igual a la fecha seleccionada
+         * Trae TODOS los movimientos de todas las sucursales en el rango
          */
         $sql = "SELECT 
                     a.nombre AS almacen, 
-                    IFNULL(h.monto, 0.00) AS monto, 
-                    IFNULL(h.monto_efectivo, 0.00) AS monto_efectivo, 
-                    IFNULL(h.monto_tarjeta, 0.00) AS monto_tarjeta, 
-                    IFNULL(h.monto_transferencia, 0.00) AS monto_transferencia
-                FROM almacenes a
-                LEFT JOIN historial_capital h ON h.id = (
-                    SELECT id 
-                    FROM historial_capital 
-                    WHERE almacen_origen_id = a.id 
-                      AND fecha_movimiento <= ?
-                    ORDER BY id DESC 
-                    
-                )
-                WHERE a.activo = 1 
-                ORDER BY a.nombre ASC";
+                    h.monto, 
+                    h.monto_efectivo, 
+                    h.monto_tarjeta, 
+                    h.monto_transferencia,
+                    h.fecha_movimiento,
+                    h.concepto -- O la columna que uses para describir el movimiento
+                FROM historial_capital h
+                INNER JOIN almacenes a ON h.almacen_origen_id = a.id
+                WHERE h.fecha_movimiento BETWEEN ? AND ?
+                ORDER BY h.id DESC";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("s", $fecha_corte);
-        $stmt->execute();
-
-        $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-
-        // 🔥 Asegurar estructura consistente (por si acaso)
-        foreach ($result as &$r) {
-            $r['monto'] = floatval($r['monto'] ?? 0);
-            $r['monto_efectivo'] = floatval($r['monto_efectivo'] ?? 0);
-            $r['monto_tarjeta'] = floatval($r['monto_tarjeta'] ?? 0);
-            $r['monto_transferencia'] = floatval($r['monto_transferencia'] ?? 0);
-        }
-
-        return $result;
-
+        $stmt->bind_param("ss", $fecha_inicio, $fecha_final);
     } else {
         /**
          * VISTA SUCURSAL:
-         * Último saldo antes o igual a la fecha
+         * Trae todos los movimientos de UNA sucursal en el rango
          */
         $sql = "SELECT 
-                    IFNULL(monto, 0.00) as monto, 
-                    IFNULL(monto_efectivo, 0.00) as monto_efectivo, 
-                    IFNULL(monto_tarjeta, 0.00) as monto_tarjeta, 
-                    IFNULL(monto_transferencia, 0.00) as monto_transferencia
-                FROM historial_capital 
-                WHERE  almacen_origen_id = ? 
-                  AND fecha_movimiento <= ?
-                ORDER BY id DESC 
-                LIMIT 1";
+            a.nombre AS almacen, -- Faltaba la coma aquí
+            h.monto, 
+            h.monto_efectivo, 
+            h.monto_tarjeta, 
+            h.monto_transferencia,
+            h.fecha_movimiento,
+            h.concepto
+        FROM historial_capital h -- Debes poner el alias 'h' aquí
+        INNER JOIN almacenes a ON h.almacen_origen_id = a.id
+        WHERE h.almacen_origen_id = ? 
+          AND h.fecha_movimiento BETWEEN ? AND ?
+        ORDER BY h.id DESC";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("is", $almacen_id, $fecha_corte);
-        $stmt->execute();
-
-        $res = $stmt->get_result()->fetch_assoc();
-
-        // ✅ Si no hay historial → regresar ceros
-        return $res ?: [
-            'monto' => 0.00, 
-            'monto_efectivo' => 0.00, 
-            'monto_tarjeta' => 0.00, 
-            'monto_transferencia' => 0.00
-        ];
+        $stmt->bind_param("iss", $almacen_id, $fecha_inicio, $fecha_final);
     }
+
+    $stmt->execute();
+    $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    // Formatear para que el JS reciba números y no strings
+    foreach ($result as &$r) {
+        $r['monto'] = (float)$r['monto'];
+        $r['monto_efectivo'] = (float)$r['monto_efectivo'];
+        $r['monto_tarjeta'] = (float)$r['monto_tarjeta'];
+        $r['monto_transferencia'] = (float)$r['monto_transferencia'];
+    }
+
+    return $result;
 }
 }

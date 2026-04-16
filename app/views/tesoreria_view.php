@@ -20,6 +20,14 @@
         .table thead th { background: transparent; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; color: #8e8e93; font-size: 11px; border-bottom: 1px solid rgba(0,0,0,0.05); padding: 15px 10px; }
         .btn-ios { border-radius: 14px; font-weight: 600; transition: 0.2s; }
         .icon-box { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: rgba(0,122,255,0.1); color: var(--apple-blue); }
+        
+        /* Estilos para el Avatar de Almacén */
+        .avatar-sucursal {
+            width: 38px; height: 38px; display: flex; align-items: center; justify-content: center;
+            background: rgba(0, 122, 255, 0.1); color: var(--apple-blue); font-weight: 700;
+            border-radius: 10px; border: 1px solid rgba(0, 122, 255, 0.2);
+        }
+
         @media (max-width: 992px) { .main-content { margin-left: 0; } }
     </style>
 </head>
@@ -62,7 +70,7 @@
                 </form>
             </div>
 
-            <div class="glass-card position-relative overflow-hidden animate__animated animate__fadeInUp">
+            <div class="glass-card position-relative overflow-hidden mb-4 animate__animated animate__fadeInUp">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead>
@@ -78,50 +86,121 @@
                     </table>
                 </div>
             </div>
+
+            <div class="glass-card position-relative overflow-hidden animate__animated animate__fadeInUp">
+            <div class="col-md-4">
+    <label class="small fw-bold text-muted text-uppercase mb-2 d-block">Buscar por Concepto</label>
+    <div class="position-relative">
+        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+        <input type="text" id="filtro_concepto" onkeyup="Tesoreria.filtrarLocal()" class="form-control ios-input ps-5" placeholder="Escribe para buscar...">
+    </div>
+</div>    
+            <div class="p-3 bg-light border-bottom">
+                    <h6 class="m-0 fw-bold text-muted"><i class="bi bi-list-check me-2"></i>DETALLE DE AFECTACIONES</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">Fecha del movimiento</th>
+                                <th class="ps-4">SUCURSAL AFECTADA</th>
+                                  <th class="text-end">CONCEPTO</th>
+                                <th class="text-end">EFECTIVO</th>
+                                <th class="text-end">TARJETA</th>
+                                <th class="text-end">TRANSFERENCIA</th>
+                                <th class="text-end pe-4">SUBTOTAL</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyAfectaciones"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </main>
-
-  
 
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <script>
+   <script>
     const Tesoreria = {
         url: '/cfsistem/app/controllers/tesoreriaController.php',
+        datosHistorial: [], // Memoria para el filtrado en el front
+
         init: function() {
             this.listar();
         },
+
         listar: function() {
             const params = {
                 action: 'listar',
                 almacen_id: $('#filtro_almacen_id').val(),
                 fecha: $('#filtro_fecha').val()
             };
+
             $.getJSON(this.url, params, (res) => {
                 let html = '';
-                if (res.status === 'success' && res.data) {
-                    if (Array.isArray(res.data)) {
-                        res.data.forEach(m => html += this.renderFila(m));
-                    } else {
-                        html = this.renderFila(res.data);
+                let htmlHistorial = '';
+
+                if (res.status === 'success') {
+                    // 1. Renderizar Resumen General (res.data)
+                    if (res.data) {
+                        if (Array.isArray(res.data)) {
+                            res.data.forEach(m => html += this.renderFila(m));
+                        } else {
+                            html = this.renderFila(res.data);
+                        }
+                    }
+
+                    // 2. Guardar en memoria y renderizar Historial (movimientosHistorial)
+                    if (res.movimientosHistorial) {
+                        // Guardamos siempre como array para el filtro
+                        this.datosHistorial = Array.isArray(res.movimientosHistorial) 
+                            ? res.movimientosHistorial 
+                            : [res.movimientosHistorial];
+                        
+                        // Renderizamos inicialmente el historial completo
+                        this.datosHistorial.forEach(mh => {
+                            htmlHistorial += this.renderFilaHistorial(mh);
+                        });
                     }
                 }
-                $('#tbodyTesoreria').html(html || '<tr><td colspan="5" class="text-center py-5 text-muted">No hay registros</td></tr>');
+
+                // Inyección en los contenedores correctos
+                $('#tbodyTesoreria').html(html || '<tr><td colspan="5" class="text-center py-5 text-muted">No hay registros de saldos</td></tr>');
+                $('#tbodyAfectaciones').html(htmlHistorial || '<tr><td colspan="7" class="text-center py-5 text-muted">Sin movimientos detallados</td></tr>');
+                
+                // Limpiamos el buscador al recargar datos del servidor
+                $('#filtro_concepto').val('');
             });
         },
+
+        // Nueva función para filtrar solo en el front
+        filtrarLocal: function() {
+            const busqueda = $('#filtro_concepto').val().toLowerCase();
+            
+            const filtrados = this.datosHistorial.filter(m => {
+                const concepto = (m.concepto || '').toLowerCase();
+                const almacen = (m.almacen || '').toLowerCase();
+                return concepto.includes(busqueda) || almacen.includes(busqueda);
+            });
+
+            let html = '';
+            filtrados.forEach(m => html += this.renderFilaHistorial(m));
+            $('#tbodyAfectaciones').html(html || '<tr><td colspan="7" class="text-center py-5 text-muted">No se encontraron coincidencias</td></tr>');
+        },
+
         renderFila: function(m) {
             const colorClass = (val) => parseFloat(val) < 0 ? 'text-danger' : 'text-secondary';
             const badgeClass = (val) => parseFloat(val) < 0 ? 'bg-danger' : 'bg-primary';
             return `
-                <tr class="animate__animated animate__fadeInUp">
+                <tr class="animate__animated animate__fadeIn">
                     <td class="ps-4">
                         <div class="d-flex align-items-center">
                             <div class="icon-box me-3"><i class="bi bi-shop"></i></div>
                             <div>
                                 <span class="fw-bold d-block text-dark">${m.almacen || 'Sucursal'}</span>
-                                <span class="text-muted" style="font-size:10px;">MONITOR EN TIEMPO REAL</span>
+                                <span class="text-muted" style="font-size:10px;">SALDO ACTUAL</span>
                             </div>
                         </div>
                     </td>
@@ -135,12 +214,49 @@
                     </td>
                 </tr>`;
         },
+
+        renderFilaHistorial: function(m) {
+            return `
+                <tr class="animate__animated animate__fadeIn">
+                    <td class="ps-4">
+                        <span class="d-block fw-bold text-dark">${m.fecha_movimiento || 'S/F'}</span>
+                    </td>
+                    <td>
+                        <div class="d-flex align-items-center">
+                            <div class="avatar-sucursal me-3">
+                                ${m.almacen ? m.almacen.substring(0, 1).toUpperCase() : 'A'}
+                            </div>
+                            <span class="fw-bold text-dark">${m.almacen || 'Almacén'}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="d-block fw-bold text-dark text-uppercase small">${m.concepto || 'Sin Concepto'}</span>
+                    </td>
+                    <td class="text-end fw-medium text-dark">${this.f(m.monto_efectivo)}</td>
+                    <td class="text-end fw-medium text-dark">${this.f(m.monto_tarjeta)}</td>
+                    <td class="text-end fw-medium text-dark">${this.f(m.monto_transferencia)}</td>
+                    <td class="text-end pe-4">
+                        <span class="fw-bolder fs-6 text-primary">
+                            ${this.f(m.monto)}
+                        </span>
+                    </td>
+                </tr>`;
+        },
+
         f: function(n) {
             return '$' + parseFloat(n || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 });
         }
     };
-    $(document).ready(() => Tesoreria.init());
-    </script>
+
+    $(document).ready(() => {
+        Tesoreria.init();
+        
+        // Vincular el evento de escritura al buscador
+        $('#filtro_concepto').on('keyup', function() {
+            Tesoreria.filtrarLocal();
+        });
+    });
+</script>
 
 <?php require_once __DIR__ . '/tesoreriaModal/ajusteModal.php'; ?>
 </body>

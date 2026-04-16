@@ -123,7 +123,7 @@ if (!empty($action)) {
                 echo json_encode([
                     'status'        => 'success',
                     'data'          => $movimientos,
-                    'tablaHistorial'=> $movimientosHistorial,
+                    'movimientosHistorial'=> $movimientosHistorial,
                     'saldo_inicial' => $saldo_inicial,
                     'es_lista'      => ($almacen_id == 0)
                 ]);
