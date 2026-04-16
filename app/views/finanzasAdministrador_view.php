@@ -127,23 +127,42 @@
 
  <div class="row g-4">
     <div class="col-12">
-        <div class="card border-0 shadow-sm bg-dark text-white p-4" style="border-radius: 15px;">
-            <div class="row align-items-center">
-                <div class="col-md-4 text-center border-end border-secondary">
-                    <small class="text-uppercase opacity-75 fw-bold">Venta Bruta Total</small>
-                    <h2 class="display-6 fw-bold mb-0" id="res-venta-bruta">$0.00</h2>
+        <div class="card border-0 p-3" style="border-radius:20px; background: linear-gradient(135deg,#f8fafc,#eef2ff);">
+
+            <div class="row text-center">
+
+                <!-- VENTA BRUTA -->
+                <div class="col-md-4">
+                    <div class="p-3 h-100" style="border-radius:16px; background:white; box-shadow:0 6px 20px rgba(0,0,0,0.05);">
+                        <small class="text-muted text-uppercase fw-bold d-block mb-1">Venta Bruta</small>
+                        <h2 class="fw-bold mb-0 text-dark" id="res-venta-bruta">$0.00</h2>
+                        <div class="mt-2" style="height:4px; width:40px; background:#2563eb; border-radius:10px; margin:auto;"></div>
+                    </div>
                 </div>
-                <div class="col-md-4 text-center border-end border-secondary">
-                    <small class="text-uppercase opacity-75 fw-bold text-danger">Pendiente de Cobro</small>
-                    <h2 class="display-6 fw-bold mb-0 text-danger" id="res-deuda">$0.00</h2>
+
+                <!-- DEUDA -->
+                <div class="col-md-4">
+                    <div class="p-3 h-100" style="border-radius:16px; background:white; box-shadow:0 6px 20px rgba(0,0,0,0.05);">
+                        <small class="text-muted text-uppercase fw-bold d-block mb-1">Pendiente</small>
+                        <h2 class="fw-bold mb-0 text-danger" id="res-deuda">$0.00</h2>
+                        <div class="mt-2" style="height:4px; width:40px; background:#ef4444; border-radius:10px; margin:auto;"></div>
+                    </div>
                 </div>
-                <div class="col-md-4 text-center">
-                    <small class="text-uppercase opacity-75 fw-bold text-warning">Saldo Favor Usado</small>
-                    <h2 class="display-6 fw-bold mb-0 text-warning" id="res-saldo-favor">$0.00</h2>
+
+                <!-- SALDO FAVOR -->
+                <div class="col-md-4">
+                    <div class="p-3 h-100" style="border-radius:16px; background:white; box-shadow:0 6px 20px rgba(0,0,0,0.05);">
+                        <small class="text-muted text-uppercase fw-bold d-block mb-1">Saldo Favor</small>
+                        <h2 class="fw-bold mb-0 text-warning" id="res-saldo-favor">$0.00</h2>
+                        <div class="mt-2" style="height:4px; width:40px; background:#f59e0b; border-radius:10px; margin:auto;"></div>
+                    </div>
                 </div>
+
             </div>
+
         </div>
     </div>
+</div>
 
     <div class="col-md-6">
         <div class="card border-0 shadow-sm h-100" style="border-radius: 15px;">
@@ -194,11 +213,17 @@
 
     
 </div>
-  <div class="col-12 col-lg-6 d-flex"></div>
-<div id="contenedor-egresos-gastos" style="display:none;"></div>
+ <div class="row g-3">
 
-<div id="contenedor-egresosCompras" style="display:none;"></div>
-                            </div>
+    <div class="col-12 col-lg-6 d-flex">
+        <div id="contenedor-egresos-gastos" class="w-100" style="display:none;"></div>
+    </div>
+
+    <div class="col-12 col-lg-6 d-flex">
+        <div id="contenedor-egresosCompras" class="w-100" style="display:none;"></div>
+    </div>
+
+</div>
    
 </div>
  <div class="glass-card position-relative overflow-hidden mt-4">
@@ -223,7 +248,7 @@
                     </table>
                 </div>
             </div>
-          <!-- <div class="row align-items-stretch g-4">
+        <div class="row align-items-stretch g-4">
 
     <div class="col-12 col-lg-6 d-flex">
         <div class="card border-0 shadow-sm w-100 h-100" style="border-radius: 20px; overflow: hidden;">
@@ -241,6 +266,7 @@
                                 <th>Fecha</th>
                                 <th>Folio</th>
                                 <th>Beneficiario</th>
+                                 <th>Metodo de pago</th>
                                 <th class="text-end">Monto</th>
                             </tr>
                         </thead>
@@ -267,6 +293,7 @@
                                 <th>Fecha</th>
                                 <th>Folio</th>
                                 <th>Proveedor</th>
+                                <th>Metodo de pago</th>
                                 <th class="text-end">Total</th>
                             </tr>
                         </thead>
@@ -277,7 +304,7 @@
         </div>
     </div>
 
-</div> -->
+</div> 
             </div>
     </main>
 
@@ -298,7 +325,7 @@ function periodoRequiereSaldo(periodo) {
 
 const AppCaja = {
     config: { 
-        url: '/cfsistem/app/controllers/corteCajaController.php' 
+        url: '/cfsistem/app/controllers/finanzasAdmController.php' 
     },
 
     init: function() {
@@ -358,7 +385,7 @@ const AppCaja = {
             // 🔥 NUEVO: tablas inferiores
   this.renderEgresos('body_gastos', res.gastos || []);
                 this.renderEgresos('body_compras', res.compras || []);
-                console.log(res.gastos);
+                console.log(res.egresos);
 
             // 2. Totales egresos (cards generales)
             if (this.renderEgresosTotales) {
@@ -439,6 +466,7 @@ renderEgresos: function(id, data) {
                     <td class="small text-muted">${item.fecha || ''}</td>
                     <td class="fw-bold">${item.folio}</td>
                     <td>${entidad}</td>
+                    <td>${item.metodo_pago}</td>
                     <td class="text-end fw-bold text-danger">-${this.formatMoney(item.total)}</td>
                 </tr>`;
         });
@@ -453,38 +481,37 @@ renderGastosPorMetodo: function(data) {
 
     const total = efec + tar + tra;
 
-    $('#contenedor-egresos-gastos').html(`
-        <div class="card shadow-sm border-0 mb-3 animate__animated animate__fadeIn col-md-6" style="border-radius:15px;">
-            <div class="card-header bg-danger text-white">
-                <strong>Gastos por Método</strong>
+   $('#contenedor-egresos-gastos').html(`
+    <div class="card shadow-sm border-0 mb-3 animate__animated animate__fadeIn " style="border-radius:15px;">
+        <div class="card-header bg-danger text-white">
+            <strong>Gastos por Método</strong>
+        </div>
+
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <span>Efectivo</span>
+                <strong>${this.formatMoney(efec)}</strong>
             </div>
 
-            <div class="card-body">
-                <div class="d-flex justify-content-between">
-                    <span>Efectivo</span>
-                    <strong>${this.formatMoney(efec)}</strong>
-                </div>
+            <div class="d-flex justify-content-between">
+                <span>Tarjeta</span>
+                <strong>${this.formatMoney(tar)}</strong>
+            </div>
 
-                <div class="d-flex justify-content-between">
-                    <span>Tarjeta</span>
-                    <strong>${this.formatMoney(tar)}</strong>
-                </div>
+            <div class="d-flex justify-content-between">
+                <span>Transferencia</span>
+                <strong>${this.formatMoney(tra)}</strong>
+            </div>
 
-                <div class="d-flex justify-content-between">
-                    <span>Transferencia</span>
-                    <strong>${this.formatMoney(tra)}</strong>
-                </div>
+            <hr>
 
-                <hr>
-
-                <div class="d-flex justify-content-between fw-bold">
-                    <span>Total</span>
-                    <span>${this.formatMoney(total)}</span>
-                </div>
+            <div class="d-flex justify-content-between fw-bold">
+                <span>Total</span>
+                <span>${this.formatMoney(total)}</span>
             </div>
         </div>
-    `).show();
-},
+    </div>
+`).show();},
 renderComprasPorMetodo: function(data) {
 
     const efec = parseFloat(data.EFECTIVO || 0);
@@ -494,7 +521,7 @@ renderComprasPorMetodo: function(data) {
     const total = efec + tar + tra;
 
     $('#contenedor-egresosCompras').html(`
-        <div class="card shadow-sm border-0 mb-3 animate__animated animate__fadeIn col-md-6" style="border-radius:15px;">
+        <div class="card shadow-sm border-0 mb-3 animate__animated animate__fadeIn " style="border-radius:15px;">
             <div class="card-header bg-warning text-dark">
                 <strong>Compras por Método</strong>
             </div>

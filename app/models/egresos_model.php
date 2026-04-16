@@ -121,6 +121,60 @@ public function obtenerTodosLosEgresos($desde, $hasta, $almacen_id = 0, $tipo_fi
 
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
+public function obtenerTodosLosEgresosSencillo($desde, $hasta, $almacen_id = 0) {
+    // 1. Filtros opcionales de almacén
+    $whereAlmacenC = ($almacen_id > 0) ? " AND c.almacen_id = ?" : "";
+    $whereAlmacenG = ($almacen_id > 0) ? " AND g.almacen_id = ?" : "";
+
+    // 2. La consulta unificada (Compras + Gastos)
+    $sql = "
+        SELECT 
+            c.id, 
+            c.fecha_compra AS fecha, 
+            c.proveedor AS entidad, 
+            c.total, 
+            COALESCE(c.metodo_pago, 'Efectivo') AS metodo_pago, 
+            'compra' AS tipo, 
+            a.nombre AS almacen_nombre
+        FROM compras c 
+        JOIN almacenes a ON c.almacen_id = a.id
+        WHERE (c.fecha_compra BETWEEN ? AND ?) 
+          AND c.estado != 'cancelada' 
+          $whereAlmacenC
+
+        UNION ALL
+
+        SELECT 
+            g.id, 
+            g.fecha_gasto AS fecha, 
+            g.beneficiario AS entidad, 
+            g.total, 
+            COALESCE(g.metodo_pago, 'Efectivo') AS metodo_pago, 
+            'gasto' AS tipo, 
+            a.nombre AS almacen_nombre
+        FROM gastos g 
+        JOIN almacenes a ON g.almacen_id = a.id
+        WHERE (g.fecha_gasto BETWEEN ? AND ?) 
+          AND g.estado != 'cancelado' 
+          $whereAlmacenG
+
+        ORDER BY fecha DESC, id DESC
+    ";
+
+    $stmt = $this->db->prepare($sql);
+
+    // 3. Vinculación dinámica de parámetros
+    if ($almacen_id > 0) {
+        // Se pasan: desde, hasta, id (para compras) y luego desde, hasta, id (para gastos)
+        $stmt->bind_param("ssi ssi", $desde, $hasta, $almacen_id, $desde, $hasta, $almacen_id);
+    } else {
+        // Solo desde y hasta para ambas partes del UNION
+        $stmt->bind_param("ss ss", $desde, $hasta, $desde, $hasta);
+    }
+
+    $stmt->execute();
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
 
     /**
      * 2. REGISTRA UN GASTO (CON EVIDENCIA Y DESCRIPCIÓN)
