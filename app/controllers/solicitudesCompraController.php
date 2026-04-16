@@ -154,6 +154,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'guardarCompraCompleta') {
         $items = json_decode($_POST['items'], true);
         $almacen_id = intval($_POST['almacen_id'] ?? 0);
         $solicitud_id = intval($_POST['solicitud_id'] ?? 0);
+        $metodo_pago = $_POST['metodo_pago'] ?? 'Efectivo';
 
         if ($almacen_id <= 0) throw new Exception("ID de almacén no válido.");
         if (empty($items)) throw new Exception("No hay productos para procesar.");
@@ -165,7 +166,8 @@ if (isset($_POST['action']) && $_POST['action'] === 'guardarCompraCompleta') {
             $_POST['proveedor'] ?? 'Sin Proveedor', 
             $_FILES['evidencia_compra'] ?? null, 
             $almacen_id, 
-            $_SESSION['usuario_id'] ?? 0
+            $_SESSION['usuario_id'] ?? 0,
+            $metodo_pago
         );
 
         // 2. Si hay éxito y tenemos solicitud, actualizamos

@@ -17,31 +17,30 @@ error_reporting(E_ALL);
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
         rel="stylesheet" />
-     <?php require_once __DIR__ . '/layout/icono.php' ?>
+    <?php require_once __DIR__ . '/layout/icono.php' ?>
     <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
-<link href="/cfsistem/css/solicitudesCompra.css"
-        rel="stylesheet" />
-   
+    <link href="/cfsistem/css/solicitudesCompra.css" rel="stylesheet" />
+
 </head>
 
 <body>
     <?php renderizarLayout($paginaActual); ?>
 
     <main class="main-content">
-        
+
         <div class="glass-card p-4 mb-4">
 
-        <div class="row align-items-center mb-5">
-            <div class="col-md-8">
-                <h1 class="h3 fw-bold mb-1">Solicitudes de Compra</h1>
-                <p class="text-muted small">Gestión de requerimientos de materiales</p>
+            <div class="row align-items-center mb-5">
+                <div class="col-md-8">
+                    <h1 class="h3 fw-bold mb-1">Solicitudes de Compra</h1>
+                    <p class="text-muted small">Gestión de requerimientos de materiales</p>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <button class="btn btn-add" onclick="nuevaSolicitud()">
+                        <i class="bi bi-plus-lg me-2"></i> Crear Solicitud
+                    </button>
+                </div>
             </div>
-            <div class="col-md-4 text-md-end">
-                <button class="btn btn-add" onclick="nuevaSolicitud()">
-                    <i class="bi bi-plus-lg me-2"></i> Crear Solicitud
-                </button>
-            </div>
-        </div>
 
             <div class="row g-3 align-items-end">
                 <div class="col-md-3">
@@ -121,9 +120,9 @@ error_reporting(E_ALL);
                                 <span class="badge badge-status <?= $clase ?> rounded-pill"><?= $status ?></span>
                             </td>
                             <td class="text-end">
-                                
+
                                 <?php if($status === 'PENDIENTE'): ?>
-                                    <button class="btn btn-sm btn-white border shadow-sm"
+                                <button class="btn btn-sm btn-white border shadow-sm"
                                     onclick="gestionarSolicitud(<?= $s['id'] ?>)">
                                     <i class="bi bi-eye text-primary"></i> Gestionar
                                 </button>
@@ -132,12 +131,11 @@ error_reporting(E_ALL);
                                     <i class="bi bi-trash text-danger"></i>
                                 </button>
                                 <?php endif; ?>
-                                <button class="btn btn-sm btn-white border shadow-sm rounded-pill px-3" 
-        onclick="prepararImpresion(<?= $s['id'] ?>)" 
-        title="Imprimir solicitud">
-    <i class="bi bi-printer text-primary me-1"></i> 
-    <span class="text-dark fw-medium">Imprimir</span>
-</button>
+                                <button class="btn btn-sm btn-white border shadow-sm rounded-pill px-3"
+                                    onclick="prepararImpresion(<?= $s['id'] ?>)" title="Imprimir solicitud">
+                                    <i class="bi bi-printer text-primary me-1"></i>
+                                    <span class="text-dark fw-medium">Imprimir</span>
+                                </button>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -147,109 +145,119 @@ error_reporting(E_ALL);
         </div>
     </main>
 
-<div class="modal fade" id="modalSolicitud" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content" style="border-radius: 20px; border: none; overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.2);">
-            <form id="formSolicitud">
-                <div class="modal-header bg-white border-0 pt-4 px-4">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-primary text-white rounded-3 p-2 me-3 shadow-sm">
-                            <i class="bi bi-file-earmark-plus fs-4"></i>
+    <div class="modal fade" id="modalSolicitud" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content"
+                style="border-radius: 20px; border: none; overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.2);">
+                <form id="formSolicitud">
+                    <div class="modal-header bg-white border-0 pt-4 px-4">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-primary text-white rounded-3 p-2 me-3 shadow-sm">
+                                <i class="bi bi-file-earmark-plus fs-4"></i>
+                            </div>
+                            <div>
+                                <h4 class="fw-bold mb-0">Nueva Solicitud de Compra</h4>
+                                <p class="text-muted small mb-0">Complete los datos para requerir materiales al almacén
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <h4 class="fw-bold mb-0">Nueva Solicitud de Compra</h4>
-                            <p class="text-muted small mb-0">Complete los datos para requerir materiales al almacén</p>
-                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
 
-                <div class="modal-body px-4">
-                    <div class="row g-3 mb-4 p-3 rounded-4 bg-light shadow-sm align-items-end">
-                        
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold text-muted text-uppercase">Almacén de Destino</label>
-                            <?php if (isset($es_admin) && $es_admin): ?>
+                    <div class="modal-body px-4">
+                        <div class="row g-3 mb-4 p-3 rounded-4 bg-light shadow-sm align-items-end">
+
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Almacén de
+                                    Destino</label>
+                                <?php if (isset($es_admin) && $es_admin): ?>
                                 <select name="almacen_id" class="form-select select2-modal" required>
                                     <option value="">-- Seleccionar --</option>
                                     <?php foreach ($almacenes as $alm): ?>
-                                        <option value="<?= $alm['id'] ?>"><?= htmlspecialchars($alm['nombre']) ?></option>
+                                    <option value="<?= $alm['id'] ?>"><?= htmlspecialchars($alm['nombre']) ?></option>
                                     <?php endforeach; ?>
                                 </select>
-                            <?php else: ?>
-                                <input type="text" class="form-control border-0 bg-white fw-bold" 
-                                       value="<?= htmlspecialchars($almacenes[0]['nombre'] ?? 'Almacén Asignado') ?>" readonly>
-                                <input type="hidden" name="almacen_id" value="<?= $almacen_usuario ?? ($almacenes[0]['id'] ?? '') ?>">
-                            <?php endif; ?>
-                        </div>
+                                <?php else: ?>
+                                <input type="text" class="form-control border-0 bg-white fw-bold"
+                                    value="<?= htmlspecialchars($almacenes[0]['nombre'] ?? 'Almacén Asignado') ?>"
+                                    readonly>
+                                <input type="hidden" name="almacen_id"
+                                    value="<?= $almacen_usuario ?? ($almacenes[0]['id'] ?? '') ?>">
+                                <?php endif; ?>
+                            </div>
 
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold text-muted text-uppercase">Proveedor Sugerido</label>
-                            <select name="proveedor_id" class="form-select select2-modal" required>
-                                <option value="">Seleccionar proveedor...</option>
-                                <?php foreach($proveedores as $p): ?>
-                                    <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Proveedor
+                                    Sugerido</label>
+                                <select name="proveedor_id" class="form-select select2-modal" required>
+                                    <option value="">Seleccionar proveedor...</option>
+                                    <?php foreach($proveedores as $p): ?>
+                                    <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?>
+                                    </option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold text-muted text-uppercase">Añadir Producto (SKU o Nombre)</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-                                <select id="buscadorProductos" class="form-select select2-modal border-start-0">
-                                    <option value="">Escribe para buscar...</option>
-                                    <?php foreach($productos as $pr): ?>
-                                        <option value="<?= $pr['producto_id'] ?>" 
-                                                data-nombre="<?= htmlspecialchars($pr['nombre']) ?>"
-                                                data-sku="<?= htmlspecialchars($pr['sku']) ?>"
-                                                data-um="<?= htmlspecialchars($pr['unidad_medida']) ?>"
-                                                data-ur="<?= htmlspecialchars($pr['unidad_reporte']) ?>"
-                                                data-factor="<?= $pr['factor_conversion'] ?? 1 ?>">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Añadir Producto (SKU o
+                                    Nombre)</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-white border-end-0"><i
+                                            class="bi bi-search"></i></span>
+                                    <select id="buscadorProductos" class="form-select select2-modal border-start-0">
+                                        <option value="">Escribe para buscar...</option>
+                                        <?php foreach($productos as $pr): ?>
+                                        <option value="<?= $pr['producto_id'] ?>"
+                                            data-nombre="<?= htmlspecialchars($pr['nombre']) ?>"
+                                            data-sku="<?= htmlspecialchars($pr['sku']) ?>"
+                                            data-um="<?= htmlspecialchars($pr['unidad_medida']) ?>"
+                                            data-ur="<?= htmlspecialchars($pr['unidad_reporte']) ?>"
+                                            data-factor="<?= $pr['factor_conversion'] ?? 1 ?>">
                                             [<?= $pr['sku'] ?>] <?= $pr['nombre'] ?>
                                         </option>
-                                    <?php endforeach; ?>
-                                </select>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="table-responsive border rounded-4 bg-white">
-                        <table class="table align-middle mb-0" id="tablaDetalle">
-                            <thead class="bg-light">
-                                <tr class="text-muted small uppercase">
-                                    <th class="ps-4" style="width: 45%;">Producto</th>
-                                    <th style="width: 20%;">Cantidad</th>
-                                    <th style="width: 25%;">Presentación / Unidad</th>
-                                    <th style="width: 10%;" class="text-end pe-4">Acción</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                        <div class="table-responsive border rounded-4 bg-white">
+                            <table class="table align-middle mb-0" id="tablaDetalle">
+                                <thead class="bg-light">
+                                    <tr class="text-muted small uppercase">
+                                        <th class="ps-4" style="width: 45%;">Producto</th>
+                                        <th style="width: 20%;">Cantidad</th>
+                                        <th style="width: 25%;">Presentación / Unidad</th>
+                                        <th style="width: 10%;" class="text-end pe-4">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
                                 </tbody>
-                        </table>
-                        
-                        <div id="emptyState" class="text-center py-5 text-muted">
-                            <div class="mb-3">
-                                <i class="bi bi-cart-plus opacity-25" style="font-size: 3.5rem;"></i>
+                            </table>
+
+                            <div id="emptyState" class="text-center py-5 text-muted">
+                                <div class="mb-3">
+                                    <i class="bi bi-cart-plus opacity-25" style="font-size: 3.5rem;"></i>
+                                </div>
+                                <p class="fw-medium">La lista está vacía</p>
+                                <small>Utiliza el buscador de arriba para añadir artículos</small>
                             </div>
-                            <p class="fw-medium">La lista está vacía</p>
-                            <small>Utiliza el buscador de arriba para añadir artículos</small>
                         </div>
                     </div>
-                </div>
 
-                <div class="modal-footer border-0 p-4">
-                    <button type="button" class="btn btn-link text-decoration-none text-muted fw-bold" data-bs-dismiss="modal">
-                        Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow">
-                        <i class="bi bi-check2-circle me-2"></i> Confirmar Solicitud
-                    </button>
-                </div>
-            </form>
+                    <div class="modal-footer border-0 p-4">
+                        <button type="button" class="btn btn-link text-decoration-none text-muted fw-bold"
+                            data-bs-dismiss="modal">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow">
+                            <i class="bi bi-check2-circle me-2"></i> Confirmar Solicitud
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div> 
     <div class="modal fade" id="modalGestionSolicitud" tabindex="-1" data-bs-backdrop="static"
         aria-labelledby="labelModal" aria-hidden="false">
         <div class="modal-dialog modal-xl">
@@ -285,6 +293,12 @@ error_reporting(E_ALL);
                                 <label class="small text-muted d-block fw-bold">TOTAL FACTURA</label>
                                 <span class="h3 fw-bold text-success" id="uni-gran-total">$ 0.00</span>
                             </div>
+                            <select name="metodo_pago" id="metodo_pago" class="form-select" required>
+                                <option value="">Seleccione método de pago...</option>
+                                <option value="Efectivo">Efectivo</option>
+                                <option value="Transferencia">Transferencia</option>
+                                <option value="Tarjeta">Tarjeta</option>
+                            </select>
                         </div>
 
                         <div class="table-responsive bg-white rounded-4 shadow-sm p-2">
@@ -315,78 +329,79 @@ error_reporting(E_ALL);
             </div>
         </div>
     </div>
-<div class="modal fade" id="modalImprimirSolicitud" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
-            <div class="modal-header bg-dark text-white border-0">
-                <h5 class="fw-bold mb-0"><i class="bi bi-printer me-2"></i>Vista de Impresión</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body p-0">
-                <div id="areaImpresion" class="p-5 bg-white">
-                    <div class="d-flex justify-content-between align-items-start mb-4">
-                        <div>
-                            <h2 class="fw-bold text-uppercase mb-0">Solicitud de Compra</h2>
-                            <p class="text-muted mb-0" id="print-folio">FOLIO: #00000</p>
+    <div class="modal fade" id="modalImprimirSolicitud" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+                <div class="modal-header bg-dark text-white border-0">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-printer me-2"></i>Vista de Impresión</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div id="areaImpresion" class="p-5 bg-white">
+                        <div class="d-flex justify-content-between align-items-start mb-4">
+                            <div>
+                                <h2 class="fw-bold text-uppercase mb-0">Solicitud de Compra</h2>
+                                <p class="text-muted mb-0" id="print-folio">FOLIO: #00000</p>
+                            </div>
+                            <div class="text-end">
+                                <h5 class="fw-bold mb-0">cfsistem</h5>
+                                <p class="small text-muted mb-0" id="print-fecha">Fecha: --/--/----</p>
+                            </div>
                         </div>
-                        <div class="text-end">
-                            <h5 class="fw-bold mb-0">cfsistem</h5>
-                            <p class="small text-muted mb-0" id="print-fecha">Fecha: --/--/----</p>
-                        </div>
-                    </div>
 
-                    <hr>
+                        <hr>
 
-                    <div class="row mb-4">
-                        <div class="col-6">
-                            <label class="small text-muted d-block">ALMACÉN DESTINO:</label>
-                            <span class="fw-bold" id="print-almacen">---</span>
+                        <div class="row mb-4">
+                            <div class="col-6">
+                                <label class="small text-muted d-block">ALMACÉN DESTINO:</label>
+                                <span class="fw-bold" id="print-almacen">---</span>
+                            </div>
+                            <div class="col-6">
+                                <label class="small text-muted d-block">PROVEEDOR SUGERIDO:</label>
+                                <span class="fw-bold" id="print-proveedor">---</span>
+                            </div>
                         </div>
-                        <div class="col-6">
-                            <label class="small text-muted d-block">PROVEEDOR SUGERIDO:</label>
-                            <span class="fw-bold" id="print-proveedor">---</span>
-                        </div>
-                    </div>
 
-                    <table class="table table-bordered align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Descripción del Material</th>
-                                <th width="120" class="text-center">Cantidad</th>
-                                <th width="150">Unidad</th>
-                            </tr>
-                        </thead>
-                        <tbody id="print-tabla-cuerpo">
+                        <table class="table table-bordered align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Descripción del Material</th>
+                                    <th width="120" class="text-center">Cantidad</th>
+                                    <th width="150">Unidad</th>
+                                </tr>
+                            </thead>
+                            <tbody id="print-tabla-cuerpo">
                             </tbody>
-                    </table>
+                        </table>
 
-                    <div class="mt-5 pt-4">
-                        <div class="row text-center">
-                            <div class="col-4">
-                                <div style="border-top: 1px solid #000; margin: 0 20px;"></div>
-                                <small>Solicita</small>
-                            </div>
-                            <div class="col-4">
-                                <div style="border-top: 1px solid #000; margin: 0 20px;"></div>
-                                <small>Autoriza</small>
-                            </div>
-                            <div class="col-4">
-                                <div style="border-top: 1px solid #000; margin: 0 20px;"></div>
-                                <small>Recibe (Compras)</small>
+                        <div class="mt-5 pt-4">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <div style="border-top: 1px solid #000; margin: 0 20px;"></div>
+                                    <small>Solicita</small>
+                                </div>
+                                <div class="col-4">
+                                    <div style="border-top: 1px solid #000; margin: 0 20px;"></div>
+                                    <small>Autoriza</small>
+                                </div>
+                                <div class="col-4">
+                                    <div style="border-top: 1px solid #000; margin: 0 20px;"></div>
+                                    <small>Recibe (Compras)</small>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="modal-footer border-0 bg-light">
-                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Cerrar</button>
-                <button type="button" class="btn btn-primary rounded-pill px-4" onclick="ejecutarImpresion()">
-                    <i class="bi bi-printer-fill me-2"></i> Imprimir Ahora
-                </button>
+                <div class="modal-footer border-0 bg-light">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4" onclick="ejecutarImpresion()">
+                        <i class="bi bi-printer-fill me-2"></i> Imprimir Ahora
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -568,43 +583,43 @@ error_reporting(E_ALL);
         }
     }
     </script>
-  <script>
-async function gestionarSolicitud(id) {
-    try {
-        // Limpiamos la tabla antes de cargar para evitar residuos visuales
-        $('#tablaConversion tbody').empty();
+    <script>
+    async function gestionarSolicitud(id) {
+        try {
+            // Limpiamos la tabla antes de cargar para evitar residuos visuales
+            $('#tablaConversion tbody').empty();
 
-        const resp = await fetch(`${URL_CONTROLADOR}?action=obtenerDetalle&id=${id}`);
-        asignarSiguienteFolioCompra();
+            const resp = await fetch(`${URL_CONTROLADOR}?action=obtenerDetalle&id=${id}`);
+            asignarSiguienteFolioCompra();
 
-        if (!resp.ok) throw new Error(`Error de servidor: ${resp.status}`);
-        const res = await resp.json();
+            if (!resp.ok) throw new Error(`Error de servidor: ${resp.status}`);
+            const res = await resp.json();
 
-        if (res.status !== 'success') throw new Error(res.message || 'Error al obtener datos');
+            if (res.status !== 'success') throw new Error(res.message || 'Error al obtener datos');
 
-        const items = res.data;
-        if (!items || items.length === 0) {
-            Swal.fire('Info', 'La solicitud no tiene productos.', 'info');
-            return;
-        }
+            const items = res.data;
+            if (!items || items.length === 0) {
+                Swal.fire('Info', 'La solicitud no tiene productos.', 'info');
+                return;
+            }
 
-        $('#uni-solicitud-id').val(id);
-        $('#uni-folio').text(`#${id.toString().padStart(5, '0')}`);
-        $('#uni-proveedor').val(items[0].proveedor_nombre || 'Sin Proveedor');
-        $('#uni-proveedor-nombre').val(items[0].proveedor_nombre || '');
+            $('#uni-solicitud-id').val(id);
+            $('#uni-folio').text(`#${id.toString().padStart(5, '0')}`);
+            $('#uni-proveedor').val(items[0].proveedor_nombre || 'Sin Proveedor');
+            $('#uni-proveedor-nombre').val(items[0].proveedor_nombre || '');
 
-        let html = '';
-        // Aunque solo sea uno, iteramos el array que devuelve el servidor
-        items.forEach((i, index) => {
-            const factor = parseFloat(i.factor_conversion) || 1;
-            const uBase = i.unidad_medida || 'pzas';
-            const uRep = i.unidad_reporte || 'Mayoreo';
-            const cantidadSolicitada = parseFloat(i.cantidad) || 0;
+            let html = '';
+            // Aunque solo sea uno, iteramos el array que devuelve el servidor
+            items.forEach((i, index) => {
+                const factor = parseFloat(i.factor_conversion) || 1;
+                const uBase = i.unidad_medida || 'pzas';
+                const uRep = i.unidad_reporte || 'Mayoreo';
+                const cantidadSolicitada = parseFloat(i.cantidad) || 0;
 
-            const cantMayoreo = Math.floor(cantidadSolicitada / factor);
-            const cantSueltas = cantidadSolicitada % factor;
+                const cantMayoreo = Math.floor(cantidadSolicitada / factor);
+                const cantSueltas = cantidadSolicitada % factor;
 
-            html += `
+                html += `
             <tr class="fila-item" data-index="${index}">
                 <td>
                     <input type="hidden" name="items[${index}][producto_id]" value="${i.producto_id}">
@@ -646,180 +661,197 @@ async function gestionarSolicitud(id) {
                     <input type="hidden" class="h-total-piezas">
                 </td>
             </tr>`;
-        });
-
-        $('#tablaConversion tbody').html(html);
-        $('.fila-item').each(function(idx) { recalcularFila(idx); });
-        
-        // Removemos aria-hidden antes de mostrar para evitar errores de consola
-        $('#modalGestionSolicitud').removeAttr('aria-hidden').modal('show');
-
-    } catch (e) {
-        Swal.fire('Error', e.message, 'error');
-    }
-}
-
-function recalcularFila(index) {
-    const fila = $(`.fila-item[data-index="${index}"]`);
-    const factor = parseFloat(fila.find('.h-factor').val()) || 1;
-    const mayoreo = parseFloat(fila.find('.i-mayoreo').val()) || 0;
-    const sueltas = parseFloat(fila.find('.i-sueltas').val()) || 0;
-    const costoTotalRenglon = parseFloat(fila.find('.i-costo-total').val()) || 0;
-
-    const totalPiezas = (mayoreo * factor) + sueltas;
-    const displayTotal = Number.isInteger(totalPiezas) ? totalPiezas : totalPiezas.toFixed(2);
-
-    fila.find('.s-total-piezas').text(displayTotal);
-    fila.find('.h-total-piezas').val(totalPiezas);
-
-    let precioUnitario = totalPiezas > 0 ? costoTotalRenglon / totalPiezas : 0;
-    fila.find('.h-precio-lote').val(precioUnitario.toFixed(4));
-    fila.find('.s-precio-lote').text('$ ' + precioUnitario.toLocaleString(undefined, {
-        minimumFractionDigits: 2, 
-        maximumFractionDigits: 4
-    }));
-
-    actualizarGranTotal();
-}
-
-function actualizarGranTotal() {
-    let granTotal = 0;
-    $('.i-costo-total').each(function() { granTotal += parseFloat($(this).val()) || 0; });
-    $('#uni-gran-total').text('$ ' + granTotal.toLocaleString(undefined, {minimumFractionDigits: 2}));
-}
-
-function asignarSiguienteFolioCompra() {
-    const inputFolio = document.getElementsByName('folio')[0];
-    if (!inputFolio) return;
-    fetch(`${URL_CONTROLADOR}?action=getSiguienteFolio`)
-        .then(res => res.json())
-        .then(data => { if (data.success) inputFolio.value = data.folio; })
-        .catch(err => console.error("Error al obtener folio:", err));
-}
-
-</script>
-<script>
-    $(document).ready(function() {
-    // Usamos .off() para evitar registros duplicados
-    $('#formConvertirCompra').off('submit').on('submit', function(e) {
-        e.preventDefault();
-
-        const detalle = [];
-        const fila = $('.fila-item').first();
-        
-        if (fila.length > 0) {
-            const index = fila.data('index');
-            const almId = fila.find('.i-almacen-id').val();
-            const cantTotal = fila.find('.h-total-piezas').val();
-            const costoTotal = parseFloat(fila.find('.i-costo-total').val()) || 0;
-            
-            // Captura el producto_id buscando específicamente en la fila actual
-            const productoId = fila.find(`input[name="items[${index}][producto_id]"]`).val();
-
-            detalle.push({
-                producto_id: productoId,
-                input_mayoreo: fila.find('.i-mayoreo').val() || 0,      
-                input_sueltas: fila.find('.i-sueltas').val() || 0,      
-                total_item: costoTotal,    
-                precio_lote: fila.find('.h-precio-lote').val(),   
-                hidden_factor: fila.find('.h-factor').val() || 1,      
-                cantidad_faltante: 0, 
-                almacenes: {
-                    [almId]: { activo: 'on', cantidad: cantTotal }
-                }
             });
+
+            $('#tablaConversion tbody').html(html);
+            $('.fila-item').each(function(idx) {
+                recalcularFila(idx);
+            });
+
+            // Removemos aria-hidden antes de mostrar para evitar errores de consola
+            $('#modalGestionSolicitud').removeAttr('aria-hidden').modal('show');
+
+        } catch (e) {
+            Swal.fire('Error', e.message, 'error');
         }
+    }
 
-        // Validación preventiva
-        if (detalle.length === 0 || detalle[0].total_item <= 0) {
-            Swal.fire('Atención', 'El costo del producto debe ser mayor a 0 para generar el lote.', 'warning');
-            return;
-        }
+    function recalcularFila(index) {
+        const fila = $(`.fila-item[data-index="${index}"]`);
+        const factor = parseFloat(fila.find('.h-factor').val()) || 1;
+        const mayoreo = parseFloat(fila.find('.i-mayoreo').val()) || 0;
+        const sueltas = parseFloat(fila.find('.i-sueltas').val()) || 0;
+        const costoTotalRenglon = parseFloat(fila.find('.i-costo-total').val()) || 0;
 
-        // Preparamos el FormData con todos los campos necesarios para el controlador
-        const formData = new FormData(this); 
-        formData.append('action', 'guardarCompraCompleta'); 
-        formData.append('items', JSON.stringify(detalle));
-        formData.append('solicitud_id', $('#uni-solicitud-id').val()); // ¡Importante para cerrar la solicitud!
-        formData.append('almacen_id', $('.i-almacen-id').first().val()); 
-        formData.append('proveedor', $('#uni-proveedor').val());
+        const totalPiezas = (mayoreo * factor) + sueltas;
+        const displayTotal = Number.isInteger(totalPiezas) ? totalPiezas : totalPiezas.toFixed(2);
 
-        Swal.fire({
-            title: '¿Confirmar Ingreso?',
-            text: "Se registrará la entrada en inventario y se cerrará la solicitud.",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#198754',
-            confirmButtonText: 'Sí, guardar',
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({ 
-                    title: 'Procesando...', 
-                    html: 'Guardando datos y generando lotes',
-                    allowOutsideClick: false, 
-                    didOpen: () => { Swal.showLoading(); } 
-                });
+        fila.find('.s-total-piezas').text(displayTotal);
+        fila.find('.h-total-piezas').val(totalPiezas);
 
-                $.ajax({
-                    url: URL_CONTROLADOR, 
-                    type: 'POST',
-                    data: formData,
-                    processData: false, 
-                    contentType: false, 
-                    dataType: 'json', // Forzamos a que espere un JSON
-                    success: function(res) {
-                        if (res.success) {
-                            Swal.fire('¡Éxito!', res.message, 'success').then(() => {
-                                location.reload();
-                            });
-                        } else {
-                            // Si el controlador responde con success: false
-                            Swal.fire('Error de negocio', res.message || 'Error desconocido', 'error');
+        let precioUnitario = totalPiezas > 0 ? costoTotalRenglon / totalPiezas : 0;
+        fila.find('.h-precio-lote').val(precioUnitario.toFixed(4));
+        fila.find('.s-precio-lote').text('$ ' + precioUnitario.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 4
+        }));
+
+        actualizarGranTotal();
+    }
+
+    function actualizarGranTotal() {
+        let granTotal = 0;
+        $('.i-costo-total').each(function() {
+            granTotal += parseFloat($(this).val()) || 0;
+        });
+        $('#uni-gran-total').text('$ ' + granTotal.toLocaleString(undefined, {
+            minimumFractionDigits: 2
+        }));
+    }
+
+    function asignarSiguienteFolioCompra() {
+        const inputFolio = document.getElementsByName('folio')[0];
+        if (!inputFolio) return;
+        fetch(`${URL_CONTROLADOR}?action=getSiguienteFolio`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) inputFolio.value = data.folio;
+            })
+            .catch(err => console.error("Error al obtener folio:", err));
+    }
+    </script>
+    <script>
+    $(document).ready(function() {
+        // Usamos .off() para evitar registros duplicados
+        $('#formConvertirCompra').off('submit').on('submit', function(e) {
+            e.preventDefault();
+
+            const detalle = [];
+            const fila = $('.fila-item').first();
+
+            if (fila.length > 0) {
+                const index = fila.data('index');
+                const almId = fila.find('.i-almacen-id').val();
+                const cantTotal = fila.find('.h-total-piezas').val();
+                const costoTotal = parseFloat(fila.find('.i-costo-total').val()) || 0;
+
+                // Captura el producto_id buscando específicamente en la fila actual
+                const productoId = fila.find(`input[name="items[${index}][producto_id]"]`).val();
+
+                detalle.push({
+                    producto_id: productoId,
+                    input_mayoreo: fila.find('.i-mayoreo').val() || 0,
+                    input_sueltas: fila.find('.i-sueltas').val() || 0,
+                    total_item: costoTotal,
+                    precio_lote: fila.find('.h-precio-lote').val(),
+                    hidden_factor: fila.find('.h-factor').val() || 1,
+                    cantidad_faltante: 0,
+                    almacenes: {
+                        [almId]: {
+                            activo: 'on',
+                            cantidad: cantTotal
                         }
-                    },
-                    error: function(jqXHR, textStatus, errorThrown) {
-                        // SI DA ERROR, ESTO TE DIRÁ POR QUÉ:
-                        console.error("Respuesta del servidor:", jqXHR.responseText);
-                        
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error del Servidor',
-                            html: `<div style="text-align:left; font-size:11px; background:#eee; padding:10px; max-height:200px; overflow:auto;">
-                                    ${jqXHR.responseText || 'Error desconocido (posible 500)'}
-                                   </div>`,
-                            footer: 'Revisa la pestaña Network en F12 para más detalles.'
-                        });
                     }
                 });
             }
+
+            // Validación preventiva
+            if (detalle.length === 0 || detalle[0].total_item <= 0) {
+                Swal.fire('Atención', 'El costo del producto debe ser mayor a 0 para generar el lote.',
+                    'warning');
+                return;
+            }
+
+            // Preparamos el FormData con todos los campos necesarios para el controlador
+            const formData = new FormData(this);
+            formData.append('action', 'guardarCompraCompleta');
+            formData.append('items', JSON.stringify(detalle));
+            formData.append('solicitud_id', $('#uni-solicitud-id')
+        .val()); // ¡Importante para cerrar la solicitud!
+            formData.append('almacen_id', $('.i-almacen-id').first().val());
+            formData.append('proveedor', $('#uni-proveedor').val());
+
+            Swal.fire({
+                title: '¿Confirmar Ingreso?',
+                text: "Se registrará la entrada en inventario y se cerrará la solicitud.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#198754',
+                confirmButtonText: 'Sí, guardar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Procesando...',
+                        html: 'Guardando datos y generando lotes',
+                        allowOutsideClick: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    $.ajax({
+                        url: URL_CONTROLADOR,
+                        type: 'POST',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        dataType: 'json', // Forzamos a que espere un JSON
+                        success: function(res) {
+                            if (res.success) {
+                                Swal.fire('¡Éxito!', res.message, 'success').then(
+                                () => {
+                                        location.reload();
+                                    });
+                            } else {
+                                // Si el controlador responde con success: false
+                                Swal.fire('Error de negocio', res.message ||
+                                    'Error desconocido', 'error');
+                            }
+                        },
+                        error: function(jqXHR, textStatus, errorThrown) {
+                            // SI DA ERROR, ESTO TE DIRÁ POR QUÉ:
+                            console.error("Respuesta del servidor:", jqXHR
+                                .responseText);
+
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error del Servidor',
+                                html: `<div style="text-align:left; font-size:11px; background:#eee; padding:10px; max-height:200px; overflow:auto;">
+                                    ${jqXHR.responseText || 'Error desconocido (posible 500)'}
+                                   </div>`,
+                                footer: 'Revisa la pestaña Network en F12 para más detalles.'
+                            });
+                        }
+                    });
+                }
+            });
         });
     });
-});
-</script>
-<script>
+    </script>
+    <script>
     /**
- * Llena el modal de impresión con la data de la solicitud
- */
-function prepararImpresion(id) {
-    // Reutilizamos la lógica que ya tienes para obtener el detalle
-    fetch(`${URL_CONTROLADOR}?action=obtenerDetalle&id=${id}`)
-        .then(res => res.json())
-        .then(res => {
-            if (res.status === 'success') {
-                const data = res.data;
-                const infoBase = data[0];
+     * Llena el modal de impresión con la data de la solicitud
+     */
+    function prepararImpresion(id) {
+        // Reutilizamos la lógica que ya tienes para obtener el detalle
+        fetch(`${URL_CONTROLADOR}?action=obtenerDetalle&id=${id}`)
+            .then(res => res.json())
+            .then(res => {
+                if (res.status === 'success') {
+                    const data = res.data;
+                    const infoBase = data[0];
 
-                // Llenar cabecera
-                $('#print-folio').text(`FOLIO: #${id.toString().padStart(5, '0')}`);
-                $('#print-fecha').text(`Fecha: ${new Date().toLocaleDateString()}`);
-                $('#print-almacen').text(infoBase.almacen_nombre);
-                $('#print-proveedor').text(infoBase.proveedor_nombre || 'No especificado');
+                    // Llenar cabecera
+                    $('#print-folio').text(`FOLIO: #${id.toString().padStart(5, '0')}`);
+                    $('#print-fecha').text(`Fecha: ${new Date().toLocaleDateString()}`);
+                    $('#print-almacen').text(infoBase.almacen_nombre);
+                    $('#print-proveedor').text(infoBase.proveedor_nombre || 'No especificado');
 
-                // Llenar tabla
-                let html = '';
-                data.forEach(i => {
-                    html += `
+                    // Llenar tabla
+                    let html = '';
+                    data.forEach(i => {
+                        html += `
                         <tr>
                             <td>
                                 <div class="fw-bold">${i.producto_nombre}</div>
@@ -828,28 +860,28 @@ function prepararImpresion(id) {
                             <td class="text-center fw-bold fs-5">${i.cantidad}</td>
                             <td>${i.unidad_medida}</td>
                         </tr>`;
-                });
-                $('#print-tabla-cuerpo').html(html);
+                    });
+                    $('#print-tabla-cuerpo').html(html);
 
-                // Mostrar modal
-                new bootstrap.Modal(document.getElementById('modalImprimirSolicitud')).show();
-            }
-        });
-}
+                    // Mostrar modal
+                    new bootstrap.Modal(document.getElementById('modalImprimirSolicitud')).show();
+                }
+            });
+    }
 
-/**
- * Llama al comando de impresión del navegador
- */
-function ejecutarImpresion() {
-    // 1. Obtener el contenido del área de impresión
-    const contenido = document.getElementById('areaImpresion').innerHTML;
-    const folio = $('#print-folio').text();
+    /**
+     * Llama al comando de impresión del navegador
+     */
+    function ejecutarImpresion() {
+        // 1. Obtener el contenido del área de impresión
+        const contenido = document.getElementById('areaImpresion').innerHTML;
+        const folio = $('#print-folio').text();
 
-    // 2. Crear una ventana nueva
-    const ventana = window.open('', '_blank', 'height=600,width=800');
+        // 2. Crear una ventana nueva
+        const ventana = window.open('', '_blank', 'height=600,width=800');
 
-    // 3. Escribir el HTML necesario para que se vea bien
-    ventana.document.write(`
+        // 3. Escribir el HTML necesario para que se vea bien
+        ventana.document.write(`
         <html>
             <head>
                 <title>Imprimir ${folio}</title>
@@ -878,9 +910,9 @@ function ejecutarImpresion() {
         </html>
     `);
 
-    ventana.document.close();
-}
-</script>
+        ventana.document.close();
+    }
+    </script>
 </body>
 
 </html>

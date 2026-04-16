@@ -6,7 +6,7 @@ class CompraModel {
         $this->db = $conexion;
     }
 
-public function guardarCompraCompleta($items, $folio, $proveedor, $evidencia, $almacen_id, $user_id) {
+public function guardarCompraCompleta($items, $folio, $proveedor, $evidencia, $almacen_id, $user_id,$metodo_pago) {
         $this->db->begin_transaction();
         try {
             // --- 1. Gestión de Evidencia ---
@@ -29,7 +29,7 @@ public function guardarCompraCompleta($items, $folio, $proveedor, $evidencia, $a
                 $total_final += floatval($item['total_item']);
                 if (floatval($item['cantidad_faltante'] ?? 0) > 0) $tiene_faltantes_global = 1;
             }
-$metodo_pago = $_POST['metodo_pago'] ?? 'Efectivo';
+
             // --- 3. Insertar Cabecera ---
             $sqlC = "INSERT INTO compras 
 (folio, proveedor, fecha_compra, almacen_id, total, metodo_pago, estado, usuario_registra_id, documento_url, tiene_faltantes) 
