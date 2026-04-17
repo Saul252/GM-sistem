@@ -676,6 +676,7 @@ public function registrarAperturaDesdeCierreConcepto($data) {
     $efectivo      = floatval($data['monto_efectivo'] ?? 0);
     $tarjeta       = floatval($data['monto_tarjeta'] ?? 0);
     $transferencia = floatval($data['monto_transferencia'] ?? 0);
+    $monto=$efectivo+ $tarjeta+$transferencia;
     
     $fecha_base     = $data['fecha_movimiento'] ?? date('Y-m-d');
    
@@ -705,7 +706,7 @@ if (date('Y-m-d', strtotime($fecha_base)) == date('Y-m-d')) {
             $data['almacen_destino_id'] ?: null,
             $data['caja_fuerte_id'] ?: null,
             $data['banco_id'] ?: null,
-            $monto_mov, $efectivo, $tarjeta, $transferencia,
+            $monto, $efectivo, $tarjeta, $transferencia,
             $usuario_id, $concepto_final, $fecha_apertura
         ]);
 
@@ -761,6 +762,160 @@ if (date('Y-m-d', strtotime($fecha_base)) == date('Y-m-d')) {
         return false;
     }
 }
+public function registrarAperturaDesdeCierreConceptoAbono($data) {
+
+    date_default_timezone_set('America/Mexico_City');
+
+    // 1. Datos base
+    $almacen_id   = intval($data['almacen_id'] ?? 0);
+    $usuario_id   = intval($data['usuario_id'] ?? 0);
+    $categoria_id = intval($data['categoria_id'] ?? 1);
+
+    $monto_mov    = floatval($data['monto'] ?? 0);
+    $tipo_op      = $data['tipo_operacion'] ?? 'entrada';
+    $metodo       = $data['metodo_pago'] ?? 'efectivo';
+
+    $efectivo      = floatval($data['monto_efectivo'] ?? 0);
+    $tarjeta       = floatval($data['monto_tarjeta'] ?? 0);
+    $transferencia = floatval($data['monto_transferencia'] ?? 0);
+
+    $fecha_base = $data['fecha_movimiento'] ?? date('Y-m-d');
+
+    if (date('Y-m-d', strtotime($fecha_base)) == date('Y-m-d')) {
+        $fecha_apertura = date('Y-m-d H:i:s');
+    } else {
+        $fecha_apertura = date('Y-m-d', strtotime($fecha_base)) . ' 00:00:01';
+    }
+
+    $concepto_final = "Movimiento de " . $tipo_op . ": " . ($data['concepto'] ?? '') . " : " . date('Y-m-d H:i:s');
+
+    // 2. Caja/Banco lógica
+    $operador = ($tipo_op === 'salida' || $tipo_op === 'traspaso') ? 1 : -1;
+    $ajuste_saldo = $monto_mov * $operador;
+
+    try {
+        $this->db->begin_transaction();
+
+        // ======================================================
+        // 🔥 PASO 1: CONSULTAR SALDO ACTUAL DEL ALMACÉN
+        // ======================================================
+        $saldos_actuales = $this->obtenerSaldoInicialMonitor(
+            $almacen_id,
+            '2000-01-01',
+            $fecha_base
+        );
+
+        $saldo_efectivo_actual      = floatval($saldos_actuales['monto_efectivo'] ?? 0);
+        $saldo_tarjeta_actual       = floatval($saldos_actuales['monto_tarjeta'] ?? 0);
+        $saldo_transferencia_actual = floatval($saldos_actuales['monto_transferencia'] ?? 0);
+
+        // ======================================================
+        // 🔥 PASO 2: SUMAR LO NUEVO
+        // ======================================================
+        $nuevo_efectivo      = $saldo_efectivo_actual + $efectivo;
+        $nuevo_tarjeta       = $saldo_tarjeta_actual + $tarjeta;
+        $nuevo_transferencia = $saldo_transferencia_actual + $transferencia;
+
+        $monto = $nuevo_efectivo + $nuevo_tarjeta + $nuevo_transferencia;
+
+        // ======================================================
+        // 🔥 PASO 3: INSERT MOVIMIENTO PRINCIPAL
+        // ======================================================
+        $sql = "INSERT INTO historial_capital (
+                    categoria_id,
+                    almacen_origen_id,
+                    almacen_destino_id,
+                    caja_fuerte_destino_id,
+                    banco_destino_id,
+                    monto,
+                    monto_efectivo,
+                    monto_tarjeta,
+                    monto_transferencia,
+                    usuario_registro_id,
+                    concepto,
+                    fecha_movimiento
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        $stmt = $this->db->prepare($sql);
+
+        $stmt->execute([
+            $categoria_id,
+            $almacen_id,
+            $data['almacen_destino_id'] ?: null,
+            $data['caja_fuerte_id'] ?: null,
+            $data['banco_id'] ?: null,
+            $monto,
+            $nuevo_efectivo,
+            $nuevo_tarjeta,
+            $nuevo_transferencia,
+            $usuario_id,
+            $concepto_final,
+            $fecha_apertura
+        ]);
+
+        // ======================================================
+        // 🔥 PASO 4: TRASPASO A OTRO ALMACÉN
+        // ======================================================
+        $almacen_dest_id = intval($data['almacen_destino_id'] ?? 0);
+
+        if ($tipo_op === 'traspaso' && $almacen_dest_id > 0) {
+
+            $saldos_dest = $this->obtenerSaldoInicialMonitor(
+                $almacen_dest_id,
+                '2000-01-01',
+                $fecha_base
+            );
+
+            $nuevo_dest_efectivo      = floatval($saldos_dest['monto_efectivo'] ?? 0);
+            $nuevo_dest_tarjeta       = floatval($saldos_dest['monto_tarjeta'] ?? 0);
+            $nuevo_dest_transferencia = floatval($saldos_dest['monto_transferencia'] ?? 0);
+
+            if (isset([
+                'efectivo' => $nuevo_dest_efectivo,
+                'tarjeta' => $nuevo_dest_tarjeta,
+                'transferencia' => $nuevo_dest_transferencia
+            ][$metodo])) {
+                if ($metodo === 'efectivo') $nuevo_dest_efectivo += $monto_mov;
+                if ($metodo === 'tarjeta') $nuevo_dest_tarjeta += $monto_mov;
+                if ($metodo === 'transferencia') $nuevo_dest_transferencia += $monto_mov;
+            }
+
+            $stmt->execute([
+                $categoria_id,
+                $almacen_dest_id,
+                null,
+                null,
+                null,
+                $monto_mov,
+                $nuevo_dest_efectivo,
+                $nuevo_dest_tarjeta,
+                $nuevo_dest_transferencia,
+                $usuario_id,
+                "Entrada por traspaso desde Almacén ID: " . $almacen_id . " | " . date('Y-m-d H:i:s'),
+                $fecha_apertura
+            ]);
+        }
+
+        // ======================================================
+        // 🔥 PASO 5: CAJA FUERTE / BANCO
+        // ======================================================
+        if (!empty($data['caja_fuerte_id'])) {
+            $this->actualizarSaldoCajaFuerte($data['caja_fuerte_id'], $ajuste_saldo);
+        }
+
+        if (!empty($data['banco_id'])) {
+            $this->actualizarSaldoBanco($data['banco_id'], $ajuste_saldo);
+        }
+
+        $this->db->commit();
+        return true;
+
+    } catch (Exception $e) {
+        $this->db->rollback();
+        error_log("Error en flujo de fondos: " . $e->getMessage());
+        return false;
+    }
+}
 /**
  * Métodos auxiliares para la actualización de saldos reales
  */
@@ -789,6 +944,7 @@ public function obtenerSaldoInicialMonitor($almacen_id, $f_inicio, $f_fin) {
          * ANTES o igual a la fecha seleccionada
          */
         $sql = "SELECT 
+        a.id as idAlmacen,
                     a.nombre AS almacen, 
                     IFNULL(h.monto, 0.00) AS monto, 
                     IFNULL(h.monto_efectivo, 0.00) AS monto_efectivo, 
@@ -814,6 +970,8 @@ public function obtenerSaldoInicialMonitor($almacen_id, $f_inicio, $f_fin) {
 
         // 🔥 Asegurar estructura consistente (por si acaso)
         foreach ($result as &$r) {
+              $r['almacen'] = ($r['almacen'] ?? '');
+              $r['idAlmacen'] = ($r['idAlmacen'] ?? 0);
             $r['monto'] = floatval($r['monto'] ?? 0);
             $r['monto_efectivo'] = floatval($r['monto_efectivo'] ?? 0);
             $r['monto_tarjeta'] = floatval($r['monto_tarjeta'] ?? 0);
@@ -828,6 +986,7 @@ public function obtenerSaldoInicialMonitor($almacen_id, $f_inicio, $f_fin) {
          * Último saldo antes o igual a la fecha
          */
         $sql = "SELECT 
+
                     IFNULL(monto, 0.00) as monto, 
                     IFNULL(monto_efectivo, 0.00) as monto_efectivo, 
                     IFNULL(monto_tarjeta, 0.00) as monto_tarjeta, 

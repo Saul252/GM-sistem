@@ -224,19 +224,20 @@ public function registrarGasto($cabecera, $descripciones, $cantidades, $precios)
     $this->db->begin_transaction();
     
     try {
-        // 2. Insertar Cabecera ✅ CON CATEGORÍA
-        $sql = "INSERT INTO gastos (folio, fecha_gasto, almacen_id, categoria_id, usuario_registra_id, beneficiario, metodo_pago, total, documento_url, observaciones, estado) 
+        // 2. Insertar Cabecera
+        $sql = "INSERT INTO gastos 
+                (folio, fecha_gasto, almacen_id, categoria_id, usuario_registra_id, beneficiario, metodo_pago, total, documento_url, observaciones, estado) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pagado')";
         
         $stmt = $this->db->prepare($sql);
         if (!$stmt) throw new Exception("Error en Prepare Cabecera: " . $this->db->error);
 
-        // ✅ AGREGAR categoria_id
-        $stmt->bind_param("ssiiisddss", 
+        // ✅ CORRECCIÓN AQUÍ (tipos correctos)
+        $stmt->bind_param("ssiiissdss", 
             $cabecera['folio'], 
             $cabecera['fecha'], 
             $cabecera['almacen_id'],
-            $cabecera['categoria_id'],  // ✅ NUEVO
+            $cabecera['categoria_id'],
             $cabecera['usuario_id'], 
             $cabecera['beneficiario'], 
             $cabecera['metodo_pago'], 

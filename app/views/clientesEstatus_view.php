@@ -87,7 +87,9 @@
                             <th class="py-3">Cliente / RFC</th>
                             <th class="text-center">Situación de Pago</th>
                             <th class="text-center">Situación de Entrega</th>
-                            <th class="text-end">Saldo Pendiente</th>
+                            <th class="text-center">Saldo a Favor</th>
+                            <th class="text-center">Saldo en contra</th>
+                            <th class="text-end">Deuda</th>
                             <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
@@ -136,6 +138,10 @@
                             const sDeuda = parseFloat(c.saldo_deuda || 0);
                             const pEntregas = parseInt(c.entregas_pendientes || 0);
                             const tieneVentas = parseInt(c.total_ventas || 0);
+                            let saldoFavor=parseFloat(c.saldo_a_favor);
+                            let saldoEnContra= parseFloat(c.saldo_en_contra);
+                           
+                            
 
                             let badgePago, badgeEntrega, btnAccion;
 
@@ -147,10 +153,13 @@
                                                 <i class="bi bi-eye-slash"></i>
                                              </button>`;
                             } else {
-                                badgePago = sDeuda > 0 
-                                    ? '<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3">CON DEUDA</span>' 
-                                    : '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">AL CORRIENTE</span>';
-                                
+                               if (sDeuda > 0) {
+    badgePago = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3">CON DEUDA</span>';
+} else if (sDeuda < 0) {
+    badgePago = '<span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3">SALDO A FAVOR</span>';
+} else {
+    badgePago = '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">AL CORRIENTE</span>';
+}
                                 badgeEntrega = pEntregas > 0 
                                     ? `<span class="badge bg-warning-subtle text-warning-dark border border-warning-subtle rounded-pill px-3">PENDIENTE (${pEntregas})</span>` 
                                     : '<span class="badge bg-light text-muted border rounded-pill px-3 text-uppercase small">Completo</span>';
@@ -170,6 +179,8 @@
                                 </td>
                                 <td class="text-center">${badgePago}</td>
                                 <td class="text-center">${badgeEntrega}</td>
+                                 <td class="text-center">${saldoFavor}</td>
+                                 <td class="text-center">${saldoEnContra}</td>
                                 <td class="text-end fw-bold pe-4 text-dark">
                                     ${tieneVentas > 0 ? '$ ' + sDeuda.toLocaleString('es-MX', {minimumFractionDigits: 2}) : '--'}
                                 </td>

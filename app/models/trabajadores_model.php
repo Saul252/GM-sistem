@@ -12,7 +12,24 @@ class TrabajadorModel {
         $res = $this->db->query($sql);
         return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
     }
+public function listarTrabajadores($almacen_id = 0) {
 
+    if ($almacen_id == 0) {
+        // 🔥 ADMIN → todos
+        $sql = "SELECT * FROM trabajadores ORDER BY nombre ASC";
+        $stmt = $this->db->prepare($sql);
+    } else {
+        // 🔒 SUCURSAL → solo su almacén
+        $sql = "SELECT * FROM trabajadores WHERE almacen_id = ? ORDER BY nombre ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("i", $almacen_id);
+    }
+
+    $stmt->execute();
+    $res = $stmt->get_result();
+
+    return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+}
     // NUEVO: Listar por almacén específico
     public function listarPorAlmacen($almacen_id) {
         $id = intval($almacen_id);
@@ -46,6 +63,20 @@ class TrabajadorModel {
         $id = intval($id);
         return $this->db->query("DELETE FROM trabajadores WHERE id = $id");
     }
+       public function listarPersonal($almacen_id = 0) {
+        // Si mandas 0, busca en todos (opcional), si no, filtra por sucursal
+        $whereAlmacen = ($almacen_id > 0) ? " AND almacen_id = " . intval($almacen_id) : "";
+        
+        $sql = "SELECT id, nombre, rol 
+                FROM trabajadores 
+                WHERE estado = 'activo' 
+              
+                $whereAlmacen
+                ORDER BY nombre ASC";
+                
+        $res = $this->db->query($sql);
+        return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+    }
 
     // Ajustado para logística filtrando por almacén
     public function listarPersonalLogistica($almacen_id = 0) {
@@ -62,4 +93,19 @@ class TrabajadorModel {
         $res = $this->db->query($sql);
         return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
     }
+public function nombreTrabajador($id)
+{
+    $sql = "SELECT nombre FROM trabajadores WHERE id = ?";
+    $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) return null;
+
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+
+    $res = $stmt->get_result();
+    $row = $res->fetch_assoc();
+
+    return $row['nombre'] ?? null;
+}
 }

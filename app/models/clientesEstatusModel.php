@@ -19,17 +19,40 @@ class ClientesEstatusModel {
     // Si es 0 (Admin), el WHERE siempre será verdadero (1=1)
     // Si no es 0, filtrará por el ID correspondiente.
     $sql = "SELECT 
-                c.id, 
-                c.nombre_comercial as nombre, 
-                c.rfc,
-                c.almacen_id, /* Importante para que el Admin sepa de quién es */
-                (SELECT COUNT(*) FROM ventas v_count WHERE v_count.id_cliente = c.id AND v_count.estado_general = 'activa') as total_ventas,
-                (SELECT IFNULL(SUM(v_pago.total), 0) - IFNULL((SELECT SUM(hp.monto) FROM historial_pagos hp INNER JOIN ventas v_hp ON hp.venta_id = v_hp.id WHERE v_hp.id_cliente = c.id AND v_hp.estado_general = 'activa'), 0) FROM ventas v_pago WHERE v_pago.id_cliente = c.id AND v_pago.estado_general = 'activa') as saldo_deuda,
-                (SELECT COUNT(*) FROM detalle_venta dv INNER JOIN ventas v_entrega ON dv.venta_id = v_entrega.id WHERE v_entrega.id_cliente = c.id AND v_entrega.estado_general = 'activa' AND (dv.cantidad - dv.cantidad_entregada) > 0.01) as entregas_pendientes
-            FROM clientes c
-            WHERE c.activo = 1 
-            AND (? = 0 OR c.almacen_id = ?) 
-            ORDER BY total_ventas DESC, saldo_deuda DESC, nombre ASC";
+            c.id, 
+            c.nombre_comercial AS nombre, 
+            c.rfc,
+            c.almacen_id, 
+            IFNULL(cp.saldo_en_contra, 0) AS saldo_en_contra,
+            IFNULL(cp.saldo_a_favor, 0) AS saldo_a_favor,
+            -- Subconsulta 1: Total de ventas activas
+            (SELECT COUNT(*) 
+             FROM ventas v_count 
+             WHERE v_count.id_cliente = c.id 
+               AND v_count.estado_general = 'activa') AS total_ventas,
+            -- Subconsulta 2: Deuda total (Total ventas - Pagos realizados)
+            (SELECT IFNULL(SUM(v_pago.total), 0) - 
+                    IFNULL((SELECT SUM(hp.monto) 
+                            FROM historial_pagos hp 
+                            INNER JOIN ventas v_hp ON hp.venta_id = v_hp.id 
+                            WHERE v_hp.id_cliente = c.id 
+                              AND v_hp.estado_general = 'activa'), 0) 
+             FROM ventas v_pago 
+             WHERE v_pago.id_cliente = c.id 
+               AND v_pago.estado_general = 'activa') AS saldo_deuda,
+            -- Subconsulta 3: Entregas pendientes
+            (SELECT COUNT(*) 
+             FROM detalle_venta dv 
+             INNER JOIN ventas v_entrega ON dv.venta_id = v_entrega.id 
+             WHERE v_entrega.id_cliente = c.id 
+               AND v_entrega.estado_general = 'activa' 
+               AND (dv.cantidad - dv.cantidad_entregada) > 0.01) AS entregas_pendientes
+        FROM clientes c
+        -- El JOIN debe ir después del FROM y antes del WHERE
+        LEFT JOIN clientes_saldos cp ON c.id = cp.cliente_id 
+        WHERE c.activo = 1 
+          AND (? = 0 OR c.almacen_id = ?) 
+        ORDER BY total_ventas DESC, saldo_deuda DESC, nombre ASC";
     
     $stmt = $this->db->prepare($sql);
     // Pasamos el ID dos veces para la lógica del WHERE (? = 0 OR almacen_id = ?)

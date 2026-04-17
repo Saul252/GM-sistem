@@ -195,38 +195,48 @@
 
  <script>
     async function cargarPersonalDespacho(alm) {
-        // 1. Definir la ruta si no existe globalmente (ajusta según tu estructura)
         const rutaControlador = '/cfsistem/app/controllers/cajaRapidaController.php';
-        
-        // 2. Referencias a los selects usando jQuery
         const selectC = $('#patio_chofer_id');
         const selectT = $('#patio_tripulantes');
 
-        if (!selectC.length) return; // Salir si el modal no está en el DOM
+        if (!selectC.length) return;
 
-        // Feedback visual inmediato
         selectC.empty().append('<option value="">Cargando personal...</option>');
         selectT.empty();
 
         try {
-            // 3. Petición al servidor
             const response = await fetch(`${rutaControlador}?action=get_recursos_sucursal&almacen_id=${alm}`);
-            
-            if (!response.ok) throw new Error('Error en la respuesta del servidor');
-            
             const res = await response.json();
 
             if (res.success && res.choferes) {
                 selectC.empty().append('<option value="">Seleccione encargado...</option>');
                 selectT.empty();
 
-                // 4. Llenar los selects
                 res.choferes.forEach(persona => {
                     const option = `<option value="${persona.id}">${persona.nombre}</option>`;
                     selectC.append(option);
                     selectT.append(option);
                 });
-                
+
+                // --- LÓGICA DE FILTRADO ---
+                // Cada que cambie el encargado, actualizamos los ayudantes
+                selectC.off('change').on('change', function() {
+                    const seleccionadoId = $(this).val();
+
+                    // Mostramos todos primero para resetear
+                    selectT.find('option').show().prop('disabled', false);
+
+                    if (seleccionadoId) {
+                        // Buscamos la opción con ese ID en el select de tripulantes y la ocultamos
+                        selectT.find(`option[value="${seleccionadoId}"]`).hide().prop('disabled', true);
+                        
+                        // Si el ayudante ya estaba seleccionado y ahora es el encargado, lo desmarcamos
+                        if (selectT.val() == seleccionadoId) {
+                            selectT.val(null).trigger('change');
+                        }
+                    }
+                });
+
                 console.log(`Personal cargado para almacén ${alm}`);
             } else {
                 throw new Error(res.message || 'No se encontró personal');
@@ -234,9 +244,6 @@
         } catch (e) {
             console.error("Error en cargarPersonalDespacho:", e);
             selectC.empty().append('<option value="">Error al cargar personal</option>');
-            
-            // Opcional: Avisar al usuario con un Toast o alert pequeño
-            // Swal.fire('Nota', 'No se pudo cargar la lista de choferes para este almacén', 'info');
         }
     }
 </script>
