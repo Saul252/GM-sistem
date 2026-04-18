@@ -919,12 +919,12 @@ public function registrarAperturaDesdeCierreConceptoAbono($data) {
 /**
  * Métodos auxiliares para la actualización de saldos reales
  */
-private function actualizarSaldoCajaFuerte($id, $monto) {
+public function actualizarSaldoCajaFuerte($id, $monto) {
     $sql = "UPDATE cajas_fuertes SET Saldo = Saldo + ? WHERE id = ?";
     return $this->db->prepare($sql)->execute([$monto, $id]);
 }
 
-private function actualizarSaldoBanco($id, $monto) {
+public function actualizarSaldoBanco($id, $monto) {
     $sql = "UPDATE bancos SET saldo = saldo + ? WHERE id_cuenta = ?"; 
     return $this->db->prepare($sql)->execute([$monto, $id]);
 }
@@ -1072,5 +1072,47 @@ public function obtenerSaldoInicialMonitorTabla($almacen_id, $f_inicio, $f_fin) 
     }
 
     return $result;
+}
+public function saldoCajaFuerte($almacen_id = 0) {
+
+    if ($almacen_id == 0) {
+
+        $sql = "SELECT * FROM cajas_fuertes WHERE estatus = 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+
+    } else {
+
+        $sql = "SELECT * FROM cajas_fuertes WHERE almacen_id = ? AND estatus = 1";
+        $stmt = $this->db->prepare($sql);
+
+        $stmt->bind_param("i", $almacen_id);
+        $stmt->execute();
+    }
+
+    $result = $stmt->get_result();
+
+    return $result->fetch_all(MYSQLI_ASSOC);
+}
+public function saldoCuentasBancarias($almacen_id = 0) {
+
+    if ($almacen_id == 0) {
+
+        $sql = "SELECT * FROM cuentas_bancarias WHERE estatus = 1";
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+
+    } else {
+
+        $sql = "SELECT * FROM cuentas_bancarias WHERE id_almacen= ? AND estatus = 1";
+        $stmt = $this->db->prepare($sql);
+
+        $stmt->bind_param("i", $almacen_id);
+        $stmt->execute();
+    }
+
+    $result = $stmt->get_result();
+
+    return $result->fetch_all(MYSQLI_ASSOC);
 }
 }

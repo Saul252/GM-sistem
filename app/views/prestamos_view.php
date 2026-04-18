@@ -190,18 +190,32 @@ $paginaActual = $paginaActual ?? 'prestamos';
                 </div>
 
                 <div class="modal-body">
-
                     <div class="row g-3">
 
-                        <!-- ALMACÉN ORIGEN -->
+                        <!-- ID -->
                         <div class="col-md-6">
-                            <label class="form-label">Almacén Origen</label>
+                            <label class="form-label">Movimiento</label>
+                            <input type="hidden" name="prestamo_id" id="mov_prestamo_id">
+                            <div class="form-control bg-light">
+                                ID: <span id="mov_prestamo_id_text"></span>
+                            </div>
+                        </div>
+
+                        <!-- SALDO -->
+                        <div class="col-md-6">
+                            <label class="form-label">Saldo</label>
+                            <div class="form-control bg-light">
+                                Deuda: <span id="mov_saldo_text"></span>
+                            </div>
+                        </div>
+
+                        <!-- ALMACÉN -->
+                        <div class="col-md-6">
+                            <label class="form-label">Almacén</label>
                             <select name="almacen_id" id="mov_almacen_id" class="form-select" required>
                                 <option value="">-- Seleccionar --</option>
                                 <?php foreach($almacenes as $a): ?>
-                                    <option value="<?= $a['id'] ?>">
-                                        <?= $a['nombre'] ?>
-                                    </option>
+                                    <option value="<?= $a['id'] ?>"><?= $a['nombre'] ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -211,69 +225,53 @@ $paginaActual = $paginaActual ?? 'prestamos';
                             <label class="form-label">Monto</label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
-                                <input type="number" step="0.01" name="monto" class="form-control" required>
+                                <input type="number" step="0.01" name="monto_abono" class="form-control" required>
                             </div>
                         </div>
 
-                        <!-- TIPO DE MOVIMIENTO -->
+                        <!-- DESTINO -->
                         <div class="col-md-6">
-                            <label class="form-label">Tipo de Destino</label>
+                            <label class="form-label">Destino</label>
                             <select name="tipo_destino" id="tipo_destino" class="form-select" required>
                                 <option value="">-- Seleccionar --</option>
-                                <option value="caja_fuerte">🏦 Caja Fuerte</option>
-                                <option value="banco">🏛️ Banco</option>
-                                <option value="saldo_inicial">💰 Saldo Inicial</option>
+                                <option value="caja_fuerte">Caja Fuerte</option>
+                                <option value="banco">Banco</option>
+                                <option value="saldo_inicial">Saldo Inicial</option>
                             </select>
                         </div>
 
-                        <!-- DESTINO DINÁMICO -->
-                        <div class="col-md-6">
-                            <label class="form-label">Destino Específico</label>
-
-                            <!-- CAJAS FUERTES -->
-                            <select name="caja_fuerte_id" id="select_caja_fuerte" class="form-select d-none">
-                                <option value="">-- Seleccionar Caja --</option>
+                        <!-- CAJA -->
+                        <div class="col-md-6 d-none" id="wrap_caja">
+                            <select name="caja_fuerte_id" id="select_caja_fuerte" class="form-select">
+                                <option value="">-- Caja Fuerte --</option>
                                 <?php foreach($cajasFuertes as $c): ?>
                                     <option value="<?= $c['id'] ?>"><?= $c['nombre'] ?></option>
                                 <?php endforeach; ?>
                             </select>
+                        </div>
 
-                            <!-- BANCOS -->
-                            <select name="banco_id" id="select_banco" class="form-select d-none">
-                                <option value="">-- Seleccionar Banco --</option>
+                        <!-- BANCO -->
+                        <div class="col-md-6 d-none" id="wrap_banco">
+                            <select name="banco_id" id="select_banco" class="form-select">
+                                <option value="">-- Banco --</option>
                                 <?php foreach($bancos as $b): ?>
                                     <option value="<?= $b['id'] ?>"><?= $b['nombre'] ?></option>
                                 <?php endforeach; ?>
                             </select>
-
-                            <!-- SALDO INICIAL -->
-                            <select name="saldo_inicial_id" id="select_saldo_inicial" class="form-select d-none">
-                                <option value="">-- Seleccionar Cuenta --</option>
-                                <?php foreach($saldo as $s): ?>
-                                    <option value="<?= $s['idAlmacen'] ?>">
-                                        <?= $s['almacen'] ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
-
                         </div>
 
-                        <!-- DESCRIPCIÓN -->
+                        <!-- OBS -->
                         <div class="col-12">
-                            <label class="form-label">Descripción</label>
-                            <textarea name="descripcion" class="form-control" rows="2"
-                                placeholder="Motivo del movimiento"></textarea>
+                            <label class="form-label">Observaciones</label>
+                            <textarea name="observaciones" class="form-control" rows="2"></textarea>
                         </div>
 
                     </div>
-
                 </div>
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="submit" class="btn btn-primary px-4">
-                        Confirmar Movimiento
-                    </button>
+                    <button type="submit" class="btn btn-primary px-4">Confirmar</button>
                 </div>
 
             </form>
@@ -281,7 +279,7 @@ $paginaActual = $paginaActual ?? 'prestamos';
         </div>
     </div>
 </div>
-</main>
+</main> 
 
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -292,56 +290,127 @@ let tabla;
 const CONTROLLER = '/cfsistem/app/controllers/prestamosController.php';
 
 $(document).ready(function() {
+
+    // =========================
+    // DATATABLE
+    // =========================
     tabla = $('#tablaPrestamos').DataTable({
         pageLength: 15,
         dom: 'rtp',
-        language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' }
+        language: {
+            url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+        }
     });
 
+    // =========================
+    // BUSCADOR
+    // =========================
     $('#busqueda').on('keyup', function() {
         tabla.search(this.value).draw();
     });
 
+    // =========================
+    // FILTRO SUCURSAL
+    // =========================
     $('#filtroSucursal').on('change', function() {
         const id = $(this).val();
         cargarDatosAlmacen(id);
     });
 
+    // =========================
+    // CAMBIO ALMACÉN MODAL
+    // =========================
     $('#modal_almacen_id').on('change', function() {
         cargarDatosAlmacen(this.value, true);
     });
 
-    // ✅ FORM PRESTAMO
+    // =====================================================
+    // 🔥 LÓGICA DE DESTINO (Caja Fuerte / Banco)
+    // =====================================================
+    $(document).on('change', '#tipo_destino', function() {
+        const destino = $(this).val();
+        
+        // Ocultar contenedores
+        $('#wrap_caja, #wrap_banco').addClass('d-none');
+        
+        // Resetear valores de los selects para no enviar datos cruzados
+        $('#select_caja_fuerte').val('').removeAttr('required');
+        $('#select_banco').val('').removeAttr('required');
+
+        if (destino === 'caja_fuerte') {
+            $('#wrap_caja').removeClass('d-none');
+            $('#select_caja_fuerte').attr('required', true);
+        } else if (destino === 'banco') {
+            $('#wrap_banco').removeClass('d-none');
+            $('#select_banco').attr('required', true);
+        }
+    });
+
+    // =========================
+    // FORM PRESTAMO (NUEVO)
+    // =========================
     $('#formPrestamo').on('submit', async function(e) {
         e.preventDefault();
         const formData = new FormData(this);
 
         try {
-            const resp = await fetch(`${CONTROLLER}?action=crear`, { 
-                method: 'POST', 
-                body: formData 
+            const resp = await fetch(`${CONTROLLER}?action=crear`, {
+                method: 'POST',
+                body: formData
             });
 
             const res = await resp.json();
-            console.log(res); // 👈 DEBUG
-
-            if(res.success) {
-                Swal.fire('Éxito', res.message, 'success')
-                    .then(() => location.reload());
+            if (res.success) {
+                Swal.fire('Éxito', res.message, 'success').then(() => location.reload());
             } else {
                 Swal.fire('Error', res.message || 'Error desconocido', 'error');
             }
-
         } catch (err) {
             console.error(err);
             Swal.fire('Error', 'Error en la petición', 'error');
         }
     });
+
+    // =====================================================
+    // 🔥 FORM MOVIMIENTO (ABONO) - CORREGIDO
+    // =====================================================
+    $('#formMovimientoDinero').on('submit', async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+
+        // Debug: Ver qué se está enviando realmente antes del fetch
+        console.log("Datos a enviar:");
+        for (let [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`);
+        }
+
+        try {
+            const resp = await fetch(`${CONTROLLER}?action=abonar`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const res = await resp.json();
+            console.log("Respuesta servidor:", res);
+
+            if (res.success) {
+                Swal.fire('Éxito', res.message, 'success').then(() => location.reload());
+            } else {
+                Swal.fire('Error', res.message || 'Error', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            Swal.fire('Error', 'Error en la petición', 'error');
+        }
+    });
+
 });
 
-/* =========================
-   AJAX ALMACÉN
-========================= */
+// =====================================================
+// FUNCIONES GLOBALES
+// =====================================================
+
 async function cargarDatosAlmacen(almacenId, esParaModal = false) {
     try {
         const resp = await fetch(`${CONTROLLER}?action=ajax&almacen_id=${almacenId}`);
@@ -365,82 +434,46 @@ async function cargarDatosAlmacen(almacenId, esParaModal = false) {
                 tabla.draw();
             }
         }
-
     } catch (e) {
         console.error("Error cargando datos:", e);
     }
 }
 
-/* =========================
-   NUEVO PRESTAMO
-========================= */
 function nuevoPrestamo() {
     $('#formPrestamo')[0].reset();
     $('#select_caja_fuerte, #select_saldo_dia').addClass('d-none');
-
     const modal = new bootstrap.Modal(document.getElementById('modalPrestamo'));
     modal.show();
-
-    if($('#modal_almacen_id').val()) {
+    if ($('#modal_almacen_id').val()) {
         $('#modal_almacen_id').trigger('change');
     }
 }
 
-/* =========================
-   🔥 ABONAR (CORREGIDO)
-========================= */
-async function modalAbonar(id, nombre, saldo, almacen_id) {
+function modalAbonar(id, nombre, saldo, almacen_id) {
+    const form = $('#formMovimientoDinero')[0];
+    if (form) form.reset();
 
-    const { value: monto } = await Swal.fire({
-        title: `Abono para ${nombre}`,
-        text: `Saldo pendiente: $${saldo}`,
-        input: 'number',
-        inputLabel: 'Monto del abono',
-        showCancelButton: true,
-        inputValidator: (value) => {
-            if (!value || value <= 0) return 'Ingrese un monto válido';
-            if (value > saldo) return 'El abono no puede superar la deuda';
-        }
-    });
+    // Limpiar UI del modal
+    $('#wrap_caja, #wrap_banco').addClass('d-none');
+    $('#tipo_destino').val(''); 
+    $('#select_caja_fuerte').val('').removeAttr('required');
+    $('#select_banco').val('').removeAttr('required');
 
-    if (monto) {
-        try {
+    // Cargar datos del préstamo
+    $('#mov_prestamo_id').val(id);
+    $('#mov_prestamo_id_text').text(id);
+    $('#mov_saldo_text').text(saldo);
+    $('#mov_almacen_id').val(almacen_id);
 
-            const resp = await fetch(`${CONTROLLER}?action=abonar`, {
-                method: 'POST',
-                body: new URLSearchParams({
-                    almacen_id: almacen_id, 
-                    prestamo_id: id,
-                    monto_abono: monto,
-                    metodo_pago: 'efectivo', // 👈 IMPORTANTE
-                    observaciones: ''
-                })
-            });
-
-            const res = await resp.json();
-            console.log(res); // 👈 DEBUG CLAVE
-
-            if(res.success){
-                Swal.fire('Abonado', res.message || '', 'success')
-                    .then(() => location.reload());
-            } else {
-                Swal.fire('Error', res.message || 'No se pudo registrar el abono', 'error');
-            }
-
-        } catch (err) {
-            console.error(err);
-            Swal.fire('Error', 'Error en la petición', 'error');
-        }
-    }
+    const modalEl = document.getElementById('modalMovimientoDinero');
+    let modal = bootstrap.Modal.getInstance(modalEl);
+    if (!modal) modal = new bootstrap.Modal(modalEl);
+    modal.show();
 }
 
-/* =========================
-   VER DETALLE
-========================= */
 function verPrestamo(id) {
     window.location.href = `${CONTROLLER}?action=detalle&id=${id}`;
-}
-</script>
+}</script>
 
 </body>
 </html>

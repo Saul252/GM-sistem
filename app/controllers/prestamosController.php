@@ -186,86 +186,149 @@ $descripcion   = trim($_POST['descripcion'] ?? '');
    ABONAR
 ========================= */
 if (isset($_GET['action']) && $_GET['action'] === 'abonar') {
-    // 1. Limpiar cualquier eco o basura previa
+
     while (ob_get_level()) ob_end_clean();
     ob_start();
-    
+
     header('Content-Type: application/json');
 
     try {
-        // Log de entrada (ver en el error_log del servidor)
-        error_log("--- Iniciando proceso de abono ---");
-        error_log("POST recibidos: " . print_r($_POST, true));
 
-        // Validación de modelos
-        if (!isset($prestamosModel)) throw new Exception("Modelo 'prestamosModel' no instanciado.");
-        if (!isset($corteCaja)) throw new Exception("Modelo 'corteCaja' no instanciado.");
+        error_log("--- INICIANDO ABONO ---");
+        error_log("POST: " . print_r($_POST, true));
 
-        $id_almacen = intval($_POST['almacen'] ?? $_POST['almacen_id'] ?? 0);
-        $monto = floatval($_POST['monto_abono'] ?? 0);
-        $id_prestamo = intval($_POST['prestamo_id'] ?? 0);
+        // =========================
+        // VALIDACIONES BASE
+        // =========================
+        if (!isset($prestamosModel)) {
+            throw new Exception("prestamosModel no instanciado");
+        }
 
-        if($id_almacen <= 0) throw new Exception("ID de almacén inválido o no recibido.");
+        if (!isset($corteCaja)) {
+            throw new Exception("corteCaja no instanciado");
+        }
 
+        // =========================
+        // DATOS
+        // =========================
+        $id_almacen   = intval($_POST['almacen_id'] ?? 0);
+        $id_prestamo  = intval($_POST['prestamo_id'] ?? 0);
+        $monto        = floatval($_POST['monto_abono'] ?? 0);
+
+        $metodo_pago  = $_POST['metodo_pago'] ?? 'efectivo';
+        $observaciones = trim($_POST['observaciones'] ?? '');
+
+        $caja_fuerte_id = intval($_POST['caja_fuerte_id'] ?? 0);
+        $banco_id       = intval($_POST['banco_id'] ?? 0);
+
+        $usuario_id = intval($usuario_id ?? 0);
+
+        // =========================
+        // VALIDACIONES
+        // =========================
+        if ($id_almacen <= 0) throw new Exception("Almacén inválido");
+        if ($id_prestamo <= 0) throw new Exception("Préstamo inválido");
+        if ($monto <= 0) throw new Exception("Monto inválido");
+
+        // =========================
+        // REGISTRAR ABONO
+        // =========================
         $data = [
             'almacen_id'    => $id_almacen,
             'prestamo_id'   => $id_prestamo,
             'monto_abono'   => $monto,
-            'metodo_pago'   => $_POST['metodo_pago'] ?? 'efectivo',
-            'usuario_id'    => $usuario_id ?? 0,
-            'observaciones' => trim($_POST['observaciones'] ?? '')
+            'metodo_pago'   => $metodo_pago,
+            'usuario_id'    => $usuario_id,
+            'observaciones' => $observaciones
         ];
 
-        // Paso 1: Registrar el abono
         $ok = $prestamosModel->registrarAbono($data);
-        if (!$ok) throw new Exception("Fallo en registrarAbono() del modelo.");
 
-        // Paso 2: Cerrar si aplica
+        if (!$ok) {
+            throw new Exception("Error en registrarAbono()");
+        }
+
+        // =========================
+        // CERRAR PRÉSTAMO SI APLICA
+        // =========================
         $prestamosModel->cerrarPrestamoSiPagado($id_prestamo);
 
-        // Paso 3: Inyectar a caja
-        $data2 = [
-            'almacen_id'         => $id_almacen,
-            'usuario_id'         => $usuario_id ?? 0,
-            'categoria_id'       => 13,
-            'monto'              => $monto,
-            'metodo_pago'        => $data['metodo_pago'],
-            'fecha_movimiento'   => date('Y-m-d'), 
-            'concepto'           => 'Abono a préstamo ID: ' . $id_prestamo,
-            'tipo_operacion'     => 'Entrada',
-            'monto_efectivo'     => ($data['metodo_pago'] == 'efectivo') ? $monto : 0,
-            'monto_tarjeta'      => 0,
-            'monto_transferencia'=> 0,
-            'almacen_destino_id' => $id_almacen,
-            'caja_fuerte_id'     => null, 
-            'banco_id'           => null
-        ];
+        // =========================
+        // 🔥 DECISIÓN REAL DE DESTINO
+        // =========================
+        $usado_caja_o_banco = false;
 
-        $res_corte = $corteCaja->registrarAperturaDesdeCierreConceptoAbono($data2);
-        
-        // Limpiar el buffer por si hubo warnings
+        // CAJA FUERTE
+        if (!empty($caja_fuerte_id)) {
+
+            $corteCaja->actualizarSaldoCajaFuerte($caja_fuerte_id, $monto);
+            $usado_caja_o_banco = true;
+        }
+
+        // BANCO
+        elseif (!empty($banco_id)) {
+
+            $corteCaja->actualizarSaldoBanco($banco_id, $monto);
+            $usado_caja_o_banco = true;
+        }
+
+        // =========================
+        // SOLO SI NO ES CAJA NI BANCO
+        // =========================
+        if (!$usado_caja_o_banco) {
+
+            $data2 = [
+                'almacen_id'         => $id_almacen,
+                'usuario_id'         => $usuario_id,
+                'categoria_id'       => 13,
+                'monto'              => $monto,
+                'metodo_pago'        => $metodo_pago,
+                'fecha_movimiento'   => date('Y-m-d H:i:s'),
+
+                'concepto'           => "Abono a préstamo ID: $id_prestamo",
+                'tipo_operacion'     => 'entrada',
+
+                'monto_efectivo'      => ($metodo_pago === 'efectivo') ? $monto : 0,
+                'monto_tarjeta'       => ($metodo_pago === 'tarjeta') ? $monto : 0,
+                'monto_transferencia' => ($metodo_pago === 'transferencia') ? $monto : 0,
+
+                'almacen_destino_id'  => $id_almacen,
+                'caja_fuerte_id'      => null,
+                'banco_id'            => null
+            ];
+
+            $corteCaja->registrarAperturaDesdeCierreConceptoAbono($data2);
+        }
+
+        // =========================
+        // RESPUESTA
+        // =========================
         ob_end_clean();
 
         echo json_encode([
             'success' => true,
-            'message' => 'Abono registrado con éxito',
-            'debug_corte' => $res_corte
+            'message' => 'Abono registrado correctamente',
+            'debug'   => [
+                'caja_fuerte_id' => $caja_fuerte_id,
+                'banco_id'       => $banco_id,
+                'usado_directo'  => $usado_caja_o_banco
+            ]
         ]);
 
     } catch (Throwable $e) {
-        // Si algo falló, limpiamos el buffer y mandamos el error real
+
         if (ob_get_level()) ob_end_clean();
-        
-        error_log("ERROR EN ABONAR: " . $e->getMessage());
-        
+
+        error_log("ERROR ABONO: " . $e->getMessage());
+
         echo json_encode([
-            'success' => false, 
-            'message' => 'Error: ' . $e->getMessage(),
-            'file' => $e->getFile(),
-            'line' => $e->getLine(),
-            'trace' => $e->getTraceAsString() // Esto te dice el camino del error
+            'success' => false,
+            'message' => $e->getMessage(),
+            'file'    => $e->getFile(),
+            'line'    => $e->getLine()
         ]);
     }
+
     exit;
 }
 /* =========================
