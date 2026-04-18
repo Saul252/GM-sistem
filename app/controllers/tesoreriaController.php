@@ -179,6 +179,8 @@ case 'obtener_saldos_sucursal':
 $categoriasCapital= $tesoreria->getCategorias();
 $almacen_sesion = $_SESSION['almacen_id'] ?? 0;
 $listaAlmacenes = $almacenModel->getAlmacenes($almacen_sesion); 
+$saldoCajas=$corteCaja->saldoCajaFuerte($almacen_sesion);
+$saldosCuentasBancarias=$corteCaja->saldoCuentasBancarias($almacen_sesion);
 $paginaActual   = 'tesoreria';
 
 // Carga de la vista HTML

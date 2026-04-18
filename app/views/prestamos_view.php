@@ -12,8 +12,8 @@ $paginaActual = $paginaActual ?? 'prestamos';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 
-<?php require_once __DIR__ . '/layout/icono.php' ?>
-<?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
+    <?php require_once __DIR__ . '/layout/icono.php' ?>
+    <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
     <style>
         :root { --accent: #007aff; --bg: #f5f5f7; }
         body { background: var(--bg); font-family: -apple-system, sans-serif; }
@@ -103,7 +103,7 @@ $paginaActual = $paginaActual ?? 'prestamos';
                         </td>
                         <td class="text-end">
                             <button class="btn btn-sm btn-light" onclick="verPrestamo(<?= $p['id'] ?>)"><i class="bi bi-eye"></i></button>
-                            <button class="btn btn-sm btn-success" onclick="modalAbonar(<?= $p['id'] ?>, '<?= $p['trabajador'] ?>', <?= $saldo_p ?>,<?= $p['almacen_id']?>)"><i class="bi bi-cash"></i></button>
+                            <button class="btn btn-sm btn-success" onclick="modalAbonar(<?= $p['id'] ?>, '<?= addslashes($p['trabajador']) ?>', <?= $saldo_p ?>,<?= $p['almacen_id']?>)"><i class="bi bi-cash"></i></button>
                         </td>
                     </tr>
                     <?php endforeach; ?>
@@ -112,7 +112,7 @@ $paginaActual = $paginaActual ?? 'prestamos';
         </div>
     </div>
 
-  <div class="modal fade" id="modalPrestamo" tabindex="-1">
+    <div class="modal fade" id="modalPrestamo" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content border-0" style="border-radius:20px;">
                 <form id="formPrestamo">
@@ -135,14 +135,12 @@ $paginaActual = $paginaActual ?? 'prestamos';
                             <div class="col-md-6">
                                 <label class="form-label">Trabajador</label>
                                 <select name="trabajador_id" id="modal_trabajador_id" class="form-select" required>
-                                   <option value="0">Seleccione un trabajador</option>
-                                <?php foreach($trabajadores as $t): ?>
+                                    <option value="0">Seleccione un trabajador</option>
+                                    <?php foreach($trabajadores as $t): ?>
                                         <option value="<?= $t['id'] ?>"> <?= $t['nombre'] ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-
-                           
 
                             <div class="col-md-6">
                                 <label class="form-label">Monto a Prestar</label>
@@ -151,20 +149,19 @@ $paginaActual = $paginaActual ?? 'prestamos';
                                     <input type="number" step="0.01" name="monto_total" class="form-control" required>
                                 </div>
                             </div>
-                            <div class="col-6" id="col_metodo_pago">
-                            <label class="text-xs fw-bold text-muted text-uppercase">Método</label>
-                            <select name="metodo_pago" id="sel_metodo_pago" class="form-select" required>
-                                <option value="efectivo">💵 Efectivo</option>
-                                <option value="tarjeta">💳 Tarjeta</option>
-                                <option value="transferencia">🏛️ Transferencia</option>
-                            </select>
-                        </div>
+                            <div class="col-6">
+                                <label class="text-xs fw-bold text-muted text-uppercase">Método</label>
+                                <select name="metodo_pago" class="form-select" required>
+                                    <option value="efectivo">💵 Efectivo</option>
+                                    <option value="tarjeta">💳 Tarjeta</option>
+                                    <option value="transferencia">🏛️ Transferencia</option>
+                                </select>
+                            </div>
 
                             <div class="col-12">
                                 <label class="form-label">Motivo / Descripción</label>
                                 <textarea name="descripcion" class="form-control" rows="2" placeholder="Ej. Adelanto de quincena"></textarea>
                             </div>
-                            
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -175,116 +172,107 @@ $paginaActual = $paginaActual ?? 'prestamos';
             </div>
         </div>
     </div>
-<div class="modal fade" id="modalMovimientoDinero" tabindex="-1">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0" style="border-radius:20px;">
 
-            <form id="formMovimientoDinero">
-
-                <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title">
-                        <i class="bi bi-arrow-left-right me-2"></i>
-                        Movimiento de Dinero
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-
-                <div class="modal-body">
-                    <div class="row g-3">
-
-                        <!-- ID -->
-                        <div class="col-md-6">
-                            <label class="form-label">Movimiento</label>
-                            <input type="hidden" name="prestamo_id" id="mov_prestamo_id">
-                            <div class="form-control bg-light">
-                                ID: <span id="mov_prestamo_id_text"></span>
-                            </div>
-                        </div>
-
-                        <!-- SALDO -->
-                        <div class="col-md-6">
-                            <label class="form-label">Saldo</label>
-                            <div class="form-control bg-light">
-                                Deuda: <span id="mov_saldo_text"></span>
-                            </div>
-                        </div>
-
-                        <!-- ALMACÉN -->
-                        <div class="col-md-6">
-                            <label class="form-label">Almacén</label>
-                            <select name="almacen_id" id="mov_almacen_id" class="form-select" required>
-                                <option value="">-- Seleccionar --</option>
-                                <?php foreach($almacenes as $a): ?>
-                                    <option value="<?= $a['id'] ?>"><?= $a['nombre'] ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <!-- MONTO -->
-                        <div class="col-md-6">
-                            <label class="form-label">Monto</label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="number" step="0.01" name="monto_abono" class="form-control" required>
-                            </div>
-                        </div>
-
-                        <!-- DESTINO -->
-                        <div class="col-md-6">
-                            <label class="form-label">Destino</label>
-                            <select name="tipo_destino" id="tipo_destino" class="form-select" required>
-                                <option value="">-- Seleccionar --</option>
-                                <option value="caja_fuerte">Caja Fuerte</option>
-                                <option value="banco">Banco</option>
-                                <option value="saldo_inicial">Saldo Inicial</option>
-                            </select>
-                        </div>
-
-                        <!-- CAJA -->
-                        <div class="col-md-6 d-none" id="wrap_caja">
-                            <select name="caja_fuerte_id" id="select_caja_fuerte" class="form-select">
-                                <option value="">-- Caja Fuerte --</option>
-                                <?php foreach($cajasFuertes as $c): ?>
-                                    <option value="<?= $c['id'] ?>"><?= $c['nombre'] ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <!-- BANCO -->
-                        <div class="col-md-6 d-none" id="wrap_banco">
-                            <select name="banco_id" id="select_banco" class="form-select">
-                                <option value="">-- Banco --</option>
-                                <?php foreach($bancos as $b): ?>
-                                    <option value="<?= $b['id'] ?>"><?= $b['nombre'] ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <!-- OBS -->
-                        <div class="col-12">
-                            <label class="form-label">Observaciones</label>
-                            <textarea name="observaciones" class="form-control" rows="2"></textarea>
-                        </div>
-
+    <div class="modal fade" id="modalMovimientoDinero" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0" style="border-radius:20px;">
+                <form id="formMovimientoDinero">
+                    <div class="modal-header bg-dark text-white">
+                        <h5 class="modal-title">
+                            <i class="bi bi-arrow-left-right me-2"></i>
+                            Movimiento de Dinero (Abono)
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                     </div>
-                </div>
 
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="submit" class="btn btn-primary px-4">Confirmar</button>
-                </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Movimiento</label>
+                                <input type="hidden" name="prestamo_id" id="mov_prestamo_id">
+                                <div class="form-control bg-light">
+                                    ID: <span id="mov_prestamo_id_text"></span>
+                                </div>
+                            </div>
 
-            </form>
+                            <div class="col-md-6">
+                                <label class="form-label">Saldo</label>
+                                <div class="form-control bg-light">
+                                    Deuda: <span id="mov_saldo_text"></span>
+                                </div>
+                            </div>
 
+                            <div class="col-md-6">
+                                <label class="form-label">Almacén</label>
+                                <select name="almacen_id" id="mov_almacen_id" class="form-select" required>
+                                    <option value="">-- Seleccionar --</option>
+                                    <?php foreach($almacenes as $a): ?>
+                                        <option value="<?= $a['id'] ?>"><?= $a['nombre'] ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Monto del Abono</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" step="0.01" name="monto_abono" class="form-control" required>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Destino del Dinero</label>
+                                <select name="tipo_destino" id="tipo_destino" class="form-select" required>
+                                    <option value="">-- Seleccionar --</option>
+                                    <option value="caja_fuerte">Caja Fuerte</option>
+                                    <option value="banco">Banco</option>
+                                    <option value="saldo_inicial">Caja del Día (Saldo Inicial)</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 d-none" id="wrap_caja">
+                                <label class="form-label">Seleccionar Caja Fuerte</label>
+                                <select name="caja_fuerte_id" id="select_caja_fuerte" class="form-select">
+                                    <option value="">-- Seleccionar Caja --</option>
+                                    <?php foreach($cajasFuertes as $c): ?>
+                                        <option value="<?= $c['id'] ?>"><?= $c['nombre'] ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 d-none" id="wrap_banco">
+                                <label class="form-label">Seleccionar Banco</label>
+                                <select name="banco_id" id="select_banco" class="form-select">
+                                    <option value="">-- Seleccionar Banco --</option>
+                                    <?php foreach($bancos as $b): ?>
+                                        <option value="<?= $b['id'] ?>"><?= $b['nombre'] ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Observaciones</label>
+                                <textarea name="observaciones" class="form-control" rows="2"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="submit" class="btn btn-primary px-4">Confirmar Abono</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 </main> 
 
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <script>
 let tabla;
 const CONTROLLER = '/cfsistem/app/controllers/prestamosController.php';
@@ -329,13 +317,8 @@ $(document).ready(function() {
     // =====================================================
     $(document).on('change', '#tipo_destino', function() {
         const destino = $(this).val();
-        
-        // Ocultar contenedores
         $('#wrap_caja, #wrap_banco').addClass('d-none');
-        
-        // Resetear valores de los selects para no enviar datos cruzados
-        $('#select_caja_fuerte').val('').removeAttr('required');
-        $('#select_banco').val('').removeAttr('required');
+        $('#select_caja_fuerte, #select_banco').val('').removeAttr('required');
 
         if (destino === 'caja_fuerte') {
             $('#wrap_caja').removeClass('d-none');
@@ -371,19 +354,12 @@ $(document).ready(function() {
         }
     });
 
-    // =====================================================
-    // 🔥 FORM MOVIMIENTO (ABONO) - CORREGIDO
-    // =====================================================
+    // =========================
+    // FORM ABONO
+    // =========================
     $('#formMovimientoDinero').on('submit', async function(e) {
         e.preventDefault();
-
         const formData = new FormData(this);
-
-        // Debug: Ver qué se está enviando realmente antes del fetch
-        console.log("Datos a enviar:");
-        for (let [key, value] of formData.entries()) {
-            console.log(`${key}: ${value}`);
-        }
 
         try {
             const resp = await fetch(`${CONTROLLER}?action=abonar`, {
@@ -392,8 +368,6 @@ $(document).ready(function() {
             });
 
             const res = await resp.json();
-            console.log("Respuesta servidor:", res);
-
             if (res.success) {
                 Swal.fire('Éxito', res.message, 'success').then(() => location.reload());
             } else {
@@ -404,11 +378,10 @@ $(document).ready(function() {
             Swal.fire('Error', 'Error en la petición', 'error');
         }
     });
-
 });
 
 // =====================================================
-// FUNCIONES GLOBALES
+// FUNCIONES DE CARGA Y MODALES
 // =====================================================
 
 async function cargarDatosAlmacen(almacenId, esParaModal = false) {
@@ -418,20 +391,40 @@ async function cargarDatosAlmacen(almacenId, esParaModal = false) {
 
         if (data.status === 'success') {
             if (esParaModal) {
-                let htmlT = '<option value="">-- Seleccionar --</option>';
+                let htmlT = '<option value="0">Seleccione un trabajador</option>';
                 data.trabajadores.forEach(t => {
                     htmlT += `<option value="${t.id}">${t.nombre}</option>`;
                 });
                 $('#modal_trabajador_id').html(htmlT);
             } else {
-                if (almacenId == 0) {
-                    $.fn.dataTable.ext.search = [];
-                } else {
-                    $.fn.dataTable.ext.search.push((settings, dataArr, index) => {
-                        return $(tabla.row(index).node()).data('almacen') == almacenId;
-                    });
-                }
+                // 🔥 REPOBLAR TABLA SIN ROMPER DATATABLES
+                tabla.clear();
+                data.prestamos.forEach(p => {
+                    const abonado = parseFloat(p.total_abonado || 0);
+                    const montoTotal = parseFloat(p.monto_total || 0);
+                    const saldoP = parseFloat(p.saldo_pendiente || (montoTotal - abonado));
+                    const porcentaje = montoTotal > 0 ? (abonado / montoTotal) * 100 : 0;
+
+                    const rowNode = tabla.row.add([
+                        p.almacen_id,
+                        `<span class="fw-semibold">${p.trabajador}</span>`,
+                        `<span class="small text-muted">${p.descripcion || ''}</span>`,
+                        `$${montoTotal.toFixed(2)}`,
+                        `<span class="text-success fw-bold">$${abonado.toFixed(2)}</span>`,
+                        `<span class="${saldoP > 0 ? 'text-danger' : 'text-success'} fw-bold">$${saldoP.toFixed(2)}</span>`,
+                        `<div class="progress"><div class="progress-bar" style="width: ${porcentaje}%"></div></div>`,
+                        `<span class="badge-estado ${saldoP > 0 ? 'estado-activo' : 'estado-liquidado'}">${saldoP > 0 ? 'PENDIENTE' : 'LIQUIDADO'}</span>`,
+                        `<div class="text-end">
+                            <button class="btn btn-sm btn-light" onclick="verPrestamo(${p.id})"><i class="bi bi-eye"></i></button>
+                            <button class="btn btn-sm btn-success" onclick="modalAbonar(${p.id}, '${p.trabajador.replace(/'/g, "\\'")}', ${saldoP}, ${p.almacen_id})"><i class="bi bi-cash"></i></button>
+                        </div>`
+                    ]).node();
+                    $(rowNode).attr('data-almacen', p.almacen_id);
+                });
                 tabla.draw();
+                
+                // Actualizar info visual
+                $('#status-almacen').text(`Mostrando datos de: ${almacenId == 0 ? 'Todas las sucursales' : 'Sucursal seleccionada'}`);
             }
         }
     } catch (e) {
@@ -441,7 +434,6 @@ async function cargarDatosAlmacen(almacenId, esParaModal = false) {
 
 function nuevoPrestamo() {
     $('#formPrestamo')[0].reset();
-    $('#select_caja_fuerte, #select_saldo_dia').addClass('d-none');
     const modal = new bootstrap.Modal(document.getElementById('modalPrestamo'));
     modal.show();
     if ($('#modal_almacen_id').val()) {
@@ -453,16 +445,10 @@ function modalAbonar(id, nombre, saldo, almacen_id) {
     const form = $('#formMovimientoDinero')[0];
     if (form) form.reset();
 
-    // Limpiar UI del modal
     $('#wrap_caja, #wrap_banco').addClass('d-none');
-    $('#tipo_destino').val(''); 
-    $('#select_caja_fuerte').val('').removeAttr('required');
-    $('#select_banco').val('').removeAttr('required');
-
-    // Cargar datos del préstamo
     $('#mov_prestamo_id').val(id);
     $('#mov_prestamo_id_text').text(id);
-    $('#mov_saldo_text').text(saldo);
+    $('#mov_saldo_text').text(saldo.toFixed(2));
     $('#mov_almacen_id').val(almacen_id);
 
     const modalEl = document.getElementById('modalMovimientoDinero');
@@ -473,7 +459,8 @@ function modalAbonar(id, nombre, saldo, almacen_id) {
 
 function verPrestamo(id) {
     window.location.href = `${CONTROLLER}?action=detalle&id=${id}`;
-}</script>
+}
+</script>
 
 </body>
 </html>

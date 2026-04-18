@@ -87,8 +87,88 @@
                 </div>
             </div>
 
-            <div class="glass-card position-relative overflow-hidden animate__animated animate__fadeInUp">
-            <div class="col-md-4">
+<div class="row g-4">
+
+    <!-- 🔵 CAJAS FUERTES -->
+    <div class="col-lg-6">
+        <div class="glass-card h-100 position-relative overflow-hidden animate__animated animate__fadeInUp"
+             style="border-radius:18px; backdrop-filter: blur(12px);">
+
+            <div class="p-3 border-bottom bg-white bg-opacity-50">
+                <h6 class="mb-0 fw-semibold text-dark">🏦 Cajas Fuertes</h6>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Almacén</th>
+                            <th class="text-end">Caja</th>
+                            <th class="text-end pe-3">Saldo</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <?php foreach($saldoCajas as $caja): ?>
+                            <tr>
+                                <td class="ps-3 fw-medium"><?= $caja['almacen'] ?></td>
+                                <td class="text-end"><?= $caja['nombre'] ?></td>
+                                <td class="text-end pe-3 fw-semibold text-success">
+                                    $<?= number_format($caja['saldo'], 2) ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 🟣 BANCOS -->
+    <div class="col-lg-6">
+        <div class="glass-card h-100 position-relative overflow-hidden animate__animated animate__fadeInUp"
+             style="border-radius:18px; backdrop-filter: blur(12px);">
+
+            <div class="p-3 border-bottom bg-white bg-opacity-50">
+                <h6 class="mb-0 fw-semibold text-dark">🏛️ Cuentas Bancarias</h6>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Almacén</th>
+                            <th class="text-end">Cuenta</th>
+                            <th class="text-end pe-3">Saldo</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <?php foreach($saldosCuentasBancarias as $cb): ?>
+                            <tr>
+                                <td class="ps-3 fw-medium"><?= $cb['almacen'] ?></td>
+                                <td class="text-end"><?= $cb['nombre_cuenta'] ?></td>
+                                <td class="text-end pe-3 fw-semibold text-primary">
+                                    $<?= number_format($cb['saldo'], 2) ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+            <div class="glass-card position-relative overflow-hidden animate__animated animate__fadeInUp mt-3">
+            <div class="col-md-4 mt-3">
     <label class="small fw-bold text-muted text-uppercase mb-2 d-block">Buscar por Concepto</label>
     <div class="position-relative">
         <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
