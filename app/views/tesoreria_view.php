@@ -49,15 +49,7 @@
 
             <div class="glass-card p-4 mb-4 animate__animated animate__fadeIn">
                 <form id="formFiltrosTesoreria" class="row g-3 align-items-end">
-                    <div class="col-md-4">
-                        <label class="small fw-bold text-muted text-uppercase mb-2 d-block">Sucursal a Monitorear</label>
-                        <select id="filtro_almacen_id" class="form-select ios-input">
-                            <option value="0">🌐 Todas las Sucursales</option>
-                            <?php foreach($listaAlmacenes as $alm): ?>
-                                <option value="<?= $alm['id'] ?>">📍 <?= $alm['nombre'] ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
+                   
                     <div class="col-md-3">
                         <label class="small fw-bold text-muted text-uppercase mb-2 d-block">Fecha de Corte</label>
                         <input type="date" id="filtro_fecha" class="form-control ios-input" value="<?= date('Y-m-d') ?>">

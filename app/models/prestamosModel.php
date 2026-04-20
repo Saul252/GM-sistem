@@ -80,14 +80,28 @@ public function obtenerPrestamo($id) {
     $res = $stmt->get_result();
     return $res->fetch_assoc();
 }
-public function listarPrestamos($almacen_id = 0) {
+public function listarPrestamos($almacen_id = 0, $f_inicio = null, $f_fin = null) {
 
     $filtro = "";
     $params = [];
 
+    // =========================
+    // FILTRO ALMACÉN
+    // =========================
     if ($almacen_id != 0) {
         $filtro = "WHERE p.almacen_id = ?";
         $params[] = $almacen_id;
+    } else {
+        $filtro = "WHERE 1=1";
+    }
+
+    // =========================
+    // FILTRO FECHAS
+    // =========================
+    if (!empty($f_inicio) && !empty($f_fin)) {
+        $filtro .= " AND DATE(p.fecha_registro) BETWEEN ? AND ?";
+        $params[] = $f_inicio;
+        $params[] = $f_fin;
     }
 
     $sql = "
@@ -108,7 +122,7 @@ public function listarPrestamos($almacen_id = 0) {
     if (!$stmt) return [];
 
     if (!empty($params)) {
-        $types = str_repeat('i', count($params));
+        $types = str_repeat('s', count($params));
         $stmt->bind_param($types, ...$params);
     }
 

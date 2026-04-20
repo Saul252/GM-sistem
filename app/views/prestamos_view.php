@@ -52,7 +52,46 @@ $paginaActual = $paginaActual ?? 'prestamos';
                     <input type="text" id="busqueda" class="form-control border-0 bg-transparent" placeholder="Buscar trabajador...">
                 </div>
             </div>
+<div class="row mb-4 g-3 align-items-end">
 
+    <!-- 📅 PERIODO -->
+    <div class="col-md-2">
+        <label class="form-label text-muted small">Periodo</label>
+        <select id="periodo" class="form-select border-0 bg-light rounded-3">
+            <option value="hoy">Hoy</option>
+            <option value="ayer">Ayer</option>
+            <option value="semana">Últimos 7 días</option>
+            <option value="mes">Este mes</option>
+            <option value="personalizado">Personalizado</option>
+        </select>
+    </div>
+
+    <!-- 📆 FECHA INICIO -->
+    <div class="col-md-2">
+        <label class="form-label text-muted small">Desde</label>
+        <input type="date" id="f_inicio" class="form-control border-0 bg-light rounded-3">
+    </div>
+
+    <!-- 📆 FECHA FIN -->
+    <div class="col-md-2">
+        <label class="form-label text-muted small">Hasta</label>
+        <input type="date" id="f_fin" class="form-control border-0 bg-light rounded-3">
+    </div>
+
+    <!-- 🏢 SUCURSAL (solo si aplica) -->
+    <?php if ($almacen_usuario == 0): ?>
+    <div class="col-md-3">
+        <label class="form-label text-muted small">Sucursal</label>
+        <select id="filtroSucursal" class="form-select border-0 bg-light rounded-3">
+            <option value="0">🌐 Todas</option>
+            <?php foreach ($almacenes as $a): ?>
+                <option value="<?= $a['id'] ?>"><?= $a['nombre'] ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <?php endif; ?>
+
+</div>
             <?php if ($almacen_usuario == 0): ?>
             <div class="col-md-4">
                 <select id="filtroSucursal" class="form-select border-0 bg-light rounded-3">
@@ -272,7 +311,6 @@ $paginaActual = $paginaActual ?? 'prestamos';
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
 <script>
 let tabla;
 const CONTROLLER = '/cfsistem/app/controllers/prestamosController.php';
@@ -303,6 +341,23 @@ $(document).ready(function() {
     $('#filtroSucursal').on('change', function() {
         const id = $(this).val();
         cargarDatosAlmacen(id);
+    });
+
+    // =========================
+    // 🔥 FILTROS DE FECHA (AGREGADO)
+    // =========================
+    function recargarFiltros() {
+        const id = $('#filtroSucursal').val() || 0;
+        cargarDatosAlmacen(id);
+    }
+
+    $('#periodo').on('change', function() {
+        recargarFiltros();
+    });
+
+    $('#f_inicio, #f_fin').on('change', function() {
+        $('#periodo').val('personalizado');
+        recargarFiltros();
     });
 
     // =========================
@@ -385,8 +440,17 @@ $(document).ready(function() {
 // =====================================================
 
 async function cargarDatosAlmacen(almacenId, esParaModal = false) {
+
+    // 🔥 AGREGADO: enviar filtros
+    const periodo = $('#periodo').val() || 'hoy';
+    const f_inicio = $('#f_inicio').val() || '';
+    const f_fin = $('#f_fin').val() || '';
+
     try {
-        const resp = await fetch(`${CONTROLLER}?action=ajax&almacen_id=${almacenId}`);
+        const resp = await fetch(
+            `${CONTROLLER}?action=ajax&almacen_id=${almacenId}&periodo=${periodo}&f_inicio=${f_inicio}&f_fin=${f_fin}`
+        );
+
         const data = await resp.json();
 
         if (data.status === 'success') {
@@ -419,14 +483,18 @@ async function cargarDatosAlmacen(almacenId, esParaModal = false) {
                             <button class="btn btn-sm btn-success" onclick="modalAbonar(${p.id}, '${p.trabajador.replace(/'/g, "\\'")}', ${saldoP}, ${p.almacen_id})"><i class="bi bi-cash"></i></button>
                         </div>`
                     ]).node();
+
                     $(rowNode).attr('data-almacen', p.almacen_id);
                 });
+
                 tabla.draw();
-                
-                // Actualizar info visual
-                $('#status-almacen').text(`Mostrando datos de: ${almacenId == 0 ? 'Todas las sucursales' : 'Sucursal seleccionada'}`);
+
+                $('#status-almacen').text(
+                    `Mostrando datos de: ${almacenId == 0 ? 'Todas las sucursales' : 'Sucursal seleccionada'}`
+                );
             }
         }
+
     } catch (e) {
         console.error("Error cargando datos:", e);
     }
@@ -461,6 +529,5 @@ function verPrestamo(id) {
     window.location.href = `${CONTROLLER}?action=detalle&id=${id}`;
 }
 </script>
-
 </body>
 </html>

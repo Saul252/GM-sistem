@@ -44,10 +44,26 @@ $almacen_id_req = isset($_GET['almacen_id']) ? intval($_GET['almacen_id']) : 0;
 /* =========================
    FECHAS AUTOMÁTICAS
 ========================= */
-if ($periodo === 'hoy') {
-    $f_inicio = $f_fin = date('Y-m-d');
-} elseif ($periodo === 'ayer') {
-    $f_inicio = $f_fin = date('Y-m-d', strtotime("-1 day"));
+// Solo aplicar periodo si NO vienen fechas manuales
+$usaFechasManual = !empty($_GET['f_inicio']) || !empty($_GET['f_fin']);
+
+if (!$usaFechasManual) {
+
+    if ($periodo === 'hoy') {
+        $f_inicio = $f_fin = date('Y-m-d');
+    } 
+    elseif ($periodo === 'ayer') {
+        $f_inicio = $f_fin = date('Y-m-d', strtotime("-1 day"));
+    }
+    elseif ($periodo === 'semana') {
+        $f_inicio = date('Y-m-d', strtotime('-7 days'));
+        $f_fin = date('Y-m-d');
+    }
+    elseif ($periodo === 'mes') {
+        $f_inicio = date('Y-m-01');
+        $f_fin = date('Y-m-d');
+    }
+
 }
 
 /* =========================
@@ -65,7 +81,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'ajax') {
 
     try {
 
-        $prestamos     = $prestamosModel->listarPrestamos($target);
+        $prestamos     = $prestamosModel->listarPrestamos($target, $f_inicio, $f_fin);
         $trabajadores  = $trabajadoresModel->listarTrabajadores($target);
         $cajasFuertes  = $tesoreria->getCajasFuertes($target);
         $saldo         = $corteCaja->obtenerSaldoInicialMonitor($target, $f_inicio, $f_fin);
@@ -339,7 +355,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'listar') {
 
     try {
 
-        $data = $prestamosModel->listarPrestamos($target);
+        $data = $prestamosModel->listarPrestamos($target, $f_inicio, $f_fin);
 
         echo json_encode([
             'success' => true,
@@ -383,7 +399,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'detalle') {
 ========================= */
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
 
-    $prestamos = $prestamosModel->listarPrestamos($target);
+    $prestamos = $prestamosModel->listarPrestamos($target, $f_inicio, $f_fin);
     $trabajadores = $trabajadoresModel->listarTrabajadores($target);
     $cajasFuertes = $tesoreria->getCajasFuertes($target);
     $saldo = $corteCaja->obtenerSaldoInicialMonitor($target, $f_inicio, $f_fin);
