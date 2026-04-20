@@ -135,7 +135,21 @@
         </div>
     </div>
 </div>
+<button type="button"
+        class="btn fw-bold px-4 py-2"
+        data-bs-toggle="modal"
+        data-bs-target="#modalDeudasPendientes"
+        style="
+            border-radius: 20px;
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            color: white;
+            box-shadow: 0 6px 20px rgba(245, 158, 11, 0.3);
+            border: none;
+        ">
 
+    <i class="bi bi-cash-stack me-2"></i>
+    Deudas Pendientes
+</button>
           <div class="card mb-4 shadow-sm border-0" style="border-radius: 15px;">
     <div class="card-body p-4">
         <?php 
@@ -353,8 +367,12 @@ if (str_contains($metodo, 'EFECT')) {
                             </button>
                         <?php endif; ?>
 
-                        <button class="btn btn-sm btn-light border" title="Ver Detalle"
+                        <button class="btn btn-sm btn-light border" title="Registar deuda"
                                 onclick="verDetalle('<?= $e['tipo'] ?>', <?= $e['id'] ?>)">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-light border" title="Ver Detalle"
+                                onclick="abrirModalExceso ('<?= $e['tipo'] ?>', <?= $e['id'] ?>)">
                             <i class="bi bi-eye"></i>
                         </button>
 
@@ -394,6 +412,9 @@ require_once $ruta;
     <?php require_once __DIR__ . '/egresosComponets/modalAjuste.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/modalDetalles.php'; ?>
         <?php require_once __DIR__ . '/egresosComponets/modalGasto.php'; ?>
+                <?php require_once __DIR__ . '/egresosComponets/cuentasPendientes.php'; ?>
+<?php require_once __DIR__ . '/egresosComponets/historialCuentasPorPagar.php'; ?>
+
 
 
 

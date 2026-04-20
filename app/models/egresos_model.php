@@ -601,4 +601,190 @@ public function obtenerComprasPorMetodo($desde, $hasta, $almacen_id = 0) {
 
     return $data;
 }
+/**
+ * Inserta una nueva obligación financiera vinculada a un almacén y operación específica.
+ */
+public function registrarObligacionFinanciera($data) {
+    try {
+
+        $sql = "INSERT INTO cuentas_por_pagar (
+                    id_almacen,
+                    id_proveedor,
+                    beneficiario,
+                    id_referencia_origen,
+                    monto_total,
+                    monto_pagado,
+                    tipo_deuda,
+                    estado,
+                    fecha_vencimiento,
+                    notas,
+                    fecha_registro
+                ) VALUES (?, ?, ?, ?, ?, 0.00, ?, 'pendiente', NULL, ?, NOW())";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new Exception("Error en prepare: " . $this->db->error);
+        }
+
+        // Manejo correcto de NULL en proveedor
+        $id_proveedor = !empty($data['id_proveedor']) ? intval($data['id_proveedor']) : null;
+
+        // 🔥 TIPOS CORRECTOS
+        // i = int
+        // s = string
+        // d = double
+        $tipos = "iisidss";
+
+        $stmt->bind_param(
+            $tipos,
+            $data['id_almacen'],            // i
+            $id_proveedor,                  // i (puede ser null)
+            $data['beneficiario'],          // s
+            $data['id_referencia_origen'],  // i
+            $data['monto_total'],           // d ✅
+            $data['tipo_deuda'],            // s ✅ (VARCHAR ahora)
+            $data['notas']                  // s
+        );
+
+        if (!$stmt->execute()) {
+            throw new Exception("Error execute: " . $stmt->error);
+        }
+
+        return [
+            "success" => true,
+            "id" => $this->db->insert_id
+        ];
+
+    } catch (Exception $e) {
+        return [
+            "success" => false,
+            "message" => $e->getMessage()
+        ];
+    }
+}
+public function obtenerDetalleCompletoConProveedores($tipo, $id) {
+    $response = ['tipo_documento' => $tipo];
+
+    if ($tipo === 'compra') {
+        // CABECERA COMPRAS
+        $sql = "SELECT c.*, p.id AS pid, a.nombre as almacen_nombre, u.nombre as usuario_nombre 
+                FROM compras c 
+                JOIN almacenes a ON c.almacen_id = a.id 
+                JOIN usuarios u ON c.usuario_registra_id = u.id 
+                JOIN proveedores p 
+    ON TRIM(LOWER(p.nombre_comercial)) = TRIM(LOWER(c.proveedor))
+                WHERE c.id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $response['cabecera'] = $stmt->get_result()->fetch_assoc();
+
+        // DETALLE COMPRAS CON TRAZABILIDAD (9 y 9 en Rancho...)
+        $sqlDet = "SELECT dc.*, p.sku, p.nombre as producto_nombre, p.unidad_medida, p.unidad_reporte, p.factor_conversion as factor_prod,
+                    (SELECT GROUP_CONCAT(CONCAT(a.nombre, ' [', m.cantidad, ']') SEPARATOR '||')
+                     FROM movimientos m 
+                     JOIN almacenes a ON m.almacen_destino_id = a.id
+                     WHERE m.referencia_id = dc.compra_id AND m.producto_id = dc.producto_id AND m.tipo = 'entrada') as desglose_movimientos,
+                    (SELECT IFNULL(SUM(m.cantidad), 0) FROM movimientos m 
+                     WHERE m.referencia_id = dc.compra_id AND m.producto_id = dc.producto_id AND m.tipo = 'entrada') as cantidad_recibida
+                   FROM detalle_compra dc
+                   JOIN productos p ON dc.producto_id = p.id
+                   WHERE dc.compra_id = ?";
+        $stmtDet = $this->db->prepare($sqlDet);
+        $stmtDet->bind_param("i", $id);
+        $stmtDet->execute();
+        $response['items'] = $stmtDet->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    } else {
+       // --- MEJORA EN CABECERA GASTOS ---
+        // Agregamos JOIN a la tabla de categorías para obtener el nombre
+       $sql = "SELECT g.*, a.nombre as almacen_nombre, u.nombre as usuario_nombre, 
+               gc.nombre as categoria_nombre 
+        FROM gastos g 
+        JOIN almacenes a ON g.almacen_id = a.id 
+        JOIN usuarios u ON g.usuario_registra_id = u.id 
+        LEFT JOIN gastos_categorias gc ON g.categoria_id = gc.id 
+        WHERE g.id = ?";
+
+$stmt = $this->db->prepare($sql);
+if (!$stmt) throw new Exception("Error en SQL Gastos: " . $this->db->error);
+
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$response['cabecera'] = $stmt->get_result()->fetch_assoc();
+
+// DETALLE GASTOS
+$sqlDet = "SELECT * FROM detalle_gasto WHERE gasto_id = ?";
+$stmtDet = $this->db->prepare($sqlDet);
+$stmtDet->bind_param("i", $id);
+$stmtDet->execute();
+$response['items'] = $stmtDet->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+    return $response;
+}
+public function listarCuentasPorPagar($filtros) {
+
+    $where = [];
+    $params = [];
+    $types = "";
+
+    // 🔎 BUSCADOR
+    if (!empty($filtros['busqueda'])) {
+        $where[] = "(beneficiario LIKE ? OR notas LIKE ?)";
+        $like = "%" . $filtros['busqueda'] . "%";
+        $params[] = $like;
+        $params[] = $like;
+        $types .= "ss";
+    }
+
+    // 📅 FILTROS DE FECHA
+    if (!empty($filtros['fecha_inicio']) && !empty($filtros['fecha_fin'])) {
+        $where[] = "DATE(fecha_registro) BETWEEN ? AND ?";
+        $params[] = $filtros['fecha_inicio'];
+        $params[] = $filtros['fecha_fin'];
+        $types .= "ss";
+    }
+
+    // 🔥 SOLO PENDIENTES
+    $where[] = "estado = 'pendiente'";
+
+    $whereSQL = count($where) ? "WHERE " . implode(" AND ", $where) : "";
+
+    // 📄 PAGINACIÓN
+    $limit  = intval($filtros['limit'] ?? 10);
+    $offset = intval($filtros['offset'] ?? 0);
+
+    $sql = "SELECT * FROM cuentas_por_pagar
+            $whereSQL
+            ORDER BY fecha_registro DESC
+            LIMIT ? OFFSET ?";
+
+    $stmt = $this->db->prepare($sql);
+
+    $types .= "ii";
+    $params[] = $limit;
+    $params[] = $offset;
+
+    $stmt->bind_param($types, ...$params);
+    $stmt->execute();
+
+    $data = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    // 🔢 TOTAL PARA PAGINACIÓN
+    $sqlTotal = "SELECT COUNT(*) as total FROM cuentas_por_pagar $whereSQL";
+    $stmtTotal = $this->db->prepare($sqlTotal);
+
+    if ($types !== "ii") {
+        $stmtTotal->bind_param(substr($types, 0, -2), ...array_slice($params, 0, -2));
+    }
+
+    $stmtTotal->execute();
+    $total = $stmtTotal->get_result()->fetch_assoc()['total'];
+
+    return [
+        "data" => $data,
+        "total" => $total
+    ];
+}
 }

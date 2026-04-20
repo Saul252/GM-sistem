@@ -227,6 +227,23 @@ if ($action === 'obtenerDetalleMovimiento') {
     }
     exit;
 }
+if ($action === 'obtenerDetalleMovimientoConProveedores') {
+    while (ob_get_level()) ob_end_clean(); 
+    header('Content-Type: application/json');
+    $tipo = $_GET['tipo'] ?? '';
+    $id = intval($_GET['id'] ?? 0);
+    try {
+        $resultado = $egresoModel->obtenerDetalleCompletoConProveedores($tipo, $id);
+        if ($resultado && $resultado['cabecera']) {
+            echo json_encode(['success' => true, 'cabecera' => $resultado['cabecera'], 'items' => $resultado['items']]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'No se encontró el registro.']);
+        }
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit;
+}
 
 if ($action === 'getProveedoresJSON') {
     while (ob_get_level()) ob_end_clean(); 
@@ -334,6 +351,100 @@ if ($action === 'guardar_categoria_egreso') {
     }
     // 2. OBLIGATORIO: Detener el script aquí
     exit; 
+}
+// Acción para registrar la deuda nacida de un exceso en compras o gastos
+if ($action === 'registrarDeudaPorExceso') {
+    // Limpiamos el buffer para evitar que espacios en blanco rompan el JSON de salida
+    while (ob_get_level()) ob_end_clean(); 
+    
+    // Definimos cabecera para respuesta JSON
+    header('Content-Type: application/json; charset=utf-8');
+    
+    try {
+        // 1. Recolección de datos desde el Formulario y Sesión
+        $datos = [
+            // Priorizamos el almacén de la operación original enviado desde el modal
+            'id_almacen'           => !empty($_POST['id_almacen']) ? intval($_POST['id_almacen']) : ($_SESSION['id_almacen'] ?? null),
+            'id_proveedor'         => !empty($_POST['id_proveedor']) ? intval($_POST['id_proveedor']) : null,
+            'beneficiario'         => trim($_POST['beneficiario'] ?? ''),
+            'id_referencia_origen' => trim($_POST['id_referencia_origen'] ?? ''),
+            'origen_tipo'          => trim($_POST['origen_tipo'] ?? 'compra'),
+            'monto_total'          => floatval($_POST['monto_total'] ?? 0),
+            'montopagado'          => 0,
+            'tipo_deuda'           => 'excedente_material', // Categoría fija para este proceso
+            'notas'                => "Ajuste generado por exceso en " . ($_POST['origen_tipo'] ?? 'operación') . " #" . ($_POST['id_referencia_origen'] ?? 'S/N')
+        ];
+
+        // 2. Validaciones Críticas
+        if (!$datos['id_almacen']) {
+            throw new Exception("Error: No se pudo identificar el almacén de origen.");
+        }
+        if (empty($datos['beneficiario'])) {
+            throw new Exception("El nombre del beneficiario es obligatorio para el registro.");
+        }
+        if ($datos['monto_total'] <= 0) {
+            throw new Exception("La cantidad excedente debe generar un monto mayor a $0.00.");
+        }
+        if (empty($datos['id_referencia_origen'])) {
+            throw new Exception("Falta la referencia (ID) de la operación de origen.");
+        }
+
+        // 3. Llamada al Modelo para insertar la obligación financiera
+        // Asumiendo que instanciaste el modelo como $cuentasPagarModel
+        $resultado = $egresoModel->registrarObligacionFinanciera($datos);
+
+        if ($resultado['success']) {
+            // Respuesta exitosa para el SweetAlert del JS
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Cuenta por pagar registrada correctamente.',
+                'id_deuda' => $resultado['id']
+            ]);
+        } else {
+            // Error devuelto por el SQL o el Modelo
+            throw new Exception($resultado['message'] ?? "Error interno al procesar el registro.");
+        }
+
+    } catch (Exception $e) {
+        // Respuesta en caso de error o excepción
+        echo json_encode([
+            'success' => false, 
+            'message' => $e->getMessage()
+        ]);
+    }
+    exit;
+}
+if ($action === 'listarCuentasPorPagar') {
+
+    while (ob_get_level()) ob_end_clean();
+    header('Content-Type: application/json');
+
+    try {
+
+        $filtros = [
+            'busqueda'     => $_GET['busqueda'] ?? '',
+            'fecha_inicio' => $_GET['fecha_inicio'] ?? '',
+            'fecha_fin'    => $_GET['fecha_fin'] ?? '',
+            'limit'        => $_GET['limit'] ?? 10,
+            'offset'       => $_GET['offset'] ?? 0
+        ];
+
+        $res = $cuentasPagarModel->listarCuentasPorPagar($filtros);
+
+        echo json_encode([
+            "success" => true,
+            "data" => $res['data'],
+            "total" => $res['total']
+        ]);
+
+    } catch (Exception $e) {
+        echo json_encode([
+            "success" => false,
+            "message" => $e->getMessage()
+        ]);
+    }
+
+    exit;
 }
 // =========================================================================
 // --- CARGA DE VISTA (GET) ---

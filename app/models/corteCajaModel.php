@@ -688,7 +688,7 @@ if (date('Y-m-d', strtotime($fecha_base)) == date('Y-m-d')) {
     // Si es una fecha distinta (pasada o futura), usamos el primer segundo del día
     $fecha_apertura = date('Y-m-d', strtotime($fecha_base)) . ' 00:00:01';
 }
-   $concepto_final = "Movimiento de " . $tipo_op . ": " . ($data['concepto'] ?? '') . " : " . date('Y-m-d H:i:s');
+   $concepto_final = "Movimiento de " . $tipo_op . ": " . ($data['concepto'] ?? '') . " Monto :".$monto_mov." Fecha: " . date('Y-m-d H:i:s');
     try {
         $this->db->begin_transaction();
 
@@ -740,7 +740,7 @@ if (date('Y-m-d', strtotime($fecha_base)) == date('Y-m-d')) {
     $nuevo_desglose_dest['transferencia'],
     $usuario_id,
     // Añadimos un espacio o separador antes de la fecha
-    "Entrada por traspaso desde Almacén ID: " . $almacen_id . " | " . date('Y-m-d H:i:s'),
+    "Entrada por traspaso desde Almacén ID: " . $almacen_id ." Monto ".$monto_mov. " | " . date('Y-m-d H:i:s'),
     $fecha_apertura
 ]);
         }
@@ -787,7 +787,7 @@ public function registrarAperturaDesdeCierreConceptoAbono($data) {
         $fecha_apertura = date('Y-m-d', strtotime($fecha_base)) . ' 00:00:01';
     }
 
-    $concepto_final = "Movimiento de " . $tipo_op . ": " . ($data['concepto'] ?? '') . " : " . date('Y-m-d H:i:s');
+    $concepto_final = "Movimiento de " . $tipo_op . ": " . ($data['concepto'] ?? '') ." Monto ".$monto_mov. " : " . date('Y-m-d H:i:s');
 
     // 2. Caja/Banco lógica
     $operador = ($tipo_op === 'salida' || $tipo_op === 'traspaso') ? 1 : -1;
@@ -891,7 +891,7 @@ public function registrarAperturaDesdeCierreConceptoAbono($data) {
                 $nuevo_dest_tarjeta,
                 $nuevo_dest_transferencia,
                 $usuario_id,
-                "Entrada por traspaso desde Almacén ID: " . $almacen_id . " | " . date('Y-m-d H:i:s'),
+                "Entrada por traspaso desde Almacén ID: " . $almacen_id ." Monto ".$monto_mov. " | " . date('Y-m-d H:i:s'),
                 $fecha_apertura
             ]);
         }
