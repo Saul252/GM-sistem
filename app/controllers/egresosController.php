@@ -446,6 +446,61 @@ if ($action === 'listarCuentasPorPagar') {
 
     exit;
 }
+if ($action === 'obtenerDeudaCompra') {
+
+    header('Content-Type: application/json; charset=utf-8');
+
+    try {
+
+        $id = intval($_GET['id'] ?? 0);
+
+        $data = $egresoModel->obtenerDeudaPorCompra($id);
+
+        if (!$data) {
+            echo json_encode([
+                'success' => false,
+                'message' => 'No se encontró la deuda'
+            ]);
+            exit;
+        }
+
+        echo json_encode([
+            'success' => true,
+            'data' => $data
+        ]);
+
+    } catch (Exception $e) {
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+    }
+
+    exit;
+}
+if ($action === 'pagarDeudaCompra') {
+
+    header('Content-Type: application/json');
+
+    $cuenta_id = intval($_POST['cuenta_id'] ?? 0);
+    $monto     = floatval($_POST['monto'] ?? 0);
+
+    if ($cuenta_id <= 0 || $monto <= 0) {
+        echo json_encode([
+            'success' => false,
+            'message' => 'Datos inválidos'
+        ]);
+        exit;
+    }
+
+    require_once '../models/egresos_model.php';
+   
+
+    $result = $egresoModel->pagarDeudaCompra($cuenta_id, $monto);
+
+    echo json_encode($result);
+    exit;
+}
 // =========================================================================
 // --- CARGA DE VISTA (GET) ---
 // =========================================================================

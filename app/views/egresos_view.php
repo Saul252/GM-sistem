@@ -371,10 +371,20 @@ if (str_contains($metodo, 'EFECT')) {
                                 onclick="verDetalle('<?= $e['tipo'] ?>', <?= $e['id'] ?>)">
                             <i class="bi bi-eye"></i>
                         </button>
-                        <button class="btn btn-sm btn-light border" title="Ver Detalle"
-                                onclick="abrirModalExceso ('<?= $e['tipo'] ?>', <?= $e['id'] ?>)">
-                            <i class="bi bi-eye"></i>
-                        </button>
+                        <?php ?>
+                        <?php if ($e['tipo'] === 'compra') : ?>
+   <button class="btn btn-sm btn-light border" title="Ver Detalle"
+    onclick="abrirModalExceso('<?= $e['tipo'] ?>', <?= $e['id'] ?>)">
+    <i class="bi bi-exclamation-circle"></i>
+</button>
+<?php endif; ?>
+<?php if (!empty($e['tiene_deuda']) && $e['tiene_deuda'] == 1): ?>
+    <button class="btn btn-sm btn-danger"
+        title="Ver deuda pendiente"
+        onclick="abrirDeudaCompra(<?= $e['id'] ?>)">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+    </button>
+<?php endif; ?>
 
                         <button class="btn btn-sm btn-light border text-danger" title="Anular"
                                 onclick="<?= ($e['tipo'] == 'compra') ? "confirmarCancelacionCompra" : "confirmarCancelacionGasto" ?>('<?= $e['id'] ?>', '<?= $e['folio'] ?>')">

@@ -1,327 +1,191 @@
-<div class="modal fade" id="modalDeudas" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg"
-             style="border-radius:25px; overflow:hidden;">
+<div class="modal fade" id="modalVerDeudaCompra" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg" style="border-radius:20px;">
 
-            <!-- HEADER -->
             <div class="modal-header bg-dark text-white border-0">
-                <h5 class="fw-bold">
-                    <i class="bi bi-wallet2 me-2"></i>
-                    Cuentas por Pagar
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-cash-stack me-2"></i>
+                    Detalle de Deuda Pendiente
                 </h5>
-                <button class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <!-- BODY -->
             <div class="modal-body p-4">
+                <div class="p-3 mb-3 bg-light rounded-3 border">
+                    <div class="fw-bold text-primary" id="deuda_folio" style="font-size: 1.1rem;">-</div>
+                    <div class="text-dark fw-bold" id="deuda_proveedor">-</div>
+                    <div class="text-muted small" id="deuda_fecha">-</div>
+                </div>
 
-                <!-- FILTROS -->
                 <div class="row g-3 mb-3">
-
-                    <div class="col-md-4">
-                        <input type="text" id="buscarDeuda"
-                               class="form-control"
-                               placeholder="Buscar beneficiario o nota...">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-muted">TOTAL ORIGINAL COMPRA</label>
+                        <input type="text" id="deuda_total" class="form-control bg-white" readonly style="font-weight: 600;">
                     </div>
 
-                    <div class="col-md-3">
-                        <select id="filtroFecha" class="form-select">
-                            <option value="hoy">Hoy</option>
-                            <option value="ayer">Ayer</option>
-                            <option value="semana">Esta semana</option>
-                            <option value="mes">Este mes</option>
-                            <option value="custom">Personalizado</option>
-                        </select>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold text-danger">SALDO ACTUAL PENDIENTE</label>
+                        <input type="text" id="deuda_pendiente" class="form-control fw-bold text-danger bg-danger-subtle" readonly>
                     </div>
-
-                    <div class="col-md-2">
-                        <input type="date" id="fecha_inicio" class="form-control">
-                    </div>
-
-                    <div class="col-md-2">
-                        <input type="date" id="fecha_fin" class="form-control">
-                    </div>
-
-                    <div class="col-md-1">
-                        <button class="btn btn-primary w-100"
-                                onclick="cargarCuentas()">
-                            <i class="bi bi-search"></i>
-                        </button>
-                    </div>
-
                 </div>
 
-                <!-- TABLA -->
-                <div class="table-responsive">
-                    <table class="table align-middle table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>#</th>
-                                <th>Beneficiario</th>
-                                <th>Monto</th>
-                                <th>Fecha</th>
-                                <th></th>
-                            </tr>
-                        </thead>
-                        <tbody id="tablaDeudas"></tbody>
-                    </table>
+                <input type="hidden" id="deuda_compra_id">
+                <input type="hidden" id="deuda_cuenta_id">
+
+                <div class="mb-3 p-3 rounded-3" style="background-color: #f8f9fa; border: 1px dashed #dee2e6;">
+                    <label class="form-label fw-bold">Monto a Liquidar / Abonar</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-success text-white border-0">$</span>
+                        <input type="number" id="pago_monto" class="form-control form-control-lg border-success" placeholder="0.00" step="any">
+                    </div>
+                    <small class="text-muted mt-2 d-block">* Al saldar, se generará un registro automático en el historial de egresos.</small>
                 </div>
-
-                <!-- PAGINACION -->
-                <div class="d-flex justify-content-center mt-3" id="paginacion"></div>
-
             </div>
+
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-success px-4 fw-bold" onclick="pagarDeudaCompra()">
+                    <i class="bi bi-check-circle me-1"></i> Aplicar Pago
+                </button>
+            </div>
+
         </div>
     </div>
 </div>
+
 <script>
+    const URL_EGRESOS_BASE = "/cfsistem/app/controllers/egresosController.php";
 
 /* =========================
-   CONFIG GLOBAL
+   SAFE SET
 ========================= */
-let paginaActual = 1;
-const limit = 10;
-let debounceTimer = null;
-
-/* =========================
-   FECHAS
-========================= */
-function obtenerFechas(tipo) {
-
-    const hoy = new Date();
-    let inicio = '', fin = '';
-
-    if (tipo === 'hoy') {
-        inicio = fin = hoy.toISOString().split('T')[0];
+function setVal(id, value) {
+    const el = document.getElementById(id);
+    if (!el) {
+        console.warn("Elemento no encontrado:", id);
+        return;
     }
+    el.value = value ?? '';
+}
 
-    if (tipo === 'ayer') {
-        const ayer = new Date();
-        ayer.setDate(hoy.getDate() - 1);
-        inicio = fin = ayer.toISOString().split('T')[0];
+function setText(id, value) {
+    const el = document.getElementById(id);
+    if (!el) {
+        console.warn("Elemento no encontrado:", id);
+        return;
     }
-
-    if (tipo === 'semana') {
-        const first = new Date();
-        first.setDate(hoy.getDate() - hoy.getDay());
-        inicio = first.toISOString().split('T')[0];
-        fin = hoy.toISOString().split('T')[0];
-    }
-
-    if (tipo === 'mes') {
-        const first = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-        inicio = first.toISOString().split('T')[0];
-        fin = hoy.toISOString().split('T')[0];
-    }
-
-    if (tipo === 'custom') {
-        inicio = document.getElementById('fecha_inicio').value;
-        fin    = document.getElementById('fecha_fin').value;
-    }
-
-    return {inicio, fin};
+    el.textContent = value ?? '-';
 }
 
 /* =========================
-   LOADER
+   ABRIR MODAL DEUDA COMPRA
 ========================= */
-function mostrarLoader() {
-    document.getElementById('tablaDeudas').innerHTML = `
-        <tr>
-            <td colspan="5" class="text-center text-muted py-4">
-                <div class="spinner-border spinner-border-sm me-2"></div>
-                Cargando...
-            </td>
-        </tr>
-    `;
-}
+window.abrirDeudaCompra = async function (compra_id) {
 
-/* =========================
-   CARGAR CUENTAS
-========================= */
-function cargarCuentas() {
+ 
 
-    const busqueda = document.getElementById('buscarDeuda').value;
-    const tipoFecha = document.getElementById('filtroFecha').value;
+    try {
+        const res = await fetch(`${URL_EGRESOS_BASE}?action=obtenerDeudaCompra&id=${compra_id}`);
+        const json = await res.json();
 
-    const fechas = obtenerFechas(tipoFecha);
-    const offset = (paginaActual - 1) * limit;
+        console.log("RESPUESTA:", json);
 
-    mostrarLoader();
+        if (!json.success || !json.data) {
+            await ensureSwal();
+            return Swal.fire('Sin datos', 'No hay deuda activa', 'info');
+        }
 
-    fetch(`/cfsistem/app/controllers/egresosController.php?action=listarCuentasPorPagar&busqueda=${encodeURIComponent(busqueda)}&fecha_inicio=${fechas.inicio}&fecha_fin=${fechas.fin}&limit=${limit}&offset=${offset}`)
-    .then(res => res.json())
-    .then(res => {
+        const d = json.data.data;
 
-        if (!res.success) {
-            console.error(res);
+        // esperar DOM por seguridad
+        await new Promise(r => setTimeout(r, 50));
+
+        const folioEl = document.getElementById('deuda_folio');
+        const provEl  = document.getElementById('deuda_proveedor');
+        const fechaEl = document.getElementById('deuda_fecha');
+
+        const totalEl = document.getElementById('deuda_total');
+        const pendEl  = document.getElementById('deuda_pendiente');
+
+        const idCompraEl = document.getElementById('deuda_compra_id');
+        const idCuentaEl = document.getElementById('deuda_cuenta_id');
+
+       
+
+        if (!folioEl || !provEl || !fechaEl) {
+            console.error("❌ Elementos del modal no existen o IDs duplicados");
             return;
         }
 
-        renderTabla(res.data);
-        renderPaginacion(res.total);
+        // llenar datos
+        folioEl.textContent = `Folio: ${d.folio ?? '-'}`;
+        provEl.textContent  = d.beneficiario ?? '-';
+        fechaEl.textContent = d.fecha_compra ?? '-';
 
-    })
-    .catch(err => {
-        console.error('ERROR:', err);
-    });
-}
+        totalEl.value = `$${parseFloat(d.total_compra || 0).toFixed(2)}`;
+        pendEl.value  = `$${parseFloat(d.saldo_pendiente || 0).toFixed(2)}`;
 
+        idCompraEl.value = d.id_referencia_origen ?? '';
+        idCuentaEl.value = d.id ?? '';
+
+        document.getElementById('pago_monto').value = '';
+
+        // abrir modal seguro
+        const modalEl = document.getElementById('modalVerDeudaCompra');
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+
+    } catch (err) {
+        console.error("ERROR:", err);
+        await ensureSwal();
+        Swal.fire('Error', 'No se pudo cargar la deuda', 'error');
+    }
+};
 /* =========================
-   TABLA
+   PAGAR DEUDA
 ========================= */
-function renderTabla(data) {
+window.pagarDeudaCompra = async function () {
 
-    const tbody = document.getElementById('tablaDeudas');
-    tbody.innerHTML = '';
+    const cuenta_id = document.getElementById('deuda_cuenta_id')?.value;
+    const monto = parseFloat(document.getElementById('pago_monto')?.value || 0);
 
-    if (!data || data.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="5" class="text-center text-muted py-4">
-                    Sin resultados
-                </td>
-            </tr>
-        `;
-        return;
+    if (!monto || monto <= 0) {
+        await ensureSwal();
+        return Swal.fire('Error', 'Monto inválido', 'warning');
     }
 
-    data.forEach(d => {
+    try {
+        const res = await fetch(`${URL_EGRESOS_BASE}?action=pagarDeudaCompra`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: `cuenta_id=${cuenta_id}&monto=${monto}`
+        });
 
-        tbody.innerHTML += `
-            <tr class="align-middle">
-                <td>${d.id}</td>
-                <td>${d.beneficiario}</td>
-                <td class="fw-bold text-primary">$${parseFloat(d.monto_total).toFixed(2)}</td>
-                <td>${d.fecha_registro}</td>
-                <td>
-                    <button class="btn btn-success btn-sm px-3"
-                        onclick="saldarDeuda(${d.id})">
-                        Saldar
-                    </button>
-                </td>
-            </tr>
-        `;
-    });
-}
-
-/* =========================
-   PAGINACIÓN
-========================= */
-function renderPaginacion(total) {
-
-    const totalPaginas = Math.ceil(total / limit);
-    const cont = document.getElementById('paginacion');
-
-    cont.innerHTML = '';
-
-    if (totalPaginas <= 1) return;
-
-    for (let i = 1; i <= totalPaginas; i++) {
-
-        cont.innerHTML += `
-            <button class="btn btn-sm ${i === paginaActual ? 'btn-primary' : 'btn-light'} me-1"
-                onclick="paginaActual=${i}; cargarCuentas();">
-                ${i}
-            </button>
-        `;
-    }
-}
-
-/* =========================
-   SALDAR DEUDA
-========================= */
-async function saldarDeuda(id) {
+        const json = await res.json();
+if (json.success) {
 
     await ensureSwal();
 
-    Swal.fire({
-        title: '¿Saldar deuda?',
-        text: 'Esta acción marcará la deuda como pagada',
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, saldar',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-
-        if (!result.isConfirmed) return;
-
-        fetch(`/cfsistem/app/controllers/egresosController.php?action=saldarDeuda&id=${id}`)
-        .then(res => res.json())
-        .then(res => {
-
-            if (res.success) {
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Deuda saldada',
-                    timer: 1200,
-                    showConfirmButton: false
-                });
-
-                cargarCuentas();
-
-            } else {
-
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: res.message || 'No se pudo saldar'
-                });
-            }
-
-        })
-        .catch(err => {
-            console.error(err);
-            Swal.fire('Error', 'Error de conexión', 'error');
-        });
-
+    await Swal.fire({
+        icon: 'success',
+        title: 'Pago aplicado',
+        timer: 1200,
+        showConfirmButton: false
     });
-}
 
-/* =========================
-   BUSCADOR CON DEBOUNCE
-========================= */
-document.getElementById('buscarDeuda').addEventListener('input', () => {
+    location.reload();
 
-    clearTimeout(debounceTimer);
+            const modalEl = document.getElementById('modalVerDeudaCompra');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
 
-    debounceTimer = setTimeout(() => {
-        paginaActual = 1;
-        cargarCuentas();
-    }, 400);
-});
+        } else {
+            Swal.fire('Error', json.message || 'Error al pagar', 'error');
+        }
 
-/* =========================
-   CAMBIO DE FECHA
-========================= */
-document.getElementById('filtroFecha').addEventListener('change', () => {
-    paginaActual = 1;
-    cargarCuentas();
-});
-
-/* =========================
-   FECHAS PERSONALIZADAS
-========================= */
-document.getElementById('fecha_inicio').addEventListener('change', () => {
-    if (document.getElementById('filtroFecha').value === 'custom') {
-        cargarCuentas();
+    } catch (err) {
+        console.error(err);
+        Swal.fire('Error', 'Fallo de red', 'error');
     }
-});
-
-document.getElementById('fecha_fin').addEventListener('change', () => {
-    if (document.getElementById('filtroFecha').value === 'custom') {
-        cargarCuentas();
-    }
-});
-
-/* =========================
-   ABRIR MODAL
-========================= */
-function abrirModalDeudas() {
-    paginaActual = 1;
-    cargarCuentas();
-    new bootstrap.Modal(document.getElementById('modalDeudas')).show();
-}
-
+};
 </script>

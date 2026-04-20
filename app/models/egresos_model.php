@@ -21,33 +21,45 @@ public function obtenerTodosLosEgresos($desde, $hasta, $almacen_id = 0, $tipo_fi
     $whereAlmacenG = ($almacen_id > 0) ? " AND g.almacen_id = ?" : "";
     $whereCatG     = ($categoria_gasto_id > 0) ? " AND g.categoria_id = ?" : "";
 
-    // 2. COMPRAS
-    $queryCompra = "
-        SELECT 
-            c.id,
-            c.folio,
-            c.fecha_compra AS fecha,
-            c.proveedor AS entidad,
-            c.total,
-            COALESCE(c.metodo_pago, 'Efectivo') AS metodo_pago,
-            'compra' AS tipo,
-            c.tiene_faltantes,
-            c.documento_url,
-            0 AS categoria_id,
-            IFNULL(
-                (SELECT SUM(cantidad_pendiente) 
-                 FROM faltantes_ingreso 
-                 WHERE compra_id = c.id), 
-            0) AS piezas_faltantes,
-            a.nombre AS almacen_nombre,
-            c.estado
-        FROM compras c
-        JOIN almacenes a ON c.almacen_id = a.id
-        WHERE (c.fecha_compra BETWEEN ? AND ?)
-        AND c.estado != 'cancelada'
-        $whereAlmacenC
-    ";
+$queryCompra = "
+    SELECT 
+        c.id,
+        c.folio,
+        c.fecha_compra AS fecha,
+        c.proveedor AS entidad,
+        c.total,
+        COALESCE(c.metodo_pago, 'Efectivo') AS metodo_pago,
+        'compra' AS tipo,
+        c.tiene_faltantes,
+        c.documento_url,
+        0 AS categoria_id,
 
+        IFNULL(
+            (SELECT SUM(cantidad_pendiente) 
+             FROM faltantes_ingreso 
+             WHERE compra_id = c.id), 
+        0) AS piezas_faltantes,
+
+        a.nombre AS almacen_nombre,
+        c.estado,
+
+        -- 🔥 DEUDA COMPRA
+        CASE 
+            WHEN cpp.id IS NOT NULL THEN 1 
+            ELSE 0 
+        END AS tiene_deuda
+
+    FROM compras c
+    JOIN almacenes a ON c.almacen_id = a.id
+
+    LEFT JOIN cuentas_por_pagar cpp 
+        ON cpp.id_referencia_origen = c.id 
+        AND cpp.estado = 'pendiente'
+
+    WHERE (c.fecha_compra BETWEEN ? AND ?)
+    AND c.estado != 'cancelada'
+    $whereAlmacenC
+";
     // 3. GASTOS
     $queryGasto = "
         SELECT 
@@ -63,9 +75,14 @@ public function obtenerTodosLosEgresos($desde, $hasta, $almacen_id = 0, $tipo_fi
             g.categoria_id,
             0 AS piezas_faltantes,
             a.nombre AS almacen_nombre,
-            g.estado
+            g.estado,
+
+            -- 🔥 DEUDA GASTO (NO TIENE, PERO SE IGUALA)
+            0 AS tiene_deuda
+
         FROM gastos g
         JOIN almacenes a ON g.almacen_id = a.id
+
         WHERE (g.fecha_gasto BETWEEN ? AND ?)
         AND g.estado != 'cancelado'
         $whereAlmacenG
@@ -785,6 +802,120 @@ public function listarCuentasPorPagar($filtros) {
     return [
         "data" => $data,
         "total" => $total
+    ];
+}
+public function obtenerDeudaPorCompra($id_compra)
+{
+    try {
+
+        $sql = "SELECT 
+                    cpp.id,
+                    cpp.id_almacen,
+                    cpp.id_proveedor,
+                    cpp.beneficiario,
+                    cpp.id_referencia_origen,
+                    cpp.monto_total,
+                    cpp.monto_pagado,
+                    (cpp.monto_total - cpp.monto_pagado) AS saldo_pendiente,
+                    cpp.tipo_deuda,
+                    cpp.estado,
+                    cpp.fecha_vencimiento,
+                    cpp.notas,
+                    cpp.fecha_registro,
+
+                    a.nombre AS almacen_nombre,
+                    c.folio,
+                    c.fecha_compra,
+                    c.total AS total_compra
+
+                FROM cuentas_por_pagar cpp
+
+                INNER JOIN compras c 
+                    ON c.id = cpp.id_referencia_origen
+
+                LEFT JOIN almacenes a 
+                    ON a.id = cpp.id_almacen
+
+                WHERE cpp.id_referencia_origen = ?
+                LIMIT 1";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new Exception("Error en prepare: " . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $id_compra);
+        $stmt->execute();
+
+        $result = $stmt->get_result();
+        $data = $result->fetch_assoc();
+
+        // 🔥 Si no existe deuda
+        if (!$data) {
+            return [
+                "success" => false,
+                "message" => "No existe deuda para esta compra"
+            ];
+        }
+
+        return [
+            "success" => true,
+            "data" => $data
+        ];
+
+    } catch (Exception $e) {
+        return [
+            "success" => false,
+            "message" => $e->getMessage()
+        ];
+    }
+}
+public function pagarDeudaCompra($cuenta_id, $monto)
+{
+    // 1. Obtener cuenta actual
+    $stmt = $this->db->prepare("
+        SELECT monto_total, monto_pagado, estado
+        FROM cuentas_por_pagar
+        WHERE id = ?
+        LIMIT 1
+    ");
+
+    $stmt->bind_param("i", $cuenta_id);
+    $stmt->execute();
+    $res = $stmt->get_result()->fetch_assoc();
+
+    if (!$res) {
+        return ['success' => false, 'message' => 'Cuenta no encontrada'];
+    }
+
+    if ($res['estado'] !== 'pendiente') {
+        return ['success' => false, 'message' => 'La deuda ya está pagada'];
+    }
+
+    $nuevoPagado = $res['monto_pagado'] + $monto;
+    $saldo = $res['monto_total'] - $nuevoPagado;
+
+    // 2. Determinar estado
+    $estado = ($saldo <= 0) ? 'pagado' : 'pendiente';
+
+    // 3. Actualizar deuda
+    $stmt = $this->db->prepare("
+        UPDATE cuentas_por_pagar
+        SET monto_pagado = ?,
+            estado = ?
+        WHERE id = ?
+    ");
+
+    $stmt->bind_param("dsi", $nuevoPagado, $estado, $cuenta_id);
+
+    if (!$stmt->execute()) {
+        return ['success' => false, 'message' => 'Error al actualizar deuda'];
+    }
+
+    return [
+        'success' => true,
+        'saldo_restante' => max($saldo, 0)
     ];
 }
 }
