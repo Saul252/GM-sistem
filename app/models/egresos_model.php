@@ -350,32 +350,46 @@ $response['items'] = $stmtDet->get_result()->fetch_all(MYSQLI_ASSOC);
     }
     return $response;
 }
-public function obtenerDetalleCompletoPago($tipo, $id) {
+public function obtenerDetalleCompletoPago($id) {
     
 
    
         // CABECERA COMPRAS
         $sql = "SELECT 
-            c.*, 
-            pcpp.*, 
+         c.id, 
+           
+            pcpp.monto as monto_pagado,
+            pcpp.fecha_pago as fecha,
+            pcpp.observaciones as observaciones,
+
+            pcpp.metodo_pago as metodo_pago, 
             a.nombre AS almacen_nombre, 
             u.nombre AS usuario_nombre, 
-            p.nombre_comercial AS proveedorNombre
+            p.nombre_comercial AS proveedorNombre,
             dc.cantidad_excedente as cantidad_excedente,
-            dc.precio_unitario as precio_unitario
+            dc.precio_unitario as precio_unitario,
+            pro.nombre  as producto_nombre,
+            pro.unidad_medida as unidad_medida
+            
+
+            
         FROM pagos_cuentas_por_pagar pcpp
 
         JOIN compras c ON c.id = pcpp.compra_id
         JOIN almacenes a ON c.almacen_id = a.id 
         JOIN proveedores p ON p.id = pcpp.proveedor_id 
         JOIN detalle_compra dc ON dc.compra_id = pcpp.compra_id
+        join productos pro on pro.id=dc.producto_id
         JOIN usuarios u ON u.id = pcpp.usuario_id 
+        
+
+        
 
         WHERE pcpp.id = ?";
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param("i", $id);
         $stmt->execute();
-        $response['cabecera'] = $stmt->get_result()->fetch_assoc();
+        $response= $stmt->get_result()->fetch_assoc();
 
        
 

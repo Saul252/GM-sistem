@@ -291,18 +291,31 @@ if ($action === 'obtenerDetalleMovimiento') {
 if ($action === 'obtenerDetallePago') {
     while (ob_get_level()) ob_end_clean(); 
     header('Content-Type: application/json');
-    $tipo = $_GET['tipo'] ?? '';
+
     $id = intval($_GET['id'] ?? 0);
+
     try {
-        $resultado = $egresoModel->obtenerDetalleCompletoPago($tipo, $id);
-        if ($resultado && $resultado['cabecera']) {
-            echo json_encode(['success' => true, 'cabecera' => $resultado['cabecera'], 'items' => $resultado['items']]);
+        $resultado = $egresoModel->obtenerDetalleCompletoPago($id);
+
+        if (!empty($resultado)) {
+            echo json_encode([
+                'success' => true,
+                'data' => $resultado // 🔥 TODO viene aquí
+            ]);
         } else {
-            echo json_encode(['success' => false, 'message' => 'No se encontró el registro.']);
+            echo json_encode([
+                'success' => false,
+                'message' => 'No se encontró el registro.'
+            ]);
         }
+
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
     }
+
     exit;
 }
 if ($action === 'obtenerDetalleMovimientoConProveedores') {

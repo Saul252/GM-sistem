@@ -431,6 +431,9 @@
                                 <i class="bi bi-wrench-adjustable"></i>
                             </button>
                         <?php endif; ?>
+                        <button class="btn btn-sm btn-dark" onclick="abrirDetallePago(<?=$e['id']  ?>)">
+    <i class="bi bi-eye"></i>
+</button>
 
                             <?php if($e['tiene_deuda'] == 1): ?>
                                 <button class="btn btn-sm btn-danger shadow-sm px-2" onclick="abrirDeudaCompra(<?= $e['id'] ?>)" title="Pagar Deuda">
@@ -489,7 +492,7 @@ require_once $ruta;
     <?php require_once __DIR__ . '/egresosComponets/modalGasto.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/cuentasPendientes.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/historialCuentasPorPagar.php'; ?>
-
+ <?php require_once __DIR__ . '/egresosComponets/modalDetallePago.php'; ?>
 
 
 
