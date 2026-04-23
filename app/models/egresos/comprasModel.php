@@ -31,7 +31,7 @@ public function guardarCompraCompleta($items, $folio, $proveedor, $evidencia, $a
         // --- 2. Totales iniciales ---
         $total_final = 0;
         $tiene_faltantes_global = 0;
-        $monto_acumulado_excedentes = 0; // Para la obligación financiera
+        $monto_acumulado_excedentes = 0;
 
         foreach ($items as $item) {
             $total_final += floatval($item['total_item']);
@@ -39,7 +39,7 @@ public function guardarCompraCompleta($items, $folio, $proveedor, $evidencia, $a
         }
 
         // --- 3. Insertar Cabecera de Compra ---
-        $sqlC = "INSERT INTO compras 
+         $sqlC = "INSERT INTO compras 
         (folio, proveedor, fecha_compra, almacen_id, total, metodo_pago, estado, usuario_registra_id, documento_url, tiene_faltantes) 
         VALUES (?, ?, NOW(), ?, ?, ?, 'confirmada', ?, ?, ?)";
 
@@ -51,6 +51,7 @@ public function guardarCompraCompleta($items, $folio, $proveedor, $evidencia, $a
 
         // --- 4. Procesar Items ---
         foreach ($items as $item) {
+
             $p_id = intval($item['producto_id']);
             $factor = floatval($item['hidden_factor'] ?? 1);
             $cant_fac = (floatval($item['input_mayoreo'] ?? 0) * $factor) + floatval($item['input_sueltas'] ?? 0);
@@ -59,22 +60,74 @@ public function guardarCompraCompleta($items, $folio, $proveedor, $evidencia, $a
             
             $subtotal = floatval($item['total_item']);
             $precio_lote = floatval($item['precio_lote'] ?? 0); 
-
-            // CÁLCULO DE DEUDA POR EXCEDENTE:
-            // Si hay excedente, calculamos su valor basándonos en el precio unitario del lote
-            if ($cant_exe > 0) {
-                $monto_acumulado_excedentes += ($cant_exe * $precio_lote);
-            }
-            
+           
             $estado_e = ($cant_fal > 0) ? 'incompleto' : (($cant_exe > 0) ? 'excedente' : 'completo');
 
-            // --- 5. Insertar Detalle Histórico ---
-    $sqlD = "INSERT INTO detalle_compra 
-(compra_id, producto_id, cantidad, cantidad_faltante, cantidad_excedente, precio_unitario, subtotal, estado_entrega) 
-VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            $sumaTotal = 0;
+            foreach ($item['almacenes'] as $dist) {
+                $sumaTotal += floatval($dist['cantidad']);
+            }
+
+            $cantidad_real = $sumaTotal - $cant_exe;
+            if ($cant_exe > $sumaTotal) {
+    error_log("Excedente inválido en producto $p_id");
+}
+           $unitary_price=floatval( $precio_lote/$cantidad_real);
+           // Validaciones seguras
+$unidad_compra = $item['unidad_compra'] ?? 'PZA';
+$factor_conversion = floatval($item['hidden_factor'] ?? 1);
+
+// 🔥 Cálculo correcto (evita división por 0)
+$cantidad_real = $sumaTotal - $cant_exe;
+if ($cantidad_real <= 0) {
+    $cantidad_real = $sumaTotal; // fallback seguro
+}
+
+// 🔥 Precio unitario REAL correcto
+$precio_unitario = ($cantidad_real > 0) 
+    ? ($subtotal / $cantidad_real) 
+    : 0;
+
+            // 🔥 AJUSTE AQUÍ (único cambio real)
+            if ($cant_exe > 0) {
+                
+                $monto_acumulado_excedentes += ($cant_exe * $precio_unitario);
+            }
+
+         // --- 5. Insertar Detalle Histórico ---
+$sqlD = "INSERT INTO detalle_compra 
+(
+    compra_id, 
+    producto_id, 
+    cantidad, 
+    unidad_compra, 
+    factor_conversion, 
+    cantidad_faltante, 
+    cantidad_excedente, 
+    precio_unitario, 
+    estado_entrega, 
+    subtotal
+) 
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 $stmtD = $this->db->prepare($sqlD);
-$stmtD->bind_param("iiddddds", $compra_id, $p_id, $cant_fac, $cant_fal, $cant_exe, $precio_lote, $subtotal, $estado_e);
+
+
+
+$stmtD->bind_param(
+    "iidsddddsd",
+    $compra_id,
+    $p_id,
+    $cantidad_real,
+    $unidad_compra,
+    $factor_conversion,
+    $cant_fal,
+    $cant_exe,
+    $precio_unitario,
+    $estado_e,
+    $subtotal
+);
+
 $stmtD->execute();
 $detalle_id = $stmtD->insert_id;
 
@@ -87,7 +140,7 @@ $detalle_id = $stmtD->insert_id;
             }
 
             // --- 7. Inventario, MOVIMIENTOS Y LOTES ---
-            if (isset($item['almacenes'])) {
+           if (isset($item['almacenes'])) {
                 foreach ($item['almacenes'] as $id_alm_dest => $dist) {
                     if (isset($dist['activo']) && $dist['activo'] === 'on') {
                         $cant_reparto = floatval($dist['cantidad']);
@@ -104,7 +157,7 @@ $detalle_id = $stmtD->insert_id;
                         $sqlL = "INSERT INTO lotes_stock (producto_id, almacen_id, codigo_lote, cantidad_inicial, cantidad_actual, precio_compra_unitario, estado_lote) 
                                  VALUES (?, ?, ?, ?, ?, ?, 'activo')";
                         $stmtL = $this->db->prepare($sqlL);
-                        $stmtL->bind_param("iisddd", $p_id, $id_alm_dest, $codigo_lote, $cant_reparto, $cant_reparto, $precio_lote);
+                        $stmtL->bind_param("iisddd", $p_id, $id_alm_dest, $codigo_lote, $cant_reparto, $cant_reparto, $precio_unitario);
                         $stmtL->execute();
                         $lote_id = $stmtL->insert_id;
 
@@ -112,7 +165,7 @@ $detalle_id = $stmtD->insert_id;
                                   (lote_id, detalle_compra_id, cantidad_recibida, costo_aplicado) 
                                   VALUES (?, ?, ?, ?)";
                         $stmtLI = $this->db->prepare($sqlLI);
-                        $stmtLI->bind_param("iidd", $lote_id, $detalle_id, $cant_reparto, $precio_lote);
+                        $stmtLI->bind_param("iidd", $lote_id, $detalle_id, $cant_reparto, $subtotal);
                         $stmtLI->execute();
 
                         $sqlM = "INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_destino_id, usuario_registra_id, referencia_id, observaciones) 
@@ -126,12 +179,12 @@ $detalle_id = $stmtD->insert_id;
             }
         }
 
-        // --- 8. REGISTRAR OBLIGACIÓN FINANCIERA (CUENTAS POR PAGAR) ---
-        // Solo si hubo excedentes acumulados
+        // --- REGISTRAR OBLIGACIÓN ---
         if ($monto_acumulado_excedentes > 0) {
+
             $dataObligacion = [
                 'id_almacen'           => $almacen_id,
-                'id_proveedor'         => $proveedor, // La función ya hace el intval
+                'id_proveedor'         => $proveedor,
                 'beneficiario'         => "Proveedor ID: " . $proveedor,
                 'id_referencia_origen' => $compra_id,
                 'monto_total'          => $monto_acumulado_excedentes,
@@ -140,7 +193,7 @@ $detalle_id = $stmtD->insert_id;
             ];
 
             $resObligacion = $this->registrarObligacionFinanciera($dataObligacion);
-            
+
             if (!$resObligacion['success']) {
                 throw new Exception("Compra guardada pero falló obligación: " . $resObligacion['message']);
             }

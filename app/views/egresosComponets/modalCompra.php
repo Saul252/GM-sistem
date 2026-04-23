@@ -553,31 +553,44 @@ function refrescarListaProductosCompra(nuevoIdSeleccionar = null) {
 }
 
 function calcularPrecioUnitarioLote(id) {
+
     const card = $(`#card_item_${id}`);
 
-    // Obtenemos el costo total que el usuario escribió para ese renglón
     const costoTotalRenglon = parseFloat(card.find('.input-costo-total').val()) || 0;
 
-    // Obtenemos el total de piezas físicas que SI llegaron (ya restado el faltante)
-    const piezasReales = parseFloat(card.find('.hidden-total-piezas').val()) || 0;
+    const piezasReales = parseFloat(card.find('.input-cantidad-recibida').val()) || 0;
+    const excedente   = parseFloat(card.find('.input-excedente').val()) || 0;
 
-    let precioUnitario = 0;
-    if (piezasReales > 0) {
-        precioUnitario = costoTotalRenglon / piezasReales;
+    // 🔥 calcular base correctamente
+    let piezasBase = piezasReales - excedente;
+
+    // 🛑 evitar negativos o 0
+    if (piezasBase <= 0) {
+        piezasBase = 0;
     }
 
-    // Guardamos en el input oculto que se enviará al PHP
+    let precioUnitario = 0;
+
+    if (piezasBase > 0) {
+        precioUnitario = costoTotalRenglon / piezasBase;
+    }
+
+    // 🛡️ blindaje
+    if (!isFinite(precioUnitario)) {
+        precioUnitario = 0;
+    }
+
     card.find('.hidden-precio-lote').val(precioUnitario.toFixed(4));
 
-    // Mostramos visualmente al usuario para confirmación
-    card.find('.span-precio-lote').text('$ ' + precioUnitario.toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 4
-    }));
+    card.find('.span-precio-lote').text(
+        '$ ' + precioUnitario.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 4
+        })
+    );
 
     actualizarGranTotal();
-}
-/**
+}/**
  * MANEJO DEL SUBMIT (BLINDADO)
  */
 function procesarGuardadoCompra(event) {
@@ -724,15 +737,5 @@ function actualizarListaProveedores() {
 
             $select.trigger('change');
         });
-}
-function toggleFaltante(id, checkbox) {
-    const inputFaltante = $(`#faltante_${id}`);
-
-    if (checkbox.checked) {
-        inputFaltante.prop('disabled', false).focus();
-    } else {
-        inputFaltante.prop('disabled', true).val(0); // Si lo desmarcan, vuelve a cero
-        recalcularTotales(id); // Recalculamos para que el stock vuelva a la normalidad
-    }
 }
 </script>

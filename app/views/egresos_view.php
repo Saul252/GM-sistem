@@ -425,6 +425,13 @@
 
                     <td class="text-end pe-4">
                         <div class="d-flex justify-content-end gap-1">
+                              <?php if ($e['tipo'] == 'compra' && ($e['piezas_faltantes'] ?? 0) > 0): ?>
+                            <button class="btn btn-sm btn-outline-danger py-0 px-2" 
+                                    onclick="abrirModalAjuste(<?= $e['id'] ?>, '<?= $e['folio'] ?>')">
+                                <i class="bi bi-wrench-adjustable"></i>
+                            </button>
+                        <?php endif; ?>
+
                             <?php if($e['tiene_deuda'] == 1): ?>
                                 <button class="btn btn-sm btn-danger shadow-sm px-2" onclick="abrirDeudaCompra(<?= $e['id'] ?>)" title="Pagar Deuda">
                                     <i class="bi bi-wallet2"></i>
