@@ -14,185 +14,125 @@ public function obtenerAlmacenesActivos() {
      * 1. OBTIENE TODO EL FLUJO (COMPRAS + GASTOS)
      * Usa un UNION para juntar ambas tablas en una sola lista para la tabla principal
      */
-public function obtenerTodosLosEgresos($desde, $hasta, $almacen_id = 0, $tipo_filtro = 'todos', $categoria_gasto_id = 0) {
+public function obtenerTodosLosEgresosFiltros(
+    $desde,
+    $hasta,
+    $almacen_id = 0,
+    $tipo_filtro = 'todos',
+    $categoria_gasto_id = 0,
+    $deuda_filtro = 'todos',
+    $metodo_filtro = 'todos'
+) {
+    $parts = [];
+    $params = [];
+    $types = "";
 
-    // 1. Fragmentos de WHERE
-    $whereAlmacenC = ($almacen_id > 0) ? " AND c.almacen_id = ?" : "";
-    $whereAlmacenG = ($almacen_id > 0) ? " AND g.almacen_id = ?" : "";
-    $whereCatG     = ($categoria_gasto_id > 0) ? " AND g.categoria_id = ?" : "";
+    // Formatear fechas para cubrir el día completo
+    $desde_f = $desde . " 00:00:00";
+    $hasta_f = $hasta . " 23:59:59";
 
-$queryCompra = "
-    SELECT 
-        c.id,
-        c.folio,
-        c.fecha_compra AS fecha,
-        c.proveedor AS entidad,
-        c.total,
-        COALESCE(c.metodo_pago, 'Efectivo') AS metodo_pago,
-        'compra' AS tipo,
-        c.tiene_faltantes,
-        c.documento_url,
-        0 AS categoria_id,
+    /* --- BLOQUE 1: COMPRAS --- */
+    // Solo entra si no filtramos específicamente por categorías de gastos
+    if (($tipo_filtro === 'todos' || $tipo_filtro === 'compra') && $categoria_gasto_id == 0) {
+        $whereAlmacen = ($almacen_id > 0) ? " AND c.almacen_id = ?" : "";
+        $whereMetodo  = ($metodo_filtro !== 'todos') ? " AND LOWER(COALESCE(c.metodo_pago,'efectivo')) LIKE ?" : "";
+        $whereDeuda   = "";
+        
+        if ($deuda_filtro === '1') $whereDeuda = " AND cpp.id IS NOT NULL AND cpp.estado != 'pagado'";
+        elseif ($deuda_filtro === '0') $whereDeuda = " AND (cpp.id IS NULL OR cpp.estado = 'pagado')";
 
-        IFNULL(
-            (SELECT SUM(cantidad_pendiente) 
-             FROM faltantes_ingreso 
-             WHERE compra_id = c.id), 
-        0) AS piezas_faltantes,
+       $parts[] = "(SELECT 
+            c.id, 
+            c.folio, 
+            c.fecha_compra AS fecha, 
+            COALESCE(pro.nombre_comercial, c.proveedor) AS entidad,
+            c.total, 
+            COALESCE(c.metodo_pago, 'efectivo') AS metodo_pago,
+            'compra' AS tipo, 
+            c.documento_url, 
+            0 AS categoria_id,
+            IFNULL((SELECT SUM(cantidad_pendiente) FROM faltantes_ingreso WHERE compra_id = c.id), 0) AS piezas_faltantes,
+            a.nombre AS almacen_nombre, 
+            c.estado,
+            CASE WHEN cpp.id IS NOT NULL AND cpp.estado != 'pagado' THEN 1 ELSE 0 END AS tiene_deuda,
+            CASE WHEN cpp.id IS NOT NULL AND cpp.estado = 'pagado' THEN 1 ELSE 0 END AS pagado_cpp
+        FROM compras c
+        JOIN almacenes a ON c.almacen_id = a.id
+        LEFT JOIN cuentas_por_pagar cpp ON cpp.id_referencia_origen = c.id
+        LEFT JOIN proveedores pro ON c.proveedor = pro.id
+        WHERE (c.fecha_compra BETWEEN ? AND ?) 
+        AND c.estado != 'cancelada'
+        $whereAlmacen $whereMetodo $whereDeuda)";
 
-        a.nombre AS almacen_nombre,
-        c.estado,
+        $types .= "ss";
+        $params[] = $desde_f; $params[] = $hasta_f;
+        if ($almacen_id > 0) { $types .= "i"; $params[] = $almacen_id; }
+        if ($metodo_filtro !== 'todos') { $types .= "s"; $params[] = "%".$metodo_filtro."%"; }
+    }
 
-        -- 🔥 DEUDA COMPRA
-        CASE 
-            WHEN cpp.id IS NOT NULL THEN 1 
-            ELSE 0 
-        END AS tiene_deuda
+    /* --- BLOQUE 2: GASTOS --- */
+    // Solo entra si no estamos buscando específicamente deudas de compras
+    if (($tipo_filtro === 'todos' || $tipo_filtro === 'gasto') && $deuda_filtro === 'todos') {
+        $whereAlmacen = ($almacen_id > 0) ? " AND g.almacen_id = ?" : "";
+        $whereCat     = ($categoria_gasto_id > 0) ? " AND g.categoria_id = ?" : "";
+        $whereMetodo  = ($metodo_filtro !== 'todos') ? " AND LOWER(COALESCE(g.metodo_pago,'efectivo')) LIKE ?" : "";
 
-    FROM compras c
-    JOIN almacenes a ON c.almacen_id = a.id
-
-    LEFT JOIN cuentas_por_pagar cpp 
-        ON cpp.id_referencia_origen = c.id 
-        AND cpp.estado = 'pendiente'
-
-    WHERE (c.fecha_compra BETWEEN ? AND ?)
-    AND c.estado != 'cancelada'
-    $whereAlmacenC
-";
-    // 3. GASTOS
-    $queryGasto = "
-        SELECT 
-            g.id,
-            g.folio,
-            g.fecha_gasto AS fecha,
-            g.beneficiario AS entidad,
-            g.total,
-            COALESCE(g.metodo_pago, 'Efectivo') AS metodo_pago,
-            'gasto' AS tipo,
-            0 AS tiene_faltantes,
-            g.documento_url,
-            g.categoria_id,
-            0 AS piezas_faltantes,
-            a.nombre AS almacen_nombre,
-            g.estado,
-
-            -- 🔥 DEUDA GASTO (NO TIENE, PERO SE IGUALA)
-            0 AS tiene_deuda
-
+        $parts[] = "(SELECT 
+            g.id, g.folio, g.fecha_gasto AS fecha, g.beneficiario AS entidad,
+            g.total, COALESCE(g.metodo_pago, 'efectivo') AS metodo_pago,
+            'gasto' AS tipo, NULL AS documento_url, g.categoria_id,
+            0 AS piezas_faltantes, a.nombre AS almacen_nombre, g.estado,
+            0 AS tiene_deuda, 0 AS pagado_cpp
         FROM gastos g
         JOIN almacenes a ON g.almacen_id = a.id
+        WHERE (g.fecha_gasto BETWEEN ? AND ?) AND g.estado != 'cancelado'
+        $whereAlmacen $whereCat $whereMetodo)";
 
-        WHERE (g.fecha_gasto BETWEEN ? AND ?)
-        AND g.estado != 'cancelado'
-        $whereAlmacenG
-        $whereCatG
-    ";
-
-    // 4. SQL FINAL
-    if ($tipo_filtro === 'compra') {
-        $sql = $queryCompra . " ORDER BY fecha DESC, id DESC";
-    } elseif ($tipo_filtro === 'gasto') {
-        $sql = $queryGasto . " ORDER BY fecha DESC, id DESC";
-    } else {
-        $sql = "($queryCompra) UNION ALL ($queryGasto) ORDER BY fecha DESC, id DESC";
+        $types .= "ss";
+        $params[] = $desde_f; $params[] = $hasta_f;
+        if ($almacen_id > 0) { $types .= "i"; $params[] = $almacen_id; }
+        if ($categoria_gasto_id > 0) { $types .= "i"; $params[] = $categoria_gasto_id; }
+        if ($metodo_filtro !== 'todos') { $types .= "s"; $params[] = "%".$metodo_filtro."%"; }
     }
+
+    /* --- BLOQUE 3: PAGOS DE DEUDAS --- */
+    // Solo entra si no hay filtros específicos de otros tipos
+    if (($tipo_filtro === 'todos' || $tipo_filtro === 'pago_deuda') && $categoria_gasto_id == 0 && $deuda_filtro === 'todos') {
+        $whereAlmacen = ($almacen_id > 0) ? " AND p.almacen_id = ?" : "";
+        $whereMetodo  = ($metodo_filtro !== 'todos') ? " AND LOWER(COALESCE(p.metodo_pago,'efectivo')) LIKE ?" : "";
+
+        $parts[] = "(SELECT 
+            p.id, p.referencia_pago AS folio, p.fecha_pago AS fecha, 
+            p.observaciones AS entidad,
+            p.monto AS total, COALESCE(p.metodo_pago, 'efectivo') AS metodo_pago,
+            'pago_deuda' AS tipo, NULL AS documento_url, 0 AS categoria_id,
+            0 AS piezas_faltantes, a.nombre AS almacen_nombre, 'confirmado' AS estado,
+            0 AS tiene_deuda, 1 AS pagado_cpp
+        FROM pagos_cuentas_por_pagar p
+        JOIN almacenes a ON p.almacen_id = a.id
+        WHERE (p.fecha_pago BETWEEN ? AND ?)
+        $whereAlmacen $whereMetodo)";
+
+        $types .= "ss";
+        $params[] = $desde_f; $params[] = $hasta_f;
+        if ($almacen_id > 0) { $types .= "i"; $params[] = $almacen_id; }
+        if ($metodo_filtro !== 'todos') { $types .= "s"; $params[] = "%".$metodo_filtro."%"; }
+    }
+
+    if (empty($parts)) return [];
+
+    // Unir todo con UNION ALL
+    $sql = implode(" UNION ALL ", $parts) . " ORDER BY fecha DESC, id DESC";
 
     $stmt = $this->db->prepare($sql);
+    if (!$stmt) return [];
 
-    // 5. PARAMETROS DINÁMICOS
-    $params = [];
-    $types  = "";
-
-    // COMPRAS
-    if ($tipo_filtro === 'todos' || $tipo_filtro === 'compra') {
-        $types .= "ss";
-        $params[] = $desde;
-        $params[] = $hasta;
-
-        if ($almacen_id > 0) {
-            $types .= "i";
-            $params[] = $almacen_id;
-        }
-    }
-
-    // GASTOS
-    if ($tipo_filtro === 'todos' || $tipo_filtro === 'gasto') {
-        $types .= "ss";
-        $params[] = $desde;
-        $params[] = $hasta;
-
-        if ($almacen_id > 0) {
-            $types .= "i";
-            $params[] = $almacen_id;
-        }
-
-        if ($categoria_gasto_id > 0) {
-            $types .= "i";
-            $params[] = $categoria_gasto_id;
-        }
-    }
-
+    // Vinculación dinámica
     $stmt->bind_param($types, ...$params);
     $stmt->execute();
 
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
-public function obtenerTodosLosEgresosSencillo($desde, $hasta, $almacen_id = 0) {
-    // 1. Filtros opcionales de almacén
-    $whereAlmacenC = ($almacen_id > 0) ? " AND c.almacen_id = ?" : "";
-    $whereAlmacenG = ($almacen_id > 0) ? " AND g.almacen_id = ?" : "";
-
-    // 2. La consulta unificada (Compras + Gastos)
-    $sql = "
-        SELECT 
-            c.id, 
-            c.fecha_compra AS fecha, 
-            c.proveedor AS entidad, 
-            c.total, 
-            COALESCE(c.metodo_pago, 'Efectivo') AS metodo_pago, 
-            'compra' AS tipo, 
-            a.nombre AS almacen_nombre
-        FROM compras c 
-        JOIN almacenes a ON c.almacen_id = a.id
-        WHERE (c.fecha_compra BETWEEN ? AND ?) 
-          AND c.estado != 'cancelada' 
-          $whereAlmacenC
-
-        UNION ALL
-
-        SELECT 
-            g.id, 
-            g.fecha_gasto AS fecha, 
-            g.beneficiario AS entidad, 
-            g.total, 
-            COALESCE(g.metodo_pago, 'Efectivo') AS metodo_pago, 
-            'gasto' AS tipo, 
-            a.nombre AS almacen_nombre
-        FROM gastos g 
-        JOIN almacenes a ON g.almacen_id = a.id
-        WHERE (g.fecha_gasto BETWEEN ? AND ?) 
-          AND g.estado != 'cancelado' 
-          $whereAlmacenG
-
-        ORDER BY fecha DESC, id DESC
-    ";
-
-    $stmt = $this->db->prepare($sql);
-
-    // 3. Vinculación dinámica de parámetros
-    if ($almacen_id > 0) {
-        // Se pasan: desde, hasta, id (para compras) y luego desde, hasta, id (para gastos)
-        $stmt->bind_param("ssi ssi", $desde, $hasta, $almacen_id, $desde, $hasta, $almacen_id);
-    } else {
-        // Solo desde y hasta para ambas partes del UNION
-        $stmt->bind_param("ss ss", $desde, $hasta, $desde, $hasta);
-    }
-
-    $stmt->execute();
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
-
     /**
      * 2. REGISTRA UN GASTO (CON EVIDENCIA Y DESCRIPCIÓN)
      * Según tu tabla 'gastos' y 'detalle_gasto'
@@ -351,49 +291,16 @@ $compra_id = $this->db->insert_id;
             return false;
         }
     }
-public function obtenerDetalleMovimientosFisicos($compra_id) {
-    $sql = "SELECT 
-                dc.producto_id,
-                p.sku,
-                p.nombre as producto_nombre,
-                p.unidad_reporte, -- Ejemplo: Tonelada
-                p.unidad_medida, -- Ejemplo: Bultos/Pzas
-                dc.factor_conversion, -- Ejemplo: 20
-                dc.cantidad as total_pedido,
-                /* Traemos el desglose de movimientos: Almacén y cuánto entró ahí */
-                (SELECT GROUP_CONCAT(CONCAT(a.nombre, ': ', m.cantidad) SEPARATOR ' | ')
-                 FROM movimientos m 
-                 JOIN almacenes a ON m.almacen_destino_id = a.id
-                 WHERE m.referencia_id = dc.compra_id 
-                 AND m.producto_id = dc.producto_id 
-                 AND m.tipo = 'entrada') as desglose_entradas,
-                /* Suma total recibida */
-                (SELECT IFNULL(SUM(m.cantidad), 0) 
-                 FROM movimientos m 
-                 WHERE m.referencia_id = dc.compra_id 
-                 AND m.producto_id = dc.producto_id 
-                 AND m.tipo = 'entrada') as total_recibido,
-                /* Faltante */
-                IFNULL((SELECT f.cantidad_pendiente FROM faltantes_ingreso f 
-                        WHERE f.compra_id = dc.compra_id 
-                        AND f.producto_id = dc.producto_id), 0) as faltante
-            FROM detalle_compra dc
-            JOIN productos p ON dc.producto_id = p.id
-            WHERE dc.compra_id = ?";
-    
-    $stmt = $this->db->prepare($sql);
-    $stmt->bind_param("i", $compra_id);
-    $stmt->execute();
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
+
 public function obtenerDetalleCompleto($tipo, $id) {
     $response = ['tipo_documento' => $tipo];
 
     if ($tipo === 'compra') {
         // CABECERA COMPRAS
-        $sql = "SELECT c.*, a.nombre as almacen_nombre, u.nombre as usuario_nombre 
+        $sql = "SELECT c.*, a.nombre as almacen_nombre, u.nombre as usuario_nombre, p.nombre_comercial as proveedorNombre
                 FROM compras c 
                 JOIN almacenes a ON c.almacen_id = a.id 
+                JOIN proveedores p ON c.proveedor = p.id 
                 JOIN usuarios u ON c.usuario_registra_id = u.id 
                 WHERE c.id = ?";
         $stmt = $this->db->prepare($sql);
@@ -444,65 +351,84 @@ $response['items'] = $stmtDet->get_result()->fetch_all(MYSQLI_ASSOC);
     }
     return $response;
 }
-public function obtenerSumaEgresos($desde, $hasta, $almacen_id = 0, $tipo_filtro = 'todos', $categoria_gasto_id = 0) {
-    $whereAlmacenC = ($almacen_id > 0) ? " AND almacen_id = ?" : "";
-    $whereAlmacenG = ($almacen_id > 0) ? " AND almacen_id = ?" : "";
-    $whereCatG = ($categoria_gasto_id > 0) ? " AND categoria_id = ?" : "";
+public function obtenerSumaEgresos($desde, $hasta, $almacen_id = 0, $tipo_filtro = 'todos') {
 
-    // Queries simplificadas solo para sumar el total
-    $sqlCompra = "SELECT IFNULL(SUM(total), 0) FROM compras WHERE (fecha_compra BETWEEN ? AND ?) AND estado != 'cancelada' $whereAlmacenC";
-    $sqlGasto = "SELECT IFNULL(SUM(total), 0) FROM gastos WHERE (fecha_gasto BETWEEN ? AND ?) AND estado != 'cancelado' $whereAlmacenG $whereCatG";
+    // 🔥 Formatear fechas correctamente (incluye todo el día)
+    $desde_f = $desde . " 00:00:00";
+    $hasta_f = date('Y-m-d', strtotime($hasta )) . " 00:00:00";
 
-    $total = 0;
-    $params = [];
-    $types = "";
+    // 🔥 Filtro almacén
+    $whereAlmacen = ($almacen_id > 0) ? " AND almacen_id = ?" : "";
 
-    // Sumar Compras
-    if ($tipo_filtro === 'todos' || $tipo_filtro === 'compra') {
-        $stmtC = $this->db->prepare($sqlCompra);
-        $pC = [$desde, $hasta];
-        $tC = "ss";
-        if ($almacen_id > 0) { $tC .= "i"; $pC[] = $almacen_id; }
-        $stmtC->bind_param($tC, ...$pC);
-        $stmtC->execute();
-        $resC = $stmtC->get_result()->fetch_row();
-        $total += $resC[0];
+    // 🔥 Query unificada (compras + pagos)
+    $sql = "
+        SELECT SUM(sub.monto_total) AS total FROM (
+            
+            SELECT IFNULL(SUM(c.total), 0) AS monto_total
+            FROM compras c
+            WHERE c.fecha_compra >= ?
+              AND c.fecha_compra < ?
+              AND c.estado != 'cancelada'
+              $whereAlmacen
+
+            UNION ALL 
+
+            SELECT IFNULL(SUM(p.monto), 0) AS monto_total
+            FROM pagos_cuentas_por_pagar p
+            WHERE p.fecha_pago >= ?
+              AND p.fecha_pago < ?
+              $whereAlmacen
+
+        ) AS sub
+    ";
+
+    $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) {
+        throw new Exception("Error en prepare(): " . $this->db->error);
     }
 
-    // Sumar Gastos
-    if ($tipo_filtro === 'todos' || $tipo_filtro === 'gasto') {
-        $stmtG = $this->db->prepare($sqlGasto);
-        $pG = [$desde, $hasta];
-        $tG = "ss";
-        if ($almacen_id > 0) { $tG .= "i"; $pG[] = $almacen_id; }
-        if ($categoria_gasto_id > 0) { $tG .= "i"; $pG[] = $categoria_gasto_id; }
-        $stmtG->bind_param($tG, ...$pG);
-        $stmtG->execute();
-        $resG = $stmtG->get_result()->fetch_row();
-        $total += $resG[0];
+    // 🔥 Parámetros (IMPORTANTE ORDEN)
+    $params = [$desde_f, $hasta_f, $desde_f, $hasta_f];
+    $types  = "ssss";
+
+    if ($almacen_id > 0) {
+        // Se repite 2 veces porque se usa en compras y pagos
+        $types .= "ii";
+        $params[] = $almacen_id;
+        $params[] = $almacen_id;
     }
 
-    return $total;
+    $stmt->bind_param($types, ...$params);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+
+    return floatval($row['total'] ?? 0);
 }
 
 public function obtenerGastosPorMetodo($desde, $hasta, $almacen_id = 0) {
 
-    // 🔥 Estructura base SIEMPRE completa
     $data = [
         'EFECTIVO'      => 0,
         'TARJETA'       => 0,
         'TRANSFERENCIA' => 0
     ];
 
+    // ✅ MISMA LÓGICA DE FECHAS
+    $desde_f = $desde . " 00:00:00";
+    $hasta_f = date('Y-m-d', strtotime($hasta . ' +1 day')) . " 00:00:00";
+
     $whereAlmacen = ($almacen_id > 0) ? " AND almacen_id = ?" : "";
 
-    // 🔥 SOLO TRAEMOS CRUDOS
     $sql = "
         SELECT metodo_pago, total
         FROM gastos
-        WHERE DATE(fecha_gasto) BETWEEN ? AND ?
-        AND estado != 'cancelado'
-        $whereAlmacen
+        WHERE fecha_gasto >= ?
+          AND fecha_gasto < ?
+          AND estado != 'cancelado'
+          $whereAlmacen
     ";
 
     $stmt = $this->db->prepare($sql);
@@ -513,7 +439,7 @@ public function obtenerGastosPorMetodo($desde, $hasta, $almacen_id = 0) {
     }
 
     $types  = "ss";
-    $params = [$desde, $hasta];
+    $params = [$desde_f, $hasta_f];
 
     if ($almacen_id > 0) {
         $types .= "i";
@@ -525,7 +451,6 @@ public function obtenerGastosPorMetodo($desde, $hasta, $almacen_id = 0) {
 
     $result = $stmt->get_result();
 
-    // 🔥 SUMA REAL EN PHP (sin MySQL raro)
     while ($row = $result->fetch_assoc()) {
 
         $metodo = strtoupper(trim($row['metodo_pago'] ?? 'EFECTIVO'));
@@ -541,7 +466,6 @@ public function obtenerGastosPorMetodo($desde, $hasta, $almacen_id = 0) {
             $data['TRANSFERENCIA'] += $total;
 
         } else {
-            // fallback seguro
             $data['EFECTIVO'] += $total;
         }
     }
@@ -553,68 +477,120 @@ public function obtenerGastosPorMetodo($desde, $hasta, $almacen_id = 0) {
 }
 public function obtenerComprasPorMetodo($desde, $hasta, $almacen_id = 0) {
 
-    // 🔥 Estructura base SIEMPRE completa
+    // 🔥 Estructura base
     $data = [
         'EFECTIVO'      => 0,
         'TARJETA'       => 0,
         'TRANSFERENCIA' => 0
     ];
 
-    $whereAlmacen = ($almacen_id > 0) ? " AND almacen_id = ?" : "";
+    // ✅ FECHAS CORRECTAS (CLAVE)
+    $desde_f = $desde . " 00:00:00";
+    $hasta_f = date('Y-m-d', strtotime($hasta . ' +1 day')) . " 00:00:00";
 
-    // 🔥 CONSULTA A COMPRAS
-    $sql = "
-        SELECT metodo_pago, total
-        FROM compras
-        WHERE DATE(fecha_compra) BETWEEN ? AND ?
-        AND estado != 'cancelada'
-        $whereAlmacen
+    $whereAlmacenC = ($almacen_id > 0) ? " AND c.almacen_id = ?" : "";
+    $whereAlmacenP = ($almacen_id > 0) ? " AND p.almacen_id = ?" : "";
+
+    /* =========================
+       🧾 COMPRAS
+    ========================= */
+    $sqlCompras = "
+        SELECT c.metodo_pago, c.total AS monto
+        FROM compras c
+        WHERE c.fecha_compra >= ?
+          AND c.fecha_compra < ?
+          AND c.estado != 'cancelada'
+          $whereAlmacenC
     ";
 
-    $stmt = $this->db->prepare($sql);
+    $stmtC = $this->db->prepare($sqlCompras);
 
-    if (!$stmt) {
-        error_log("SQL ERROR: " . $this->db->error);
-        return $data;
-    }
+    if ($stmtC) {
 
-    // 🔥 Bind dinámico
-    $types  = "ss";
-    $params = [$desde, $hasta];
+        $types  = "ss";
+        $params = [$desde_f, $hasta_f];
 
-    if ($almacen_id > 0) {
-        $types .= "i";
-        $params[] = $almacen_id;
-    }
-
-    $stmt->bind_param($types, ...$params);
-    $stmt->execute();
-
-    $result = $stmt->get_result();
-
-    // 🔥 SUMA SEGURA EN PHP
-    while ($row = $result->fetch_assoc()) {
-
-        $metodo = strtoupper(trim($row['metodo_pago'] ?? 'EFECTIVO'));
-        $total  = (float)$row['total'];
-
-        if (str_contains($metodo, 'EFECT')) {
-            $data['EFECTIVO'] += $total;
-
-        } elseif (str_contains($metodo, 'TARJ')) {
-            $data['TARJETA'] += $total;
-
-        } elseif (str_contains($metodo, 'TRANS')) {
-            $data['TRANSFERENCIA'] += $total;
-
-        } else {
-            // fallback seguro
-            $data['EFECTIVO'] += $total;
+        if ($almacen_id > 0) {
+            $types .= "i";
+            $params[] = $almacen_id;
         }
+
+        $stmtC->bind_param($types, ...$params);
+        $stmtC->execute();
+
+        $result = $stmtC->get_result();
+
+        while ($row = $result->fetch_assoc()) {
+
+            $metodo = strtoupper(trim($row['metodo_pago'] ?? 'EFECTIVO'));
+            $monto  = (float)$row['monto'];
+
+            if (str_contains($metodo, 'EFECT')) {
+                $data['EFECTIVO'] += $monto;
+
+            } elseif (str_contains($metodo, 'TARJ')) {
+                $data['TARJETA'] += $monto;
+
+            } elseif (str_contains($metodo, 'TRANS')) {
+                $data['TRANSFERENCIA'] += $monto;
+
+            } else {
+                $data['EFECTIVO'] += $monto;
+            }
+        }
+
+        $stmtC->close();
     }
 
-    $result->free();
-    $stmt->close();
+    /* =========================
+       🏦 PAGOS DE DEUDA
+    ========================= */
+    $sqlPagos = "
+        SELECT p.metodo_pago, p.monto
+        FROM pagos_cuentas_por_pagar p
+        WHERE p.fecha_pago >= ?
+          AND p.fecha_pago < ?
+          $whereAlmacenP
+    ";
+
+    $stmtP = $this->db->prepare($sqlPagos);
+
+    if ($stmtP) {
+
+        $types  = "ss";
+        $params = [$desde_f, $hasta_f];
+
+        if ($almacen_id > 0) {
+            $types .= "i";
+            $params[] = $almacen_id;
+        }
+
+        $stmtP->bind_param($types, ...$params);
+        $stmtP->execute();
+
+        $result = $stmtP->get_result();
+
+        while ($row = $result->fetch_assoc()) {
+
+            $metodo = strtoupper(trim($row['metodo_pago'] ?? 'EFECTIVO'));
+            $monto  = (float)$row['monto'];
+
+            if (str_contains($metodo, 'EFECT')) {
+                $data['EFECTIVO'] += $monto;
+
+            } elseif (str_contains($metodo, 'TARJ')) {
+                $data['TARJETA'] += $monto;
+
+            } elseif (str_contains($metodo, 'TRANS')) {
+                $data['TRANSFERENCIA'] += $monto;
+
+            } else {
+                $data['EFECTIVO'] += $monto;
+            }
+        }
+
+        $stmtP->close();
+    }
 
     return $data;
 }
@@ -877,7 +853,7 @@ public function pagarDeudaCompra($cuenta_id, $monto)
     $stmt = $this->db->prepare("
         SELECT monto_total, monto_pagado, estado
         FROM cuentas_por_pagar
-        WHERE id = ?
+        WHERE id_referencia_origen = ?
         LIMIT 1
     ");
 
@@ -904,7 +880,7 @@ public function pagarDeudaCompra($cuenta_id, $monto)
         UPDATE cuentas_por_pagar
         SET monto_pagado = ?,
             estado = ?
-        WHERE id = ?
+        WHERE id_referencia_origen = ?
     ");
 
     $stmt->bind_param("dsi", $nuevoPagado, $estado, $cuenta_id);
@@ -917,5 +893,68 @@ public function pagarDeudaCompra($cuenta_id, $monto)
         'success' => true,
         'saldo_restante' => max($saldo, 0)
     ];
+}
+public function registrarPagoCuentaPorPagar(
+    $almacen_id,
+    $proveedor_id,
+    $compra_id,
+    $monto,
+    $metodo,
+    $referencia,
+    $usuario_id,
+    $observaciones
+) {
+    try {
+
+        $sql = "INSERT INTO pagos_cuentas_por_pagar
+        (almacen_id, proveedor_id, compra_id, monto, metodo_pago, referencia_pago, fecha_pago, usuario_id, observaciones)
+        VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?)";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new Exception("Error en prepare: " . $this->db->error);
+        }
+
+        // 🔥 valores por defecto seguros
+        $referencia = !empty($referencia) ? $referencia : 'PAGO-' . time();
+        $observaciones = !empty($observaciones) 
+            ? $observaciones 
+            : 'Pago de deuda compra #' . $compra_id . ' por $' . number_format($monto, 2);
+
+        // 🔥 casteo seguro
+        $almacen_id   = (int)$almacen_id;
+        $proveedor_id = (int)$proveedor_id;
+        $compra_id    = (int)$compra_id;
+        $monto        = (float)$monto;
+        $usuario_id   = (int)$usuario_id;
+
+        $stmt->bind_param(
+            "iiidssis",
+            $almacen_id,
+            $proveedor_id,
+            $compra_id,
+            $monto,
+            $metodo,
+            $referencia,
+            $usuario_id,
+            $observaciones
+        );
+
+        if (!$stmt->execute()) {
+            throw new Exception("Error en execute: " . $stmt->error);
+        }
+
+        return [
+            'success' => true,
+            'pago_id' => $stmt->insert_id
+        ];
+
+    } catch (Exception $e) {
+        return [
+            'success' => false,
+            'message' => $e->getMessage()
+        ];
+    }
 }
 }

@@ -86,7 +86,10 @@
             let detalleMovimientos = '';
             
             if (esCompra) {
-                const totalCant = parseFloat(item.cantidad_pedida || item.cantidad || 0);
+                let cantidad_exedente=item.cantidad_exedente;
+                let cantidad_real=item.cantidad - item.cantidad_exedente;
+                let totalCant = parseFloat(item.cantidad_pedida ||cantidad_real || 0);
+
                 const factor = parseFloat(item.factor_prod || 1);
                 
                 if (factor > 1) {
@@ -165,7 +168,7 @@ console.log(c.categoria_nombre );
                     <div class="col-6 text-end">
                         <div class="p-3 border rounded-3 bg-light h-100">
                             <small class="text-muted fw-bold text-uppercase d-block mb-2 border-bottom">${esCompra ? 'Proveedor' : 'Beneficiario'}</small>
-                            <div class="h6 mb-1 fw-bold text-primary">${c.proveedor || c.beneficiario}</div>
+                            <div class="h6 mb-1 fw-bold text-primary">${c.proveedorNombre || c.beneficiario}</div>
                             
                             <small class="d-block text-muted">Método: ${c.metodo_pago || 'N/A'}</small>
                             ${c.documento_url ? `<a href="${c.documento_url}" target="_blank" class="btn btn-link btn-sm p-0 text-decoration-none"><i class="bi bi-file-earmark-pdf"></i> Ver Comprobante</a>` : '<small class="text-muted">Sin adjunto</small>'}

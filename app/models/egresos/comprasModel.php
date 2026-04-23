@@ -11,134 +11,211 @@ class CompraModel {
      * Obtiene productos activos para el selector de compras
      * @param string $termino Buscador opcional para Select2 o filtros
      */
+
 public function guardarCompraCompleta($items, $folio, $proveedor, $evidencia, $almacen_id, $user_id, $metodo_pago) {
-        $this->db->begin_transaction();
-        try {
-            // --- 1. Gestión de Evidencia ---
-            $documento_url = null;
-            if ($evidencia && $evidencia['error'] === UPLOAD_ERR_OK) {
-                $ruta_carpeta = $_SERVER['DOCUMENT_ROOT'] . "/cfsistem/uploads/compras/";
-                if (!is_dir($ruta_carpeta)) { mkdir($ruta_carpeta, 0777, true); }
-                $extension = pathinfo($evidencia['name'], PATHINFO_EXTENSION);
-                $nombre_archivo = "compra_" . preg_replace('/[^a-zA-Z0-9]/', '_', $folio) . "_" . time() . "." . $extension;
-                $ruta_destino = $ruta_carpeta . $nombre_archivo;
-                if (move_uploaded_file($evidencia['tmp_name'], $ruta_destino)) {
-                    $documento_url = "uploads/compras/" . $nombre_archivo;
-                }
+    $this->db->begin_transaction();
+    try {
+        // --- 1. Gestión de Evidencia ---
+        $documento_url = null;
+        if ($evidencia && $evidencia['error'] === UPLOAD_ERR_OK) {
+            $ruta_carpeta = $_SERVER['DOCUMENT_ROOT'] . "/cfsistem/uploads/compras/";
+            if (!is_dir($ruta_carpeta)) { mkdir($ruta_carpeta, 0777, true); }
+            $extension = pathinfo($evidencia['name'], PATHINFO_EXTENSION);
+            $nombre_archivo = "compra_" . preg_replace('/[^a-zA-Z0-9]/', '_', $folio) . "_" . time() . "." . $extension;
+            $ruta_destino = $ruta_carpeta . $nombre_archivo;
+            if (move_uploaded_file($evidencia['tmp_name'], $ruta_destino)) {
+                $documento_url = "uploads/compras/" . $nombre_archivo;
+            }
+        }
+
+        // --- 2. Totales iniciales ---
+        $total_final = 0;
+        $tiene_faltantes_global = 0;
+        $monto_acumulado_excedentes = 0; // Para la obligación financiera
+
+        foreach ($items as $item) {
+            $total_final += floatval($item['total_item']);
+            if (floatval($item['cantidad_faltante'] ?? 0) > 0) $tiene_faltantes_global = 1;
+        }
+
+        // --- 3. Insertar Cabecera de Compra ---
+        $sqlC = "INSERT INTO compras 
+        (folio, proveedor, fecha_compra, almacen_id, total, metodo_pago, estado, usuario_registra_id, documento_url, tiene_faltantes) 
+        VALUES (?, ?, NOW(), ?, ?, ?, 'confirmada', ?, ?, ?)";
+
+        $stmtC = $this->db->prepare($sqlC);
+        $stmtC->bind_param("ssidsisi", $folio, $proveedor, $almacen_id, $total_final, $metodo_pago, $user_id, $documento_url, $tiene_faltantes_global);
+
+        if (!$stmtC->execute()) { throw new Exception("Error en cabecera: " . $stmtC->error); }
+        $compra_id = $stmtC->insert_id;
+
+        // --- 4. Procesar Items ---
+        foreach ($items as $item) {
+            $p_id = intval($item['producto_id']);
+            $factor = floatval($item['hidden_factor'] ?? 1);
+            $cant_fac = (floatval($item['input_mayoreo'] ?? 0) * $factor) + floatval($item['input_sueltas'] ?? 0);
+            $cant_fal = floatval($item['cantidad_faltante'] ?? 0);
+            $cant_exe = floatval($item['cantidad_excedente'] ?? 0); 
+            
+            $subtotal = floatval($item['total_item']);
+            $precio_lote = floatval($item['precio_lote'] ?? 0); 
+
+            // CÁLCULO DE DEUDA POR EXCEDENTE:
+            // Si hay excedente, calculamos su valor basándonos en el precio unitario del lote
+            if ($cant_exe > 0) {
+                $monto_acumulado_excedentes += ($cant_exe * $precio_lote);
+            }
+            
+            $estado_e = ($cant_fal > 0) ? 'incompleto' : (($cant_exe > 0) ? 'excedente' : 'completo');
+
+            // --- 5. Insertar Detalle Histórico ---
+    $sqlD = "INSERT INTO detalle_compra 
+(compra_id, producto_id, cantidad, cantidad_faltante, cantidad_excedente, precio_unitario, subtotal, estado_entrega) 
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+
+$stmtD = $this->db->prepare($sqlD);
+$stmtD->bind_param("iiddddds", $compra_id, $p_id, $cant_fac, $cant_fal, $cant_exe, $precio_lote, $subtotal, $estado_e);
+$stmtD->execute();
+$detalle_id = $stmtD->insert_id;
+
+            // --- 6. Registrar Faltante Pendiente ---
+            if ($cant_fal > 0) {
+                $sqlF = "INSERT INTO faltantes_ingreso (compra_id, producto_id, cantidad_pendiente) VALUES (?, ?, ?)";
+                $stmtF = $this->db->prepare($sqlF);
+                $stmtF->bind_param("iid", $compra_id, $p_id, $cant_fal);
+                $stmtF->execute();
             }
 
-            // --- 2. Totales y Faltantes ---
-            $total_final = 0;
-            $tiene_faltantes_global = 0;
-            foreach ($items as $item) {
-                $total_final += floatval($item['total_item']);
-                if (floatval($item['cantidad_faltante'] ?? 0) > 0) $tiene_faltantes_global = 1;
-            }
+            // --- 7. Inventario, MOVIMIENTOS Y LOTES ---
+            if (isset($item['almacenes'])) {
+                foreach ($item['almacenes'] as $id_alm_dest => $dist) {
+                    if (isset($dist['activo']) && $dist['activo'] === 'on') {
+                        $cant_reparto = floatval($dist['cantidad']);
+                        if ($cant_reparto <= 0) continue;
 
-            // --- 3. Insertar Cabecera ---
-            $sqlC = "INSERT INTO compras 
-(folio, proveedor, fecha_compra, almacen_id, total, metodo_pago, estado, usuario_registra_id, documento_url, tiene_faltantes) 
-VALUES (?, ?, NOW(), ?, ?, ?, 'confirmada', ?, ?, ?)";
+                        $sqlI = "INSERT INTO inventario (almacen_id, producto_id, stock) 
+                                 VALUES (?, ?, ?) 
+                                 ON DUPLICATE KEY UPDATE stock = stock + VALUES(stock)";
+                        $stmtI = $this->db->prepare($sqlI);
+                        $stmtI->bind_param("iid", $id_alm_dest, $p_id, $cant_reparto);
+                        $stmtI->execute();
 
-$stmtC = $this->db->prepare($sqlC);
-$stmtC->bind_param(
-    "ssidsisi",
-    $folio,                  // s
-    $proveedor,             // s
-    $almacen_id,            // i
-    $total_final,           // d
-    $metodo_pago,           // s
-    $user_id,               // i
-    $documento_url,         // s
-    $tiene_faltantes_global // i
-);
+                        $codigo_lote = "LOTE-" . $compra_id . "-" . $p_id . "-" . $id_alm_dest;
+                        $sqlL = "INSERT INTO lotes_stock (producto_id, almacen_id, codigo_lote, cantidad_inicial, cantidad_actual, precio_compra_unitario, estado_lote) 
+                                 VALUES (?, ?, ?, ?, ?, ?, 'activo')";
+                        $stmtL = $this->db->prepare($sqlL);
+                        $stmtL->bind_param("iisddd", $p_id, $id_alm_dest, $codigo_lote, $cant_reparto, $cant_reparto, $precio_lote);
+                        $stmtL->execute();
+                        $lote_id = $stmtL->insert_id;
 
-if (!$stmtC->execute()) {
-    throw new Exception("Error en cabecera: " . $stmtC->error);
-}
+                        $sqlLI = "INSERT INTO lotes_ingresos_detalle 
+                                  (lote_id, detalle_compra_id, cantidad_recibida, costo_aplicado) 
+                                  VALUES (?, ?, ?, ?)";
+                        $stmtLI = $this->db->prepare($sqlLI);
+                        $stmtLI->bind_param("iidd", $lote_id, $detalle_id, $cant_reparto, $precio_lote);
+                        $stmtLI->execute();
 
-$compra_id = $stmtC->insert_id;
-
-            // --- 4. Procesar Items ---
-            foreach ($items as $item) {
-                $p_id = intval($item['producto_id']);
-                $factor = floatval($item['hidden_factor'] ?? 1);
-                $cant_fac = (floatval($item['input_mayoreo'] ?? 0) * $factor) + floatval($item['input_sueltas'] ?? 0);
-                $cant_fal = floatval($item['cantidad_faltante'] ?? 0);
-                $subtotal = floatval($item['total_item']);
-                
-                // IMPORTANTE: El precio unitario para el detalle histórico y para el LOTE
-                $precio_lote = floatval($item['precio_lote'] ?? 0); 
-                $estado_e = ($cant_fal > 0) ? 'incompleto' : 'completo';
-
-                // --- 5. Insertar Detalle Histórico ---
-                $sqlD = "INSERT INTO detalle_compra (compra_id, producto_id, cantidad, cantidad_faltante, precio_unitario, subtotal, estado_entrega) 
-                         VALUES (?, ?, ?, ?, ?, ?, ?)";
-                $stmtD = $this->db->prepare($sqlD);
-                $stmtD->bind_param("iidddds", $compra_id, $p_id, $cant_fac, $cant_fal, $precio_lote, $subtotal, $estado_e);
-                $stmtD->execute();
-                $detalle_id = $stmtD->insert_id;
-
-                // --- 6. Registrar Faltante Pendiente ---
-                if ($cant_fal > 0) {
-                    $sqlF = "INSERT INTO faltantes_ingreso (compra_id, producto_id, cantidad_pendiente) VALUES (?, ?, ?)";
-                    $stmtF = $this->db->prepare($sqlF);
-                    $stmtF->bind_param("iid", $compra_id, $p_id, $cant_fal);
-                    $stmtF->execute();
-                }
-
-                // --- 7. Inventario, MOVIMIENTOS Y LOTES ---
-                if (isset($item['almacenes'])) {
-                    foreach ($item['almacenes'] as $id_alm_dest => $dist) {
-                        if (isset($dist['activo']) && $dist['activo'] === 'on') {
-                            $cant_reparto = floatval($dist['cantidad']);
-                            if ($cant_reparto <= 0) continue;
-
-                            // A. Actualizar Inventario General
-                            $sqlI = "INSERT INTO inventario (almacen_id, producto_id, stock) 
-                                     VALUES (?, ?, ?) 
-                                     ON DUPLICATE KEY UPDATE stock = stock + VALUES(stock)";
-                            $stmtI = $this->db->prepare($sqlI);
-                            $stmtI->bind_param("iid", $id_alm_dest, $p_id, $cant_reparto);
-                            $stmtI->execute();
-
-                            // B. CREAR EL LOTE (Para trazabilidad de costos)
-                            $codigo_lote = "LOTE-" . $compra_id . "-" . $p_id . "-" . $id_alm_dest;
-                            $sqlL = "INSERT INTO lotes_stock (producto_id, almacen_id, codigo_lote, cantidad_inicial, cantidad_actual, precio_compra_unitario, estado_lote) 
-                                     VALUES (?, ?, ?, ?, ?, ?, 'activo')";
-                            $stmtL = $this->db->prepare($sqlL);
-                            $stmtL->bind_param("iisddd", $p_id, $id_alm_dest, $codigo_lote, $cant_reparto, $cant_reparto, $precio_lote);
-                            $stmtL->execute();
-                            $lote_id = $stmtL->insert_id;
-
-                            // C. Vincular Lote con la Compra (lotes_ingresos_detalle)
-                            $sqlLI = "INSERT INTO lotes_ingresos_detalle (lote_id, detalle_compra_id, cantidad_recibida, costo_aplicado) 
-                                      VALUES (?, ?, ?, ?)";
-                            $stmtLI = $this->db->prepare($sqlLI);
-                            $stmtLI->bind_param("iidd", $lote_id, $detalle_id, $cant_reparto, $precio_lote);
-                            $stmtLI->execute();
-
-                            // D. Registrar Movimiento (Kardex)
-                            $sqlM = "INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_destino_id, usuario_registra_id, referencia_id, observaciones) 
-                                     VALUES (?, 'entrada', ?, ?, ?, ?, ?)";
-                            $stmtM = $this->db->prepare($sqlM);
-                            $obs = "Compra Folio: $folio (Lote: $codigo_lote)";
-                            $stmtM->bind_param("idiiis", $p_id, $cant_reparto, $id_alm_dest, $user_id, $compra_id, $obs);
-                            $stmtM->execute();
-                        }
+                        $sqlM = "INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_destino_id, usuario_registra_id, referencia_id, observaciones) 
+                                 VALUES (?, 'entrada', ?, ?, ?, ?, ?)";
+                        $stmtM = $this->db->prepare($sqlM);
+                        $obs = "Compra Folio: $folio (Lote: $codigo_lote)";
+                        $stmtM->bind_param("idiiis", $p_id, $cant_reparto, $id_alm_dest, $user_id, $compra_id, $obs);
+                        $stmtM->execute();
                     }
                 }
             }
-
-            $this->db->commit();
-            return ['success' => true, 'message' => 'Compra y lotes generados correctamente.'];
-
-        } catch (Exception $e) {
-            $this->db->rollback();
-            if (isset($ruta_destino) && file_exists($ruta_destino)) { unlink($ruta_destino); }
-            return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
         }
-    }    public function obtenerProductos($termino = '') {
+
+        // --- 8. REGISTRAR OBLIGACIÓN FINANCIERA (CUENTAS POR PAGAR) ---
+        // Solo si hubo excedentes acumulados
+        if ($monto_acumulado_excedentes > 0) {
+            $dataObligacion = [
+                'id_almacen'           => $almacen_id,
+                'id_proveedor'         => $proveedor, // La función ya hace el intval
+                'beneficiario'         => "Proveedor ID: " . $proveedor,
+                'id_referencia_origen' => $compra_id,
+                'monto_total'          => $monto_acumulado_excedentes,
+                'tipo_deuda'           => 'excedente_compra',
+                'notas'                => "Deuda generada por material excedente en Compra Folio: $folio"
+            ];
+
+            $resObligacion = $this->registrarObligacionFinanciera($dataObligacion);
+            
+            if (!$resObligacion['success']) {
+                throw new Exception("Compra guardada pero falló obligación: " . $resObligacion['message']);
+            }
+        }
+
+        $this->db->commit();
+        return ['success' => true, 'message' => 'Compra procesada y deuda por excedente registrada.'];
+
+    } catch (Exception $e) {
+        $this->db->rollback();
+        if (isset($ruta_destino) && file_exists($ruta_destino)) { unlink($ruta_destino); }
+        return ['success' => false, 'message' => 'Error: ' . $e->getMessage()];
+    }
+}
+
+public function registrarObligacionFinanciera($data) {
+    try {
+
+        $sql = "INSERT INTO cuentas_por_pagar (
+                    id_almacen,
+                    id_proveedor,
+                    beneficiario,
+                    id_referencia_origen,
+                    monto_total,
+                    monto_pagado,
+                    tipo_deuda,
+                    estado,
+                    fecha_vencimiento,
+                    notas,
+                    fecha_registro
+                ) VALUES (?, ?, ?, ?, ?, 0.00, ?, 'pendiente', NULL, ?, NOW())";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new Exception("Error en prepare: " . $this->db->error);
+        }
+
+        // Manejo correcto de NULL en proveedor
+        $id_proveedor = !empty($data['id_proveedor']) ? intval($data['id_proveedor']) : null;
+
+        // 🔥 TIPOS CORRECTOS
+        // i = int
+        // s = string
+        // d = double
+        $tipos = "iisidss";
+
+        $stmt->bind_param(
+            $tipos,
+            $data['id_almacen'],            // i
+            $id_proveedor,                  // i (puede ser null)
+            $data['beneficiario'],          // s
+            $data['id_referencia_origen'],  // i
+            $data['monto_total'],           // d ✅
+            $data['tipo_deuda'],            // s ✅ (VARCHAR ahora)
+            $data['notas']                  // s
+        );
+
+        if (!$stmt->execute()) {
+            throw new Exception("Error execute: " . $stmt->error);
+        }
+
+        return [
+            "success" => true,
+            "id" => $this->db->insert_id
+        ];
+
+    } catch (Exception $e) {
+        return [
+            "success" => false,
+            "message" => $e->getMessage()
+        ];
+    }
+}
+   public function obtenerProductos($termino = '') {
         $sql = "SELECT 
                     id, 
                     sku, 

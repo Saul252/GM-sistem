@@ -1,5 +1,10 @@
+<style>
+    .swal2-container {
+    z-index: 15000 !important;
+}
+</style>
 <div class="modal fade" id="modalExcesoCompra" tabindex="-1" aria-hidden="true"
-     style="backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);">
+     style=" z-index:10000; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);">
 
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg"

@@ -121,17 +121,44 @@ if (isset($_GET['ajax'])) {
 
     try {
 
-        $periodo  = $_GET['periodo'] ?? 'hoy';
-        $f_inicio = $_GET['f_inicio'] ?? date('Y-m-d');
-        $f_fin    = $_GET['f_fin'] ?? date('Y-m-d');
+        
         $almacen_id_req = isset($_GET['almacen_id']) ? intval($_GET['almacen_id']) : 0;
+$periodo  = $_GET['periodo'] ?? 'hoy';
+$f_inicio = $_GET['f_inicio'] ?? '';
+$f_fin    = $_GET['f_fin'] ?? '';
 
-        if ($periodo === 'hoy') {
-            $f_inicio = $f_fin = date('Y-m-d');
-        } elseif ($periodo === 'ayer') {
-            $f_inicio = $f_fin = date('Y-m-d', strtotime("-1 day"));
+switch ($periodo) {
+
+    case 'hoy':
+        $f_inicio = $f_fin = date('Y-m-d');
+        break;
+
+    case 'ayer':
+        $f_inicio = $f_fin = date('Y-m-d', strtotime('-1 day'));
+        break;
+
+    case 'semana':
+        // 🔥 Lunes → hoy
+        $f_inicio = date('Y-m-d', strtotime('monday this week'));
+        $f_fin    = date('Y-m-d');
+        break;
+
+    case 'mes':
+        // 🔥 Inicio de mes → hoy
+        $f_inicio = date('Y-m-01');
+        $f_fin    = date('Y-m-d');
+        break;
+
+    case 'personalizado':
+        // usa lo que venga
+        if (empty($f_inicio) || empty($f_fin)) {
+            throw new Exception("Fechas requeridas");
         }
+        break;
 
+    default:
+        $f_inicio = $f_fin = date('Y-m-d');
+}
         $target = ($almacen_sesion != 0) ? $almacen_sesion : $almacen_id_req;
 
         $esUnSoloDia = ($f_inicio === $f_fin);
@@ -142,7 +169,7 @@ if (isset($_GET['ajax'])) {
         // 🔥 DEBUG REAL
         $comprasTotales = $egresoModel->obtenerSumaEgresos($f_inicio, $f_fin, $target, 'compra');
         $gastosTotales  = $egresoModel->obtenerSumaEgresos($f_inicio, $f_fin, $target, 'gasto');
-        $egresos = $egresoModel->obtenerTodosLosEgresos(
+        $egresos = $egresoModel->obtenerTodosLosEgresosFiltros(
             $f_inicio,
             $f_fin,
             $target,
@@ -153,7 +180,7 @@ if (isset($_GET['ajax'])) {
         $gastos  = [];
 
         foreach ($egresos as $e) {
-            if (($e['tipo'] ?? '') === 'compra') {
+            if (($e['tipo'] ?? '') === 'compra'|| $e['tipo'] == 'pago_deuda') {
                 $compras[] = $e;
             } else {
                 $gastos[] = $e;

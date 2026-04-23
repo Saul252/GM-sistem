@@ -19,83 +19,128 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
             <form id="formNuevaCompra" enctype="multipart/form-data" autocomplete="off">
                 <div class="modal-body bg-light">
                     <div class="card mb-4 border-0 shadow-sm">
-                        <div class="card-body row g-3">
-                            <div class="col-md-4">
-                                <label class="form-label small fw-bold">Proveedor</label>
-                                <div class="input-group">
-                                    <select name="proveedor" id="select_proveedor" class="form-select" required>
-                                        <option value="">Seleccione un proveedor...</option>
-                                        <?php foreach($proveedores as $p): ?>
-                                        <option value="<?= $p['nombre_comercial'] ?>"><?= $p['nombre_comercial'] ?>
-                                        </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                    <button class="btn btn-outline-success" type="button"
-                                        onclick="abrirModalNuevoProveedor()">
-                                        <i class="bi bi-plus-lg"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label small fw-bold">Folio de Factura</label>
-                                <input type="text" id="folio_compra" name="folio" class="form-control"
-                                    placeholder="Cargando..." readonly required>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="mac-select-container">
-                                    <label class="mac-label">
-                                        <i class="bi bi-box-seam"></i> Almacén de Cargo
-                                    </label>
+                      <div class="card-body">
 
-                                    <?php $es_admin = ($_SESSION['rol_id'] == 1); ?>
+    <div class="row g-3">
 
-                                    <div class="select-wrapper">
-                                        <select id="almacen_id_cabecera_visual"
-                                            class="mac-select <?= $es_admin ? 'admin-active' : 'user-locked' ?>"
-                                            <?= !$es_admin ? 'disabled' : 'name="almacen_id_cabecera"' ?> required>
+        <!-- PROVEEDOR -->
+        <div class="col-md-5">
+            <label class="form-label small fw-bold">Proveedor</label>
 
-                                            <?php if ($es_admin): ?>
-                                            <option value="">Seleccionar ubicación...</option>
-                                            <?php endif; ?>
+            <div class="input-group shadow-sm">
+                <select name="proveedor" id="select_proveedor" class="form-select" required>
+                    <option value="">Seleccione un proveedor...</option>
+                    <?php foreach($proveedores as $p): ?>
+                    <option value="<?= $p['id'] ?>" data-deuda="<?= $p['total_deuda'] ?>">
+                        <?= $p['nombre_comercial'] ?>
+                    </option>
+                    <?php endforeach; ?>
+                </select>
 
-                                            <?php foreach($almacenes as $a): ?>
-                                            <option value="<?= $a['id'] ?>"
-                                                <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
-                                                <?= $a['nombre'] ?>
-                                                <?= ($a['id'] == $_SESSION['almacen_id'] && !$es_admin) ? ' •' : '' ?>
-                                            </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                        <i class="bi bi-chevron-down custom-arrow"></i>
-                                    </div>
+                <button class="btn btn-outline-success" type="button"
+                    onclick="abrirModalNuevoProveedor()">
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+            </div>
 
-                                    <?php if (!$es_admin): ?>
-                                    <input type="hidden" name="almacen_id_cabecera"
-                                        value="<?= $_SESSION['almacen_id'] ?>">
-                                    <span class="mac-badge-locked">
-                                        <i class="bi bi-lock-fill"></i> Privilegios de sede actual
-                                    </span>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small fw-bold">Evidencia (PDF/IMG)</label>
-                                <input type="file" name="evidencia_compra" class="form-control" accept="image/*,.pdf">
-                            </div>
-                            <div class="col-md-3 ">
-                                <label class="form-label small fw-bold text-muted">TOTAL FACTURA</label>
-                                <div class="h3 text-success fw-bold" id="granTotalCompra">$ 0.00</div>
-                            </div>
-                            <div class="col-md-3 text-end">
-                                          <select name="metodo_pago" id="metodo_pago" class="form-select" required>
-    <option value="">Seleccione método de pago...</option>
-    <option value="Efectivo">Efectivo</option>
-    <option value="Transferencia">Transferencia</option>
-    <option value="Tarjeta">Tarjeta</option>
-</select> </div>
-                            
-                        </div>
-              
+            <!-- DEUDA -->
+            <div id="deuda_proveedor" class="small fw-semibold text-danger mt-2">
+                Deuda: $0.00
+            </div>
+        </div>
+
+        <!-- FOLIO -->
+        <div class="col-md-2">
+            <label class="form-label small fw-bold">Folio</label>
+            <input type="text" id="folio_compra" name="folio"
+                class="form-control shadow-sm"
+                placeholder="Cargando..." readonly required>
+        </div>
+
+        <!-- ALMACEN -->
+        <div class="col-md-5">
+            <label class="form-label small fw-bold">
+                <i class="bi bi-box-seam"></i> Almacén de Cargo
+            </label>
+
+            <?php $es_admin = ($_SESSION['rol_id'] == 1); ?>
+
+            <div class="input-group shadow-sm">
+                <select id="almacen_id_cabecera_visual"
+                    class="form-select <?= $es_admin ? '' : 'bg-light' ?>"
+                    <?= !$es_admin ? 'disabled' : 'name="almacen_id_cabecera"' ?> required>
+
+                    <?php if ($es_admin): ?>
+                    <option value="">Seleccionar ubicación...</option>
+                    <?php endif; ?>
+
+                    <?php foreach($almacenes as $a): ?>
+                    <option value="<?= $a['id'] ?>"
+                        <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
+                        <?= $a['nombre'] ?>
+                    </option>
+                    <?php endforeach; ?>
+                </select>
+
+                <?php if (!$es_admin): ?>
+                <span class="input-group-text bg-light text-muted">
+                    <i class="bi bi-lock-fill"></i>
+                </span>
+                <?php endif; ?>
+            </div>
+
+            <?php if (!$es_admin): ?>
+            <input type="hidden" name="almacen_id_cabecera"
+                value="<?= $_SESSION['almacen_id'] ?>">
+            <small class="text-muted">
+                Privilegios de sede actual
+            </small>
+            <?php endif; ?>
+        </div>
+
+        <!-- EVIDENCIA -->
+        <div class="col-md-4">
+            <label class="form-label small fw-bold">Evidencia</label>
+            <input type="file"
+                name="evidencia_compra"
+                class="form-control shadow-sm"
+                accept="image/*,.pdf">
+        </div>
+
+        <!-- METODO -->
+        <div class="col-md-3">
+            <label class="form-label small fw-bold">Método de pago</label>
+            <select name="metodo_pago" id="metodo_pago"
+                class="form-select shadow-sm" required>
+                <option value="">Seleccione...</option>
+                <option value="Efectivo">Efectivo</option>
+                <option value="Transferencia">Transferencia</option>
+                <option value="Tarjeta">Tarjeta</option>
+            </select>
+        </div>
+
+        <!-- PAGO DE DEUDA -->
+        <div class="col-md-2">
+            <label class="form-label small fw-bold text-primary">
+                <i class="bi bi-cash-coin"></i> Pagar deuda
+            </label>
+            <input type="number"
+                name="saldo_a_pagar"
+                class="form-control shadow-sm border-primary"
+                value="0" min="0" step="0.1"
+                placeholder="0.0">
+        </div>
+
+        <!-- TOTAL -->
+        <div class="col-md-3">
+            <label class="form-label small fw-bold text-muted">TOTAL FACTURA</label>
+            <div class="bg-light border rounded-3 p-2 text-center shadow-sm">
+                <span class="h4 text-success fw-bold m-0" id="granTotalCompra">$ 0.00</span>
+            </div>
+        </div>
+
+    </div>
+</div>
                     </div>
 
                     <h6 class="fw-bold mb-3 d-flex justify-content-between align-items-center">
@@ -203,6 +248,7 @@ window.addEventListener('load', function() {
         });
     }
 });
+
 function agregarFilaCompra() {
     const idUnico = Date.now();
 
@@ -213,15 +259,11 @@ function agregarFilaCompra() {
     });
 
     let filasAlmacenes = '';
-
-    // LÓGICA DE FILTRADO: 
-    // Si es Admin, ve todos. Si no, solo ve el que coincida con USER_ALMACEN_ID
     const almacenesAMostrar = ES_ADMIN ?
         DATA_COMPRAS.almacenes :
         DATA_COMPRAS.almacenes.filter(alm => alm.id == USER_ALMACEN_ID);
 
     almacenesAMostrar.forEach(alm => {
-        // Si no es admin, bloqueamos el checkbox para que no pueda desmarcar su propio almacén
         const inputBloqueado = !ES_ADMIN ? 'onclick="return false;" style="opacity: 0.7;"' : '';
         const filaResaltada = alm.id == USER_ALMACEN_ID ? 'table-info' : '';
 
@@ -232,117 +274,139 @@ function agregarFilaCompra() {
                        class="form-check-input check-activo" checked ${inputBloqueado} 
                        onchange="recalcularTotales(${idUnico})">
             </td>
-            <td class="small align-middle fw-bold">
-                ${alm.nombre} 
-                ${alm.id == USER_ALMACEN_ID ? '<br><small class="text-primary">(Tu almacén)</small>' : ''}
-            </td>
+            <td class="small align-middle fw-bold">${alm.nombre}</td>
             <td>
                 <input type="number" name="items[${idUnico}][almacenes][${alm.id}][cantidad]" 
                        class="form-control form-control-sm input-reparto border-primary" 
-                       placeholder="Confirmar cantidad" min="0" step="0.01" 
+                       placeholder="0.00" min="0" step="0.01" 
                        oninput="validarReparto(${idUnico})">
             </td>
         </tr>`;
     });
 
-    const html = `
-    <div class="card mb-4 border-start border-4 border-success shadow-sm item-compra" id="card_item_${idUnico}">
-        <div class="card-body">
-            <div class="row g-3 mb-3">
-           <div class="col-md-3">
-    <div class="mac-select-container h-100">
-        <div class="d-flex justify-content-between align-items-center mb-1">
-            <label class="mac-label m-0">
-                <i class="bi bi-search"></i> Producto
-            </label>
-           
-<button type="button" 
-        class="btn btn-outline-primary btn-sm rounded-circle border-0 p-0" 
-        onclick="window.ultimaFilaEditada = ${idUnico}; $('#modalAgregarProducto').modal('show')"
-        title="Registrar nuevo producto">
-    <i class="bi bi-plus-lg"></i>
-</button>
-        </div>
-        
-        <div class="select-wrapper">
-            <select name="items[${idUnico}][producto_id]" 
-                class="mac-select admin-active select2-compra" 
-                onchange="actualizarLabelsUnidad(${idUnico}, this)" required>
-                ${opcionesProd}
-            </select>
+   const html = `
+<div class="card mb-4 border-0 shadow-sm rounded-4 item-compra" id="card_item_${idUnico}">
+    <div class="card-body p-3">
+
+        <div class="row g-3 mb-3">
+
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold text-muted mb-1">
+                    <i class="bi bi-search me-1"></i>Producto
+                </label>
+                <select name="items[${idUnico}][producto_id]" 
+                    class="form-select form-select-sm shadow-sm select2-compra"
+                    onchange="actualizarLabelsUnidad(${idUnico}, this)" required>
+                    ${opcionesProd}
+                </select>
             </div>
+
+            <div class="col-md-1">
+                <label class="form-label small text-muted mb-1 label-urep">Mayoreo</label>
+                <input type="number" class="form-control form-control-sm shadow-sm input-mayoreo"
+                    value="0" min="0" oninput="recalcularTotales(${idUnico})">
+            </div>
+
+            <div class="col-md-1">
+                <label class="form-label small text-muted mb-1 label-ubase">Sueltas</label>
+                <input type="number" class="form-control form-control-sm shadow-sm input-sueltas"
+                    value="0" min="0" oninput="recalcularTotales(${idUnico})">
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small text-danger fw-semibold mb-1 d-flex align-items-center gap-1">
+                    <input type="checkbox" class="form-check-input me-1"
+                        onchange="toggleFaltante(${idUnico}, this)">
+                    Faltante
+                </label>
+                <input type="number"
+                    class="form-control form-control-sm border-danger shadow-sm input-faltante"
+                    value="0" min="0" disabled
+                    oninput="recalcularTotales(${idUnico})">
+                <input type="hidden" name="items[${idUnico}][cantidad_faltante]" class="hidden-faltante" value="0">
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small text-success fw-semibold mb-1">
+                    <i class="bi bi-plus-circle-fill me-1"></i>Excedente
+                </label>
+                <input type="number"
+                    name="items[${idUnico}][cantidad_excedente]"
+                    class="form-control form-control-sm border-success shadow-sm input-excedente"
+                    value="0" min="0" step="0.01"
+                    oninput="recalcularTotales(${idUnico})"
+                    placeholder="0.00">
+            </div>
+
+         
+
+            <div class="col-md-2">
+                <label class="form-label small fw-semibold text-muted mb-1">Costo total</label>
+                <div class="input-group input-group-sm shadow-sm">
+                    <span class="input-group-text">$</span>
+                    <input type="number"
+                        name="items[${idUnico}][total_item]"
+                        class="form-control input-costo-total"
+                        value="0" step="0.01"
+                        oninput="calcularPrecioUnitarioLote(${idUnico})"
+                        required>
+                </div>
+                <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">
+                    Costo lote: <span class="span-precio-lote fw-semibold">$0.00</span>
+                </small>
+                <input type="hidden" name="items[${idUnico}][precio_lote]" class="hidden-precio-lote" value="0">
+            </div>
+
+            <div class="col-md-1 d-flex align-items-end">
+                <button type="button"
+                    class="btn btn-sm btn-outline-danger w-100 rounded-3"
+                    onclick="$('#card_item_${idUnico}').remove(); actualizarGranTotal();">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+
+        </div>
+
+        <div class="row g-3 mb-2">
+            <div class="col-md-4">
+                <div class="p-3 bg-dark text-white rounded-3 text-center shadow-sm">
+                    <small class="d-block opacity-75 mb-1">STOCK TOTAL</small>
+                    <span class="h5 fw-bold span-total-base">0</span>
+                    <small class="label-ubase-text">pzas</small>
+                    <input type="hidden" class="hidden-factor" value="1">
+                    <input type="hidden" class="hidden-total-piezas" name="items[${idUnico}][cantidad_total_piezas]" value="0">
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="alert alert-info d-flex justify-content-between align-items-center h-100 py-2 px-3 small rounded-3 shadow-sm">
+                    <span>
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        Distribuye el total en almacenes
+                    </span>
+                    <span class="badge bg-danger" id="error_reparto_${idUnico}" style="display:none;">
+                        Error
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <hr class="my-3">
+
+        <table class="table table-sm align-middle mb-0">
+            <thead class="text-muted small">
+                <tr>
+                    <th class="text-center">Usar</th>
+                    <th>Almacén</th>
+                    <th>Piezas</th>
+                </tr>
+            </thead>
+            <tbody>${filasAlmacenes}</tbody>
+        </table>
+
     </div>
 </div>
-                <div class="col-md-2">
-                    <label class="small fw-bold label-urep">Cant. Mayoreo</label>
-                    <input type="number" class="form-control input-mayoreo" value="0" min="0" step="0.01" oninput="recalcularTotales(${idUnico})">
-                </div>
-                <div class="col-md-1">
-                    <label class="small fw-bold label-ubase">Sueltas</label>
-                    <input type="number" class="form-control input-sueltas" value="0" min="0" step="0.01" oninput="recalcularTotales(${idUnico})">
-                </div>
-                
-                <div class="col-md-2">
-                    <label class="small fw-bold text-danger">
-                        <input type="checkbox" class="form-check-input check-habilitar-faltante" onchange="toggleFaltante(${idUnico}, this)"> 
-                        ¿Faltante?
-                    </label>
-                    <div class="input-group input-group-sm">
-                        <input type="number" class="form-control input-faltante border-danger" value="0" min="0" step="0.01" id="faltante_${idUnico}" disabled oninput="recalcularTotales(${idUnico})">
-                        <input type="hidden" name="items[${idUnico}][cantidad_faltante]" class="hidden-faltante" value="0">
-                    </div>
-                </div>
-
-                                       
-<div class="col-md-3">
-    <label class="small fw-bold">Costo Total Renglón</label>
-    <div class="input-group">
-        <span class="input-group-text bg-light fw-bold">$</span>
-        <input type="number" name="items[${idUnico}][total_item]" 
-               class="form-control input-costo-total" 
-               value="0" step="0.01" 
-               oninput="calcularPrecioUnitarioLote(${idUnico})" required>
-    </div>
-    <input type="hidden" name="items[${idUnico}][precio_lote]" class="hidden-precio-lote" value="0">
-    <small class="text-muted" style="font-size: 0.7rem;">
-        Costo u. lote: <span class="span-precio-lote">$ 0.00</span>
-    </small>
-</div>
-
-
-                <div class="col-md-1 d-flex align-items-end">
-                    <button type="button" class="btn btn-outline-danger btn-sm w-100" onclick="$('#card_item_${idUnico}').remove(); actualizarGranTotal();">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </div>
-            </div>
-            
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <div class="p-2 bg-dark text-white rounded text-center">
-                        <small class="d-block opacity-75">STOCK TOTAL A INGRESAR:</small>
-                        <span class="h5 mb-0 fw-bold span-total-base">0</span> <small class="label-ubase-text">pzas</small>
-                        <input type="hidden" class="hidden-factor" value="1">
-                        <input type="hidden" class="hidden-total-piezas" name="items[${idUnico}][cantidad_total_piezas]" value="0">
-                    </div>
-                </div>
-                <div class="col-md-8">
-                    <div class="alert alert-info py-2 px-3 m-0 small d-flex justify-content-between align-items-center h-100 border-0 shadow-sm rounded">
-                        <span><i class="bi bi-info-circle-fill me-2"></i>Confirma las piezas recibidas en tu almacén:</span>
-                        <span class="badge bg-danger" id="error_reparto_${idUnico}" style="display:none;">Suma no coincide</span>
-                    </div>
-                </div>
-            </div>
-            <hr class="my-3">
-            <table class="table table-sm table-borderless align-middle mb-0">
-                <thead class="text-muted" style="font-size: 0.75rem;">
-                    <tr><th width="10%" class="text-center">¿USAR?</th><th width="50%">ALMACÉN DESTINO</th><th width="40%">PIEZAS FÍSICAS</th></tr>
-                </thead>
-                <tbody>${filasAlmacenes}</tbody>
-            </table>
-        </div>
-    </div>`;
-
+`;
     $('#contenedorItemsCompra').append(html);
     setTimeout(() => {
         $(`#card_item_${idUnico} .select2-compra`).select2({
@@ -370,24 +434,30 @@ function recalcularTotales(id) {
     const card = $(`#card_item_${id}`);
     const factor = parseFloat(card.find('.hidden-factor').val()) || 0;
     const inputFaltante = card.find('.input-faltante');
+    const inputExcedente = card.find('.input-excedente'); // <--- NUEVO
 
-    // 1. Cantidad según lo que dice la factura (Mayoreo * Factor + Sueltas)
+    // 1. Cantidad según factura (Mayoreo * Factor + Sueltas)
     const cantidadFacturada = (parseFloat(card.find('.input-mayoreo').val()) || 0) * factor +
         (parseFloat(card.find('.input-sueltas').val()) || 0);
 
-    // 2. Si el input está deshabilitado, el faltante es 0. Si no, tomamos su valor.
+    // 2. Faltante: Si está habilitado, restamos.
     const faltante = inputFaltante.is(':disabled') ? 0 : (parseFloat(inputFaltante.val()) || 0);
 
-    // 3. Lo que realmente llegó
-    const totalReal = cantidadFacturada - faltante;
+    // 3. Excedente: Si está habilitado, SUMAMOS (Lo que llegó de más) <--- NUEVO
+    const excedente = inputExcedente.is(':disabled') ? 0 : (parseFloat(inputExcedente.val()) || 0);
+
+    // 4. Lo que realmente entró físicamente al almacén
+    const totalReal = cantidadFacturada - faltante + excedente;
 
     // Actualizar labels y campos ocultos
     card.find('.span-total-base').text(totalReal.toLocaleString());
     card.find('.hidden-total-piezas').val(totalReal);
     card.find('.hidden-faltante').val(faltante);
-    // --- AGREGAR ESTA LÍNEA ---
+
+    // Si tienes un input oculto para excedente, actualízalo aquí:
+    // card.find('.hidden-excedente').val(excedente); 
+
     calcularPrecioUnitarioLote(id);
-    // --------------------------
     validarReparto(id);
     actualizarGranTotal();
 }
@@ -611,8 +681,35 @@ function procesarGuardadoCompra(event) {
 }
 </script>
 <script>
+document.addEventListener('DOMContentLoaded', function () {
 
+    const select = document.getElementById('select_proveedor');
+    const box = document.getElementById('deuda_proveedor');
 
+    select.addEventListener('change', function () {
+
+        const option = this.options[this.selectedIndex];
+
+        const deuda = parseFloat(option.dataset.deuda || 0);
+
+        box.innerText = "Deuda: $" + deuda.toLocaleString('es-MX', {
+            minimumFractionDigits: 2
+        });
+
+        // 🔥 opcional: cambiar color si debe o no
+        if (deuda > 0) {
+            box.classList.remove('text-success');
+            box.classList.add('text-danger');
+        } else {
+            box.classList.remove('text-danger');
+            box.classList.add('text-success');
+        }
+
+    });
+
+});
+</script>
+<script>
 // Función para refrescar la lista de proveedores sin recargar página
 function actualizarListaProveedores() {
     fetch('egresosController.php?action=getProveedoresJSON')
@@ -627,5 +724,15 @@ function actualizarListaProveedores() {
 
             $select.trigger('change');
         });
+}
+function toggleFaltante(id, checkbox) {
+    const inputFaltante = $(`#faltante_${id}`);
+
+    if (checkbox.checked) {
+        inputFaltante.prop('disabled', false).focus();
+    } else {
+        inputFaltante.prop('disabled', true).val(0); // Si lo desmarcan, vuelve a cero
+        recalcularTotales(id); // Recalculamos para que el stock vuelva a la normalidad
+    }
 }
 </script>

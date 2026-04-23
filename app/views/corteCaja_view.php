@@ -59,6 +59,9 @@
                     <p class="text-secondary m-0">Detalle de ingresos y movimientos operativos.</p>
                 </div>
             </div>
+<script>
+    console.log("pagos",<?= json_encode($pagos) ?>);
+</script>
 
             <div class="glass-card p-4 mb-4">
                 <form id="formFiltros" class="row g-3 align-items-end">

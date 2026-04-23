@@ -93,30 +93,91 @@ if ($action === 'eliminar_categoria') {
 if ($action === 'guardarCompraInventario') {
     if (ob_get_length()) ob_clean(); 
     header('Content-Type: application/json');
+
     try {
         $user_id = $_SESSION['usuario_id'] ?? 1;
         $rol_id  = $_SESSION['rol_id'] ?? 0;
 
-        if ($rol_id == 1 && isset($_POST['almacen_id_cabecera'])) {
-            $almacen_principal = intval($_POST['almacen_id_cabecera']);
-        } else {
-            $almacen_principal = $_SESSION['almacen_id'] ?? null;
-        }
+        // 1. Determinar Almacén
+        $almacen_principal = ($rol_id == 1 && isset($_POST['almacen_id_cabecera'])) 
+            ? intval($_POST['almacen_id_cabecera']) 
+            : ($_SESSION['almacen_id'] ?? null);
 
         if (!$almacen_principal) throw new Exception("No se pudo determinar el almacén de cargo.");
 
+        // 2. Guardar Compra Principal
         $resultado = $comprasModel->guardarCompraCompleta(
-            $_POST['items'] ?? [], 
-            $_POST['folio'] ?? 'S/F', 
+            $_POST['items'] ?? [],
+            $_POST['folio'] ?? 'S/F',
             $_POST['proveedor'] ?? 'Sin Proveedor',
+            
             (isset($_FILES['evidencia_compra']) && $_FILES['evidencia_compra']['error'] === UPLOAD_ERR_OK) ? $_FILES['evidencia_compra'] : null,
             $almacen_principal,
             $user_id,
-            $_POST['metodo_pago'] ?? 'Efectivo',
+            $_POST['metodo_pago'] ?? 'Efectivo'
         );
-        echo json_encode($resultado ?? ['success' => false, 'message' => 'El modelo no respondió']);
+
+        if (!$resultado['success']) throw new Exception($resultado['message']);
+
+        // 3. Procesar Saldo / Pago de Deuda
+        $saldo = floatval($_POST['saldo_a_pagar'] ?? 0);
+        if ($saldo > 0) {
+            $proveedor_id = intval($_POST['proveedor'] ?? 0);
+            if ($proveedor_id <= 0) throw new Exception("Proveedor inválido para pago de deuda");
+
+            $deudas = $proveedorModel->ProveedorYDeuda($proveedor_id);
+            if (empty($deudas)) throw new Exception("El proveedor no tiene deudas pendientes");
+
+            foreach ($deudas as $deuda) {
+                if ($saldo <= 0) break;
+
+                $cuenta_id = intval($deuda['compra_id']);
+                $pendiente = floatval($deuda['pendiente']);
+                $metodoPago = $_POST['metodo_pago'] ?? 'Efectivo';
+
+                if ($cuenta_id <= 0 || $pendiente <= 0) continue;
+
+                $pago_aplicado = min($saldo, $pendiente);
+
+                // A. Actualizar saldo en la tabla de deuda
+                $res = $egresoModel->pagarDeudaCompra($cuenta_id, $pago_aplicado);
+                $proveedorNombre=$proveedorModel->obtenerPorId($proveedor_id);
+                
+                // B. Registrar en historial de pagos
+                $desc = 'Pago de deuda (Compra #' . $cuenta_id . ') por $' . number_format($pago_aplicado, 2);
+                $ref = "PAGO-REF-" . time(); // Evitar string vacío
+
+                $regPago = $egresoModel->registrarPagoCuentaPorPagar(
+                    $almacen_principal,
+                    $proveedor_id,
+                    $cuenta_id,
+                    $pago_aplicado,
+                    $metodoPago,
+                    $ref,
+                    $user_id,
+                    $desc
+                );
+
+                if (!$res || (isset($res['success']) && !$res['success'])) {
+                    throw new Exception("Error al descontar saldo de la deuda ID: $cuenta_id");
+                }
+                
+                $saldo -= $pago_aplicado;
+            }
+        }
+
+        // Devolvemos el resultado final
+        echo json_encode([
+            'success' => true,
+            'message' => 'Compra guardada y saldos actualizados correctamente.',
+            'compra_id' => $resultado['compra_id'] ?? null
+        ]);
+
     } catch (Throwable $e) {
-        echo json_encode(['success' => false, 'message' => 'Fallo en el Sistema: ' . $e->getMessage()]);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Error Crítico: ' . $e->getMessage()
+        ]);
     }
     exit;
 }
@@ -493,7 +554,7 @@ if ($action === 'pagarDeudaCompra') {
         exit;
     }
 
-    require_once '../models/egresos_model.php';
+
    
 
     $result = $egresoModel->pagarDeudaCompra($cuenta_id, $monto);
@@ -501,34 +562,87 @@ if ($action === 'pagarDeudaCompra') {
     echo json_encode($result);
     exit;
 }
-// =========================================================================
-// --- CARGA DE VISTA (GET) ---
-// =========================================================================
-
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && empty($action)) {
+
+    // 1. Lógica de Fechas Dinámica (Filtro Rápido)
+    $periodo_sel = $_GET['periodo_filtro'] ?? 'mes';
     $fecha_desde = $_GET['desde'] ?? date('Y-m-01');
     $fecha_hasta = $_GET['hasta'] ?? date('Y-m-d');
-    $tipo_filtro = $_GET['tipo_filtro'] ?? 'todos'; 
 
+    // Si el usuario eligió un periodo predefinido, calculamos las fechas aquí
+    if ($periodo_sel !== 'personalizado') {
+        switch ($periodo_sel) {
+            case 'hoy':
+                $fecha_desde = date('Y-m-d');
+                $fecha_hasta = date('Y-m-d');
+                break;
+            case 'ayer':
+                $fecha_desde = date('Y-m-d', strtotime('-1 day'));
+                $fecha_hasta = date('Y-m-d', strtotime('-1 day'));
+                break;
+            case 'semana':
+                $fecha_desde = date('Y-m-d', strtotime('monday this week'));
+                $fecha_hasta = date('Y-m-d', strtotime('sunday this week'));
+                break;
+            case 'mes':
+                $fecha_desde = date('Y-m-01');
+                $fecha_hasta = date('Y-m-t');
+                break;
+        }
+    }
+
+    // 2. Filtros de Categoría y Tipo
+    $tipo_filtro = $_GET['tipo_filtro'] ?? 'todos'; 
+    $categoria_gasto_id = isset($_GET['categoria_gasto_filtro']) ? intval($_GET['categoria_gasto_filtro']) : 0;
+
+    // 3. Seguridad por Almacén y Rol
     $rol_id = $_SESSION['rol_id'] ?? 0;
     $mi_almacen_id = $_SESSION['almacen_id'] ?? 0;
-    $almacen_a_consultar = ($rol_id == 1) ? (isset($_GET['almacen_filtro']) ? intval($_GET['almacen_filtro']) : 0) : $mi_almacen_id;
-$categoria_gasto_id = isset($_GET['categoria_gasto_filtro']) ? intval($_GET['categoria_gasto_filtro']) : 0;
-    $egresos = $egresoModel->obtenerTodosLosEgresos($fecha_desde, $fecha_hasta, $almacen_a_consultar, $tipo_filtro, $categoria_gasto_id);
+
+    $almacen_a_consultar = ($rol_id == 1)
+        ? (isset($_GET['almacen_filtro']) ? intval($_GET['almacen_filtro']) : 0)
+        : $mi_almacen_id;
+
+    // 4. Filtros Financieros
+    $deuda_filtro  = $_GET['deuda_filtro'] ?? 'todos';
+    $metodo_filtro = $_GET['metodo_filtro'] ?? 'todos';
+
+    // 5. Consulta al Modelo
+    $egresos = $egresoModel->obtenerTodosLosEgresosFiltros(
+        $fecha_desde,
+        $fecha_hasta,
+        $almacen_a_consultar,
+        $tipo_filtro,
+        $categoria_gasto_id,
+        $deuda_filtro,
+        $metodo_filtro
+    );
+
+    // 6. Cálculos de Totales
     $totalSumCompras = 0;
     $totalSumGastos = 0;
+
     foreach ($egresos as $e) {
-        if ($e['tipo'] == 'compra') $totalSumCompras += $e['total'];
-        else $totalSumGastos += $e['total'];
+        if ($e['tipo'] == 'compra' || $e['tipo'] == 'pago_deuda') {
+            $totalSumCompras += $e['total'];
+        } else {
+            $totalSumGastos += $e['total'];
+        }
     }
-    $listaCategoriasGastos= $gastosCategorias->listarTodas();
-   
+
     $granTotalEgresos = $totalSumCompras + $totalSumGastos;
+
+    // 7. Carga de Catálogos para la Vista
+    $listaCategoriasGastos = $gastosCategorias->listarTodas();
     $almacenes = $egresoModel->obtenerAlmacenesActivos();
     $productos = $comprasModel->obtenerProductos(); 
-    $proveedores = $proveedorModel->listarTodos(); 
+    $proveedores = $proveedorModel->listarTodosProveedorsYDeuda(); 
 
     $tituloPagina = "Gestión de Egresos";
+
+    // Pasar variables adicionales a la vista para mantener el estado de los inputs
+    // $periodo_sel, $fecha_desde, $fecha_hasta ya están listas
+    
     require_once __DIR__ . '/../views/egresos_view.php';
     exit;
 }
