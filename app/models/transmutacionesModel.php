@@ -82,7 +82,7 @@ public function registrarTransmutacion($datos) {
     private function registrarMovimientoKardex($p_id, $tipo, $cant, $a_id, $u_id, $resp, $obs) {
         $colAlmacen = ($tipo === 'salida') ? 'almacen_origen_id' : 'almacen_destino_id';
         $sql = "INSERT INTO `movimientos` 
-                (`producto_id`, `tipo`, `cantidad`, `$colAlmacen`, `usuario_registra_id`, `responsable_movimiento`, `observaciones`) 
+                (`producto_id`, `tipo`, `cantidad`, `$colAlmacen`, `usuario_registra_id`, `origen_movimiento`, `observaciones`) 
                 VALUES (?, ?, ?, ?, ?, ?, ?)";
         
         $stmt = $this->db->prepare($sql);

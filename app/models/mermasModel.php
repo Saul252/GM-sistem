@@ -11,7 +11,7 @@ public function registrarMerma($datos) {
     try {
         // 1. INSERTAR EN MOVIMIENTOS (Historial / Kardex)
         $sqlMov = "INSERT INTO movimientos 
-                   (producto_id, tipo, cantidad, almacen_origen_id, usuario_registra_id, responsable_movimiento, observaciones) 
+                   (producto_id, tipo, cantidad, almacen_origen_id, usuario_registra_id, origen_movimiento, observaciones) 
                    VALUES (?, 'ajuste', ?, ?, ?, ?, ?)";
         $stmtMov = $this->db->prepare($sqlMov);
         $stmtMov->bind_param("idiiss", 
@@ -87,7 +87,7 @@ public function registrarMerma($datos) {
                 m.fecha_reporte, -- <--- Nombre corregido según tu DB
                 m.cantidad,
                 m.tipo_merma,
-                mov.responsable_movimiento as responsable, -- Tomamos el responsable del movimiento
+                mov.origen_movimiento as responsable, -- Tomamos el responsable del movimiento
                 a.nombre as almacen_nombre,
                 p.nombre as producto_nombre,
                 l.codigo_lote

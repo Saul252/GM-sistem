@@ -590,7 +590,7 @@ CREATE TABLE `movimientos` (
   `usuario_autoriza_id` int(11) DEFAULT NULL,
   `usuario_envia_id` int(11) DEFAULT NULL,
   `usuario_recibe_id` int(11) DEFAULT NULL,
-  `responsable_movimiento` varchar(150) DEFAULT NULL,
+  `origen_movimiento` varchar(150) DEFAULT NULL,
   `referencia_id` int(11) DEFAULT NULL,
   `observaciones` text DEFAULT NULL,
   `fecha` timestamp NOT NULL DEFAULT current_timestamp()

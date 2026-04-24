@@ -54,7 +54,7 @@ try {
 
     $porRestar = $cantidad;
     $precio_historico = 0; // Para arrastrar el costo al nuevo lote
-
+$lotesAfectados = [];
     while ($lote = $resLotes->fetch_assoc()) {
         if ($porRestar <= 0) break;
         
@@ -71,6 +71,11 @@ try {
         $upL->execute();
         
         $porRestar -= $aQuitar;
+        $lotesAfectados[] = [
+    'lote_id' => $idLote,
+    'cantidad' => $aQuitar,
+    'precio' => $precio_historico
+];
     }
 
     if ($porRestar > 0) throw new Exception("No hay suficiente stock en los lotes del almacén de origen.");
@@ -84,6 +89,7 @@ try {
                                    VALUES (?, ?, ?, ?, ?, ?, 'activo')");
     $insLote->bind_param("iisddd", $p_id, $dest_id, $nomLote, $cantidad, $cantidad, $precio_final);
     $insLote->execute();
+    $idLoteNuevo = $conexion->insert_id;
 
     // 2. Lógica de Inventario
     $stmtInv = $conexion->prepare("INSERT INTO inventario (almacen_id, producto_id, stock, stock_minimo, stock_maximo) 
@@ -104,20 +110,69 @@ try {
         $copyPrecios->bind_param("iii", $dest_id, $p_id, $orig_id);
         $copyPrecios->execute();
     }
+  $stmtKardex = $conexion->prepare("
+    INSERT INTO kardex_movimientos_lotes (
+        movimiento_id,
+        lote_origen_id,
+        lote_destino_id,        
+        producto_id,
+        cantidad,
+        usuario_id,
+        observaciones
+    ) VALUES (?, ?,?, ?, ?, ?, ?)
+");
+foreach ($lotesAfectados as $lote) {
+    $lote_id = $lote['lote_id'];
+    $cantidad_lote = $lote['cantidad'];
+
+    $stmtKardex->bind_param(
+        "iiiidis",
+         $movimiento_id ,
+           $lote_id,       
+        $idLoteNuevo,        
+        $p_id,
+        $cantidad_lote,
+        $usuario_id,
+        $observaciones
+    );
+
+    $stmtKardex->execute();
+}
 
     // 4. Actualizar Movimiento
-    $col_autoriza = ($rol_id == 1) ? ", usuario_autoriza_id = ?" : "";
-    $sqlFinal = "UPDATE movimientos SET usuario_recibe_id = ?, fecha = CURRENT_TIMESTAMP $col_autoriza WHERE id = ?";
-    
-    $stmtFinal = $conexion->prepare($sqlFinal);
-    if ($rol_id == 1) {
-        $stmtFinal->bind_param("iii", $usuario_id, $usuario_id, $movimiento_id);
-    } else {
-        $stmtFinal->bind_param("ii", $usuario_id, $movimiento_id);
-    }
-    $stmtFinal->execute();
+   $col_autoriza = ($rol_id == 1) ? ", usuario_autoriza_id = ?" : "";
 
-    $conexion->commit();
+$sqlFinal = "UPDATE movimientos 
+             SET usuario_recibe_id = ?, 
+                 origen_movimiento = ?, 
+                 fecha = CURRENT_TIMESTAMP 
+                 $col_autoriza 
+             WHERE id = ?";
+
+$stmtFinal = $conexion->prepare($sqlFinal);
+
+if ($rol_id == 1) {
+    // admin → 4 parámetros
+    $stmtFinal->bind_param(
+        "iiii",
+        $usuario_id,   // usuario_recibe_id
+        $idLote,       // origen_movimiento
+        $usuario_id,   // usuario_autoriza_id
+        $movimiento_id // WHERE id
+    );
+} else {
+    // usuario normal → 3 parámetros
+    $stmtFinal->bind_param(
+        "iii",
+        $usuario_id,   // usuario_recibe_id
+        $idLote,       // origen_movimiento
+        $movimiento_id // WHERE id
+    );
+}
+
+$stmtFinal->execute();
+
+$conexion->commit();
     
     ob_end_clean();
     echo json_encode(['status' => 'success', 'message' => "Material agregado a nuevo lote: $nomLote"]);

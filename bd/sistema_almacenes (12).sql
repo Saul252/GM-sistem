@@ -2893,7 +2893,7 @@ CREATE TABLE `movimientos` (
   `usuario_autoriza_id` int(11) DEFAULT NULL,
   `usuario_envia_id` int(11) DEFAULT NULL,
   `usuario_recibe_id` int(11) DEFAULT NULL,
-  `responsable_movimiento` varchar(150) DEFAULT NULL,
+  `origen_movimiento` varchar(150) DEFAULT NULL,
   `referencia_id` int(11) DEFAULT NULL,
   `observaciones` text DEFAULT NULL,
   `fecha` timestamp NOT NULL DEFAULT current_timestamp()
@@ -2903,7 +2903,7 @@ CREATE TABLE `movimientos` (
 -- Volcado de datos para la tabla `movimientos`
 --
 
-INSERT INTO `movimientos` (`id`, `producto_id`, `tipo`, `cantidad`, `almacen_origen_id`, `almacen_destino_id`, `usuario_registra_id`, `usuario_autoriza_id`, `usuario_envia_id`, `usuario_recibe_id`, `responsable_movimiento`, `referencia_id`, `observaciones`, `fecha`) VALUES
+INSERT INTO `movimientos` (`id`, `producto_id`, `tipo`, `cantidad`, `almacen_origen_id`, `almacen_destino_id`, `usuario_registra_id`, `usuario_autoriza_id`, `usuario_envia_id`, `usuario_recibe_id`, `origen_movimiento`, `referencia_id`, `observaciones`, `fecha`) VALUES
 (1, 21, 'salida', 1.00, 1, NULL, 3, NULL, NULL, NULL, NULL, 1, 'Salida por venta folio: V-260312162333 (Cant. Entregada: 1)', '2026-03-12 22:23:33'),
 (2, 21, 'salida', 1.00, 1, NULL, 3, NULL, NULL, NULL, NULL, 1, 'Salida por entrega parcial. Folio Venta: V-260312162333', '2026-03-12 22:24:18'),
 (3, 21, 'salida', 2.00, 1, NULL, 3, NULL, NULL, NULL, NULL, 2, 'Salida por venta folio: V-260312162439 (Cant. Entregada: 2)', '2026-03-12 22:24:39'),
@@ -3257,7 +3257,7 @@ INSERT INTO `movimientos` (`id`, `producto_id`, `tipo`, `cantidad`, `almacen_ori
 (381, 21, 'entrada', 1.00, 1, NULL, 1, NULL, NULL, NULL, NULL, 190, 'REINGRESO POR CANCELACIÓN - Folio: V-190. Motivo: ya no quiso el material', '2026-04-07 16:37:28'),
 (382, 21, 'entrada', 1.00, 1, NULL, 1, NULL, NULL, NULL, NULL, 189, 'REINGRESO POR CANCELACIÓN - Folio: V-189. Motivo: ya no quiso el material', '2026-04-07 16:37:33'),
 (383, 21, 'entrada', 1.00, 1, NULL, 1, NULL, NULL, NULL, NULL, 187, 'REINGRESO POR CANCELACIÓN - Folio: V-187. Motivo: ya no quiso el material', '2026-04-07 16:37:40');
-INSERT INTO `movimientos` (`id`, `producto_id`, `tipo`, `cantidad`, `almacen_origen_id`, `almacen_destino_id`, `usuario_registra_id`, `usuario_autoriza_id`, `usuario_envia_id`, `usuario_recibe_id`, `responsable_movimiento`, `referencia_id`, `observaciones`, `fecha`) VALUES
+INSERT INTO `movimientos` (`id`, `producto_id`, `tipo`, `cantidad`, `almacen_origen_id`, `almacen_destino_id`, `usuario_registra_id`, `usuario_autoriza_id`, `usuario_envia_id`, `usuario_recibe_id`, `origen_movimiento`, `referencia_id`, `observaciones`, `fecha`) VALUES
 (384, 21, 'entrada', 1.00, 1, NULL, 1, NULL, NULL, NULL, NULL, 186, 'REINGRESO POR CANCELACIÓN - Folio: V-186. Motivo: ya no quiso el material', '2026-04-07 16:37:46'),
 (385, 21, 'entrada', 1.00, 1, NULL, 1, NULL, NULL, NULL, NULL, 185, 'REINGRESO POR CANCELACIÓN - Folio: V-185. Motivo: ya no quiso el material', '2026-04-07 16:37:52'),
 (386, 21, 'salida', 1.00, 1, NULL, 1, NULL, NULL, NULL, NULL, 196, 'Salida Venta: V-196. Entregado: 1 / 1', '2026-04-07 16:38:24'),
