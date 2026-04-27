@@ -305,7 +305,70 @@ $paginaActual = $paginaActual ?? 'prestamos';
         </div>
     </div>
 </main> 
+<div class="modal fade" id="modalPrestamoDetalleUnique" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
 
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-cash-coin me-2"></i>Detalle del Préstamo
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <small class="text-muted">Trabajador</small>
+                        <div id="mp_trabajador_u" class="fw-semibold"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <small class="text-muted">Estado</small>
+                        <div id="mp_estado_u"></div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <small class="text-muted">Monto</small>
+                        <div id="mp_monto_u" class="fw-bold"></div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <small class="text-muted">Abonado</small>
+                        <div id="mp_abonado_u" class="fw-bold text-primary"></div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <small class="text-muted">Saldo</small>
+                        <div id="mp_saldo_u" class="fw-bold text-danger"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <small class="text-muted">Descripción</small>
+                    <div id="mp_desc_u" class="p-2 bg-light rounded-3 small"></div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Monto</th>
+                                <th>Método</th>
+                                <th>Fecha</th>
+                                <th>Obs</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaAbonosPrestamoUnique"></tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -480,8 +543,13 @@ async function cargarDatosAlmacen(almacenId, esParaModal = false) {
                         `<span class="badge-estado ${saldoP > 0 ? 'estado-activo' : 'estado-liquidado'}">${saldoP > 0 ? 'PENDIENTE' : 'LIQUIDADO'}</span>`,
                         `<div class="text-end">
                             <button class="btn btn-sm btn-light" onclick="verPrestamo(${p.id})"><i class="bi bi-eye"></i></button>
-                            <button class="btn btn-sm btn-success" onclick="modalAbonar(${p.id}, '${p.trabajador.replace(/'/g, "\\'")}', ${saldoP}, ${p.almacen_id})"><i class="bi bi-cash"></i></button>
-                        </div>`
+                           ${saldoP > 0 
+    ? `<button class="btn btn-sm btn-success" onclick="modalAbonar(${p.id}, '${p.trabajador.replace(/'/g, "\\'")}', ${saldoP}, ${p.almacen_id})">
+            <i class="bi bi-cash"></i>
+       </button>` 
+    : '' 
+}
+</div>`
                     ]).node();
 
                     $(rowNode).attr('data-almacen', p.almacen_id);
@@ -526,7 +594,68 @@ function modalAbonar(id, nombre, saldo, almacen_id) {
 }
 
 function verPrestamo(id) {
-    window.location.href = `${CONTROLLER}?action=detalle&id=${id}`;
+
+    $.ajax({
+        url: CONTROLLER,
+        type: 'GET',
+        data: { action: 'detalle', id: id },
+        dataType: 'json',
+
+        success: function(res) {
+            if (!res.success) return;
+
+            const p = res.prestamo;
+            const abonos = res.abonos;
+
+            const f = new Intl.NumberFormat('es-MX', {
+                style: 'currency',
+                currency: 'MXN'
+            });
+
+            // Datos
+            $('#mp_trabajador_u').text(p.trabajador);
+            $('#mp_monto_u').text(f.format(p.monto_total));
+            $('#mp_abonado_u').text(f.format(p.total_abonado));
+            $('#mp_saldo_u').text(f.format(p.saldo_pendiente));
+            $('#mp_desc_u').text(p.descripcion || '-');
+
+            // Estado
+            let estado = `<span class="badge bg-secondary">${p.estado}</span>`;
+            if (p.estado === 'pagado') {
+                estado = `<span class="badge bg-success">Pagado</span>`;
+            } else if (p.estado === 'pendiente') {
+                estado = `<span class="badge bg-warning text-dark">Pendiente</span>`;
+            }
+
+            $('#mp_estado_u').html(estado);
+
+            // Tabla
+            let html = '';
+            if (abonos.length) {
+                abonos.forEach(a => {
+                    html += `
+                        <tr>
+                            <td>${a.numero_pago}</td>
+                            <td class="text-success fw-semibold">${f.format(a.monto_abono)}</td>
+                            <td>${a.metodo_pago}</td>
+                            <td class="small">${a.fecha_abono}</td>
+                            <td class="small">${a.observaciones || '-'}</td>
+                        </tr>
+                    `;
+                });
+            } else {
+                html = `<tr><td colspan="5" class="text-center text-muted">Sin abonos</td></tr>`;
+            }
+
+            $('#tablaAbonosPrestamoUnique').html(html);
+
+            // Mostrar modal (IMPORTANTE: ID único)
+            const modal = new bootstrap.Modal(
+                document.getElementById('modalPrestamoDetalleUnique')
+            );
+            modal.show();
+        }
+    });
 }
 </script>
 </body>

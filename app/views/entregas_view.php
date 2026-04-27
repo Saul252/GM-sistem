@@ -107,7 +107,37 @@
                 </div>
                 <div id="loader" class="spinner-border text-primary d-none" role="status"></div>
             </div>
+<div class="row g-3 mt-2" id="widgetGanancias">
 
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 rounded-4 p-3 text-center">
+            <div class="small text-muted">Unidades</div>
+            <div class="fs-4 fw-bold" id="w_unidades">0</div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 rounded-4 p-3 text-center">
+            <div class="small text-muted">Costo Total</div>
+            <div class="fs-4 fw-bold text-danger" id="w_costo">$0</div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 rounded-4 p-3 text-center">
+            <div class="small text-muted">Ventas</div>
+            <div class="fs-4 fw-bold text-primary" id="w_venta">$0</div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 rounded-4 p-3 text-center">
+            <div class="small text-muted">Ganancia</div>
+            <div class="fs-4 fw-bold" id="w_ganancia">$0</div>
+        </div>
+    </div>
+
+</div>
             <div class="card card-custom mb-4">
                 <div class="card-body p-4">
                     <form id="formFiltros" class="row g-3 align-items-end">
@@ -250,7 +280,24 @@ $(document).ready(function() {
         return `<div class="fw-bold text-dark fs-6">${cant} <small class="fw-normal text-muted">pzas</small></div>`;
     }
 
+function renderWidgetGanancias(data) {
+    const f = new Intl.NumberFormat('es-MX', {
+        style: 'currency',
+        currency: 'MXN'
+    });
 
+    $('#w_unidades').text(data.total_unidades || 0);
+    $('#w_costo').text(f.format(data.costo_total || 0));
+    $('#w_venta').text(f.format(data.total_venta || 0));
+
+    const ganancia = data.ganancia_total || 0;
+    const $ganancia = $('#w_ganancia');
+
+    $ganancia
+        .text(f.format(ganancia))
+        .removeClass('text-success text-danger')
+        .addClass(ganancia >= 0 ? 'text-success' : 'text-danger');
+}
 /**
  * Carga y renderiza la lista de entregas en la tabla principal.
  * Maneja lógica de agrupación por venta y estados dinámicos de botones.
@@ -283,6 +330,8 @@ function cargarEntregas() {
             }
 
             let datosAMostrar = res.data;
+            console.log(res.ganancias);
+            renderWidgetGanancias(res.ganancias);
 
             // --- PROCESAMIENTO DE AGRUPACIÓN ---
             if (agrupar) {

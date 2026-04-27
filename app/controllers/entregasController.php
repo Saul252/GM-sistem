@@ -32,7 +32,10 @@ if (isset($_GET['ajax'])) {
         switch ($_GET['ajax']) {
             case 'listar':
                 $entregas = $modelo->listarSalidasPendientes($_GET, $almacen_usuario, $es_admin);
-                echo json_encode(['data' => $entregas]);
+                $totales  = $modelo->obtenerTotalesSalidas($_GET, $almacen_usuario, $es_admin);
+                echo json_encode(
+                ['data' => $entregas,
+                'ganancias'=> $totales]);
                 break;
 
             case 'get_recursos_reparto':

@@ -115,6 +115,92 @@ public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_a
     }
     return $data;
 }// MANTIENE TU FUNCIÓN ORIGINAL DE PROCESO DE STOCK
+public function obtenerTotalesSalidas($filtros, $almacen_usuario_sesion, $es_admin) {
+    date_default_timezone_set('America/Mexico_City');
+
+    $periodo = $filtros['periodo'] ?? 'semana';
+    $f_inicio_user = $filtros['f_inicio'] ?? '';
+    $f_fin_user = $filtros['f_fin'] ?? '';
+
+    $hoy = date('Y-m-d');
+    $inicio = $hoy;
+    $fin = $hoy;
+
+    if ($periodo !== 'personalizado') {
+        switch ($periodo) {
+            case 'hoy':
+                break;
+            case 'ayer':
+                $inicio = date('Y-m-d', strtotime('-1 day'));
+                $fin = $inicio;
+                break;
+            case 'semana':
+                $inicio = date('Y-m-d', strtotime('-7 days'));
+                break;
+            case 'mes':
+                $inicio = date('Y-m-01');
+                $fin = date('Y-m-t');
+                break;
+            default:
+                $inicio = date('Y-m-d', strtotime('-7 days'));
+                break;
+        }
+    } else {
+        $inicio = !empty($f_inicio_user) ? date('Y-m-d', strtotime($f_inicio_user)) : $hoy;
+        $fin = !empty($f_fin_user) ? date('Y-m-d', strtotime($f_fin_user)) : $hoy;
+    }
+
+    $almacen_filtro = intval($filtros['almacen_id'] ?? 0);
+    $target_almacen = ($almacen_usuario_sesion > 0) ? $almacen_usuario_sesion : $almacen_filtro;
+
+    $where = "WHERE m.tipo = 'salida'
+              AND trm.estado_reparto = 'completado'
+              AND m.fecha BETWEEN '$inicio 00:00:00' AND '$fin 23:59:59'";
+
+    if ($target_almacen > 0) {
+        $where .= " AND m.almacen_origen_id = $target_almacen";
+    }
+
+    $sql = "SELECT 
+                SUM(lms.cantidad_salida) AS total_unidades,
+
+                SUM(lms.costo_compra_historico * lms.cantidad_salida) AS costo_total,
+
+                SUM(lms.precio_venta_pactado * lms.cantidad_salida) AS total_venta,
+
+                SUM(
+                    (lms.precio_venta_pactado - lms.costo_compra_historico) 
+                    * lms.cantidad_salida
+                ) AS ganancia_total
+
+            FROM movimientos m
+
+            INNER JOIN detalle_venta dv 
+                ON dv.venta_id = m.referencia_id 
+                AND dv.producto_id = m.producto_id
+
+            INNER JOIN entregas_venta ev 
+                ON ev.venta_id = dv.venta_id
+
+            INNER JOIN lotes_movimientos_salida lms 
+                ON lms.detalle_venta_id = dv.id 
+                AND lms.entrega_venta_id = ev.id
+
+            LEFT JOIN transporte_repartos_maestro trm 
+                ON m.id = trm.entrega_venta_id
+
+            $where";
+
+    $res = $this->db->query($sql);
+    $row = $res->fetch_assoc();
+
+    return [
+        'total_unidades' => floatval($row['total_unidades'] ?? 0),
+        'costo_total'    => floatval($row['costo_total'] ?? 0),
+        'total_venta'    => floatval($row['total_venta'] ?? 0),
+        'ganancia_total' => floatval($row['ganancia_total'] ?? 0),
+    ];
+}
     public function procesarDespachoFisico($idMovimiento) {
         $this->db->begin_transaction();
 
