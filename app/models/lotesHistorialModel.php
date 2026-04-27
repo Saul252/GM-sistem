@@ -8,68 +8,79 @@ class HistorialLotesModel {
         $this->db = $conexion;
     }
 
+    // =====================================================
+    // 🔥 TOTALES LOTES
+    // =====================================================
     public function obtenerTotalesLotes($producto_id, $almacen_id, $fecha_inicio, $fecha_fin)
-{
-    $sql = "SELECT 
-                IFNULL(SUM(cantidad_inicial), 0) AS total_cantidad_inicial,
-                IFNULL(SUM(cantidad_actual), 0) AS total_cantidad_actual
-            FROM lotes_stock
-            WHERE producto_id = ?
-            AND almacen_id = ?
-            AND fecha_ingreso BETWEEN ? AND ?";
+    {
+        $sql = "SELECT 
+                    IFNULL(SUM(cantidad_inicial), 0) AS total_cantidad_inicial,
+                    IFNULL(SUM(cantidad_actual), 0) AS total_cantidad_actual
+                FROM lotes_stock
+                WHERE producto_id = ?
+                AND almacen_id = ?
+                AND fecha_ingreso BETWEEN ? AND ?";
 
-    $stmt = $this->db->prepare($sql);
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("iiss", $producto_id, $almacen_id, $fecha_inicio, $fecha_fin);
+        $stmt->execute();
 
-    $stmt->bind_param("iiss", $producto_id, $almacen_id, $fecha_inicio, $fecha_fin);
+        return $stmt->get_result()->fetch_assoc();
+    }
 
-    $stmt->execute();
-
-    return $stmt->get_result()->fetch_assoc();
-}
-
-    // 🔥 1. LISTADO COMPLETO DE LOTES
+    // =====================================================
+    // 🔥 LISTADO DE LOTES (CON FECHA)
+    // =====================================================
     public function obtenerLotes($producto_id, $almacen_id, $fecha_inicio, $fecha_fin) {
 
         $sql = "SELECT 
-                    ls.id AS lote_id,
-                    ls.codigo_lote,
-                    ls.producto_id,
-                    p.nombre AS producto_nombre,
-                    ls.almacen_id,
-                    a.nombre AS almacen_nombre,
+    ls.id AS lote_id,
+    ls.codigo_lote,
+    ls.producto_id,
+    p.nombre AS producto_nombre,
+    ls.almacen_id,
+    a.nombre AS almacen_nombre,
 
-                    ls.cantidad_inicial,
-                    ls.cantidad_actual,
-                    ls.precio_compra_unitario,
+    ls.cantidad_inicial,
+    ls.cantidad_actual,
+    ls.precio_compra_unitario,
 
-                    li.fecha_registro AS fecha_compra,
+    MAX(li.detalle_compra_id) AS compra,
+    kml.lote_destino_id AS lote_destino,
+    kml.lote_origen_id as lote_origen,
+    MAX(com.folio) AS folio_compra,
 
-                    ls.estado_lote,
+    ls.fecha_ingreso AS fecha_compra,
+    ls.estado_lote,
 
-                    IFNULL(SUM(lms.cantidad_salida), 0) AS total_vendido,
+    IFNULL(SUM(lms.cantidad_salida), 0) AS total_vendido,
 
-                    IFNULL(SUM(lms.cantidad_salida * lms.precio_venta_pactado), 0) AS ingreso_total,
+    IFNULL(SUM(lms.cantidad_salida * lms.precio_venta_pactado), 0) AS ingreso_total,
 
-                    IFNULL(SUM(lms.cantidad_salida * lms.costo_compra_historico), 0) AS costo_total,
+    IFNULL(SUM(lms.cantidad_salida * lms.costo_compra_historico), 0) AS costo_total,
 
-                    IFNULL(SUM(
-                        (lms.precio_venta_pactado - lms.costo_compra_historico) * lms.cantidad_salida
-                    ), 0) AS ganancia_total
+    IFNULL(SUM(
+        (lms.precio_venta_pactado - lms.costo_compra_historico) * lms.cantidad_salida
+    ), 0) AS ganancia_total
 
-                FROM lotes_stock ls
+FROM lotes_stock ls
 
-                LEFT JOIN productos p ON p.id = ls.producto_id
-                LEFT JOIN almacenes a ON a.id = ls.almacen_id
+LEFT JOIN productos p ON p.id = ls.producto_id
+LEFT JOIN almacenes a ON a.id = ls.almacen_id
+LEFT JOIN kardex_movimientos_lotes kml ON ls.id = kml.lote_destino_id
 
-                LEFT JOIN lotes_ingresos_detalle li ON li.lote_id = ls.id
-                LEFT JOIN lotes_movimientos_salida lms ON lms.lote_id = ls.id
+LEFT JOIN lotes_ingresos_detalle li ON li.lote_id = ls.id
+LEFT JOIN detalle_compra dc ON li.detalle_compra_id = dc.id
+LEFT JOIN compras com ON dc.compra_id = com.id
 
-                WHERE ls.producto_id = ?
-                AND ls.almacen_id = ?
-                AND ls.fecha_ingreso BETWEEN ? AND ?
+LEFT JOIN lotes_movimientos_salida lms ON lms.lote_id = ls.id
 
-                GROUP BY ls.id
-                ORDER BY ls.fecha_ingreso DESC";
+WHERE ls.producto_id = ?
+AND ls.almacen_id = ?
+AND ls.fecha_ingreso BETWEEN ? AND ?
+
+GROUP BY ls.id
+ORDER BY ls.fecha_ingreso DESC";
 
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param("iiss", $producto_id, $almacen_id, $fecha_inicio, $fecha_fin);
@@ -78,71 +89,106 @@ class HistorialLotesModel {
         return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
 
-    // 🧾 2.1 VENTAS POR LOTE
+    // =====================================================
+    // 🧾 VENTAS POR LOTE (SIN CAMBIO)
+    // =====================================================
     public function obtenerVentasLote($lote_id) {
 
-        $sql = "SELECT  
-    'VENTA' AS tipo_movimiento,
+    $sql = "SELECT 
+    tipo_movimiento,
+    documento,
+    cliente_proveedor,
+    codigo_lote,
+    fecha_lote,
+    fecha_movimiento,
+    cantidad_inicial,
+    
+    -- CANTIDAD ACTUAL: Es la inicial menos lo que salió en movimientos anteriores
+    cantidad_inicial - COALESCE(SUM(cantidad_salida) OVER (
+        ORDER BY fecha_movimiento ASC, movimiento_id ASC 
+        ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
+    ), 0) AS cantidad_actual,
+    
+    cantidad_salida,
+    
+    -- SALDO FINAL: Es la inicial menos todo lo que ha salido hasta este momento
+    cantidad_inicial - SUM(cantidad_salida) OVER (
+        ORDER BY fecha_movimiento ASC, movimiento_id ASC
+    ) AS saldo_final,
+    
+    costo_unitario,
+    precio_venta,
+    ganancia,
+    referencia_extra
+FROM (
+    -- TU CONSULTA ORIGINAL (Simplificada para que el cálculo lo haga el bloque de arriba)
+    SELECT 
+        'VENTA' AS tipo_movimiento, v.id AS documento_id, v.folio AS documento, c.nombre_comercial AS cliente_proveedor,
+        lt.id AS lote_id, lt.codigo_lote, lt.fecha_ingreso AS fecha_lote, lms.id AS movimiento_id, lms.fecha_movimiento AS fecha_movimiento,
+        lt.cantidad_inicial, lms.cantidad_salida, lms.costo_compra_historico AS costo_unitario, lms.precio_venta_pactado AS precio_venta,
+        (lms.precio_venta_pactado - lms.costo_compra_historico) * lms.cantidad_salida AS ganancia, '-' AS referencia_extra
+    FROM lotes_movimientos_salida lms
+    INNER JOIN lotes_stock lt ON lt.id = lms.lote_id
+    INNER JOIN detalle_venta dv ON dv.id = lms.detalle_venta_id
+    INNER JOIN ventas v ON v.id = dv.venta_id
+    INNER JOIN clientes c ON c.id = v.id_cliente
+    WHERE lt.id = ?
 
-    lms.lote_id,
-    lms.fecha_movimiento,
-    lt.codigo_lote AS nombre_lote,
+    UNION ALL
 
-    v.id AS venta_id,
-    v.folio,
-    v.fecha AS fecha_venta,
+    SELECT 
+        'TRASPASO', m.id, COALESCE(m.referencia_id, '-'), '-', 
+        lt.id, lt.codigo_lote, lt.fecha_ingreso, m.id, m.fecha, 
+        lt.cantidad_inicial, m.cantidad, 0, 0, 0, COALESCE(m.observaciones, '-')
+    FROM movimientos m
+    JOIN kardex_movimientos_lotes km ON km.movimiento_id = m.id
+    JOIN lotes_stock lt ON km.lote_origen_id = lt.id
+    WHERE lt.id = ?
 
-    dv.producto_id,
-    dv.cantidad,
-    c.nombre_comercial AS cliente,
+    UNION ALL
 
-    lms.cantidad_salida,
-    lms.precio_venta_pactado,
-    lms.costo_compra_historico,
+    SELECT 
+        'AJUSTE', m.id, '-', '-', 
+        lt.id, lt.codigo_lote, lt.fecha_ingreso, m.id, m.fecha, 
+        lt.cantidad_inicial, m.cantidad, 0, 0, 0, COALESCE(m.observaciones, '-')
+    FROM movimientos m
+    JOIN transmutacion_detalle td ON m.id = td.movimiento_id
+    JOIN lotes_stock lt ON td.lote_id = lt.id
+    WHERE lt.id = ?
 
-    (lms.precio_venta_pactado - lms.costo_compra_historico) * lms.cantidad_salida AS ganancia,
+    UNION ALL
 
-    ev.id AS entrega_id
+    SELECT 
+        'MERMA', m.id, '-', '-', 
+        lt.id, lt.codigo_lote, lt.fecha_ingreso, m.id, m.fecha, 
+        lt.cantidad_inicial, m.cantidad, 0, 0, 0, COALESCE(m.observaciones, '-')
+    FROM movimientos m
+    JOIN mermas merma ON m.id = merma.movimiento_id
+    JOIN lotes_stock lt ON merma.lote_id = lt.id
+    WHERE lt.id = ?
+) AS t
+ORDER BY fecha_movimiento DESC, movimiento_id DESC;";
 
-FROM lotes_movimientos_salida lms
+    $stmt = $this->db->prepare($sql);
 
-INNER JOIN detalle_venta dv 
-    ON dv.id = lms.detalle_venta_id
+    // 🔥 FIX: ahora sí 4 parámetros correctos
+    $stmt->bind_param("iiii", $lote_id, $lote_id, $lote_id, $lote_id);
 
-INNER JOIN ventas v 
-    ON v.id = dv.venta_id
+    $stmt->execute();
 
-INNER JOIN lotes_stock lt 
-    ON lms.lote_id = lt.id
-
-LEFT JOIN entregas_venta ev 
-    ON ev.id = lms.entrega_venta_id
-
-INNER JOIN clientes c 
-    ON v.id_cliente = c.id
-
-
-                WHERE lms.lote_id = ?";
-
-        $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("i", $lote_id);
-        $stmt->execute();
-
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    }
-public function obtenerConsumoLotesPorProducto($producto_id, $almacen_id = 0, $fecha_inicio = null, $fecha_fin = null) {
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+    // =====================================================
+    // 📊 CONSUMO POR PRODUCTO (CON FECHAS CORREGIDO)
+    // =====================================================
+  public function obtenerConsumoLotesPorProducto($producto_id, $almacen_id = 0, $fecha_inicio = null, $fecha_fin = null) {
     try {
-        // 1. Configurar zona horaria y fechas por defecto (CDMX)
-        date_default_timezone_set('America/Mexico_City');
-        
-        if (empty($fecha_inicio)) {
-            $fecha_inicio = date('Y-m-d');
-        }
-        if (empty($fecha_fin)) {
-            $fecha_fin = date('Y-m-d');
-        }
 
-        // Aseguramos formato de día completo para el filtrado (de 00:00:00 a 23:59:59)
+        date_default_timezone_set('America/Mexico_City');
+
+        if (empty($fecha_inicio)) $fecha_inicio = date('Y-m-d');
+        if (empty($fecha_fin)) $fecha_fin = date('Y-m-d');
+
         $f_inicio_full = $fecha_inicio . " 00:00:00";
         $f_fin_full    = $fecha_fin . " 23:59:59";
 
@@ -150,56 +196,84 @@ public function obtenerConsumoLotesPorProducto($producto_id, $almacen_id = 0, $f
             v.id AS venta_id,
             v.folio,
             c.nombre_comercial AS cliente,
-            lt.fecha_ingreso AS fecha_de_ingreso,
+
             lt.id AS lote_id,
             lt.codigo_lote,
+            lt.fecha_ingreso AS fecha_de_ingreso,
+
             lms.id AS movimiento_id,
             lms.fecha_movimiento,
-            lt.cantidad_inicial,
+
+            -- 🔥 1. CANTIDAD INICIAL
+            lt.cantidad_inicial AS cantidad_inicial,
+
+            -- 🔥 2. SALDO ANTES DEL MOVIMIENTO
+            lt.cantidad_inicial - COALESCE((
+                SELECT SUM(lms2.cantidad_salida)
+                FROM lotes_movimientos_salida lms2
+                WHERE lms2.lote_id = lms.lote_id
+                AND lms2.id < lms.id
+            ),0) AS cantidad_actual,
+
+            -- 🔥 3. SALIDA DEL MOVIMIENTO
             lms.cantidad_salida,
-            -- Saldo histórico acumulado hasta este movimiento específico
-            lt.cantidad_inicial - (
+
+            -- 🔥 4. SALDO FINAL
+            lt.cantidad_inicial - COALESCE((
                 SELECT SUM(lms2.cantidad_salida)
                 FROM lotes_movimientos_salida lms2
                 WHERE lms2.lote_id = lms.lote_id
                 AND lms2.id <= lms.id
-            ) AS saldo_final
+            ),0) AS saldo_final
+
         FROM lotes_movimientos_salida lms
-        INNER JOIN lotes_stock lt ON lt.id = lms.lote_id
-        INNER JOIN detalle_venta dv ON dv.id = lms.detalle_venta_id
-        INNER JOIN ventas v ON v.id = dv.venta_id
-        INNER JOIN clientes c ON c.id = v.id_cliente
-        WHERE dv.producto_id = ? 
+
+        INNER JOIN lotes_stock lt 
+            ON lt.id = lms.lote_id
+
+        INNER JOIN detalle_venta dv 
+            ON dv.id = lms.detalle_venta_id
+
+        INNER JOIN ventas v 
+            ON v.id = dv.venta_id
+
+        INNER JOIN clientes c 
+            ON c.id = v.id_cliente
+
+        WHERE dv.producto_id = ?
         AND lms.fecha_movimiento BETWEEN ? AND ?";
 
-        // 2. Agregar filtro de almacén si aplica
+        // 🔥 filtro opcional de almacén
         if ($almacen_id != 0) {
             $sql .= " AND lt.almacen_id = ?";
         }
 
-        $sql .= " ORDER BY lms.fecha_movimiento ASC, lms.id ASC";
+        $sql .= " ORDER BY lt.id ASC, lms.id ASC";
 
         $stmt = $this->db->prepare($sql);
 
-        // 3. Binding dinámico de parámetros
         if ($almacen_id != 0) {
-            // i = producto, s = fecha_inicio, s = fecha_fin, i = almacen
-            $stmt->bind_param("issi", $producto_id, $f_inicio_full, $f_fin_full, $almacen_id);
+            $stmt->bind_param(
+                "issi",
+                $producto_id,
+                $f_inicio_full,
+                $f_fin_full,
+                $almacen_id
+            );
         } else {
-            // i = producto, s = fecha_inicio, s = fecha_fin
-            $stmt->bind_param("iss", $producto_id, $f_inicio_full, $f_fin_full);
+            $stmt->bind_param(
+                "iss",
+                $producto_id,
+                $f_inicio_full,
+                $f_fin_full
+            );
         }
 
         $stmt->execute();
-        $resultado = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
         return [
             'success' => true,
-            'data'    => $resultado,
-            'filtros' => [ // Útil para depuración en el JS
-                'desde' => $f_inicio_full,
-                'hasta' => $f_fin_full
-            ]
+            'data' => $stmt->get_result()->fetch_all(MYSQLI_ASSOC)
         ];
 
     } catch (Throwable $e) {
@@ -209,97 +283,150 @@ public function obtenerConsumoLotesPorProducto($producto_id, $almacen_id = 0, $f
         ];
     }
 }
-    // 🔄 2.2 TRASPASOS
-   public function obtenerTraspasos($producto_id, $almacen_id) {
+    // =====================================================
+    // 🔁 TRASPASOS (CORREGIDO SQL)
+    // =====================================================
+ public function obtenerTraspasos($lote_id, $fecha_inicio = null, $fecha_fin = null) {
 
     $sql = "SELECT        
         m.id AS movimiento_id,
-        km.lote_origen_id as lote_origen_id,
-        km.lote_destino_id as lote_destino_id,
-        m.fecha as fecha,
-        m.tipo as tipo,
-        m.producto_id producto_id,
-        m.cantidad as cantidad,
-        m.almacen_origen_id as almacen_origen_id,
-        m.almacen_destino_id as almacen_destino_id,
+
+        lt.codigo_lote AS codigo_lote_origen,
+        ltd.codigo_lote AS codigo_lote_destino,
+
+        km.lote_origen_id,
+        km.lote_destino_id,
+
+        m.fecha,
+        m.tipo,
+        m.producto_id,
+        m.cantidad,
+        m.almacen_origen_id,
+        m.almacen_destino_id,
         m.referencia_id,
         m.observaciones
 
     FROM movimientos m
+
     JOIN kardex_movimientos_lotes km 
         ON m.id = km.movimiento_id
 
-    WHERE m.producto_id = ?
-    AND m.tipo = 'traspaso'
-    AND (m.almacen_origen_id = ? OR m.almacen_destino_id = ?)";
+    JOIN lotes_stock lt 
+        ON km.lote_origen_id = lt.id
+
+    LEFT JOIN lotes_stock ltd 
+        ON km.lote_destino_id = ltd.id
+
+    WHERE km.lote_origen_id = ?
+    AND m.tipo = 'traspaso'";
+
+    if ($fecha_inicio && $fecha_fin) {
+        $sql .= " AND m.fecha BETWEEN ? AND ?";
+    }
+
+    $sql .= " ORDER BY m.fecha ASC";
 
     $stmt = $this->db->prepare($sql);
-    $stmt->bind_param("iii", $producto_id, $almacen_id, $almacen_id);
+
+    if ($fecha_inicio && $fecha_fin) {
+        $stmt->bind_param("iss", $lote_id, $fecha_inicio, $fecha_fin);
+    } else {
+        $stmt->bind_param("i", $lote_id);
+    }
+
     $stmt->execute();
 
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
+    // =====================================================
+    // ⚙️ AJUSTES
+    // =====================================================
+   public function obtenerAjustes($producto_id, $almacen_id, $fecha_inicio = null, $fecha_fin = null) {
 
-    // ⚙️ 2.3 AJUSTES
-    public function obtenerAjustes($producto_id, $almacen_id) {
+    $sql = "SELECT 
+        'AJUSTE' AS tipo_movimiento,
+        m.id,
+        m.fecha,
+        m.producto_id,
+        m.cantidad,
+        m.observaciones
 
-        $sql = "SELECT 
-                    'AJUSTE' AS tipo_movimiento,
+    FROM movimientos m
 
-                    m.id,
-                    m.fecha,
-                    m.producto_id,
-                    m.cantidad,
-                    m.observaciones
+    WHERE m.producto_id = ?
+  AND m.observaciones LIKE '%Salida Transmutación%'
+    AND m.almacen_origen_id = ?";
 
-                FROM movimientos m
+    // 🔥 filtro opcional por fecha
+    if ($fecha_inicio && $fecha_fin) {
+        $sql .= " AND m.fecha BETWEEN ? AND ?";
+    }
 
-                WHERE m.producto_id = ?
-                AND m.tipo = 'ajuste'
-                AND m.almacen_origen_id = ?";
+    $sql .= " ORDER BY m.fecha ASC";
 
-        $stmt = $this->db->prepare($sql);
+    $stmt = $this->db->prepare($sql);
+
+    // 🔥 binding dinámico
+    if ($fecha_inicio && $fecha_fin) {
+        $stmt->bind_param("iiss", $producto_id, $almacen_id, $fecha_inicio, $fecha_fin);
+    } else {
         $stmt->bind_param("ii", $producto_id, $almacen_id);
-        $stmt->execute();
-
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
 
-    // 📦 2.4 ENTRADAS (COMPRAS)
-    public function obtenerEntradasLote($lote_id) {
+    $stmt->execute();
 
-        $sql = "SELECT 
-                    'ENTRADA' AS tipo_movimiento,
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+    // =====================================================
+    // 📦 ENTRADAS
+    // =====================================================
+    public function obtenerEntradasLote($lote_id, $fecha_inicio = null, $fecha_fin = null) {
 
-                    li.lote_id,
-                    li.fecha_registro,
-                    li.cantidad_recibida,
-                    li.costo_aplicado,
+    $sql = "SELECT 
+        'ENTRADA' AS tipo_movimiento,
+        li.lote_id,
+        li.fecha_registro,
+        li.cantidad_recibida,
+        li.costo_aplicado,
+        dc.compra_id
 
-                    dc.compra_id
+    FROM lotes_ingresos_detalle li
 
-                FROM lotes_ingresos_detalle li
+    INNER JOIN detalle_compra dc 
+        ON dc.id = li.detalle_compra_id
 
-                INNER JOIN detalle_compra dc ON dc.id = li.detalle_compra_id
+    WHERE li.lote_id = ?";
 
-                WHERE li.lote_id = ?";
+    // 🔥 filtro opcional por fecha
+    if ($fecha_inicio && $fecha_fin) {
+        $sql .= " AND li.fecha_registro BETWEEN ? AND ?";
+    }
 
-        $stmt = $this->db->prepare($sql);
+    $sql .= " ORDER BY li.fecha_registro ASC";
+
+    $stmt = $this->db->prepare($sql);
+
+    // 🔥 binding dinámico
+    if ($fecha_inicio && $fecha_fin) {
+        $stmt->bind_param("iss", $lote_id, $fecha_inicio, $fecha_fin);
+    } else {
         $stmt->bind_param("i", $lote_id);
-        $stmt->execute();
-
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
 
-    // 🔥 EXTRA: TODO EL HISTORIAL JUNTO (para dashboard)
+    $stmt->execute();
+
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+    // =====================================================
+    // 🔥 HISTORIAL COMPLETO
+    // =====================================================
     public function obtenerHistorialCompleto($producto_id, $almacen_id, $lote_id) {
 
         return [
-            'ventas'     => $this->obtenerVentasLote($lote_id),
-            'traspasos'  => $this->obtenerTraspasos($producto_id, $almacen_id),
-            'ajustes'    => $this->obtenerAjustes($producto_id, $almacen_id),
-            'entradas'   => $this->obtenerEntradasLote($lote_id)
+            'ventas'    => $this->obtenerVentasLote($lote_id),
+            'traspasos' => $this->obtenerTraspasos($producto_id, $almacen_id),
+            'ajustes'   => $this->obtenerAjustes($producto_id, $almacen_id),
+            'entradas'  => $this->obtenerEntradasLote($lote_id)
         ];
     }
-
 }

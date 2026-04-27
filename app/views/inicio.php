@@ -19,6 +19,12 @@ $modulos = [
     ['id' => 'usuarios', 'url' => '/cfsistem/app/controllers/usuariosController.php', 'icon' => 'bi-people', 'class' => 'icon-usuarios', 'label' => 'Usuarios', 'desc' => 'Accesos'],
     ['id' => 'Mermas', 'url' => '/cfsistem/app/controllers/mermasController.php', 'icon' => 'bi-exclamation-triangle', 'class' => 'icon-mermas', 'label' => 'Mermas', 'desc' => 'Pérdidas'],
     ['id' => 'transmutaciones', 'url' => '/cfsistem/app/controllers/transmutacionesController.php', 'icon' => 'bi-arrow-repeat', 'class' => 'icon-transmutaciones', 'label' => 'Conversiones', 'desc' => 'Procesos'],
+    ['id' => 'historialLotes', 
+ 'url' => '/cfsistem/app/controllers/lotesHistorialController.php', 
+ 'icon' => 'bi-clock-history', 
+ 'label' => 'Historial de Lotes', 
+ 'desc' => 'Historial de lotes'
+],
     ['id' => 'clientes', 'url' => '/cfsistem/app/controllers/clientesController.php', 'icon' => 'bi-person-lines-fill', 'class' => 'icon-clientes', 'label' => 'Clientes', 'desc' => 'Cartera'],
 
     ['id' => 'finanzas', 'url' => '/cfsistem/app/controllers/finanzasController.php', 'icon' => 'bi-graph-up-arrow', 'class' => 'text-primary', 'label' => 'Finanzas', 'desc' => 'Estado financiero'],

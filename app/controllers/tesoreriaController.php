@@ -143,7 +143,7 @@ case 'obtener_saldos_sucursal':
     break;
             case 'catalogos_modal':
     // Obtenemos el ID del almacén seleccionado en el modal (0 si es global/admin)
-    $almacen_id = isset($_GET['almacen_id']) ? intval($_GET['almacen_id']) : 0;
+    $almacen_id = 0;
 
     // Carga de selects para el modal en una sola respuesta
     echo json_encode([

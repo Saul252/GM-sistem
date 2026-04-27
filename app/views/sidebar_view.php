@@ -18,8 +18,12 @@ date_default_timezone_set('America/Mexico_City');
    ['id' => 'clientes', 'url' => '/cfsistem/app/controllers/clientesController.php', 'icon' => 'bi-person-lines-fill', 'label' => 'Clientes', 'active' => ($archivoActual == 'clientesController.php')],
    ['id' => 'Mermas', 'url' => '/cfsistem/app/controllers/mermasController.php', 'icon' => 'bi-exclamation-triangle', 'label' => 'Mermas', 'active' => ($archivoActual == 'mermasController.php')],
    ['id' => 'transmutaciones', 'url' => '/cfsistem/app/controllers/transmutacionesController.php', 'icon' => 'bi-arrow-repeat', 'label' => 'Conversiones', 'active' => ($archivoActual == 'transmutacionesController.php')],
-['id' => 'historialLotes', 'url' => '/cfsistem/app/controllers/lotesHistorialController.php', 'icon' => 'bi-calculator', 'label' => 'Historial de Lotes', 'active' => ($archivoActual == 'lotesHistorialController.php')],
-  
+['id' => 'historialLotes', 
+ 'url' => '/cfsistem/app/controllers/lotesHistorialController.php', 
+ 'icon' => 'bi-clock-history', 
+ 'label' => 'Historial de Lotes', 
+ 'active' => ($archivoActual == 'lotesHistorialController.php')
+],
    // 🔥 CAMBIOS AQUÍ
    ['id' => 'finanzas_admin', 'url' => '/cfsistem/app/controllers/finanzasAdmController.php', 'icon' => 'bi-bar-chart-line', 'label' => 'Finanzas Admin', 'active' => ($archivoActual == 'finanzasAdminController.php')],
    
@@ -47,23 +51,29 @@ date_default_timezone_set('America/Mexico_City');
             <button class="btn btn-toggle border-0" id="toggleSidebar" aria-label="Abrir Menú">
                 <i class="bi bi-list fs-2 text-white"></i>
             </button>
-             </div>
+        </div>
 
         <div class="d-flex align-items-center gap-2 gap-md-3">
             <div class="dropdown">
-                <a href="javascript:void(0);" class="text-white position-relative p-2" id="btnNotif" data-bs-toggle="dropdown">
+                <a href="javascript:void(0);" class="text-white position-relative p-2" id="btnNotif"
+                    data-bs-toggle="dropdown">
                     <i class="bi bi-bell fs-4"></i>
-                    <span id="notif-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
+                    <span id="notif-badge"
+                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
                 </a>
-                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0" id="menuNotif" style="width: 320px; max-width: 90vw; max-height: 400px; overflow-y: auto;">
+                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0" id="menuNotif"
+                    style="width: 320px; max-width: 90vw; max-height: 400px; overflow-y: auto;">
                     <li class="p-3 border-bottom bg-light">
                         <h6 class="mb-0 fw-bold text-dark">Traspasos Pendientes</h6>
                     </li>
                     <div id="lista-notificaciones">
                         <li class="p-3 text-center text-muted small">Cargando...</li>
                     </div>
-                    <li><hr class="dropdown-divider m-0"></li>
-                    <li><a class="dropdown-item text-center py-2 small text-primary fw-bold" href="/cfsistem/app/views/almacenes.php">Ver todos</a></li>
+                    <li>
+                        <hr class="dropdown-divider m-0">
+                    </li>
+                    <li><a class="dropdown-item text-center py-2 small text-primary fw-bold"
+                            href="/cfsistem/app/views/almacenes.php">Ver todos</a></li>
                 </ul>
             </div>
 
@@ -72,7 +82,8 @@ date_default_timezone_set('America/Mexico_City');
                 <span class="ms-2 d-none d-md-inline small"><?= $_SESSION['nombre'] ?? 'Usuario' ?></span>
             </div>
 
-            <a href="/cfsistem/logout.php" class="btn btn-sm btn-outline-light border-0 rounded-circle" title="Cerrar Sesión">
+            <a href="/cfsistem/logout.php" class="btn btn-sm btn-outline-light border-0 rounded-circle"
+                title="Cerrar Sesión">
                 <i class="bi bi-box-arrow-right fs-4"></i>
             </a>
         </div>
@@ -84,20 +95,21 @@ date_default_timezone_set('America/Mexico_City');
         <div class="text-center mb-4">
             <h5 class="fw-bold text-primary mb-1">Menú</h5>
             <?php if (!empty($_SESSION['rol'])): ?>
-                <span class="badge bg-light text-secondary border">Rol: <?= ucfirst($_SESSION['rol']) ?></span>
+            <span class="badge bg-light text-secondary border">Rol: <?= ucfirst($_SESSION['rol']) ?></span>
             <?php endif; ?>
         </div>
 
         <ul class="nav nav-pills flex-column gap-1">
             <?php foreach ($modulos as $m): ?>
-                <?php if (puedeVerModulo($m['id'])): ?>
-                <li class="nav-item">
-                    <a href="<?= $m['url'] ?>" class="nav-link d-flex align-items-center gap-3 <?= $m['active'] ? 'active shadow-sm' : 'text-dark' ?>">
-                        <i class="<?= $m['icon'] ?> fs-5"></i>
-                        <span><?= $m['label'] ?></span>
-                    </a>
-                </li>
-                <?php endif; ?>
+            <?php if (puedeVerModulo($m['id'])): ?>
+            <li class="nav-item">
+                <a href="<?= $m['url'] ?>"
+                    class="nav-link d-flex align-items-center gap-3 <?= $m['active'] ? 'active shadow-sm' : 'text-dark' ?>">
+                    <i class="<?= $m['icon'] ?> fs-5"></i>
+                    <span><?= $m['label'] ?></span>
+                </a>
+            </li>
+            <?php endif; ?>
             <?php endforeach; ?>
         </ul>
     </div>
@@ -110,13 +122,13 @@ date_default_timezone_set('America/Mexico_City');
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-    
+
     // --- 1. VARIABLES DE ELEMENTOS ---
     const toggleBtn = document.getElementById('toggleSidebar');
     const sidebar = document.getElementById('sidebar');
     const btnNotif = document.getElementById('btnNotif');
     const menuNotif = document.getElementById('menuNotif');
-    
+
     // Crear el overlay para móvil si no existe
     let overlay = document.querySelector('.sidebar-overlay');
     if (!overlay) {
@@ -128,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 2. LÓGICA DEL SIDEBAR (RESPONSIVO) ---
     function toggleMenu() {
         const isMobile = window.innerWidth <= 992;
-        
+
         if (isMobile) {
             sidebar.classList.toggle('show');
             overlay.classList.toggle('active');
@@ -157,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-  // --- 3. SISTEMA DE NOTIFICACIONES DE TRASPASOS ---
+    // --- 3. SISTEMA DE NOTIFICACIONES DE TRASPASOS ---
     let ultimoConteoTraspasos = 0;
     let primeraCarga = true;
     let corteProcesadoHoy = false;
@@ -207,16 +219,23 @@ document.addEventListener('DOMContentLoaded', () => {
                                 fontWeight: "500",
                                 padding: "16px 20px"
                             },
-                            offset: { x: 15, y: 15 },
-                            onClick: function() { window.location.href = "/cfsistem/app/controllers/almacenes.php"; }
+                            offset: {
+                                x: 15,
+                                y: 15
+                            },
+                            onClick: function() {
+                                window.location.href =
+                                "/cfsistem/app/controllers/almacenes.php";
+                            }
                         }).showToast();
 
                         if (!document.getElementById('style-toast-red-close')) {
                             const style = document.createElement('style');
                             style.id = 'style-toast-red-close';
-                            style.innerHTML = `.toast-traspaso .toast-close { color: #ff0000 !important; opacity: 1; font-weight: bold; font-size: 20px; margin-left: 10px; }`;
+                            style.innerHTML =
+                                `.toast-traspaso .toast-close { color: #ff0000 !important; opacity: 1; font-weight: bold; font-size: 20px; margin-left: 10px; }`;
                             document.head.appendChild(style);
-                        } 
+                        }
                     }
                     primeraCarga = false;
                 }
@@ -225,10 +244,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (lista && data.items) {
                     if (cantidadActual === 0) {
-                        lista.innerHTML = '<div class="p-4 text-center text-muted small">Sin traspasos pendientes</div>';
+                        lista.innerHTML =
+                            '<div class="p-4 text-center text-muted small">Sin traspasos pendientes</div>';
                     } else {
                         lista.innerHTML = data.items.map(item => {
-                            const mostrarCantidad = item.cantidad_texto ? item.cantidad_texto : (item.cantidad + ' PZA');
+                            const mostrarCantidad = item.cantidad_texto ? item.cantidad_texto : (
+                                item.cantidad + ' PZA');
                             return `
                             <div class="d-flex align-items-center justify-content-between p-3 border-bottom bg-white hover-notif">
                                 <div style="flex: 1; line-height: 1.4;">
@@ -251,70 +272,72 @@ document.addEventListener('DOMContentLoaded', () => {
             .catch(err => console.error("❌ Error fetch notificaciones:", err));
     }
 
-function verificarCorteCaja() {
-    const hoy = new Date().toISOString().split('T')[0];
-    const corteYaHecho = localStorage.getItem('corte_finalizado_fecha') === hoy;
-    const estaProcesando = localStorage.getItem('corte_en_progreso') === 'true';
+    function verificarCorteCaja() {
+        const hoy = new Date().toISOString().split('T')[0];
+        const corteYaHecho = localStorage.getItem('corte_finalizado_fecha') === hoy;
+        const estaProcesando = localStorage.getItem('corte_en_progreso') === 'true';
 
-    if (corteYaHecho || estaProcesando) return;
+        if (corteYaHecho || estaProcesando) return;
 
-    const ahora = new Date();
-    const horaActual = ahora.getHours().toString().padStart(2, '0') + ":" + ahora.getMinutes().toString().padStart(2, '0');
-    const horaCierreConfig = localStorage.getItem('config_hora_cierre') || '12:01';
+        const ahora = new Date();
+        const horaActual = ahora.getHours().toString().padStart(2, '0') + ":" + ahora.getMinutes().toString()
+            .padStart(2, '0');
+        const horaCierreConfig = localStorage.getItem('config_hora_cierre') || '12:01';
 
-    console.log("corte de caja", horaCierreConfig);
-    if (horaActual >= horaCierreConfig) {
-        ejecutarRondaDeCorte();
+        console.log("corte de caja", horaCierreConfig);
+        if (horaActual >= horaCierreConfig) {
+            ejecutarRondaDeCorte();
+        }
     }
-}
 
-function ejecutarRondaDeCorte() {
-    localStorage.setItem('corte_en_progreso', 'true');
-    console.log("🚀 Procesando bloque de almacenes...");
+    function ejecutarRondaDeCorte() {
+        localStorage.setItem('corte_en_progreso', 'true');
+        console.log("🚀 Procesando bloque de almacenes...");
 
-    fetch('/cfsistem/app/backend/funciones/corteApi.php?action=check_sistema', {
-        method: 'POST'
-    })
-    .then(response => {
-        // Si la respuesta no es 200-299, extraemos el texto para ver el error de PHP
-        if (!response.ok) {
-            return response.text().then(text => { 
-                throw new Error(`Servidor respondió con ${response.status}: ${text}`); 
-            });
-        }
-        return response.json();
-    })
-    .then(res => {
-        if (res.status === 'success') {
-            if (res.hay_mas) {
-                console.log("⏳ Bloque completado, solicitando siguiente...");
-                ejecutarRondaDeCorte(); 
-            } else {
-                const hoy = new Date().toISOString().split('T')[0];
-                localStorage.setItem('corte_finalizado_fecha', hoy);
+        fetch('/cfsistem/app/backend/funciones/corteApi.php?action=check_sistema', {
+                method: 'POST'
+            })
+            .then(response => {
+                // Si la respuesta no es 200-299, extraemos el texto para ver el error de PHP
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(`Servidor respondió con ${response.status}: ${text}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(res => {
+                if (res.status === 'success') {
+                    if (res.hay_mas) {
+                        console.log("⏳ Bloque completado, solicitando siguiente...");
+                        ejecutarRondaDeCorte();
+                    } else {
+                        const hoy = new Date().toISOString().split('T')[0];
+                        localStorage.setItem('corte_finalizado_fecha', hoy);
+                        localStorage.setItem('corte_en_progreso', 'false');
+                        console.log("✅ Proceso completo.");
+                        actualizarInterfazCorte(true);
+                    }
+                } else {
+                    console.error("❌ El servidor devolvió un error de lógica:", res.mensaje);
+                    localStorage.setItem('corte_en_progreso', 'false');
+                }
+            })
+            .catch(err => {
                 localStorage.setItem('corte_en_progreso', 'false');
-                console.log("✅ Proceso completo.");
-                actualizarInterfazCorte(true);
-            }
-        } else {
-            console.error("❌ El servidor devolvió un error de lógica:", res.mensaje);
-            localStorage.setItem('corte_en_progreso', 'false');
-        }
-    })
-    .catch(err => {
-        localStorage.setItem('corte_en_progreso', 'false');
-        // Aquí es donde verás el fallo real en la consola de F12
-        console.error("🚨 FALLO CRÍTICO EN LA COMUNICACIÓN:");
-        console.error(err.message); 
-    });
-}
+                // Aquí es donde verás el fallo real en la consola de F12
+                console.error("🚨 FALLO CRÍTICO EN LA COMUNICACIÓN:");
+                console.error(err.message);
+            });
+    }
+
     function actualizarInterfazCorte(estado) {
         const hoy = new Date().toISOString().split('T')[0];
         if (localStorage.getItem('corte_finalizado_fecha') === hoy) {
-            estado = true; 
+            estado = true;
         }
         const badgeCorte = document.getElementById('badgeCorte');
-        if(badgeCorte && estado) {
+        if (badgeCorte && estado) {
             badgeCorte.classList.remove('bg-secondary', 'opacity-50');
             badgeCorte.classList.add('bg-success', 'shadow-sm');
             badgeCorte.innerHTML = '<i class="bi bi-check-circle-fill"></i> Caja Cerrada';
@@ -327,18 +350,18 @@ function ejecutarRondaDeCorte() {
         formData.append('id', id);
 
         fetch('/cfsistem/app/backend/movimientos/procesar_transaccion_rapida.php', {
-            method: 'POST',
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success || data.status === 'success') {
-                location.reload();
-            } else {
-                alert("Error: " + (data.message || "No se pudo procesar"));
-            }
-        })
-        .catch(err => console.error("Error en recepción:", err));
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success || data.status === 'success') {
+                    location.reload();
+                } else {
+                    alert("Error: " + (data.message || "No se pudo procesar"));
+                }
+            })
+            .catch(err => console.error("Error en recepción:", err));
     };
 
     if (btnNotif && menuNotif) {
@@ -364,5 +387,5 @@ function ejecutarRondaDeCorte() {
             if (overlay) overlay.classList.remove('active');
         }
     });
-}); 
+});
 </script>
