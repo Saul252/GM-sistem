@@ -77,96 +77,108 @@ $target = ($almacen_usuario != 0)
    AJAX
 ========================= */
 if (isset($_GET['action']) && $_GET['action'] === 'ajax') {
+
     header('Content-Type: application/json');
 
     try {
 
-        $prestamos     = $prestamosModel->listarPrestamos($target, $f_inicio, $f_fin);
-        $trabajadores  = $trabajadoresModel->listarTrabajadores($target);
-        $cajasFuertes  = $tesoreria->getCajasFuertes($target);
-        $saldo         = $corteCaja->obtenerSaldoInicialMonitor($target, $f_inicio, $f_fin);
+        // 🔥 LEER LO QUE ENVÍAS DESDE JS
+        $almacen_id = intval($_GET['almacen_id'] ?? 0);
+        $f_inicio   = $_GET['f_inicio'] ?? null;
+        $f_fin      = $_GET['f_fin'] ?? null;
 
-        if (!isset($saldo[0])) {
-            $saldo = [[
-                'idAlmacen' => $target,
-                'almacen'   => 'Sucursal',
-                'monto'     => $saldo['monto'] ?? 0
-            ]];
-        }
+        // 👇 ESTE ES TU TARGET REAL
+        $target = $almacen_id;
+
+        // 🔥 CONSULTAS
+        $prestamos = $prestamosModel->listarPrestamos($target, $f_inicio, $f_fin);
+        $deuda     = $prestamosModel->obtenerTotalDeuda($target, $f_inicio, $f_fin);
+        $trabajadores = $trabajadoresModel->listarTrabajadores($target);
 
         echo json_encode([
             'status' => 'success',
-            'almacen_activo' => $target,
             'prestamos' => $prestamos,
-            'trabajadores' => $trabajadores,
-            'cajasFuertes' => $cajasFuertes,
-            'saldo' => $saldo
+            'deuda' => $deuda,
+            'trabajadores' => $trabajadores
         ]);
 
-    } catch (Exception $e) {
+    } catch (Throwable $e) {
         echo json_encode([
             'status' => 'error',
             'message' => $e->getMessage()
         ]);
     }
+
     exit;
 }
+if (isset($_GET['action']) && $_GET['action'] === 'deudaTrabajador') {
 
+    header('Content-Type: application/json');
+
+    try {
+
+        $trabajador_id = intval($_GET['trabajador_id'] ?? 0);
+
+        $deudaTrabajador = $prestamosModel->obtenerDeudaTrabajador($trabajador_id);
+
+        echo json_encode([
+            'status' => 'success',
+            'deuda' => $deudaTrabajador
+        ]);
+
+    } catch (Throwable $e) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+
+    exit;
+}
 /* =========================
    CREAR PRÉSTAMO + GASTO
 ========================= */
+
 if (isset($_GET['action']) && $_GET['action'] === 'crear') {
     header('Content-Type: application/json');
 
     try {
- $almacen = intval($_POST['almacen_id'] ?? 0);
-        $trabajador_id = intval($_POST['trabajador_id'] ?? 0);
-        $monto         = floatval($_POST['monto_total'] ?? 0);
-      $metodo_pago     =   ($_POST['metodo_pago'] ?? 'Efectivo');
-$descripcion   = trim($_POST['descripcion'] ?? '');
+
+        $almacen        = intval($_POST['almacen_id'] ?? 0);
+        $trabajador_id  = intval($_POST['trabajador_id'] ?? 0);
+        $monto          = floatval($_POST['monto_total'] ?? 0);
+        $metodo_pago    = $_POST['metodo_pago'] ?? 'efectivo';
+        $descripcion    = trim($_POST['descripcion'] ?? '');
 
         if ($trabajador_id <= 0 || $monto <= 0) {
             throw new Exception("Datos inválidos");
         }
 
-        /* ===== 1. PRÉSTAMO ===== */
-        $data = [
-            'trabajador_id' => $trabajador_id,
-            'almacen_id'    => $almacen,
-            'monto_total'   => $monto,
-            'estado'        =>'activo',
-            'descripcion'   => $descripcion
-        ];
+        // =========================
+        // 1. OBTENER NOMBRE
+        // =========================
+        $nombreTrabajador = $trabajadoresModel->nombreTrabajador($trabajador_id);
 
-        $ok = $prestamosModel->crearPrestamo($data);
+        // =========================
+        // 2. CREAR GASTO (PRIMERO 🔥)
+        // =========================
+        $folio = $gastosModel->generarSiguienteFolioGasto();
 
-        if (!$ok) {
-            throw new Exception("Error al registrar préstamo");
-        }
-
-
-        /* ===== 2. OBTENER NOMBRE TRABAJADOR (DIRECTO BD SEGURO) ===== */
-      $nombreTrabajador = $trabajadoresModel->nombreTrabajador($trabajador_id);
-
-  $siguiente = $gastosModel->generarSiguienteFolioGasto();
-        /* ===== 3. CREAR GASTO ===== */
-        $folio = 'PREST-' . time();
-
-        $concepto = "Préstamo a {$nombreTrabajador} por motivo de {$descripcion}";
+        $concepto = "Préstamo a {$nombreTrabajador}" . 
+                    ($descripcion ? " - {$descripcion}" : "");
 
         $cabecera = [
-            'folio' => $siguiente,
-            'fecha' => date('Y-m-d'),
-            'almacen_id' => $almacen,
-            'categoria_id' => 8,
-            'usuario_id' => $usuario_id,
-            'beneficiario' => $nombreTrabajador,
-            'metodo_pago'  => $_POST['metodo_pago'] ?? 'Efectivo', // ⚠️ en minúscula
-            'total' => $monto,
-            'documento_url' => '',
-            'observaciones' => $concepto
+            'folio'            => $folio,
+            'fecha'            => date('Y-m-d'),
+            'almacen_id'       => $almacen,
+            'categoria_id'     => 8, // préstamos
+            'usuario_id'       => $usuario_id,
+            'beneficiario'     => $nombreTrabajador,
+            'metodo_pago'      => $metodo_pago,
+            'total'            => $monto,
+            'documento_url'    => '',
+            'observaciones'    => $concepto
         ];
-       
 
         $descripciones = [$concepto];
         $cantidades    = [1];
@@ -183,6 +195,34 @@ $descripcion   = trim($_POST['descripcion'] ?? '');
             throw new Exception("Error al registrar gasto");
         }
 
+        // 🔥 IMPORTANTE: obtener ID del gasto
+        $gasto_id = $folio ?? 0;
+
+        if ($gasto_id <= 0) {
+            throw new Exception("No se obtuvo el ID del gasto");
+        }
+
+        // =========================
+        // 3. CREAR PRÉSTAMO
+        // =========================
+        $data = [
+            'trabajador_id' => $trabajador_id,
+            'almacen_id'    => $almacen,
+            'monto_total'   => $monto,
+            'estado'        => 'activo',
+            'descripcion'   => $descripcion,
+            'gasto_id'      => $gasto_id // 🔥 vínculo clave
+        ];
+
+        $ok = $prestamosModel->crearPrestamo($data);
+
+        if (!$ok) {
+            throw new Exception("Error al registrar préstamo");
+        }
+
+        // =========================
+        // RESPUESTA
+        // =========================
         echo json_encode([
             'success' => true,
             'message' => 'Préstamo y gasto registrados correctamente'
@@ -195,9 +235,9 @@ $descripcion   = trim($_POST['descripcion'] ?? '');
             'message' => $e->getMessage()
         ]);
     }
+
     exit;
 }
-
 /* =========================
    ABONAR
 ========================= */
@@ -393,13 +433,62 @@ if (isset($_GET['action']) && $_GET['action'] === 'detalle') {
     }
     exit;
 }
+if (isset($_GET['action']) && $_GET['action'] === 'eliminarPrestamo') {
+    header('Content-Type: application/json');
 
+    try {
+
+        $id = intval($_GET['id'] ?? 0);
+
+        if ($id <= 0) {
+            throw new Exception("ID inválido");
+        }
+
+        // 🔥 Validar si tiene abonos
+        if ($prestamosModel->tieneAbonos($id)) {
+            throw new Exception("No puedes eliminar, el préstamo tiene abonos");
+        }
+
+        // 🔥 Eliminar gasto (folio → id → delete)
+        $okGasto = $prestamosModel->eliminarGastoPorPrestamo($id);
+
+        if (!$okGasto) {
+            throw new Exception("Error al eliminar el gasto");
+        }
+
+        // 🔥 Eliminar préstamo
+        $okPrestamo = $prestamosModel->eliminarPrestamo($id);
+
+        if (!$okPrestamo) {
+            throw new Exception("Error al eliminar el préstamo");
+        }
+
+        echo json_encode([
+            'success'  => true,
+            'message'  => 'Préstamo eliminado correctamente',
+            'debug'    => [
+                'gasto'     => $okGasto,
+                'prestamo'  => $okPrestamo
+            ]
+        ]);
+
+    } catch (Throwable $e) {
+
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+    }
+
+    exit;
+}
 /* =========================
    VISTA
 ========================= */
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
 
     $prestamos = $prestamosModel->listarPrestamos($target, $f_inicio, $f_fin);
+    $deuda       =$prestamosModel->obtenerTotalDeuda($target, $f_inicio, $f_fin);
     $trabajadores = $trabajadoresModel->listarTrabajadores($target);
     $cajasFuertes = $tesoreria->getCajasFuertes($target);
     $saldo = $corteCaja->obtenerSaldoInicialMonitor($target, $f_inicio, $f_fin);
