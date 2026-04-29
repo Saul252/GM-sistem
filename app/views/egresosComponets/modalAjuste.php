@@ -26,6 +26,9 @@
 
                 <div class="modal-footer bg-white border-top">
                     <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-danger px-5 fw-bold shadow-sm" onclick="aplicarFaltantesCompra()">
+                        <i class="bi bi-check-all me-2"></i> Ajustar compra
+                    </button>
                     <button type="button" class="btn btn-danger px-5 fw-bold shadow-sm" onclick="procesarAjuste()">
                         <i class="bi bi-check-all me-2"></i> REGISTRAR ENTRADA
                     </button>
@@ -49,7 +52,71 @@ function toggleAlmacen(check, prodId, almId) {
         input.classList.add('bg-light');
     }
 }
+function aplicarFaltantesCompra() {
+    const compra_id = document.getElementById('ajuste_compra_id').value;
+    console.log(compra_id);
 
+    Swal.fire({
+        title: '¿Aplicar faltantes?',
+        text: 'Se descontarán del total y los faltantes se pondrán en 0.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, aplicar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33'
+    }).then((result) => {
+
+        if (result.isConfirmed) {
+
+            // 🔄 Loader
+            Swal.fire({
+                title: 'Procesando...',
+                text: 'Aplicando cambios',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            fetch(`/cfsistem/app/controllers/egresosController.php?action=aplicarFaltantesCompras&compra_id=${compra_id}`)
+                .then(res => res.json())
+                .then(data => {
+
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Actualizado',
+                            html: `
+                                <b>Total anterior:</b> $${data.total_original}<br>
+                                <b>Faltantes:</b> $${data.total_faltantes}<br>
+                                <b>Nuevo total:</b> $${data.total_ajustado}
+                            `
+                        });
+
+                        // 🔥 Opcional: recargar tabla o vista
+                        // cargarCompras();
+                        
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'No se pudo aplicar'
+                        });
+                    }
+
+                })
+                .catch(err => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de conexión',
+                        text: 'No se pudo conectar con el servidor'
+                    });
+                    console.error(err);
+                });
+
+        }
+
+    });
+}
 function abrirModalAjuste(id, folio) {
     const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalAjusteFaltante'));
     document.getElementById('folioAjuste').innerText = folio;

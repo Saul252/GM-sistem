@@ -390,7 +390,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
                 if (res.data && res.data.length > 0) {
                     res.data.forEach(t => {
                         html +=
-                            `<tr><td>TRASPASO</td><td>${t.fecha}</td><td>${t.movimiento_id}</td><td>${t.almacen_origen_id}</td><td>${t.codigo_lote_origen}</td><td>${t.almacen_destino_id}</td><td>${t.codigo_lote_destino}</td><td>${t.cantidad}</td></tr>`;
+                            `<tr><td>TRASPASO</td><td>${t.fecha}</td><td>${t.movimiento_id}</td><td>${t.nombreOrigen}</td><td>${t.codigo_lote_origen}</td><td>${t.nombreDestino}</td><td>${t.codigo_lote_destino}</td><td>${t.cantidad}</td></tr>`;
                     });
                 } else {
                     html = '<tr><td colspan="9" class="text-center">Sin traspasos</td></tr>';

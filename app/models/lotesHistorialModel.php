@@ -302,6 +302,8 @@ ORDER BY fecha_movimiento DESC, movimiento_id DESC;";
         m.producto_id,
         m.cantidad,
         m.almacen_origen_id,
+        a.nombre as nombreOrigen,
+        a2.nombre as nombreDestino,
         m.almacen_destino_id,
         m.referencia_id,
         m.observaciones
@@ -310,6 +312,12 @@ ORDER BY fecha_movimiento DESC, movimiento_id DESC;";
 
     JOIN kardex_movimientos_lotes km 
         ON m.id = km.movimiento_id
+
+    JOIN almacenes a 
+        ON m.almacen_origen_id = a.id
+
+    JOIN almacenes a2 
+        ON m.almacen_destino_id = a2.id
 
     JOIN lotes_stock lt 
         ON km.lote_origen_id = lt.id
@@ -320,15 +328,16 @@ ORDER BY fecha_movimiento DESC, movimiento_id DESC;";
     WHERE km.lote_origen_id = ?
     AND m.tipo = 'traspaso'";
 
-    if ($fecha_inicio && $fecha_fin) {
-        $sql .= " AND m.fecha BETWEEN ? AND ?";
+    // 🔥 FECHAS
+    if (!empty($fecha_inicio) && !empty($fecha_fin)) {
+        $sql .= " AND DATE(m.fecha) BETWEEN ? AND ?";
     }
 
     $sql .= " ORDER BY m.fecha ASC";
 
     $stmt = $this->db->prepare($sql);
 
-    if ($fecha_inicio && $fecha_fin) {
+    if (!empty($fecha_inicio) && !empty($fecha_fin)) {
         $stmt->bind_param("iss", $lote_id, $fecha_inicio, $fecha_fin);
     } else {
         $stmt->bind_param("i", $lote_id);

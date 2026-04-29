@@ -236,6 +236,13 @@ if ($action === 'obtenerFaltantes') {
     echo json_encode($faltantes);
     exit;
 }
+if ($action === 'aplicarFaltantesCompras') {
+    header('Content-Type: application/json');
+    $compra_id = intval($_GET['compra_id'] ?? 0);
+    $faltantes = $comprasModel->aplicarFaltantesCompra($compra_id);
+    echo json_encode($faltantes);
+    exit;
+}
 
 if ($action === 'procesarAjusteFaltante') {
     header('Content-Type: application/json');

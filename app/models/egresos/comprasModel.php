@@ -67,8 +67,9 @@ public function guardarCompraCompleta($items, $folio, $proveedor, $evidencia, $a
             foreach ($item['almacenes'] as $dist) {
                 $sumaTotal += floatval($dist['cantidad']);
             }
+            $cantidad_real2=($sumaTotal - $cant_exe);
 
-            $cantidad_real = $sumaTotal - $cant_exe;
+            $cantidad_real = ($sumaTotal - $cant_exe)+$cant_fal;
             if ($cant_exe > $sumaTotal) {
     error_log("Excedente inválido en producto $p_id");
 }
@@ -85,7 +86,7 @@ if ($cantidad_real <= 0) {
 
 // 🔥 Precio unitario REAL correcto
 $precio_unitario = ($cantidad_real > 0) 
-    ? ($subtotal / $cantidad_real) 
+    ? ($subtotal / ($cantidad_real+$cant_fal)) 
     : 0;
 
             // 🔥 AJUSTE AQUÍ (único cambio real)
@@ -113,12 +114,12 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 $stmtD = $this->db->prepare($sqlD);
 
 
-
+$cantidad_total=($cantidad_real+$cant_fal);
 $stmtD->bind_param(
     "iidsddddsd",
     $compra_id,
     $p_id,
-    $cantidad_real,
+    $cantidad_total,
     $unidad_compra,
     $factor_conversion,
     $cant_fal,
@@ -506,7 +507,83 @@ public function registrarObligacionFinanciera($data) {
         }
         return $productos;
     }
+public function aplicarFaltantesCompra($compra_id) {
+    $this->db->begin_transaction();
 
+    try {
+        /**
+         * PASO 1: AJUSTE FÍSICO (CANTIDADES)
+         * Restamos el faltante a la cantidad original para dejar el dato real.
+         */
+        $sql1 = "
+            UPDATE detalle_compra 
+            SET cantidad = (cantidad - cantidad_faltante)
+            WHERE compra_id = ? AND cantidad_faltante > 0
+        ";
+        $stmt1 = $this->db->prepare($sql1);
+        $stmt1->bind_param("i", $compra_id);
+        $stmt1->execute();
+
+
+        /**
+         * PASO 2: AJUSTE FINANCIERO Y ESTADOS
+         * Ahora que 'cantidad' ya es la correcta, actualizamos el dinero.
+         */
+        $sql2 = "
+            UPDATE detalle_compra 
+            SET 
+                subtotal = cantidad * precio_unitario,
+                cantidad_faltante = 0,
+                estado_entrega = 'completo'
+            WHERE compra_id = ?
+        ";
+        $stmt2 = $this->db->prepare($sql2);
+        $stmt2->bind_param("i", $compra_id);
+        $stmt2->execute();
+
+
+        /**
+         * PASO 3: SINCRONIZACIÓN DE CABECERA
+         * Llevamos la suma de subtotales a la tabla 'compras'.
+         */
+        $sql3 = "
+            UPDATE compras c
+            SET c.total = (
+                SELECT IFNULL(SUM(subtotal), 0)
+                FROM detalle_compra 
+                WHERE compra_id = c.id
+            )
+            WHERE c.id = ?
+        ";
+        $stmt3 = $this->db->prepare($sql3);
+        $stmt3->bind_param("i", $compra_id);
+        $stmt3->execute();
+
+
+        /**
+         * PASO 4: LIMPIEZA FINAL
+         */
+        $sql4 = "DELETE FROM faltantes_ingreso WHERE compra_id = ?";
+        $stmt4 = $this->db->prepare($sql4);
+        $stmt4->bind_param("i", $compra_id);
+        $stmt4->execute();
+
+
+        $this->db->commit();
+
+        return [
+            "success" => true,
+            "message" => "Proceso completado en dos pasos: Inventario y Finanzas sincronizados."
+        ];
+
+    } catch (Exception $e) {
+        $this->db->rollback();
+        return [
+            "success" => false,
+            "message" => "Error: " . $e->getMessage()
+        ];
+    }
+}
     public function obtenerDetalleFaltantes($compra_id) {
     $sql = "SELECT 
                 f.producto_id, 
