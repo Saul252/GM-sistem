@@ -59,7 +59,7 @@ class SolicitudCompra {
 public function obtenerDetalle($id) {
     $sql = "SELECT d.*, p.nombre as producto_nombre, p.sku, p.unidad_medida, 
                    p.unidad_reporte, p.factor_conversion, s.almacen_id as almacen_origen_id,
-                   a.nombre as almacen_nombre, prov.nombre_comercial as proveedor_nombre
+                   a.nombre as almacen_nombre,prov.id as proveedor_id, prov.nombre_comercial as proveedor_nombre
             FROM detalle_solicitud_compra d
             INNER JOIN productos p ON d.producto_id = p.id
             INNER JOIN solicitudes_compra s ON d.solicitud_id = s.id

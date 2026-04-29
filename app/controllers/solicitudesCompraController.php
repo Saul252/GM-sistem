@@ -128,15 +128,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
         
         // Llamamos al modelo. Si el modelo tiene 'return', $detalle tendrá los datos.
         $detalle = $solicitudModel->obtenerDetalle($id);
+        
 
         if ($detalle === null) {
             throw new Exception("El modelo no devolvió datos (Void).");
         }
+        $proveedor_id = $detalle[0]['proveedor_id'] ?? 0;
+        $deudas = $proveedorModel->ProveedorYDeuda($proveedor_id);
 
         echo json_encode([
             'status' => 'success',
-            'data'   => $detalle
+            'data'   => $detalle,
+            'deuda'  => $deudas
         ]);
+
 
     } catch (Throwable $e) {
         echo json_encode([
@@ -186,6 +191,52 @@ $proveedor = $proveedorData['id'] ?? 0;
 
             $resultado['message'] .= " (Solicitud #$solicitud_id finalizada)";
         }
+         $saldo = floatval($_POST['saldo_a_pagar'] ?? 0);
+        if ($saldo > 0) {
+            $proveedor_id = $proveedor;
+            if ($proveedor_id <= 0) throw new Exception("Proveedor inválido para pago de deuda");
+
+            $deudas = $proveedorModel->ProveedorYDeuda($proveedor_id);
+            if (empty($deudas)) throw new Exception("El proveedor no tiene deudas pendientes");
+
+            foreach ($deudas as $deuda) {
+                if ($saldo <= 0) break;
+
+                $cuenta_id = intval($deuda['compra_id']);
+                $pendiente = floatval($deuda['pendiente']);
+                $metodoPago = $_POST['metodo_pago'] ?? 'Efectivo';
+
+                if ($cuenta_id <= 0 || $pendiente <= 0) continue;
+
+                $pago_aplicado = min($saldo, $pendiente);
+
+                // A. Actualizar saldo en la tabla de deuda
+                $res = $egresoModel->pagarDeudaCompra($cuenta_id, $pago_aplicado);
+                $proveedorNombre=$proveedorModel->obtenerPorId($proveedor_id);
+                
+                // B. Registrar en historial de pagos
+                $desc = 'Pago de deuda (Compra #' . $cuenta_id . ') por $' . number_format($pago_aplicado, 2);
+                $ref = "PC-" . $cuenta_id; // Evitar string vacío
+
+                $regPago = $egresoModel->registrarPagoCuentaPorPagar(
+                    $almacen_principal,
+                    $proveedor_id,
+                    $cuenta_id,
+                    $pago_aplicado,
+                    $metodoPago,
+                    $ref,
+                    $user_id,
+                    $desc
+                );
+
+                if (!$res || (isset($res['success']) && !$res['success'])) {
+                    throw new Exception("Error al descontar saldo de la deuda ID: $cuenta_id");
+                }
+                
+                $saldo -= $pago_aplicado;
+            }
+        }
+
 
         echo json_encode($resultado);
 
