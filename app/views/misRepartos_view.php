@@ -132,6 +132,13 @@
                     <?= $es_supervisor ? 'Monitor General de Entregas' : 'Mis Entregas Recientes' ?>
                 </h6>
                 
+                 <!-- 🔥 NUEVO -->
+   <span class="small text-muted">Fecha de Inicio:</span>  <input type="date" id="fecha_inicio_monitor" class="form-control form-control-sm" style="width:auto;" onchange="cargarMonitor(1)">
+    
+    <span class="small text-muted">Fecha de Fin:</span> <input type="date" id="fecha_fin_monitor" class="form-control form-control-sm" style="width:auto;" onchange="cargarMonitor(1)">
+
+
+                
                 <?php if ($es_supervisor): ?>
                 <div class="d-flex align-items-center gap-2">
                     <span class="small text-muted">Almacén:</span>
@@ -200,13 +207,22 @@ $(document).ready(function() {
 
 /**
  * CARGA DEL MONITOR (TABLA PRINCIPAL)
- */
-function cargarMonitor(pagina = 1) {
-    // Aseguramos que la página sea un número entero
-    paginaActual = parseInt(pagina);
+ */function cargarMonitor(pagina = 1) {
+
+    // Aseguramos número válido
+    paginaActual = parseInt(pagina) || 1;
+
     const idAlmacen = $('#filtro_almacen_monitor').val();
-    
-    $('#tbodyMonitor').html('<tr><td colspan="8" class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary me-2"></div> Sincronizando...</td></tr>');
+
+    // Fechas
+    const fecha_inicio = $('#fecha_inicio_monitor').val();
+    const fecha_fin = $('#fecha_fin_monitor').val();
+
+    // Loader
+    $('#tbodyMonitor').html(
+        '<tr><td colspan="8" class="text-center py-5">' +
+        '<div class="spinner-border spinner-border-sm text-primary me-2"></div> Sincronizando...</td></tr>'
+    );
 
     $.ajax({
         url: '/cfsistem/app/controllers/misRepartosController.php',
@@ -215,38 +231,75 @@ function cargarMonitor(pagina = 1) {
             action: 'get_monitor_entregas', 
             almacen_id: idAlmacen, 
             pagina: paginaActual, 
-            limite: limitePorPagina 
+            limite: limitePorPagina,
+            fecha_inicio: fecha_inicio,
+            fecha_fin: fecha_fin
         },
         dataType: 'json',
+
         success: function(res) {
-            if(res.success && res.data && res.data.length > 0) { 
+
+            // 🔥 DEBUG OPCIONAL
+            // console.log(res);
+
+            if (res.success && Array.isArray(res.data) && res.data.length > 0) { 
+                
                 renderizarFilas(res.data); 
                 
-                // Convertimos a número para evitar el error de "indefinido" o saltos locos
-                const totalPags = parseInt(res.total_pages);
-                const pagAct = parseInt(res.current_page);
-                const totalRecs = res.total_records;
+                // 🔥 Normalizamos valores (CLAVE)
+                const totalPags = parseInt(res.total_pages) || 0;
+                const pagAct = parseInt(res.current_page) || 1;
+                const totalRecs = parseInt(res.total_records) || 0;
 
-                renderizarPaginacion(totalPags, pagAct);
-                $('#infoConteo').html(`Página <b>${pagAct}</b> de <b>${totalPags}</b> | Total: ${totalRecs} registros`);
+                // 🔥 CONTROL REAL DE PAGINACIÓN
+                if (totalPags <= 1) {
+                    $('#paginacionMonitor').empty();
+                } else {
+                    renderizarPaginacion(totalPags, pagAct);
+                }
+
+                // 🔥 Opcional: ocultar texto si solo hay 1 página
+                if (totalPags <= 1) {
+                    $('#infoConteo').html(`Total: ${totalRecs} registros`);
+                } else {
+                    $('#infoConteo').html(
+                        `Página <b>${pagAct}</b> de <b>${totalPags}</b> | Total: ${totalRecs} registros`
+                    );
+                }
+
             } else { 
-                $('#tbodyMonitor').html('<tr><td colspan="8" class="text-center text-muted py-5">No se encontraron entregas.</td></tr>'); 
-                $('#paginacionMonitor, #infoConteo').empty();
+                $('#tbodyMonitor').html(
+                    '<tr><td colspan="8" class="text-center text-muted py-5">No se encontraron entregas.</td></tr>'
+                ); 
+
+                $('#paginacionMonitor').empty();
+                $('#infoConteo').empty();
             }
         },
+
         error: () => {
-            $('#tbodyMonitor').html('<tr><td colspan="8" class="text-center text-danger py-5">Error al conectar con el servidor.</td></tr>');
+            $('#tbodyMonitor').html(
+                '<tr><td colspan="8" class="text-center text-danger py-5">Error al conectar con el servidor.</td></tr>'
+            );
+
+            $('#paginacionMonitor').empty();
+            $('#infoConteo').empty();
         }
     });
-}
-
-/**
+}/**
  * DIBUJA LOS BOTONES DE PAGINACIÓN (BOOTSTRAP)
  */
 function renderizarPaginacion(total, actual) {
+
+    // 🔥 SI SOLO HAY 1 PÁGINA, NO MOSTRAR NADA
+    if (!total || total <= 1) {
+        $('#paginacionMonitor').empty();
+        return;
+    }
+
     let html = '';
     
-    // Botón Anterior: Solo si no es la primera página
+    // Botón Anterior
     const claseAnt = (actual <= 1) ? 'disabled' : '';
     const clickAnt = (actual > 1) ? `onclick="cargarMonitor(${actual - 1})"` : '';
     
@@ -254,7 +307,7 @@ function renderizarPaginacion(total, actual) {
                 <a class="page-link" href="javascript:void(0)" ${clickAnt}>&laquo;</a>
              </li>`;
 
-    // Páginas numéricas con lógica de puntos suspensivos
+    // Páginas
     for (let i = 1; i <= total; i++) {
         if (i === 1 || i === total || (i >= actual - 2 && i <= actual + 2)) {
             html += `<li class="page-item ${i === actual ? 'active' : ''}">
@@ -265,7 +318,7 @@ function renderizarPaginacion(total, actual) {
         }
     }
 
-    // Botón Siguiente: Solo si no es la última página
+    // Botón Siguiente
     const claseSig = (actual >= total) ? 'disabled' : '';
     const clickSig = (actual < total) ? `onclick="cargarMonitor(${actual + 1})"` : '';
 
@@ -275,7 +328,6 @@ function renderizarPaginacion(total, actual) {
              
     $('#paginacionMonitor').html(html);
 }
-
 /**
  * RENDERIZA FILAS DE LA TABLA
  */

@@ -58,38 +58,66 @@ if (isset($_REQUEST['action'])) {
 if ($action === 'get_monitor_entregas') {
     header('Content-Type: application/json');
 
-    // 1. Almacén
-    $almacen_id = isset($_GET['almacen_id']) ? intval($_GET['almacen_id']) : intval($_SESSION['almacen_id'] ?? 0);
-    
-    // 2. Lógica de Paginación (Conversión de página a offset)
+    // 🔹 1. ALMACÉN
+    $almacen_id = isset($_GET['almacen_id']) 
+        ? intval($_GET['almacen_id']) 
+        : intval($_SESSION['almacen_id'] ?? 0);
+
+    // 🔹 2. FECHAS
+    $fecha_inicio = !empty($_GET['fecha_inicio']) ? $_GET['fecha_inicio'] : null;
+    $fecha_fin    = !empty($_GET['fecha_fin']) ? $_GET['fecha_fin'] : null;
+
+    // 🔹 3. PAGINACIÓN
     $limite = isset($_GET['limite']) ? intval($_GET['limite']) : 15;
     $pagina = isset($_GET['pagina']) ? intval($_GET['pagina']) : 1;
-    
-    // Calculamos dónde empezar: (Página 1 - 1) * 15 = 0 | (Página 2 - 1) * 15 = 15
+
+    if ($pagina < 1) $pagina = 1;
+
     $inicio = ($pagina - 1) * $limite;
-    
-    // 3. Datos y Conteo Total (Vital para los numeritos 1,2,3)
-    $registros = $repartoM->getMonitorEntregasRuta($almacen_id, $inicio, $limite);
-    $total_records = $repartoM->contarTotalEntregasRuta($almacen_id); // Esta es la función que agregamos al modelo
-    
+
+    // 🔥 4. CONSULTA PRINCIPAL (YA CON FECHAS)
+    $registros = $repartoM->getMonitorEntregasRuta(
+        $almacen_id,
+        $fecha_inicio,
+        $fecha_fin,
+        $inicio,
+        $limite
+    );
+
+    // 🔥 5. TOTAL (IMPORTANTE: también con fechas)
+    $total_records = $repartoM->contarTotalEntregasRuta(
+        $almacen_id, $fecha_inicio,
+        $fecha_fin
+        
+    );
+
     if (is_array($registros)) {
-        // Calculamos cuántas páginas hay en total
-        $total_pages = ceil($total_records / $limite);
+
+        $total_pages = ($limite > 0) 
+            ? ceil($total_records / $limite) 
+            : 1;
 
         echo json_encode([
-            "success"       => true, 
+            "success"       => true,
             "data"          => $registros,
             "total_records" => $total_records,
             "total_pages"   => $total_pages,
             "current_page"  => $pagina,
-            "limite"        => $limite
+            "limite"        => $limite,
+            "filtros"       => [
+                "almacen_id"   => $almacen_id,
+                "fecha_inicio" => $fecha_inicio,
+                "fecha_fin"    => $fecha_fin
+            ]
         ]);
+
     } else {
         echo json_encode([
-            "success" => false, 
+            "success" => false,
             "message" => "Error al obtener la trazabilidad de entregas."
         ]);
     }
+
     exit;
 }
 

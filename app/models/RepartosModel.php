@@ -1463,13 +1463,49 @@ public function registrarEntregaMovimiento($datos) {
         throw new Exception($e->getMessage());
     }
 }
-public function getMonitorEntregasRuta($almacen_id = 0, $inicio = 0, $limite = 25) {
-    // Filtro de almacén
-    $where = " WHERE m.tipo = 'salida' AND tc.viaje_folio IS NOT NULL ";
-    if ($almacen_id > 0) {
-        $where .= " AND m.almacen_origen_id = ? ";
+public function getMonitorEntregasRuta(
+    $almacen_id = 0, 
+    $fecha_inicio = null, 
+    $fecha_fin = null,
+    $inicio = 0, 
+    $limite = 25
+) {
+
+    $where = [];
+    $params = [];
+    $types = '';
+
+    // 🔹 BASE
+    $where[] = "m.tipo = 'salida'";
+    $where[] = "tc.viaje_folio IS NOT NULL";
+    $where[] = "trm.estado_reparto != 'cancelado'";
+
+    // 🔹 ALMACÉN
+    if (!empty($almacen_id) && $almacen_id > 0) {
+        $where[] = "m.almacen_origen_id = ?";
+        $params[] = $almacen_id;
+        $types .= 'i';
     }
 
+    // 🔥 FECHAS (LÓGICA NUEVA)
+    if (!empty($fecha_inicio) && !empty($fecha_fin)) {
+
+        // 👉 RANGO COMPLETO
+        $where[] = "DATE(m.fecha) BETWEEN ? AND ?";
+        $params[] = $fecha_inicio;
+        $params[] = $fecha_fin;
+        $types .= 'ss';
+
+    } else {
+
+        // 👉 SI NO VIENEN O VIENE SOLO UNA → HOY
+        $where[] = "DATE(m.fecha) = CURDATE()";
+    }
+
+    // 🔹 ARMAR WHERE
+    $where_sql = "WHERE " . implode(" AND ", $where);
+
+    // 🔥 SQL
     $sql = "SELECT 
                 m.id AS movimiento_id, 
                 trm.id AS reparto_id,
@@ -1483,35 +1519,70 @@ public function getMonitorEntregasRuta($almacen_id = 0, $inicio = 0, $limite = 2
                 COALESCE(t_chofer.nombre, 'POR ASIGNAR') AS responsable,
                 DATE_FORMAT(MAX(IFNULL(rsl.fecha_despacho, m.fecha)), '%d/%m/%Y %H:%i') AS fecha_evento
             FROM movimientos m
-            INNER JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id 
-            INNER JOIN transporte_consolidacion tc ON trm.id = tc.reparto_id
-            LEFT JOIN trabajadores t_chofer ON trm.usuario_encargado_id = t_chofer.id
-            LEFT JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
-            $where
-            AND trm.estado_reparto != 'cancelado'
+            INNER JOIN transporte_repartos_maestro trm 
+                ON m.id = trm.entrega_venta_id 
+            INNER JOIN transporte_consolidacion tc 
+                ON trm.id = tc.reparto_id
+            LEFT JOIN trabajadores t_chofer 
+                ON trm.usuario_encargado_id = t_chofer.id
+            LEFT JOIN registro_salida_lotes rsl 
+                ON m.id = rsl.movimiento_id
+            $where_sql
             GROUP BY tc.viaje_folio
-            ORDER BY (CASE WHEN trm.estado_reparto = 'en_ruta' THEN 1 ELSE 2 END) ASC, MAX(m.fecha) DESC 
-            LIMIT ?, ?"; // IMPORTANTE: Los parámetros de límite
+            ORDER BY 
+                (CASE WHEN trm.estado_reparto = 'en_ruta' THEN 1 ELSE 2 END) ASC, 
+                MAX(m.fecha) DESC
+            LIMIT ?, ?";
 
     $stmt = $this->db->prepare($sql);
-    
-    // Vinculación dinámica de parámetros según el almacén
-    if ($almacen_id > 0) {
-        $stmt->bind_param("iii", $almacen_id, $inicio, $limite);
-    } else {
-        $stmt->bind_param("ii", $inicio, $limite);
-    }
+
+    // 🔥 LIMIT siempre al final
+    $params[] = $inicio;
+    $params[] = $limite;
+    $types .= 'ii';
+
+    $stmt->bind_param($types, ...$params);
 
     $stmt->execute();
+
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
-public function contarTotalEntregasRuta($almacen_id = 0) {
+public function contarTotalEntregasRuta($almacen_id = 0, $fecha_inicio = null, $fecha_fin = null) {
+
     $where = " WHERE m.tipo = 'salida' AND tc.viaje_folio IS NOT NULL ";
+    $params = [];
+    $types = '';
+
+    // 🔹 FILTRO ALMACÉN
     if ($almacen_id > 0) {
         $where .= " AND m.almacen_origen_id = ? ";
+        $params[] = $almacen_id;
+        $types .= 'i';
     }
 
-    // Contamos los grupos únicos de viaje_folio
+    // 🔹 FILTRO FECHAS
+    if (!empty($fecha_inicio) && !empty($fecha_fin)) {
+        $where .= " AND DATE(m.fecha) BETWEEN ? AND ? ";
+        $params[] = $fecha_inicio;
+        $params[] = $fecha_fin;
+        $types .= 'ss';
+
+    } elseif (!empty($fecha_inicio)) {
+        $where .= " AND DATE(m.fecha) >= ? ";
+        $params[] = $fecha_inicio;
+        $types .= 's';
+
+    } elseif (!empty($fecha_fin)) {
+        $where .= " AND DATE(m.fecha) <= ? ";
+        $params[] = $fecha_fin;
+        $types .= 's';
+
+    } else {
+        // 🔥 SI NO HAY FECHAS → SOLO HOY
+        $where .= " AND DATE(m.fecha) = CURDATE() ";
+    }
+
+    // 🔹 QUERY
     $sql = "SELECT COUNT(DISTINCT tc.viaje_folio) as total 
             FROM movimientos m
             INNER JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id 
@@ -1520,16 +1591,18 @@ public function contarTotalEntregasRuta($almacen_id = 0) {
             AND trm.estado_reparto != 'cancelado'";
 
     $stmt = $this->db->prepare($sql);
-    
-    if ($almacen_id > 0) {
-        $stmt->bind_param("i", $almacen_id);
+
+    // 🔹 BIND DINÁMICO
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
     }
 
     $stmt->execute();
+
     $result = $stmt->get_result()->fetch_assoc();
+
     return intval($result['total'] ?? 0);
 }
-
 public function obtenerViajesLogisticaParaEntrega($folio_viaje = null) {
     try {
         // Ruta base para tus imágenes (ajusta según tu carpeta real)
