@@ -431,9 +431,14 @@
                                 <i class="bi bi-wrench-adjustable"></i>
                             </button>
                         <?php endif; ?>
-                        <button class="btn btn-sm btn-dark" onclick="abrirDetallePago(<?=$e['id']  ?>)">
+                         <?php if ($e['tipo'] == 'pago_deuda'): ?>
+                           
+                                    <button class="btn btn-sm btn-dark" onclick="abrirDetallePago(<?=$e['id']  ?>)">
     <i class="bi bi-eye"></i>
 </button>
+                            </button>
+                        <?php endif; ?>
+                       
 
                             <?php if($e['tiene_deuda'] == 1): ?>
                                 <button class="btn btn-sm btn-danger shadow-sm px-2" onclick="abrirDeudaCompra(<?= $e['id'] ?>)" title="Pagar Deuda">
@@ -446,8 +451,8 @@
                                     <i class="bi bi-patch-check-fill"></i>
                                 </button>
                             <?php endif; ?>
-
-                            <button class="btn btn-sm btn-light border shadow-sm px-2 text-primary" onclick="verDetalle('<?= $e['tipo'] ?>', <?= $e['id'] ?>)">
+                            <?php if ($e['tipo'] != 'pago_deuda'): ?>
+                              <button class="btn btn-sm btn-light border shadow-sm px-2 text-primary" onclick="verDetalle('<?= $e['tipo'] ?>', <?= $e['id'] ?>)">
                                 <i class="bi bi-eye-fill"></i>
                             </button>
 
@@ -455,6 +460,9 @@
                                 onclick="<?= ($e['tipo']=='compra') ? "confirmarCancelacionCompra" : "confirmarCancelacionGasto" ?>('<?= $e['id'] ?>','<?= $e['folio'] ?>')">
                                 <i class="bi bi-trash3"></i>
                             </button>
+                        <?php endif; ?>
+
+                          
                         </div>
                     </td>
 

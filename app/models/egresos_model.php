@@ -1002,4 +1002,20 @@ public function registrarPagoCuentaPorPagar(
         ];
     }
 }
+public function cancelarDeuda($id) {
+
+    $sql = "UPDATE cuentas_por_pagar
+            SET estado = 'cancelado'
+            WHERE id_referencia_origen = ?";
+
+    $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) {
+        throw new Exception("Error al preparar query: " . $this->db->error);
+    }
+
+    $stmt->bind_param("i", $id);
+
+    return $stmt->execute();
+}
 }

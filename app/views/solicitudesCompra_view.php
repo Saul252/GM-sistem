@@ -289,6 +289,19 @@ error_reporting(E_ALL);
                                 <input type="file" name="evidencia_compra" class="form-control form-control-sm"
                                     accept="image/*,.pdf">
                             </div>
+                             <div class="col-md-2">
+    <label class="form-label small fw-bold text-primary">
+        <i class="bi bi-cash-coin"></i> Pagar deuda
+    </label>
+    <input type="number"
+        id="input_pagar_deuda"
+        name="saldo_a_pagar"
+        class="form-control shadow-sm border-primary"
+        value="0" min="0" step="0.1"
+        placeholder="0.0"
+        >
+</div>
+
                             <div class="col-md-4 text-end">
                                 <label class="small text-muted d-block fw-bold">TOTAL FACTURA</label>
                                 <span class="h3 fw-bold text-success" id="uni-gran-total">$ 0.00</span>
@@ -584,42 +597,53 @@ error_reporting(E_ALL);
     }
     </script>
     <script>
-    async function gestionarSolicitud(id) {
-        try {
-            // Limpiamos la tabla antes de cargar para evitar residuos visuales
-            $('#tablaConversion tbody').empty();
+        
+function asignarSiguienteFolioCompra() {
+    const inputFolio = document.getElementsByName('folio')[0];
+    if (!inputFolio) return;
+    fetch(`${URL_CONTROLADOR}?action=getSiguienteFolio`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) inputFolio.value = data.folio;
+        })
+        .catch(err => console.error("Error al obtener folio:", err));
+}
 
-            const resp = await fetch(`${URL_CONTROLADOR}?action=obtenerDetalle&id=${id}`);
-            asignarSiguienteFolioCompra();
+async function gestionarSolicitud(id) {
+    try {
+        $('#tablaConversion tbody').empty();
 
-            if (!resp.ok) throw new Error(`Error de servidor: ${resp.status}`);
-            const res = await resp.json();
+        const resp = await fetch(`${URL_CONTROLADOR}?action=obtenerDetalle&id=${id}`);
+        asignarSiguienteFolioCompra();
 
-            if (res.status !== 'success') throw new Error(res.message || 'Error al obtener datos');
+        if (!resp.ok) throw new Error(`Error de servidor: ${resp.status}`);
+        const res = await resp.json();
 
-            const items = res.data;
-            if (!items || items.length === 0) {
-                Swal.fire('Info', 'La solicitud no tiene productos.', 'info');
-                return;
-            }
+        if (res.status !== 'success') throw new Error(res.message || 'Error al obtener datos');
 
-            $('#uni-solicitud-id').val(id);
-            $('#uni-folio').text(`#${id.toString().padStart(5, '0')}`);
-            $('#uni-proveedor').val(items[0].proveedor_nombre || 'Sin Proveedor');
-            $('#uni-proveedor-nombre').val(items[0].proveedor_nombre || '');
+        const items = res.data;
+        if (!items || items.length === 0) {
+            Swal.fire('Info', 'La solicitud no tiene productos.', 'info');
+            return;
+        }
 
-            let html = '';
-            // Aunque solo sea uno, iteramos el array que devuelve el servidor
-            items.forEach((i, index) => {
-                const factor = parseFloat(i.factor_conversion) || 1;
-                const uBase = i.unidad_medida || 'pzas';
-                const uRep = i.unidad_reporte || 'Mayoreo';
-                const cantidadSolicitada = parseFloat(i.cantidad) || 0;
+        $('#uni-solicitud-id').val(id);
+        $('#uni-folio').text(`#${id.toString().padStart(5, '0')}`);
+        $('#uni-proveedor').val(items[0].proveedor_nombre || 'Sin Proveedor');
+        $('#uni-proveedor-nombre').val(items[0].proveedor_nombre || '');
 
-                const cantMayoreo = Math.floor(cantidadSolicitada / factor);
-                const cantSueltas = cantidadSolicitada % factor;
+        let html = '';
 
-                html += `
+        items.forEach((i, index) => {
+            const factor = parseFloat(i.factor_conversion) || 1;
+            const uBase = i.unidad_medida || 'pzas';
+            const uRep = i.unidad_reporte || 'Mayoreo';
+            const cantidadSolicitada = parseFloat(i.cantidad) || 0;
+
+            const cantMayoreo = Math.floor(cantidadSolicitada / factor);
+            const cantSueltas = cantidadSolicitada % factor;
+
+            html += `
             <tr class="fila-item" data-index="${index}">
                 <td>
                     <input type="hidden" name="items[${index}][producto_id]" value="${i.producto_id}">
@@ -627,208 +651,253 @@ error_reporting(E_ALL);
                     <div class="fw-bold text-dark">${i.producto_nombre}</div>
                     <small class="text-muted d-block">1 ${uRep} = ${factor} ${uBase}</small>
                 </td>
+
                 <td>
                     <label class="small text-muted text-uppercase fw-bold">${uRep}</label>
                     <input type="number" class="form-control form-control-sm i-mayoreo border-success" 
-                           value="${cantMayoreo}" step="1" oninput="recalcularFila(${index})">
+                        value="${cantMayoreo}" step="1" oninput="recalcularFila(${index})">
                 </td>
+
                 <td>
                     <label class="small text-muted text-uppercase fw-bold">${uBase}</label>
                     <input type="number" class="form-control form-control-sm i-sueltas border-primary" 
-                           value="${cantSueltas}" step="0.01" oninput="recalcularFila(${index})">
+                        value="${cantSueltas}" step="0.01" oninput="recalcularFila(${index})">
                 </td>
+
+                <td>
+                    <input type="number"
+                        class="form-control form-control-sm border-danger shadow-sm i-faltante"
+                        value="0" min="0" 
+                        oninput="recalcularFila(${index})">
+
+                    <input type="hidden" id="faltante_${index}"  
+                        name="items[${index}][cantidad_faltante]" 
+                        class="hidden-faltante" value="0">
+                </td>
+
+                <td>
+                    <label class="form-label small text-success fw-semibold mb-1">
+                        Excedente
+                    </label>
+                    <input type="number"
+                        name="items[${index}][cantidad_excedente]"
+                        class="form-control form-control-sm border-success shadow-sm i-excedente"
+                        value="0" min="0" step="0.01"
+                        oninput="recalcularFila(${index})">
+                </td>
+
                 <td>
                     <label class="small text-muted fw-bold">Costo Total Renglón</label>
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-light">$</span>
-                        <input type="number" step="0.01" class="form-control i-costo-total" placeholder="0.00" required 
-                               oninput="recalcularFila(${index})">
+                        <input type="number" step="0.01" class="form-control i-costo-total" 
+                            placeholder="0.00" required 
+                            oninput="recalcularFila(${index})">
                     </div>
+
                     <input type="hidden" class="h-precio-lote">
+
                     <div class="mt-1" style="font-size:0.75rem">
-                        Cost. Unit: <span class="s-precio-lote fw-bold text-secondary">$ 0.00</span>
+                        Cost. Unit: 
+                        <span class="s-precio-lote fw-bold text-secondary">$ 0.00</span>
                     </div>
                 </td>
+
                 <td>
                     <label class="small text-muted fw-bold">Almacén Destino</label>
                     <select class="form-select form-select-sm bg-light i-almacen-id">
-                        <option value="${i.almacen_origen_id}" selected>📍 ${i.almacen_nombre}</option>
+                        <option value="${i.almacen_origen_id}" selected>
+                            📍 ${i.almacen_nombre}
+                        </option>
                     </select>
                 </td>
+
                 <td class="text-end bg-light-subtle">
                     <div class="h5 mb-0 fw-bold text-primary s-total-piezas">0</div>
                     <small class="text-muted">${uBase}</small>
                     <input type="hidden" class="h-total-piezas">
                 </td>
             </tr>`;
-            });
-
-            $('#tablaConversion tbody').html(html);
-            $('.fila-item').each(function(idx) {
-                recalcularFila(idx);
-            });
-
-            // Removemos aria-hidden antes de mostrar para evitar errores de consola
-            $('#modalGestionSolicitud').removeAttr('aria-hidden').modal('show');
-
-        } catch (e) {
-            Swal.fire('Error', e.message, 'error');
-        }
-    }
-
-    function recalcularFila(index) {
-        const fila = $(`.fila-item[data-index="${index}"]`);
-        const factor = parseFloat(fila.find('.h-factor').val()) || 1;
-        const mayoreo = parseFloat(fila.find('.i-mayoreo').val()) || 0;
-        const sueltas = parseFloat(fila.find('.i-sueltas').val()) || 0;
-        const costoTotalRenglon = parseFloat(fila.find('.i-costo-total').val()) || 0;
-
-        const totalPiezas = (mayoreo * factor) + sueltas;
-        const displayTotal = Number.isInteger(totalPiezas) ? totalPiezas : totalPiezas.toFixed(2);
-
-        fila.find('.s-total-piezas').text(displayTotal);
-        fila.find('.h-total-piezas').val(totalPiezas);
-
-        let precioUnitario = totalPiezas > 0 ? costoTotalRenglon / totalPiezas : 0;
-        fila.find('.h-precio-lote').val(precioUnitario.toFixed(4));
-        fila.find('.s-precio-lote').text('$ ' + precioUnitario.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 4
-        }));
-
-        actualizarGranTotal();
-    }
-
-    function actualizarGranTotal() {
-        let granTotal = 0;
-        $('.i-costo-total').each(function() {
-            granTotal += parseFloat($(this).val()) || 0;
         });
-        $('#uni-gran-total').text('$ ' + granTotal.toLocaleString(undefined, {
-            minimumFractionDigits: 2
-        }));
-    }
 
-    function asignarSiguienteFolioCompra() {
-        const inputFolio = document.getElementsByName('folio')[0];
-        if (!inputFolio) return;
-        fetch(`${URL_CONTROLADOR}?action=getSiguienteFolio`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) inputFolio.value = data.folio;
-            })
-            .catch(err => console.error("Error al obtener folio:", err));
+        $('#tablaConversion tbody').html(html);
+
+        $('.fila-item').each(function(idx) {
+            recalcularFila(idx);
+        });
+
+        $('#modalGestionSolicitud').removeAttr('aria-hidden').modal('show');
+
+    } catch (e) {
+        Swal.fire('Error', e.message, 'error');
     }
-    </script>
+}
+
+function recalcularFila(index) {
+
+    const fila = $(`.fila-item[data-index="${index}"]`);
+
+    const factor = parseFloat(fila.find('.h-factor').val()) || 1;
+    const mayoreo = parseFloat(fila.find('.i-mayoreo').val()) || 0;
+    const sueltas = parseFloat(fila.find('.i-sueltas').val()) || 0;
+
+    let faltante = parseFloat(fila.find('.i-faltante').val()) || 0;
+    const excedente = parseFloat(fila.find('.i-excedente').val()) || 0;
+
+    const costoTotalRenglon = parseFloat(fila.find('.i-costo-total').val()) || 0;
+
+    const totalBase = (mayoreo * factor) + sueltas;
+
+    // 🔴 evitar faltante mayor al total
+    if (faltante > totalBase) faltante = totalBase;
+
+    const totalPiezasFinal = totalBase - faltante + excedente;
+
+    const displayTotal = Number.isInteger(totalPiezasFinal)
+        ? totalPiezasFinal
+        : totalPiezasFinal.toFixed(2);
+
+    fila.find('.s-total-piezas').text(displayTotal);
+    fila.find('.h-total-piezas').val(totalPiezasFinal);
+
+    // actualizar hidden faltante
+    fila.find('.hidden-faltante').val(faltante);
+
+    let precioUnitario = totalBase > 0
+        ? costoTotalRenglon / totalBase
+        : 0;
+
+    fila.find('.h-precio-lote').val(precioUnitario.toFixed(4));
+
+    fila.find('.s-precio-lote').text('$ ' + precioUnitario.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 4
+    }));
+
+    actualizarGranTotal();
+}
+
+function actualizarGranTotal() {
+    let granTotal = 0;
+    $('.i-costo-total').each(function() {
+        granTotal += parseFloat($(this).val()) || 0;
+    });
+
+    $('#uni-gran-total').text('$ ' + granTotal.toLocaleString(undefined, {
+        minimumFractionDigits: 2
+    }));
+}
+   </script>
     <script>
-    $(document).ready(function() {
-        // Usamos .off() para evitar registros duplicados
-        $('#formConvertirCompra').off('submit').on('submit', function(e) {
-            e.preventDefault();
+   $(document).ready(function() {
+    // Usamos .off() para evitar registros duplicados
+    $('#formConvertirCompra').off('submit').on('submit', function(e) {
+        e.preventDefault();
 
-            const detalle = [];
-            const fila = $('.fila-item').first();
+        const detalle = [];
+        const fila = $('.fila-item').first();
 
-            if (fila.length > 0) {
-                const index = fila.data('index');
-                const almId = fila.find('.i-almacen-id').val();
-                const cantTotal = fila.find('.h-total-piezas').val();
-                const costoTotal = parseFloat(fila.find('.i-costo-total').val()) || 0;
+        if (fila.length > 0) {
+            const index = fila.data('index');
+            const almId = fila.find('.i-almacen-id').val();
+            const cantTotal = fila.find('.h-total-piezas').val();
+            const costoTotal = parseFloat(fila.find('.i-costo-total').val()) || 0;
 
-                // Captura el producto_id buscando específicamente en la fila actual
-                const productoId = fila.find(`input[name="items[${index}][producto_id]"]`).val();
+            const excedente = parseFloat(fila.find('.i-excedente').val()) || 0;
+            const faltante = parseFloat(fila.find('.i-faltante').val()) || 0;
 
-                detalle.push({
-                    producto_id: productoId,
-                    input_mayoreo: fila.find('.i-mayoreo').val() || 0,
-                    input_sueltas: fila.find('.i-sueltas').val() || 0,
-                    total_item: costoTotal,
-                    precio_lote: fila.find('.h-precio-lote').val(),
-                    hidden_factor: fila.find('.h-factor').val() || 1,
-                    cantidad_faltante: 0,
-                    almacenes: {
-                        [almId]: {
-                            activo: 'on',
-                            cantidad: cantTotal
+            // Captura el producto_id buscando específicamente en la fila actual
+            const productoId = fila.find(`input[name="items[${index}][producto_id]"]`).val();
+
+            detalle.push({
+                producto_id: productoId,
+                input_mayoreo: fila.find('.i-mayoreo').val() || 0,
+                input_sueltas: fila.find('.i-sueltas').val() || 0,
+
+                // ✅ CORRECTO
+                cantidad_excedente: excedente,
+                cantidad_faltante: faltante,
+
+                total_item: costoTotal,
+                precio_lote: fila.find('.h-precio-lote').val(),
+                hidden_factor: fila.find('.h-factor').val() || 1,
+
+                almacenes: {
+                    [almId]: {
+                        activo: 'on',
+                        cantidad: cantTotal
+                    }
+                }
+            });
+        }
+
+        // Validación preventiva
+        if (detalle.length === 0 || detalle[0].total_item <= 0) {
+            Swal.fire('Atención', 'El costo del producto debe ser mayor a 0 para generar el lote.',
+                'warning');
+            return;
+        }
+
+        // Preparamos el FormData con todos los campos necesarios para el controlador
+        const formData = new FormData(this);
+        formData.append('action', 'guardarCompraCompleta');
+        formData.append('items', JSON.stringify(detalle));
+        formData.append('solicitud_id', $('#uni-solicitud-id').val());
+        formData.append('almacen_id', $('.i-almacen-id').first().val());
+        formData.append('proveedor', $('#uni-proveedor').val());
+
+        Swal.fire({
+            title: '¿Confirmar Ingreso?',
+            text: "Se registrará la entrada en inventario y se cerrará la solicitud.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#198754',
+            confirmButtonText: 'Sí, guardar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Procesando...',
+                    html: 'Guardando datos y generando lotes',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                $.ajax({
+                    url: URL_CONTROLADOR,
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    dataType: 'json',
+                    success: function(res) {
+                        if (res.success) {
+                            Swal.fire('¡Éxito!', res.message, 'success').then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('Error de negocio', res.message || 'Error desconocido', 'error');
                         }
+                    },
+                    error: function(jqXHR) {
+                        console.error("Respuesta del servidor:", jqXHR.responseText);
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error del Servidor',
+                            html: `<div style="text-align:left; font-size:11px; background:#eee; padding:10px; max-height:200px; overflow:auto;">
+                                ${jqXHR.responseText || 'Error desconocido (posible 500)'}
+                               </div>`,
+                            footer: 'Revisa la pestaña Network en F12 para más detalles.'
+                        });
                     }
                 });
             }
-
-            // Validación preventiva
-            if (detalle.length === 0 || detalle[0].total_item <= 0) {
-                Swal.fire('Atención', 'El costo del producto debe ser mayor a 0 para generar el lote.',
-                    'warning');
-                return;
-            }
-
-            // Preparamos el FormData con todos los campos necesarios para el controlador
-            const formData = new FormData(this);
-            formData.append('action', 'guardarCompraCompleta');
-            formData.append('items', JSON.stringify(detalle));
-            formData.append('solicitud_id', $('#uni-solicitud-id')
-        .val()); // ¡Importante para cerrar la solicitud!
-            formData.append('almacen_id', $('.i-almacen-id').first().val());
-            formData.append('proveedor', $('#uni-proveedor').val());
-
-            Swal.fire({
-                title: '¿Confirmar Ingreso?',
-                text: "Se registrará la entrada en inventario y se cerrará la solicitud.",
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#198754',
-                confirmButtonText: 'Sí, guardar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    Swal.fire({
-                        title: 'Procesando...',
-                        html: 'Guardando datos y generando lotes',
-                        allowOutsideClick: false,
-                        didOpen: () => {
-                            Swal.showLoading();
-                        }
-                    });
-
-                    $.ajax({
-                        url: URL_CONTROLADOR,
-                        type: 'POST',
-                        data: formData,
-                        processData: false,
-                        contentType: false,
-                        dataType: 'json', // Forzamos a que espere un JSON
-                        success: function(res) {
-                            if (res.success) {
-                                Swal.fire('¡Éxito!', res.message, 'success').then(
-                                () => {
-                                        location.reload();
-                                    });
-                            } else {
-                                // Si el controlador responde con success: false
-                                Swal.fire('Error de negocio', res.message ||
-                                    'Error desconocido', 'error');
-                            }
-                        },
-                        error: function(jqXHR, textStatus, errorThrown) {
-                            // SI DA ERROR, ESTO TE DIRÁ POR QUÉ:
-                            console.error("Respuesta del servidor:", jqXHR
-                                .responseText);
-
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error del Servidor',
-                                html: `<div style="text-align:left; font-size:11px; background:#eee; padding:10px; max-height:200px; overflow:auto;">
-                                    ${jqXHR.responseText || 'Error desconocido (posible 500)'}
-                                   </div>`,
-                                footer: 'Revisa la pestaña Network en F12 para más detalles.'
-                            });
-                        }
-                    });
-                }
-            });
         });
     });
-    </script>
+}); </script>
     <script>
     /**
      * Llena el modal de impresión con la data de la solicitud

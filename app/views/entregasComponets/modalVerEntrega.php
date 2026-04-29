@@ -38,6 +38,7 @@
         
         if (res.success && res.data) {
             const d = res.data;
+            console.log("hola",res.data.tripulantes)
 
             // 2. CABECERA
             $('#v_folio_ticket').text(`TICKET: ${d.folio_venta || 'S/N'}`);

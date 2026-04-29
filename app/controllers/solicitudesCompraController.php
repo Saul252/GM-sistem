@@ -151,11 +151,19 @@ if (isset($_POST['action']) && $_POST['action'] === 'guardarCompraCompleta') {
     header('Content-Type: application/json; charset=utf-8');
 
     try {
+        // 🔥 Decodificar UNA sola vez
         $items = json_decode($_POST['items'], true);
+
+        // 🔥 Validar JSON correctamente
+        if (!$items || json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception("Error en items JSON: " . json_last_error_msg());
+        }
+
         $almacen_id = intval($_POST['almacen_id'] ?? 0);
         $solicitud_id = intval($_POST['solicitud_id'] ?? 0);
         $metodo_pago = $_POST['metodo_pago'] ?? 'Efectivo';
-
+       $proveedorData = $proveedorModel->obtenerProveedorPorNombre($_POST['proveedor']);
+$proveedor = $proveedorData['id'] ?? 0;
         if ($almacen_id <= 0) throw new Exception("ID de almacén no válido.");
         if (empty($items)) throw new Exception("No hay productos para procesar.");
 
@@ -163,27 +171,29 @@ if (isset($_POST['action']) && $_POST['action'] === 'guardarCompraCompleta') {
         $resultado = $comprasModel->guardarCompraCompleta(
             $items, 
             $_POST['folio'] ?? '', 
-            $_POST['proveedor'] ?? 'Sin Proveedor', 
+            $proveedor, 
             $_FILES['evidencia_compra'] ?? null, 
             $almacen_id, 
             $_SESSION['usuario_id'] ?? 0,
             $metodo_pago
         );
 
-        // 2. Si hay éxito y tenemos solicitud, actualizamos
+        // 2. Actualizar solicitud si aplica
         if ($resultado['success'] === true && $solicitud_id > 0) {
             $id_generado = $resultado['compra_id'] ?? null;
-            
-            // IMPORTANTE: 'recibido' en minúsculas para que el ENUM no dé error
+
             $solicitudModel->actualizarEstado($solicitud_id, 'recibido', $id_generado);
-            
+
             $resultado['message'] .= " (Solicitud #$solicitud_id finalizada)";
         }
 
         echo json_encode($resultado);
 
     } catch (Throwable $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        echo json_encode([
+            'success' => false, 
+            'message' => $e->getMessage()
+        ]);
     }
     exit;
 }

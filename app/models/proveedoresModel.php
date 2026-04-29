@@ -13,27 +13,27 @@ class ProveedoresModel {
     }
 public function listarTodosProveedorsYDeuda() {
 
-    $sql = "
-        SELECT 
-            p.*,
+ $sql = "
+    SELECT 
+        p.*,
 
-            cpp.id AS deuda_id,
-            cpp.id_referencia_origen,
-            cpp.monto_total,
-            cpp.monto_pagado,
-            cpp.estado,
-            cpp.fecha_registro,
+        cpp.id AS deuda_id,
+        cpp.id_referencia_origen,
+        cpp.monto_total,
+        cpp.monto_pagado,
+        cpp.estado,
+        cpp.fecha_registro,
 
-            -- 🔥 cálculo directo
-            (cpp.monto_total - IFNULL(cpp.monto_pagado,0)) AS pendiente
+        (cpp.monto_total - IFNULL(cpp.monto_pagado,0)) AS pendiente
 
-        FROM proveedores p
+    FROM proveedores p
 
-        LEFT JOIN cuentas_por_pagar cpp 
-            ON cpp.id_proveedor = p.id
+    LEFT JOIN cuentas_por_pagar cpp 
+        ON cpp.id_proveedor = p.id
+        AND cpp.estado != 'cancelado'
 
-        ORDER BY p.activo DESC, p.nombre_comercial ASC
-    ";
+    ORDER BY p.activo DESC, p.nombre_comercial ASC
+";
 
     $result = $this->db->query($sql);
     $rows = $result->fetch_all(MYSQLI_ASSOC);
@@ -95,6 +95,26 @@ public function ProveedorYDeuda($id) {
     $stmt->execute();
 
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+public function obtenerProveedorPorNombre($nombre) {
+    $sql = "
+        SELECT 
+            p.id
+        FROM proveedores p
+        WHERE p.nombre_comercial LIKE ?
+        LIMIT 1
+    ";
+
+    $stmt = $this->db->prepare($sql);
+
+    // 🔥 Importante: agregamos los % aquí
+    $busqueda = "%" . $nombre . "%";
+
+    $stmt->bind_param("s", $busqueda);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+    return $result->fetch_assoc(); // devuelve ['id' => ...] o null
 }
     public function guardar($datos) {
         $sql = "INSERT INTO proveedores (nombre_comercial, razon_social, rfc, correo, telefono, activo) 

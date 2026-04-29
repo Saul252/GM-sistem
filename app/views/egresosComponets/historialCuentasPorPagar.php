@@ -32,22 +32,22 @@
                 <input type="hidden" id="deuda_compra_id">
                 <input type="hidden" id="deuda_cuenta_id">
 
-                <div class="mb-3 p-3 rounded-3" style="background-color: #f8f9fa; border: 1px dashed #dee2e6;">
+                <div  class="mb-3 p-3 rounded-3" style="display:none; background-color: #f8f9fa; border: 1px dashed #dee2e6;">
                     <label class="form-label fw-bold">Monto a Liquidar / Abonar</label>
                     <div class="input-group">
                         <span class="input-group-text bg-success text-white border-0">$</span>
-                        <input type="number" id="pago_monto" class="form-control form-control-lg border-success" placeholder="0.00" step="any">
+                        <input type="hidden" id="pago_monto" class="form-control form-control-lg border-success" placeholder="0.00" step="any">
                     </div>
                     <small class="text-muted mt-2 d-block">* Al saldar, se generará un registro automático en el historial de egresos.</small>
                 </div>
             </div>
 
-            <div class="modal-footer border-0">
+            <!-- <div class="modal-footer border-0">
                 <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cerrar</button>
                 <button type="button" class="btn btn-success px-4 fw-bold" onclick="pagarDeudaCompra()">
                     <i class="bi bi-check-circle me-1"></i> Aplicar Pago
                 </button>
-            </div>
+            </div> -->
 
         </div>
     </div>

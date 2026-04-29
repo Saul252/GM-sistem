@@ -145,7 +145,7 @@ if ($action === 'guardarCompraInventario') {
                 
                 // B. Registrar en historial de pagos
                 $desc = 'Pago de deuda (Compra #' . $cuenta_id . ') por $' . number_format($pago_aplicado, 2);
-                $ref = "PAGO-REF-" . time(); // Evitar string vacío
+                $ref = "PC-" . $cuenta_id; // Evitar string vacío
 
                 $regPago = $egresoModel->registrarPagoCuentaPorPagar(
                     $almacen_principal,
@@ -380,6 +380,8 @@ if ($action === 'cancelarCompra') {
         $id_usuario = $_SESSION['usuario_id'];
         if ($id_compra <= 0) throw new Exception("ID de compra inválido.");
         $resultado = $comprasModel->cancelarCompra($id_compra, $id_usuario);
+        $cancelarCuentaPorPagar = $egresoModel->cancelarDeuda($id_compra);
+
         echo json_encode($resultado);
     } catch (Exception $e) {
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);

@@ -282,7 +282,7 @@
 </div>
 <script>
 function verDetalleViaje(folio) {
-    console.log("1. Folio enviado:", folio);
+    console.log("1. Folio enviado hola:", folio);
     if (!folio) return;
 
     fetch('/cfsistem/app/controllers/repartosController.php?action=get_detalle_ruta_completa&id=' + folio)

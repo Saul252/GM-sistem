@@ -72,6 +72,7 @@
 
 <script>
     function verDetalle(tipo, id) {
+        console.log(tipo,id);
     $.get(`/cfsistem/app/controllers/egresosController.php?action=obtenerDetalleMovimiento&tipo=${tipo}&id=${id}`, function(data) {
         if (!data.success) return Swal.fire('Error', data.message, 'error');
 

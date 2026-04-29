@@ -920,7 +920,7 @@ public function obtenerViajesLogistica($folio_folio = null) {
                     u_chofer.nombre AS nombre_chofer,
                     (SELECT GROUP_CONCAT(u_ayu.nombre SEPARATOR ' / ') 
                      FROM transporte_tripulantes_detalle ttd
-                     INNER JOIN usuarios u_ayu ON ttd.usuario_id = u_ayu.id
+                     INNER JOIN trabajadores u_ayu ON ttd.usuario_id = u_ayu.id
                      WHERE ttd.reparto_id = tc.reparto_id) AS ayudantes,
                     trp.orden_visita,
                     trp.descripcion_punto AS direccion_entrega,
