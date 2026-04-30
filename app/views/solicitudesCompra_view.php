@@ -258,90 +258,152 @@ error_reporting(E_ALL);
             </div>
         </div>
     </div>
-    <div class="modal fade" id="modalGestionSolicitud" tabindex="-1" data-bs-backdrop="static"
-        aria-labelledby="labelModal" aria-hidden="false">
-        <div class="modal-dialog modal-xl">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
-                <div class="modal-header bg-success text-white pt-4 px-4 border-0">
-                    <h5 class="fw-bold"><i class="bi bi-box-arrow-in-down me-2"></i>Convertir Solicitud <span
-                            id="uni-folio"></span> a Compra</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    <div class="modal fade" id="modalGestionSolicitud" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow:hidden;">
+
+            <!-- HEADER -->
+            <div class="modal-header bg-success text-white px-4 py-3 border-0">
+                <div>
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-box-arrow-in-down me-2"></i>
+                        Convertir Solicitud <span id="uni-folio"></span>
+                    </h5>
+                    <small class="opacity-75">Generación de compra e inventario</small>
                 </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
 
-                <form id="formConvertirCompra" enctype="multipart/form-data">
-                    <input type="hidden" name="solicitud_id" id="uni-solicitud-id">
-                    <div class="modal-body px-4 bg-light">
+            <form id="formConvertirCompra" enctype="multipart/form-data">
+                <input type="hidden" name="solicitud_id" id="uni-solicitud-id">
 
-                        <div class="row g-3 mb-4 p-3 rounded-4 bg-white shadow-sm">
+                <div class="modal-body bg-light px-4 py-4">
+
+                    <!-- CARD PROVEEDOR / FINANZAS -->
+                    <div class="bg-white rounded-4 shadow-sm p-4 mb-4">
+
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="fw-semibold text-muted small">Información del proveedor</span>
+                            <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill">
+                                Compra en proceso
+                            </span>
+                        </div>
+
+                        <div class="row g-3 align-items-end">
+
+                            <!-- PROVEEDOR -->
                             <div class="col-md-3">
-                                <label class="small text-muted d-block fw-bold">Proveedor</label>
-                                <input type="text" id="uni-proveedor" class="form-control border-0 bg-light fw-bold"
-                                    readonly>
+                                <label class="form-label small text-muted">Proveedor</label>
+                                <input type="text" id="uni-proveedor"
+                                    class="form-control bg-light border-0 fw-bold rounded-3" readonly>
+
                                 <input type="hidden" name="proveedor" id="uni-proveedor-nombre">
+
+                                <!-- DEUDA -->
+                                <div class="mt-2 p-2 rounded-3 bg-danger-subtle border border-danger-subtle">
+                                    <small class="text-danger fw-semibold d-block">Deuda actual</small>
+                                    <input type="text"
+                                        name="deudaProveedor"
+                                        id="uni-proveedor-deuda"
+                                        class="form-control border-0 bg-transparent text-danger fw-bold p-0"
+                                        readonly>
+                                </div>
                             </div>
+
+                            <!-- FOLIO -->
                             <div class="col-md-2">
-                                <label class="small text-muted d-block fw-bold">Folio Factura</label>
-                                <input type="text" name="folio" class="form-control form-control-sm"
-                                    placeholder="Ej: FAC-123" required>
+                                <label class="form-label small text-muted">Folio factura</label>
+                                <input type="text" name="folio"
+                                    class="form-control rounded-3 shadow-sm"
+                                    placeholder="FAC-000" required>
                             </div>
+
+                            <!-- EVIDENCIA -->
                             <div class="col-md-3">
-                                <label class="small text-muted d-block fw-bold">Evidencia (PDF/IMG)</label>
-                                <input type="file" name="evidencia_compra" class="form-control form-control-sm"
+                                <label class="form-label small text-muted">Evidencia</label>
+                                <input type="file"
+                                    name="evidencia_compra"
+                                    class="form-control rounded-3 shadow-sm"
                                     accept="image/*,.pdf">
                             </div>
-                             <div class="col-md-2">
-    <label class="form-label small fw-bold text-primary">
-        <i class="bi bi-cash-coin"></i> Pagar deuda
-    </label>
-    <input type="number"
-        id="input_pagar_deuda"
-        name="saldo_a_pagar"
-        class="form-control shadow-sm border-primary"
-        value="0" min="0" step="0.1"
-        placeholder="0.0"
-        >
-</div>
 
-                            <div class="col-md-4 text-end">
-                                <label class="small text-muted d-block fw-bold">TOTAL FACTURA</label>
-                                <span class="h3 fw-bold text-success" id="uni-gran-total">$ 0.00</span>
+                            <!-- PAGAR DEUDA -->
+                            <div class="col-md-2">
+                                <label class="form-label small text-primary fw-semibold">
+    <i class="bi bi-cash-coin"></i> Abono 
+    <span class="label-abono-info text-muted"></span>
+</label>
+                                <input type="number"
+                                    id="input_pagar_deuda"
+                                    name="saldo_a_pagar"
+                                    class="form-control border-primary shadow-sm rounded-3"
+                                    value="0" min="0" step="0.1">
                             </div>
-                            <select name="metodo_pago" id="metodo_pago" class="form-select" required>
-                                <option value="">Seleccione método de pago...</option>
+
+                            <!-- TOTAL -->
+                            <div class="col-md-2 text-end">
+                                <label class="form-label small text-muted">Total compra</label>
+                                <div class="p-2 rounded-3 bg-success-subtle">
+                                    <span class="h4 fw-bold text-success mb-0" id="uni-gran-total">
+                                        $ 0.00
+                                    </span>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- MÉTODO PAGO -->
+                        <div class="mt-3">
+                            <label class="form-label small text-muted">Método de pago</label>
+                            <select name="metodo_pago" id="metodo_pago"
+                                class="form-select rounded-3 shadow-sm">
+                                <option value="">Seleccione...</option>
                                 <option value="Efectivo">Efectivo</option>
                                 <option value="Transferencia">Transferencia</option>
                                 <option value="Tarjeta">Tarjeta</option>
                             </select>
                         </div>
 
-                        <div class="table-responsive bg-white rounded-4 shadow-sm p-2">
-                            <table class="table align-middle" id="tablaConversion">
-                                <thead>
-                                    <tr class="text-muted small">
-                                        <th>Producto</th>
-                                        <th width="110">Cant. Mayoreo</th>
-                                        <th width="100">Sueltas</th>
-                                        <th width="150">Costo Renglón</th>
-                                        <th width="180">Almacén Destino</th>
-                                        <th width="130" class="text-end">Total Piezas</th>
-                                    </tr>
-                                </thead>
-                                <tbody style="border-top: 0;">
-                                </tbody>
-                            </table>
-                        </div>
                     </div>
 
-                    <div class="modal-footer border-0 px-4 pb-4 bg-light">
-                        <button type="button" class="btn btn-link text-muted" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-success rounded-pill px-5 shadow">
-                            <i class="bi bi-save me-2"></i> Guardar Compra e Inventario
-                        </button>
+                    <!-- TABLA -->
+                    <div class="bg-white rounded-4 shadow-sm p-2">
+                        <table class="table align-middle mb-0" id="tablaConversion">
+                            <thead class="table-light">
+                                <tr class="small text-muted">
+                                    <th>Producto</th>
+                                    <th>Mayoreo</th>
+                                    <th>Sueltas</th>
+                                    <th>Faltantes</th>
+                                    <th>Excedentes</th>
+                                    <th>Costo</th>
+                                    <th>Almacén</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
                     </div>
-                </form>
-            </div>
+
+                </div>
+
+                <!-- FOOTER -->
+                <div class="modal-footer bg-light border-0 px-4 pb-4">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button type="submit"
+                        class="btn btn-success rounded-pill px-5 shadow-sm fw-semibold">
+                        <i class="bi bi-check2-circle me-2"></i> Confirmar compra
+                    </button>
+                </div>
+
+            </form>
         </div>
     </div>
+</div>
     <div class="modal fade" id="modalImprimirSolicitud" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
@@ -620,6 +682,7 @@ async function gestionarSolicitud(id) {
         const res = await resp.json();
 
         if (res.status !== 'success') throw new Error(res.message || 'Error al obtener datos');
+        console.log(res);
 
         const items = res.data;
         if (!items || items.length === 0) {
@@ -631,6 +694,16 @@ async function gestionarSolicitud(id) {
         $('#uni-folio').text(`#${id.toString().padStart(5, '0')}`);
         $('#uni-proveedor').val(items[0].proveedor_nombre || 'Sin Proveedor');
         $('#uni-proveedor-nombre').val(items[0].proveedor_nombre || '');
+$('#uni-proveedor-deuda').val(res.deuda[0].pendiente || 0);
+
+// valor inicial
+$('#input_pagar_deuda').val(0);
+
+// 🔥 aquí el truco importante
+const deuda = parseFloat(res.deuda?.[0]?.pendiente ?? 0);
+
+$('#input_pagar_deuda').attr('max', deuda);
+$('.label-abono-info').text(`Máximo: ${res.deuda[0].pendiente || 0}`);
 
         let html = '';
 
@@ -665,6 +738,9 @@ async function gestionarSolicitud(id) {
                 </td>
 
                 <td>
+                 <label class="form-label small text-danger fw-semibold mb-1">
+                        Faltantes
+                    </label>
                     <input type="number"
                         class="form-control form-control-sm border-danger shadow-sm i-faltante"
                         value="0" min="0" 

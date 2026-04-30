@@ -44,7 +44,8 @@ $modulos = [
     ['id' => 'repartos', 'url' => '/cfsistem/app/controllers/repartosController.php', 'icon' => 'bi-truck-flatbed', 'class' => 'text-info', 'label' => 'Repartos', 'desc' => 'Monitor Ruta'],
    
     ['id' => 'misRepartos', 'url' => '/cfsistem/app/controllers/misRepartosController.php', 'icon' => 'bi-map-fill', 'class' => 'text-primary', 'label' => 'Mis repartos', 'desc' => 'Repartos activos y evidencias'],
-  
+  ['id' => 'viajesTrabajadores', 'url' => '/cfsistem/app/controllers/viajesTrabajadoresController.php', 'icon' => 'bi-person-workspace','class' => 'text-primary', 'label' => 'Viajes Trabjadores','desc' => 'Historial de viajes por trabajador'],
+   
     ['id' => 'pedidosVendedor', 'url' => '/cfsistem/app/controllers/pedidosVendedorController.php', 'icon' => 'bi-person-badge-fill', 'class' => 'text-warning', 'label' => 'Pedidos Vendedor', 'desc' => 'Preventa'],
 
    ];

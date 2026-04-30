@@ -15,12 +15,15 @@ require_once __DIR__ . '/../models/proveedoresModel.php';
 require_once __DIR__ . '/../models/almacen_model.php'; 
 require_once __DIR__ . '/../models/egresos/comprasModel.php';
 
+require_once __DIR__ . '/../models/egresos_model.php';
+
 
 protegerPagina('solicitudesCompra'); 
 
 $solicitudModel = new SolicitudCompra($conexion);
 $productosModel = new ProductosModel($conexion);
 $almacenModel   = new AlmacenModel($conexion);
+$egresoModel   = new EgresoModel($conexion);
 $proveedorModel = new ProveedoresModel($conexion);
 $comprasModel = new CompraModel($conexion);
 $paginaActual = 'solicitudesCompra'; 
@@ -219,13 +222,13 @@ $proveedor = $proveedorData['id'] ?? 0;
                 $ref = "PC-" . $cuenta_id; // Evitar string vacío
 
                 $regPago = $egresoModel->registrarPagoCuentaPorPagar(
-                    $almacen_principal,
+                    $almacen_id,
                     $proveedor_id,
                     $cuenta_id,
                     $pago_aplicado,
                     $metodoPago,
                     $ref,
-                    $user_id,
+                    $_SESSION['usuario_id'] ?? 0,
                     $desc
                 );
 

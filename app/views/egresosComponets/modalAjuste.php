@@ -1,38 +1,63 @@
 <div class="modal fade" id="modalAjusteFaltante" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title fw-bold">
-                    <i class="bi bi-diagram-3-fill me-2"></i> 
-                    Distribución de Faltantes: <span id="folioAjuste" class="badge bg-white text-danger ms-2"></span>
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+
+            <!-- HEADER -->
+            <div class="modal-header bg-danger text-white px-4 py-3 border-0">
+                <h5 class="modal-title fw-semibold d-flex align-items-center gap-2">
+                    <i class="bi bi-diagram-3-fill fs-5"></i> 
+                    <span>Distribución de Faltantes</span>
+                    <span id="folioAjuste" class="badge bg-white text-danger fw-bold ms-2 px-3 py-1"></span>
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close btn-close-white opacity-75" data-bs-dismiss="modal"></button>
             </div>
-            
+
             <form id="formAjusteFaltante">
-                <div class="modal-body bg-light">
+                <div class="modal-body bg-light px-4 py-4">
+
                     <input type="hidden" name="compra_id" id="ajuste_compra_id">
-                    
-                    <div class="alert alert-warning d-flex align-items-center mb-4 shadow-sm border-0">
-                        <i class="bi bi-shield-check me-3 h4 mb-0 text-danger"></i>
-                        <div class="small">
-                            <strong>Control de Entradas:</strong> Primero <b>habilite</b> el almacén de destino con el interruptor y luego ingrese la cantidad recibida.
+
+                    <!-- ALERTA PREMIUM -->
+                    <div class="d-flex align-items-start gap-3 p-3 mb-4 rounded-4 bg-white shadow-sm border-start border-4 border-danger">
+                        <div>
+                            <i class="bi bi-exclamation-triangle-fill text-danger fs-4"></i>
+                        </div>
+                        <div class="small text-muted">
+                            <div class="fw-semibold text-dark mb-1">Control de Entradas</div>
+                            Habilite el almacén de destino y después capture la cantidad recibida para evitar errores en inventario.
                         </div>
                     </div>
 
+                    <!-- CONTENEDOR -->
                     <div id="listaProductosFaltantes" class="row g-4">
-                        </div>
+                        <!-- contenido dinámico -->
+                    </div>
+
                 </div>
 
-                <div class="modal-footer bg-white border-top">
-                    <button type="button" class="btn btn-light px-4" data-bs-dismiss="modal">Cerrar</button>
-                    <button type="button" class="btn btn-danger px-5 fw-bold shadow-sm" onclick="aplicarFaltantesCompra()">
-                        <i class="bi bi-check-all me-2"></i> Ajustar compra
+                <!-- FOOTER -->
+                <div class="modal-footer bg-white px-4 py-3 border-0 d-flex justify-content-between">
+
+                    <button type="button" class="btn btn-light rounded-pill px-4 shadow-sm" data-bs-dismiss="modal">
+                        Cancelar
                     </button>
-                    <button type="button" class="btn btn-danger px-5 fw-bold shadow-sm" onclick="procesarAjuste()">
-                        <i class="bi bi-check-all me-2"></i> REGISTRAR ENTRADA
-                    </button>
+
+                    <div class="d-flex gap-2">
+
+                        <button type="button" 
+                                class="btn btn-outline-danger rounded-pill px-4 fw-semibold shadow-sm"
+                                onclick="aplicarFaltantesCompra()">
+                            <i class="bi bi-arrow-repeat me-1"></i> Ajustar compra
+                        </button>
+
+                        <button type="button" 
+                                class="btn btn-danger rounded-pill px-4 fw-bold shadow">
+                            <i class="bi bi-check-circle-fill me-1"></i> Registrar entrada
+                        </button>
+
+                    </div>
                 </div>
+
             </form>
         </div>
     </div>

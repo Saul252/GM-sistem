@@ -180,27 +180,44 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
  * LÓGICA DE COMPRAS - CF SISTEM
  */
 function abrirModalCompra() {
-    $('#select_proveedor').select2('destroy');
-    // Resetear el formulario pero mantener el almacén seleccionado por PHP
-    const almacenPreseleccionado = $('#almacen_id_cabecera').val();
-    $('#formNuevaCompra')[0].reset();
-    $('#almacen_id_cabecera').val(almacenPreseleccionado); // Restauramos lo que PHP eligió
 
+    const $selectProveedor = $('#select_proveedor');
+
+    // 🔥 SOLO destruir si ya está inicializado
+    if ($selectProveedor.hasClass('select2-hidden-accessible')) {
+        $selectProveedor.select2('destroy');
+    }
+
+    // Guardar almacén antes del reset
+    const almacenPreseleccionado = $('#almacen_id_cabecera').val();
+
+    // Reset form
+    $('#formNuevaCompra')[0].reset();
+
+    // Restaurar almacén
+    $('#almacen_id_cabecera').val(almacenPreseleccionado);
+
+    // Limpiar UI
     $('#contenedorItemsCompra').empty();
     $('#granTotalCompra').text('$ 0.00');
 
+    // Agregar primera fila
+    agregarFilaCompra();
+
+    // 🔥 Mostrar modal primero
+    $('#modalNuevaCompra').modal('show');
+
+    // 🔥 Inicializar select2 DESPUÉS de abrir
     if (ES_ADMIN) {
         setTimeout(() => {
             $('.select2-cabecera').select2({
                 theme: 'bootstrap-5',
-                dropdownParent: $('#modalNuevaCompra .modal-content')
+                dropdownParent: $('#modalNuevaCompra')
             });
-        }, 100);
+        }, 150);
     }
-
-    agregarFilaCompra();
-    $('#modalNuevaCompra').modal('show');
 }
+
 // --- PEGA ESTO DENTRO DE TU ETIQUETA <script> ---
 
 /**
@@ -711,6 +728,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const option = this.options[this.selectedIndex];
 
         const deuda = parseFloat(option.dataset.deuda || 0);
+$('#input_pagar_deuda').attr('max', deuda);
+$('.label-abono-info').text(`Máximo: ${deuda}`);
 
         box.innerText = "Deuda: $" + deuda.toLocaleString('es-MX', {
             minimumFractionDigits: 2

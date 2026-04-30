@@ -181,7 +181,64 @@ if ($action === 'guardarCompraInventario') {
     }
     exit;
 }
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'subirDocumento') {
 
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+
+    try {
+
+        
+        
+        $compra_id = intval($_POST['compra_id'] ?? 0);
+        $folio = $_POST['folio'] ?? '';
+
+        if ($compra_id <= 0) {
+            throw new Exception("Compra inválida");
+        }
+
+        $documento = $_FILES['documento'] ?? null;
+
+        if (!$documento || $documento['error'] !== UPLOAD_ERR_OK) {
+            throw new Exception("Error al subir archivo");
+        }
+
+        // 🔥 SUBIDA
+        $ruta_carpeta = $_SERVER['DOCUMENT_ROOT'] . "/cfsistem/uploads/compras/";
+        if (!is_dir($ruta_carpeta)) mkdir($ruta_carpeta, 0777, true);
+
+        $ext = pathinfo($documento['name'], PATHINFO_EXTENSION);
+        $nombre = "compra_" . preg_replace('/[^a-zA-Z0-9]/', '_', $folio) . "_" . time() . "." . $ext;
+
+        $destino = $ruta_carpeta . $nombre;
+
+        if (!move_uploaded_file($documento['tmp_name'], $destino)) {
+            throw new Exception("No se pudo guardar el archivo");
+        }
+
+        $documento_url = "uploads/compras/" . $nombre;
+
+        // 🔥 GUARDAR EN BD
+        $ok = $comprasModel->actualizarDocumentoCompra($compra_id, $documento_url);
+
+        if (!$ok) {
+            throw new Exception("Error al guardar en BD");
+        }
+
+        echo json_encode([
+            'success' => true,
+            'url' => $documento_url
+        ]);
+
+    } catch (Throwable $e) {
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+    }
+
+    exit;
+}
 if ($action === 'guardarGasto') {
     header('Content-Type: application/json');
     try {

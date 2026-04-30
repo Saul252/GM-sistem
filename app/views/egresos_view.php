@@ -421,6 +421,16 @@
                         <?php else: ?>
                             <i class="bi bi-slash-circle text-muted opacity-25"></i>
                         <?php endif; ?>
+                        <?php if(!empty($e['tipo']=='compra')): ?>
+                        <button class="btn btn-sm btn-outline-primary rounded-pill"
+    onclick="subirDocumentoCompra(
+        <?= $e['id'] ?>, 
+        '<?= $e['folio'] ?? ''?>', 
+        '<?= $e['documento_url'] ?? ''?>'
+    )">
+    <i class="bi bi-upload"></i>
+</button>
+<?php endif; ?>
                     </td>
 
                     <td class="text-end pe-4">
@@ -689,7 +699,89 @@ function confirmarCancelacionGasto(id, folio) {
         }
     });
 }
-</script>
+function subirDocumentoCompra(compra_id, folio, documento_actual = '') {
+
+    Swal.fire({
+        title: 'Documento de Compra',
+        html: `
+            <div class="text-start">
+                <label class="fw-bold small mb-2">Subir / Reemplazar documento</label>
+                <input type="file" id="swal_file_doc" class="form-control mb-2" accept=".pdf,image/*">
+                
+                ${documento_actual 
+                    ? `<a href="/cfsistem/${documento_actual}" target="_blank" class="small text-primary">Ver documento actual</a>` 
+                    : `<div class="small text-muted">Sin documento</div>`
+                }
+            </div>
+        `,
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Guardar',
+        confirmButtonColor: '#198754',
+        focusConfirm: false,
+
+        preConfirm: async () => {
+
+            const fileInput = document.getElementById('swal_file_doc');
+            const file = fileInput?.files[0];
+
+            if (!file) {
+                Swal.showValidationMessage('Selecciona un archivo');
+                return false;
+            }
+
+            const formData = new FormData();
+            formData.append('action', 'subirDocumento');
+            formData.append('compra_id', compra_id);
+            formData.append('folio', folio);
+            formData.append('documento', file);
+
+            try {
+                const response = await fetch('/cfsistem/app/controllers/egresosController.php?action=subirDocumento', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                // 🔥 LEEMOS COMO TEXTO PRIMERO (ANTI "Unexpected token <")
+                const text = await response.text();
+                console.log('RESPUESTA CRUDA:', text);
+
+                let res;
+                try {
+                    res = JSON.parse(text);
+                } catch (e) {
+                    throw new Error('El servidor no devolvió JSON válido');
+                }
+
+                if (!res.success) {
+                    throw new Error(res.message || 'Error al subir archivo');
+                }
+
+                return res;
+
+            } catch (err) {
+                Swal.showValidationMessage(err.message);
+                return false;
+            }
+        }
+
+    }).then(result => {
+
+        if (!result.isConfirmed || !result.value) return;
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Guardado',
+            text: 'Documento actualizado correctamente',
+            timer: 1800,
+            showConfirmButton: false
+        });
+
+        if (typeof cargarCompras === 'function') {
+            cargarCompras();
+        }
+    });
+}</script>
 
 </body>
 

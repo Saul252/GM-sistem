@@ -40,7 +40,7 @@ date_default_timezone_set('America/Mexico_City');
    ['id' => 'vehiculos', 'url' => '/cfsistem/app/controllers/vehiculosController.php', 'icon' => 'bi-truck-front-fill', 'label' => 'Vehículos', 'active' => ($archivoActual == 'vehiculosController.php')],
    ['id' => 'repartos', 'url' => '/cfsistem/app/controllers/repartosController.php', 'icon' => 'bi-truck-flatbed', 'label' => 'Repartos', 'active' => ($archivoActual == 'repartosController.php')],
    ['id' => 'misRepartos', 'url' => '/cfsistem/app/controllers/misRepartosController.php', 'icon' => 'bi-map-fill', 'label' => 'Mis repartos', 'active' => ($archivoActual == 'misRepartosController.php')],
-   ['id' => 'viajesTrabajadores', 'url' => '/cfsistem/app/controllers/viajesTrabajadoresController.php', 'icon' => 'bi-map-fill', 'label' => 'Viajes Trabjadores', 'active' => ($archivoActual == 'viajesTrabajadoresController.php')],
+   ['id' => 'viajesTrabajadores', 'url' => '/cfsistem/app/controllers/viajesTrabajadoresController.php', 'icon' => 'bi-person-workspace', 'label' => 'Viajes Trabajadores', 'active' => ($archivoActual == 'viajesTrabajadoresController.php')],
    
    ['id' => 'pedidosVendedor', 'url' => '/cfsistem/app/controllers/pedidosVendedorController.php', 'icon' => 'bi-person-badge-fill', 'label' => 'Pedidos Vendedor', 'desc' => 'Preventa', 'active' => ($archivoActual == 'pedidosVendedorController.php')],
    ['id' => 'Configuracion', 'url' => '/cfsistem/app/controllers/configuracionController.php', 'icon' => 'bi-gear-fill', 'label' => 'Configuración', 'active' => ($archivoActual == 'configuracionController.php')],
