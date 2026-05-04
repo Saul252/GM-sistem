@@ -9,6 +9,9 @@ class AlmacenModel {
     public function getCategorias() {
         return $this->db->query("SELECT id, nombre FROM categorias ORDER BY nombre ASC")->fetch_all(MYSQLI_ASSOC);
     }
+     public function getUnidadesMedida() {
+        return $this->db->query("SELECT id, nombre, clave FROM unidades_medida ORDER BY nombre ASC")->fetch_all(MYSQLI_ASSOC);
+    }
 
     public function getAlmacenes($almacen_id ) {
         $sql = "SELECT * FROM almacenes WHERE activo = 1";
@@ -32,7 +35,7 @@ class AlmacenModel {
 }
 
     public function getInventario($almacen_id = 0) {
-        $sql = "SELECT p.id, p.sku, p.nombre, p.categoria_id, p.factor_conversion, p.unidad_reporte,c.nombre AS categoria_nombre,
+        $sql = "SELECT p.id, p.sku, p.nombre,p.descripcion, p.categoria_id, p.factor_conversion, p.unidad_reporte,c.nombre AS categoria_nombre,
 
                        i.stock, i.almacen_id, a.nombre AS almacen_nombre
                 FROM inventario i

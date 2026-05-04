@@ -185,4 +185,113 @@ class MovimientoModel {
     
     return $ids; // Ahora regresa un array, ej: [45, 46, 47]
 }
+public function obtenerMovimientosPorRol($usuario_id, $rol_id, $almacen_id = null)
+{
+    try {
+
+        $response = [
+            'arribos' => [],
+            'envios'  => []
+        ];
+
+        // 🔹 Filtros dinámicos
+        $filtro_arribos = "";
+        $filtro_envios  = "";
+
+        if ($rol_id == 1) { // ADMIN
+
+            if ($almacen_id) {
+                $filtro_arribos = "AND m.almacen_destino_id = " . intval($almacen_id);
+                $filtro_envios  = "AND m.almacen_origen_id = " . intval($almacen_id);
+            } else {
+                return $response; // vacío
+            }
+
+        } else {
+            // ALMACENISTA (ajusta según tu lógica real)
+            $filtro_arribos = "AND m.almacen_destino_id IN (SELECT id FROM almacenes)";
+            $filtro_envios  = "AND m.usuario_envia_id = " . intval($usuario_id);
+        }
+
+        // 🔹 ARRIBOS
+        $sqlArribos = "SELECT 
+                            m.id, 
+                            m.fecha, 
+                            p.nombre AS producto, 
+                            p.sku,
+                            p.factor_conversion, 
+                            p.unidad_reporte, 
+                            m.cantidad, 
+                            ao.nombre AS origen, 
+                            u.nombre AS enviado_por
+                        FROM movimientos m
+                        JOIN productos p ON m.producto_id = p.id
+                        JOIN almacenes ao ON m.almacen_origen_id = ao.id
+                        JOIN usuarios u ON m.usuario_envia_id = u.id
+                        WHERE m.tipo = 'traspaso' 
+                        AND m.usuario_recibe_id IS NULL 
+                        $filtro_arribos
+                        ORDER BY m.fecha DESC";
+
+        $resA = $this->db->query($sqlArribos);
+
+        if ($resA) {
+            while ($row = $resA->fetch_assoc()) {
+
+                // Tipado limpio
+                $row['cantidad'] = (float)$row['cantidad'];
+                $row['factor_conversion'] = (float)$row['factor_conversion'];
+
+                $response['arribos'][] = $row;
+            }
+        }
+
+        // 🔹 ENVÍOS
+        $sqlEnvios = "SELECT 
+                            m.id, 
+                            m.fecha, 
+                            p.nombre AS producto,
+                            p.factor_conversion, 
+                            p.unidad_reporte, 
+                            m.cantidad, 
+                            ad.nombre AS destino, 
+                            m.usuario_recibe_id
+                        FROM movimientos m
+                        JOIN productos p ON m.producto_id = p.id
+                        JOIN almacenes ad ON m.almacen_destino_id = ad.id
+                        WHERE m.tipo = 'traspaso' 
+                        $filtro_envios
+                        ORDER BY m.fecha DESC 
+                        LIMIT 20";
+
+        $resE = $this->db->query($sqlEnvios);
+
+        if ($resE) {
+            while ($row = $resE->fetch_assoc()) {
+
+                $row['cantidad'] = (float)$row['cantidad'];
+                $row['factor_conversion'] = (float)$row['factor_conversion'];
+
+                // Estado visual
+                $row['estado'] = ($row['usuario_recibe_id']) ? 'Completado' : 'En Tránsito';
+
+                $response['envios'][] = $row;
+            }
+        }
+
+        return [
+            'status' => true,
+            'data' => $response
+        ];
+
+    } catch (Exception $e) {
+
+        error_log("ERROR obtenerMovimientosPorRol: " . $e->getMessage());
+
+        return [
+            'status' => false,
+            'msg' => 'Error al obtener movimientos'
+        ];
+    }
+}
 }

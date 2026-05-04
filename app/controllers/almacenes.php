@@ -19,7 +19,8 @@ protegerPagina('almacenes');
 class AlmacenController {
     private $model;
     private $productoModel;
-    private $categoriaModel; 
+
+        private $categoriaModel; 
     private $conexion;
 
     public function __construct($conexion) {
@@ -43,6 +44,9 @@ class AlmacenController {
         
         // 2. Cargamos el inventario detallado para el DataTable
         $productos = $this->model->getInventario($almacen_usuario);
+        $unidadesMedida = $this->model->getUnidadesMedida();
+
+        $unidadesMedidam = $this->model->getUnidadesMedida();
 
         // --- 3. NUEVA LÓGICA: RESUMEN AUTOMÁTICO PARA LAS TARJETAS ---
         // El modelo detectará por sesión si es Admin o Vendedor
@@ -68,7 +72,7 @@ class AlmacenController {
 
         // 4. Renderizamos la vista (ya lleva $resumenData inyectado)
         $tituloPagina='Almacenes';
-        require_once __DIR__ . '/../views/almacenes_view.php';
+        require_once __DIR__ . '/../views/almacenes_view2.php';
 
     } catch (Exception $e) {
         // Un mensaje un poco más limpio para el usuario final
@@ -125,6 +129,17 @@ class AlmacenController {
         }
         exit;
     }
+     public function getUnidadesMedidaJSON() {
+        while (ob_get_level()) ob_end_clean(); 
+        header('Content-Type: application/json; charset=utf-8');
+        try {
+            $unidadesMedida = $this->model->getCategorias();
+            echo json_encode($unidadesMedida ?: []);
+        } catch (Exception $e) {
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+        exit;
+    }
 
     public function guardarProducto() {
         while (ob_get_level()) ob_end_clean(); // Asegurar respuesta limpia
@@ -141,7 +156,7 @@ class AlmacenController {
             'impuesto_iva'        => floatval($_POST['impuesto_iva'] ?? 16.00),
             'descripcion'         => $_POST['description'] ?? '',
             'fiscal_clave_prod'   => $_POST['fiscal_clave_prod'] ?? '',
-            'fiscal_clave_unit'   => $_POST['fiscal_clave_unit'] ?? '',
+            'fiscal_clave_unidad'   => $_POST['fiscal_clave_unidad'] ?? '',
             'precio_minorista'    => floatval($_POST['precio_minorista'] ?? 0),
             'precio_mayorista'    => floatval($_POST['precio_mayorista'] ?? 0),
             'precio_distribuidor' => floatval($_POST['precio_distribuidor'] ?? 0)
@@ -184,11 +199,170 @@ public function obtenerListaAlmacenes() {
     // 3. Terminamos la ejecución para que no se pegue el HTML del Layout
     exit; 
 }
+public function guardarProductoCompleto() {
+   while (ob_get_level()) ob_end_clean();
+
+ini_set('display_errors', 0);
+error_reporting(0);
+
+header('Content-Type: application/json');
+    try {
+
+        // 🔹 1. Armar datos
+        $data = [
+            'sku' => trim($_POST['sku'] ?? ''),
+            'nombre' => trim($_POST['nombre'] ?? ''),
+            'descripcion' => $_POST['description'] ?? '',
+            'categoria_id' => !empty($_POST['categoria_id']) ? $_POST['categoria_id'] : null,
+            'unidad_medida' => $_POST['unidad_medida'] ?? 'PZA',
+            'unidad_reporte' => $_POST['unidad_reporte'] ?? null,
+            'factor_conversion' => floatval($_POST['factor_conversion'] ?? 1),
+            'precio_adquisicion' => floatval($_POST['precio_adquisicion'] ?? 0),
+            'fiscal_clave_prod' => $_POST['fiscal_clave_prod'] ?? null,
+            'fiscal_clave_unit' => $_POST['fiscal_clave_unit'] ?? null,
+            'impuesto_iva' => floatval($_POST['impuesto_iva'] ?? 16),
+            'almacenes' => $_POST['almacenes'] ?? [],
+            'usuario_id' => $_SESSION['usuario_id'] ?? 1
+        ];
+
+        // 🔹 2. Validación básica
+        if (empty($data['sku']) || empty($data['nombre'])) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'SKU y Nombre son obligatorios'
+            ]);
+            exit;
+        }
+
+        // 🔹 3. Llamar al modelo PRO
+        $resultado = $this->productoModel->crearProducto($data);
+
+        // 🔹 4. Respuesta
+        if ($resultado['status']) {
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Producto guardado correctamente'
+            ]);
+        } else {
+            echo json_encode([
+                'status' => 'error',
+                'message' => $resultado['msg']
+            ]);
+        }
+
+    } catch (Exception $e) {
+    error_log($e->getMessage()); // 👈 guarda error real en logs
+
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Error interno del servidor'
+    ]);
+
+    }
+
+    exit;
+}
 /**
      * AJAX: Obtiene el resumen de productos (Mi Almacén vs Total Sistema)
      */
+public function obtenerProductoDetalle()
+{
+    while (ob_get_level()) ob_end_clean();
+    header('Content-Type: application/json');
 
+    $id = $_GET['id'] ?? 0;
+    $almacen_id = $_GET['almacen_id'] ?? 0;
 
+    if (!$id || !$almacen_id) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Parámetros incompletos'
+        ]);
+        exit;
+    }
+
+    $resultado = $this->productoModel->obtenerProductoPorAlmacen($id, $almacen_id);
+
+    if ($resultado['status']) {
+        echo json_encode([
+            'status' => 'success',
+            'producto' => $resultado['data']
+        ]);
+    } else {
+        echo json_encode([
+            'status' => 'error',
+            'message' => $resultado['msg']
+        ]);
+    }
+
+    exit;
+}
+public function actualizarProducto()
+{
+    while (ob_get_level()) ob_end_clean();
+    header('Content-Type: application/json');
+
+    try {
+
+        $data = [
+            'id' => $_POST['producto_id'] ?? 0,
+            'almacen_id' => $_POST['almacen_actual_id'] ?? 0,
+            'sku' => $_POST['sku'] ?? '',
+            'nombre' => $_POST['nombre'] ?? '',
+            'descripcion' => $_POST['descripcion'] ?? '',
+            'categoria_id' => $_POST['categoria_id'] ?? null,
+
+            'fiscal_clave_prod' => $_POST['fiscal_clave_prod'] ?? '',
+            'fiscal_clave_unit' => $_POST['fiscal_clave_unidad'] ?? '',
+            'impuesto_iva' => floatval($_POST['impuesto_iva'] ?? 0),
+
+            'unidad_reporte' => $_POST['unidad_reporte'] ?? '',
+            'factor_conversion' => floatval($_POST['factor_conversion'] ?? 1),
+            'unidad_medida' => $_POST['unidad_medida'] ?? '',
+
+            'precio_minorista' => floatval($_POST['precio_minorista'] ?? 0),
+            'precio_mayorista' => floatval($_POST['precio_mayorista'] ?? 0),
+            'precio_distribuidor' => floatval($_POST['precio_distribuidor'] ?? 0),
+
+            'stock' => floatval($_POST['stock'] ?? 0),
+            'stock_minimo' => floatval($_POST['stock_minimo'] ?? 0),
+
+            'aplicar_global' => isset($_POST['aplicar_global'])
+        ];
+
+        if (!$data['id']) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'ID inválido'
+            ]);
+            exit;
+        }
+
+        $res = $this->productoModel->actualizarProductoCompleto($data);
+
+        if ($res['status']) {
+            echo json_encode([
+                'status' => 'success',
+                'message' => 'Producto actualizado correctamente'
+            ]);
+        } else {
+            echo json_encode([
+                'status' => 'error',
+                'message' => $res['msg']
+            ]);
+        }
+
+    } catch (Exception $e) {
+        error_log($e->getMessage());
+
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Error interno del servidor'
+        ]);
+    }
+
+    exit;
+}
 }
 
 /**
@@ -202,6 +376,9 @@ if (isset($conexion)) {
         case 'guardar':
             $controller->guardarProducto();
             break;
+            case 'guardarCompleto':
+            $controller->guardarProductoCompleto();
+            break;
         case 'guardarCategoria':
             $controller->guardarCategoria();
             break;
@@ -211,6 +388,12 @@ if (isset($conexion)) {
         case 'getListaProductosJson': // <--- SECCIÓN PARA ACTUALIZAR SELECTS
             $controller->getListaProductosJson();
             break;
+            case 'getProducto': // <--- SECCIÓN PARA ACTUALIZAR SELECTS
+            $controller->obtenerProductoDetalle();
+            break;
+            case 'actualizarProducto':
+    $controller->actualizarProducto();
+    break;
             case 'getAlmacenesJSON': // <--- AÑADE ESTO
         $controller->obtenerListaAlmacenes();
         break;

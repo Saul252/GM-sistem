@@ -63,10 +63,14 @@
                             <input type="number" name="impuesto_iva" class="form-control" value="16">
                         </div>
 
-                        <div class="col-md-8">
+                        <div class="col-md-4">
                             <label class="mac-label">Clave SAT</label>
                             <input type="text" name="fiscal_clave_prod" class="form-control">
                         </div>
+                        <div class="col-md-4">
+                                        <label class="small text-muted">Clave Unidad</label>
+                                        <input type="text" name="fiscal_clave_unidad" id="fiscal_clave_unidad" class="form-control form-control-sm border-0 shadow-sm">
+                                    </div>
 
                         <div class="col-12">
                             <div class="card p-3 shadow-sm border-0">
