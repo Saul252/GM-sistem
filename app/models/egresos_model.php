@@ -80,7 +80,7 @@ public function obtenerTodosLosEgresosFiltros(
         $parts[] = "(SELECT 
             g.id, g.folio, g.fecha_gasto AS fecha, g.beneficiario AS entidad,
             g.total, COALESCE(g.metodo_pago, 'efectivo') AS metodo_pago,
-            'gasto' AS tipo, NULL AS documento_url, g.categoria_id,
+            'gasto' AS tipo, g.documento_url AS documento_url, g.categoria_id,
             0 AS piezas_faltantes, a.nombre AS almacen_nombre, g.estado,
             0 AS tiene_deuda, 0 AS pagado_cpp
         FROM gastos g

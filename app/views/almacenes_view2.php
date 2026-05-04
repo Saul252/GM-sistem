@@ -93,6 +93,47 @@
     .border-blue { border-left: 3px solid #007aff; }
     .border-purple { border-left: 3px solid #5856d6; }
     .border-green { border-left: 3px solid #34c759; }
+
+    /* Estilos ultra-finos para no afectar el main-content */
+    .ios-micro-card {
+        background: #ffffff;
+        border-radius: 12px;
+        border: 1px solid rgba(0,0,0,0.05);
+        padding: 5px 10px;
+        min-width: 90px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    .ios-micro-label { 
+        color: #8e8e93; 
+        font-size: 0.55rem; 
+        font-weight: 700; 
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        line-height: 1.2;
+    }
+    .ios-micro-value { 
+        color: #1c1c1e; 
+        font-size: 1rem; 
+        font-weight: 700; 
+        letter-spacing: -0.02em;
+        line-height: 1;
+        margin-top: 2px;
+    }
+    .ios-micro-footer {
+        font-size: 0.6rem;
+        color: #aeaeb2;
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .border-blue { border-left: 3px solid #007aff; }
+    .border-purple { border-left: 3px solid #5856d6; }
+    .border-green { border-left: 3px solid #34c759; }
+
     </style>
     <div class="main-content">
    <div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
@@ -136,47 +177,7 @@
     </div>
 </div>
 
-<style>
-    /* Estilos ultra-finos para no afectar el main-content */
-    .ios-micro-card {
-        background: #ffffff;
-        border-radius: 12px;
-        border: 1px solid rgba(0,0,0,0.05);
-        padding: 5px 10px;
-        min-width: 90px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-    .ios-micro-label { 
-        color: #8e8e93; 
-        font-size: 0.55rem; 
-        font-weight: 700; 
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        line-height: 1.2;
-    }
-    .ios-micro-value { 
-        color: #1c1c1e; 
-        font-size: 1rem; 
-        font-weight: 700; 
-        letter-spacing: -0.02em;
-        line-height: 1;
-        margin-top: 2px;
-    }
-    .ios-micro-footer {
-        font-size: 0.6rem;
-        color: #aeaeb2;
-        margin-top: 2px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    .border-blue { border-left: 3px solid #007aff; }
-    .border-purple { border-left: 3px solid #5856d6; }
-    .border-green { border-left: 3px solid #34c759; }
-</style>
+
 
         <div class="card p-3 shadow-sm">
             <div class="row mb-3 g-2 align-items-center">
@@ -791,115 +792,9 @@
         </div>
     </div>
 </div>
-    <div class="modal fade" id="modalNuevaCategoria" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-sm modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h6 class="modal-title">Nueva Categoría</h6>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="formRapidoCategoria">
-                        <div class="mb-3">
-                            <label class="form-label small">Nombre de la Categoría</label>
-                            <input type="text" id="nombre_cat_rapida" class="form-control"
-                                placeholder="Ej: Herramientas" required>
-                        </div>
-                        <button type="button" onclick="guardarCategoriaRapida()" class="btn btn-success w-100">
-                            <i class="bi bi-save"></i> Guardar
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    <script>
-    function abrirSubModalCategoria() {
-        // Simplemente abrimos el modal de categoría sin cerrar el anterior
-        const myModal = new bootstrap.Modal(document.getElementById('modalNuevaCategoria'), {
-            backdrop: 'static', // Evita que se cierre el de atrás si haces clic fuera
-            keyboard: false
-        });
-        myModal.show();
-    }
-
-  function guardarCategoriaRapida() {
-
-    const input = document.getElementById('nombre_cat_rapida');
-    const nombre = input.value.trim();
-
-    if (!nombre) {
-        return Swal.fire('Error', 'Escribe un nombre', 'error');
-    }
-
-    // 🔥 USAR FORMDATA (compatible con PHP $_POST)
-    const formData = new FormData();
-    formData.append('nombre', nombre);
-
-    fetch('/cfsistem/app/controllers/almacenes.php?action=guardarCategoria', {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => res.json())
-    .then(data => {
-
-        console.log(data);
-
-        if (data.status === 'success') {
-
-            const id = data.id; // 🔥 CORRECTO
-
-            // 🔥 ACTUALIZAR TODOS LOS SELECTS
-            document.querySelectorAll('select[name="categoria_id"]').forEach(select => {
-
-                // evitar duplicados
-                const existe = Array.from(select.options)
-                    .some(opt => opt.value == id);
-
-                if (!existe) {
-                    const nuevaOpcion = new Option(data.nombre, id);
-                    select.add(nuevaOpcion);
-                }
-
-                // seleccionar nueva categoría
-                select.value = String(id);
-            });
-
-            // 🔥 CERRAR MODAL
-            const modal = bootstrap.Modal.getOrCreateInstance(
-                document.getElementById('modalNuevaCategoria')
-            );
-            modal.hide();
-
-            // 🔥 limpiar input
-            input.value = '';
-
-            // 🔥 asegurar scroll del modal padre
-            setTimeout(() => {
-                if (document.querySelectorAll('.modal.show').length > 0) {
-                    document.body.classList.add('modal-open');
-                }
-            }, 300);
-
-            // 🔥 mensaje
-            Swal.fire({
-                title: '¡Éxito!',
-                text: 'Categoría guardada y seleccionada.',
-                icon: 'success',
-                timer: 1200,
-                showConfirmButton: false
-            });
-
-        } else {
-            Swal.fire('Error', data.message || 'Error desconocido', 'error');
-        }
-    })
-    .catch(error => {
-        console.error(error);
-        Swal.fire('Error', 'No se pudo procesar la categoría', 'error');
-    });
-}
-   </script>
+   
+    
+ <?php require_once __DIR__ . '/almacenes/ModalCategoria.php'; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/cfsistem/app/backend/js/filtros_almacen.js"></script>

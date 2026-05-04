@@ -75,9 +75,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $stmtInv->execute();
 
                     // --- INICIO CÓDIGO AGREGADO: CREACIÓN DE LOTE ---
+                    $precioIndividal=$precio_adquisicion/$stock;
                     $codigo_lote = "L-" . $sku . "-" . date('His');
                     $stmtLote = $conexion->prepare("INSERT INTO lotes_stock (producto_id, almacen_id, codigo_lote, cantidad_inicial, cantidad_actual, precio_compra_unitario, estado_lote) VALUES (?, ?, ?, ?, ?, ?, 'activo')");
-                    $stmtLote->bind_param("iisddd", $producto_id, $almacen_id, $codigo_lote, $stock, $stock, $precio_adquisicion);
+                    $stmtLote->bind_param("iisddd", $producto_id, $almacen_id, $codigo_lote, $stock, $stock, $precioIndividal);
                     $stmtLote->execute();
                     // --- FIN CÓDIGO AGREGADO ---
 

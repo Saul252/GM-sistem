@@ -17,6 +17,7 @@ require_once __DIR__ . '/../models/almacen/categoriasModel.php';
 require_once __DIR__ . '/../models/egresos/gastosModel.php';
 require_once __DIR__ . '/../models/categoriasGastosModel.php';
 
+
 protegerPagina('compras'); 
 
 $egresoModel = new EgresoModel($conexion);
@@ -421,7 +422,9 @@ if ($action === 'guardarProveedor') {
             'razon_social'     => trim($_POST['razon_social'] ?? ''),
             'rfc'              => trim($_POST['rfc'] ?? 'XAXX010101000'),
             'correo'           => trim($_POST['correo'] ?? ''),
-            'telefono'         => trim($_POST['telefono'] ?? '')
+            'telefono'         => trim($_POST['telefono'] ?? ''),
+       'almacen_id'           => trim($_POST['almacen_id'] ?? ''),
+            'direccion'         => trim($_POST['direccion'] ?? '')
         ];
         if (empty($datos['nombre_comercial'])) throw new Exception("El nombre comercial es obligatorio.");
         if ($proveedorModel->guardar($datos)) {
@@ -571,38 +574,38 @@ if ($action === 'registrarDeudaPorExceso') {
     }
     exit;
 }
-if ($action === 'listarCuentasPorPagar') {
+// if ($action === 'listarCuentasPorPagar') {
 
-    while (ob_get_level()) ob_end_clean();
-    header('Content-Type: application/json');
+//     while (ob_get_level()) ob_end_clean();
+//     header('Content-Type: application/json');
 
-    try {
+//     try {
 
-        $filtros = [
-            'busqueda'     => $_GET['busqueda'] ?? '',
-            'fecha_inicio' => $_GET['fecha_inicio'] ?? '',
-            'fecha_fin'    => $_GET['fecha_fin'] ?? '',
-            'limit'        => $_GET['limit'] ?? 10,
-            'offset'       => $_GET['offset'] ?? 0
-        ];
+//         $filtros = [
+//             'busqueda'     => $_GET['busqueda'] ?? '',
+//             'fecha_inicio' => $_GET['fecha_inicio'] ?? '',
+//             'fecha_fin'    => $_GET['fecha_fin'] ?? '',
+//             'limit'        => $_GET['limit'] ?? 10,
+//             'offset'       => $_GET['offset'] ?? 0
+//         ];
 
-        $res = $cuentasPagarModel->listarCuentasPorPagar($filtros);
+//         $res = $cuentasPagarModel->listarCuentasPorPagar($filtros);
 
-        echo json_encode([
-            "success" => true,
-            "data" => $res['data'],
-            "total" => $res['total']
-        ]);
+//         echo json_encode([
+//             "success" => true,
+//             "data" => $res['data'],
+//             "total" => $res['total']
+//         ]);
 
-    } catch (Exception $e) {
-        echo json_encode([
-            "success" => false,
-            "message" => $e->getMessage()
-        ]);
-    }
+//     } catch (Exception $e) {
+//         echo json_encode([
+//             "success" => false,
+//             "message" => $e->getMessage()
+//         ]);
+//     }
 
-    exit;
-}
+//     exit;
+// }
 if ($action === 'obtenerDeudaCompra') {
 
     header('Content-Type: application/json; charset=utf-8');
@@ -658,6 +661,58 @@ if ($action === 'pagarDeudaCompra') {
     echo json_encode($result);
     exit;
 }
+if ($action === 'guardarCategoria') {
+
+    // 🔥 LIMPIAR CUALQUIER SALIDA (evita romper JSON)
+    while (ob_get_level()) ob_end_clean();
+
+    header('Content-Type: application/json; charset=utf-8');
+
+    try {
+
+        // 🔥 VALIDAR QUE EL MODELO EXISTA
+        if (!isset($categoriasModel)) {
+            throw new Exception("Modelo de categorías no inicializado");
+        }
+
+        // 🔥 OBTENER Y LIMPIAR DATO
+        $nombre = trim($_POST['nombre'] ?? '');
+
+        if ($nombre === '') {
+            throw new Exception("El nombre es obligatorio");
+        }
+
+        // 🔥 VALIDAR DUPLICADO
+        if ($categoriasModel->existe($nombre)) {
+            throw new Exception("Esta categoría ya existe");
+        }
+
+        // 🔥 GUARDAR
+        $id = $categoriasModel->guardar($nombre);
+
+        if (!$id) {
+            throw new Exception("No se pudo guardar la categoría");
+        }
+
+        // 🔥 RESPUESTA EXITOSA
+        echo json_encode([
+            'status' => 'success',
+            'id' => $id,
+            'nombre' => $nombre
+        ]);
+
+    } catch (Throwable $e) {
+
+        // 🔥 RESPUESTA DE ERROR LIMPIA
+        echo json_encode([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && empty($action)) {
 
     // 1. Lógica de Fechas Dinámica (Filtro Rápido)
@@ -727,12 +782,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && empty($action)) {
     }
 
     $granTotalEgresos = $totalSumCompras + $totalSumGastos;
-
+$almacen_actual= $_SESSION['almacen_id'];
     // 7. Carga de Catálogos para la Vista
     $listaCategoriasGastos = $gastosCategorias->listarTodas();
     $almacenes = $egresoModel->obtenerAlmacenesActivos();
     $productos = $comprasModel->obtenerProductos(); 
-    $proveedores = $proveedorModel->listarTodosProveedorsYDeuda(); 
+    $proveedores = $proveedorModel->listarTodosProveedorsYDeuda(0); 
 
     $tituloPagina = "Gestión de Egresos";
 

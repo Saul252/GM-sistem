@@ -49,231 +49,403 @@
 
     <?php if (function_exists('renderizarLayout')) { renderizarLayout($tituloPagina); } ?>
 
-    <div class="main-content">
-        <div class="container-fluid">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-               <div class="d-flex justify-content-between align-items-center flex-wrap mb-4" style="gap: 15px; width: 100%;">
-    <style>
-        .ios-micro-card {
-            background: #ffffff !important;
-            border-radius: 12px !important;
-            border: 1px solid rgba(0,0,0,0.05) !important;
-            padding: 4px 10px !important;
-            min-width: 85px !important;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: center !important;
-            border-left: 3px solid #5856d6 !important;
-        }
-        .ios-m-label { 
-            color: #8e8e93; font-size: 0.55rem; font-weight: 700; 
-            text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.1; margin: 0;
-        }
-        .ios-m-value { 
-            color: #1c1c1e; font-size: 1rem; font-weight: 700; 
-            letter-spacing: -0.02em; line-height: 1; margin-top: 1px;
-        }
-    </style>
+    <main class="main-content py-4">
 
-    <div style="flex: 1; min-width: 200px;">
-        <h2 class="fw-bold m-0" style="letter-spacing: -0.02em; color: #1c1c1e;">
-            <i class="bi bi-truck text-primary me-2"></i> Proveedores
-        </h2>
-        <p class="text-muted mb-0" style="font-size: 0.85rem;">Gestión de suministros y cuentas por pagar</p>
-    </div>
+    <div class="container-fluid">
 
-    <div class="d-flex align-items-center" style="gap: 12px;">
-        
-        <?php 
-            // ESCÁNER UNIVERSAL DE VARIABLES
-            $valor_final = 0;
-            if (isset($nproveedores)) {
-                if (is_numeric($nproveedores)) {
-                    $valor_final = $nproveedores;
-                } elseif (is_array($nproveedores)) {
-                    // Probamos todas las llaves posibles que hayamos usado
-                    $valor_final = $nproveedores['total'] 
-                                 ?? $nproveedores['mis_clientes'] 
-                                 ?? $nproveedores['mis_productos'] 
-                                 ?? 0;
-                }
-            }
-        ?>
+        <!-- HEADER -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
 
-        <div class="ios-micro-card">
-            <p class="ios-m-label">Proveedores</p>
-            <div class="ios-micro-value">
-                <?= number_format((float)$valor_final) ?>
+            <div>
+                <h2 class="fw-bold mb-1">Proveedores</h2>
+                <p class="text-muted small mb-0">
+                    Gestiona y administra tus proveedores
+                </p>
             </div>
+
+            <button class="btn btn-primary rounded-pill px-4 shadow-sm d-flex align-items-center"
+                onclick="abrirModalNuevoProveedor()">
+                <i class="bi bi-plus-lg me-2"></i>
+                Nuevo Proveedor
+            </button>
+
         </div>
 
-       
+        <!-- CARD -->
+        <div class="card border-0 shadow-sm rounded-4">
+
+            <!-- CARD HEADER -->
+            <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+
+                <span class="fw-semibold text-muted small">
+                    Lista de proveedores
+                </span>
+
+                <!-- puedes meter filtro o buscador aquí después -->
+            </div>
+
+            <!-- TABLA -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="tablaProveedores">
+
+                    <thead class="bg-light">
+                        <tr class="text-muted small">
+                            <th class="ps-4">Nombre</th>
+                            <th>RFC</th>
+                            <th>Correo</th>
+                            <th>Teléfono</th>
+                            <th class="text-end pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        <!-- dinámico -->
+                    </tbody>
+
+                </table>
+            </div>
+
+        </div>
+
+    </div>
+
+</main>
+
+
+    
+<div class="modal fade" id="modalProveedor" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+
+            <!-- HEADER -->
+            <div class="modal-header border-0 bg-white">
+                <h5 class="modal-title fw-semibold fs-5" id="tituloModal">
+                    ✏️ Editar Proveedor
+                </h5>
+                <button class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form id="formProveedor">
+
+                <div class="modal-body px-4 py-3">
+
+                    <input type="hidden" id="proveedor_id" name="id">
+
+                    <!-- GRID -->
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">Nombre Comercial</label>
+                            <input type="text" class="form-control rounded-3" id="nombre_comercial" name="nombre_comercial">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">Razón Social</label>
+                            <input type="text" class="form-control rounded-3" id="razon_social" name="razon_social">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">RFC</label>
+                            <input type="text" class="form-control rounded-3" id="rfc" name="rfc">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">Teléfono</label>
+                            <input type="text" class="form-control rounded-3" id="telefono" name="telefono">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">Correo</label>
+                            <input type="email" class="form-control rounded-3" id="correo" name="correo">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">Estado</label>
+                            <select class="form-select rounded-3" id="activo" name="activo">
+                                <option value="1">🟢 Activo</option>
+                                <option value="0">⚫ Inactivo</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small text-muted">Dirección</label>
+                            <textarea class="form-control rounded-3" rows="2" id="direccion" name="direccion"></textarea>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">Almacén</label>
+                            <select name="almacen_id"
+                                id="almacen_id"
+                                class="form-select rounded-3 <?= $_SESSION['almacen_id']==0 ? '' : 'bg-light' ?>"
+                                <?= $_SESSION['almacen_id'] != 0 ? 'disabled' : '' ?>>
+
+                                <?php if ($_SESSION['almacen_id']==0): ?>
+                                    <option value="">Seleccionar ubicación...</option>
+                                <?php endif; ?>
+
+                                <?php foreach($almacenes as $a): ?>
+                                    <option value="<?= $a['id'] ?>"
+                                        <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
+                                        <?= $a['nombre'] ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>       
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small text-muted">Fecha creación</label>
+                            <input type="text" class="form-control rounded-3 bg-light" id="creado_at" disabled>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- FOOTER -->
+                <div class="modal-footer border-0 px-4 pb-4">
+                    <button class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button type="button"
+                        class="btn btn-primary rounded-3 px-4 shadow-sm"
+                        onclick="guardarProveedor()">
+                        💾 Guardar cambios
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
     </div>
 </div>
-                <button class="btn btn-primary rounded-pill px-4 shadow-sm" onclick="nuevoProveedor()">
-                    <i class="bi bi-plus-lg me-2"></i> Nuevo Proveedor
-                </button>
-            </div>
-
-            <div class="card card-table p-4">
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle w-100" id="tablaProveedores">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Nombre / RFC</th>
-                                <th>Contacto</th>
-                                <th>Estado</th>
-                                <th class="text-end">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach ($proveedores as $p): ?>
-                            <tr class="<?= $p['activo'] ? '' : 'fila-inactiva' ?>">
-                                <td>
-                                    <div class="fw-bold"><?= htmlspecialchars($p['nombre_comercial']) ?></div>
-                                    <small class="text-muted"><?= htmlspecialchars($p['rfc'] ?: 'SIN RFC') ?></small>
-                                </td>
-                                <td>
-                                    <div class="small"><i class="bi bi-envelope me-1"></i><?= $p['correo'] ?: 'S/C' ?></div>
-                                    <div class="small"><i class="bi bi-telephone me-1"></i><?= $p['telefono'] ?: 'S/T' ?></div>
-                                </td>
-                                <td>
-                                    <span class="badge rounded-pill <?= $p['activo'] ? 'bg-success' : 'bg-danger' ?>">
-                                        <?= $p['activo'] ? 'Activo' : 'Inactivo' ?>
-                                    </span>
-                                </td>
-                                <td class="text-end">
-                                    <button class="btn btn-sm btn-outline-primary border-0" 
-                                            onclick='editarProveedor(<?= json_encode($p) ?>)' title="Editar">
-                                        <i class="bi bi-pencil-square fs-5"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-danger border-0" 
-                                            onclick="eliminarProveedor(<?= $p['id'] ?>, <?= $p['activo'] ?>)" title="Cambiar Estado">
-                                        <i class="bi <?= $p['activo'] ? 'bi-trash' : 'bi-arrow-counterclockwise' ?> fs-5"></i>
-                                    </button>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal fade" id="modalProveedor" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
-                <div class="modal-header bg-light py-3">
-                    <h5 class="modal-title fw-bold" id="tituloModal">Nuevo Proveedor</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form id="formProveedor">
-                    <div class="modal-body p-4">
-                        <input type="hidden" id="proveedor_id" name="id">
-                        
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Nombre Comercial / Alias</label>
-                            <input type="text" class="form-control rounded-pill" name="nombre_comercial" id="nombre_comercial" required>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Razón Social</label>
-                            <input type="text" class="form-control rounded-pill" name="razon_social" id="razon_social">
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label small fw-bold">RFC</label>
-                                <input type="text" class="form-control rounded-pill" name="rfc" id="rfc">
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label small fw-bold">Teléfono</label>
-                                <input type="text" class="form-control rounded-pill" name="telefono" id="telefono">
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold">Correo Electrónico</label>
-                            <input type="email" class="form-control rounded-pill" name="correo" id="correo">
-                        </div>
-                    </div>
-                    <div class="modal-footer border-0 p-4">
-                        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary rounded-pill px-4">Guardar</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<?php require_once __DIR__ . '/egresosComponets/modalProveedoresCompra.php'; ?>
 
     <script>
-        // Funciones Globales (Disponibles para los onclick)
-        function nuevoProveedor() {
-            $('#formProveedor')[0].reset();
-            $('#proveedor_id').val('');
-            $('#tituloModal').text('Nuevo Proveedor');
-            $('#modalProveedor').modal('show');
+
+let tabla;
+
+/* =========================
+   CARGAR PROVEEDORES
+========================= */
+function cargarProveedores() {
+    $.get('/cfsistem/app/controllers/proveedoresController.php?ajax=1', function(res) {
+
+        if (res.status === 'success') {
+
+            if (tabla) tabla.destroy();
+
+            let html = '';
+            console.log(res.data);
+
+            res.data.forEach(p => {
+                html += `
+                    <tr>
+                        <td>${p.nombre_comercial}</td>
+                        <td>${p.rfc ?? ''}</td>
+                        <td>${p.correo ?? ''}</td>
+                        <td>${p.telefono ?? ''}</td>
+                        <td> <button class="btn btn-link btn-sm text-primary p-2" onclick="editarProveedor(${p.id ?? ''})">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </button>
+                                   <button 
+    class="btn btn-sm btn-link p-2 ${p.activo == 1 ? 'text-success' : 'text-secondary'}"
+    onclick="cambiarEstado(${p.id})"
+    title="Cambiar estado">
+
+    <i class="bi ${p.activo == 1 ? 'bi-toggle-on' : 'bi-toggle-off'} fs-5"></i>
+
+</button>
+                              </td>
+                    </tr>
+                `;
+            });
+
+            $('#tablaProveedores tbody').html(html);
+
+            tabla = $('#tablaProveedores').DataTable({
+                language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' }
+            });
+
         }
 
-        function editarProveedor(datos) {
-            $('#proveedor_id').val(datos.id);
-            $('#nombre_comercial').val(datos.nombre_comercial);
-            $('#razon_social').val(datos.razon_social);
-            $('#rfc').val(datos.rfc);
-            $('#telefono').val(datos.telefono);
-            $('#correo').val(datos.correo);
-            
-            $('#tituloModal').text('Editar Proveedor');
-            $('#modalProveedor').modal('show');
-        }
+    }, 'json');
+}
 
-        function eliminarProveedor(id, estadoActual) {
-            const accion = estadoActual ? 'desactivar' : 'activar';
+/* =========================
+   NUEVO
+========================= */
+function nuevoProveedor() {
+
+    $('#formProveedor')[0].reset();
+    $('#proveedor_id').val('');
+    $('#tituloModal').text('Nuevo Proveedor');
+
+    new bootstrap.Modal(document.getElementById('modalProveedor')).show();
+}
+
+/* =========================
+   Editar
+========================= */
+
+async function editarProveedor(id) {
+    console.log(id);
+
+    try {
+        const resp = await fetch(`/cfsistem/app/controllers/proveedoresController.php?action=obtenerProveedor&id=${id}`);
+        const res = await resp.json();
+        console.log(res);
+
+        if (!res.success) throw new Error(res.message);
+
+        const p = res.data;
+
+        // 🔥 LLENAR CAMPOS
+        document.getElementById('proveedor_id').value = p.id || '';
+        document.getElementById('nombre_comercial').value = p.nombre_comercial || '';
+        document.getElementById('razon_social').value = p.razon_social || '';
+        document.getElementById('rfc').value = p.rfc || '';
+        document.getElementById('correo').value = p.correo || '';
+        document.getElementById('telefono').value = p.telefono || '';
+        document.getElementById('direccion').value = p.direccion || '';
+        document.getElementById('almacen_id').value = p.almacen_id || 0;
+        document.getElementById('activo').value = p.activo ?? 1;
+        document.getElementById('creado_at').value = p.creado_at || '';
+
+        // 🔥 CAMBIAR TÍTULO
+        document.getElementById('tituloModal').innerText = 'Editar Proveedor';
+
+        // 🔥 ABRIR MODAL
+        const modal = new bootstrap.Modal(document.getElementById('modalProveedor'));
+        modal.show();
+
+    } catch (e) {
+        console.error(e);
+        Swal.fire('Error', e.message, 'error');
+    }
+}
+/* =========================
+   INIT
+========================= */
+$(document).ready(function() {
+    cargarProveedores();
+});
+
+</script>
+<script>
+function guardarProveedor() {
+
+    const form = document.getElementById('formProveedor');
+    const formData = new FormData();
+
+    // 🔥 tomamos los valores manualmente (más control)
+    formData.append('id', document.getElementById('proveedor_id').value);
+    formData.append('nombre_comercial', document.getElementById('nombre_comercial').value);
+    formData.append('razon_social', document.getElementById('razon_social').value);
+    formData.append('rfc', document.getElementById('rfc').value);
+    formData.append('correo', document.getElementById('correo').value);
+    formData.append('telefono', document.getElementById('telefono').value);
+    formData.append('direccion', document.getElementById('direccion').value);
+
+    // 🔥 almacen (aunque esté disabled)
+    const almacen = document.getElementById('almacen_id');
+    formData.append('almacen_id', almacen.value);
+
+    // 🔥 activo (ya que lo tienes en el modal)
+    formData.append('activo', document.getElementById('activo').value);
+
+    fetch('/cfsistem/app/controllers/proveedoresController.php?action=actualizarProveedor', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if (data.success) {
+
             Swal.fire({
-                title: `¿Deseas ${accion} este proveedor?`,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Sí, confirmar',
-                cancelButtonText: 'Cancelar'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.post('/cfsistem/app/controllers/proveedoresController.php?action=cambiarEstado', {
-                        id: id, 
-                        estado: estadoActual ? 0 : 1 
-                    }, function(res) {
-                        if(res.success) location.reload();
-                    }, 'json');
-                }
+                icon: 'success',
+                title: 'Proveedor actualizado',
+                text: data.message,
+                timer: 1500,
+                showConfirmButton: false
+            });
+
+            // cerrar modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('modalProveedor'));
+            modal.hide();
+
+            // recargar (o luego lo hacemos dinámico)
+            setTimeout(() => location.reload(), 1500);
+
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message
             });
         }
 
-        $(document).ready(function() {
-            // DataTable
-            $('#tablaProveedores').DataTable({
-                language: { url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
-                order: [[2, 'desc'], [0, 'asc']]
+    })
+    .catch(err => {
+        console.error(err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error en la petición'
+        });
+    });
+}
+
+</script>
+<script>
+function cambiarEstado(id) {
+
+    const formData = new FormData();
+    formData.append('id', id);
+
+    fetch('/cfsistem/app/controllers/proveedoresController.php?action=eliminarProveedor', {
+        method: 'POST',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        if (data.success) {
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Estado actualizado',
+                timer: 1000,
+                showConfirmButton: false
             });
 
-            // Guardar Formulario
-            $('#formProveedor').on('submit', function(e) {
-                e.preventDefault();
-                $.post('/cfsistem/app/controllers/proveedoresController.php?action=guardar', $(this).serialize(), function(res) {
-                    if(res.success) {
-                        Swal.fire('¡Éxito!', res.message, 'success').then(() => location.reload());
-                    } else {
-                        Swal.fire('Error', res.message, 'error');
-                    }
-                }, 'json');
+            // 🔥 OPCIÓN 1: recargar
+            setTimeout(() => location.reload(), 1000);
+
+            // 🔥 OPCIÓN 2 (pro): solo actualizar icono (te lo hago si quieres)
+
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message
             });
+        }
+
+    })
+    .catch(() => {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error en la petición'
         });
-    </script>
+    });
+}
+</script>
 </body>
 </html>

@@ -11,7 +11,7 @@ class CompraModel {
      * Obtiene productos activos para el selector de compras
      * @param string $termino Buscador opcional para Select2 o filtros
      */
-public function actualizarDocumentoCompra($compra_id, $documento_url) {
+public function actualizarDocumentoCompra($id, $documento_url) {
 
     $sql = "UPDATE compras 
             SET documento_url = ?
@@ -20,7 +20,7 @@ public function actualizarDocumentoCompra($compra_id, $documento_url) {
     $stmt = $this->db->prepare($sql);
     if (!$stmt) return false;
 
-    $stmt->bind_param("si", $documento_url, $compra_id);
+    $stmt->bind_param("si", $documento_url, $id);
 
     return $stmt->execute();
 }

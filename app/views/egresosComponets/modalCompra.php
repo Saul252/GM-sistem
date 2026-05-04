@@ -111,7 +111,7 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
         <div class="col-md-3">
             <label class="form-label small fw-bold">Método de pago</label>
             <select name="metodo_pago" id="metodo_pago"
-                class="form-select shadow-sm" required>
+                class="form-select shadow-sm"  required>
                 <option value="">Seleccione...</option>
                 <option value="Efectivo">Efectivo</option>
                 <option value="Transferencia">Transferencia</option>
@@ -318,6 +318,10 @@ function agregarFilaCompra() {
                     onchange="actualizarLabelsUnidad(${idUnico}, this)" required>
                     ${opcionesProd}
                 </select>
+                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-4"
+    onclick="abrirModalProducto()">
+    <i class="bi bi-plus-circle me-1"></i> 
+</button>
             </div>
 
             <div class="col-md-1">

@@ -414,19 +414,20 @@
 
                     <td class="text-center">
                         <?php if(!empty($e['documento_url'])): ?>
-                            <a href="../../<?= ($e['tipo']=='gasto'?'uploads/evidencias/':'') . $e['documento_url'] ?>"
+                            <a href="../../<?= ($e['tipo']=='gasto'?'uploads/gastos/':'') . $e['documento_url'] ?>"
                                 target="_blank" class="btn btn-sm btn-outline-primary border-0 rounded-circle">
                                 <i class="bi bi-file-earmark-text-fill"></i>
                             </a>
                         <?php else: ?>
                             <i class="bi bi-slash-circle text-muted opacity-25"></i>
                         <?php endif; ?>
-                        <?php if(!empty($e['tipo']=='compra')): ?>
+                        <?php if(!empty($e['tipo']=='compra'||$e['tipo']=='gasto')): ?>
                         <button class="btn btn-sm btn-outline-primary rounded-pill"
     onclick="subirDocumentoCompra(
         <?= $e['id'] ?>, 
         '<?= $e['folio'] ?? ''?>', 
-        '<?= $e['documento_url'] ?? ''?>'
+        '<?= $e['documento_url'] ?? ''?>',
+        '<?= $e['tipo'] ?? ''?>'
     )">
     <i class="bi bi-upload"></i>
 </button>
@@ -699,7 +700,7 @@ function confirmarCancelacionGasto(id, folio) {
         }
     });
 }
-function subirDocumentoCompra(compra_id, folio, documento_actual = '') {
+function subirDocumentoCompra(compra_id, folio, documento_actual = '',tipo) {
 
     Swal.fire({
         title: 'Documento de Compra',
@@ -735,6 +736,7 @@ function subirDocumentoCompra(compra_id, folio, documento_actual = '') {
             formData.append('compra_id', compra_id);
             formData.append('folio', folio);
             formData.append('documento', file);
+             formData.append('tipo', tipo);
 
             try {
                 const response = await fetch('/cfsistem/app/controllers/egresosController.php?action=subirDocumento', {

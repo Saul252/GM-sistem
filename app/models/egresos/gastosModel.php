@@ -26,16 +26,16 @@ class GastoModel {
     // Retornamos solo el número puro
     return $nuevoId;
 }
-public function actualizarDocumentoCompra($compra_id, $documento_url) {
+public function actualizarDocumentoGasto($id, $documento_url) {
 
-    $sql = "UPDATE compras 
+    $sql = "UPDATE gastos 
             SET documento_url = ?
             WHERE id = ?";
 
     $stmt = $this->db->prepare($sql);
     if (!$stmt) return false;
 
-    $stmt->bind_param("si", $documento_url, $compra_id);
+    $stmt->bind_param("si", $documento_url, $id);
 
     return $stmt->execute();
 }
