@@ -4,9 +4,9 @@ function cargarTraspasos() {
     const contenedorEnvios = document.getElementById('contenedor-envios');
 
     contenedorArribos.innerHTML = '<tr><td colspan="6" class="text-center">Buscando movimientos...</td></tr>';
-
-    fetch(`/cfsistem/app/backend/almacen/obtener_traspasos.php?almacen_id=${almacenId}`)
-        .then(response => response.json())
+fetch(`/cfsistem/app/controllers/traspasosController.php?action=resumen&almacen_id=${almacenId}`)
+    
+     .then(response => response.json())
         .then(data => {
             
             // --- FUNCIÓN INTERNA PARA CONVERSIÓN VISUAL ---

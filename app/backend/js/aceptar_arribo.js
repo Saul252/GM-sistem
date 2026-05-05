@@ -31,7 +31,7 @@
             formData.append('id', movId);
 
             // 4. Petición al Backend
-            fetch('/cfsistem/app/backend/almacen/autorizar_arribo.php', {
+            fetch('/cfsistem/app/controllers/traspasosController.php?action=recibirTraspaso', {
                     method: 'POST',
                     body: formData
                 })

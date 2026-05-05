@@ -20,18 +20,19 @@
                 </h6>
                 <div class="row g-3">
                     <!-- SKU -->
-                    <div class="col-md-3">
-                        <label class="form-label small fw-bold text-dark">SKU</label>
-                        <input type="text" name="sku" class="form-control border-0 shadow-sm " 
-                               placeholder="Ej: J-01" required>
-                    </div>
-                    
-                    <!-- Nombre del Producto -->
-                    <div class="col-md-9">
-                        <label class="form-label small fw-bold text-dark">Nombre del Producto</label>
-                        <input type="text" name="nombre" class="form-control border-0 shadow-sm" 
-                               placeholder="Ej: Fertilizante Premium" required>
-                    </div>
+                 <div class="col-md-3">
+    <label class="form-label small fw-bold text-dark">SKU</label>
+    <input type="text" id="input_sku" name="sku"
+        class="form-control border-0 shadow-sm"
+        placeholder="Ej: AL-25" required>
+</div>
+
+<div class="col-md-9">
+    <label class="form-label small fw-bold text-dark">Nombre del Producto</label>
+    <input type="text" id="input_nombre" name="nombre"
+        class="form-control border-0 shadow-sm"
+        placeholder="Ej: Alambre calibre 25" required>
+</div>
 
                     <!-- Categoría con botón integrado -->
                     <div class="col-md-12">
@@ -276,6 +277,45 @@
     </div>
 </div>
 <script>
+    function generarSKU(nombre) {
+    if (!nombre) return '';
+
+    let limpio = nombre
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toUpperCase();
+
+    const palabras = limpio.split(' ').filter(p => p.length > 0);
+
+    // Prefijo (2 letras)
+    let prefijo = palabras.length > 0
+        ? palabras[0].substring(0, 2)
+        : '';
+
+    // Número detectado
+    const matchNumero = limpio.match(/\d+/);
+    let numero = matchNumero ? matchNumero[0] : '';
+     numerorandom= Math.floor(Math.random() * 10000); // 0 - 9999
+
+    return numero ? `${prefijo}-${numero}-${numerorandom}` : prefijo;
+}
+document.addEventListener('DOMContentLoaded', () => {
+    const nombre = document.getElementById('input_nombre');
+    const sku = document.getElementById('input_sku');
+
+    nombre.addEventListener('input', () => {
+
+        // 🛑 No sobreescribir si el usuario ya escribió manualmente
+        if (sku.dataset.editado === "true") return;
+
+        sku.value = generarSKU(nombre.value);
+    });
+
+    // Detectar si el usuario edita el SKU manualmente
+    sku.addEventListener('input', () => {
+        sku.dataset.editado = "true";
+    });
+});
 document.getElementById('formAgregarProducto').addEventListener('submit', function(e) {
     e.preventDefault();
 

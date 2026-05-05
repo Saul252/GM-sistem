@@ -43,7 +43,7 @@ date_default_timezone_set('America/Mexico_City');
    ['id' => 'viajesTrabajadores', 'url' => '/cfsistem/app/controllers/viajesTrabajadoresController.php', 'icon' => 'bi-person-workspace', 'label' => 'Viajes Trabajadores', 'active' => ($archivoActual == 'viajesTrabajadoresController.php')],
    
    ['id' => 'pedidosVendedor', 'url' => '/cfsistem/app/controllers/pedidosVendedorController.php', 'icon' => 'bi-person-badge-fill', 'label' => 'Pedidos Vendedor', 'desc' => 'Preventa', 'active' => ($archivoActual == 'pedidosVendedorController.php')],
-   ['id' => 'Configuracion', 'url' => '/cfsistem/app/controllers/configuracionController.php', 'icon' => 'bi-gear-fill', 'label' => 'Configuración', 'active' => ($archivoActual == 'configuracionController.php')],
+  // ['id' => 'Configuracion', 'url' => '/cfsistem/app/controllers/configuracionController.php', 'icon' => 'bi-gear-fill', 'label' => 'Configuración', 'active' => ($archivoActual == 'configuracionController.php')],
 ];?>
 
 
@@ -351,7 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const formData = new FormData();
         formData.append('id', id);
 
-        fetch('/cfsistem/app/backend/movimientos/procesar_transaccion_rapida.php', {
+        fetch('/cfsistem/app/controllers/traspasosController.php?action=recibirTraspaso', {
                 method: 'POST',
                 body: formData
             })

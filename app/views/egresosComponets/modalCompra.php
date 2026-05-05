@@ -172,6 +172,20 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
         </div>
     </div>
 </div>
+<style>
+  .select2-container--open {
+    z-index: 9999 !important;
+}
+
+.select2-dropdown {
+    pointer-events: auto;
+}
+
+.select2-results__options {
+    max-height: 200px !important;
+    overflow-y: auto !important;
+}
+</style>
 <?php require_once __DIR__ . '/agregarPoductoModal.php'; ?>
 <?php require_once __DIR__ . '/modalProveedoresCompra.php'; ?>
 
@@ -271,7 +285,7 @@ window.addEventListener('load', function() {
 function agregarFilaCompra() {
     const idUnico = Date.now();
 
-    let opcionesProd = '<option value="">-- Buscar Producto --</option>';
+    let opcionesProd = '<option value="">Seleccione Producto </option>';
     DATA_COMPRAS.productos.forEach(p => {
         opcionesProd +=
             `<option value="${p.id}" data-factor="${p.factor_conversion}" data-ubase="${p.unidad_medida}" data-urep="${p.unidad_reporte}">${p.nombre} (${p.sku})</option>`;
@@ -309,20 +323,28 @@ function agregarFilaCompra() {
 
         <div class="row g-3 mb-3">
 
-            <div class="col-md-3">
-                <label class="form-label small fw-semibold text-muted mb-1">
-                    <i class="bi bi-search me-1"></i>Producto
-                </label>
-                <select name="items[${idUnico}][producto_id]" 
-                    class="form-select form-select-sm shadow-sm select2-compra"
-                    onchange="actualizarLabelsUnidad(${idUnico}, this)" required>
-                    ${opcionesProd}
-                </select>
-                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-4"
-    onclick="abrirModalProducto()">
-    <i class="bi bi-plus-circle me-1"></i> 
-</button>
-            </div>
+          <div class="col-md-3"> <!-- Aumenté a col-md-4 para que respire mejor -->
+   
+     <label class="form-label small text-muted mb-1 label-urep">Producto</label>
+               
+    <div class="input-group input-group-sm shadow-sm">
+        <!-- El Select -->
+        <select name="items[${idUnico}][producto_id]" 
+            class="form-select select2-compra"
+            onchange="actualizarLabelsUnidad(${idUnico}, this)" required>
+            ${opcionesProd}
+        </select>
+        
+        <!-- El Botón pegado al select -->
+        <button type="button" 
+            class="btn btn-primary d-flex align-items-center" 
+            onclick="abrirModalProducto()"
+            title="Agregar nuevo producto">
+            <i class="bi bi-plus-lg me-1"></i>
+            <span class="d-none d-xl-inline">Nuevo</span>
+        </button>
+    </div>
+</div>
 
             <div class="col-md-1">
                 <label class="form-label small text-muted mb-1 label-urep">Mayoreo</label>
@@ -556,7 +578,7 @@ function refrescarListaProductosCompra(nuevoIdSeleccionar = null) {
             const select = $(this);
             const valorActual = select.val();
 
-            let html = '<option value="">-- Buscar Producto --</option>';
+            let html = '<option value="">Seleccione Producto </option>';
             productos.forEach(p => {
                 html += `<option value="${p.id}" 
                             data-factor="${p.factor_conversion}" 

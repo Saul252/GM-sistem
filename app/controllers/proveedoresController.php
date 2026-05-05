@@ -262,7 +262,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'actualizarProveedor') {
 ===================================================== */
 
 //$proveedores = $model->listarTodosProveedores($almacen_sesion);
-$proveedores = $model->listarTodosProveedores( $_SESSION['almacen_id']);
+$proveedores = $model->listarTodosProveedores($almacen_sesion);
 $almacenes = $almacenModel->getAlmacenes($almacen_sesion);
 
 $tituloPagina = "Catálogo de Proveedores";

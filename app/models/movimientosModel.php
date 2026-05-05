@@ -188,32 +188,22 @@ class MovimientoModel {
 public function obtenerMovimientosPorRol($usuario_id, $rol_id, $almacen_id = null)
 {
     try {
-
         $response = [
             'arribos' => [],
             'envios'  => []
         ];
 
-        // 🔹 Filtros dinámicos
-        $filtro_arribos = "";
-        $filtro_envios  = "";
-
-        if ($rol_id == 1) { // ADMIN
-
-            if ($almacen_id) {
-                $filtro_arribos = "AND m.almacen_destino_id = " . intval($almacen_id);
-                $filtro_envios  = "AND m.almacen_origen_id = " . intval($almacen_id);
-            } else {
-                return $response; // vacío
-            }
-
-        } else {
-            // ALMACENISTA (ajusta según tu lógica real)
-            $filtro_arribos = "AND m.almacen_destino_id IN (SELECT id FROM almacenes)";
-            $filtro_envios  = "AND m.usuario_envia_id = " . intval($usuario_id);
+        // Si no hay almacén, no podemos filtrar, retornamos vacío
+        if (!$almacen_id) {
+            return [
+                'status' => true,
+                'data' => $response
+            ];
         }
 
-        // 🔹 ARRIBOS
+        $id_almacen = intval($almacen_id);
+
+        // 🔹 ARRIBOS (Lo que llega al almacén seleccionado)
         $sqlArribos = "SELECT 
                             m.id, 
                             m.fecha, 
@@ -230,23 +220,20 @@ public function obtenerMovimientosPorRol($usuario_id, $rol_id, $almacen_id = nul
                         JOIN usuarios u ON m.usuario_envia_id = u.id
                         WHERE m.tipo = 'traspaso' 
                         AND m.usuario_recibe_id IS NULL 
-                        $filtro_arribos
+                        AND m.almacen_destino_id = $id_almacen
                         ORDER BY m.fecha DESC";
 
         $resA = $this->db->query($sqlArribos);
 
         if ($resA) {
             while ($row = $resA->fetch_assoc()) {
-
-                // Tipado limpio
                 $row['cantidad'] = (float)$row['cantidad'];
                 $row['factor_conversion'] = (float)$row['factor_conversion'];
-
                 $response['arribos'][] = $row;
             }
         }
 
-        // 🔹 ENVÍOS
+        // 🔹 ENVÍOS (Lo que sale del almacén seleccionado)
         $sqlEnvios = "SELECT 
                             m.id, 
                             m.fecha, 
@@ -260,7 +247,7 @@ public function obtenerMovimientosPorRol($usuario_id, $rol_id, $almacen_id = nul
                         JOIN productos p ON m.producto_id = p.id
                         JOIN almacenes ad ON m.almacen_destino_id = ad.id
                         WHERE m.tipo = 'traspaso' 
-                        $filtro_envios
+                        AND m.almacen_origen_id = $id_almacen
                         ORDER BY m.fecha DESC 
                         LIMIT 20";
 
@@ -268,13 +255,9 @@ public function obtenerMovimientosPorRol($usuario_id, $rol_id, $almacen_id = nul
 
         if ($resE) {
             while ($row = $resE->fetch_assoc()) {
-
                 $row['cantidad'] = (float)$row['cantidad'];
                 $row['factor_conversion'] = (float)$row['factor_conversion'];
-
-                // Estado visual
                 $row['estado'] = ($row['usuario_recibe_id']) ? 'Completado' : 'En Tránsito';
-
                 $response['envios'][] = $row;
             }
         }
@@ -285,12 +268,275 @@ public function obtenerMovimientosPorRol($usuario_id, $rol_id, $almacen_id = nul
         ];
 
     } catch (Exception $e) {
-
         error_log("ERROR obtenerMovimientosPorRol: " . $e->getMessage());
-
         return [
             'status' => false,
             'msg' => 'Error al obtener movimientos'
+        ];
+    }
+}
+public function registrarTraspaso($producto_id, $origen_id, $destino_id, $cantidad, $usuario_id, $obs = '')
+{
+    try {
+
+        $this->db->begin_transaction();
+
+        // 🔹 1. Verificar stock (bloqueo FOR UPDATE)
+        $stmtStock = $this->db->prepare("
+            SELECT stock 
+            FROM inventario 
+            WHERE producto_id = ? 
+            AND almacen_id = ? 
+            FOR UPDATE
+        ");
+
+        $stmtStock->bind_param("ii", $producto_id, $origen_id);
+        $stmtStock->execute();
+        $resStock = $stmtStock->get_result()->fetch_assoc();
+
+        if (!$resStock || $resStock['stock'] < $cantidad) {
+            throw new Exception("Stock insuficiente en el almacén de origen.");
+        }
+
+        // 🔹 2. Restar stock origen
+        $stmtOut = $this->db->prepare("
+            UPDATE inventario 
+            SET stock = stock - ? 
+            WHERE producto_id = ? 
+            AND almacen_id = ?
+        ");
+
+        $stmtOut->bind_param("dii", $cantidad, $producto_id, $origen_id);
+        $stmtOut->execute();
+
+        // 🔹 3. Registrar movimiento
+        $tipo = 'traspaso';
+
+        $stmtMov = $this->db->prepare("
+            INSERT INTO movimientos 
+            (producto_id, tipo, cantidad, almacen_origen_id, almacen_destino_id, usuario_registra_id, usuario_envia_id, observaciones) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ");
+
+        $stmtMov->bind_param(
+            "isdiiiis",
+            $producto_id,
+            $tipo,
+            $cantidad,
+            $origen_id,
+            $destino_id,
+            $usuario_id,
+            $usuario_id,
+            $obs
+        );
+
+        $stmtMov->execute();
+
+        // 🔹 4. Commit
+        $this->db->commit();
+
+        return [
+            'status' => true,
+            'msg' => 'Envío registrado correctamente'
+        ];
+
+    } catch (Exception $e) {
+
+        $this->db->rollback();
+
+        error_log("ERROR registrarTraspaso: " . $e->getMessage());
+
+        return [
+            'status' => false,
+            'msg' => $e->getMessage()
+        ];
+    }
+}
+public function recibirTraspaso($movimiento_id, $usuario_id, $rol_id)
+{
+    try {
+
+        $this->db->begin_transaction();
+
+        // 🔹 1. Obtener movimiento
+        $stmt = $this->db->prepare("
+            SELECT producto_id, cantidad, almacen_origen_id, almacen_destino_id, usuario_recibe_id 
+            FROM movimientos 
+            WHERE id = ? 
+            FOR UPDATE
+        ");
+        $stmt->bind_param("i", $movimiento_id);
+        $stmt->execute();
+
+        $mov = $stmt->get_result()->fetch_assoc();
+
+        if (!$mov) {
+            throw new Exception("El movimiento no existe.");
+        }
+
+        if ($mov['usuario_recibe_id'] !== null) {
+            throw new Exception("Este traspaso ya fue recibido.");
+        }
+
+        $p_id     = (int)$mov['producto_id'];
+        $dest_id  = (int)$mov['almacen_destino_id'];
+        $orig_id  = (int)$mov['almacen_origen_id'];
+        $cantidad = (float)$mov['cantidad'];
+
+        // =========================================
+        // 🔻 PEPS: DESCONTAR DE LOTES ORIGEN
+        // =========================================
+        $sqlLotes = "
+            SELECT id, cantidad_actual, precio_compra_unitario 
+            FROM lotes_stock
+            WHERE producto_id = ? 
+            AND almacen_id = ? 
+            AND estado_lote = 'activo'
+            ORDER BY fecha_ingreso ASC
+            FOR UPDATE
+        ";
+
+        $stmtL = $this->db->prepare($sqlLotes);
+        $stmtL->bind_param("ii", $p_id, $orig_id);
+        $stmtL->execute();
+
+        $resLotes = $stmtL->get_result();
+
+        $porRestar = $cantidad;
+        $precio_historico = 0;
+
+        while ($lote = $resLotes->fetch_assoc()) {
+
+            if ($porRestar <= 0) break;
+
+            $idLote = (int)$lote['id'];
+            $actual = (float)$lote['cantidad_actual'];
+            $precio_historico = (float)$lote['precio_compra_unitario'];
+
+            $aQuitar = ($actual <= $porRestar) ? $actual : $porRestar;
+            $nuevoStock = $actual - $aQuitar;
+            $nuevoEstado = ($nuevoStock <= 0) ? 'agotado' : 'activo';
+
+            $up = $this->db->prepare("
+                UPDATE lotes_stock 
+                SET cantidad_actual = ?, estado_lote = ? 
+                WHERE id = ?
+            ");
+            $up->bind_param("dsi", $nuevoStock, $nuevoEstado, $idLote);
+            $up->execute();
+
+            $porRestar -= $aQuitar;
+        }
+
+        if ($porRestar > 0) {
+            throw new Exception("Stock insuficiente en lotes del almacén origen.");
+        }
+
+        // =========================================
+        // 🔻 CREAR LOTE EN DESTINO
+        // =========================================
+        $codigo_lote = "L-TR-" . $movimiento_id . "-" . date('His');
+        $precio_final = ($precio_historico > 0) ? $precio_historico : 0;
+
+        $stmtNewLote = $this->db->prepare("
+            INSERT INTO lotes_stock (
+                producto_id, almacen_id, codigo_lote,
+                cantidad_inicial, cantidad_actual,
+                precio_compra_unitario, estado_lote
+            ) VALUES (?, ?, ?, ?, ?, ?, 'activo')
+        ");
+
+        $stmtNewLote->bind_param(
+            "iisddd",
+            $p_id,
+            $dest_id,
+            $codigo_lote,
+            $cantidad,
+            $cantidad,
+            $precio_final
+        );
+        $stmtNewLote->execute();
+
+        // =========================================
+        // 🔻 INVENTARIO DESTINO
+        // =========================================
+        $stmtInv = $this->db->prepare("
+            INSERT INTO inventario (almacen_id, producto_id, stock, stock_minimo, stock_maximo)
+            VALUES (?, ?, ?, 0, 0)
+            ON DUPLICATE KEY UPDATE stock = stock + ?
+        ");
+
+        $stmtInv->bind_param("iidd", $dest_id, $p_id, $cantidad, $cantidad);
+        $stmtInv->execute();
+
+        // =========================================
+        // 🔻 PRECIOS (SI NO EXISTEN)
+        // =========================================
+        $check = $this->db->prepare("
+            SELECT id 
+            FROM precios_producto 
+            WHERE producto_id = ? AND almacen_id = ?
+        ");
+        $check->bind_param("ii", $p_id, $dest_id);
+        $check->execute();
+
+        if ($check->get_result()->num_rows === 0) {
+
+            $copy = $this->db->prepare("
+                INSERT INTO precios_producto (
+                    producto_id, almacen_id, 
+                    precio_minorista, precio_mayorista, precio_distribuidor
+                )
+                SELECT 
+                    producto_id, ?, 
+                    precio_minorista, precio_mayorista, precio_distribuidor
+                FROM precios_producto 
+                WHERE producto_id = ? AND almacen_id = ?
+                LIMIT 1
+            ");
+
+            $copy->bind_param("iii", $dest_id, $p_id, $orig_id);
+            $copy->execute();
+        }
+
+        // =========================================
+        // 🔻 FINALIZAR MOVIMIENTO
+        // =========================================
+        if ($rol_id == 1) {
+            $stmtFin = $this->db->prepare("
+                UPDATE movimientos 
+                SET usuario_recibe_id = ?, usuario_autoriza_id = ?, fecha = CURRENT_TIMESTAMP
+                WHERE id = ?
+            ");
+            $stmtFin->bind_param("iii", $usuario_id, $usuario_id, $movimiento_id);
+        } else {
+            $stmtFin = $this->db->prepare("
+                UPDATE movimientos 
+                SET usuario_recibe_id = ?, fecha = CURRENT_TIMESTAMP
+                WHERE id = ?
+            ");
+            $stmtFin->bind_param("ii", $usuario_id, $movimiento_id);
+        }
+
+        $stmtFin->execute();
+
+        // 🔹 COMMIT
+        $this->db->commit();
+
+        return [
+            'status' => true,
+            'message' => "Material recibido correctamente (Lote: $codigo_lote)"
+        ];
+
+    } catch (Exception $e) {
+
+        $this->db->rollback();
+
+        error_log("ERROR recibirTraspaso: " . $e->getMessage());
+
+        return [
+            'status' => false,
+            'message' => $e->getMessage()
         ];
     }
 }

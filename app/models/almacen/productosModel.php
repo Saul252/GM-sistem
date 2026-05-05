@@ -169,15 +169,20 @@ public function crearProducto($data)
         // 🔹 ALMACENES
         foreach ($data['almacenes'] as $almacen_id => $datos) {
 
-            $stock = !empty($datos['stock']) ? floatval($datos['stock']) : 0;
+           $stock = isset($datos['stock']) ? floatval($datos['stock']) : 0;
 
-            if ($stock <= 0) continue;
+$min = floatval($datos['stock_minimo'] ?? 0);
 
-            $min = floatval($datos['stock_minimo'] ?? 0);
-            $p_minorista = floatval($datos['precio_minorista'] ?? 0);
-            $p_mayorista = floatval($datos['precio_mayorista'] ?? 0);
-            $p_distribuidor = floatval($datos['precio_distribuidor'] ?? 0);
-
+// 👉 si no hay stock, precios en 0
+if ($stock <= 0) {
+    $p_minorista = 0;
+    $p_mayorista = 0;
+    $p_distribuidor = 0;
+} else {
+    $p_minorista = floatval($datos['precio_minorista'] ?? 0);
+    $p_mayorista = floatval($datos['precio_mayorista'] ?? 0);
+    $p_distribuidor = floatval($datos['precio_distribuidor'] ?? 0);
+}
             // INVENTARIO
             $stmtInv = $this->db->prepare("INSERT INTO inventario 
                 (almacen_id, producto_id, stock, stock_minimo) 
@@ -190,7 +195,7 @@ public function crearProducto($data)
             if (!$stmtInv->execute()) {
                 throw new Exception("Error inventario: " . $stmtInv->error);
             }
-
+if ($stock > 0) {
             // 🔹 PROTEGER DIVISIÓN
             $precioIndividual = $stock > 0 ? ($data['precio_adquisicion'] / $stock) : 0;
 
@@ -242,6 +247,7 @@ public function crearProducto($data)
             if (!$stmtMov->execute()) {
                 throw new Exception("Error movimiento: " . $stmtMov->error);
             }
+        }
         }
 
         $this->db->commit();
@@ -344,94 +350,87 @@ public function actualizarProductoCompleto($data)
     $this->db->begin_transaction();
 
     try {
-
-        // 🔹 1. UPDATE productos
+        // 🔹 1. UPDATE productos (Siempre existe porque viene de una edición)
         $sqlProd = "UPDATE productos SET 
-                        sku = ?, 
-                        nombre = ?, 
-                        descripcion = ?, 
-                        categoria_id = ?, 
-                        unidad_medida = ?, 
-                        unidad_reporte = ?, 
-                        factor_conversion = ?, 
-                        fiscal_clave_prod = ?, 
-                        fiscal_clave_unidad = ?, 
-                        impuesto_iva = ? 
+                        sku = ?, nombre = ?, descripcion = ?, categoria_id = ?, 
+                        unidad_medida = ?, unidad_reporte = ?, factor_conversion = ?, 
+                        fiscal_clave_prod = ?, fiscal_clave_unidad = ?, impuesto_iva = ? 
                     WHERE id = ?";
 
         $stmt1 = $this->db->prepare($sqlProd);
         $stmt1->bind_param(
             "sssisssdssi",
-            $data['sku'],
-            $data['nombre'],
-            $data['descripcion'],
-            $data['categoria_id'],
-            $data['unidad_medida'],
-            $data['unidad_reporte'],
-            $data['factor_conversion'],
-            $data['fiscal_clave_prod'],
-            $data['fiscal_clave_unit'],
-            $data['impuesto_iva'],
+            $data['sku'], $data['nombre'], $data['descripcion'], $data['categoria_id'],
+            $data['unidad_medida'], $data['unidad_reporte'], $data['factor_conversion'],
+            $data['fiscal_clave_prod'], $data['fiscal_clave_unit'], $data['impuesto_iva'],
             $data['id']
         );
         $stmt1->execute();
 
-
-        // 🔹 2. UPDATE precios
+        // 🔹 2. LÓGICA DE PRECIOS: CONSULTAR ANTES DE GUARDAR
         if ($data['aplicar_global']) {
-
+            // Si es global, actualizamos todos los registros que coincidan con el producto
             $sqlPre = "UPDATE precios_producto SET 
-                            precio_minorista = ?, 
-                            precio_mayorista = ?, 
-                            precio_distribuidor = ? 
+                            precio_minorista = ?, precio_mayorista = ?, precio_distribuidor = ? 
                         WHERE producto_id = ?";
-
             $stmt2 = $this->db->prepare($sqlPre);
-            $stmt2->bind_param(
-                "dddi",
-                $data['precio_minorista'],
-                $data['precio_mayorista'],
-                $data['precio_distribuidor'],
+            $stmt2->bind_param("dddi", 
+                $data['precio_minorista'], $data['precio_mayorista'], $data['precio_distribuidor'], 
                 $data['id']
             );
-
+            $stmt2->execute();
         } else {
+            // 1. Consultar si existe el registro para este producto en este almacén
+            $sqlCheckPre = "SELECT id FROM precios_producto WHERE producto_id = ? AND almacen_id = ?";
+            $stmtCheck = $this->db->prepare($sqlCheckPre);
+            $stmtCheck->bind_param("ii", $data['id'], $data['almacen_id']);
+            $stmtCheck->execute();
+            $resPre = $stmtCheck->get_result();
 
-            $sqlPre = "UPDATE precios_producto SET 
-                            precio_minorista = ?, 
-                            precio_mayorista = ?, 
-                            precio_distribuidor = ? 
-                        WHERE producto_id = ? AND almacen_id = ?";
-
-            $stmt2 = $this->db->prepare($sqlPre);
-            $stmt2->bind_param(
-                "dddii",
-                $data['precio_minorista'],
-                $data['precio_mayorista'],
-                $data['precio_distribuidor'],
-                $data['id'],
-                $data['almacen_id']
-            );
+            if ($resPre->num_rows > 0) {
+                // 2a. SI EXISTE -> UPDATE
+                $sqlPre = "UPDATE precios_producto SET 
+                                precio_minorista = ?, precio_mayorista = ?, precio_distribuidor = ? 
+                            WHERE producto_id = ? AND almacen_id = ?";
+                $stmt2 = $this->db->prepare($sqlPre);
+                $stmt2->bind_param("dddii", 
+                    $data['precio_minorista'], $data['precio_mayorista'], $data['precio_distribuidor'], 
+                    $data['id'], $data['almacen_id']
+                );
+            } else {
+                // 2b. NO EXISTE -> INSERT
+                $sqlPre = "INSERT INTO precios_producto 
+                            (producto_id, almacen_id, precio_minorista, precio_mayorista, precio_distribuidor) 
+                           VALUES (?, ?, ?, ?, ?)";
+                $stmt2 = $this->db->prepare($sqlPre);
+                $stmt2->bind_param("iiddd", 
+                    $data['id'], $data['almacen_id'], 
+                    $data['precio_minorista'], $data['precio_mayorista'], $data['precio_distribuidor']
+                );
+            }
+            $stmt2->execute();
         }
 
-        $stmt2->execute();
+        // 🔹 3. LÓGICA DE INVENTARIO: CONSULTAR ANTES DE GUARDAR
+        $sqlCheckInv = "SELECT id FROM inventario WHERE producto_id = ? AND almacen_id = ?";
+        $stmtCheckInv = $this->db->prepare($sqlCheckInv);
+        $stmtCheckInv->bind_param("ii", $data['id'], $data['almacen_id']);
+        $stmtCheckInv->execute();
+        $resInv = $stmtCheckInv->get_result();
 
-
-        // 🔹 3. UPDATE inventario
-        $sqlInv = "UPDATE inventario 
-                   SET stock = ?, stock_minimo = ? 
-                   WHERE producto_id = ? AND almacen_id = ?";
-
-        $stmt3 = $this->db->prepare($sqlInv);
-        $stmt3->bind_param(
-            "ddii",
-            $data['stock'],
-            $data['stock_minimo'],
-            $data['id'],
-            $data['almacen_id']
-        );
+        if ($resInv->num_rows > 0) {
+            // SI EXISTE -> UPDATE
+            $sqlInv = "UPDATE inventario SET stock = ?, stock_minimo = ? 
+                       WHERE producto_id = ? AND almacen_id = ?";
+            $stmt3 = $this->db->prepare($sqlInv);
+            $stmt3->bind_param("ddii", $data['stock'], $data['stock_minimo'], $data['id'], $data['almacen_id']);
+        } else {
+            // NO EXISTE -> INSERT
+            $sqlInv = "INSERT INTO inventario (producto_id, almacen_id, stock, stock_minimo) VALUES (?, ?, ?, ?)";
+            $stmt3 = $this->db->prepare($sqlInv);
+            $stmt3->bind_param("iidd", $data['id'], $data['almacen_id'], $data['stock'], $data['stock_minimo']);
+        }
         $stmt3->execute();
-
 
         $this->db->commit();
         return ['status' => true];

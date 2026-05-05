@@ -228,6 +228,7 @@ error_reporting(E_ALL);
                                         <th class="ps-4" style="width: 45%;">Producto</th>
                                         <th style="width: 20%;">Cantidad</th>
                                         <th style="width: 25%;">Presentación / Unidad</th>
+                                         <th style="width: 25%;">Precio</th>
                                         <th style="width: 10%;" class="text-end pe-4">Acción</th>
                                     </tr>
                                 </thead>
@@ -556,6 +557,8 @@ error_reporting(E_ALL);
                         <option value="1">Unidad (${d.um})</option>
                         <option value="${d.factor}">Presentación (${d.ur})</option>
                     </select></td>
+                     <td><input type="number" name="items[${id}][precio]" class="form-control" step="0.01" placeholder="costo" required></td>
+                   
                     <td><button type="button" class="btn btn-link text-danger" onclick="quitarFila(${id})"><i class="bi bi-trash"></i></button></td>
                 </tr>`);
             $(this).val(null).trigger('change');
@@ -674,36 +677,42 @@ function asignarSiguienteFolioCompra() {
 async function gestionarSolicitud(id) {
     try {
         $('#tablaConversion tbody').empty();
+        console.log(id);
 
         const resp = await fetch(`${URL_CONTROLADOR}?action=obtenerDetalle&id=${id}`);
         asignarSiguienteFolioCompra();
 
         if (!resp.ok) throw new Error(`Error de servidor: ${resp.status}`);
+
         const res = await resp.json();
 
-        if (res.status !== 'success') throw new Error(res.message || 'Error al obtener datos');
+        if (res.status !== 'success') {
+            throw new Error(res.message || 'Error al obtener datos');
+        }
+
         console.log(res);
 
-        const items = res.data;
-        if (!items || items.length === 0) {
+        const items = res.data || [];
+
+        if (items.length === 0) {
             Swal.fire('Info', 'La solicitud no tiene productos.', 'info');
             return;
         }
 
+        // 🔥 MANEJO SEGURO DE DEUDA (UNA SOLA VEZ)
+        const deuda = Number(res?.deuda?.[0]?.pendiente) || 0;
+
+        // 🔹 Datos generales
         $('#uni-solicitud-id').val(id);
         $('#uni-folio').text(`#${id.toString().padStart(5, '0')}`);
         $('#uni-proveedor').val(items[0].proveedor_nombre || 'Sin Proveedor');
         $('#uni-proveedor-nombre').val(items[0].proveedor_nombre || '');
-$('#uni-proveedor-deuda').val(res.deuda[0].pendiente || 0);
 
-// valor inicial
-$('#input_pagar_deuda').val(0);
-
-// 🔥 aquí el truco importante
-const deuda = parseFloat(res.deuda?.[0]?.pendiente ?? 0);
-
-$('#input_pagar_deuda').attr('max', deuda);
-$('.label-abono-info').text(`Máximo: ${res.deuda[0].pendiente || 0}`);
+        // 🔹 Deuda segura
+        $('#uni-proveedor-deuda').val(deuda);
+        $('#input_pagar_deuda').val(0);
+        $('#input_pagar_deuda').attr('max', deuda);
+        $('.label-abono-info').text(`Máximo: ${deuda}`);
 
         let html = '';
 
@@ -711,17 +720,20 @@ $('.label-abono-info').text(`Máximo: ${res.deuda[0].pendiente || 0}`);
             const factor = parseFloat(i.factor_conversion) || 1;
             const uBase = i.unidad_medida || 'pzas';
             const uRep = i.unidad_reporte || 'Mayoreo';
+            const costo =i.costo;
             const cantidadSolicitada = parseFloat(i.cantidad) || 0;
 
             const cantMayoreo = Math.floor(cantidadSolicitada / factor);
             const cantSueltas = cantidadSolicitada % factor;
+            const totalUnidad=cantidadSolicitada / factor;
 
             html += `
             <tr class="fila-item" data-index="${index}">
                 <td>
                     <input type="hidden" name="items[${index}][producto_id]" value="${i.producto_id}">
                     <input type="hidden" class="h-factor" value="${factor}">
-                    <div class="fw-bold text-dark">${i.producto_nombre}</div>
+                    <div class="fw-bold text-dark">${i.producto_nombre} </div>
+                    <small class="text-muted d-block">Total Pedido ${totalUnidad} ${uRep} </small>
                     <small class="text-muted d-block">1 ${uRep} = ${factor} ${uBase}</small>
                 </td>
 
@@ -738,9 +750,7 @@ $('.label-abono-info').text(`Máximo: ${res.deuda[0].pendiente || 0}`);
                 </td>
 
                 <td>
-                 <label class="form-label small text-danger fw-semibold mb-1">
-                        Faltantes
-                    </label>
+                    <label class="form-label small text-danger fw-semibold mb-1">Faltantes</label>
                     <input type="number"
                         class="form-control form-control-sm border-danger shadow-sm i-faltante"
                         value="0" min="0" 
@@ -752,9 +762,7 @@ $('.label-abono-info').text(`Máximo: ${res.deuda[0].pendiente || 0}`);
                 </td>
 
                 <td>
-                    <label class="form-label small text-success fw-semibold mb-1">
-                        Excedente
-                    </label>
+                    <label class="form-label small text-success fw-semibold mb-1">Excedente</label>
                     <input type="number"
                         name="items[${index}][cantidad_excedente]"
                         class="form-control form-control-sm border-success shadow-sm i-excedente"
@@ -767,7 +775,7 @@ $('.label-abono-info').text(`Máximo: ${res.deuda[0].pendiente || 0}`);
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-light">$</span>
                         <input type="number" step="0.01" class="form-control i-costo-total" 
-                            placeholder="0.00" required 
+                            placeholder="0.00" required value="${costo}"
                             oninput="recalcularFila(${index})">
                     </div>
 
@@ -805,10 +813,10 @@ $('.label-abono-info').text(`Máximo: ${res.deuda[0].pendiente || 0}`);
         $('#modalGestionSolicitud').removeAttr('aria-hidden').modal('show');
 
     } catch (e) {
+        console.error(e);
         Swal.fire('Error', e.message, 'error');
     }
 }
-
 function recalcularFila(index) {
 
     const fila = $(`.fila-item[data-index="${index}"]`);

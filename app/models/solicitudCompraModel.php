@@ -6,39 +6,54 @@ class SolicitudCompra {
         $this->db = $db;
     }
 
-    public function crear($data, $items) {
-        try {
-            // MySQLi Transaction
-            $this->db->begin_transaction();
+   public function crear($data, $items) {
+    try {
+        $this->db->begin_transaction();
 
-            $sqlCab = "INSERT INTO solicitudes_compra (administrador_id, almacen_id, proveedor_id, estado) 
-                       VALUES (?, ?, ?, 'pendiente')";
-            $stmt = $this->db->prepare($sqlCab);
-            $stmt->bind_param("iii", $data['usuario_id'], $data['almacen_id'], $data['proveedor_id']);
-            
-            if (!$stmt->execute()) throw new Exception("Error al insertar cabecera: " . $stmt->error);
-            
-            $solicitud_id = $this->db->insert_id;
+        // 🔹 CABECERA
+        $sqlCab = "INSERT INTO solicitudes_compra 
+                   (administrador_id, almacen_id, proveedor_id, estado) 
+                   VALUES (?, ?, ?, 'pendiente')";
 
-            $sqlDet = "INSERT INTO detalle_solicitud_compra (solicitud_id, producto_id, cantidad) 
-                       VALUES (?, ?, ?)";
-            $stmtDet = $this->db->prepare($sqlDet);
+        $stmt = $this->db->prepare($sqlCab);
+        $stmt->bind_param("iii", $data['usuario_id'], $data['almacen_id'], $data['proveedor_id']);
 
-            foreach ($items as $id_producto => $cantidad_base) {
-                $id_prod = intval($id_producto);
-                $cant = floatval($cantidad_base);
-                $stmtDet->bind_param("iid", $solicitud_id, $id_prod, $cant);
-                if (!$stmtDet->execute()) throw new Exception("Error al insertar detalle: " . $stmtDet->error);
-            }
-
-            $this->db->commit();
-            return true;
-        } catch (Throwable $e) {
-            $this->db->rollback();
-            return $e->getMessage();
+        if (!$stmt->execute()) {
+            throw new Exception("Error al insertar cabecera: " . $stmt->error);
         }
-    }
 
+        $solicitud_id = $this->db->insert_id;
+
+        // 🔹 DETALLE (con costo)
+        $sqlDet = "INSERT INTO detalle_solicitud_compra 
+                   (solicitud_id, producto_id, cantidad, costo) 
+                   VALUES (?, ?, ?, ?)";
+
+        $stmtDet = $this->db->prepare($sqlDet);
+
+        foreach ($items as $id_producto => $item) {
+
+            $id_prod = intval($id_producto);
+
+            // 🔥 tomar datos correctamente
+            $cant = floatval($item['cantidad'] ?? 0);
+            $costo = floatval($item['costo'] ?? 0);
+
+            $stmtDet->bind_param("iidd", $solicitud_id, $id_prod, $cant, $costo);
+
+            if (!$stmtDet->execute()) {
+                throw new Exception("Error al insertar detalle: " . $stmtDet->error);
+            }
+        }
+
+        $this->db->commit();
+        return true;
+
+    } catch (Throwable $e) {
+        $this->db->rollback();
+        return $e->getMessage();
+    }
+}
     public function listar($es_admin, $almacen_id) {
         $sql = "SELECT s.*, p.nombre_comercial as proveedor_nombre, a.nombre as almacen_nombre, u.nombre as admin_nombre
                 FROM solicitudes_compra s

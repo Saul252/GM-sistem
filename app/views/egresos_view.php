@@ -771,14 +771,15 @@ function subirDocumentoCompra(compra_id, folio, documento_actual = '',tipo) {
 
         if (!result.isConfirmed || !result.value) return;
 
-        Swal.fire({
-            icon: 'success',
-            title: 'Guardado',
-            text: 'Documento actualizado correctamente',
-            timer: 1800,
-            showConfirmButton: false
-        });
-
+       Swal.fire({
+    icon: 'success',
+    title: 'Guardado',
+    text: 'Documento actualizado correctamente',
+    timer: 1800,
+    showConfirmButton: false
+}).then(() => {
+    location.reload();
+});
         if (typeof cargarCompras === 'function') {
             cargarCompras();
         }

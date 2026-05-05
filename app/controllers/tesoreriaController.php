@@ -107,7 +107,7 @@ if (!empty($action)) {
     break;
 
             case 'listar':
-                $almacen_id = isset($_GET['almacen_id']) ? intval($_GET['almacen_id']) : 0;
+                $almacen_id = isset($_GET['almacen_id']) ? intval($_GET['almacen_id']) :  $_SESSION['almacen_id'];
                 
                 // Normalización de fechas para el rango completo del día
                 $f_inicio = $_GET['f_inicio'] ?? $_GET['fecha'] ?? date('Y-m-d');

@@ -6,7 +6,7 @@ class ProveedoresModel {
         $this->db = $conexion;
     }
 public function listarTodosProveedores($almacen_id = 0) {
-
+$almacen_id = 0;
     $sql = "SELECT * FROM proveedores";
 
     if ($almacen_id != 0) {
@@ -144,8 +144,7 @@ public function listarTodosProveedorsYDeuda($almacen_id = 0) {
 }
 public function ProveedorYDeuda($id) {
 
-    $sql = "
-        SELECT 
+    $sql = "SELECT 
             cpp.id_referencia_origen AS compra_id,
             (cpp.monto_total - IFNULL(cpp.monto_pagado,0)) AS pendiente
 

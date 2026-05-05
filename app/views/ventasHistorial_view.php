@@ -132,11 +132,12 @@
                         <div class="col-md-2">
                             <label class="form-label small fw-bold">Periodo</label>
                             <select id="f_rango" class="form-select form-select-sm" onchange="togglePerso()">
-                                <option value="todos">Historial Completo</option>
+                              
                                 <option value="hoy">Hoy</option>
                                 <option value="ayer">Ayer</option>
                                 <option value="semana">Semana</option>
                                 <option value="mes">Mes</option>
+                                  <option value="todos">Historial Completo</option>
                                 <option value="personalizado">Rango...</option>
                             </select>
                         </div>
