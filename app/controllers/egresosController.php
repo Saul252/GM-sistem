@@ -19,6 +19,10 @@ require_once __DIR__ . '/../models/categoriasGastosModel.php';
 
 require_once __DIR__ . '/../models/almacen_model.php';
 
+require_once __DIR__ . '/../models/productosModel.php';
+
+$productosModel = new ProductosModel($conexion);
+
 protegerPagina('compras'); 
 $almacenMo = new AlmacenModel($conexion);
 $egresoModel = new EgresoModel($conexion);
@@ -788,6 +792,7 @@ $almacen_actual= $_SESSION['almacen_id'];
     $listaCategoriasGastos = $gastosCategorias->listarTodas();
     $almacenes = $egresoModel->obtenerAlmacenesActivos();
     $productos = $comprasModel->obtenerProductos(); 
+    $listaProductos= $productosModel->listarTodo();
     $proveedores = $proveedorModel->listarTodosProveedorsYDeuda(0); 
 $unidadesMedida= $almacenMo->getUnidadesMedida();
 

@@ -239,9 +239,9 @@ async function cancelarTodoElViaje(vehiculoId, folioViaje) {
                 icon: 'success',
                 confirmButtonColor: '#1c1c1e',
                 customClass: { popup: 'rounded-4' }
-            });
+            }) .then(() => location.reload());
             // Recargamos el monitor de viajes para que la unidad desaparezca
-            window.cargarMonitorViajes();
+           
         } else {
             Swal.fire('Error', res.message || 'No se pudo anular', 'error');
         }

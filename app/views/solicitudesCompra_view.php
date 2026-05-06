@@ -433,7 +433,7 @@ error_reporting(E_ALL);
                                 <span class="fw-bold" id="print-almacen">---</span>
                             </div>
                             <div class="col-6">
-                                <label class="small text-muted d-block">PROVEEDOR SUGERIDO:</label>
+                                <label class="small text-muted d-block">PROVEEDOR :</label>
                                 <span class="fw-bold" id="print-proveedor">---</span>
                             </div>
                         </div>
@@ -443,7 +443,9 @@ error_reporting(E_ALL);
                                 <tr>
                                     <th>Descripción del Material</th>
                                     <th width="120" class="text-center">Cantidad</th>
-                                    <th width="150">Unidad</th>
+                                    <th width="150">Unidad Mayor</th>
+                                       <th width="150">Unidad Menor</th>
+                                          <th width="150">Costo</th>
                                 </tr>
                             </thead>
                             <tbody id="print-tabla-cuerpo">
@@ -536,7 +538,8 @@ error_reporting(E_ALL);
             table.draw();
         });
 
-        $('.select2-modal').select2({
+     });
+   $('.select2-modal').select2({
             theme: 'bootstrap-5',
             dropdownParent: $('#modalSolicitud')
         });
@@ -626,8 +629,7 @@ error_reporting(E_ALL);
                 Swal.fire('Error', 'Fallo de conexión', 'error');
             }
         });
-    });
-
+    
     function quitarFila(id) {
         $(`#fila-${id}`).remove();
         if (!$('#tablaDetalle tbody tr').length) $('#emptyState').removeClass('d-none');
@@ -987,41 +989,86 @@ function actualizarGranTotal() {
      * Llena el modal de impresión con la data de la solicitud
      */
     function prepararImpresion(id) {
-        // Reutilizamos la lógica que ya tienes para obtener el detalle
-        fetch(`${URL_CONTROLADOR}?action=obtenerDetalle&id=${id}`)
-            .then(res => res.json())
-            .then(res => {
-                if (res.status === 'success') {
-                    const data = res.data;
-                    const infoBase = data[0];
+    fetch(`${URL_CONTROLADOR}?action=obtenerDetalle&id=${id}`)
+        .then(res => res.json())
+        .then(res => {
 
-                    // Llenar cabecera
-                    $('#print-folio').text(`FOLIO: #${id.toString().padStart(5, '0')}`);
-                    $('#print-fecha').text(`Fecha: ${new Date().toLocaleDateString()}`);
-                    $('#print-almacen').text(infoBase.almacen_nombre);
-                    $('#print-proveedor').text(infoBase.proveedor_nombre || 'No especificado');
+            if (res.status !== 'success') return;
 
-                    // Llenar tabla
-                    let html = '';
-                    data.forEach(i => {
-                        html += `
-                        <tr>
-                            <td>
-                                <div class="fw-bold">${i.producto_nombre}</div>
-                                <small class="text-muted">SKU: ${i.sku}</small>
-                            </td>
-                            <td class="text-center fw-bold fs-5">${i.cantidad}</td>
-                            <td>${i.unidad_medida}</td>
-                        </tr>`;
-                    });
-                    $('#print-tabla-cuerpo').html(html);
+            const data = res.data;
+            const infoBase = data[0];
 
-                    // Mostrar modal
-                    new bootstrap.Modal(document.getElementById('modalImprimirSolicitud')).show();
+            // 🔹 CABECERA
+            $('#print-folio').text(`FOLIO: #${id.toString().padStart(5, '0')}`);
+            $('#print-fecha').text(`Fecha: ${new Date().toLocaleDateString()}`);
+            $('#print-almacen').text(infoBase.almacen_nombre);
+            $('#print-proveedor').text(infoBase.proveedor_nombre || 'No especificado');
+
+            let html = '';
+
+            data.forEach(i => {
+
+                const factor = parseFloat(i.factor_conversion) || 1;
+                const uBase = i.unidad_medida || 'pzas';
+                const uRep = i.unidad_reporte || 'Mayoreo';
+                const costo=i.costo;
+
+                const cantidad = parseFloat(i.cantidad) || 0;
+
+                // 🔥 SOPORTE PARA FACTORES DECIMALES (ej: 1.5)
+                let cantMayoreo = 0;
+                let cantSueltas = 0;
+
+                if (factor > 1) {
+                    cantMayoreo = Math.floor(cantidad / factor);
+                    cantSueltas = (cantidad % factor);
+                } else {
+                    // Si factor es decimal tipo 1.5
+                    cantMayoreo = (cantidad / factor).toFixed(2);
+                    cantSueltas = 0;
                 }
-            });
-    }
 
+                const totalUnidades = (cantidad / factor).toFixed(2);
+
+                html += `
+                <tr>
+                    <td style="width:40%">
+                        <div class="fw-bold">${i.producto_nombre}</div>
+                        <small class="text-muted">SKU: ${i.sku || '-'}</small><br>
+                        <small class="text-muted">
+                            1 ${uRep} = ${factor} ${uBase}
+                        </small>
+                    </td>
+
+                   
+<td class="text-center text-primary fw-bold">
+                        ${totalUnidades} ${uRep}
+                    </td>
+                    <td class="text-center">
+                        <div><b>${cantMayoreo}</b> ${uRep}</div>
+                      
+                    </td>
+                    <td class="text-center fw-bold">
+                        ${cantidad} ${uBase}
+                    </td>
+
+                    
+                     
+
+                    <td class="text-center text-primary fw-bold">
+                        ${costo}
+                    </td>
+                </tr>`;
+            });
+
+            $('#print-tabla-cuerpo').html(html);
+
+            new bootstrap.Modal(document.getElementById('modalImprimirSolicitud')).show();
+        })
+        .catch(err => {
+            console.error(err);
+        });
+}
     /**
      * Llama al comando de impresión del navegador
      */

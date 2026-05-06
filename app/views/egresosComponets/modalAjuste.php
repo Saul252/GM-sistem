@@ -5,7 +5,7 @@
             <!-- HEADER -->
             <div class="modal-header bg-danger text-white px-4 py-3 border-0">
                 <h5 class="modal-title fw-semibold d-flex align-items-center gap-2">
-                    <i class="bi bi-diagram-3-fill fs-5"></i> 
+                    <i class="bi bi-diagram-3-fill fs-5"></i>
                     <span>Distribución de Faltantes</span>
                     <span id="folioAjuste" class="badge bg-white text-danger fw-bold ms-2 px-3 py-1"></span>
                 </h5>
@@ -18,13 +18,15 @@
                     <input type="hidden" name="compra_id" id="ajuste_compra_id">
 
                     <!-- ALERTA PREMIUM -->
-                    <div class="d-flex align-items-start gap-3 p-3 mb-4 rounded-4 bg-white shadow-sm border-start border-4 border-danger">
+                    <div
+                        class="d-flex align-items-start gap-3 p-3 mb-4 rounded-4 bg-white shadow-sm border-start border-4 border-danger">
                         <div>
                             <i class="bi bi-exclamation-triangle-fill text-danger fs-4"></i>
                         </div>
                         <div class="small text-muted">
                             <div class="fw-semibold text-dark mb-1">Control de Entradas</div>
-                            Habilite el almacén de destino y después capture la cantidad recibida para evitar errores en inventario.
+                            Habilite el almacén de destino y después capture la cantidad recibida para evitar errores en
+                            inventario.
                         </div>
                     </div>
 
@@ -44,14 +46,12 @@
 
                     <div class="d-flex gap-2">
 
-                        <button type="button" 
-                                class="btn btn-outline-danger rounded-pill px-4 fw-semibold shadow-sm"
-                                onclick="aplicarFaltantesCompra()">
+                        <button type="button" class="btn btn-outline-danger rounded-pill px-4 fw-semibold shadow-sm"
+                            onclick="aplicarFaltantesCompra()">
                             <i class="bi bi-arrow-repeat me-1"></i> Ajustar compra
                         </button>
 
-                        <button type="button" 
-                                class="btn btn-danger rounded-pill px-4 fw-bold shadow">
+                        <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold shadow">
                             <i class="bi bi-check-circle-fill me-1"></i> Registrar entrada
                         </button>
 
@@ -77,6 +77,7 @@ function toggleAlmacen(check, prodId, almId) {
         input.classList.add('bg-light');
     }
 }
+
 function aplicarFaltantesCompra() {
     const compra_id = document.getElementById('ajuste_compra_id').value;
     console.log(compra_id);
@@ -102,7 +103,8 @@ function aplicarFaltantesCompra() {
                 didOpen: () => Swal.showLoading()
             });
 
-            fetch(`/cfsistem/app/controllers/egresosController.php?action=aplicarFaltantesCompras&compra_id=${compra_id}`)
+            fetch(
+                    `/cfsistem/app/controllers/egresosController.php?action=aplicarFaltantesCompras&compra_id=${compra_id}`)
                 .then(res => res.json())
                 .then(data => {
 
@@ -110,16 +112,15 @@ function aplicarFaltantesCompra() {
                         Swal.fire({
                             icon: 'success',
                             title: 'Actualizado',
-                            html: `
-                                <b>Total anterior:</b> $${data.total_original}<br>
-                                <b>Faltantes:</b> $${data.total_faltantes}<br>
-                                <b>Nuevo total:</b> $${data.total_ajustado}
-                            `
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload();
                         });
 
                         // 🔥 Opcional: recargar tabla o vista
                         // cargarCompras();
-                        
+
                     } else {
                         Swal.fire({
                             icon: 'error',
@@ -142,21 +143,22 @@ function aplicarFaltantesCompra() {
 
     });
 }
+
 function abrirModalAjuste(id, folio) {
     const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalAjusteFaltante'));
     document.getElementById('folioAjuste').innerText = folio;
     document.getElementById('ajuste_compra_id').value = id;
-    
+
     const contenedor = document.getElementById('listaProductosFaltantes');
     contenedor.innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border text-danger"></div></div>';
-    
+
     modal.show();
 
     fetch(`/cfsistem/app/controllers/egresosController.php?action=obtenerFaltantes&compra_id=${id}`)
         .then(res => res.json())
         .then(data => {
             contenedor.innerHTML = '';
-            
+
             data.forEach(p => {
                 let tablaAlmacenes = `
                     <table class="table table-sm align-middle mb-0">
@@ -217,7 +219,7 @@ function abrirModalAjuste(id, folio) {
 function procesarAjuste() {
     const form = document.getElementById('formAjusteFaltante');
     const formData = new FormData(form);
-    
+
     let hayDatos = false;
     let erroresExceso = [];
     const sumasGlobales = {};
@@ -225,21 +227,22 @@ function procesarAjuste() {
     // Recorremos solo los inputs que NO están deshabilitados (los habilitados por el switch)
     form.querySelectorAll('.input-dist:not(:disabled)').forEach(input => {
         const cant = parseFloat(input.value) || 0;
-        if(cant > 0) {
+        if (cant > 0) {
             hayDatos = true;
             const prodId = input.dataset.prodId;
             const max = parseFloat(input.dataset.max);
-            
+
             sumasGlobales[prodId] = (sumasGlobales[prodId] || 0) + cant;
-            
-            if(sumasGlobales[prodId] > max) {
-                erroresExceso.push(`Exceso en <b>${prodId}</b>: Ingresó ${sumasGlobales[prodId]} de ${max} pendientes.`);
+
+            if (sumasGlobales[prodId] > max) {
+                erroresExceso.push(
+                    `Exceso en <b>${prodId}</b>: Ingresó ${sumasGlobales[prodId]} de ${max} pendientes.`);
             }
         }
     });
 
-    if(!hayDatos) return Swal.fire('Sin datos', 'Habilite al menos un almacén e ingrese cantidad.', 'warning');
-    if(erroresExceso.length > 0) return Swal.fire('Error de Cantidades', erroresExceso.join('<br>'), 'error');
+    if (!hayDatos) return Swal.fire('Sin datos', 'Habilite al menos un almacén e ingrese cantidad.', 'warning');
+    if (erroresExceso.length > 0) return Swal.fire('Error de Cantidades', erroresExceso.join('<br>'), 'error');
 
     Swal.fire({
         title: '¿Confirmar Ingreso?',
@@ -251,24 +254,27 @@ function procesarAjuste() {
     }).then((result) => {
         if (result.isConfirmed) {
             fetch('/cfsistem/app/controllers/egresosController.php?action=procesarAjusteFaltante', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.success) {
-                    Swal.fire('¡Éxito!', data.message, 'success').then(() => location.reload());
-                } else {
-                    Swal.fire('Error', data.message, 'error');
-                }
-            });
+                    method: 'POST',
+                    body: formData
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('¡Éxito!', data.message, 'success').then(() => location.reload());
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                });
         }
     });
 }
 </script>
 
 <style>
-.pointer { cursor: pointer; }
+.pointer {
+    cursor: pointer;
+}
+
 .form-switch .form-check-input:checked {
     background-color: #dc3545;
     border-color: #dc3545;

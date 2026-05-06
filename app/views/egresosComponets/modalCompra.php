@@ -19,130 +19,122 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
             <form id="formNuevaCompra" enctype="multipart/form-data" autocomplete="off">
                 <div class="modal-body bg-light">
                     <div class="card mb-4 border-0 shadow-sm">
-                      <div class="card-body">
+                        <div class="card-body">
 
-    <div class="row g-3">
+                            <div class="row g-3">
 
-        <!-- PROVEEDOR -->
-        <div class="col-md-5">
-            <label class="form-label small fw-bold">Proveedor</label>
+                                <!-- PROVEEDOR -->
+                                <div class="col-md-5">
+                                    <label class="form-label small fw-bold">Proveedor</label>
 
-            <div class="input-group shadow-sm">
-                <select name="proveedor" id="select_proveedor" class="form-select" required>
-                    <option value="">Seleccione un proveedor...</option>
-                    <?php foreach($proveedores as $p): ?>
-                    <option value="<?= $p['id'] ?>" data-deuda="<?= $p['total_deuda'] ?>">
-                        <?= $p['nombre_comercial'] ?>
-                    </option>
-                    <?php endforeach; ?>
-                </select>
+                                    <div class="input-group shadow-sm">
+                                        <select name="proveedor" id="select_proveedor" class="form-select" required>
+                                            <option value="">Seleccione un proveedor...</option>
+                                            <?php foreach($proveedores as $p): ?>
+                                            <option value="<?= $p['id'] ?>" data-deuda="<?= $p['total_deuda'] ?>">
+                                                <?= $p['nombre_comercial'] ?>
+                                            </option>
+                                            <?php endforeach; ?>
+                                        </select>
 
-                <button class="btn btn-outline-success" type="button"
-                    onclick="abrirModalNuevoProveedor()">
-                    <i class="bi bi-plus-lg"></i>
-                </button>
-            </div>
+                                        <button class="btn btn-outline-success" type="button"
+                                            onclick="abrirModalNuevoProveedor()">
+                                            <i class="bi bi-plus-lg"></i>
+                                        </button>
+                                    </div>
 
-            <!-- DEUDA -->
-            <div id="deuda_proveedor" class="small fw-semibold text-danger mt-2">
-                Deuda: $0.00
-            </div>
-        </div>
+                                    <!-- DEUDA -->
+                                    <div id="deuda_proveedor" class="small fw-semibold text-danger mt-2">
+                                        Deuda: $0.00
+                                    </div>
+                                </div>
 
-        <!-- FOLIO -->
-        <div class="col-md-2">
-            <label class="form-label small fw-bold">Folio</label>
-            <input type="text" id="folio_compra" name="folio"
-                class="form-control shadow-sm"
-                placeholder="Cargando..." readonly required>
-        </div>
+                                <!-- FOLIO -->
+                                <div class="col-md-2">
+                                    <label class="form-label small fw-bold">Folio</label>
+                                    <input type="text" id="folio_compra" name="folio" class="form-control shadow-sm"
+                                        placeholder="Cargando..." readonly required>
+                                </div>
 
-        <!-- ALMACEN -->
-        <div class="col-md-5">
-            <label class="form-label small fw-bold">
-                <i class="bi bi-box-seam"></i> Almacén de Cargo
-            </label>
+                                <!-- ALMACEN -->
+                                <div class="col-md-5">
+                                    <label class="form-label small fw-bold">
+                                        <i class="bi bi-box-seam"></i> Almacén de Cargo
+                                    </label>
 
-            <?php $es_admin = ($_SESSION['rol_id'] == 1); ?>
+                                    <?php $es_admin = ($_SESSION['rol_id'] == 1); ?>
 
-            <div class="input-group shadow-sm">
-                <select id="almacen_id_cabecera_visual"
-                    class="form-select <?= $es_admin ? '' : 'bg-light' ?>"
-                    <?= !$es_admin ? 'disabled' : 'name="almacen_id_cabecera"' ?> required>
+                                    <div class="input-group shadow-sm">
+                                        <select id="almacen_id_cabecera_visual"
+                                            class="form-select <?= $es_admin ? '' : 'bg-light' ?>"
+                                            <?= !$es_admin ? 'disabled' : 'name="almacen_id_cabecera"' ?> required>
 
-                    <?php if ($es_admin): ?>
-                    <option value="">Seleccionar ubicación...</option>
-                    <?php endif; ?>
+                                            <?php if ($es_admin): ?>
+                                            <option value="">Seleccionar ubicación...</option>
+                                            <?php endif; ?>
 
-                    <?php foreach($almacenes as $a): ?>
-                    <option value="<?= $a['id'] ?>"
-                        <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
-                        <?= $a['nombre'] ?>
-                    </option>
-                    <?php endforeach; ?>
-                </select>
+                                            <?php foreach($almacenes as $a): ?>
+                                            <option value="<?= $a['id'] ?>"
+                                                <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
+                                                <?= $a['nombre'] ?>
+                                            </option>
+                                            <?php endforeach; ?>
+                                        </select>
 
-                <?php if (!$es_admin): ?>
-                <span class="input-group-text bg-light text-muted">
-                    <i class="bi bi-lock-fill"></i>
-                </span>
-                <?php endif; ?>
-            </div>
+                                        <?php if (!$es_admin): ?>
+                                        <span class="input-group-text bg-light text-muted">
+                                            <i class="bi bi-lock-fill"></i>
+                                        </span>
+                                        <?php endif; ?>
+                                    </div>
 
-            <?php if (!$es_admin): ?>
-            <input type="hidden" name="almacen_id_cabecera"
-                value="<?= $_SESSION['almacen_id'] ?>">
-            <small class="text-muted">
-                Privilegios de sede actual
-            </small>
-            <?php endif; ?>
-        </div>
+                                    <?php if (!$es_admin): ?>
+                                    <input type="hidden" name="almacen_id_cabecera"
+                                        value="<?= $_SESSION['almacen_id'] ?>">
+                                    <small class="text-muted">
+                                        Privilegios de sede actual
+                                    </small>
+                                    <?php endif; ?>
+                                </div>
 
-        <!-- EVIDENCIA -->
-        <div class="col-md-4">
-            <label class="form-label small fw-bold">Evidencia</label>
-            <input type="file"
-                name="evidencia_compra"
-                class="form-control shadow-sm"
-                accept="image/*,.pdf">
-        </div>
+                                <!-- EVIDENCIA -->
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-bold">Evidencia</label>
+                                    <input type="file" name="evidencia_compra" class="form-control shadow-sm"
+                                        accept="image/*,.pdf">
+                                </div>
 
-        <!-- METODO -->
-        <div class="col-md-3">
-            <label class="form-label small fw-bold">Método de pago</label>
-            <select name="metodo_pago" id="metodo_pago"
-                class="form-select shadow-sm"  required>
-                <option value="">Seleccione...</option>
-                <option value="Efectivo">Efectivo</option>
-                <option value="Transferencia">Transferencia</option>
-                <option value="Tarjeta">Tarjeta</option>
-            </select>
-        </div>
+                                <!-- METODO -->
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold">Método de pago</label>
+                                    <select name="metodo_pago" id="metodo_pago" class="form-select shadow-sm" required>
+                                        <option value="">Seleccione...</option>
+                                        <option value="Efectivo">Efectivo</option>
+                                        <option value="Transferencia">Transferencia</option>
+                                        <option value="Tarjeta">Tarjeta</option>
+                                    </select>
+                                </div>
 
-        <!-- PAGO DE DEUDA -->
-      <div class="col-md-2">
-    <label class="form-label small fw-bold text-primary">
-        <i class="bi bi-cash-coin"></i> Pagar deuda
-    </label>
-    <input type="number"
-        id="input_pagar_deuda"
-        name="saldo_a_pagar"
-        class="form-control shadow-sm border-primary"
-        value="0" min="0" step="0.1"
-        placeholder="0.0"
-        disabled>
-</div>
+                                <!-- PAGO DE DEUDA -->
+                                <div class="col-md-2">
+                                    <label class="form-label small fw-bold text-primary">
+                                        <i class="bi bi-cash-coin"></i> Pagar deuda
+                                    </label>
+                                    <input type="number" id="input_pagar_deuda" name="saldo_a_pagar"
+                                        class="form-control shadow-sm border-primary" value="0" min="0" step="0.1"
+                                        placeholder="0.0" disabled>
+                                </div>
 
-        <!-- TOTAL -->
-        <div class="col-md-3">
-            <label class="form-label small fw-bold text-muted">TOTAL FACTURA</label>
-            <div class="bg-light border rounded-3 p-2 text-center shadow-sm">
-                <span class="h4 text-success fw-bold m-0" id="granTotalCompra">$ 0.00</span>
-            </div>
-        </div>
+                                <!-- TOTAL -->
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold text-muted">TOTAL FACTURA</label>
+                                    <div class="bg-light border rounded-3 p-2 text-center shadow-sm">
+                                        <span class="h4 text-success fw-bold m-0" id="granTotalCompra">$ 0.00</span>
+                                    </div>
+                                </div>
 
-    </div>
-</div>
+                            </div>
+                        </div>
                     </div>
 
                     <h6 class="fw-bold mb-3 d-flex justify-content-between align-items-center">
@@ -173,7 +165,7 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
     </div>
 </div>
 <style>
-  .select2-container--open {
+.select2-container--open {
     z-index: 9999 !important;
 }
 
@@ -317,13 +309,14 @@ function agregarFilaCompra() {
         </tr>`;
     });
 
-   const html = `
+    const html = `
 <div class="card mb-4 border-0 shadow-sm rounded-4 item-compra" id="card_item_${idUnico}">
     <div class="card-body p-3">
 
+        
         <div class="row g-3 mb-3">
 
-          <div class="col-md-3"> <!-- Aumenté a col-md-4 para que respire mejor -->
+          <div class="col-md-4"> <!-- Aumenté a col-md-4 para que respire mejor -->
    
      <label class="form-label small text-muted mb-1 label-urep">Producto</label>
                
@@ -402,13 +395,13 @@ function agregarFilaCompra() {
                 <input type="hidden" name="items[${idUnico}][precio_lote]" class="hidden-precio-lote" value="0">
             </div>
 
-            <div class="col-md-1 d-flex align-items-end">
-                <button type="button"
-                    class="btn btn-sm btn-outline-danger w-100 rounded-3"
-                    onclick="$('#card_item_${idUnico}').remove(); actualizarGranTotal();">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </div>
+           <div class="col-md-1 d-flex align-items-end ms-auto">
+    <button type="button"
+        class="btn btn-sm btn-outline-danger w-100 rounded-3"
+        onclick="$('#card_item_${idUnico}').remove(); actualizarGranTotal();">
+        <i class="bi bi-trash"></i>
+    </button>
+</div>
 
         </div>
 
@@ -606,7 +599,7 @@ function calcularPrecioUnitarioLote(id) {
     const costoTotalRenglon = parseFloat(card.find('.input-costo-total').val()) || 0;
 
     const piezasReales = parseFloat(card.find('.input-cantidad-recibida').val()) || 0;
-    const excedente   = parseFloat(card.find('.input-excedente').val()) || 0;
+    const excedente = parseFloat(card.find('.input-excedente').val()) || 0;
 
     // 🔥 calcular base correctamente
     let piezasBase = piezasReales - excedente;
@@ -637,7 +630,8 @@ function calcularPrecioUnitarioLote(id) {
     );
 
     actualizarGranTotal();
-}/**
+}
+/**
  * MANEJO DEL SUBMIT (BLINDADO)
  */
 function procesarGuardadoCompra(event) {
@@ -741,21 +735,21 @@ function procesarGuardadoCompra(event) {
 }
 </script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+document.addEventListener('DOMContentLoaded', function() {
 
     const select = document.getElementById('select_proveedor');
     const box = document.getElementById('deuda_proveedor');
     const input = document.getElementById('input_pagar_deuda');
 
- // Limpia formato ($, comas, etc.)
-    
-    select.addEventListener('change', function () {
+    // Limpia formato ($, comas, etc.)
+
+    select.addEventListener('change', function() {
 
         const option = this.options[this.selectedIndex];
 
         const deuda = parseFloat(option.dataset.deuda || 0);
-$('#input_pagar_deuda').attr('max', deuda);
-$('.label-abono-info').text(`Máximo: ${deuda}`);
+        $('#input_pagar_deuda').attr('max', deuda);
+        $('.label-abono-info').text(`Máximo: ${deuda}`);
 
         box.innerText = "Deuda: $" + deuda.toLocaleString('es-MX', {
             minimumFractionDigits: 2
@@ -765,12 +759,12 @@ $('.label-abono-info').text(`Máximo: ${deuda}`);
         if (deuda > 0) {
             box.classList.remove('text-success');
             box.classList.add('text-danger');
-             input.disabled = false;
+            input.disabled = false;
         } else {
             box.classList.remove('text-danger');
             box.classList.add('text-success');
             input.disabled = true;
-        input.value = 0;
+            input.value = 0;
         }
 
     });

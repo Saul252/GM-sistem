@@ -6,7 +6,9 @@
     <title>Egresos | Sistema Almacén</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 
     <?php require_once __DIR__ . '/layout/icono.php' ?>
     <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
@@ -137,16 +139,54 @@
                 </div>
                 <div class="col-md-5 text-md-end mt-3 mt-md-0">
                     <div class="d-flex gap-2 justify-content-md-end">
+                        <div class="col-md-5 d-flex justify-content-end">
+
+    <div class="dropdown">
+        <button 
+            class="btn btn-add dropdown-toggle"
+            type="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            style="border-radius: 10px; background: #127717; color: #ffffff;">
+            
+            <i class="bi bi-gear me-2"></i> Solicitudes de compra
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2" href="#"
+                   onclick="nuevaSolicitud()">
+                    <i class="bi bi-plus-lg text-success"></i>
+                    Crear Solicitud
+                </a>
+            </li>
+
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2"
+                   href="/cfsistem/app/controllers/solicitudesCompraController.php">
+                    <i class="bi bi-list-ul text-primary"></i>
+                    Ver Solicitudes
+                </a>
+            </li>
+
+        </ul>
+    </div>
+
+</div>
+                     
                         <button class="btn btn-warning fw-bold px-3 shadow-sm border-0" onclick="abrirModalGasto()"
                             style="border-radius: 10px; background: #ffc107; color: #000;">
                             <i class="bi bi-cash-stack me-1"></i> Nuevo Gasto
                         </button>
+                          
 
                         <button class="btn btn-primary fw-bold px-3 shadow-sm border-0" onclick="abrirModalCompra()"
                             style="border-radius: 10px; background: #0d6efd;">
                             <i class="bi bi-cart-plus me-1"></i> Nueva Compra
                         </button>
                     </div>
+                   
                 </div>
             </div>
 
@@ -298,6 +338,7 @@
                     </div>
                 </div>
             </div>
+        
            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
     <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
@@ -517,12 +558,13 @@ require_once $ruta;
 
 
 
+
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+     <?php require_once __DIR__ . '/solicitudesCompra/ModalSolicitud.php'; ?>
     <script>
     // Forzamos que sea global con window.
     window.DATA_COMPRAS = {
