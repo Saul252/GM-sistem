@@ -37,7 +37,35 @@ public function listarTrabajadores($almacen_id = 0) {
         $res = $this->db->query($sql);
         return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
     }
+ public function listarTrabajadoresDisponiblesPorAlmacen($almacen_id) {
+    $id = intval($almacen_id);
 
+    $sql = "        SELECT t.*
+        FROM trabajadores t
+        WHERE t.almacen_id = $id
+        AND t.id NOT IN (
+
+            -- Encargados en rutas activas
+            SELECT rm.usuario_encargado_id
+            FROM transporte_repartos_maestro rm
+            WHERE rm.estado_reparto = 'en_transito'
+            AND rm.usuario_encargado_id IS NOT NULL
+
+            UNION
+
+            -- Tripulantes en rutas activas
+            SELECT td.usuario_id
+            FROM transporte_tripulantes_detalle td
+            INNER JOIN transporte_repartos_maestro rm2 
+                ON rm2.id = td.reparto_id
+            WHERE rm2.estado_reparto = 'en_transito'
+        )
+        ORDER BY t.nombre ASC
+    ";
+
+    $res = $this->db->query($sql);
+    return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+}
     public function guardar($d) {
         $nombre = $this->db->real_escape_string($d['nombre']);
         $tel    = $this->db->real_escape_string($d['telefono']);

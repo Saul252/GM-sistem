@@ -143,7 +143,7 @@
                         <?php foreach($saldosCuentasBancarias as $cb): ?>
                             <tr>
                                 <td class="ps-3 fw-medium"><?= $cb['almacen'] ?></td>
-                                <td class="text-end"><?= $cb['nombre_cuenta'] ?></td>
+                                <td class="text-end"><?= $cb['nombre'] ?></td>
                                 <td class="text-end pe-3 fw-semibold text-primary">
                                     $<?= number_format($cb['saldo'], 2) ?>
                                 </td>

@@ -741,6 +741,71 @@ public function simularDespachoLotesMasivo($idsMovimientos) {
         return ['success' => false, 'message' => $e->getMessage()];
     }
 }
+public function getDatosPorVehiculo($vehiculo_id)
+{
+    $sql = "SELECT 
+                rm.id AS reparto_id,
+                rm.vehiculo_id,
+                rm.usuario_encargado_id,
+
+                u_enc.nombre AS encargado_nombre,
+
+                td.usuario_id AS tripulante_id,
+                t_tri.nombre AS tripulante_nombre,
+                td.rol_secundario
+
+            FROM transporte_repartos_maestro rm
+
+            LEFT JOIN trabajadores u_enc 
+                ON u_enc.id = rm.usuario_encargado_id
+
+            LEFT JOIN transporte_tripulantes_detalle td 
+                ON td.reparto_id = rm.id
+
+            LEFT JOIN trabajadores t_tri 
+                ON t_tri.id = td.usuario_id
+
+            WHERE rm.vehiculo_id = ?
+            and rm.estado_reparto='en_transito'
+            ORDER BY rm.id DESC";
+    $stmt = $this->db->prepare($sql);
+    if (!$stmt) return false;
+
+    $stmt->bind_param("i", $vehiculo_id);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+
+    if ($result->num_rows === 0) return false;
+
+    $encargado = null;
+    $tripulantes = [];
+
+    while ($row = $result->fetch_assoc()) {
+
+        // 👤 encargado (solo una vez)
+        if (!$encargado && $row['usuario_encargado_id']) {
+            $encargado = [
+                "id" => $row['usuario_encargado_id'],
+                "nombre" => $row['encargado_nombre']
+            ];
+        }
+
+        // 👥 tripulantes
+        if ($row['tripulante_id']) {
+            $tripulantes[] = [
+                "id" => $row['tripulante_id'],
+                "nombre" => $row['tripulante_nombre'],
+                "rol" => $row['rol_secundario']
+            ];
+        }
+    }
+
+    return [
+        "encargado" => $encargado,
+        "tripulantes" => $tripulantes
+    ];
+}
 public function procesarDespachoFisicoMasivo($idsMovimientos) {
     if (empty($idsMovimientos)) {
         return ['success' => false, 'message' => 'No se proporcionaron IDs para procesar.'];

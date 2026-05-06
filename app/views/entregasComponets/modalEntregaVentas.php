@@ -164,39 +164,153 @@ async function abrirModalDespachoVentaTotal(ventaId, almacenId) {
 
         const resDetalle = await respDetalle.json();
         const resRecursos = await respRecursos.json();
+ 
+   if (resDetalle.success && resRecursos.success) {
 
-        if (resDetalle.success && resRecursos.success) {
-            // Llenar dirección predeterminada
-            $('#mv_direccion').val(resDetalle.data.entrega.cliente_direccion_fiscal || '');
+    // 1. Dirección
+    $('#mv_direccion').val(resDetalle.data.entrega.cliente_direccion_fiscal || '');
 
-            // Llenar Selects
-            const selectV = $('#mv_vehiculo_id').empty().append('<option value="">Seleccione unidad...</option>');
-            resRecursos.unidades.forEach(u => selectV.append(`<option value="${u.id}">${u.nombre} [${u.placas || 'S/P'}]</option>`));
+    // 2. VEHÍCULOS
+    const selectV = $('#mv_vehiculo_id')
+        .empty()
+        .append('<option value="">Seleccione unidad...</option>');
 
-            const selectC = $('#mv_chofer_id').empty().append('<option value="">Seleccione responsable...</option>');
-            const selectT = $('#mv_tripulantes').empty();
-            resRecursos.choferes.forEach(c => {
-                selectC.append(`<option value="${c.id}">${c.nombre}</option>`);
-                selectT.append(`<option value="${c.id}">${c.nombre}</option>`);
-            });
+    (resRecursos.unidades || []).forEach(u => {
+        selectV.append(`<option value="${String(u.id)}">${u.nombre} [${u.placas || 'S/P'}]</option>`);
+    });
 
-            // Lógica exclusión chofer/ayudante
-            $('#mv_chofer_id').off('change').on('change', function() {
-                const sel = $(this).val();
-                $('#mv_tripulantes option').each(function() {
-                    if (sel && $(this).val() === sel) {
-                        $(this).prop('disabled', true).hide().prop('selected', false);
-                    } else {
-                        $(this).prop('disabled', false).show();
+    // 3. PERSONAL BASE (CHOFERES)
+    const selectC = $('#mv_chofer_id')
+        .empty()
+        .append('<option value="">Seleccione responsable...</option>');
+
+    const selectT = $('#mv_tripulantes').empty();
+
+    (resRecursos.choferes || []).forEach(c => {
+        const id = String(c.id);
+        const opt = `<option value="${id}">${c.nombre}</option>`;
+        selectC.append(opt);
+        selectT.append(opt);
+    });
+
+    // =========================================
+    // 🚛 CAMBIO DE VEHÍCULO (CON FALLBACK)
+    // =========================================
+    $('#mv_vehiculo_id')
+        .off('change')
+        .on('change', function () {
+
+            const vehiculo_id = $(this).val();
+            if (!vehiculo_id) return;
+
+            fetch(`${URL_ENTREGAS}?ajax=get_datos_vehiculo&vehiculo_id=${vehiculo_id}`)
+                .then(r => r.json())
+                .then(res => {
+
+                    console.log("Respuesta servidor:", res);
+
+                    // LIMPIAR SIEMPRE
+                    $('#mv_chofer_id').val('');
+                    $('#mv_tripulantes').val([]);
+
+                    // =========================
+                    // 🟢 CASO 1: TIENE DATOS
+                    // =========================
+                    if (res.success && res.data &&
+                        (res.data.encargado || (res.data.tripulantes && res.data.tripulantes.length))
+                    ) {
+
+                        const data = res.data;
+
+                        // 👤 CHOFER
+                        if (data.encargado && data.encargado.id) {
+                            const idChofer = String(data.encargado.id);
+
+                            if ($(`#mv_chofer_id option[value="${idChofer}"]`).length) {
+                                $('#mv_chofer_id').val(idChofer).trigger('change');
+                            }
+                        }
+
+                        // 👥 TRIPULANTES
+                        if (Array.isArray(data.tripulantes)) {
+                            const ids = data.tripulantes.map(t => String(t.id));
+
+                            const validos = ids.filter(id =>
+                                $(`#mv_tripulantes option[value="${id}"]`).length
+                            );
+
+                            $('#mv_tripulantes').val(validos).trigger('change');
+                        }
+
+                        console.log('✔ Datos cargados desde vehículo');
+
+                    } 
+                    // =========================
+                    // 🔵 CASO 2: FALLBACK
+                    // =========================
+                    else {
+                        console.log(resRecursos.trabajadoresDisponibles);
+
+                        console.log('⚠ Sin datos en vehículo → usando trabajadores disponibles');
+
+                        // 🔥 REEMPLAZAR OPTIONS CON DISPONIBLES
+                        const selectC = $('#mv_chofer_id')
+                            .empty()
+                            .append('<option value="">Seleccione responsable...</option>');
+
+                        const selectT = $('#mv_tripulantes').empty();
+
+                        (resRecursos.trabajadoresDisponibles || []).forEach(t => {
+                            const id = String(t.id);
+                            const opt = `<option value="${id}">${t.nombre}</option>`;
+                            selectC.append(opt);
+                            selectT.append(opt);
+                        });
+
+                        // reset visual
+                        $('#mv_chofer_id').val('');
+                        $('#mv_tripulantes').val([]);
                     }
-                });
+                })
+                .catch(err => console.error('Error fetch:', err));
+        });
+
+    // =========================================
+    // 🔒 EXCLUSIÓN CHOFER → TRIPULANTES
+    // =========================================
+    $('#mv_chofer_id')
+        .off('change')
+        .on('change', function () {
+
+            const sel = String($(this).val());
+
+            $('#mv_tripulantes option').each(function () {
+
+                const val = String($(this).val());
+
+                if (sel && val === sel) {
+                    $(this)
+                        .prop('disabled', true)
+                        .prop('selected', false)
+                        .hide();
+                } else {
+                    $(this)
+                        .prop('disabled', false)
+                        .show();
+                }
             });
 
-            logSection.classList.remove('d-none');
-            btnConfirmar.disabled = false;
-            btnConfirmar.onclick = () => ejecutarSalidaMasivaFinal(idsParaProcesar, btnConfirmar);
-        }
-    } catch (err) {
+            $('#mv_tripulantes').trigger('change');
+        });
+
+    // =========================================
+    // UI FINAL
+    // =========================================
+    logSection.classList.remove('d-none');
+    btnConfirmar.disabled = false;
+    btnConfirmar.onclick = () => ejecutarSalidaMasivaFinal(idsParaProcesar, btnConfirmar);
+}
+}catch (err) {
         contenedor.innerHTML = `<div class="alert alert-danger mx-2 small">${err.message}</div>`;
     }
 }

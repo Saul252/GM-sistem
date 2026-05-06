@@ -47,13 +47,43 @@ if (isset($_GET['ajax'])) {
                     echo json_encode(["success" => true, "data" => ["entrega" => $detalle]]);
                 }
                 break;
+case 'get_datos_vehiculo':
 
+    header('Content-Type: application/json'); // 🔥 IMPORTANTE
+
+    $vehiculo_id = $_GET['vehiculo_id'] ?? 0;
+
+    if (!$vehiculo_id) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Vehículo no válido"
+        ]);
+        exit; // 🔥 corta ejecución
+    }
+
+    $data = $modelo->getDatosPorVehiculo($vehiculo_id);
+
+    if (!$data) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Sin datos para este vehículo"
+        ]);
+    } else {
+        echo json_encode([
+            "success" => true,
+            "data" => $data
+        ]);
+    }
+
+    exit; // 🔥 MUY IMPORTANTE
+break;;
             case 'get_recursos_sucursal':
                 $almacen_id = intval($_GET['almacen_id'] ?? 0);
                 echo json_encode([
                     "success"  => true,
                     "unidades" => $vehiculoM->listarPorAlmacen($almacen_id),
-                    "choferes" => $trabajadorM->listarPorAlmacen($almacen_id)
+                    "choferes" => $trabajadorM->listarPorAlmacen($almacen_id),
+                    "trabajadoresDisponibles" => $trabajadorM->listarTrabajadoresDisponiblesPorAlmacen($almacen_id),
                 ]);
                 break;
 
