@@ -26,6 +26,12 @@
         font-size: 0.8rem;
         padding: 5px 10px;
     }
+    .modalc{
+        z-index:2000 !important;
+    }
+    .swal-zindex{
+        z-index:2000 !important;
+    }
     </style>
 </head>
 
@@ -182,7 +188,7 @@
 
     
 
-    <div class="modal fade" id="modalNuevoCliente" tabindex="-1" aria-labelledby="modalNuevoClienteLabel"
+    <div class="modal fade modalc" id="modalNuevoCliente" tabindex="-1" aria-labelledby="modalNuevoClienteLabel"
         aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">

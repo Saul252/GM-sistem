@@ -832,7 +832,7 @@ public function obtenerDeudaPorCompra($id_compra)
         $sql = "SELECT 
                     cpp.id,
                     cpp.id_almacen,
-                    cpp.id_proveedor,
+                    p.nombre_comercial as beneficiario2,
                     cpp.beneficiario,
                     cpp.id_referencia_origen,
                     cpp.monto_total,
@@ -853,6 +853,8 @@ public function obtenerDeudaPorCompra($id_compra)
 
                 INNER JOIN compras c 
                     ON c.id = cpp.id_referencia_origen
+                     INNER JOIN proveedores p
+                    ON p.id = cpp.id_proveedor
 
                 LEFT JOIN almacenes a 
                     ON a.id = cpp.id_almacen

@@ -124,96 +124,210 @@
                 </h5>
                 <button class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+<form id="formProveedor">
 
-            <form id="formProveedor">
+    <div class="modal-body px-4 py-3">
 
-                <div class="modal-body px-4 py-3">
+        <input type="hidden" id="proveedor_id" name="id">
 
-                    <input type="hidden" id="proveedor_id" name="id">
+        <!-- GRID -->
+        <div class="row g-3">
 
-                    <!-- GRID -->
-                    <div class="row g-3">
+            <!-- ALMACEN -->
+            <div class="col-md-6">
+                <label class="form-label small text-muted">Almacén</label>
 
-                        <div class="col-md-6">
-                            <label class="form-label small text-muted">Nombre Comercial</label>
-                            <input type="text" class="form-control rounded-3" id="nombre_comercial" name="nombre_comercial">
-                        </div>
+                <select name="almacen_id"
+                    id="almacen_id"
+                    class="form-select rounded-3 <?= $_SESSION['almacen_id']==0 ? '' : 'bg-light' ?>"
+                    <?= $_SESSION['almacen_id'] != 0 ? 'disabled' : '' ?>
+                    required>
 
-                        <div class="col-md-6">
-                            <label class="form-label small text-muted">Razón Social</label>
-                            <input type="text" class="form-control rounded-3" id="razon_social" name="razon_social">
-                        </div>
+                    <?php if ($_SESSION['almacen_id']==0): ?>
+                        <option value="">Seleccionar ubicación...</option>
+                    <?php endif; ?>
 
-                        <div class="col-md-6">
-                            <label class="form-label small text-muted">RFC</label>
-                            <input type="text" class="form-control rounded-3" id="rfc" name="rfc">
-                        </div>
+                    <?php foreach($almacenes as $a): ?>
+                        <option value="<?= $a['id'] ?>"
+                            <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
+                            <?= $a['nombre'] ?>
+                        </option>
+                    <?php endforeach; ?>
 
-                        <div class="col-md-6">
-                            <label class="form-label small text-muted">Teléfono</label>
-                            <input type="text" class="form-control rounded-3" id="telefono" name="telefono">
-                        </div>
+                </select>
 
-                        <div class="col-md-6">
-                            <label class="form-label small text-muted">Correo</label>
-                            <input type="email" class="form-control rounded-3" id="correo" name="correo">
-                        </div>
+                <?php if ($_SESSION['almacen_id'] != 0): ?>
+                    <input type="hidden"
+                        name="almacen_id"
+                        value="<?= $_SESSION['almacen_id'] ?>">
+                <?php endif; ?>
+            </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label small text-muted">Estado</label>
-                            <select class="form-select rounded-3" id="activo" name="activo">
-                                <option value="1">🟢 Activo</option>
-                                <option value="0">⚫ Inactivo</option>
-                            </select>
-                        </div>
+            <!-- ESTADO -->
+            <div class="col-md-6">
+                <label class="form-label small text-muted">Estado</label>
 
-                        <div class="col-12">
-                            <label class="form-label small text-muted">Dirección</label>
-                            <textarea class="form-control rounded-3" rows="2" id="direccion" name="direccion"></textarea>
-                        </div>
+                <select class="form-select rounded-3"
+                    id="activo"
+                    name="activo">
 
-                        <div class="col-md-6">
-                            <label class="form-label small text-muted">Almacén</label>
-                            <select name="almacen_id"
-                                id="almacen_id"
-                                class="form-select rounded-3 <?= $_SESSION['almacen_id']==0 ? '' : 'bg-light' ?>"
-                                <?= $_SESSION['almacen_id'] != 0 ? 'disabled' : '' ?>>
+                    <option value="1">🟢 Activo</option>
+                    <option value="0">⚫ Inactivo</option>
 
-                                <?php if ($_SESSION['almacen_id']==0): ?>
-                                    <option value="">Seleccionar ubicación...</option>
-                                <?php endif; ?>
+                </select>
+            </div>
 
-                                <?php foreach($almacenes as $a): ?>
-                                    <option value="<?= $a['id'] ?>"
-                                        <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
-                                        <?= $a['nombre'] ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>       
-                        </div>
+            <!-- NOMBRE COMERCIAL -->
+            <div class="col-md-6">
+                <label class="form-label small text-muted">Nombre Comercial</label>
 
-                        <div class="col-md-6">
-                            <label class="form-label small text-muted">Fecha creación</label>
-                            <input type="text" class="form-control rounded-3 bg-light" id="creado_at" disabled>
-                        </div>
+                <input type="text"
+                    class="form-control rounded-3"
+                    id="nombre_comercial"
+                    name="nombre_comercial">
+            </div>
 
-                    </div>
-                </div>
+            <!-- RAZON SOCIAL -->
+            <div class="col-md-6">
+                <label class="form-label small text-muted">Razón Social</label>
 
-                <!-- FOOTER -->
-                <div class="modal-footer border-0 px-4 pb-4">
-                    <button class="btn btn-light rounded-3 px-4" data-bs-dismiss="modal">
-                        Cancelar
-                    </button>
+                <input type="text"
+                    class="form-control rounded-3"
+                    id="razon_social"
+                    name="razon_social">
+            </div>
 
-                    <button type="button"
-                        class="btn btn-primary rounded-3 px-4 shadow-sm"
-                        onclick="guardarProveedor()">
-                        💾 Guardar cambios
-                    </button>
-                </div>
+            <!-- RFC -->
+            <div class="col-md-6">
+                <label class="form-label small text-muted">RFC</label>
 
-            </form>
+                <input type="text"
+                    class="form-control rounded-3 text-uppercase"
+                    id="rfc"
+                    name="rfc">
+            </div>
+
+            <!-- CORREO -->
+            <div class="col-md-6">
+                <label class="form-label small text-muted">Correo</label>
+
+                <input type="email"
+                    class="form-control rounded-3"
+                    id="correo"
+                    name="correo">
+            </div>
+
+            <!-- TELEFONO -->
+            <div class="col-md-4">
+                <label class="form-label small text-muted">Teléfono</label>
+
+                <input type="text"
+                    class="form-control rounded-3"
+                    id="telefono"
+                    name="telefono">
+            </div>
+
+            <!-- TELEFONO 2 -->
+            <div class="col-md-4">
+                <label class="form-label small text-muted">Teléfono secundario</label>
+
+                <input type="text"
+                    class="form-control rounded-3"
+                    id="telefono2"
+                    name="telefono2">
+            </div>
+
+            <!-- EXTENSION -->
+            <div class="col-md-4">
+                <label class="form-label small text-muted">Extensión</label>
+
+                <input type="text"
+                    class="form-control rounded-3"
+                    id="extencion"
+                    name="extencion">
+            </div>
+
+            <!-- DIRECCION -->
+            <div class="col-12">
+                <label class="form-label small text-muted">Dirección</label>
+
+                <textarea class="form-control rounded-3"
+                    rows="2"
+                    id="direccion"
+                    name="direccion"></textarea>
+            </div>
+
+            <!-- NUMERO EXTERIOR -->
+            <div class="col-md-6">
+                <label class="form-label small text-muted">Número Exterior</label>
+
+                <input type="text"
+                    class="form-control rounded-3"
+                    id="numeroExt"
+                    name="numeroExt">
+            </div>
+
+            <!-- NUMERO INTERIOR -->
+            <div class="col-md-6">
+                <label class="form-label small text-muted">Número Interior</label>
+
+                <input type="text"
+                    class="form-control rounded-3"
+                    id="numeroInt"
+                    name="numeroInt">
+            </div>
+
+            <!-- COLONIA -->
+            <div class="col-md-6">
+                <label class="form-label small text-muted">Colonia</label>
+
+                <input type="text"
+                    class="form-control rounded-3"
+                    id="colonia"
+                    name="colonia">
+            </div>
+
+            <!-- CIUDAD -->
+            <div class="col-md-6">
+                <label class="form-label small text-muted">Ciudad</label>
+
+                <input type="text"
+                    class="form-control rounded-3"
+                    id="ciudad"
+                    name="ciudad">
+            </div>
+
+            <!-- FECHA -->
+            <div class="col-md-6">
+                <label class="form-label small text-muted">Fecha creación</label>
+
+                <input type="text"
+                    class="form-control rounded-3 bg-light"
+                    id="creado_at"
+                    readonly>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="modal-footer border-0 px-4 pb-4">
+
+        <button type="button"
+            class="btn btn-light rounded-3 px-4"
+            data-bs-dismiss="modal">
+            Cancelar
+        </button>
+
+        <button type="button"
+            class="btn btn-primary rounded-3 px-4 shadow-sm"
+            onclick="guardarProveedor()">
+            💾 Guardar cambios
+        </button>
+
+    </div>
+
+</form>
 
         </div>
     </div>
@@ -311,7 +425,13 @@ async function editarProveedor(id) {
         document.getElementById('rfc').value = p.rfc || '';
         document.getElementById('correo').value = p.correo || '';
         document.getElementById('telefono').value = p.telefono || '';
+        document.getElementById('telefono2').value = p.telefono2 || 0;
+        document.getElementById('extencion').value = p.extencion || 0;
         document.getElementById('direccion').value = p.direccion || '';
+        document.getElementById('ciudad').value = p.ciudad || '';
+        document.getElementById('colonia').value = p.colonia || '';
+        document.getElementById('numeroExt').value = p.numeroExt || '';
+        document.getElementById('numeroInt').value = p.numeroInt || '';
         document.getElementById('almacen_id').value = p.almacen_id || 0;
         document.getElementById('activo').value = p.activo ?? 1;
         document.getElementById('creado_at').value = p.creado_at || '';
@@ -339,31 +459,117 @@ $(document).ready(function() {
 <script>
 function guardarProveedor() {
 
-    const form = document.getElementById('formProveedor');
     const formData = new FormData();
 
-    // 🔥 tomamos los valores manualmente (más control)
-    formData.append('id', document.getElementById('proveedor_id').value);
-    formData.append('nombre_comercial', document.getElementById('nombre_comercial').value);
-    formData.append('razon_social', document.getElementById('razon_social').value);
-    formData.append('rfc', document.getElementById('rfc').value);
-    formData.append('correo', document.getElementById('correo').value);
-    formData.append('telefono', document.getElementById('telefono').value);
-    formData.append('direccion', document.getElementById('direccion').value);
+    // 🔥 ID
+    formData.append(
+        'id',
+        document.getElementById('proveedor_id').value || 0
+    );
 
-    // 🔥 almacen (aunque esté disabled)
+    // 🔥 DATOS GENERALES
+    formData.append(
+        'nombre_comercial',
+        document.getElementById('nombre_comercial').value.trim()
+    );
+
+    formData.append(
+        'razon_social',
+        document.getElementById('razon_social').value.trim()
+    );
+
+    formData.append(
+        'rfc',
+        document.getElementById('rfc').value.trim()
+    );
+
+    formData.append(
+        'correo',
+        document.getElementById('correo').value.trim()
+    );
+
+    // 🔥 TELEFONOS
+    formData.append(
+        'telefono',
+        document.getElementById('telefono').value.trim() || 0
+    );
+
+    formData.append(
+        'telefono2',
+        document.getElementById('telefono2').value.trim() || 0
+    );
+
+    formData.append(
+        'extencion',
+        document.getElementById('extencion').value.trim() || 0
+    );
+
+    // 🔥 DIRECCION
+    formData.append(
+        'direccion',
+        document.getElementById('direccion').value.trim()
+    );
+
+    formData.append(
+        'colonia',
+        document.getElementById('colonia').value.trim()
+    );
+
+    formData.append(
+        'ciudad',
+        document.getElementById('ciudad').value.trim()
+    );
+
+    // 🔥 NUMEROS
+    formData.append(
+        'numeroExt',
+        document.getElementById('numeroExt').value.trim() || 0
+    );
+
+    formData.append(
+        'numeroInt',
+        document.getElementById('numeroInt').value.trim() || 0
+    );
+
+    // 🔥 ALMACEN
     const almacen = document.getElementById('almacen_id');
-    formData.append('almacen_id', almacen.value);
 
-    // 🔥 activo (ya que lo tienes en el modal)
-    formData.append('activo', document.getElementById('activo').value);
+    formData.append(
+        'almacen_id',
+        almacen.value || 0
+    );
 
+    // 🔥 ESTADO
+    formData.append(
+        'activo',
+        document.getElementById('activo').value || 1
+    );
+
+    // 🔥 DEBUG
+    for (let pair of formData.entries()) {
+        console.log(pair[0] + ':', pair[1]);
+    }
+
+    // 🔥 PETICION
     fetch('/cfsistem/app/controllers/proveedoresController.php?action=actualizarProveedor', {
         method: 'POST',
         body: formData
     })
-    .then(res => res.json())
+    .then(async res => {
+
+        const text = await res.text();
+
+        console.log('RESPUESTA RAW:', text);
+
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            throw new Error('La respuesta no es JSON válido');
+        }
+    })
     .then(data => {
+
+        console.log(data);
 
         if (data.success) {
 
@@ -371,36 +577,47 @@ function guardarProveedor() {
                 icon: 'success',
                 title: 'Proveedor actualizado',
                 text: data.message,
-                timer: 1500,
+                timer: 1600,
                 showConfirmButton: false
             });
 
-            // cerrar modal
-            const modal = bootstrap.Modal.getInstance(document.getElementById('modalProveedor'));
-            modal.hide();
+            // 🔥 CERRAR MODAL
+            const modalEl = document.getElementById('modalProveedor');
 
-            // recargar (o luego lo hacemos dinámico)
-            setTimeout(() => location.reload(), 1500);
+            const modal = bootstrap.Modal.getInstance(modalEl);
+
+            if (modal) {
+                modal.hide();
+            }
+
+            // 🔥 RECARGAR
+            setTimeout(() => {
+                location.reload();
+            }, 1600);
 
         } else {
+
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: data.message
+                text: data.message || 'No se pudo actualizar'
             });
+
         }
 
     })
     .catch(err => {
+
         console.error(err);
+
         Swal.fire({
             icon: 'error',
             title: 'Error',
-            text: 'Error en la petición'
+            text: err.message || 'Error en la petición'
         });
+
     });
 }
-
 </script>
 <script>
 function cambiarEstado(id) {

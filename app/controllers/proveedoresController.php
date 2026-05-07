@@ -195,6 +195,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerProveedor') {
 if (isset($_GET['action']) && $_GET['action'] == 'actualizarProveedor') {
 
     while (ob_get_level()) ob_end_clean();
+
     header('Content-Type: application/json; charset=utf-8');
 
     try {
@@ -205,16 +206,29 @@ if (isset($_GET['action']) && $_GET['action'] == 'actualizarProveedor') {
             throw new Exception("ID de proveedor inválido.");
         }
 
-        // 🔥 Sanitizar
+        // 🔥 TEXTOS
         $nombre_comercial = trim($_POST['nombre_comercial'] ?? '');
         $razon_social     = trim($_POST['razon_social'] ?? '');
         $rfc              = trim($_POST['rfc'] ?? 'XAXX010101000');
         $correo           = trim($_POST['correo'] ?? '');
-        $telefono         = trim($_POST['telefono'] ?? '');
         $direccion        = trim($_POST['direccion'] ?? '');
-        $almacen_id       = intval($_POST['almacen_id'] ?? 0);
+        $colonia          = trim($_POST['colonia'] ?? '');
+        $ciudad           = trim($_POST['ciudad'] ?? '');
 
-        // 🔥 Validaciones
+        // 🔥 ENTEROS
+        $telefono   = !empty($_POST['telefono']) ? intval($_POST['telefono']) : 0;
+        $telefono2  = !empty($_POST['telefono2']) ? intval($_POST['telefono2']) : 0;
+        $extencion  = !empty($_POST['extencion']) ? intval($_POST['extencion']) : 0;
+
+        // 🔥 NUMEROS EXTERIOR/INTERIOR
+        $numeroExt = trim($_POST['numeroExt'] ?? '');
+        $numeroInt = trim($_POST['numeroInt'] ?? '');
+
+        // 🔥 IDS
+        $almacen_id = intval($_POST['almacen_id'] ?? 0);
+        $activo     = intval($_POST['activo'] ?? 1);
+
+        // VALIDACIONES
         if ($nombre_comercial === '') {
             throw new Exception("El nombre comercial es obligatorio.");
         }
@@ -223,18 +237,24 @@ if (isset($_GET['action']) && $_GET['action'] == 'actualizarProveedor') {
             throw new Exception("Selecciona un almacén válido.");
         }
 
-        // 🔥 Datos
+        // ARRAY
         $datos = [
             'nombre_comercial' => $nombre_comercial,
             'razon_social'     => $razon_social,
             'rfc'              => $rfc,
             'correo'           => $correo,
             'telefono'         => $telefono,
+            'telefono2'        => $telefono2,
+            'extencion'        => $extencion,
             'direccion'        => $direccion,
+            'colonia'          => $colonia,
+            'ciudad'           => $ciudad,
+            'numeroExt'        => $numeroExt,
+            'numeroInt'        => $numeroInt,
             'almacen_id'       => $almacen_id,
+            'activo'           => $activo
         ];
 
-        // 🔥 ACTUALIZAR
         $resultado = $model->actualizar($id, $datos);
 
         if (!$resultado) {
@@ -247,6 +267,8 @@ if (isset($_GET['action']) && $_GET['action'] == 'actualizarProveedor') {
         ]);
 
     } catch (Throwable $e) {
+
+        http_response_code(500);
 
         echo json_encode([
             'success' => false,

@@ -1,4 +1,4 @@
-<div class="modal fade" id="modalDetallePago" tabindex="-1">
+<div class="modal fade" style="z-index:1999" id="modalDetallePago" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius:16px; overflow:hidden;">
 

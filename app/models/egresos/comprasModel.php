@@ -151,6 +151,7 @@ $detalle_id = $stmtD->insert_id;
                 $stmtF->bind_param("iid", $compra_id, $p_id, $cant_fal);
                 $stmtF->execute();
             }
+           
 
             // --- 7. Inventario, MOVIMIENTOS Y LOTES ---
            if (isset($item['almacenes'])) {
@@ -190,10 +191,7 @@ $detalle_id = $stmtD->insert_id;
                     }
                 }
             }
-        }
-
-        // --- REGISTRAR OBLIGACIÓN ---
-        if ($monto_acumulado_excedentes > 0) {
+             if ($cant_exe > 0) {
 
             $dataObligacion = [
                 'id_almacen'           => $almacen_id,
@@ -211,6 +209,10 @@ $detalle_id = $stmtD->insert_id;
                 throw new Exception("Compra guardada pero falló obligación: " . $resObligacion['message']);
             }
         }
+        }
+
+        // --- REGISTRAR OBLIGACIÓN ---
+       
 
         $this->db->commit();
         return ['success' => true, 'message' => 'Compra procesada y deuda por excedente registrada.'];

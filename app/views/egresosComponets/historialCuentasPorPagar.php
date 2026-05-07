@@ -13,7 +13,7 @@
             <div class="modal-body p-4">
                 <div class="p-3 mb-3 bg-light rounded-3 border">
                     <div class="fw-bold text-primary" id="deuda_folio" style="font-size: 1.1rem;">-</div>
-                    <div class="text-dark fw-bold" id="deuda_proveedor">-</div>
+                  <div class="text-muted small" id="proveedor">-</div>
                     <div class="text-muted small" id="deuda_fecha">-</div>
                 </div>
 
@@ -96,12 +96,13 @@ window.abrirDeudaCompra = async function (compra_id) {
         }
 
         const d = json.data.data;
+        console.log(d);
 
         // esperar DOM por seguridad
         await new Promise(r => setTimeout(r, 50));
 
         const folioEl = document.getElementById('deuda_folio');
-        const provEl  = document.getElementById('deuda_proveedor');
+        const provEl  = document.getElementById('proveedor');
         const fechaEl = document.getElementById('deuda_fecha');
 
         const totalEl = document.getElementById('deuda_total');
@@ -119,7 +120,7 @@ window.abrirDeudaCompra = async function (compra_id) {
 
         // llenar datos
         folioEl.textContent = `Folio: ${d.folio ?? '-'}`;
-        provEl.textContent  = d.beneficiario ?? '-';
+        provEl.textContent  = d.beneficiario2 ?? '';
         fechaEl.textContent = d.fecha_compra ?? '-';
 
         totalEl.value = `$${parseFloat(d.total_compra || 0).toFixed(2)}`;

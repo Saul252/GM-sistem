@@ -168,7 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
             throw new Exception("El modelo no devolvió datos (Void).");
         }
         $proveedor_id = $detalle[0]['proveedor_id'] ?? 0;
-        $deudas = $proveedorModel->ProveedorYDeuda($proveedor_id);
+        $deudas = $proveedorModel->ProveedorYDeudaSuma($proveedor_id);
 
         echo json_encode([
             'status' => 'success',
@@ -186,99 +186,250 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     exit;
 }
 if (isset($_POST['action']) && $_POST['action'] === 'guardarCompraCompleta') {
-    if (ob_get_level()) ob_clean();
+
+    if (ob_get_level()) {
+        ob_clean();
+    }
+
     header('Content-Type: application/json; charset=utf-8');
 
     try {
-        // 🔥 Decodificar UNA sola vez
+
+        // 🔥 VALIDAR EXISTENCIA
+        if (!isset($_POST['items'])) {
+            throw new Exception("No se recibieron productos.");
+        }
+
+        // 🔥 DECODIFICAR JSON
         $items = json_decode($_POST['items'], true);
 
-        // 🔥 Validar JSON correctamente
-        if (!$items || json_last_error() !== JSON_ERROR_NONE) {
-            throw new Exception("Error en items JSON: " . json_last_error_msg());
+        // 🔥 VALIDAR JSON
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new Exception(
+                "Error en JSON items: " . json_last_error_msg()
+            );
+        }
+
+        // 🔥 VALIDAR ARRAY
+        if (!is_array($items) || empty($items)) {
+            throw new Exception("El arreglo de productos está vacío.");
         }
 
         $almacen_id = intval($_POST['almacen_id'] ?? 0);
-        $solicitud_id = intval($_POST['solicitud_id'] ?? 0);
-        $metodo_pago = $_POST['metodo_pago'] ?? 'Efectivo';
-       $proveedorData = $proveedorModel->obtenerProveedorPorNombre($_POST['proveedor']);
-$proveedor = $proveedorData['id'] ?? 0;
-        if ($almacen_id <= 0) throw new Exception("ID de almacén no válido.");
-        if (empty($items)) throw new Exception("No hay productos para procesar.");
 
-        // 1. Guardar la compra
-        $resultado = $comprasModel->guardarCompraCompleta(
-            $items, 
-            $_POST['folio'] ?? '', 
-            $proveedor, 
-            $_FILES['evidencia_compra'] ?? null, 
-            $almacen_id, 
-            $_SESSION['usuario_id'] ?? 0,
-            $metodo_pago
+        $solicitud_id = intval($_POST['solicitud_id'] ?? 0);
+
+        $metodo_pago = trim(
+            $_POST['metodo_pago'] ?? 'Efectivo'
         );
 
-        // 2. Actualizar solicitud si aplica
-        if ($resultado['success'] === true && $solicitud_id > 0) {
-            $id_generado = $resultado['compra_id'] ?? null;
+        // 🔥 PROVEEDOR
+        $proveedorNombre = trim(
+            $_POST['proveedor'] ?? ''
+        );
 
-            $solicitudModel->actualizarEstado($solicitud_id, 'recibido', $id_generado);
+        $proveedorData = $proveedorModel
+            ->obtenerProveedorPorNombre($proveedorNombre);
 
-            $resultado['message'] .= " (Solicitud #$solicitud_id finalizada)";
+        $proveedor = intval(
+            $proveedorData['id'] ?? 0
+        );
+
+        if ($almacen_id <= 0) {
+            throw new Exception("ID de almacén inválido.");
         }
-         $saldo = floatval($_POST['saldo_a_pagar'] ?? 0);
-        if ($saldo > 0) {
-            $proveedor_id = $proveedor;
-            if ($proveedor_id <= 0) throw new Exception("Proveedor inválido para pago de deuda");
 
-            $deudas = $proveedorModel->ProveedorYDeuda($proveedor_id);
-            if (empty($deudas)) throw new Exception("El proveedor no tiene deudas pendientes");
+        if ($proveedor <= 0) {
+            throw new Exception("Proveedor inválido.");
+        }
+
+        // 🔥 DEBUG OPCIONAL
+        // file_put_contents(
+        //     'debug_items.txt',
+        //     print_r($items, true)
+        // );
+
+        // =====================================================
+        // 🔥 GUARDAR COMPRA COMPLETA
+        // =====================================================
+
+        $resultado = $comprasModel->guardarCompraCompleta(
+
+            $items,
+
+            $_POST['folio'] ?? '',
+
+            $proveedor,
+
+            $_FILES['evidencia_compra'] ?? null,
+
+            $almacen_id,
+
+            $_SESSION['usuario_id'] ?? 0,
+
+            $metodo_pago
+
+        );
+
+        // 🔥 VALIDAR RESPUESTA DEL MODELO
+        if (
+            !$resultado ||
+            !isset($resultado['success'])
+        ) {
+            throw new Exception(
+                "Respuesta inválida del modelo de compras."
+            );
+        }
+
+        // =====================================================
+        // 🔥 ACTUALIZAR SOLICITUD
+        // =====================================================
+
+        
+if (
+    $resultado['success'] === true &&
+    $solicitud_id > 0
+) {
+
+    $id_generado = intval($_POST['folio'] ?? 0);
+
+    // 🔥 SOLO ACTUALIZAR SI EXISTE COMPRA VÁLIDA
+    if ($id_generado > 0) {
+
+        $solicitudModel->actualizarEstado(
+            $solicitud_id,
+            $almacen_id,
+            'recibido',
+            $_POST['folio'] ?? '0'
+        );
+
+        $resultado['message'] .=
+            " (Solicitud #{$solicitud_id} completada)";
+    }
+}
+
+        // =====================================================
+        // 🔥 PAGO DE DEUDAS
+        // =====================================================
+
+        $saldo = floatval(
+            $_POST['saldo_a_pagar'] ?? 0
+        );
+
+        if ($saldo > 0) {
+
+            $proveedor_id = $proveedor;
+
+            if ($proveedor_id <= 0) {
+                throw new Exception(
+                    "Proveedor inválido para pago."
+                );
+            }
+
+            $deudas = $proveedorModel
+                ->ProveedorYDeuda($proveedor_id);
+
+            if (empty($deudas)) {
+                throw new Exception(
+                    "El proveedor no tiene deudas pendientes."
+                );
+            }
 
             foreach ($deudas as $deuda) {
-                if ($saldo <= 0) break;
 
-                $cuenta_id = intval($deuda['compra_id']);
-                $pendiente = floatval($deuda['pendiente']);
-                $metodoPago = $_POST['metodo_pago'] ?? 'Efectivo';
+                if ($saldo <= 0) {
+                    break;
+                }
 
-                if ($cuenta_id <= 0 || $pendiente <= 0) continue;
-
-                $pago_aplicado = min($saldo, $pendiente);
-
-                // A. Actualizar saldo en la tabla de deuda
-                $res = $egresoModel->pagarDeudaCompra($cuenta_id, $pago_aplicado);
-                $proveedorNombre=$proveedorModel->obtenerPorId($proveedor_id);
-                
-                // B. Registrar en historial de pagos
-                $desc = 'Pago de deuda (Compra #' . $cuenta_id . ') por $' . number_format($pago_aplicado, 2);
-                $ref = "PC-" . $cuenta_id; // Evitar string vacío
-
-                $regPago = $egresoModel->registrarPagoCuentaPorPagar(
-                    $almacen_id,
-                    $proveedor_id,
-                    $cuenta_id,
-                    $pago_aplicado,
-                    $metodoPago,
-                    $ref,
-                    $_SESSION['usuario_id'] ?? 0,
-                    $desc
+                $cuenta_id = intval(
+                    $deuda['compra_id'] ?? 0
                 );
 
-                if (!$res || (isset($res['success']) && !$res['success'])) {
-                    throw new Exception("Error al descontar saldo de la deuda ID: $cuenta_id");
+                $pendiente = floatval(
+                    $deuda['pendiente'] ?? 0
+                );
+
+                if (
+                    $cuenta_id <= 0 ||
+                    $pendiente <= 0
+                ) {
+                    continue;
                 }
-                
+
+                $pago_aplicado = min(
+                    $saldo,
+                    $pendiente
+                );
+
+                // 🔥 DESCONTAR DEUDA
+                $res = $egresoModel->pagarDeudaCompra(
+                    $cuenta_id,
+                    $pago_aplicado
+                );
+
+                if (
+                    !$res ||
+                    (
+                        isset($res['success']) &&
+                        !$res['success']
+                    )
+                ) {
+                    throw new Exception(
+                        "Error al descontar saldo de deuda ID: {$cuenta_id}"
+                    );
+                }
+
+                // 🔥 HISTORIAL DE PAGO
+                $desc =
+                    'Pago de deuda (Compra #' .
+                    $cuenta_id .
+                    ') por $' .
+                    number_format($pago_aplicado, 2);
+
+                $ref = "PC-" . $cuenta_id;
+
+                $egresoModel->registrarPagoCuentaPorPagar(
+
+                    $almacen_id,
+
+                    $proveedor_id,
+
+                    $cuenta_id,
+
+                    $pago_aplicado,
+
+                    $metodo_pago,
+
+                    $ref,
+
+                    $_SESSION['usuario_id'] ?? 0,
+
+                    $desc
+
+                );
+
                 $saldo -= $pago_aplicado;
             }
         }
 
+        // =====================================================
+        // 🔥 RESPUESTA FINAL
+        // =====================================================
 
         echo json_encode($resultado);
 
     } catch (Throwable $e) {
+
+        http_response_code(500);
+
         echo json_encode([
-            'success' => false, 
+
+            'success' => false,
+
             'message' => $e->getMessage()
+
         ]);
     }
+
     exit;
 }

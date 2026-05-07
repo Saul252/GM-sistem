@@ -61,11 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
         $almacenusu = $_SESSION['almacen_id'];
         
         // Si es admin (0), listamos todos; si no, solo los de su almacén
-        $trabajadores = ($almacenusu == 0) ? $trabajadorModel->listar() : $trabajadorModel->listarPorAlmacen($almacenusu);
-        
-        // Obtenemos lista de almacenes para el selector del modal
-        $listaAlmacenes = $almacenesModel->getAlmacenes($almacenusu); 
-        
+          $trabajadores = $trabajadorModel->listarTrabajadores($almacenusu);
+       $listaAlmacenes = $almacenesModel->getAlmacenes($almacenusu); 
         $tituloPagina = "Gestión de Personal";
         require_once __DIR__ . '/../views/trabajadores_view.php';
         
@@ -99,8 +96,8 @@ if (isset($_POST['action']) && $_POST['action'] === 'eliminar') {
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     try {
         $almacenusu=$_SESSION['almacen_id'];
-        $trabajadores = $trabajadorModel->listar();
-        $almacenesModel= $almacenes->getAlmacenes($almacenusu);
+        $trabajadores = $trabajadorModel->listarTrabajadores($almacenusu);
+       $listaAlmacenes = $almacenesModel->getAlmacenes($almacenusu); 
         $tituloPagina = "Gestión de Personal";
         
         // Asegúrate de que la ruta a la vista sea correcta

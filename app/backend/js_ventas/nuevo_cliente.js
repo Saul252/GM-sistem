@@ -10,7 +10,11 @@ document.getElementById('formNuevoCliente').addEventListener('submit', function(
     Swal.fire({
         title: 'Guardando cliente...',
         allowOutsideClick: false,
-        didOpen: () => { Swal.showLoading(); }
+        
+        didOpen: () => { Swal.showLoading(); },
+         customClass: {
+        popup: 'swal-zindex'
+    }
     });
 
     fetch('/cfsistem/app/controllers/clientesController.php?action=guardar', {
@@ -20,7 +24,14 @@ document.getElementById('formNuevoCliente').addEventListener('submit', function(
     .then(res => res.json())
     .then(res => {
         if(res.success === true) {
-            Swal.fire('¡Éxito!', res.message, 'success');
+           Swal.fire({
+    title: '¡Éxito!',
+    text: res.message,
+    icon: 'success',
+    customClass: {
+        popup: 'swal-zindex'
+    }
+});
             
             const selectCliente = document.getElementById('selectCliente');
             
@@ -64,7 +75,14 @@ document.getElementById('formNuevoCliente').addEventListener('submit', function(
             }
 
         } else {
-            Swal.fire('Error', res.message || 'Error desconocido', 'error');
+           Swal.fire({
+    title: 'Error',
+    text: res.message || 'Error desconocido',
+    icon: 'error',
+    customClass: {
+        popup: 'swal-zindex'
+    }
+});
         }
     })
     .catch(err => {

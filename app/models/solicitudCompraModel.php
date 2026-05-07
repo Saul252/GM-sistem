@@ -109,17 +109,32 @@ public function obtenerDetalle($id) {
             return false;
         }
     }
+public function actualizarEstado($id, $almacen_id, $nuevoEstado, $compra_id = null) {
 
- public function actualizarEstado($id, $nuevoEstado, $compra_id = null) {
-    // Forzamos minúsculas para que coincida con el ENUM('pendiente', 'recibido'...)
-    $nuevoEstado = strtolower($nuevoEstado); 
-    
-    $sql = "UPDATE solicitudes_compra SET estado = ?, compra_id_final = ? WHERE id = ?";
+    // Forzamos minúsculas para coincidir con ENUM
+    $nuevoEstado = strtolower($nuevoEstado);
+
+    $sql = "
+        UPDATE solicitudes_compra 
+        SET 
+            estado = ?, 
+            almacen_id = ?, 
+            compra_id_final = ?
+        WHERE id = ?
+    ";
+
     $stmt = $this->db->prepare($sql);
-    
-    // "sii" -> string (estado), int (compra_id), int (id_solicitud)
-    $stmt->bind_param("sii", $nuevoEstado, $compra_id, $id);
-    
+
+    // s = string
+    // i = integer
+    $stmt->bind_param(
+        "siii",
+        $nuevoEstado,
+        $almacen_id,
+        $compra_id,
+        $id
+    );
+
     return $stmt->execute();
 }
 }

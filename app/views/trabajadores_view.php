@@ -126,7 +126,7 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                                 </span>
                             </td>
                             <td>
-                                <span class="small text-muted"><i class="bi bi-geo-alt"></i> ID: <?= $t['almacen_id'] ?></span>
+                                <span class="small text-muted"><i class="bi bi-geo-alt"></i> <?= $t['nombreAlmacen'] ?></span>
                             </td>
                             <td>
                                 <?php 

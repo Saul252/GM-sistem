@@ -92,7 +92,9 @@
               
 
                 const factor = parseFloat(item.factor_prod || 1);
-                let unidadGrande= parseFloat(item.cantidad_recibida)
+                let unidadGrande= parseFloat(item.cantidad_recibida);
+                let unidadt= parseFloat(item.cantidad_pedida || item.cantidad || 0);
+                
                 
                 let totalCant = parseFloat(item.cantidad_recibida);
 totalCant = isNaN(totalCant) ? 0 : totalCant;
@@ -101,7 +103,7 @@ if (factor && factor > 0) {
     const uniReporte = (totalCant / factor).toFixed(2);
 
     conversionInfo = `<div class="text-primary fw-bold" style="font-size: 0.75rem;">
-        Equivale a: ${uniReporte} ${item.unidad_reporte} (1 ${item.unidad_reporte} = ${factor} ${item.unidad_medida})
+        (1 ${item.unidad_reporte} = ${factor} ${item.unidad_medida})
     </div>`;
 }
 
@@ -116,7 +118,16 @@ if (factor && factor > 0) {
                     });
                 }
             }
-
+             const factor = parseFloat(item.factor_prod || 1);
+             let unidadc= parseFloat(item.cantidad_pedida || item.cantidad || 0);
+             let unidadr= parseFloat(item.cantidad_recibida );
+            
+             const totalComprado= (unidadc/factor).toFixed(2);
+             const totale= (parseFloat(item.cantidad_excedente)/factor).toFixed(2);
+             const totalr= (unidadr/factor).toFixed(2);
+             const totalf=(totalComprado-totalr);
+             console.log("Compra",unidadc,totalComprado);
+                
             filasHtml += `
                 <tr class="align-top">
                     <td class="small text-muted">${item.sku || 'N/A'}</td>
@@ -126,16 +137,34 @@ if (factor && factor > 0) {
                         ${esCompra ? detalleMovimientos : ''}
                     </td>
                     <td class="text-center bg-light">
-                        <span class="d-block fw-bold">${parseFloat(item.cantidad_pedida || item.cantidad || 0)}</span>
-                        <small class="text-muted">${esCompra ? item.unidad_medida : 'unidades'}</small>
+                        <span class="d-block fw-bold">${esCompra ? totalComprado+" " +item.unidad_reporte:totalComprado}</span>
+                        <small class="text-muted">(${esCompra ? unidadc+ ' '+ item.unidad_medida : 'unidades'})</small>
                     </td>
                     ${esCompra ? `
-                     <td class="text-center text-success fw-bold bg-light">${parseFloat(item.cantidad_excedente || 0)} <small class="text-muted">${esCompra ? item.unidad_medida : 'unidades'}</small></td>
-                     <td class="text-center bg-light">${parseFloat(item.cantidad_faltante || 0)} <small class="text-muted">${esCompra ? item.unidad_medida : 'unidades'}</small></td>
-                        <td class="text-center text-success fw-bold bg-light">${parseFloat(item.cantidad_recibida || 0)} <small class="text-muted">${esCompra ? item.unidad_medida : 'unidades'}</small></td>
+                     <td class="text-center text-success fw-bold bg-light">
+                     ${item.cantidad_excedente > 0 ? `
+                    
+                         <span class="d-block fw-bold">${totale} ${item.unidad_reporte}</span>
+                    
+                     
+                         <small class="text-muted"> ${item.cantidad_excedente+ " "+ item.unidad_medida }</small>
+                      ` : '0'}</td>
+                    
+                     <td class="text-center bg-light">
+                  ${item.cantidad_faltante > 0 ? `
+                     <span class="d-block fw-bold">${totalf} ${item.unidad_reporte}</span>
+                      <small class="text-muted">${esCompra ? item.cantidad_faltante + " "+ item.unidad_medida : 'unidades'}</small>
+                      ` : '0'}
+                      </td>
+                        <td class="text-center text-success fw-bold bg-light">
+                         <span class="d-block fw-bold">${totalr} ${item.unidad_reporte}</span>
+                    
+                        
+                         <small class="text-muted">(${esCompra ? parseFloat(item.cantidad_recibida || 0)+" " +item.unidad_medida : 'unidades'})</small>
+                         </td>
                         
                     ` : ''}
-                    <td class="text-end">$${parseFloat(item.precio_unitario).toFixed(2)}</td>
+                    <td class="text-center">$${esCompra ?parseFloat(item.precio_unitario).toFixed(2)+ " x "+item.unidad_medida: parseFloat(item.precio_unitario).toFixed(2)} </td>
                     <td class="text-end fw-bold">$${parseFloat(item.subtotal).toFixed(2)}</td>
                 </tr>`;
         });
@@ -190,7 +219,7 @@ console.log(c.categoria_nombre );
                             <tr class="small text-uppercase">
                                 <th style="width: 10%">SKU</th>
                                 <th style="width: ${esCompra ? '40%' : '55%'}">Descripción</th>
-                                <th class="text-center">Cant. Comprada</th>
+                               ${esCompra ? '<th class="text-center">Cant. Comprada</th>' : '<th class="text-center">Cantidad</th>'} 
                                  ${esCompra ? '<th class="text-center">Cantidad Execedente</th><th class="text-center">Pend.</th>' : ''}
                                 ${esCompra ? '<th class="text-center">Recibido</th>' : ''}
                                 <th class="text-end">P. Unit</th>

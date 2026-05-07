@@ -428,8 +428,14 @@ if ($action === 'guardarProveedor') {
             'rfc'              => trim($_POST['rfc'] ?? 'XAXX010101000'),
             'correo'           => trim($_POST['correo'] ?? ''),
             'telefono'         => trim($_POST['telefono'] ?? ''),
-       'almacen_id'           => trim($_POST['almacen_id'] ?? ''),
-            'direccion'         => trim($_POST['direccion'] ?? '')
+            'telefono2'        => trim($_POST['telefono2'] ?? ''),
+            'extencion'        => trim($_POST['extencion'] ?? ''),
+            'almacen_id'       => trim($_POST['almacen_id'] ?? ''),
+            'direccion'        => trim($_POST['direccion'] ?? ''),
+            'numeroExt'        => trim($_POST['numeroext'] ?? ''),
+            'numeroInt'        => trim($_POST['numeroint'] ?? ''),
+            'colonia'          => trim($_POST['colonia'] ?? ''),
+            'ciudad'           => trim($_POST['ciudad'] ?? '')
         ];
         if (empty($datos['nombre_comercial'])) throw new Exception("El nombre comercial es obligatorio.");
         if ($proveedorModel->guardar($datos)) {

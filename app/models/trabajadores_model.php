@@ -16,11 +16,17 @@ public function listarTrabajadores($almacen_id = 0) {
 
     if ($almacen_id == 0) {
         // 🔥 ADMIN → todos
-        $sql = "SELECT * FROM trabajadores ORDER BY nombre ASC";
+        $sql = "SELECT t.*, a.nombre as nombreAlmacen FROM trabajadores t
+        Join almacenes a on t.almacen_id =a.id
+        ORDER BY nombre ASC";
         $stmt = $this->db->prepare($sql);
     } else {
         // 🔒 SUCURSAL → solo su almacén
-        $sql = "SELECT * FROM trabajadores WHERE almacen_id = ? ORDER BY nombre ASC";
+        $sql = "SELECT t.*, a.nombre as nombreAlmacen
+FROM trabajadores t
+JOIN almacenes a ON t.almacen_id = a.id
+WHERE t.almacen_id = ?
+ORDER BY nombre ASC;";
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param("i", $almacen_id);
     }

@@ -163,6 +163,32 @@ public function ProveedorYDeuda($id) {
 
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
+public function ProveedorYDeudaSuma($id) {
+
+    $sql = "SELECT 
+            cpp.id_referencia_origen AS compra_id,
+
+            SUM(
+                cpp.monto_total - IFNULL(cpp.monto_pagado,0)
+            ) AS pendiente
+
+        FROM cuentas_por_pagar cpp
+
+        WHERE cpp.id_proveedor = ?
+        AND cpp.estado NOT IN ('pagado', 'cancelado')
+        AND (cpp.monto_total - IFNULL(cpp.monto_pagado,0)) > 0
+
+        GROUP BY cpp.id_proveedor
+    ";
+
+    $stmt = $this->db->prepare($sql);
+
+    $stmt->bind_param("i", $id);
+
+    $stmt->execute();
+
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
 public function obtenerProveedorPorNombre($nombre) {
     $sql = "
         SELECT 
@@ -184,24 +210,72 @@ public function obtenerProveedorPorNombre($nombre) {
     return $result->fetch_assoc(); // devuelve ['id' => ...] o null
 }
 public function guardar($datos) {
+
+    // 🔹 Sanitizar enteros
+    $telefono  = isset($datos['telefono'])  && $datos['telefono']  !== '' ? (int)$datos['telefono']  : 0;
+    $telefono2 = isset($datos['telefono2']) && $datos['telefono2'] !== '' ? (int)$datos['telefono2'] : 0;
+    $extencion = isset($datos['extencion']) && $datos['extencion'] !== '' ? (int)$datos['extencion'] : 0;
+
+    // 🔹 SQL actualizado
     $sql = "INSERT INTO proveedores 
-            (nombre_comercial, razon_social, rfc, correo, telefono, direccion, activo, almacen_id)
-            VALUES (?, ?, ?, ?, ?, ?, 1, ?)";
+    (
+        nombre_comercial,
+        razon_social,
+        rfc,
+        correo,
+        telefono,
+        telefono2,
+        extencion,
+        direccion,
+        colonia,
+        ciudad,
+        numeroExt,
+        numeroInt,
+        activo,
+        creado_at,
+        almacen_id
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), ?)";
 
     $stmt = $this->db->prepare($sql);
 
+    if (!$stmt) {
+        return [
+            "success" => false,
+            "message" => "Error en prepare: " . $this->db->error
+        ];
+    }
+
+    // 🔹 Tipos correctos
     $stmt->bind_param(
-        "ssssssi",
-        $datos['nombre_comercial'],
-        $datos['razon_social'],
-        $datos['rfc'],
-        $datos['correo'],
-        $datos['telefono'],
-        $datos['direccion'],
-        $datos['almacen_id']
+        "ssssiiisssssi",
+        $datos['nombre_comercial'], // s
+        $datos['razon_social'],     // s
+        $datos['rfc'],              // s
+        $datos['correo'],           // s
+        $telefono,                  // i
+        $telefono2,                 // i
+        $extencion,                 // i
+        $datos['direccion'],        // s
+        $datos['colonia'],          // s
+        $datos['ciudad'],           // s
+        $datos['numeroExt'],        // s
+        $datos['numeroInt'],        // s
+        $datos['almacen_id']        // i
     );
 
-    return $stmt->execute();
+    // 🔹 Ejecutar
+    if ($stmt->execute()) {
+        return [
+            "success" => true,
+            "id" => $stmt->insert_id
+        ];
+    } else {
+        return [
+            "success" => false,
+            "message" => "Error al insertar: " . $stmt->error
+        ];
+    }
 }
 public function actualizar($id, $datos) {
 
@@ -211,7 +285,13 @@ public function actualizar($id, $datos) {
                 rfc = ?, 
                 correo = ?, 
                 telefono = ?, 
+                telefono2 = ?,
+                extencion = ?,
                 direccion = ?, 
+                colonia = ?,
+                ciudad = ?,
+                numeroExt = ?,
+                numeroInt = ?,
                 almacen_id = ?,
                 activo = ?
             WHERE id = ?";
@@ -219,15 +299,21 @@ public function actualizar($id, $datos) {
     $stmt = $this->db->prepare($sql);
 
     $stmt->bind_param(
-        "ssssssiii",
+        "ssssssssssssiii",
         $datos['nombre_comercial'],
         $datos['razon_social'],
         $datos['rfc'],
         $datos['correo'],
         $datos['telefono'],
+        $datos['telefono2'],
+        $datos['extencion'],
         $datos['direccion'],
+        $datos['colonia'],
+        $datos['ciudad'],
+        $datos['numeroExt'],
+        $datos['numeroInt'],
         $datos['almacen_id'],
-        $datos['activo'],   // 🔥 nuevo
+        $datos['activo'],
         $id
     );
 

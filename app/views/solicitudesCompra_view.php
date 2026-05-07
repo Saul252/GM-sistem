@@ -275,133 +275,331 @@ error_reporting(E_ALL);
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
-            <form id="formConvertirCompra" enctype="multipart/form-data">
-                <input type="hidden" name="solicitud_id" id="uni-solicitud-id">
+           <form id="formConvertirCompra" enctype="multipart/form-data">
 
-                <div class="modal-body bg-light px-4 py-4">
+    <input type="hidden" name="solicitud_id" id="uni-solicitud-id">
 
-                    <!-- CARD PROVEEDOR / FINANZAS -->
-                    <div class="bg-white rounded-4 shadow-sm p-4 mb-4">
+    <div class="modal-body bg-light px-4 py-4">
 
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="fw-semibold text-muted small">Información del proveedor</span>
-                            <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill">
-                                Compra en proceso
-                            </span>
-                        </div>
+        <!-- ====================================== -->
+        <!-- CARD PRINCIPAL -->
+        <!-- ====================================== -->
 
-                        <div class="row g-3 align-items-end">
+        <div class="bg-white rounded-4 shadow-sm p-4 mb-4 border">
 
-                            <!-- PROVEEDOR -->
-                            <div class="col-md-3">
-                                <label class="form-label small text-muted">Proveedor</label>
-                                <input type="text" id="uni-proveedor"
-                                    class="form-control bg-light border-0 fw-bold rounded-3" readonly>
+            <!-- HEADER -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
 
-                                <input type="hidden" name="proveedor" id="uni-proveedor-nombre">
+                <div>
+                    <h5 class="fw-bold mb-1 text-dark">
+                        <i class="bi bi-cart-check me-2 text-success"></i>
+                        Información de Compra
+                    </h5>
 
-                                <!-- DEUDA -->
-                                <div class="mt-2 p-2 rounded-3 bg-danger-subtle border border-danger-subtle">
-                                    <small class="text-danger fw-semibold d-block">Deuda actual</small>
-                                    <input type="text"
-                                        name="deudaProveedor"
-                                        id="uni-proveedor-deuda"
-                                        class="form-control border-0 bg-transparent text-danger fw-bold p-0"
-                                        readonly>
-                                </div>
+                    <small class="text-muted">
+                        Datos generales de la entrada
+                    </small>
+                </div>
+
+                <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-semibold">
+                    Compra en proceso
+                </span>
+
+            </div>
+
+            <!-- ====================================== -->
+            <!-- FILA 1 -->
+            <!-- ====================================== -->
+
+            <div class="row g-3">
+
+                <!-- ALMACÉN -->
+                <div class="col-md-3">
+
+                    <label class="form-label small fw-bold text-muted text-uppercase">
+                        Almacén destino
+                    </label>
+
+                    <?php if (isset($es_admin) && $es_admin): ?>
+
+                    <select 
+                        id="almacen_id2"
+                        name="almacen_id2"
+                        class="form-select rounded-3 shadow-sm"
+                        required
+                    >
+                        <option value="">-- Seleccionar --</option>
+
+                        <?php foreach ($almacenes as $alm): ?>
+
+                        <option value="<?= $alm['id'] ?>">
+                            <?= htmlspecialchars($alm['nombre']) ?>
+                        </option>
+
+                        <?php endforeach; ?>
+
+                    </select>
+
+                    <?php else: ?>
+
+                    <input 
+                        type="text"
+                        class="form-control rounded-3 shadow-sm bg-light fw-bold"
+                        value="<?= htmlspecialchars($almacenes[0]['nombre'] ?? 'Almacén Asignado') ?>"
+                        readonly
+                    >
+
+                    <input 
+                        type="hidden"
+                        id="almacen_id2"
+                        name="almacen_id2"
+                        value="<?= $almacen_usuario ?? ($almacenes[0]['id'] ?? '') ?>"
+                    >
+
+                    <?php endif; ?>
+
+                </div>
+
+                <!-- PROVEEDOR -->
+                <div class="col-md-3">
+
+                    <label class="form-label small fw-bold text-muted text-uppercase">
+                        Proveedor
+                    </label>
+
+                    <input 
+                        type="text"
+                        id="uni-proveedor"
+                        class="form-control rounded-3 shadow-sm bg-light fw-bold"
+                        readonly
+                    >
+
+                    <input 
+                        type="hidden"
+                        name="proveedor"
+                        id="uni-proveedor-nombre"
+                    >
+
+                </div>
+
+                <!-- FOLIO -->
+                <div class="col-md-2">
+
+                    <label class="form-label small fw-bold text-muted text-uppercase">
+                        Folio factura
+                    </label>
+
+                    <input 
+                        type="text"
+                        name="folio"
+                        class="form-control rounded-3 shadow-sm"
+                        placeholder="FAC-000"
+                        required
+                    >
+
+                </div>
+
+                <!-- MÉTODO -->
+                <div class="col-md-2">
+
+                    <label class="form-label small fw-bold text-muted text-uppercase">
+                        Método pago
+                    </label>
+
+                    <select 
+                        name="metodo_pago"
+                        id="metodo_pago"
+                        class="form-select rounded-3 shadow-sm"
+                        required
+                    >
+                        <option value="">Seleccione...</option>
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="Transferencia">Transferencia</option>
+                        <option value="Tarjeta">Tarjeta</option>
+                    </select>
+
+                </div>
+
+                <!-- EVIDENCIA -->
+                <div class="col-md-2">
+
+                    <label class="form-label small fw-bold text-muted text-uppercase">
+                        Evidencia
+                    </label>
+
+                    <input 
+                        type="file"
+                        name="evidencia_compra"
+                        class="form-control rounded-3 shadow-sm"
+                        accept="image/*,.pdf"
+                    >
+
+                </div>
+
+            </div>
+
+            <!-- ====================================== -->
+            <!-- FILA 2 -->
+            <!-- ====================================== -->
+
+            <div class="row g-3 mt-2 align-items-stretch">
+
+                <!-- DEUDA -->
+                <div class="col-md-4">
+
+                    <div class="bg-danger-subtle border border-danger-subtle rounded-4 p-3 h-100">
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <div>
+
+                                <small class="text-danger fw-semibold d-block mb-1">
+                                    Deuda actual proveedor
+                                </small>
+
+                                <input 
+                                    type="text"
+                                    name="deudaProveedor"
+                                    id="uni-proveedor-deuda"
+                                    class="form-control border-0 bg-transparent text-danger fw-bold fs-4 p-0"
+                                    readonly
+                                >
+
                             </div>
 
-                            <!-- FOLIO -->
-                            <div class="col-md-2">
-                                <label class="form-label small text-muted">Folio factura</label>
-                                <input type="text" name="folio"
-                                    class="form-control rounded-3 shadow-sm"
-                                    placeholder="FAC-000" required>
-                            </div>
+                            <i class="bi bi-exclamation-triangle-fill text-danger fs-2"></i>
 
-                            <!-- EVIDENCIA -->
-                            <div class="col-md-3">
-                                <label class="form-label small text-muted">Evidencia</label>
-                                <input type="file"
-                                    name="evidencia_compra"
-                                    class="form-control rounded-3 shadow-sm"
-                                    accept="image/*,.pdf">
-                            </div>
-
-                            <!-- PAGAR DEUDA -->
-                            <div class="col-md-2">
-                                <label class="form-label small text-primary fw-semibold">
-    <i class="bi bi-cash-coin"></i> Abono 
-    <span class="label-abono-info text-muted"></span>
-</label>
-                                <input type="number"
-                                    id="input_pagar_deuda"
-                                    name="saldo_a_pagar"
-                                    class="form-control border-primary shadow-sm rounded-3"
-                                    value="0" min="0" step="0.1">
-                            </div>
-
-                            <!-- TOTAL -->
-                            <div class="col-md-2 text-end">
-                                <label class="form-label small text-muted">Total compra</label>
-                                <div class="p-2 rounded-3 bg-success-subtle">
-                                    <span class="h4 fw-bold text-success mb-0" id="uni-gran-total">
-                                        $ 0.00
-                                    </span>
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <!-- MÉTODO PAGO -->
-                        <div class="mt-3">
-                            <label class="form-label small text-muted">Método de pago</label>
-                            <select name="metodo_pago" id="metodo_pago"
-                                class="form-select rounded-3 shadow-sm">
-                                <option value="">Seleccione...</option>
-                                <option value="Efectivo">Efectivo</option>
-                                <option value="Transferencia">Transferencia</option>
-                                <option value="Tarjeta">Tarjeta</option>
-                            </select>
                         </div>
 
                     </div>
 
-                    <!-- TABLA -->
-                    <div class="bg-white rounded-4 shadow-sm p-2">
-                        <table class="table align-middle mb-0" id="tablaConversion">
-                            <thead class="table-light">
-                                <tr class="small text-muted">
-                                    <th>Producto</th>
-                                    <th>Mayoreo</th>
-                                    <th>Sueltas</th>
-                                    <th>Faltantes</th>
-                                    <th>Excedentes</th>
-                                    <th>Costo</th>
-                                    <th>Almacén</th>
-                                    <th class="text-end">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                </div>
+
+                <!-- ABONO -->
+                <div class="col-md-3">
+
+                    <div class="bg-primary-subtle border border-primary-subtle rounded-4 p-3 h-100">
+
+                        <label class="form-label small text-primary fw-bold mb-2">
+                            <i class="bi bi-cash-coin me-1"></i>
+                            Abono a deuda
+                        </label>
+
+                        <input 
+                            type="number"
+                            id="input_pagar_deuda"
+                            name="saldo_a_pagar"
+                            class="form-control border-primary shadow-sm rounded-3"
+                            value="0"
+                            min="0"
+                            step="0.1"
+                        >
+
+                        <small class="label-abono-info text-muted mt-2 d-block"></small>
+
                     </div>
 
                 </div>
 
-                <!-- FOOTER -->
-                <div class="modal-footer bg-light border-0 px-4 pb-4">
-                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
-                        data-bs-dismiss="modal">
-                        Cancelar
-                    </button>
+                <!-- TOTAL -->
+                <div class="col-md-5">
 
-                    <button type="submit"
-                        class="btn btn-success rounded-pill px-5 shadow-sm fw-semibold">
-                        <i class="bi bi-check2-circle me-2"></i> Confirmar compra
-                    </button>
+                    <div class="bg-success-subtle border border-success-subtle rounded-4 p-3 h-100 text-end">
+
+                        <small class="text-success fw-semibold text-uppercase d-block mb-2">
+                            Total compra
+                        </small>
+
+                        <span 
+                            class="fw-bold text-success"
+                            id="uni-gran-total"
+                            style="font-size:2rem;"
+                        >
+                            $ 0.00
+                        </span>
+
+                    </div>
+
                 </div>
 
-            </form>
+            </div>
+
+        </div>
+
+        <!-- ====================================== -->
+        <!-- TABLA -->
+        <!-- ====================================== -->
+
+        <div class="bg-white rounded-4 shadow-sm border overflow-hidden">
+
+            <div class="p-3 border-bottom bg-light">
+
+                <h6 class="fw-bold mb-1">
+                    <i class="bi bi-box-seam me-2 text-success"></i>
+                    Productos
+                </h6>
+
+                <small class="text-muted">
+                    Conversión de unidades y costos
+                </small>
+
+            </div>
+
+            <div class="table-responsive">
+
+                <table class="table align-middle mb-0" id="tablaConversion">
+
+                    <thead class="table-light">
+
+                        <tr class="small text-muted">
+
+                            <th class="ps-4">Producto</th>
+                            <th>Mayoreo</th>
+                            <th>Sueltas</th>
+                            <th>Faltantes</th>
+                            <th>Excedentes</th>
+                            <th>Costo</th>
+                            <th class="text-end pe-4">Total</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody></tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ====================================== -->
+    <!-- FOOTER -->
+    <!-- ====================================== -->
+
+    <div class="modal-footer bg-light border-0 px-4 pb-4">
+
+        <button 
+            type="button"
+            class="btn btn-outline-secondary rounded-pill px-4"
+            data-bs-dismiss="modal"
+        >
+            Cancelar
+        </button>
+
+        <button 
+            type="submit"
+            class="btn btn-success rounded-pill px-5 shadow-sm fw-semibold"
+        >
+            <i class="bi bi-check2-circle me-2"></i>
+            Confirmar compra
+        </button>
+
+    </div>
+
+</form>
         </div>
     </div>
 </div>
@@ -543,6 +741,28 @@ error_reporting(E_ALL);
             theme: 'bootstrap-5',
             dropdownParent: $('#modalSolicitud')
         });
+function calcularTotal(input) {
+
+    const fila = input.closest('tr');
+
+    const cantidad = parseFloat(
+        fila.querySelector('.cantidad').value
+    ) || 0;
+
+    const precioUnitario = parseFloat(
+        fila.querySelector('.precio-unitario').value
+    ) || 0;
+
+    const factor = parseFloat(
+        fila.querySelector('.unidad-select').value
+    ) || 1;
+
+    // 🔥 TOTAL
+    const total = cantidad * precioUnitario * factor;
+
+    fila.querySelector('.precio-total').value =
+        total.toFixed(2);
+}
 
         $('#buscadorProductos').on('select2:select', function(e) {
             const d = e.params.data.element.dataset;
@@ -553,18 +773,91 @@ error_reporting(E_ALL);
             }
             $('#emptyState').addClass('d-none');
             $('#tablaDetalle tbody').append(`
-                <tr id="fila-${id}">
-                    <td class="ps-4"><b>${d.nombre}</b><br><small class="text-muted">${d.sku}</small></td>
-                    <td><input type="number" name="items[${id}][cant]" class="form-control" step="0.01" value="1" required></td>
-                    <td><select name="items[${id}][unidad]" class="form-select">
-                        <option value="1">Unidad (${d.um})</option>
-                        <option value="${d.factor}">Presentación (${d.ur})</option>
-                    </select></td>
-                     <td><input type="number" name="items[${id}][precio]" class="form-control" step="0.01" placeholder="costo" required></td>
-                   
-                    <td><button type="button" class="btn btn-link text-danger" onclick="quitarFila(${id})"><i class="bi bi-trash"></i></button></td>
-                </tr>`);
-            $(this).val(null).trigger('change');
+
+        <tr id="fila-${id}">
+
+            <!-- PRODUCTO -->
+            <td class="ps-4">
+                <b>${d.nombre}</b><br>
+                <small class="text-muted">${d.sku}</small>
+            </td>
+
+            <!-- CANTIDAD -->
+            <td>
+                <input 
+                    type="number"
+                    name="items[${id}][cant]"
+                    class="form-control cantidad"
+                    step="0.01"
+                    value="1"
+                    min="0.01"
+                    required
+                    oninput="calcularTotal(this)"
+                >
+            </td>
+
+            <!-- UNIDAD -->
+            <td>
+                <select 
+                    name="items[${id}][unidad]" 
+                    class="form-select unidad-select"
+                    onchange="calcularTotal(this)"
+                >
+                    <option value="1">
+                        Unidad (${d.um})
+                    </option>
+
+                    <option value="${d.factor}">
+                        Presentación (${d.ur})
+                    </option>
+                </select>
+            </td>
+
+            <!-- COSTO UNITARIO -->
+            <td>
+                <input 
+                    type="number"
+                    name="items[${id}][precioUnitario]"
+                    class="form-control precio-unitario"
+                    step="0.01"
+                    min="0"
+                    placeholder="Costo Unitario"
+                    required
+                    oninput="calcularTotal(this)"
+                >
+            </td>
+
+            <!-- COSTO TOTAL -->
+         <td style="min-width:160px;">
+    <input 
+        type="number"
+        name="items[${id}][precio]"
+        class="form-control precio-total fw-bold text-success bg-light"
+        step="0.01"
+        placeholder="Costo"
+        readonly
+        style="
+            font-size:1.1rem;
+            height:45px;
+            min-width:140px;
+        "
+    >
+</td>
+
+            <!-- ELIMINAR -->
+            <td>
+                <button 
+                    type="button"
+                    class="btn btn-link text-danger"
+                    onclick="quitarFila(${id})"
+                >
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+
+        </tr>
+    `);
+ $(this).val(null).trigger('change');
         });
 
         $('#formSolicitud').on('submit', async function(e) {
@@ -715,10 +1008,32 @@ async function gestionarSolicitud(id) {
         $('#input_pagar_deuda').val(0);
         $('#input_pagar_deuda').attr('max', deuda);
         $('.label-abono-info').text(`Máximo: ${deuda}`);
+        
 
+
+// 🔥 DESACTIVAR SI NO HAY DEUDA
+if (deuda <= 0) {
+
+    $('#input_pagar_deuda')
+        .prop('disabled', true)
+        .addClass('bg-light');
+
+} else {
+
+    $('#input_pagar_deuda')
+        .prop('disabled', false)
+        .removeClass('bg-light');
+}
+const almacenInput = document.getElementById('almacen_id2');
+
+const almacen_id2 = almacenInput ? almacenInput.value : 0;
+
+console.log('ALMACEN:', almacen_id2);
         let html = '';
 
         items.forEach((i, index) => {
+            
+             
             const factor = parseFloat(i.factor_conversion) || 1;
             const uBase = i.unidad_medida || 'pzas';
             const uRep = i.unidad_reporte || 'Mayoreo';
@@ -789,13 +1104,14 @@ async function gestionarSolicitud(id) {
                     </div>
                 </td>
 
-                <td>
-                    <label class="small text-muted fw-bold">Almacén Destino</label>
-                    <select class="form-select form-select-sm bg-light i-almacen-id">
-                        <option value="${i.almacen_origen_id}" selected>
-                            📍 ${i.almacen_nombre}
-                        </option>
-                    </select>
+               
+    
+    <input 
+        type="hidden"
+        value="${almacen_id2}"
+        class="form-control i-almacen-id"
+    >
+</td>       
                 </td>
 
                 <td class="text-end bg-light-subtle">
@@ -877,113 +1193,251 @@ function actualizarGranTotal() {
     <script>
    $(document).ready(function() {
     // Usamos .off() para evitar registros duplicados
-    $('#formConvertirCompra').off('submit').on('submit', function(e) {
-        e.preventDefault();
+  $('#formConvertirCompra').off('submit').on('submit', function(e) {
 
-        const detalle = [];
-        const fila = $('.fila-item').first();
+    e.preventDefault();
 
-        if (fila.length > 0) {
-            const index = fila.data('index');
-            const almId = fila.find('.i-almacen-id').val();
-            const cantTotal = fila.find('.h-total-piezas').val();
-            const costoTotal = parseFloat(fila.find('.i-costo-total').val()) || 0;
+    const detalle = [];
 
-            const excedente = parseFloat(fila.find('.i-excedente').val()) || 0;
-            const faltante = parseFloat(fila.find('.i-faltante').val()) || 0;
+    // 🔥 RECORRER TODAS LAS FILAS
+    $('.fila-item').each(function() {
 
-            // Captura el producto_id buscando específicamente en la fila actual
-            const productoId = fila.find(`input[name="items[${index}][producto_id]"]`).val();
+        const fila = $(this);
+        const index = fila.data('index');
 
-            detalle.push({
-                producto_id: productoId,
-                input_mayoreo: fila.find('.i-mayoreo').val() || 0,
-                input_sueltas: fila.find('.i-sueltas').val() || 0,
+        const almId = $('#almacen_id2').val();
+        const cantTotal = parseFloat(
+            fila.find('.h-total-piezas').val()
+        ) || 0;
 
-                // ✅ CORRECTO
-                cantidad_excedente: excedente,
-                cantidad_faltante: faltante,
+        const costoTotal = parseFloat(
+            fila.find('.i-costo-total').val()
+        ) || 0;
 
-                total_item: costoTotal,
-                precio_lote: fila.find('.h-precio-lote').val(),
-                hidden_factor: fila.find('.h-factor').val() || 1,
+        const excedente = parseFloat(
+            fila.find('.i-excedente').val()
+        ) || 0;
 
-                almacenes: {
-                    [almId]: {
-                        activo: 'on',
-                        cantidad: cantTotal
-                    }
-                }
-            });
-        }
+        const faltante = parseFloat(
+            fila.find('.i-faltante').val()
+        ) || 0;
 
-        // Validación preventiva
-        if (detalle.length === 0 || detalle[0].total_item <= 0) {
-            Swal.fire('Atención', 'El costo del producto debe ser mayor a 0 para generar el lote.',
-                'warning');
+        const productoId = fila.find(
+            `input[name="items[${index}][producto_id]"]`
+        ).val();
+
+        // 🔥 VALIDAR PRODUCTO
+        if (!productoId) {
+            console.warn('Producto inválido en fila:', index);
             return;
         }
 
-        // Preparamos el FormData con todos los campos necesarios para el controlador
-        const formData = new FormData(this);
-        formData.append('action', 'guardarCompraCompleta');
-        formData.append('items', JSON.stringify(detalle));
-        formData.append('solicitud_id', $('#uni-solicitud-id').val());
-        formData.append('almacen_id', $('.i-almacen-id').first().val());
-        formData.append('proveedor', $('#uni-proveedor').val());
+        detalle.push({
+
+            producto_id: productoId,
+
+            input_mayoreo: parseFloat(
+                fila.find('.i-mayoreo').val()
+            ) || 0,
+
+            input_sueltas: parseFloat(
+                fila.find('.i-sueltas').val()
+            ) || 0,
+
+            cantidad_excedente: excedente,
+
+            cantidad_faltante: faltante,
+
+            total_item: costoTotal,
+
+            precio_lote: parseFloat(
+                fila.find('.h-precio-lote').val()
+            ) || 0,
+
+            hidden_factor: parseFloat(
+                fila.find('.h-factor').val()
+            ) || 1,
+
+            almacenes: {
+                [almId]: {
+                    activo: 'on',
+                    cantidad: cantTotal
+                }
+            }
+
+        });
+
+    });
+
+    console.log('DETALLE A ENVIAR:', detalle);
+
+    // 🔥 VALIDACIÓN GENERAL
+    if (detalle.length === 0) {
+
+        Swal.fire(
+            'Atención',
+            'No hay productos para guardar.',
+            'warning'
+        );
+
+        return;
+    }
+
+    // 🔥 VALIDAR COSTOS
+    const costoInvalido = detalle.some(item =>
+        parseFloat(item.total_item) <= 0
+    );
+
+    if (costoInvalido) {
+
+        Swal.fire(
+            'Atención',
+            'Todos los productos deben tener un costo mayor a 0.',
+            'warning'
+        );
+
+        return;
+    }
+
+    // 🔥 FORM DATA
+    const formData = new FormData(this);
+
+    formData.append(
+        'action',
+        'guardarCompraCompleta'
+    );
+
+    // 🔥 ENVIAR JSON COMPLETO
+    formData.append(
+        'items',
+        JSON.stringify(detalle)
+    );
+
+    formData.append(
+        'solicitud_id',
+        $('#uni-solicitud-id').val()
+    );
+
+    formData.append(
+    'almacen_id',
+    $('#almacen_id2').val()
+);
+
+    formData.append(
+        'proveedor',
+        $('#uni-proveedor').val()
+    );
+
+    Swal.fire({
+
+        title: '¿Confirmar Ingreso?',
+
+        text: 'Se registrará la entrada en inventario y se cerrará la solicitud.',
+
+        icon: 'question',
+
+        showCancelButton: true,
+
+        confirmButtonColor: '#198754',
+
+        confirmButtonText: 'Sí, guardar',
+
+        cancelButtonText: 'Cancelar'
+
+    }).then((result) => {
+
+        if (!result.isConfirmed) return;
 
         Swal.fire({
-            title: '¿Confirmar Ingreso?',
-            text: "Se registrará la entrada en inventario y se cerrará la solicitud.",
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#198754',
-            confirmButtonText: 'Sí, guardar',
-            cancelButtonText: 'Cancelar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({
-                    title: 'Procesando...',
-                    html: 'Guardando datos y generando lotes',
-                    allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
 
-                $.ajax({
-                    url: URL_CONTROLADOR,
-                    type: 'POST',
-                    data: formData,
-                    processData: false,
-                    contentType: false,
-                    dataType: 'json',
-                    success: function(res) {
-                        if (res.success) {
-                            Swal.fire('¡Éxito!', res.message, 'success').then(() => {
-                                location.reload();
-                            });
-                        } else {
-                            Swal.fire('Error de negocio', res.message || 'Error desconocido', 'error');
-                        }
-                    },
-                    error: function(jqXHR) {
-                        console.error("Respuesta del servidor:", jqXHR.responseText);
+            title: 'Procesando...',
 
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error del Servidor',
-                            html: `<div style="text-align:left; font-size:11px; background:#eee; padding:10px; max-height:200px; overflow:auto;">
-                                ${jqXHR.responseText || 'Error desconocido (posible 500)'}
-                               </div>`,
-                            footer: 'Revisa la pestaña Network en F12 para más detalles.'
-                        });
-                    }
-                });
+            html: 'Guardando datos y generando lotes',
+
+            allowOutsideClick: false,
+
+            didOpen: () => {
+                Swal.showLoading();
             }
+
         });
+
+        $.ajax({
+
+            url: URL_CONTROLADOR,
+
+            type: 'POST',
+
+            data: formData,
+
+            processData: false,
+
+            contentType: false,
+
+            dataType: 'json',
+
+            success: function(res) {
+
+                console.log('RESPUESTA:', res);
+
+                if (res.success) {
+
+                    Swal.fire(
+                        '¡Éxito!',
+                        res.message,
+                        'success'
+                    ).then(() => {
+                        location.reload();
+                    });
+
+                } else {
+
+                    Swal.fire(
+                        'Error de negocio',
+                        res.message || 'Error desconocido',
+                        'error'
+                    );
+
+                }
+            },
+
+            error: function(jqXHR, textStatus, errorThrown) {
+
+                console.error('AJAX ERROR:', textStatus);
+                console.error('ERROR THROWN:', errorThrown);
+                console.error('RESPUESTA:', jqXHR.responseText);
+
+                Swal.fire({
+
+                    icon: 'error',
+
+                    title: 'Error del Servidor',
+
+                    html: `
+                    <div style="
+                        text-align:left;
+                        font-size:11px;
+                        background:#eee;
+                        padding:10px;
+                        max-height:250px;
+                        overflow:auto;
+                        border-radius:6px;
+                    ">
+                        ${jqXHR.responseText || 'Error desconocido (posible 500)'}
+                    </div>`,
+
+                    footer: 'Revisa la pestaña Network en F12 para más detalles.'
+
+                });
+
+            }
+
+        });
+
     });
-}); </script>
+
+});
+  }); </script>
     <script>
     /**
      * Llena el modal de impresión con la data de la solicitud

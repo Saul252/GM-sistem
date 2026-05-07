@@ -22,23 +22,44 @@
                         <div class="row g-3 mb-4 p-3 rounded-4 bg-light shadow-sm align-items-end">
 
                             <div class="col-md-3">
-                                <label class="form-label small fw-bold text-muted text-uppercase">Almacén de
-                                    Destino</label>
-                                <?php if (isset($es_admin) && $es_admin): ?>
-                                <select name="almacen_id" class="form-select select2-modal" required>
-                                    <option value="">-- Seleccionar --</option>
-                                    <?php foreach ($almacenes as $alm): ?>
-                                    <option value="<?= $alm['id'] ?>"><?= htmlspecialchars($alm['nombre']) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <?php else: ?>
-                                <input type="text" class="form-control border-0 bg-white fw-bold"
-                                    value="<?= htmlspecialchars($almacenes[0]['nombre'] ?? 'Almacén Asignado') ?>"
-                                    readonly>
-                                <input type="hidden" name="almacen_id"
-                                    value="<?= $almacen_usuario ?? ($almacenes[0]['id'] ?? '') ?>">
-                                <?php endif; ?>
-                            </div>
+                                    <label class="form-label small fw-bold">
+                                        <i class="bi bi-box-seam"></i> Almacén de Cargo
+                                    </label>
+
+                                    <?php $es_admin = ($_SESSION['rol_id'] == 1); ?>
+
+                                    <div class="input-group shadow-sm">
+                                        <select id="almacen_id_cabecera_visual" name="almacen_id" id="almacen_id"
+                                            class="form-select <?= $es_admin ? '' : 'bg-light' ?>"
+                                            <?= !$es_admin ? 'disabled' : 'name="almacen_id_cabecera"' ?> required>
+
+                                            <?php if ($es_admin): ?>
+                                            <option value="">Seleccionar ubicación...</option>
+                                            <?php endif; ?>
+
+                                            <?php foreach($almacenes as $a): ?>
+                                            <option value="<?= $a['id'] ?>"
+                                                <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
+                                                <?= $a['nombre'] ?>
+                                            </option>
+                                            <?php endforeach; ?>
+                                        </select>
+
+                                        <?php if (!$es_admin): ?>
+                                        <span class="input-group-text bg-light text-muted">
+                                            <i class="bi bi-lock-fill"></i>
+                                        </span>
+                                        <?php endif; ?>
+                                    </div>
+
+                                    <?php if (!$es_admin): ?>
+                                    <input type="hidden" name="almacen_id_cabecera"
+                                        value="<?= $_SESSION['almacen_id'] ?>">
+                                    <small class="text-muted">
+                                        Privilegios de sede actual
+                                    </small>
+                                    <?php endif; ?>
+                                </div>
 
                             <div class="col-md-3">
                                 <label class="form-label small fw-bold text-muted text-uppercase">Proveedor
@@ -82,7 +103,8 @@
                                         <th class="ps-4" style="width: 45%;">Producto</th>
                                         <th style="width: 20%;">Cantidad</th>
                                         <th style="width: 25%;">Presentación / Unidad</th>
-                                         <th style="width: 25%;">Precio</th>
+                                         <th style="width: 25%;">PrecioUnitario</th>
+                                         <th style="width: 50%;">Precio</th>
                                         <th style="width: 10%;" class="text-end pe-4">Acción</th>
                                     </tr>
                                 </thead>
@@ -114,109 +136,310 @@
         </div>
     </div>
 <script>
-     const URL_CONTROLADOR = '../controllers/solicitudesCompraController.php';
 
-       $('.select2-modal').select2({
-            theme: 'bootstrap-5',
-            dropdownParent: $('#modalSolicitud')
-        });
+const URL_CONTROLADOR = '../controllers/solicitudesCompraController.php';
 
-        $('#buscadorProductos').on('select2:select', function(e) {
-            const d = e.params.data.element.dataset;
-            const id = $(this).val();
-            if ($(`#fila-${id}`).length) {
-                Swal.fire('Aviso', 'El producto ya está en la lista', 'info');
-                return;
-            }
-            $('#emptyState').addClass('d-none');
-            $('#tablaDetalle tbody').append(`
-                <tr id="fila-${id}">
-                    <td class="ps-4"><b>${d.nombre}</b><br><small class="text-muted">${d.sku}</small></td>
-                    <td><input type="number" name="items[${id}][cant]" class="form-control" step="0.01" value="1" required></td>
-                    <td><select name="items[${id}][unidad]" class="form-select">
-                        <option value="1">Unidad (${d.um})</option>
-                        <option value="${d.factor}">Presentación (${d.ur})</option>
-                    </select></td>
-                     <td><input type="number" name="items[${id}][precio]" class="form-control" step="0.01" placeholder="costo" required></td>
-                   
-                    <td><button type="button" class="btn btn-link text-danger" onclick="quitarFila(${id})"><i class="bi bi-trash"></i></button></td>
-                </tr>`);
-            $(this).val(null).trigger('change');
-        });
+// =====================================================
+// SELECT2
+// =====================================================
 
-        $('#formSolicitud').on('submit', async function(e) {
-            e.preventDefault();
-            if (!$('#tablaDetalle tbody tr').length) {
-                Swal.fire('Error', 'Agregue productos', 'warning');
-                return;
-            }
-            Swal.fire({
-                title: 'Guardando...',
-                allowOutsideClick: false,
-                didOpen: () => Swal.showLoading()
-            });
-            try {
-                const resp = await fetch(`${URL_CONTROLADOR}?action=guardar`, {
-                    method: 'POST',
-                    body: new FormData(this)
-                });
-                const res = await resp.json();
-                if (res.status === 'success') {
-                    await Swal.fire({
-                        icon: 'success',
-                        title: '¡Éxito!',
-                        text: res.message,
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                    location.reload();
-                } else {
-                    Swal.fire('Error', res.message, 'error');
-                }
-            } catch (e) {
-                Swal.fire('Error', 'Fallo de conexión', 'error');
-            }
-        });
+$('.select2-modal').select2({
+    theme: 'bootstrap-5',
+    dropdownParent: $('#modalSolicitud')
+});
 
-        // ENVÍO DEL FORMULARIO DE CONVERSIÓN
-        $('#formConvertirCompra').on('submit', async function(e) {
-            e.preventDefault();
-            Swal.fire({
-                title: 'Procesando ingreso...',
-                allowOutsideClick: false,
-                didOpen: () => Swal.showLoading()
-            });
-            try {
-                const resp = await fetch(`${URL_CONTROLADOR}?action=convertirACompra`, {
-                    method: 'POST',
-                    body: new FormData(this)
-                });
-                const res = await resp.json();
-                if (res.status === 'success') {
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Ingresado',
-                        text: res.message
-                    });
-                    location.reload();
-                } else {
-                    Swal.fire('Error', res.message, 'error');
-                }
-            } catch (e) {
-                Swal.fire('Error', 'Fallo de conexión', 'error');
-            }
-        });
-    
-    function quitarFila(id) {
-        $(`#fila-${id}`).remove();
-        if (!$('#tablaDetalle tbody tr').length) $('#emptyState').removeClass('d-none');
+// =====================================================
+// CALCULAR TOTAL
+// =====================================================
+
+function calcularTotal(input) {
+
+    const fila = input.closest('tr');
+
+    const cantidad = parseFloat(
+        fila.querySelector('.cantidad').value
+    ) || 0;
+
+    const precioUnitario = parseFloat(
+        fila.querySelector('.precio-unitario').value
+    ) || 0;
+
+    const factor = parseFloat(
+        fila.querySelector('.unidad-select').value
+    ) || 1;
+
+    // 🔥 TOTAL
+    const total = cantidad * precioUnitario * factor;
+
+    fila.querySelector('.precio-total').value =
+        total.toFixed(2);
+}
+
+// =====================================================
+// AGREGAR PRODUCTO
+// =====================================================
+
+$('#buscadorProductos').on('select2:select', function(e) {
+
+    const d = e.params.data.element.dataset;
+
+    const id = $(this).val();
+
+    // VALIDAR DUPLICADO
+    if ($(`#fila-${id}`).length) {
+
+        Swal.fire(
+            'Aviso',
+            'El producto ya está en la lista',
+            'info'
+        );
+
+        return;
     }
 
-    function nuevaSolicitud() {
-        $('#formSolicitud')[0].reset();
-        $('#tablaDetalle tbody').empty();
+    $('#emptyState').addClass('d-none');
+
+    // AGREGAR FILA
+    $('#tablaDetalle tbody').append(`
+
+        <tr id="fila-${id}">
+
+            <!-- PRODUCTO -->
+            <td class="ps-4">
+                <b>${d.nombre}</b><br>
+                <small class="text-muted">${d.sku}</small>
+            </td>
+
+            <!-- CANTIDAD -->
+            <td>
+                <input 
+                    type="number"
+                    name="items[${id}][cant]"
+                    class="form-control cantidad"
+                    step="0.01"
+                    value="1"
+                    min="0.01"
+                    required
+                    oninput="calcularTotal(this)"
+                >
+            </td>
+
+            <!-- UNIDAD -->
+            <td>
+                <select 
+                    name="items[${id}][unidad]" 
+                    class="form-select unidad-select"
+                    onchange="calcularTotal(this)"
+                >
+                    <option value="1">
+                        Unidad (${d.um})
+                    </option>
+
+                    <option value="${d.factor}">
+                        Presentación (${d.ur})
+                    </option>
+                </select>
+            </td>
+
+            <!-- COSTO UNITARIO -->
+            <td>
+                <input 
+                    type="number"
+                    name="items[${id}][precioUnitario]"
+                    class="form-control precio-unitario"
+                    step="0.01"
+                    min="0"
+                    placeholder="Costo Unitario"
+                    required
+                    oninput="calcularTotal(this)"
+                >
+            </td>
+
+            <!-- COSTO TOTAL -->
+         <td style="min-width:160px;">
+    <input 
+        type="number"
+        name="items[${id}][precio]"
+        class="form-control precio-total fw-bold text-success bg-light"
+        step="0.01"
+        placeholder="Costo"
+        readonly
+        style="
+            font-size:1.1rem;
+            height:45px;
+            min-width:140px;
+        "
+    >
+</td>
+
+            <!-- ELIMINAR -->
+            <td>
+                <button 
+                    type="button"
+                    class="btn btn-link text-danger"
+                    onclick="quitarFila(${id})"
+                >
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>
+
+        </tr>
+    `);
+
+    // LIMPIAR SELECT
+    $(this).val(null).trigger('change');
+});
+
+// =====================================================
+// GUARDAR SOLICITUD
+// =====================================================
+
+$('#formSolicitud').on('submit', async function(e) {
+
+    e.preventDefault();
+
+    if (!$('#tablaDetalle tbody tr').length) {
+
+        Swal.fire(
+            'Error',
+            'Agregue productos',
+            'warning'
+        );
+
+        return;
+    }
+
+    Swal.fire({
+        title: 'Guardando...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    try {
+
+        const resp = await fetch(
+            `${URL_CONTROLADOR}?action=guardar`,
+            {
+                method: 'POST',
+                body: new FormData(this)
+            }
+        );
+
+        const res = await resp.json();
+
+        if (res.status === 'success') {
+
+            await Swal.fire({
+                icon: 'success',
+                title: '¡Éxito!',
+                text: res.message,
+                timer: 1500,
+                showConfirmButton: false
+            });
+
+            location.reload();
+
+        } else {
+
+            Swal.fire(
+                'Error',
+                res.message,
+                'error'
+            );
+        }
+
+    } catch (e) {
+
+        Swal.fire(
+            'Error',
+            'Fallo de conexión',
+            'error'
+        );
+    }
+});
+
+// =====================================================
+// CONVERTIR A COMPRA
+// =====================================================
+
+$('#formConvertirCompra').on('submit', async function(e) {
+
+    e.preventDefault();
+
+    Swal.fire({
+        title: 'Procesando ingreso...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    try {
+
+        const resp = await fetch(
+            `${URL_CONTROLADOR}?action=convertirACompra`,
+            {
+                method: 'POST',
+                body: new FormData(this)
+            }
+        );
+
+        const res = await resp.json();
+
+        if (res.status === 'success') {
+
+            await Swal.fire({
+                icon: 'success',
+                title: 'Ingresado',
+                text: res.message
+            });
+
+            location.reload();
+
+        } else {
+
+            Swal.fire(
+                'Error',
+                res.message,
+                'error'
+            );
+        }
+
+    } catch (e) {
+
+        Swal.fire(
+            'Error',
+            'Fallo de conexión',
+            'error'
+        );
+    }
+});
+
+// =====================================================
+// ELIMINAR FILA
+// =====================================================
+
+function quitarFila(id) {
+
+    $(`#fila-${id}`).remove();
+
+    if (!$('#tablaDetalle tbody tr').length) {
+
         $('#emptyState').removeClass('d-none');
-        $('#modalSolicitud').modal('show');
     }
+}
+
+// =====================================================
+// NUEVA SOLICITUD
+// =====================================================
+
+function nuevaSolicitud() {
+
+    $('#formSolicitud')[0].reset();
+
+    $('#tablaDetalle tbody').empty();
+
+    $('#emptyState').removeClass('d-none');
+
+    $('#modalSolicitud').modal('show');
+}
 
 </script>
