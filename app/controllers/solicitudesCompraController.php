@@ -143,7 +143,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
         // Nota: Verifica que sea listarTodo() o listarTodos() según tu ProductosModel
         $productos   = $productosModel->listarTodo(); 
         $proveedores = $proveedorModel->listarTodos();
+          $listaProductos= $productosModel->listarTodo();
         $almacenes   = $almacenModel->getAlmacenes($almacen_usuario); 
+        $unidadesMedida= $almacenModel->getUnidadesMedida();
 
         $tituloPagina = "Solicitudes de Compra";
       

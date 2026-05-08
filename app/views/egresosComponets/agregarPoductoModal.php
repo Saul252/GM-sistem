@@ -137,25 +137,18 @@
                     <!-- 🔹 BLOQUE: PRECIOS -->
                     <div class="card border-0 shadow-sm rounded-4">
                         <div class="card-body">
-                            <h6 class="fw-bold mb-3 text-dark">
-                                <i class="bi bi-cash-coin me-2"></i>Precios de Venta
-                            </h6>
+                          
 
                             <div class="row g-3">
 
                                 <div class="col-md-4">
-                                    <label class="form-label small text-muted">Minorista</label>
-                                    <input type="number" name="precio_minorista" class="form-control shadow-sm">
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label class="form-label small text-muted">Mayorista</label>
-                                    <input type="number" name="precio_mayorista" class="form-control shadow-sm">
-                                </div>
-
-                                <div class="col-md-4">
-                                    <label class="form-label small text-muted">Distribuidor</label>
-                                    <input type="number" name="precio_distribuidor" class="form-control shadow-sm">
+                                  
+                                    <input type="hidden" value="0" name="precio_minorista" class="form-control shadow-sm">
+                              
+                                    
+                                    <input type="hidden" value="0" name="precio_mayorista" class="form-control shadow-sm">
+                               
+                                      <input type="hidden" value="0" name="precio_distribuidor" class="form-control shadow-sm">
                                 </div>
 
                             </div>
@@ -452,6 +445,14 @@ function iniciarModuloProducto() {
                             timer: 1500,
                             showConfirmButton: false
                         });
+                        if (typeof recargarProductos === 'function') {
+
+     recargarProductos();
+
+    // 🔥 si es async espera
+ 
+
+}
 
                         // 🔥 cerrar modal (Bootstrap 5)
                         const modal = bootstrap.Modal.getInstance(

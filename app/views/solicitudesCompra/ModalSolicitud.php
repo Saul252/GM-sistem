@@ -79,7 +79,8 @@
                                 <div class="input-group">
                                     <span class="input-group-text bg-white border-end-0"><i
                                             class="bi bi-search"></i></span>
-                                    <select id="buscadorProductos" class="form-select select2-modal border-start-0">
+                                    
+                    <select id="buscadorProductos" class="form-select select2-modal border-start-0">
                                         <option value="">Escribe para buscar...</option>
                                         <?php foreach($listaProductos as $pr): ?>
                                         <option value="<?= $pr['producto_id'] ?>"
@@ -92,6 +93,13 @@
                                         </option>
                                         <?php endforeach; ?>
                                     </select>
+                                    <button type="button" 
+            class="btn btn-primary d-flex align-items-center" 
+            onclick="abrirModalProducto()"
+            title="Agregar nuevo producto">
+            <i class="bi bi-plus-lg me-1"></i>
+            <span class="d-none d-xl-inline">Nuevo</span>
+        </button>
                                 </div>
                             </div>
                         </div>
@@ -135,6 +143,7 @@
             </div>
         </div>
     </div>
+    
 <script>
 
 const URL_CONTROLADOR = '../controllers/solicitudesCompraController.php';
@@ -178,7 +187,61 @@ function calcularTotal(input) {
 // =====================================================
 // AGREGAR PRODUCTO
 // =====================================================
+async function recargarProductos() {
 
+    try {
+
+        const resp = await fetch(
+            `/cfsistem/app/controllers/egresosController.php?action=obtenerProductosSelect`
+        );
+
+        const res = await resp.json();
+
+        if (!res.success) {
+            throw new Error(res.message);
+        }
+
+        const select = document.getElementById('buscadorProductos');
+
+        // 🔥 limpiar opciones
+        select.innerHTML = `
+            <option value="">
+                Escribe para buscar...
+            </option>
+        `;
+
+        // 🔥 volver a llenar
+        res.data.forEach(pr => {
+
+            const option = document.createElement('option');
+
+            option.value = pr.producto_id;
+
+            option.dataset.nombre = pr.nombre;
+            option.dataset.sku = pr.sku;
+            option.dataset.um = pr.unidad_medida;
+            option.dataset.ur = pr.unidad_reporte;
+            option.dataset.factor = pr.factor_conversion || 1;
+
+            option.textContent =
+                `[${pr.sku}] ${pr.nombre}`;
+
+            select.appendChild(option);
+
+        });
+
+    } catch (e) {
+
+        console.error(e);
+
+        Swal.fire(
+            'Error',
+            'No se pudo actualizar la lista de productos',
+            'error'
+        );
+    }
+    $('#buscadorProductos').trigger('change.select2');
+}
 $('#buscadorProductos').on('select2:select', function(e) {
 
     const d = e.params.data.element.dataset;
@@ -440,6 +503,7 @@ function nuevaSolicitud() {
     $('#emptyState').removeClass('d-none');
 
     $('#modalSolicitud').modal('show');
+    recargarProductos();
 }
 
 </script>

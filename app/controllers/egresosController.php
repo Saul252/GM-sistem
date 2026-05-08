@@ -672,6 +672,29 @@ if ($action === 'pagarDeudaCompra') {
     echo json_encode($result);
     exit;
 }
+if ($action === 'obtenerProductosSelect') {
+
+    header('Content-Type: application/json');
+
+    try {
+
+        $listaProductos= $productosModel->listarTodo();
+
+        echo json_encode([
+            'success' => true,
+            'data' => $listaProductos
+        ]);
+
+    } catch (Throwable $e) {
+
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+    }
+
+    exit;
+}
 if ($action === 'guardarCategoria') {
 
     // 🔥 LIMPIAR CUALQUIER SALIDA (evita romper JSON)
