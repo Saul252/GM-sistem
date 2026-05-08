@@ -85,11 +85,29 @@ public function obtenerDetalleCompleto($id) {
     
     // 2. Productos con FACTOR DE CONVERSIÓN (Esta estaba bien)
     $prods = [];
-    $sqlP = "SELECT dv.*, p.nombre as producto, p.sku, 
-                    p.unidad_medida, p.unidad_reporte, p.factor_conversion 
-             FROM detalle_venta dv 
-             JOIN productos p ON dv.producto_id = p.id 
-             WHERE dv.venta_id = $id";
+    $sqlP = "SELECT 
+    dv.*, 
+    p.nombre AS producto, 
+    p.sku,
+    COALESCE(i.stock,0) AS disponible,
+
+    p.unidad_medida,
+    p.unidad_reporte,
+    p.factor_conversion
+
+FROM detalle_venta dv
+
+INNER JOIN ventas v
+    ON v.id = dv.venta_id
+
+INNER JOIN productos p
+    ON p.id = dv.producto_id
+
+LEFT JOIN inventario i
+    ON i.producto_id = dv.producto_id
+    AND i.almacen_id = v.almacen_id
+
+WHERE dv.venta_id = $id";
     $resP = $this->db->query($sqlP);
     while($p = $resP->fetch_assoc()){ 
         $prods[] = $p; 

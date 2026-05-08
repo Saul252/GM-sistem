@@ -570,6 +570,7 @@ public function getDetalleParaDespacho($movimiento_id) {
 
     return $resultado;
 }
+
 public function cajaRapidaEntregarEnPatioCliente($datos) {
     try {
         $vehiculo_virtual_id = 999; 
@@ -806,6 +807,23 @@ public function getDatosPorVehiculo($vehiculo_id)
         "tripulantes" => $tripulantes
     ];
 }
+   public function obtener_almecen_id($id) {
+
+    $sql = "SELECT almacen_id 
+            FROM ventas
+            WHERE id = ?";
+
+    $stmt = $this->db->prepare($sql);
+
+    $stmt->bind_param("i", $id);
+
+    $stmt->execute();
+
+    return $stmt
+        ->get_result()
+        ->fetch_assoc();
+}
+
 public function procesarDespachoFisicoMasivo($idsMovimientos) {
     if (empty($idsMovimientos)) {
         return ['success' => false, 'message' => 'No se proporcionaron IDs para procesar.'];

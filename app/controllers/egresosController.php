@@ -427,13 +427,13 @@ if ($action === 'guardarProveedor') {
             'razon_social'     => trim($_POST['razon_social'] ?? ''),
             'rfc'              => trim($_POST['rfc'] ?? 'XAXX010101000'),
             'correo'           => trim($_POST['correo'] ?? ''),
-            'telefono'         => trim($_POST['telefono'] ?? ''),
-            'telefono2'        => trim($_POST['telefono2'] ?? ''),
-            'extencion'        => trim($_POST['extencion'] ?? ''),
+            'telefono'         => trim($_POST['telefono'] ?? '0'),
+            'telefono2'        => trim($_POST['telefono2'] ?? '0'),
+            'extencion'        => trim($_POST['extencion'] ?? '0'),
             'almacen_id'       => trim($_POST['almacen_id'] ?? ''),
             'direccion'        => trim($_POST['direccion'] ?? ''),
-            'numeroExt'        => trim($_POST['numeroext'] ?? ''),
-            'numeroInt'        => trim($_POST['numeroint'] ?? ''),
+            'numeroExt'        => trim($_POST['numeroext'] ?? 0),
+            'numeroInt'        => trim($_POST['numeroint'] ?? 0),
             'colonia'          => trim($_POST['colonia'] ?? ''),
             'ciudad'           => trim($_POST['ciudad'] ?? '')
         ];

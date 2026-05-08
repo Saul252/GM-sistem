@@ -374,24 +374,34 @@ function agregarFilaCompra() {
                     value="0" min="0" step="0.01"
                     oninput="recalcularTotales(${idUnico})"
                     placeholder="0.00">
+            </div> 
+            <div class="col-md-2">
+                <label class="form-label small text-success fw-semibold mb-1">
+                    <i class="bi bi-plus-circle-fill me-1"></i>Precio Unitario
+                </label>
+                <input type="number"
+                    name="items[${idUnico}][precioUnitario]"
+                    class="form-control form-control-sm border-success shadow-sm input-precioUnitario"
+                    value="0" min="0" step="0.01"
+                    oninput="recalcularTotales(${idUnico})"
+                    placeholder="0.00" required>
             </div>
 
          
 
             <div class="col-md-2">
-                <label class="form-label small fw-semibold text-muted mb-1">Costo total</label>
+               
+               <label class="form-label small fw-semibold text-muted mb-1">Costo total</label>
                 <div class="input-group input-group-sm shadow-sm">
                     <span class="input-group-text">$</span>
                     <input type="number"
                         name="items[${idUnico}][total_item]"
                         class="form-control input-costo-total"
                         value="0" step="0.01"
-                        oninput="calcularPrecioUnitarioLote(${idUnico})"
+                      
                         required>
                 </div>
-                <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">
-                    Costo lote: <span class="span-precio-lote fw-semibold">$0.00</span>
-                </small>
+                 
                 <input type="hidden" name="items[${idUnico}][precio_lote]" class="hidden-precio-lote" value="0">
             </div>
 
@@ -473,8 +483,9 @@ function recalcularTotales(id) {
     const factor = parseFloat(card.find('.hidden-factor').val()) || 0;
     const inputFaltante = card.find('.input-faltante');
     const inputExcedente = card.find('.input-excedente'); // <--- NUEVO
-
-    // 1. Cantidad según factura (Mayoreo * Factor + Sueltas)
+const inputPrecioUnitario = parseFloat(
+    card.find('.input-precioUnitario').val()
+) || 0;  // 1. Cantidad según factura (Mayoreo * Factor + Sueltas)
     const cantidadFacturada = (parseFloat(card.find('.input-mayoreo').val()) || 0) * factor +
         (parseFloat(card.find('.input-sueltas').val()) || 0);
 
@@ -486,19 +497,23 @@ function recalcularTotales(id) {
 
     // 4. Lo que realmente entró físicamente al almacén
     const totalReal = cantidadFacturada - faltante + excedente;
-
+   const precio_total =cantidadFacturada*inputPrecioUnitario;
+   console.log(precio_total);
     // Actualizar labels y campos ocultos
     card.find('.span-total-base').text(totalReal.toLocaleString());
     card.find('.hidden-total-piezas').val(totalReal);
     card.find('.hidden-faltante').val(faltante);
+     card.find('.hidden-precio-lote').val(inputPrecioUnitario.toFixed(4)); 
+      card.find('.input-costo-total').val(precio_total.toFixed(2));
 
     // Si tienes un input oculto para excedente, actualízalo aquí:
     // card.find('.hidden-excedente').val(excedente); 
 
-    calcularPrecioUnitarioLote(id);
+    //calcularPrecioUnitarioLote(id);
     validarReparto(id);
     actualizarGranTotal();
 }
+
 
 function validarReparto(id) {
     const card = $(`#card_item_${id}`);
@@ -592,45 +607,45 @@ function refrescarListaProductosCompra(nuevoIdSeleccionar = null) {
     });
 }
 
-function calcularPrecioUnitarioLote(id) {
+// function calcularPrecioUnitarioLote(id) {
 
-    const card = $(`#card_item_${id}`);
+//     const card = $(`#card_item_${id}`);
 
-    const costoTotalRenglon = parseFloat(card.find('.input-costo-total').val()) || 0;
+//     const costoTotalRenglon = parseFloat(card.find('.input-costo-total').val()) || 0;
 
-    const piezasReales = parseFloat(card.find('.input-cantidad-recibida').val()) || 0;
-    const excedente = parseFloat(card.find('.input-excedente').val()) || 0;
+//     const piezasReales = parseFloat(card.find('.input-cantidad-recibida').val()) || 0;
+//     const excedente = parseFloat(card.find('.input-excedente').val()) || 0;
 
-    // 🔥 calcular base correctamente
-    let piezasBase = piezasReales - excedente;
+//     // 🔥 calcular base correctamente
+//     let piezasBase = piezasReales - excedente;
 
-    // 🛑 evitar negativos o 0
-    if (piezasBase <= 0) {
-        piezasBase = 0;
-    }
+//     // 🛑 evitar negativos o 0
+//     if (piezasBase <= 0) {
+//         piezasBase = 0;
+//     }
 
-    let precioUnitario = 0;
+//     let precioUnitario = 0;
 
-    if (piezasBase > 0) {
-        precioUnitario = costoTotalRenglon / piezasBase;
-    }
+//     if (piezasBase > 0) {
+//         precioUnitario = costoTotalRenglon / piezasBase;
+//     }
 
-    // 🛡️ blindaje
-    if (!isFinite(precioUnitario)) {
-        precioUnitario = 0;
-    }
+//     // 🛡️ blindaje
+//     if (!isFinite(precioUnitario)) {
+//         precioUnitario = 0;
+//     }
 
-    card.find('.hidden-precio-lote').val(precioUnitario.toFixed(4));
+//     card.find('.hidden-precio-lote').val(precioUnitario.toFixed(4));
 
-    card.find('.span-precio-lote').text(
-        '$ ' + precioUnitario.toLocaleString(undefined, {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 4
-        })
-    );
+//     card.find('.span-precio-lote').text(
+//         '$ ' + precioUnitario.toLocaleString(undefined, {
+//             minimumFractionDigits: 2,
+//             maximumFractionDigits: 4
+//         })
+//     );
 
-    actualizarGranTotal();
-}
+//     actualizarGranTotal();
+// }
 /**
  * MANEJO DEL SUBMIT (BLINDADO)
  */

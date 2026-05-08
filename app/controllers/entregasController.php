@@ -86,7 +86,13 @@ break;;
                     "trabajadoresDisponibles" => $trabajadorM->listarTrabajadoresDisponiblesPorAlmacen($almacen_id),
                 ]);
                 break;
-
+  case 'obtener_id_almacen':
+                $id = intval($_GET['id'] ?? 0);
+                echo json_encode([
+                    "success"  => true,
+                    "almacen" => $modelo->obtener_almecen_id($id)
+                       ]);
+                break;
             case 'simular':
                 $id = intval($_GET['id'] ?? 0);
                 echo json_encode($modelo->simularDespachoLotes($id));

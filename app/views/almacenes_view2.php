@@ -176,7 +176,25 @@
     <?php require_once __DIR__ . '/almacenes/ModalTraspasos.php'; ?>
     <?php require_once __DIR__ . '/almacenes/ModalAgregarProducto.php'; ?>
     <?php require_once __DIR__ . '/almacenes/ModalEditarProducto.php'; ?>
+<script>
+document.addEventListener('DOMContentLoaded', async function () {
 
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.get('abrirTraspasos') === '1') {
+
+        await cargarTraspasos();
+
+        // limpiar URL
+        window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname
+        );
+    }
+
+});
+</script>
 </body>
 
 </html>

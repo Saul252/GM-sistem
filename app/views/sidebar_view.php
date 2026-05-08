@@ -74,8 +74,7 @@ date_default_timezone_set('America/Mexico_City');
                     <li>
                         <hr class="dropdown-divider m-0">
                     </li>
-                    <li><a class="dropdown-item text-center py-2 small text-primary fw-bold"
-                            href="/cfsistem/app/views/almacenes.php">Ver todos</a></li>
+                    <li></li>
                 </ul>
             </div>
 
@@ -255,10 +254,10 @@ document.addEventListener('DOMContentLoaded', () => {
                             return `
                             <div class="d-flex align-items-center justify-content-between p-3 border-bottom bg-white hover-notif">
                                 <div style="flex: 1; line-height: 1.4;">
-                                    <b class="text-primary d-block small text-uppercase">${item.producto}</b>
-                                    <span class="d-block text-muted" style="font-size: 0.75rem;">De: ${item.emisor}</span>
+                                    <b class="text-primary d-block small text-uppercase text-success">${item.producto}</b>
+                                    <b class="d-block text-muted text-success" style="font-size: 0.75rem;">De: ${item.emisor}</b>
                                     <div class="mt-1">
-                                        <span class="badge bg-light text-dark border fw-bold">${mostrarCantidad}</span>
+                                        <b class="text-primary d-block small text-uppercase text-success">${mostrarCantidad}</b>
                                     </div>
                                 </div>
                                 <button onclick="procesarRecepcionRapida(${item.id})" 

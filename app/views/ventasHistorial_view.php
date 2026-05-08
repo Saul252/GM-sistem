@@ -7,7 +7,7 @@
     <title>Entregas | Sistema</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-     <?php require_once __DIR__ . '/layout/icono.php' ?>
+    <?php require_once __DIR__ . '/layout/icono.php' ?>
     <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
 
 
@@ -132,12 +132,12 @@
                         <div class="col-md-2">
                             <label class="form-label small fw-bold">Periodo</label>
                             <select id="f_rango" class="form-select form-select-sm" onchange="togglePerso()">
-                              
+
                                 <option value="hoy">Hoy</option>
                                 <option value="ayer">Ayer</option>
                                 <option value="semana">Semana</option>
                                 <option value="mes">Mes</option>
-                                  <option value="todos">Historial Completo</option>
+                                <option value="todos">Historial Completo</option>
                                 <option value="personalizado">Rango...</option>
                             </select>
                         </div>
@@ -199,7 +199,9 @@
                 <div class="modal-body p-0">
                     <div class="row g-0">
                         <div class="col-md-3 bg-light border-end p-4">
+                            <p class="fw-bold small mb-1">Cliente:</p>
                             <p id="detCliente" class="fw-bold small mb-1"></p>
+                            <p class="fw-bold small mb-1">Almacen:</p>
                             <p id="detAlmacen" class="fw-bold small mb-3"></p>
 
                             <div class="mb-4 p-2 bg-white border rounded shadow-sm text-center">
@@ -223,13 +225,101 @@
                                     <i class="bi bi-cash"></i> Registrar Abono
                                 </button>
                             </div>
+                            <div class="text-end pe-3">
 
+
+
+                            </div>
                             <div id="controlesGuardar" class="d-none">
                                 <button class="btn btn-success w-100 mb-2 py-2 fw-bold"
                                     onclick="procesarEntrega()">Guardar Cambios</button>
+
                                 <button class="btn btn-link text-secondary w-100 btn-sm"
                                     onclick="alternarModo(false)">Cancelar</button>
                             </div>
+                            <button id="btnGestionVenta"
+                                class="btn btn-sm rounded-pill px-4 shadow-lg border-0 d-none btn-animado-entrega"
+                                disabled>
+                                <i class="bi bi-box-seam me-1"></i>
+                                Entregar en caja/asignar a ruta
+                            </button>
+
+                            <style>
+                            .btn-animado-entrega {
+                                position: relative;
+                                overflow: hidden;
+                                color: #fff;
+                                font-weight: 600;
+                                letter-spacing: .3px;
+                                transition: all .25s ease;
+
+                                background: linear-gradient(270deg,
+                                        #7c3aed,
+                                        #ec4899,
+                                        #f97316,
+                                        #3b82f6,
+                                        #7c3aed);
+
+                                background-size: 600% 600%;
+                                animation: moverGradiente 8s ease infinite;
+
+                                box-shadow:
+                                    0 4px 18px rgba(124, 58, 237, .35),
+                                    0 2px 8px rgba(236, 72, 153, .25);
+                            }
+
+                            .btn-animado-entrega:hover {
+                                transform: translateY(-2px) scale(1.02);
+                                box-shadow:
+                                    0 8px 24px rgba(124, 58, 237, .45),
+                                    0 4px 14px rgba(236, 72, 153, .35);
+                            }
+
+                            .btn-animado-entrega:disabled {
+                                opacity: .7;
+                                cursor: not-allowed;
+                            }
+
+                            .btn-animado-entrega::before {
+                                content: '';
+                                position: absolute;
+                                top: 0;
+                                left: -120%;
+                                width: 80%;
+                                height: 100%;
+
+                                background: linear-gradient(120deg,
+                                        transparent,
+                                        rgba(255, 255, 255, .35),
+                                        transparent);
+
+                                animation: brillo 2.8s linear infinite;
+                            }
+
+                            @keyframes moverGradiente {
+                                0% {
+                                    background-position: 0% 50%;
+                                }
+
+                                50% {
+                                    background-position: 100% 50%;
+                                }
+
+                                100% {
+                                    background-position: 0% 50%;
+                                }
+                            }
+
+                            @keyframes brillo {
+                                0% {
+                                    left: -120%;
+                                }
+
+                                100% {
+                                    left: 140%;
+                                }
+                            }
+                            </style>
                         </div>
                         <div class="col-md-9 p-4">
                             <div class="table-responsive border rounded mb-3" style="max-height: 180px;">
@@ -239,6 +329,7 @@
                                             <th>Producto</th>
                                             <th class="text-center">Venta</th>
                                             <th class="text-center">Surtido</th>
+                                            <th class="text-center text-success">Stock Disponible</th>
                                             <th class="text-center text-danger">Falta</th>
                                             <th class="text-center col-input d-none">Entrega</th>
                                         </tr>
@@ -288,11 +379,12 @@
             </div>
         </div>
     </div>
- 
+
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
- <?php require_once __DIR__ . '/ventasHistorialModales/registarAbono.php'; ?>
+    <?php require_once __DIR__ . '/ventasHistorialModales/registarAbono.php'; ?>
+    <?php require_once __DIR__ . '/entregasComponets/modalEntregaVentas.php'; ?>
 
     <script>
     const modalObj = new bootstrap.Modal('#modalDetalle');
@@ -342,6 +434,8 @@
                 </td>
                 <td class="text-end pe-3">
                     <div class="btn-group">
+                    
+                    
                         <a href="../controllers/editarVentaController.php?id=${v.id}" class="btn btn-warning btn-sm shadow-sm">
                             <i class="fas fa-edit"></i> Editar Venta
                         </a>
@@ -369,6 +463,48 @@
     }
     async function verDetalle(id) {
         try {
+            // 🔥 OBTENER IDS PENDIENTES
+            const respIds = await fetch(
+                `../controllers/entregasController.php?ajax=get_ids_pendientes_venta&venta_id=${id}`
+            );
+            const resNAlmacen = await fetch(
+                `../controllers/entregasController.php?ajax=obtener_id_almacen&id=${id}`
+            );
+
+            const dataAlmacen = await resNAlmacen.json();
+            const almacen_id_conseguido = dataAlmacen.almacen.almacen_id;
+            console.log(dataAlmacen.almacen.almacen_id);
+
+            const dataIds = await respIds.json();
+
+            console.log(dataIds.ids);
+
+            // =====================================================
+            // 🔥 HABILITAR / DESHABILITAR BOTÓN
+            // =====================================================
+
+            if (
+                Array.isArray(dataIds.ids) &&
+                dataIds.ids.length > 0
+
+            ) {
+                console.log('hola');
+                $('#btnGestionVenta')
+                    .removeClass('d-none')
+                    .prop('disabled', false)
+                    .attr(
+                        'onclick',
+                        `abrirModalDespachoVentaTotal(${id}, ${almacen_id_conseguido})`
+                    );
+
+            } else {
+
+                $('#btnGestionVenta')
+                    .addClass('d-none')
+                    .prop('disabled', true)
+                    .removeAttr('onclick');
+
+            }
             const res = await fetch(`${URL_CONTROLLER}?action=obtenerDetalle&id=${id}`);
             const data = await res.json();
             ventaActual = data;
@@ -387,7 +523,7 @@
                 $('#btnAbonar').addClass('d-none');
             } else {
                 $('#detSaldoLabel').text('$' + deuda.toFixed(2)).removeClass('text-success').addClass(
-                'text-danger');
+                    'text-danger');
                 $('#btnAbonar').removeClass('d-none');
             }
 
@@ -418,8 +554,10 @@
                         `<div class="text-muted small" style="font-size: 0.65rem;">1 ${p.unidad_reporte} = ${factor} ${p.unidad_medida}</div>`;
                 } else {
                     // Si no llega al factor (Ej: 10 bultos) mostramos la unidad normal
+                    //agregar observaciones en ticket 
                     visualizacionVenta = `<span>${cant} ${p.unidad_medida}</span>`;
                 }
+
 
                 return `<tr>
         <td>
@@ -430,8 +568,10 @@
             ${visualizacionVenta}
         </td>
         <td class="text-center">${p.cantidad_entregada}</td>
+        <td class="text-center text-success fw-bold">${p.disponible}</td>
+        
         <td class="text-center text-danger fw-bold">${pen}</td>
-        <td class="text-center col-input d-none">
+         <td class="text-center col-input d-none">
             ${pen > 0 ? 
                 `<input type="number" class="form-control form-control-sm input-entrega mx-auto" 
                     max="${pen}" min="0" value="0" data-id="${p.id}" style="width:70px">` 
@@ -439,34 +579,34 @@
         </td>
     </tr>`;
             }).join(''));
-             // ... (dentro de verDetalle, después de renderizar historial de entregas)
-$('#tbodyHistorial').html(data.historial.length > 0 ? data.historial.map(h => {
-    // 1. Extraemos los valores del historial
-    // Si salen vacíos o undefined, es que el PHP no los está mandando en el JSON de historial
-    let cantH = parseFloat(h.cantidad) || 0;
-    let factorH = parseFloat(h.factor_conversion) || 1;
-    let uReporteH = h.unidad_reporte || ''; 
-    let uMedidaH = h.unidad_medida || '';
+            // ... (dentro de verDetalle, después de renderizar historial de entregas)
+            $('#tbodyHistorial').html(data.historial.length > 0 ? data.historial.map(h => {
+                    // 1. Extraemos los valores del historial
+                    // Si salen vacíos o undefined, es que el PHP no los está mandando en el JSON de historial
+                    let cantH = parseFloat(h.cantidad) || 0;
+                    let factorH = parseFloat(h.factor_conversion) || 1;
+                    let uReporteH = h.unidad_reporte || '';
+                    let uMedidaH = h.unidad_medida || '';
 
-    let visualizacionHistorial = "";
+                    let visualizacionHistorial = "";
 
-    // 2. Aplicamos la misma lógica que usas arriba
-    if (factorH > 1 && cantH >= factorH) {
-        let unidadesMayoresH = (cantH / factorH);
-        let totalUnidadesStrH = Number.isInteger(unidadesMayoresH) ? 
-            unidadesMayoresH : 
-            unidadesMayoresH.toFixed(2);
+                    // 2. Aplicamos la misma lógica que usas arriba
+                    if (factorH > 1 && cantH >= factorH) {
+                        let unidadesMayoresH = (cantH / factorH);
+                        let totalUnidadesStrH = Number.isInteger(unidadesMayoresH) ?
+                            unidadesMayoresH :
+                            unidadesMayoresH.toFixed(2);
 
-        visualizacionHistorial = `
+                        visualizacionHistorial = `
             <span class="fw-bold text-primary">${totalUnidadesStrH} ${uReporteH}</span> 
             <br> <small class="text-muted">(${cantH} ${uMedidaH})</small>
         `;
-    } else {
-        // Aquí verás si unidad_medida viene vacío desde la base de datos
-        visualizacionHistorial = `<span>${cantH} ${uMedidaH}</span>`;
-    }
+                    } else {
+                        // Aquí verás si unidad_medida viene vacío desde la base de datos
+                        visualizacionHistorial = `<span>${cantH} ${uMedidaH}</span>`;
+                    }
 
-    return `
+                    return `
     <tr>
         <td class="small">${h.fecha}</td>
         <td class="small">${h.usuario_nombre}</td>
@@ -477,7 +617,8 @@ $('#tbodyHistorial').html(data.historial.length > 0 ? data.historial.map(h => {
             ${visualizacionHistorial}
         </td>
     </tr>`;
-}).join('') : '<tr><td colspan="4" class="text-center text-muted p-3">No hay entregas registradas</td></tr>');
+                }).join('') :
+                '<tr><td colspan="4" class="text-center text-muted p-3">No hay entregas registradas</td></tr>');
 
 
             // --- RENDERIZADO DE HISTORIAL DE PAGOS ---
@@ -495,7 +636,7 @@ $('#tbodyHistorial').html(data.historial.length > 0 ? data.historial.map(h => {
             } else {
                 $('#tbodyPagos').html(
                     '<tr><td colspan="3" class="text-center text-muted p-3">No hay abonos registrados</td></tr>'
-                    );
+                );
             }
             alternarModo(false);
             modalObj.show();
@@ -503,56 +644,68 @@ $('#tbodyHistorial').html(data.historial.length > 0 ? data.historial.map(h => {
             console.error("Error al obtener detalle:", error);
         }
     }
-   async function procesarEntrega() {
-    const fd = new FormData();
-    let ok = false;
-    
-    $('.input-entrega').each(function() {
-        const cant = parseFloat($(this).val());
-        if (cant > 0) {
-            // Enviamos el ID del detalle de venta y la cantidad
-            fd.append(`productos[${$(this).data('id')}]`, cant);
-            ok = true;
-        }
-    });
+    async function procesarEntrega() {
+        const fd = new FormData();
+        let ok = false;
 
-    if (!ok) return Swal.fire('Atención', 'Indique al menos una cantidad válida para entregar', 'warning');
-
-    fd.append('venta_id', ventaActual.info.id);
-
-    try {
-        const res = await fetch(`${URL_CONTROLLER}?action=guardarEntrega`, {
-            method: 'POST',
-            body: fd
+        $('.input-entrega').each(function() {
+            const cant = parseFloat($(this).val());
+            if (cant > 0) {
+                // Enviamos el ID del detalle de venta y la cantidad
+                fd.append(`productos[${$(this).data('id')}]`, cant);
+                ok = true;
+            }
         });
 
-        // Verificamos si la respuesta del servidor es un JSON válido
-        const result = await res.json();
+        if (!ok) return Swal.fire('Atención', 'Indique al menos una cantidad válida para entregar', 'warning');
 
-        if (result.status === 'success') {
-            modalObj.hide();
-            getVentas(); // Recargamos la tabla para ver el nuevo estado
-            Swal.fire({
-                title: '¡Listo!',
-                text: 'Entrega guardada correctamente',
-                icon: 'success',
-                timer: 2000
+        fd.append('venta_id', ventaActual.info.id);
+
+        try {
+            const res = await fetch(`${URL_CONTROLLER}?action=guardarEntrega`, {
+                method: 'POST',
+                body: fd
             });
-        } else {
-            // AQUÍ MANEJAMOS EL ERROR DE STOCK (o cualquier otro error del Model)
-            // Usamos result.message que es el que trae "Stock insuficiente en almacén..."
-            Swal.fire('No se pudo entregar', result.message || 'Error desconocido', 'error');
-        }
 
-    } catch (e) {
-        console.error("Error al procesar entrega:", e);
-        Swal.fire('Error Técnico', 'Hubo un problema de conexión con el servidor', 'error');
-    }
-}  // Instanciamos el nuevo modal
+            // Verificamos si la respuesta del servidor es un JSON válido
+            const result = await res.json();
+
+            if (result.status === 'success') {
+
+                modalObj.hide();
+
+                getVentas();
+
+                Swal.fire({
+                    title: '¡Listo!',
+                    text: 'Entrega guardada correctamente',
+                    icon: 'success',
+                    timer: 500,
+                    showConfirmButton: false
+                });
+
+                // 🔥 volver a abrir automáticamente
+                setTimeout(() => {
+
+                    verDetalle(ventaActual.info.id);
+
+                }, 501);
+
+            } else {
+                // AQUÍ MANEJAMOS EL ERROR DE STOCK (o cualquier otro error del Model)
+                // Usamos result.message que es el que trae "Stock insuficiente en almacén..."
+                Swal.fire('No se pudo entregar', result.message || 'Error desconocido', 'error');
+            }
+
+        } catch (e) {
+            console.error("Error al procesar entrega:", e);
+            Swal.fire('Error Técnico', 'Hubo un problema de conexión con el servidor', 'error');
+        }
+    } // Instanciamos el nuevo modal
     const modalAbonoObj = new bootstrap.Modal('#modalAbono');
 
- 
-  
+
+
     function togglePerso() {
         $('#div_p').toggleClass('d-none', $('#f_rango').val() !== 'personalizado');
         getVentas();
@@ -564,89 +717,93 @@ $('#tbodyHistorial').html(data.historial.length > 0 ? data.historial.map(h => {
         $('#controlesGuardar').toggleClass('d-none', !e);
     }
 
-   $(document).ready(function() {
-    // 1. Carga inicial de datos
-    getVentas();
+    $(document).ready(function() {
+        // 1. Carga inicial de datos
+        getVentas();
 
-    // 2. Escuchadores para filtros (opcional, pero recomendado para centralizar)
-    $('#f_rango').on('change', togglePerso);
-    // getVentas ya se llama mediante onchange/onkeyup en tu HTML, lo cual está bien.
-    
-    console.log("Sistema de historial listo.");
-});
-    </script>
-<script>
-    async function confirmarCancelacion(idVenta, folio,total,pagado) {
-      
-    // 1. Lanzamos el SweetAlert con las 3 opciones
-    const result = await Swal.fire({
-        title: `¿Cancelar Venta ${folio}?`,
-        text: "Selecciona si deseas reintegrar el dinero al saldo del cliente o solo anular la venta.",
-        icon: 'warning',
-        input: 'text',
-        inputLabel: 'Motivo de la cancelación',
-        inputPlaceholder: 'Escriba por qué se cancela...',
-        showCancelButton: true,
-        showDenyButton: true, 
-        confirmButtonColor: '#28a745', // Verde -> Con Saldo
-        denyButtonColor: '#d33',      // Rojo -> Sin Saldo
-        cancelButtonColor: '#6c757d', // Gris -> Regresar
-        confirmButtonText: '<i class="bi bi-cash-stack"></i> Con Saldo a Favor',
-        denyButtonText: '<i class="bi bi-x-circle"></i> Sin Saldo',
-        cancelButtonText: 'Regresar',
-        inputValidator: (value) => {
-            if (!value) return '¡El motivo es obligatorio!';
-        }
+        // 2. Escuchadores para filtros (opcional, pero recomendado para centralizar)
+        $('#f_rango').on('change', togglePerso);
+        // getVentas ya se llama mediante onchange/onkeyup en tu HTML, lo cual está bien.
+
+        console.log("Sistema de historial listo.");
     });
+    </script>
+    <script>
+    async function confirmarCancelacion(idVenta, folio, total, pagado) {
 
-    // 2. Si se presionó cualquiera de los dos botones de ejecución (Confirmar o Denegar)
-    if (result.isConfirmed || result.isDenied) {
-        // IMPORTANTE: Capturamos el motivo desde result.value
-        const motivo = result.value; 
-        
-        // Elegimos la ruta del controlador según el botón
-        const accion = result.isConfirmed ? 'cancelarVenta' : 'cancelarVentaSinSaldo';
-
-        Swal.fire({
-            title: 'Procesando...',
-            didOpen: () => { Swal.showLoading() },
-            allowOutsideClick: false
+        // 1. Lanzamos el SweetAlert con las 3 opciones
+        const result = await Swal.fire({
+            title: `¿Cancelar Venta ${folio}?`,
+            text: "Selecciona si deseas reintegrar el dinero al saldo del cliente o solo anular la venta.",
+            icon: 'warning',
+            input: 'text',
+            inputLabel: 'Motivo de la cancelación',
+            inputPlaceholder: 'Escriba por qué se cancela...',
+            showCancelButton: true,
+            showDenyButton: true,
+            confirmButtonColor: '#28a745', // Verde -> Con Saldo
+            denyButtonColor: '#d33', // Rojo -> Sin Saldo
+            cancelButtonColor: '#6c757d', // Gris -> Regresar
+            confirmButtonText: '<i class="bi bi-cash-stack"></i> Con Saldo a Favor',
+            denyButtonText: '<i class="bi bi-x-circle"></i> Sin Saldo',
+            cancelButtonText: 'Regresar',
+            inputValidator: (value) => {
+                if (!value) return '¡El motivo es obligatorio!';
+            }
         });
 
-        try {
-            const response = await fetch(`${URL_CONTROLLER}?action=${accion}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    id_venta: idVenta,
-                    motivo: motivo
-                })
+        // 2. Si se presionó cualquiera de los dos botones de ejecución (Confirmar o Denegar)
+        if (result.isConfirmed || result.isDenied) {
+            // IMPORTANTE: Capturamos el motivo desde result.value
+            const motivo = result.value;
+
+            // Elegimos la ruta del controlador según el botón
+            const accion = result.isConfirmed ? 'cancelarVenta' : 'cancelarVentaSinSaldo';
+
+            Swal.fire({
+                title: 'Procesando...',
+                didOpen: () => {
+                    Swal.showLoading()
+                },
+                allowOutsideClick: false
             });
 
-            const res = await response.json();
-
-            if (res.status === 'success') {
-                await Swal.fire({
-                    title: '¡Venta Cancelada!',
-                    text: res.message,
-                    icon: 'success',
-                    timer: 2000,
-                    showConfirmButton: false
+            try {
+                const response = await fetch(`${URL_CONTROLLER}?action=${accion}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id_venta: idVenta,
+                        motivo: motivo
+                    })
                 });
-                
-                // Refrescamos la tabla de ventas
-                if (typeof getVentas === 'function') getVentas(); 
-                
-            } else {
-                Swal.fire('Error', res.message, 'error');
+
+                const res = await response.json();
+
+                if (res.status === 'success') {
+                    await Swal.fire({
+                        title: '¡Venta Cancelada!',
+                        text: res.message,
+                        icon: 'success',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+
+                    // Refrescamos la tabla de ventas
+                    if (typeof getVentas === 'function') getVentas();
+
+                } else {
+                    Swal.fire('Error', res.message, 'error');
+                }
+            } catch (error) {
+                console.error("Error en la petición:", error);
+                Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
             }
-        } catch (error) {
-            console.error("Error en la petición:", error);
-            Swal.fire('Error', 'No se pudo conectar con el servidor', 'error');
         }
     }
-}
-</script>
+    </script>
 </body>
 
 </html>

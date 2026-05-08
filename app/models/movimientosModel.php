@@ -188,13 +188,18 @@ class MovimientoModel {
 public function obtenerMovimientosPorRol($usuario_id, $rol_id, $almacen_id = null)
 {
     try {
+
         $response = [
             'arribos' => [],
             'envios'  => []
         ];
 
-        // Si no hay almacén, no podemos filtrar, retornamos vacío
-        if (!$almacen_id) {
+        // 🔥 ADMIN = almacen_id 0
+        $esAdmin = (intval($almacen_id) === 0);
+
+        // 🔥 SI NO ES ADMIN Y NO TIENE ALMACÉN
+        if (!$esAdmin && !$almacen_id) {
+
             return [
                 'status' => true,
                 'data' => $response
@@ -203,61 +208,119 @@ public function obtenerMovimientosPorRol($usuario_id, $rol_id, $almacen_id = nul
 
         $id_almacen = intval($almacen_id);
 
-        // 🔹 ARRIBOS (Lo que llega al almacén seleccionado)
-        $sqlArribos = "SELECT 
-                            m.id, 
-                            m.fecha, 
-                            p.nombre AS producto, 
-                            p.sku,
-                            p.factor_conversion, 
-                            p.unidad_reporte, 
-                            m.cantidad, 
-                            ao.nombre AS origen, 
-                            u.nombre AS enviado_por
-                        FROM movimientos m
-                        JOIN productos p ON m.producto_id = p.id
-                        JOIN almacenes ao ON m.almacen_origen_id = ao.id
-                        JOIN usuarios u ON m.usuario_envia_id = u.id
-                        WHERE m.tipo = 'traspaso' 
-                        AND m.usuario_recibe_id IS NULL 
-                        AND m.almacen_destino_id = $id_almacen
-                        ORDER BY m.fecha DESC";
+        // =====================================================
+        // 🔹 ARRIBOS
+        // =====================================================
+
+        $whereArribos = "";
+
+        if (!$esAdmin) {
+
+            $whereArribos = "
+                AND m.almacen_destino_id = $id_almacen
+            ";
+        }
+
+        $sqlArribos = "
+            SELECT 
+                m.id, 
+                m.fecha, 
+                p.nombre AS producto, 
+                p.sku,
+                p.factor_conversion, 
+                p.unidad_reporte, 
+                m.cantidad, 
+                ao.nombre AS origen, 
+                u.nombre AS enviado_por
+
+            FROM movimientos m
+
+            JOIN productos p 
+                ON m.producto_id = p.id
+
+            JOIN almacenes ao 
+                ON m.almacen_origen_id = ao.id
+
+            JOIN usuarios u 
+                ON m.usuario_envia_id = u.id
+
+            WHERE m.tipo = 'traspaso' 
+            AND m.usuario_recibe_id IS NULL
+
+            $whereArribos
+
+            ORDER BY m.fecha DESC
+        ";
 
         $resA = $this->db->query($sqlArribos);
 
         if ($resA) {
+
             while ($row = $resA->fetch_assoc()) {
+
                 $row['cantidad'] = (float)$row['cantidad'];
+
                 $row['factor_conversion'] = (float)$row['factor_conversion'];
+
                 $response['arribos'][] = $row;
             }
         }
 
-        // 🔹 ENVÍOS (Lo que sale del almacén seleccionado)
-        $sqlEnvios = "SELECT 
-                            m.id, 
-                            m.fecha, 
-                            p.nombre AS producto,
-                            p.factor_conversion, 
-                            p.unidad_reporte, 
-                            m.cantidad, 
-                            ad.nombre AS destino, 
-                            m.usuario_recibe_id
-                        FROM movimientos m
-                        JOIN productos p ON m.producto_id = p.id
-                        JOIN almacenes ad ON m.almacen_destino_id = ad.id
-                        WHERE m.tipo = 'traspaso' 
-                        AND m.almacen_origen_id = $id_almacen
-                        ORDER BY m.fecha DESC 
-                        LIMIT 20";
+        // =====================================================
+        // 🔹 ENVÍOS
+        // =====================================================
+
+        $whereEnvios = "";
+
+        if (!$esAdmin) {
+
+            $whereEnvios = "
+                AND m.almacen_origen_id = $id_almacen
+            ";
+        }
+
+        $sqlEnvios = "
+            SELECT 
+                m.id, 
+                m.fecha, 
+                p.nombre AS producto,
+                p.factor_conversion, 
+                p.unidad_reporte, 
+                m.cantidad, 
+                ad.nombre AS destino, 
+                m.usuario_recibe_id
+
+            FROM movimientos m
+
+            JOIN productos p 
+                ON m.producto_id = p.id
+
+            JOIN almacenes ad 
+                ON m.almacen_destino_id = ad.id
+
+            WHERE m.tipo = 'traspaso'
+
+            $whereEnvios
+
+            ORDER BY m.fecha DESC
+
+            LIMIT 20
+        ";
 
         $resE = $this->db->query($sqlEnvios);
 
         if ($resE) {
+
             while ($row = $resE->fetch_assoc()) {
+
                 $row['cantidad'] = (float)$row['cantidad'];
+
                 $row['factor_conversion'] = (float)$row['factor_conversion'];
-                $row['estado'] = ($row['usuario_recibe_id']) ? 'Completado' : 'En Tránsito';
+
+                $row['estado'] = ($row['usuario_recibe_id'])
+                    ? 'Completado'
+                    : 'En Tránsito';
+
                 $response['envios'][] = $row;
             }
         }
@@ -268,7 +331,12 @@ public function obtenerMovimientosPorRol($usuario_id, $rol_id, $almacen_id = nul
         ];
 
     } catch (Exception $e) {
-        error_log("ERROR obtenerMovimientosPorRol: " . $e->getMessage());
+
+        error_log(
+            "ERROR obtenerMovimientosPorRol: " .
+            $e->getMessage()
+        );
+
         return [
             'status' => false,
             'msg' => 'Error al obtener movimientos'

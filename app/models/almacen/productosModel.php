@@ -440,4 +440,48 @@ public function actualizarProductoCompleto($data)
         return ['status' => false, 'msg' => $e->getMessage()];
     }
 }
+public function guardarOpcionMedida($datos) {
+
+    $sql = "INSERT INTO opciones_de_medida_adicional 
+            (
+                producto_id,
+                nombre,
+                equivalencia
+            )
+            VALUES (?, ?, ?)";
+
+    $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) {
+        return [
+            'success' => false,
+            'message' => 'Error al preparar consulta'
+        ];
+    }
+
+    $producto_id = intval($datos['producto_id'] ?? 0);
+    $nombre      = trim($datos['nombre'] ?? '');
+    $equivalencia = floatval($datos['equivalencia'] ?? 0);
+
+    $stmt->bind_param(
+        "isd",
+        $producto_id,
+        $nombre,
+        $equivalencia
+    );
+
+    if ($stmt->execute()) {
+
+        return [
+            'success' => true,
+            'message' => 'Opción de medida registrada',
+            'id' => $stmt->insert_id
+        ];
+    }
+
+    return [
+        'success' => false,
+        'message' => $stmt->error
+    ];
+}
 }
