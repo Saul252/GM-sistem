@@ -176,6 +176,10 @@
     <?php require_once __DIR__ . '/almacenes/ModalTraspasos.php'; ?>
     <?php require_once __DIR__ . '/almacenes/ModalAgregarProducto.php'; ?>
     <?php require_once __DIR__ . '/almacenes/ModalEditarProducto.php'; ?>
+    <?php require_once __DIR__ . '/productos/modalMedidasAdicionales.php' ?>
+    <?php require_once __DIR__ . '/productos/modalListaMedidas.php' ?>
+    
+    
 <script>
 document.addEventListener('DOMContentLoaded', async function () {
 

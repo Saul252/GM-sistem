@@ -484,4 +484,110 @@ public function guardarOpcionMedida($datos) {
         'message' => $stmt->error
     ];
 }
+// 🔥 ACTUALIZAR MEDIDA ADICIONAL
+public function actualizarMedidaAdicional($id, $producto_id, $nombre, $equivalencia)
+{
+    $sql = "UPDATE opciones_de_medida_adicional 
+            SET producto_id = ?, 
+                nombre = ?, 
+                equivalencia = ?
+            WHERE id = ?";
+
+    $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) {
+        return [
+            'status' => false,
+            'message' => $this->db->error
+        ];
+    }
+
+    $stmt->bind_param(
+        "isdi",
+        $producto_id,
+        $nombre,
+        $equivalencia,
+        $id
+    );
+
+    if ($stmt->execute()) {
+        return [
+            'status' => true,
+            'message' => 'Medida actualizada correctamente'
+        ];
+    }
+
+    return [
+        'status' => false,
+        'message' => $stmt->error
+    ];
+}
+public function listarMedidas($producto_id)
+{
+    $medidas = [];
+    // Filtramos solo por producto_id
+    $sql = "SELECT * FROM opciones_de_medida_adicional WHERE producto_id = ? ORDER BY id DESC";
+
+    $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) {
+        return [
+            'status' => false,
+            'message' => "Error en la preparación: " . $this->db->error
+        ];
+    }
+
+    // "i" indica que el parámetro es un entero (integer)
+    $stmt->bind_param("i", $producto_id);
+
+    if ($stmt->execute()) {
+        // Obtenemos el set de resultados
+        $resultado = $stmt->get_result();
+
+        // Llenamos el array con los registros encontrados
+        while ($h = $resultado->fetch_assoc()) {
+            $medidas[] = $h;
+        }
+
+        return [
+            'status' => true,
+            'medidas' => $medidas
+        ];
+    }
+
+    return [
+        'status' => false,
+        'message' => "Error en ejecución: " . $stmt->error
+    ];
+}
+
+// 🔥 ELIMINAR MEDIDA ADICIONAL
+public function eliminarMedidaAdicional($id)
+{
+    $sql = "DELETE FROM opciones_de_medida_adicional 
+            WHERE id = ?";
+
+    $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) {
+        return [
+            'status' => false,
+            'message' => $this->db->error
+        ];
+    }
+
+    $stmt->bind_param("i", $id);
+
+    if ($stmt->execute()) {
+        return [
+            'status' => true,
+            'message' => 'Medida eliminada correctamente'
+        ];
+    }
+
+    return [
+        'status' => false,
+        'message' => $stmt->error
+    ];
+}
 }

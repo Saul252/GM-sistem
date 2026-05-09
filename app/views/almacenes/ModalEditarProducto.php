@@ -212,7 +212,13 @@
                         </div>
                     </div>
                 </div>
-
+ 
+<!-- Cambiamos id por class -->
+<button type="button" 
+        class="btn-ver-medidas btn btn-outline-dark rounded-pill px-3">
+    <i class="bi bi-list-ul me-2"></i>
+    Ver Medidas
+</button>
                 <div class="modal-footer border-0 p-4 bg-light d-flex justify-content-between">
                     <button type="button" class="btn btn-link text-secondary text-decoration-none fw-bold"
                         data-bs-dismiss="modal">Descartar</button>
@@ -224,6 +230,8 @@
         </div>
     </div>
 </div>
+  <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+   
 <script src="/cfsistem/app/backend/js/calculo_de_conversion.js"></script>
 <script>
 function editarProducto(productoId, almacenId) {
@@ -255,6 +263,11 @@ function editarProducto(productoId, almacenId) {
                         el.value = val ?? '';
                     }
                 };
+                
+// Seleccionamos por clase y aplicamos el atributo
+$('.btn-ver-medidas').last() // Selecciona el último botón agregado en el bucle
+    .attr('onclick', `verListaMedidas(${p.id}, ${almacenId}, '${p.nombre}','${p.unidad_medida}')`);
+
 
                 // 1. Identificadores
                 setVal('edit_id', p.id);

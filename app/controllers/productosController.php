@@ -39,10 +39,22 @@ switch ($action) {
         try {
 
             $data = [
-                'producto_id'  => $_POST['producto_id'] ?? 0,
-                'nombre'       => $_POST['nombre'] ?? '',
-                'equivalencia' => $_POST['equivalencia'] ?? 0
+                'producto_id'  => intval($_POST['producto_id'] ?? 0),
+                'nombre'       => trim($_POST['nombre'] ?? ''),
+                'equivalencia' => floatval($_POST['equivalencia'] ?? 0)
             ];
+
+            if ($data['producto_id'] <= 0) {
+                throw new Exception("Producto inválido");
+            }
+
+            if ($data['nombre'] === '') {
+                throw new Exception("Nombre requerido");
+            }
+
+            if ($data['equivalencia'] <= 0) {
+                throw new Exception("Equivalencia inválida");
+            }
 
             $resultado = $productosModel->guardarOpcionMedida($data);
 
@@ -59,6 +71,7 @@ switch ($action) {
     exit;
 
 
+
     // ========================================
     // OBTENER DETALLE PRODUCTO
     // ========================================
@@ -71,10 +84,10 @@ switch ($action) {
 
         try {
 
-            $id         = $_GET['id'] ?? 0;
-            $almacen_id = $_GET['almacen_id'] ?? 0;
+            $id         = intval($_GET['id'] ?? 0);
+            $almacen_id = intval($_GET['almacen_id'] ?? 0);
 
-            if (!$id || !$almacen_id) {
+            if ($id <= 0 || $almacen_id <= 0) {
 
                 echo json_encode([
                     'status'  => 'error',
@@ -112,4 +125,156 @@ switch ($action) {
 
     exit;
 
+  case 'obtnerMedidas':
+
+        while (ob_get_level()) ob_end_clean();
+
+        header('Content-Type: application/json');
+
+        try {
+
+            $id= intval($_GET['id'] ?? 0);
+           
+            if ($id <= 0 ) {
+
+                echo json_encode([
+                    'status'  => 'error',
+                    'message' => 'Parámetros incompletos'
+                ]);
+
+                exit;
+            }
+
+            $medidas = $productosModel
+                ->listarMedidas($id);
+
+            if ($medidas['status']) {
+
+                echo json_encode([
+                    'status'   => 'success',
+                    'producto' => $medidas
+                ]);
+
+            } else {
+
+                echo json_encode([
+                    'status'  => 'error',
+                    'message' => $medidas['msg']
+                ]);
+            }
+
+        } catch (Exception $e) {
+
+            echo json_encode([
+                'status'  => 'error',
+                'message' => $e->getMessage()
+            ]);
+        }
+
+    exit;
+
+    // ========================================
+    // ACTUALIZAR MEDIDA
+    // ========================================
+
+    case 'actualizarMedidaAdicional':
+
+        while (ob_get_level()) ob_end_clean();
+
+        header('Content-Type: application/json');
+
+        try {
+
+            $id            = intval($_POST['id'] ?? 0);
+            $producto_id   = intval($_POST['producto_id'] ?? 0);
+            $nombre        = trim($_POST['nombre_edit'] ?? '');
+            $equivalencia  = floatval($_POST['equivalencia'] ?? 0);
+
+            if ($id <= 0) {
+                throw new Exception("ID inválido");
+            }
+
+            if ($producto_id <= 0) {
+                throw new Exception("Producto inválido");
+            }
+
+            if ($nombre === '') {
+                throw new Exception("Nombre requerido");
+            }
+
+            if ($equivalencia <= 0) {
+                throw new Exception("Equivalencia inválida");
+            }
+
+            $resultado = $productosModel->actualizarMedidaAdicional(
+                $id,
+                $producto_id,
+                $nombre,
+                $equivalencia
+            );
+
+            echo json_encode($resultado);
+
+        } catch (Exception $e) {
+
+            echo json_encode([
+                'status'  => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+
+    exit;
+
+
+
+    // ========================================
+    // ELIMINAR MEDIDA
+    // ========================================
+
+    case 'eliminarMedidaAdicional':
+
+        while (ob_get_level()) ob_end_clean();
+
+        header('Content-Type: application/json');
+
+        try {
+
+            $id = intval($_POST['id'] ?? 0);
+
+            if ($id <= 0) {
+                throw new Exception("ID inválido");
+            }
+
+            $resultado = $productosModel->eliminarMedidaAdicional($id);
+
+            echo json_encode($resultado);
+
+        } catch (Exception $e) {
+
+            echo json_encode([
+                'status'  => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+
+    exit;
+
+
+
+    // ========================================
+    // DEFAULT
+    // ========================================
+
+    default:
+
+        while (ob_get_level()) ob_end_clean();
+
+        header('Content-Type: application/json');
+
+        echo json_encode([
+            'status'  => false,
+            'message' => 'Acción no válida'
+        ]);
+
+    exit;
 }

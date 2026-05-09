@@ -264,9 +264,9 @@
                         </table>
                     </div>
                 </div>
+<!-- Botón para Crear -->
 
-
-                <div class="modal-footer bg-light">
+     <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                     <button type="submit" id="btnGuardarProducto" class="btn btn-success px-5 fw-bold shadow">
                         <i class="bi bi-save me-2"></i> GUARDAR PRODUCTO
@@ -276,6 +276,7 @@
         </div>
     </div>
 </div>
+
 <script>
     function generarSKU(nombre) {
     if (!nombre) return '';
