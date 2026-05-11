@@ -44,6 +44,7 @@ class AlmacenController {
         
         // 2. Cargamos el inventario detallado para el DataTable
         $productos = $this->model->getInventario($almacen_usuario);
+        
         $unidadesMedida = $this->model->getUnidadesMedida();
 
         $unidadesMedidam = $this->model->getUnidadesMedida();

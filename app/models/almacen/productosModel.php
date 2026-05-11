@@ -590,4 +590,31 @@ public function eliminarMedidaAdicional($id)
         'message' => $stmt->error
     ];
 }
+public function obtenerMedidas()
+{
+    $medidas = [];
+
+    $sql = "
+        SELECT 
+            id,
+            producto_id,
+            nombre,
+            equivalencia
+        FROM opciones_de_medida_adicional
+    ";
+
+    $resultado = $this->db->query($sql);
+
+    if (!$resultado) {
+
+        die($this->db->error);
+    }
+
+    while ($row = $resultado->fetch_assoc()) {
+
+        $medidas[] = $row;
+    }
+
+    return $medidas;
+}
 }

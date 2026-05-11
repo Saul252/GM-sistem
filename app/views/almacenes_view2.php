@@ -118,6 +118,7 @@
                             data-bs-target="#modalTraspasosGestion" onclick="cargarTraspasos()">
                             <i class="bi bi-shield-check"></i> Autorizar
                         </button>
+                       
                     </div>
                 </div>
             </div>

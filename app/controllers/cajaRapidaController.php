@@ -12,6 +12,7 @@ require_once __DIR__ . '/../models/movimientosModel.php';
 require_once __DIR__ . '/../models/vehiculos_model.php'; 
 require_once __DIR__ . '/../models/trabajadores_model.php';
 require_once __DIR__ . '/../models/RepartosModel.php'; 
+require_once __DIR__ . '/../models/almacen/productosModel.php';
 
 protegerPagina('cajaRapida'); 
 $paginaActual = 'cajaRapida';
@@ -22,7 +23,7 @@ $modeloMovimiento = new MovimientoModel($conexion);
 $vehiculoM        = new VehiculoModel($conexion);
 $trabajadorM      = new TrabajadorModel($conexion);
 $repartoM         = new RepartoModel($conexion); // Sincronizado con el nombre del modelo
-
+$productosModel = new ProductoModel($conexion);
 // --- 1. LÓGICA DE PETICIONES AJAX (GET) ---
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
@@ -129,6 +130,43 @@ $productos = [];
 if ($productos_res) {
     while($row = $productos_res->fetch_assoc()){ $productos[] = $row; }
 }
+
+
+$medidasAdicionales = $productosModel->obtenerMedidas();
+
+
+// ========================================
+// AGRUPAR MEDIDAS POR PRODUCTO
+// ========================================
+
+$medidasPorProducto = [];
+
+foreach ($medidasAdicionales as $medida) {
+
+    $producto_id = $medida['producto_id'];
+
+    if (!isset($medidasPorProducto[$producto_id])) {
+
+        $medidasPorProducto[$producto_id] = [];
+    }
+
+    $medidasPorProducto[$producto_id][] = $medida;
+}
+
+
+// ========================================
+// FUSIONAR MEDIDAS A PRODUCTOS
+// ========================================
+
+foreach ($productos as &$producto) {
+
+    $idProducto = $producto['id'];
+
+    $producto['medidas_adicionales'] =
+        $medidasPorProducto[$idProducto] ?? [];
+}
+
+unset($producto);
 
 $clientesModel = new ClientesModel($conexion);
 $clientes_res = $clientesModel->listarTodos($almacen_usuario); 

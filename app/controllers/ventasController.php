@@ -7,8 +7,12 @@ require_once __DIR__ . '/../models/clientesModel.php';
 require_once __DIR__ . '/../models/almacen_model.php';
 require_once __DIR__ . '/../models/categoriasModel.php';
 
+require_once __DIR__ . '/../models/almacen/productosModel.php';
+
 // Instanciamos el modelo una sola vez
 $clientesModel = new ClientesModel($conexion);
+
+$productosModel = new ProductoModel($conexion);
 
 // --- ACCIONES POST (Guardar Venta) ---
 $input = file_get_contents("php://input");
@@ -174,6 +178,43 @@ $categorias = ($categorias_res) ? $categorias_res->fetch_all(MYSQLI_ASSOC) : [];
 // Productos
 $productos_res = VentasModel::obtenerProductos($conexion, $almacen_usuario);
 $productos = ($productos_res) ? $productos_res->fetch_all(MYSQLI_ASSOC) : [];
+
+
+$medidasAdicionales = $productosModel->obtenerMedidas();
+
+
+// ========================================
+// AGRUPAR MEDIDAS POR PRODUCTO
+// ========================================
+
+$medidasPorProducto = [];
+
+foreach ($medidasAdicionales as $medida) {
+
+    $producto_id = $medida['producto_id'];
+
+    if (!isset($medidasPorProducto[$producto_id])) {
+
+        $medidasPorProducto[$producto_id] = [];
+    }
+
+    $medidasPorProducto[$producto_id][] = $medida;
+}
+
+
+// ========================================
+// FUSIONAR MEDIDAS A PRODUCTOS
+// ========================================
+
+foreach ($productos as &$producto) {
+
+    $idProducto = $producto['id'];
+
+    $producto['medidas_adicionales'] =
+        $medidasPorProducto[$idProducto] ?? [];
+}
+
+unset($producto);
 
 // Clientes (Asegúrate de que listarTodos traiga rfc, razon_social, regimen_fiscal)
 $clientes_res = $clientesModel->listarTodos($almacen_usuario); 

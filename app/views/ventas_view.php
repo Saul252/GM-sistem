@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Ventas | Sistema</title>
-      <?php require_once __DIR__ . '/layout/icono.php' ?>
+    <?php require_once __DIR__ . '/layout/icono.php' ?>
     <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
     <link href="/cfsistem/css/ventas.css" rel="stylesheet">
     <style>
@@ -26,11 +26,13 @@
         font-size: 0.8rem;
         padding: 5px 10px;
     }
-    .modalc{
-        z-index:2000 !important;
+
+    .modalc {
+        z-index: 2000 !important;
     }
-    .swal-zindex{
-        z-index:2000 !important;
+
+    .swal-zindex {
+        z-index: 2000 !important;
     }
     </style>
 </head>
@@ -91,6 +93,7 @@
                                     <th>Almacén</th>
                                     <th>Precio</th>
                                     <th width="120">Venta por</th>
+                                    <th width="120">Medida Especial</th>
                                     <th width="90">Cant</th>
                                     <th width="60"></th>
                                 </tr>
@@ -138,8 +141,42 @@
                                     </td>
 
                                     <td>
-                                        <input type="number" class="form-control form-control-sm cantidad" min="1"
-                                            max="<?= $p['stock'] ?>" value="1">
+
+                                        <select class="form-select border-primary medidas_adicionales"
+                                            <?= empty($p['medidas_adicionales']) ? 'disabled' : '' ?>>
+
+                                            <option value="1">
+                                                Normal
+                                            </option>
+
+                                            <?php foreach($p['medidas_adicionales'] as $ma): ?>
+
+                                            <option value="<?= $ma['equivalencia'] ?>">
+
+                                                <?= htmlspecialchars($ma['nombre']) ?>
+
+                                            </option>
+
+                                            <?php endforeach; ?>
+
+                                        </select>
+
+                                    </td>
+
+
+                                    <td>
+
+
+                                        <!-- usuario -->
+                                        <input type="number" class="form-control form-control-sm cantidad_usuario"
+                                            min="1" value="1">
+
+                                        <!-- REAL -->
+                                        <input type="hidden" class="cantidad" value="1">
+
+
+
+                                        <!-- visible -->
                                     </td>
 
                                     <td class="text-center">
@@ -186,7 +223,7 @@
         </div>
     </div>
 
-    
+
 
     <div class="modal fade modalc" id="modalNuevoCliente" tabindex="-1" aria-labelledby="modalNuevoClienteLabel"
         aria-hidden="true">
@@ -288,45 +325,85 @@
             </div>
         </div>
     </div>
- <?php require_once __DIR__ . '/ventasModales/finalizarVenta.php'; ?>
+    <?php require_once __DIR__ . '/ventasModales/finalizarVenta.php'; ?>
 
     <?php cargarScripts(); ?>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-   
+
     <script src="/cfsistem/app/backend/js_ventas/filtros.js"></script>
     <script src="/cfsistem/app/backend/js_ventas/nuevo_cliente.js"></script>
     <script src="/cfsistem/app/backend/js_ventas/modal_finalizar.js"></script>
-    
 
-    
- <script>
+
+
+    <script>
     /**
- * Soporte para agregar productos al presionar ENTER
- */
-document.addEventListener('keydown', function(e) {
-    // 1. Verificamos que la tecla sea Enter y que el foco esté en un input de cantidad
-    if (e.key === 'Enter' && e.target.classList.contains('cantidad')) {
-        
-        // Evitamos que el Enter haga un submit accidental del formulario principal
-        e.preventDefault(); 
+     * Soporte para agregar productos al presionar ENTER
+     */
+    document.addEventListener('keydown', function(e) {
+        // 1. Verificamos que la tecla sea Enter y que el foco esté en un input de cantidad
+        if (e.key === 'Enter' && e.target.classList.contains('cantidad')) {
 
-        // 2. Localizamos la fila (tr) donde se presionó Enter
-        const fila = e.target.closest('tr');
-        
-        // 3. Buscamos el botón de "Agregar" (+) en esa misma fila
-        const btnAgregar = fila.querySelector('button.btn-success');
+            // Evitamos que el Enter haga un submit accidental del formulario principal
+            e.preventDefault();
 
-        if (btnAgregar) {
-            // 4. Ejecutamos la función de agregar que ya tienes definida
-            validarYAgregar(btnAgregar);
-            
-            // Opcional: Feedback visual rápido para el usuario
-            btnAgregar.style.transform = "scale(0.9)";
-            setTimeout(() => btnAgregar.style.transform = "scale(1)", 100);
+            // 2. Localizamos la fila (tr) donde se presionó Enter
+            const fila = e.target.closest('tr');
+
+            // 3. Buscamos el botón de "Agregar" (+) en esa misma fila
+            const btnAgregar = fila.querySelector('button.btn-success');
+
+            if (btnAgregar) {
+                // 4. Ejecutamos la función de agregar que ya tienes definida
+                validarYAgregar(btnAgregar);
+
+                // Opcional: Feedback visual rápido para el usuario
+                btnAgregar.style.transform = "scale(0.9)";
+                setTimeout(() => btnAgregar.style.transform = "scale(1)", 100);
+            }
         }
+    });
+    </script>
+    <script>
+    document.addEventListener('input', actualizarCantidadReal);
+    document.addEventListener('change', actualizarCantidadReal);
+
+    function actualizarCantidadReal(e) {
+
+        const fila = e.target.closest('tr');
+
+        if (!fila) return;
+
+        const inputUsuario =
+            fila.querySelector('.cantidad_usuario');
+
+        const inputReal =
+            fila.querySelector('.cantidad');
+
+        const selectMedida =
+            fila.querySelector('.medidas_adicionales');
+
+        if (!inputUsuario || !inputReal) return;
+
+        const cantidadUsuario =
+            parseFloat(inputUsuario.value) || 0;
+
+        const equivalencia =
+            parseFloat(selectMedida?.value) || 1;
+
+        // REAL
+        const totalReal =
+            cantidadUsuario / equivalencia;
+
+        inputReal.value = totalReal;
+
+        console.log({
+            usuario: cantidadUsuario,
+            equivalencia,
+            real: totalReal
+        });
     }
-});
- </script>   
+    </script>
 </body>
 
 </html>

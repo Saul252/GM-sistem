@@ -259,9 +259,11 @@
                                     <th>Stock</th>
                                     <th>Almacén</th>
                                     <th>Precio</th>
-                                    <th width="120">Venta por</th>
-                                    <th width="90">Cant</th>
-                                    <th width="60"></th>
+                                    <th width="110">Venta por</th>
+                                   
+                                    <th width="110">Medida Esp</th>
+                                     <th width="90">Cant</th>
+                                    <th width="60">Agregar</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -305,10 +307,36 @@
                                         <span class="text-muted small">Individual</span>
                                         <?php endif; ?>
                                     </td>
+                                     <td>
+
+                                        <select class="form-select border-primary medidas_adicionales"
+                                            <?= empty($p['medidas_adicionales']) ? 'disabled' : '' ?>>
+
+                                            <option value="1">
+                                                Normal
+                                            </option>
+
+                                            <?php foreach($p['medidas_adicionales'] as $ma): ?>
+
+                                            <option value="<?= $ma['equivalencia'] ?>">
+
+                                                <?= htmlspecialchars($ma['nombre']) ?>
+
+                                            </option>
+
+                                            <?php endforeach; ?>
+
+                                        </select>
+
+                                    </td>
 
                                     <td>
-                                        <input type="number" class="form-control form-control-sm cantidad" min="1"
-                                            max="<?= $p['stock'] ?>" value="1">
+                                           <input type="number" class="form-control form-control-sm cantidad_usuario"
+                                            min="1" value="1">
+
+                                        <!-- REAL -->
+                                        <input type="hidden" class="cantidad" value="1">
+
                                     </td>
 
                                     <td class="text-center">
@@ -691,6 +719,44 @@ document.addEventListener('keydown', function(e) {
     }
 });
 </script>
+ <script>document.addEventListener('input', actualizarCantidadReal);
+document.addEventListener('change', actualizarCantidadReal);
+
+function actualizarCantidadReal(e) {
+
+    const fila = e.target.closest('tr');
+
+    if (!fila) return;
+
+    const inputUsuario =
+        fila.querySelector('.cantidad_usuario');
+
+    const inputReal =
+        fila.querySelector('.cantidad');
+
+    const selectMedida =
+        fila.querySelector('.medidas_adicionales');
+
+    if (!inputUsuario || !inputReal) return;
+
+    const cantidadUsuario =
+        parseFloat(inputUsuario.value) || 0;
+
+    const equivalencia =
+        parseFloat(selectMedida?.value) || 1;
+
+    // REAL
+    const totalReal =
+        cantidadUsuario / equivalencia;
+
+    inputReal.value = totalReal;
+
+    console.log({
+        usuario: cantidadUsuario,
+        equivalencia,
+        real: totalReal
+    });
+}</script>
 
 </body>
 
