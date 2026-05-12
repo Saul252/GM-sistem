@@ -295,39 +295,45 @@
                                         </select>
                                     </td>
 
-                                    <td>
+                                      <td>
                                         <?php if($tieneReporte): ?>
                                         <select class="form-select form-select-sm select-modo-venta">
-                                            <option value="individual">
-                                                <?= htmlspecialchars($p['unidad_medida'] ?? 'Individual') ?></option>
-                                            <option value="referencia"><?= htmlspecialchars($p['unidad_reporte']) ?>
+
+                                            <option value="individual"
+                                                data-nombre="<?= htmlspecialchars($p['unidad_medida'] ?? 'PZA') ?>">
+
+                                                <?= htmlspecialchars($p['unidad_medida'] ?? 'PZA') ?>
+
                                             </option>
+
+                                            <option value="referencia"
+                                                data-nombre="<?= htmlspecialchars($p['unidad_reporte']) ?>">
+
+                                                <?= htmlspecialchars($p['unidad_reporte']) ?>
+
+                                            </option>
+
                                         </select>
                                         <?php else: ?>
                                         <span class="text-muted small">Individual</span>
                                         <?php endif; ?>
                                     </td>
-                                     <td>
-
+                                   
+                                    <td>
                                         <select class="form-select border-primary medidas_adicionales"
                                             <?= empty($p['medidas_adicionales']) ? 'disabled' : '' ?>>
-
                                             <option value="1">
                                                 Normal
                                             </option>
-
                                             <?php foreach($p['medidas_adicionales'] as $ma): ?>
-
-                                            <option value="<?= $ma['equivalencia'] ?>">
-
+                                            <option value="<?= $ma['equivalencia'] ?>" data-id="<?= $ma['id'] ?> "
+                                                data-nombre="<?= $ma['nombre'] ?>">
                                                 <?= htmlspecialchars($ma['nombre']) ?>
-
                                             </option>
-
                                             <?php endforeach; ?>
-
                                         </select>
 
+                                    </td>
                                     </td>
 
                                     <td>
@@ -516,6 +522,25 @@ window.validarYAgregar = function(btn) {
     let cantidadAAgregar = parseFloat(cantidadInput.value) || 0;
     
     const modoVenta = fila.querySelector(".select-modo-venta")?.value || 'individual';
+       const modoVent = fila.querySelector(".select-modo-venta");
+        const unidad_medida =
+    modoVent.options[modoVent.selectedIndex].dataset.nombre;
+    console.log(unidad_medida);
+const select =
+    fila.querySelector('.medidas_adicionales');
+
+const equivalencia =
+    parseFloat(select.value);
+
+const medidaId =
+    select.options[select.selectedIndex].dataset.id;
+    const medidaNombre =
+    select.options[select.selectedIndex].dataset.nombre; 
+
+
+console.log(equivalencia);
+console.log(medidaId,medidaNombre);
+    
     
     // Si se agrega en modo "Referencia/Reporte" (ej. Tonelada), convertimos a piezas
     if(modoVenta === 'referencia') {
@@ -560,7 +585,11 @@ window.validarYAgregar = function(btn) {
             precio_unitario: precioUnitario,
             tipo_precio: tipo_p,
             factor: factor,
-            unidad_reporte: unidadReporte
+            unidad_reporte: unidadReporte,
+             unidad_medida: unidad_medida || 'Fact.',
+            unidadMedidaSelect:medidaId??'0',
+            unidadMedidaNombre:medidaNombre??'',
+             unidadEquivalencia:equivalencia??1
         });
     }
 
@@ -571,6 +600,15 @@ window.validarYAgregar = function(btn) {
 /**
  * 2. RENDERIZAR TABLA (Ajuste de inputs con MAX)
  */
+
+
+
+
+
+
+
+
+ 
 window.renderCarrito = function() {
     const tablaBody = document.querySelector("#tablaCarrito tbody");
     if (!tablaBody) return;
@@ -586,6 +624,7 @@ window.renderCarrito = function() {
         const tr = document.createElement("tr");
         tr.dataset.index = index;
         tr.innerHTML = `
+        
             <td><small>${item.almacen_nombre}</small></td>
             <td><div class="fw-bold" style="font-size: 0.8rem;">${item.nombre}</div></td>
             <td>
@@ -719,8 +758,32 @@ document.addEventListener('keydown', function(e) {
     }
 });
 </script>
- <script>document.addEventListener('input', actualizarCantidadReal);
-document.addEventListener('change', actualizarCantidadReal);
+ <script>
+ document.addEventListener('input', function(e) {
+
+    if (
+        !e.target.classList.contains('cantidad_usuario') &&
+        !e.target.classList.contains('medidas_adicionales')
+    ) {
+        return;
+    }
+
+    actualizarCantidadReal(e);
+
+});
+
+document.addEventListener('change', function(e) {
+
+    if (
+        !e.target.classList.contains('cantidad_usuario') &&
+        !e.target.classList.contains('medidas_adicionales')
+    ) {
+        return;
+    }
+
+    actualizarCantidadReal(e);
+
+});
 
 function actualizarCantidadReal(e) {
 

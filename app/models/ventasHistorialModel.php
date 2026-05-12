@@ -87,6 +87,7 @@ public function obtenerDetalleCompleto($id) {
     $prods = [];
     $sqlP = "SELECT 
     dv.*, 
+    odma.*,
     p.nombre AS producto, 
     p.sku,
     COALESCE(i.stock,0) AS disponible,
@@ -99,6 +100,7 @@ FROM detalle_venta dv
 
 INNER JOIN ventas v
     ON v.id = dv.venta_id
+join opciones_de_medida_adicional odma on odma.id= dv.unidadMedida
 
 INNER JOIN productos p
     ON p.id = dv.producto_id

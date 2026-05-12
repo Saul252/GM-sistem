@@ -127,55 +127,58 @@
                                         </select>
                                     </td>
 
-                                    <td>
-                                        <?php if($tieneReporte): ?>
-                                        <select class="form-select form-select-sm select-modo-venta">
-                                            <option value="individual">
-                                                <?= htmlspecialchars($p['unidad_medida'] ?? 'Individual') ?></option>
-                                            <option value="referencia"><?= htmlspecialchars($p['unidad_reporte']) ?>
-                                            </option>
-                                        </select>
-                                        <?php else: ?>
-                                        <span class="text-muted small">Individual</span>
-                                        <?php endif; ?>
-                                    </td>
+                            
+<td style="width:1px; padding:0; border:none;">
+    <?php if($tieneReporte): ?>
+    <select 
+        class="form-select form-select-sm select-modo-venta"
+        style="
+            opacity:0;
+            position:absolute;
+            pointer-events:none;
+            height:0;
+            width:0;
+            padding:0;
+            border:0;
+        ">
 
-                                    <td>
+        <option value="individual"
+            data-nombre="<?= htmlspecialchars($p['unidad_medida'] ?? 'PZA') ?>">
 
+            <?= htmlspecialchars($p['unidad_medida'] ?? 'PZA') ?>
+
+        </option>
+
+        <option value="referencia"
+            data-nombre="<?= htmlspecialchars($p['unidad_reporte']) ?>">
+
+            <?= htmlspecialchars($p['unidad_reporte']) ?>
+
+        </option>
+
+    </select>
+    <?php else: ?>
+    <span class="d-none">Individual</span>
+    <?php endif; ?>
+                      
                                         <select class="form-select border-primary medidas_adicionales"
                                             <?= empty($p['medidas_adicionales']) ? 'disabled' : '' ?>>
-
-                                            <option value="1">
-                                                Normal
-                                            </option>
-
+                                           
                                             <?php foreach($p['medidas_adicionales'] as $ma): ?>
-
-                                            <option value="<?= $ma['equivalencia'] ?>">
-
+                                            <option value="<?= $ma['equivalencia'] ?>" data-id="<?= $ma['id'] ?> "
+                                                data-nombre="<?= $ma['nombre'] ?>">
                                                 <?= htmlspecialchars($ma['nombre']) ?>
-
                                             </option>
-
                                             <?php endforeach; ?>
-
                                         </select>
 
                                     </td>
-
-
                                     <td>
-
-
                                         <!-- usuario -->
                                         <input type="number" class="form-control form-control-sm cantidad_usuario"
                                             min="1" value="1">
-
                                         <!-- REAL -->
                                         <input type="hidden" class="cantidad" value="1">
-
-
-
                                         <!-- visible -->
                                     </td>
 

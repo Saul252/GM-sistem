@@ -531,19 +531,26 @@
             // --- RENDERIZADO DE PRODUCTOS CON CONVERSIÓN ---
             $('#tbodyDetalle').html(data.productos.map(p => {
                 let cant = parseFloat(p.cantidad) || 0;
-                let pen = cant - (parseFloat(p.cantidad_entregada) || 0);
+                let pendiente =( cant - (parseFloat(p.cantidad_entregada) || 0)).toFixed(1);
                 let factor = parseFloat(p.factor_conversion) || 1;
-
+              let pen=Number(pendiente);
+              console.log({
+    pen,
+    tipo: typeof pen,
+    comparacion: pen > 0
+});
                 // 1. Definimos qué se verá en la columna "Venta"
                 let visualizacionVenta = "";
                 let infoEquivalenciaSub = "";
-
+let unm=(parseFloat(p.cantidad_entregada)/(1/parseFloat(p.equivalencia)));
+                    console.log(unm);
                 if (factor > 1 && cant >= factor) {
                     // Si alcanza el factor (Ej: 20 bultos >= 20 factor)
                     let unidadesMayores = (cant / factor);
                     // Formateamos para que si es entero no muestre .00 (Ej: 1 en vez de 1.00)
                     let totalUnidadesStr = Number.isInteger(unidadesMayores) ? unidadesMayores :
                         unidadesMayores.toFixed(2);
+                    
 
                     // Lo que se verá grande en la celda
                     visualizacionVenta =
@@ -565,14 +572,15 @@
             ${infoEquivalenciaSub}
         </td>
         <td class="text-center">
-            ${visualizacionVenta}
+        ${cant <1?visualizacionVenta +' ('+unm + p.nombre+')':visualizacionVenta}
+            
         </td>
-        <td class="text-center">${p.cantidad_entregada}</td>
-        <td class="text-center text-success fw-bold">${p.disponible}</td>
+        <td class="text-center">${p.cantidad_entregada <1?p.cantidad_entregada +p.unidad_medida+' ('+unm + p.nombre+')':p.cantidad_entregada +p.unidad_medida}</td>
+        <td class="text-center text-success fw-bold">${p.disponible} ${p.unidad_medida}</td>
         
-        <td class="text-center text-danger fw-bold">${pen}</td>
+        <td class="text-center text-danger fw-bold">${pen} ${p.unidad_medida}</td>
          <td class="text-center col-input d-none">
-            ${pen > 0 ? 
+            ${pen.toFixed(4) > 0 ? 
                 `<input type="number" class="form-control form-control-sm input-entrega mx-auto" 
                     max="${pen}" min="0" value="0" data-id="${p.id}" style="width:70px">` 
                 : '<span class="badge bg-success">Completo</span>'}

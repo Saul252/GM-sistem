@@ -238,8 +238,7 @@ header('Content-Type: application/json');
 
         // 🔹 3. Llamar al modelo PRO
         $resultado = $this->productoModel->crearProducto($data);
-
-        // 🔹 4. Respuesta
+               // 🔹 4. Respuesta
         if ($resultado['status']) {
             echo json_encode([
                 'status' => 'success',

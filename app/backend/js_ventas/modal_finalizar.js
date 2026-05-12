@@ -15,7 +15,7 @@ window.abrirModalFinalizar = function() {
         if (item.entrega_hoy === undefined || item.entrega_hoy === null) {
             item.entrega_hoy = item.cantidad;
         }
-
+console.log('unidaditem',item.unidadMedidaNombre);
         // Cálculos iniciales de venta total
         const cantFactorVenta = Math.floor(item.cantidad / item.factor);
         const piezasRestantesVenta = Math.round((item.cantidad % item.factor) * 100) / 100;
@@ -23,6 +23,34 @@ window.abrirModalFinalizar = function() {
         // Cálculos dinámicos de lo que se está ENTREGANDO
         const fEntregar = Math.floor(item.entrega_hoy / item.factor);
         const pEntregar = Math.round((item.entrega_hoy % item.factor) * 100) / 100;
+        console.log(item.unidad_medida);
+        let leyenda='';
+         let cantidadT=item.cantidad;
+         if(item.cantidad<1)
+           {
+              cantidadT=item.unidadEquivalencia>0?(item.cantidad/(1/item.unidadEquivalencia)):item.cantidad;
+             leyenda =
+    '1 ' + item.unidadMedidaNombre +
+    ' = ' +
+    (1 / item.unidadEquivalencia) +
+    ' de ' +
+    item.unidad_medida +
+    '\n';
+       
+
+           }
+         let nombreuni='';
+         let unidadNombre='';
+        if(cantFactorVenta==0 ){
+            nombreuni=item.unidadMedidaNombre;
+          unidadNombre=item.unidad_medida;
+
+        }
+        else{
+             nombreuni=item.unidad_medida;
+
+        }
+        
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -32,13 +60,13 @@ window.abrirModalFinalizar = function() {
                 
                 <div class="mt-1" style="font-size: 0.7rem; color: #055160; background: #e3f2fd; padding: 4px 8px; border-radius: 4px; border-left: 3px solid #0d6efd;">
                     <i class="bi bi-info-circle-fill"></i> Factor: 1 <b>${item.unidad_reporte}</b> = <b>${item.factor}</b> pzas.<br>
-                    Vendido: ${cantFactorVenta} ${item.unidad_reporte} + ${piezasRestantesVenta} pzas.<br>
+                    Vendido:${leyenda}  ${cantFactorVenta>0?item.unidad_reporte:''} ${piezasRestantesVenta > 0 ? piezasRestantesVenta + ' pzas' : ''}<br>
                     
                 </div>
             </td>
             <td class="text-center">
-                <div class="fw-bold" style="font-size: 0.9rem;">${item.cantidad}</div>
-                <small class="text-muted" style="font-size: 0.65rem;">Pzas Totales</small>
+                <div class="fw-bold" style="font-size: 0.9rem;">${cantidadT} ${(item.cantidad<1)?nombreuni:unidadNombre} </div>
+                
             </td>
             <td>
                 <div class="input-group input-group-sm">

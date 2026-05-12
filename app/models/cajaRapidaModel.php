@@ -143,6 +143,7 @@ class cajaRapidaModel {
                 $p_id      = intval($item['producto_id']);
                 $alm_id    = intval($item['almacen_id']);
                 $cant_ped  = floatval($item['cantidad']);
+                $idunidadMedida=floatval($item['idunidadMedida']?? 0);
                 $cant_real = floatval($item['entrega_hoy']);
                 $prec      = floatval($item['precio_unitario']);
                 $subt      = floatval($item['subtotal']);
@@ -153,8 +154,8 @@ class cajaRapidaModel {
                 $raw_tp = strtolower($item['tipo_precio']);
                 $tp = (strpos($raw_tp, 'dist') !== false) ? 'distribuidor' : ((strpos($raw_tp, 'may') !== false) ? 'mayorista' : 'minorista');
 
-                $stmtD = $conexion->prepare("INSERT INTO detalle_venta (venta_id, producto_id, cantidad, cantidad_entregada, precio_unitario, tipo_precio, subtotal, estado_entrega) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmtD->bind_param("iiddssds", $id_venta, $p_id, $cant_ped, $cant_real, $prec, $tp, $monto_pagado, $st_fila);
+                $stmtD = $conexion->prepare("INSERT INTO detalle_venta (venta_id, producto_id, cantidad, unidadMedida,cantidad_entregada, precio_unitario, tipo_precio, subtotal, estado_entrega) VALUES (?, ?, ?,?, ?, ?, ?, ?, ?)");
+                $stmtD->bind_param("iidddssds", $id_venta, $p_id, $cant_ped,$idunidadMedida, $cant_real, $prec, $tp, $monto_pagado, $st_fila);
                 $stmtD->execute();
                 $id_detalle_venta = $conexion->insert_id;
 

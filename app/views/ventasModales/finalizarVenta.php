@@ -622,6 +622,24 @@ window.agregarProducto = function(btn) {
     const nombre = fila.cells[1].innerText; 
     const cantidadInput = fila.querySelector(".cantidad");
     const modoVenta = fila.querySelector(".select-modo-venta")?.value || 'individual';
+    const modoVent = fila.querySelector(".select-modo-venta");
+        const unidad_medida =
+    modoVent.options[modoVent.selectedIndex].dataset.nombre;
+    console.log(unidad_medida);
+const select =
+    fila.querySelector('.medidas_adicionales');
+
+const equivalencia =
+    parseFloat(select.value);
+
+const medidaId =
+    select.options[select.selectedIndex].dataset.id;
+    const medidaNombre =
+    select.options[select.selectedIndex].dataset.nombre; 
+
+
+console.log(equivalencia);
+console.log(medidaId,medidaNombre);
     
     let cantidadBase = (modoVenta === 'referencia') ? factor : (parseFloat(cantidadInput.value) || 0);
 
@@ -652,7 +670,11 @@ window.agregarProducto = function(btn) {
             precio_unitario: precioUnitario,
             tipo_precio: tipo_p,
             factor: factor,
-            unidad_reporte: reporteNom || 'Fact.'
+            unidad_reporte: reporteNom || 'Fact.',
+            unidad_medida: unidad_medida || 'Fact.',
+            unidadMedidaSelect:medidaId??'0',
+            unidadMedidaNombre:medidaNombre??'',
+             unidadEquivalencia:equivalencia??1
         });
     }
 
@@ -682,8 +704,10 @@ window.renderCarrito = function() {
                         data-index="${index}" value="${cantFactor}" min="0" step="1">
                 </td>
                 <td>
+                
                     <input type="number" class="form-control form-control-sm text-center input-pza-cambio" 
                         data-index="${index}" value="${cantPza}" min="0" step="any">
+              
                 </td>
                 <td class="text-end fw-bold subtotal-celda">$${item.subtotal.toFixed(2)}</td>
                 <td>
@@ -714,6 +738,7 @@ document.addEventListener('input', (e) => {
         item.cantidad = (valFactor * item.factor) + valPza;
         item.subtotal = item.cantidad * item.precio_unitario;
         item.entrega_hoy = item.cantidad;
+      
 
         tr.querySelector('.subtotal-celda').innerText = `$${item.subtotal.toFixed(2)}`;
         actualizarTotalesUI();
@@ -871,6 +896,7 @@ console.log(metodoPago);
             const carritoFinal = window.carrito.map((item, index) => {
                 const inputEntrega = document.querySelector(`.input-entrega-modal[data-index="${index}"]`);
                 let entregado = inputEntrega ? parseFloat(inputEntrega.value) : item.cantidad;
+               console.log(item.unidadMedidaNombre);
                 return {
                     producto_id: parseInt(item.producto_id),
                     almacen_id: parseInt(item.almacen_id),
@@ -878,7 +904,13 @@ console.log(metodoPago);
                     entrega_hoy: isNaN(entregado) ? 0 : entregado, 
                     precio_unitario: parseFloat(item.precio_unitario),
                     subtotal: parseFloat(item.subtotal),
-                    tipo_precio: item.tipo_precio
+                    tipo_precio: item.tipo_precio,
+                     unidad_base:item. unidad_base,
+                     unidadMedidaNombre:item.unidadMedidaNombre??'',
+                   
+                    idunidadMedida:item.unidadMedidaSelect??0,
+                    unidadEquivalencia:item.unidadEquivalencia??1
+                   
                 };
             });
 

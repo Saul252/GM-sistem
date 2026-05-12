@@ -23,8 +23,11 @@ if (!$venta) die("Error: Venta no encontrada.");
 
 // 2. Detalle de Venta (Traemos Factor y Unidad de la tabla Productos)
 $sqlDetalle = "SELECT dv.*, p.nombre as producto_nombre, p.sku, 
-                      p.factor_conversion as factor, p.unidad_reporte 
+                      p.factor_conversion as factor, p.unidad_reporte,p.unidad_medida,   odma.id as odmaIdunidadMedida, odma.nombre as odmaNombre, odma.equivalencia as odmaEquivalencia 
                FROM detalle_venta dv 
+               
+join opciones_de_medida_adicional odma on odma.id= dv.unidadMedida
+
                JOIN productos p ON dv.producto_id = p.id 
                WHERE dv.venta_id = ?";
 $stmtD = $conexion->prepare($sqlDetalle);
@@ -96,23 +99,107 @@ $detalles = $stmtD->get_result();
             <?php while($item = $detalles->fetch_assoc()): 
                 // LÓGICA DE CONVERSIÓN
                 $f = ($item['factor'] > 0) ? $item['factor'] : 1;
-                $unidad = $item['unidad_reporte'] ? $item['unidad_reporte'] : 'Unid.';
-                
-                // Calculamos cuántos factores enteros y cuántas piezas sobran
+                $unidad = $item['unidad_reporte'] ? $item['unidad_reporte'] : $item['unidad_medida'];
+               // Calculamos cuántos factores enteros y cuántas piezas sobran
+              $equiv = floatval($item['odmaEquivalencia'] ?? 1);
+                $nombreMedida=$item['odmaNombre'];
                 $cantEntera = floor($item['cantidad'] / $f);
                 $cantResto = round(fmod($item['cantidad'], $f), 2);
             ?>
             <tr class="item-row">
                 <td>
-                    <div class="bold"><?php echo $item['producto_nombre']; ?></div>
-                    <div>Cant: <?php echo number_format($item['cantidad'], 0); ?> pzas</div>
-                    
-                    <div class="aclaracion-factor">
-                        Entrega: <b><?php echo $cantEntera; ?> <?php echo $unidad; ?></b> 
-                        <?php if($cantResto > 0) echo " + <b>$cantResto pzas</b>"; ?>
-                        <br>
-                        <small>(Factor: <?php echo $f; ?> pzas/<?php echo $unidad; ?>)</small>
-                    </div>
+                    <?php
+
+// ===============================
+// PRESENTACIÓN BONITA DE CANTIDAD
+// ===============================
+
+$cantidadMostrar = $item['cantidad'];
+$unidadMostrar = 'pzas';
+$cantidadMostrar = $item['cantidad'];
+$unidadMostrar = $item['unidad_medida'];
+
+$equiv = floatval($item['odmaEquivalencia'] ?? 0);
+
+$cantidadMostrar = $item['cantidad'];
+$unidadMostrar = $item['unidad_medida'];
+
+if (
+    isset($item['unidadMedida']) &&
+    $equiv > 0
+) {
+
+    $cantidadConvertida =
+        $item['cantidad'] * $equiv;
+
+    if ($cantidadConvertida >= 1) {
+
+        $cantidadMostrar = $cantidadConvertida;
+        $unidadMostrar = $item['odmaNombre'];
+    }
+}
+
+$cantidadMostrarFormateada =
+    number_format($cantidadMostrar, 2);
+
+$cantidadMostrarFormateada =
+    number_format($cantidadMostrar, 2);
+// Formato bonito
+$cantidadMostrarFormateada =
+    number_format($cantidadMostrar, 2);
+
+?>
+
+<div class="bold" style="font-size:13px;">
+    <?php echo $item['producto_nombre']; ?>
+</div>
+
+<div style="
+    margin-top:3px;
+    font-size:12px;
+">
+    Cantidad:
+    <span class="bold">
+        <?php echo $cantidadMostrarFormateada; ?>
+        <?php echo $unidadMostrar; ?>
+         <?php if($cantResto > 0): ?>
+           
+          <b>
+
+    <?php if($unidadMostrar!=$item['unidad_medida']){echo '(' .number_format($cantResto, 2) . ' ' . $item['unidad_medida'].')';} ?>
+</b>         <?php endif; ?>
+    </span>
+</div>
+
+<div class="aclaracion-factor" style="
+    margin-top:5px;
+    background:#f5f5f5;
+    padding:6px;
+    border-radius:4px;
+">
+
+    <div>
+        Entrega:
+        <b>
+            <?php if ($cantEntera>0){echo $cantEntera.'' .$unidad;}?>
+           
+        </b>
+        <?php if ($cantEntera>0 && $cantResto>0){echo'+';}?>
+
+        <?php if($cantResto > 0): ?>
+           
+          <b>
+    <?php echo number_format($cantResto, 2) . ' ' . $item['unidad_medida']; ?>
+</b>         <?php endif; ?>
+    </div>
+
+    <small style="color:#555;">
+        Factor:
+        <?php echo number_format($f,2).' '.$item['unidad_medida'].'s ='; ?>
+        <?php echo $unidad; ?>
+    </small>
+
+</div>
                 </td>
                 <?php if($mostrar_precios): ?>
                 <td align="right" class="bold">
@@ -130,15 +217,18 @@ $detalles = $stmtD->get_result();
     <table style="font-size: 14px;">
         <tr class="bold">
             <td align="right">TOTAL:</td>
-            <td align="right" style="width: 40%;">$<?php echo number_format($venta['total'], 2); ?></td>
+            <td align="right" style="width: 40%;">$<?php echo number_format($venta['cantidad'], 2); ?></td>
         </tr>
     </table>
     <?php else: ?>
     <div style="margin-top: 30px;" class="text-center">
-        __________________________<br>
-        FIRMA DE RECIBIDO
+       
     </div>
     <?php endif; ?>
+      <div style="margin-top: 30px;" class="text-center">
+       <br> __________________________
+      <br>  FIRMA DE RECIBIDO
+    </div>
 
     <div class="text-center" style="margin-top: 15px;">
         <p>Vendedor: <?php echo $venta['nombre_vendedor']; ?></p>

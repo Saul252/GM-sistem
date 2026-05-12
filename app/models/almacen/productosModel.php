@@ -39,6 +39,29 @@ class ProductoModel {
             if (!$stmt->execute()) throw new Exception("Error al insertar producto");
             
             $productoId = $this->db->insert_id;
+// 🔹 CREAR OPCIONES DE MEDIDA AUTOMÁTICAS
+
+$factor = floatval($datos['factor_conversion']);
+
+$medidas = [
+    [
+        'nombre'       => $datos['unidad_reporte'],
+        'equivalencia' => ($factor > 0 ? (1 / $factor) : 1)
+    ],
+    [
+        'nombre'       => $datos['unidad_medida'],
+        'equivalencia' => 1
+    ]
+];
+
+foreach ($medidas as $medida) {
+
+    $this->guardarOpcionMedida([
+        'producto_id'  => $productoId,
+        'nombre'       => $medida['nombre'],
+        'equivalencia' => $medida['equivalencia']
+    ]);
+}
 
             // 2. Obtener todos los almacenes activos para asignarles los precios
             $resAlmacenes = $this->db->query("SELECT id FROM almacenes WHERE activo = 1");
@@ -165,6 +188,30 @@ public function crearProducto($data)
         }
 
         $producto_id = $this->db->insert_id;
+        // 🔹 CREAR OPCIÓN DE MEDIDA AUTOMÁTICA
+// 🔹 CREAR OPCIONES DE MEDIDA AUTOMÁTICAS
+
+$factor = floatval($data['factor_conversion']);
+
+$medidas = [
+    [
+        'nombre'       => $data['unidad_reporte'],
+        'equivalencia' => ($factor > 0 ? (1 / $factor) : 1)
+    ],
+    [
+        'nombre'       => $data['unidad_medida'],
+        'equivalencia' => 1
+    ]
+];
+
+foreach ($medidas as $medida) {
+
+    $this->guardarOpcionMedida([
+        'producto_id'  => $producto_id,
+        'nombre'       => $medida['nombre'],
+        'equivalencia' => $medida['equivalencia']
+    ]);
+}
 
         // 🔹 ALMACENES
         foreach ($data['almacenes'] as $almacen_id => $datos) {
@@ -195,6 +242,7 @@ if ($stock <= 0) {
             if (!$stmtInv->execute()) {
                 throw new Exception("Error inventario: " . $stmtInv->error);
             }
+            
 if ($stock > 0) {
             // 🔹 PROTEGER DIVISIÓN
             $precioIndividual = $stock > 0 ? ($data['precio_adquisicion'] / $stock) : 0;
@@ -442,46 +490,75 @@ public function actualizarProductoCompleto($data)
 }
 public function guardarOpcionMedida($datos) {
 
-    $sql = "INSERT INTO opciones_de_medida_adicional 
-            (
-                producto_id,
-                nombre,
-                equivalencia
-            )
-            VALUES (?, ?, ?)";
+    $sqlOpcionesMedida = "
+        INSERT INTO opciones_de_medida_adicional 
+        (
+            producto_id,
+            nombre,
+            equivalencia
+        )
+        VALUES (?, ?, ?)
+    ";
 
-    $stmt = $this->db->prepare($sql);
+    $stmtOpcionesMedida = $this->db->prepare($sqlOpcionesMedida);
 
-    if (!$stmt) {
+    if (!$stmtOpcionesMedida) {
+
         return [
             'success' => false,
             'message' => 'Error al preparar consulta'
         ];
     }
 
-    $producto_id = intval($datos['producto_id'] ?? 0);
-    $nombre      = trim($datos['nombre'] ?? '');
+    $producto_id  = intval($datos['producto_id'] ?? 0);
+    $nombre       = trim($datos['nombre'] ?? '');
     $equivalencia = floatval($datos['equivalencia'] ?? 0);
 
-    $stmt->bind_param(
+    // VALIDACIONES
+    if ($producto_id <= 0) {
+
+        return [
+            'success' => false,
+            'message' => 'Producto inválido'
+        ];
+    }
+
+    if ($nombre === '') {
+
+        return [
+            'success' => false,
+            'message' => 'Nombre requerido'
+        ];
+    }
+
+    // Evitar equivalencia 0
+    if ($equivalencia <= 0) {
+
+        return [
+            'success' => false,
+            'message' => 'La equivalencia debe ser mayor a 0'
+        ];
+    }
+
+    $stmtOpcionesMedida->bind_param(
         "isd",
         $producto_id,
         $nombre,
         $equivalencia
     );
 
-    if ($stmt->execute()) {
+    if ($stmtOpcionesMedida->execute()) {
 
         return [
             'success' => true,
             'message' => 'Opción de medida registrada',
-            'id' => $stmt->insert_id
+            'id' => $stmtOpcionesMedida->insert_id
         ];
     }
 
     return [
         'success' => false,
-        'message' => $stmt->error
+        'message' => $stmtOpcionesMedida->error
     ];
 }
 // 🔥 ACTUALIZAR MEDIDA ADICIONAL

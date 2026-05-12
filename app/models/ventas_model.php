@@ -141,16 +141,17 @@ if ($monto_favor > 0 && $monto_favor == $monto_pagado) {
             $p_id      = intval($item['producto_id']);
             $alm_id    = intval($item['almacen_id']);
             $cant_ped  = floatval($item['cantidad']);
+            $idunidadMedida=floatval($item['idunidadMedida']?? 0);
             $cant_real = floatval($item['entrega_hoy']); 
             $prec      = floatval($item['precio_unitario']);
             $subt      = floatval($item['subtotal']);
             
             $st_fila = ($cant_real >= $cant_ped) ? 'entregado' : (($cant_real > 0) ? 'parcial' : 'pendiente');
             
-            $sqlD = "INSERT INTO detalle_venta (venta_id, producto_id, cantidad, cantidad_entregada, precio_unitario, subtotal, estado_entrega) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?)";
+            $sqlD = "INSERT INTO detalle_venta (venta_id, producto_id, cantidad,unidadMedida, cantidad_entregada, precio_unitario, subtotal, estado_entrega) 
+                     VALUES (?, ?, ?, ?,?, ?, ?, ?)";
             $stmtD = $conexion->prepare($sqlD);
-            $stmtD->bind_param("iidddds", $id_venta, $p_id, $cant_ped, $cant_real, $prec, $subt, $st_fila);
+            $stmtD->bind_param("iiddddds", $id_venta, $p_id, $cant_ped,$idunidadMedida, $cant_real, $prec, $subt, $st_fila);
             $stmtD->execute();
             $id_detalle_venta = $conexion->insert_id;
 
