@@ -261,7 +261,7 @@
                                     <th>Precio</th>
                                     <th width="110">Venta por</th>
                                    
-                                    <th width="110">Medida Esp</th>
+                                   
                                      <th width="90">Cant</th>
                                     <th width="60">Agregar</th>
                                 </tr>
@@ -295,36 +295,43 @@
                                         </select>
                                     </td>
 
-                                      <td>
-                                        <?php if($tieneReporte): ?>
-                                        <select class="form-select form-select-sm select-modo-venta">
+                            
+<td style="width:1px; padding:0; border:none;">
+    <?php if($tieneReporte): ?>
+    <select 
+        class="form-select form-select-sm select-modo-venta"
+        style="
+            opacity:0;
+            position:absolute;
+            pointer-events:none;
+            height:0;
+            width:0;
+            padding:0;
+            border:0;
+        ">
 
-                                            <option value="individual"
-                                                data-nombre="<?= htmlspecialchars($p['unidad_medida'] ?? 'PZA') ?>">
+        <option value="individual"
+            data-nombre="<?= htmlspecialchars($p['unidad_medida'] ?? 'PZA') ?>">
 
-                                                <?= htmlspecialchars($p['unidad_medida'] ?? 'PZA') ?>
+            <?= htmlspecialchars($p['unidad_medida'] ?? 'PZA') ?>
 
-                                            </option>
+        </option>
 
-                                            <option value="referencia"
-                                                data-nombre="<?= htmlspecialchars($p['unidad_reporte']) ?>">
+        <option value="referencia"
+            data-nombre="<?= htmlspecialchars($p['unidad_reporte']) ?>">
 
-                                                <?= htmlspecialchars($p['unidad_reporte']) ?>
+            <?= htmlspecialchars($p['unidad_reporte']) ?>
 
-                                            </option>
+        </option>
 
-                                        </select>
-                                        <?php else: ?>
-                                        <span class="text-muted small">Individual</span>
-                                        <?php endif; ?>
-                                    </td>
-                                   
-                                    <td>
+    </select>
+    <?php else: ?>
+    <span class="d-none">Individual</span>
+    <?php endif; ?>
+                      
                                         <select class="form-select border-primary medidas_adicionales"
                                             <?= empty($p['medidas_adicionales']) ? 'disabled' : '' ?>>
-                                            <option value="1">
-                                                Normal
-                                            </option>
+                                              <option value='0'>Seleccione</option>
                                             <?php foreach($p['medidas_adicionales'] as $ma): ?>
                                             <option value="<?= $ma['equivalencia'] ?>" data-id="<?= $ma['id'] ?> "
                                                 data-nombre="<?= $ma['nombre'] ?>">
@@ -333,7 +340,7 @@
                                             <?php endforeach; ?>
                                         </select>
 
-                                    </td>
+                                    
                                     </td>
 
                                     <td>
@@ -736,7 +743,7 @@ document.addEventListener('click', function(e) {
  */
 document.addEventListener('keydown', function(e) {
     // 1. Verificamos que la tecla sea Enter y que el foco esté en un input de cantidad
-    if (e.key === 'Enter' && e.target.classList.contains('cantidad')) {
+    if (e.key === 'Enter' && e.target.classList.contains('cantidad_usuario')) {
         
         // Evitamos que el Enter haga un submit accidental del formulario principal
         e.preventDefault(); 

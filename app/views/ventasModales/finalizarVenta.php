@@ -692,7 +692,7 @@ window.renderCarrito = function() {
     // Generamos el HTML en un array para un solo "paint" al final
     const htmlCarrito = window.carrito.map((item, index) => {
         const cantFactor = Math.floor(item.cantidad / item.factor);
-        const cantPza = Math.round((item.cantidad % item.factor) * 100) / 100;
+        const cantPza = (Math.round((item.cantidad % item.factor) * 100) / 100);
         item.subtotal = item.cantidad * item.precio_unitario;
 
         return `
@@ -701,12 +701,12 @@ window.renderCarrito = function() {
                 <td><div class="fw-bold" style="font-size: 0.8rem;">${item.nombre}</div></td>
                 <td>
                     <input type="number" class="form-control form-control-sm text-center input-factor-cambio" 
-                        data-index="${index}" value="${cantFactor}" min="0" step="1">
+                        data-index="${index}" value="${(cantFactor<1 &&cantFactor>0)?cantFactor.toFixed(3):cantFactor}" min="0" step="1">
                 </td>
                 <td>
                 
                     <input type="number" class="form-control form-control-sm text-center input-pza-cambio" 
-                        data-index="${index}" value="${cantPza}" min="0" step="any">
+                        data-index="${index}" value="${(cantPza<1&& cantPza>0)?cantPza.toFixed(3):cantPza}" min="0" step="any">
               
                 </td>
                 <td class="text-end fw-bold subtotal-celda">$${item.subtotal.toFixed(2)}</td>

@@ -93,7 +93,7 @@
                                     <th>Almacén</th>
                                     <th>Precio</th>
                                     <th width="120">Venta por</th>
-                                    <th width="120">Medida Especial</th>
+                                   
                                     <th width="90">Cant</th>
                                     <th width="60"></th>
                                 </tr>
@@ -163,7 +163,7 @@
                       
                                         <select class="form-select border-primary medidas_adicionales"
                                             <?= empty($p['medidas_adicionales']) ? 'disabled' : '' ?>>
-                                           
+                                              <option value='0'>Seleccione</option>
                                             <?php foreach($p['medidas_adicionales'] as $ma): ?>
                                             <option value="<?= $ma['equivalencia'] ?>" data-id="<?= $ma['id'] ?> "
                                                 data-nombre="<?= $ma['nombre'] ?>">
@@ -178,7 +178,7 @@
                                         <input type="number" class="form-control form-control-sm cantidad_usuario"
                                             min="1" value="1">
                                         <!-- REAL -->
-                                        <input type="hidden" class="cantidad" value="1">
+                                        <input type="hidden" class="cantidad" value="0">
                                         <!-- visible -->
                                     </td>
 
@@ -345,7 +345,7 @@
      */
     document.addEventListener('keydown', function(e) {
         // 1. Verificamos que la tecla sea Enter y que el foco esté en un input de cantidad
-        if (e.key === 'Enter' && e.target.classList.contains('cantidad')) {
+        if (e.key === 'Enter' && e.target.classList.contains('cantidad_usuario')) {
 
             // Evitamos que el Enter haga un submit accidental del formulario principal
             e.preventDefault();
@@ -379,6 +379,7 @@
 
         const inputUsuario =
             fila.querySelector('.cantidad_usuario');
+            
 
         const inputReal =
             fila.querySelector('.cantidad');
@@ -392,7 +393,8 @@
             parseFloat(inputUsuario.value) || 0;
 
         const equivalencia =
-            parseFloat(selectMedida?.value) || 1;
+            parseFloat(selectMedida?.value) || 0;
+  
 
         // REAL
         const totalReal =

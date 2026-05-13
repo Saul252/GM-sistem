@@ -32,7 +32,7 @@ console.log('unidaditem',item.unidadMedidaNombre);
              leyenda =
     '1 ' + item.unidadMedidaNombre +
     ' = ' +
-    (1 / item.unidadEquivalencia) +
+    (1 / item.unidadEquivalencia).toFixed(3) +
     ' de ' +
     item.unidad_medida +
     '\n';
@@ -73,10 +73,14 @@ console.log('unidaditem',item.unidadMedidaNombre);
                     <input type="number" 
                            class="form-control text-center input-entrega-modal" 
                            data-index="${index}" 
-                           value="${item.cantidad}" 
+              value="${
+    item.cantidad % 1 !== 0
+        ? item.cantidad.toFixed(3)
+        : item.cantidad
+}"
                            min="0" 
                            max="${item.cantidad}"
-                           step="any">
+                           step="0.01">
                     <span class="input-group-text"><i class="bi bi-box-seam"></i></span>
                 </div>
                 <small class="text-muted d-block text-center" style="font-size: 0.65rem;">Piezas a entregar hoy</small>

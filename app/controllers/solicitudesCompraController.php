@@ -292,6 +292,7 @@ if (
     $resultado['success'] === true &&
     $solicitud_id > 0
 ) {
+    $id_generado = intval($resultado['compra_id'] ?? 0);
 
     $id_generado = intval($_POST['folio'] ?? 0);
 
@@ -302,7 +303,7 @@ if (
             $solicitud_id,
             $almacen_id,
             'recibido',
-            $_POST['folio'] ?? '0'
+            $id_generado??'0'
         );
 
         $resultado['message'] .=

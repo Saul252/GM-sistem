@@ -155,7 +155,7 @@ error_reporting(E_ALL);
                 <div>
                     <h5 class="fw-bold mb-0">
                         <i class="bi bi-box-arrow-in-down me-2"></i>
-                        Convertir Solicitud <span id="uni-folio"></span>
+                        Convertir Solicitud <span name="uni-folio" id="uni-folio"></span>
                     </h5>
                     <small class="opacity-75">Generación de compra e inventario</small>
                 </div>
@@ -580,7 +580,7 @@ error_reporting(E_ALL);
        <?php require_once __DIR__ . '/solicitudesCompra/ModalSolicitud.php'; ?>
         <?php require_once __DIR__ . '/egresosComponets/agregarPoductoModal.php'; ?>
     <script>
-    const URL_CONTROLADOR = '../controllers/solicitudesCompraController.php';
+    const URL_CONTROLADOR_SOLICITUD = '../controllers/solicitudesCompraController.php';
 
     $(document).ready(function() {
         const table = $('#tablaSolicitudes').DataTable({
@@ -668,7 +668,7 @@ function calcularTotal(input) {
                 didOpen: () => Swal.showLoading()
             });
             try {
-                const resp = await fetch(`${URL_CONTROLADOR}?action=convertirACompra`, {
+                const resp = await fetch(`${URL_CONTROLADOR_SOLICITUD}?action=convertirACompra`, {
                     method: 'POST',
                     body: new FormData(this)
                 });
@@ -705,7 +705,7 @@ function calcularTotal(input) {
         if (r.isConfirmed) {
             const fd = new FormData();
             fd.append('id', id);
-            const resp = await fetch(`${URL_CONTROLADOR}?action=eliminar`, {
+            const resp = await fetch(`${URL_CONTROLADOR_SOLICITUD}?action=eliminar`, {
                 method: 'POST',
                 body: fd
             });
@@ -720,7 +720,7 @@ function calcularTotal(input) {
 function asignarSiguienteFolioCompra() {
     const inputFolio = document.getElementsByName('folio')[0];
     if (!inputFolio) return;
-    fetch(`${URL_CONTROLADOR}?action=getSiguienteFolio`)
+    fetch(`${URL_CONTROLADOR_SOLICITUD}?action=getSiguienteFolio`)
         .then(res => res.json())
         .then(data => {
             if (data.success) inputFolio.value = data.folio;
@@ -733,7 +733,7 @@ async function gestionarSolicitud(id) {
         $('#tablaConversion tbody').empty();
         console.log(id);
 
-        const resp = await fetch(`${URL_CONTROLADOR}?action=obtenerDetalle&id=${id}`);
+        const resp = await fetch(`${URL_CONTROLADOR_SOLICITUD}?action=obtenerDetalle&id=${id}`);
         asignarSiguienteFolioCompra();
 
         if (!resp.ok) throw new Error(`Error de servidor: ${resp.status}`);
@@ -1123,7 +1123,7 @@ function actualizarGranTotal() {
 
         $.ajax({
 
-            url: URL_CONTROLADOR,
+            url: URL_CONTROLADOR_SOLICITUD,
 
             type: 'POST',
 
@@ -1202,7 +1202,7 @@ function actualizarGranTotal() {
      * Llena el modal de impresión con la data de la solicitud
      */
     function prepararImpresion(id) {
-    fetch(`${URL_CONTROLADOR}?action=obtenerDetalle&id=${id}`)
+    fetch(`${URL_CONTROLADOR_SOLICITUD}?action=obtenerDetalle&id=${id}`)
         .then(res => res.json())
         .then(res => {
 

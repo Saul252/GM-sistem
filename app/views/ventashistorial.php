@@ -443,7 +443,7 @@ async function verDetalle(id) {
             return `<tr>
                 <td>${p.producto}</td>
                 <td class="text-center">${p.cantidad}</td>
-                <td class="text-center">${p.cantidad_entregada}</td>
+                <td class="text-center">${p.cantidad_entregada}1234567</td>
                 <td class="text-center text-danger fw-bold">${pen}</td>
                 <td class="text-center col-input d-none">
                     ${pen > 0 ? `<input type="number" class="form-control form-control-sm input-entrega mx-auto" max="${pen}" min="0" value="0" data-id="${p.id}" style="width:70px">` : '<span class="badge bg-success">Completo</span>'}

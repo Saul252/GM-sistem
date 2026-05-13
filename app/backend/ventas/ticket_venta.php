@@ -134,19 +134,16 @@ if (
 
     if ($cantidadConvertida >= 1) {
 
-        $cantidadMostrar = $cantidadConvertida;
+        $cantidadMostrar = number_format($cantidadConvertida,3);
         $unidadMostrar = $item['odmaNombre'];
     }
 }
 
 $cantidadMostrarFormateada =
-    number_format($cantidadMostrar, 2);
+    number_format($cantidadMostrar, 1);
 
-$cantidadMostrarFormateada =
-    number_format($cantidadMostrar, 2);
-// Formato bonito
-$cantidadMostrarFormateada =
-    number_format($cantidadMostrar, 2);
+
+
 
 ?>
 
@@ -193,11 +190,7 @@ $cantidadMostrarFormateada =
 </b>         <?php endif; ?>
     </div>
 
-    <small style="color:#555;">
-        Factor:
-        <?php echo number_format($f,2).' '.$item['unidad_medida'].'s ='; ?>
-        <?php echo $unidad; ?>
-    </small>
+    
 
 </div>
                 </td>
@@ -217,13 +210,12 @@ $cantidadMostrarFormateada =
     <table style="font-size: 14px;">
         <tr class="bold">
             <td align="right">TOTAL:</td>
-            <td align="right" style="width: 40%;">$<?php echo number_format($venta['cantidad'], 2); ?></td>
+            <td align="right" style="width: 60%;">$<?php echo number_format($venta['subtotal'], 2).' ('.$venta['estado_pago'].')'; ?> </td>
         </tr>
     </table>
+    
     <?php else: ?>
-    <div style="margin-top: 30px;" class="text-center">
-       
-    </div>
+    
     <?php endif; ?>
       <div style="margin-top: 30px;" class="text-center">
        <br> __________________________

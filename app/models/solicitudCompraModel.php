@@ -114,8 +114,7 @@ public function actualizarEstado($id, $almacen_id, $nuevoEstado, $compra_id = nu
     // Forzamos minúsculas para coincidir con ENUM
     $nuevoEstado = strtolower($nuevoEstado);
 
-    $sql = "
-        UPDATE solicitudes_compra 
+    $sql = "        UPDATE solicitudes_compra 
         SET 
             estado = ?, 
             almacen_id = ?, 

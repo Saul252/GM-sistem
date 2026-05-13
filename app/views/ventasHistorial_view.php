@@ -544,6 +544,7 @@
                 let infoEquivalenciaSub = "";
 let unm=(parseFloat(p.cantidad_entregada)/(1/parseFloat(p.equivalencia)));
                     console.log(unm);
+                    unm=unm %1 !==0?unm.toFixed(0):unm;
                 if (factor > 1 && cant >= factor) {
                     // Si alcanza el factor (Ej: 20 bultos >= 20 factor)
                     let unidadesMayores = (cant / factor);
@@ -572,10 +573,10 @@ let unm=(parseFloat(p.cantidad_entregada)/(1/parseFloat(p.equivalencia)));
             ${infoEquivalenciaSub}
         </td>
         <td class="text-center">
-        ${cant <1?visualizacionVenta +' ('+unm + p.nombre+')':visualizacionVenta}
+        ${cant <1?visualizacionVenta +' ('+unm + ' '+p.nombre+')':visualizacionVenta}
             
         </td>
-        <td class="text-center">${p.cantidad_entregada <1?p.cantidad_entregada +p.unidad_medida+' ('+unm + p.nombre+')':p.cantidad_entregada +p.unidad_medida}</td>
+        <td class="text-center">${p.cantidad_entregada <1?p.cantidad_entregada + p.unidad_medida+' ('+unm +' '+ p.nombre+')':p.cantidad_entregada +p.unidad_medida}</td>
         <td class="text-center text-success fw-bold">${p.disponible} ${p.unidad_medida}</td>
         
         <td class="text-center text-danger fw-bold">${pen} ${p.unidad_medida}</td>

@@ -23,8 +23,11 @@ $venta = $stmt->get_result()->fetch_assoc();
 
 // 2. Consulta de Detalles (Añadimos factor_conversion y unidad_reporte)
 $sqlDetalle = "SELECT dv.*, p.nombre as producto_nombre, p.sku, 
-                      p.factor_conversion as factor, p.unidad_reporte 
+                      p.factor_conversion as factor, p.unidad_reporte,p.unidad_medida,   odma.id as odmaIdunidadMedida, odma.nombre as odmaNombre, odma.equivalencia as odmaEquivalencia 
                FROM detalle_venta dv 
+               
+join opciones_de_medida_adicional odma on odma.id= dv.unidadMedida
+
                JOIN productos p ON dv.producto_id = p.id 
                WHERE dv.venta_id = ?";
 $stmtD = $conexion->prepare($sqlDetalle);
@@ -105,7 +108,7 @@ $detalles = $stmtD->get_result();
     <table>
         <thead>
             <tr>
-                <th style="width: 25%;">CANT.</th>
+                <th style="width: 25%;">Producto</th>
                 <th>DESCRIPCIÓN</th>
             </tr>
         </thead>
@@ -116,22 +119,47 @@ $detalles = $stmtD->get_result();
                 $unidad = $item['unidad_reporte'] ?: 'Unid.';
                 $cantEntera = floor($item['cantidad'] / $f);
                 $cantResto = round(fmod($item['cantidad'], $f), 2);
+                  $equiv = floatval($item['odmaEquivalencia'] ?? 1);
+                $nombreMedida=$item['odmaNombre'];
+                $unidadMedida= $item['unidad_medida'];
+
             ?>
             <tr>
-                <td class="bold">
-                    <?php echo number_format($item['cantidad'], 0); ?><br>
-                    <small style="font-weight:normal;">Piezas</small>
-                </td>
+                
                 <td>
                     <b style="text-transform: uppercase;"><?php echo $item['producto_nombre']; ?></b><br>
                     <small>SKU: <?php echo $item['sku']; ?></small>
                     
+                    </td>
+                    <td>
                     <div class="conversion-box">
-                        Entrega: <b><?php echo $cantEntera; ?> <?php echo $unidad; ?></b>
-                        <?php if($cantResto > 0) echo " + <b>$cantResto pzas</b>"; ?>
+                        Entrega: <b><?php echo $cantEntera>0?$cantEntera.' '.$unidad:''; ?></b>
+                        
+                        <?php if((number_format($cantResto,2)) > 0.00000000) {
+                            
+                            if($cantEntera>0)
+                                {
+                                    echo ' + ';
+
+                                }
+                                if($equiv>=1 )
+                                    {
+                                        echo "<b>$cantResto $unidadMedida </b>"; }
+
+                                    }
+                                    else{
+                                        if($cantResto>0)
+                                            {
+                                                  $cantidadMedida=$cantResto/(1/$equiv);
+                                        echo "<b>$cantidadMedida $nombreMedida </b>"; 
+
+                                            }
+                                      
+
+                                    }
+                            ?>
                         <br>
-                        <small>Factor: <?php echo $f; ?> pzas x <?php echo $unidad; ?></small>
-                    </div>
+                         </div>
                 </td>
             </tr>
             <?php endwhile; ?>
