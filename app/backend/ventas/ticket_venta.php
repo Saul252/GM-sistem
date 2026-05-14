@@ -34,6 +34,15 @@ $stmtD = $conexion->prepare($sqlDetalle);
 $stmtD->bind_param("i", $id_venta);
 $stmtD->execute();
 $detalles = $stmtD->get_result();
+// 2. Detalle de Venta (Traemos Factor y Unidad de la tabla Productos)
+$sqlPago = "SELECT h.*  FROM historial_pagos h 
+               
+
+               WHERE h.venta_id = ?";
+$stmtPago = $conexion->prepare($sqlPago);
+$stmtPago->bind_param("i", $id_venta);
+$stmtPago->execute();
+$detallesPago = $stmtPago->get_result();
 ?>
 
 <!DOCTYPE html>
@@ -211,8 +220,33 @@ $cantidadMostrarFormateada =
         <tr class="bold">
             <td align="right">TOTAL:</td>
             <td align="right" style="width: 60%;">$<?php echo number_format($venta['subtotal'], 2).' ('.$venta['estado_pago'].')'; ?> </td>
+         
         </tr>
     </table>
+   <table style="font-size:14px; width:100%;">
+
+    <?php while($pago = $detallesPago->fetch_assoc()): ?>
+
+        <tr>
+
+            <td align="right" class="bold">
+                Método de pago:
+            </td>
+
+            <td align="right" style="width:60%;">
+
+                <?php echo $pago['monto']. ' '.$pago['metodo_pago']; ?>
+
+            </td>
+
+        </tr>
+
+    <?php endwhile; ?>
+
+</table>
+
+
+
     
     <?php else: ?>
     

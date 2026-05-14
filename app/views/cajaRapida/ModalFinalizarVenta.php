@@ -252,58 +252,129 @@
 
  <script>
 async function cargarPersonalDespacho(alm) {
-    const rutaControlador = '/cfsistem/app/controllers/cajaRapidaController.php';
+
+    const rutaControlador =
+        '/cfsistem/app/controllers/cajaRapidaController.php';
+
     const selectC = $('#patio_chofer_id');
+
     const selectT = $('#patio_tripulantes');
 
     if (!selectC.length) return;
 
-    selectC.empty().append('<option value="">Cargando personal...</option>');
+    selectC.empty()
+        .append('<option value="">Cargando personal...</option>');
+
     selectT.empty();
 
     try {
-        const response = await fetch(`${rutaControlador}?action=get_recursos_sucursal&almacen_id=${alm}`);
+
+        const response = await fetch(
+            `${rutaControlador}?action=get_recursos_sucursal&almacen_id=${alm}`
+        );
+
         const res = await response.json();
 
         if (res.success && res.choferes) {
-            selectC.empty().append('<option value="">Seleccione encargado...</option>');
+
+            selectC.empty();
             selectT.empty();
 
-            res.choferes.forEach(persona => {
-                const option = `<option value="${persona.id}">${persona.nombre}</option>`;
+            // =====================================================
+            // 🔥 CARGAR PERSONAL
+            // =====================================================
+
+            res.choferes.forEach((persona, index) => {
+
+                const option =
+                    `<option value="${persona.id}">
+                        ${persona.nombre}
+                    </option>`;
+
                 selectC.append(option);
+
                 selectT.append(option);
+
             });
 
-            // --- LÓGICA DE FILTRADO ---
-            // Cada que cambie el encargado, actualizamos los ayudantes
-            selectC.off('change').on('change', function() {
-                const seleccionadoId = $(this).val();
+            // =====================================================
+            // 🔥 AUTOSELECCIONAR PRIMER CHOFER
+            // =====================================================
 
-                // Mostramos todos primero para resetear
-                selectT.find('option').show().prop('disabled', false);
+            if (res.choferes.length > 0) {
+
+                const primerId =
+                    res.choferes[0].id;
+
+                selectC
+                    .val(primerId)
+                    .trigger('change');
+            }
+
+            // =====================================================
+            // 🔥 FILTRAR TRIPULANTES
+            // =====================================================
+
+            selectC.off('change')
+            .on('change', function () {
+
+                const seleccionadoId =
+                    $(this).val();
+
+                // 🔥 reset
+                selectT.find('option')
+                    .show()
+                    .prop('disabled', false);
 
                 if (seleccionadoId) {
-                    // Buscamos la opción con ese ID en el select de tripulantes y la ocultamos
-                    selectT.find(`option[value="${seleccionadoId}"]`).hide().prop('disabled', true);
 
-                    // Si el ayudante ya estaba seleccionado y ahora es el encargado, lo desmarcamos
-                    if (selectT.val() == seleccionadoId) {
-                        selectT.val(null).trigger('change');
+                    // 🔥 ocultar encargado
+                    selectT.find(
+                        `option[value="${seleccionadoId}"]`
+                    )
+                    .hide()
+                    .prop('disabled', true);
+
+                    // 🔥 quitar selección si coincide
+                    if (
+                        selectT.val() == seleccionadoId
+                    ) {
+
+                        selectT.val(null)
+                            .trigger('change');
                     }
                 }
+
             });
 
-            console.log(`Personal cargado para almacén ${alm}`);
+            // 🔥 ejecutar filtro inicial
+            selectC.trigger('change');
+
+            console.log(
+                `Personal cargado para almacén ${alm}`
+            );
+
         } else {
-            throw new Error(res.message || 'No se encontró personal');
+
+            throw new Error(
+                res.message ||
+                'No se encontró personal'
+            );
         }
+
     } catch (e) {
-        console.error("Error en cargarPersonalDespacho:", e);
-        selectC.empty().append('<option value="">Error al cargar personal</option>');
+
+        console.error(
+            "Error en cargarPersonalDespacho:",
+            e
+        );
+
+        selectC.empty()
+            .append(
+                '<option value="">Error al cargar personal</option>'
+            );
     }
-}
- </script>
+}</script>
 
  <script>
 // Escuchar cambios en el efectivo recibido
@@ -713,8 +784,8 @@ window.abrirModalFinalizar = function() {
                </div>
             </td>
             <td class="text-center">
-                <div class="fw-bold" style="font-size: 0.9rem;">${cantidadT} ${(item.cantidad<1)?nombreuni:unidadNombre} </div>
-               
+                 <div class="fw-bold" style="font-size: 0.9rem;">${cantFactorVenta>=1?cantFactorVenta:cantidadT.toFixed(3)} ${cantFactorVenta>0?item.unidad_reporte:nombreuni} </div>
+             
             </td>
             <td>
                 <div class="input-group input-group-sm">

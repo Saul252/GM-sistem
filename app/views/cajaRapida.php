@@ -286,9 +286,9 @@
 
                                     <td>
                                         <select class="form-select form-select-sm select-precio">
-                                            <option value="<?= $p['precio_minorista'] ?>">Minorista -
+                                            <option value="<?= $p['precio_minorista'] ?>">Publico -
                                                 $<?= number_format($p['precio_minorista'],2) ?></option>
-                                            <option value="<?= $p['precio_mayorista'] ?>">Mayorista -
+                                            <option value="<?= $p['precio_mayorista'] ?>">Constructora -
                                                 $<?= number_format($p['precio_mayorista'],2) ?></option>
                                             <option value="<?= $p['precio_distribuidor'] ?>">Distribuidor -
                                                 $<?= number_format($p['precio_distribuidor'],2) ?></option>
@@ -348,7 +348,7 @@
                                             min="1" value="1">
 
                                         <!-- REAL -->
-                                        <input type="hidden" class="cantidad" value="1">
+                                        <input type="hidden" class="cantidad" value="0">
 
                                     </td>
 
@@ -547,7 +547,7 @@ const medidaId =
 
 console.log(equivalencia);
 console.log(medidaId,medidaNombre);
-    
+    select.selectedIndex = 0;
     
     // Si se agrega en modo "Referencia/Reporte" (ej. Tonelada), convertimos a piezas
     if(modoVenta === 'referencia') {
@@ -624,7 +624,7 @@ window.renderCarrito = function() {
     
     window.carrito.forEach((item, index) => {
         const cantFactor = Math.floor(item.cantidad / item.factor);
-        const cantPza = Math.round((item.cantidad % item.factor) * 100) / 100;
+        const cantPza = (item.cantidad % item.factor).toFixed(3);
 
         item.subtotal = item.cantidad * item.precio_unitario;
 
@@ -819,7 +819,7 @@ function actualizarCantidadReal(e) {
     const totalReal =
         cantidadUsuario / equivalencia;
 
-    inputReal.value = totalReal;
+    inputReal.value = totalReal.toFixed(6);
 
     console.log({
         usuario: cantidadUsuario,

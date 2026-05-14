@@ -13,7 +13,7 @@ window.abrirModalFinalizar = function() {
     
     window.carrito.forEach((item, index) => {
         if (item.entrega_hoy === undefined || item.entrega_hoy === null) {
-            item.entrega_hoy = item.cantidad;
+            item.entrega_hoy = item.cantidad.toFixed;
         }
 console.log('unidaditem',item.unidadMedidaNombre);
         // Cálculos iniciales de venta total
@@ -65,7 +65,7 @@ console.log('unidaditem',item.unidadMedidaNombre);
                 </div>
             </td>
             <td class="text-center">
-                <div class="fw-bold" style="font-size: 0.9rem;">${cantidadT} ${(item.cantidad<1)?nombreuni:unidadNombre} </div>
+                <div class="fw-bold" style="font-size: 0.9rem;">${cantFactorVenta>=1?cantFactorVenta:cantidadT.toFixed(3)} ${cantFactorVenta>0?item.unidad_reporte:nombreuni} </div>
                 
             </td>
             <td>

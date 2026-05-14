@@ -382,8 +382,8 @@ function agregarFilaCompra() {
                 <input type="number"
                     name="items[${idUnico}][precioUnitario]"
                     class="form-control form-control-sm border-success shadow-sm input-precioUnitario"
-                    value="0" min="0" step="0.01"
-                    oninput="recalcularTotales(${idUnico})"
+                    value="0" min="0" step="0.01" lang="en-US"
+                    oninput="recalcularTotales(${idUnico}, 'precioUnitario')"
                     placeholder="0.00" required>
             </div>
 
@@ -396,6 +396,7 @@ function agregarFilaCompra() {
                     <span class="input-group-text">$</span>
                     <input type="number"
                         name="items[${idUnico}][total_item]"
+                         oninput="recalcularTotales(${idUnico}, 'costoTotal')"
                         class="form-control input-costo-total"
                         value="0" step="0.01"
                       
@@ -478,43 +479,172 @@ function actualizarLabelsUnidad(id, select) {
     recalcularTotales(id);
 }
 
-function recalcularTotales(id) {
-    const card = $(`#card_item_${id}`);
-    const factor = parseFloat(card.find('.hidden-factor').val()) || 0;
-    const inputFaltante = card.find('.input-faltante');
-    const inputExcedente = card.find('.input-excedente'); // <--- NUEVO
-const inputPrecioUnitario = parseFloat(
-    card.find('.input-precioUnitario').val()
-) || 0;  // 1. Cantidad según factura (Mayoreo * Factor + Sueltas)
-    const cantidadFacturada = (parseFloat(card.find('.input-mayoreo').val()) || 0) * factor +
-        (parseFloat(card.find('.input-sueltas').val()) || 0);
+let recalculandoTotales = false;
+// 🔥 EVITAR CICLOS INFINITOS
 
-    // 2. Faltante: Si está habilitado, restamos.
-    const faltante = inputFaltante.is(':disabled') ? 0 : (parseFloat(inputFaltante.val()) || 0);
+// =====================================================
+// 🔥 RECALCULAR TOTALES
+// =====================================================
 
-    // 3. Excedente: Si está habilitado, SUMAMOS (Lo que llegó de más) <--- NUEVO
-    const excedente = inputExcedente.is(':disabled') ? 0 : (parseFloat(inputExcedente.val()) || 0);
+function recalcularTotales(id, origen = '') {
 
-    // 4. Lo que realmente entró físicamente al almacén
-    const totalReal = cantidadFacturada - faltante + excedente;
-   const precio_total =cantidadFacturada*inputPrecioUnitario;
-   console.log(precio_total);
-    // Actualizar labels y campos ocultos
-    card.find('.span-total-base').text(totalReal.toLocaleString());
-    card.find('.hidden-total-piezas').val(totalReal);
-    card.find('.hidden-faltante').val(faltante);
-     card.find('.hidden-precio-lote').val(inputPrecioUnitario.toFixed(4)); 
-      card.find('.input-costo-total').val(precio_total.toFixed(2));
+    // 🔥 evitar loops
+    if (recalculandoTotales) return;
 
-    // Si tienes un input oculto para excedente, actualízalo aquí:
-    // card.find('.hidden-excedente').val(excedente); 
+    recalculandoTotales = true;
 
-    //calcularPrecioUnitarioLote(id);
-    validarReparto(id);
-    actualizarGranTotal();
+    try {
+
+        const card = $(`#card_item_${id}`);
+
+        const factor = parseFloat(
+            card.find('.hidden-factor').val()
+        ) || 0;
+
+        const inputFaltante =
+            card.find('.input-faltante');
+
+        const inputExcedente =
+            card.find('.input-excedente');
+
+        // =====================================================
+        // 🔥 CANTIDADES
+        // =====================================================
+
+        const mayoreo = parseFloat(
+            card.find('.input-mayoreo').val()
+        ) || 0;
+
+        const sueltas = parseFloat(
+            card.find('.input-sueltas').val()
+        ) || 0;
+
+        const cantidadFacturada =
+            (mayoreo * factor) + sueltas;
+
+        // =====================================================
+        // 🔥 FALTANTES / EXCEDENTES
+        // =====================================================
+
+        const faltante = inputFaltante.is(':disabled')
+            ? 0
+            : (parseFloat(inputFaltante.val()) || 0);
+
+        const excedente = inputExcedente.is(':disabled')
+            ? 0
+            : (parseFloat(inputExcedente.val()) || 0);
+
+        // =====================================================
+        // 🔥 TOTAL REAL
+        // =====================================================
+
+        const totalReal =
+            cantidadFacturada - faltante + excedente;
+
+        // =====================================================
+        // 🔥 PRECIOS
+        // =====================================================
+
+        let precioUnitario = parseFloat(
+            card.find('.input-precioUnitario').val()
+        ) || 0;
+
+        let costoTotal = parseFloat(
+            card.find('.input-costo-total').val()
+        ) || 0;
+
+        // =====================================================
+        // 🔥 SI EL USUARIO MODIFICÓ COSTO TOTAL
+        // recalcular precio unitario
+        // =====================================================
+
+        if (origen === 'costoTotal') {
+
+            if (
+                costoTotal > 0 &&
+                cantidadFacturada > 0
+            ) {
+
+                precioUnitario =
+                    costoTotal / cantidadFacturada;
+
+                if(precioUnitario%1 !=0){
+                     card.find('.input-precioUnitario')
+                    .val(precioUnitario.toFixed(2));
+
+                }
+                else{
+                    card.find('.input-precioUnitario')
+                    .val(precioUnitario);
+
+                }
+                    
+
+                // 🔥 SOLO AQUÍ actualizamos precio unitario
+               
+            }
+        }
+
+        // =====================================================
+        // 🔥 SI EL USUARIO MODIFICÓ PRECIO UNITARIO
+        // recalcular costo total
+        // =====================================================
+
+        if (origen === 'precioUnitario') {
+
+            costoTotal =
+                cantidadFacturada * precioUnitario;
+
+            // 🔥 SOLO AQUÍ actualizamos costo total
+            card.find('.input-costo-total')
+                .val(costoTotal.toFixed(2));
+        }
+
+        // =====================================================
+        // 🔥 SI CAMBIARON CANTIDADES
+        // =====================================================
+
+        if (
+            origen === '' &&
+            precioUnitario > 0
+        ) {
+
+            costoTotal =
+                cantidadFacturada * precioUnitario;
+
+            card.find('.input-costo-total')
+                .val(costoTotal.toFixed(2));
+        }
+
+        // =====================================================
+        // 🔥 ACTUALIZAR CAMPOS
+        // =====================================================
+
+        card.find('.span-total-base')
+            .text(totalReal.toLocaleString());
+
+        card.find('.hidden-total-piezas')
+            .val(totalReal);
+
+        card.find('.hidden-faltante')
+            .val(faltante);
+
+        card.find('.hidden-precio-lote')
+            .val(precioUnitario.toFixed(4));
+
+        // =====================================================
+        // 🔥 VALIDACIONES
+        // =====================================================
+
+        validarReparto(id);
+
+        actualizarGranTotal();
+
+    } finally {
+
+        recalculandoTotales = false;
+    }
 }
-
-
 function validarReparto(id) {
     const card = $(`#card_item_${id}`);
     const total = parseFloat(card.find('.hidden-total-piezas').val()) || 0;

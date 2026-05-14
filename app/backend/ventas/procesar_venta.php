@@ -91,10 +91,11 @@ $folio = "V-" . str_pad($proximo_id, 2, "0", STR_PAD_LEFT);
 
     // 3. REGISTRAR PAGO (Si existe)
     $saldo_favor=0;
+    $efectivoPagado=0;
     $ref="";
     if ($monto_pagado > 0) {
-        $stmtP = $conexion->prepare("INSERT INTO historial_pagos (venta_id, usuario_id, monto, saldo_favor, metodo_pago, referencia) VALUES (?, ?, ?, ?, ?, ?)");
-        $stmtP->bind_param("iids", $id_venta, $id_usuario, $monto_pagado,$saldo_favor, $metodo_pago,$ref);
+        $stmtP = $conexion->prepare("INSERT INTO historial_pagos (venta_id, usuario_id, monto, saldo_favor, metodo_pago,efectivoPagado, referencia) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmtP->bind_param("iidsd", $id_venta, $id_usuario, $monto_pagado,$saldo_favor, $metodo_pago,$efectivoPagado,$ref);
         $stmtP->execute();
     }
 

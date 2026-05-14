@@ -227,8 +227,8 @@
                                     <th>Almacén</th>
                                     <th width="130">Stock Inicial</th>
                                     <th width="100">Stock Mín.</th>
-                                    <th width="110">P. Minorista</th>
-                                    <th width="110">P. Mayorista</th>
+                                    <th width="110">P. Publico</th>
+                                    <th width="110">P. Constructora</th>
                                     <th width="110">P. Distribuidor</th>
                                 </tr>
                             </thead>

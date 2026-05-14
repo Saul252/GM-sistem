@@ -35,7 +35,7 @@ if ($action === 'get_recursos_sucursal') {
     echo json_encode([
         "success"  => true,
         "unidades" => $vehiculoM->listarPorAlmacen($almacen_id),
-        "choferes" => $trabajadorM->listarPorAlmacen($almacen_id)
+        "choferes" => $trabajadorM->listarPorAlmacenEncargado($almacen_id)
     ]);
     exit;
 }

@@ -118,9 +118,9 @@
 
                                     <td>
                                         <select class="form-select form-select-sm select-precio">
-                                            <option value="<?= $p['precio_minorista'] ?>">Minorista -
+                                            <option value="<?= $p['precio_minorista'] ?>">Publico -
                                                 $<?= number_format($p['precio_minorista'],2) ?></option>
-                                            <option value="<?= $p['precio_mayorista'] ?>">Mayorista -
+                                            <option value="<?= $p['precio_mayorista'] ?>">Constructora -
                                                 $<?= number_format($p['precio_mayorista'],2) ?></option>
                                             <option value="<?= $p['precio_distribuidor'] ?>">Distribuidor -
                                                 $<?= number_format($p['precio_distribuidor'],2) ?></option>
@@ -400,7 +400,7 @@
         const totalReal =
             cantidadUsuario / equivalencia;
 
-        inputReal.value = totalReal;
+        inputReal.value = totalReal.toFixed(6);
 
         console.log({
             usuario: cantidadUsuario,

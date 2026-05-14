@@ -51,6 +51,7 @@ class cajaRapidaModel {
             
             $monto_pagado = floatval($data['monto_pagado']);
             $metodo_pago  = $data['metodo_pago'] ?? 'Efectivo';
+            $efectivoPagado=$data['efectivoPagado']??0;
 
             // 1. VALIDACIÓN DE STOCK Y CÁLCULO DE TOTALES
             $subtotal = 0;
@@ -110,8 +111,8 @@ class cajaRapidaModel {
     // 2. Capturar la referencia (vacío por defecto si no existe)
     $referencia = $data['referencia'] ?? '';
 
-    // 3. Consulta preparada con las 6 columnas
-    $stmtP = $conexion->prepare("INSERT INTO historial_pagos (venta_id, usuario_id, monto, saldo_favor, metodo_pago, referencia) VALUES (?, ?, ?, ?, ?, ?)");
+    // 3. Consulta preparada con las columnas
+    $stmtP = $conexion->prepare("INSERT INTO historial_pagos (venta_id, usuario_id, monto, saldo_favor, metodo_pago,efectivoPagado, referencia) VALUES (?, ?,?, ?, ?, ?, ?)");
     
     // 4. bind_param ajustado:
     // i = venta_id (int)
@@ -119,8 +120,9 @@ class cajaRapidaModel {
     // d = monto (double)
     // d = saldo_favor (double) <--- El nuevo valor validado
     // s = metodo_pago (string)
+    // d = efectivoPagado (double)
     // s = referencia (string)
-    $stmtP->bind_param("iiddss", $id_venta, $id_usuario, $monto_pagado, $monto_favor_valor, $metodo_pago, $referencia);
+    $stmtP->bind_param("iiddsds", $id_venta, $id_usuario, $monto_pagado, $monto_favor_valor, $metodo_pago,$efectivoPagado, $referencia);
     
     if (!$stmtP->execute()) {
         // Opcional: registrar error si falla la ejecución

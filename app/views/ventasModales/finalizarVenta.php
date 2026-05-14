@@ -640,6 +640,10 @@ const medidaId =
 
 console.log(equivalencia);
 console.log(medidaId,medidaNombre);
+
+
+// 🔥 resetear
+select.selectedIndex = 0;
     
     let cantidadBase = (modoVenta === 'referencia') ? factor : (parseFloat(cantidadInput.value) || 0);
 
@@ -692,7 +696,7 @@ window.renderCarrito = function() {
     // Generamos el HTML en un array para un solo "paint" al final
     const htmlCarrito = window.carrito.map((item, index) => {
         const cantFactor = Math.floor(item.cantidad / item.factor);
-        const cantPza = (Math.round((item.cantidad % item.factor) * 100) / 100);
+        const cantPza = (Math.round((item.cantidad % item.factor) * 1000) / 1000);
         item.subtotal = item.cantidad * item.precio_unitario;
 
         return `

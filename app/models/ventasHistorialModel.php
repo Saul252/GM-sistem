@@ -218,14 +218,15 @@ WHERE dv.venta_id = $id";
 public function registrarAbono($venta_id, $monto, $usuario_id, $metodo_pago, $fecha_pago, $referencia = null) {
     // 1. Lógica para la referencia: cadena vacía por defecto
     $ref_final = (!empty($referencia)) ? $referencia : "";
+    $efectivoPagado=0;
 
     // 2. Lógica para saldo_favor: 
     // Si es "Saldo a Favor", copiamos el monto. Si no, 0.00.
     $saldo_favor_valor = ($metodo_pago === 'Saldo a Favor') ? floatval($monto) : 0.00;
 
-    // 3. Definimos el INSERT (7 columnas)
-    $sql = "INSERT INTO historial_pagos (venta_id, monto, saldo_favor, fecha, usuario_id, metodo_pago, referencia) 
-            VALUES (?, ?, ?, ?, ?, ?, ?)";
+    // 3. Definimos el INSERT (8 columnas)
+    $sql = "INSERT INTO historial_pagos (venta_id, monto, saldo_favor, fecha, usuario_id, metodo_pago, EfectivoPagado, referencia) 
+            VALUES (?, ?, ?, ?, ?,?, ?, ?)";
     
     $stmt = $this->db->prepare($sql);
     
@@ -238,16 +239,18 @@ public function registrarAbono($venta_id, $monto, $usuario_id, $metodo_pago, $fe
      * 4. fecha         -> (s) String
      * 5. usuario_id    -> (i) Integer
      * 6. metodo_pago   -> (s) String
-     * 7. referencia    -> (s) String
+     * 7. EfectivoPagado-> (d) Double
+     * 8. referencia    -> (s) String
      */
-    $stmt->bind_param("iddsiss", 
+    $stmt->bind_param("iddsisds", 
         $venta_id,          // 1
         $monto,             // 2
         $saldo_favor_valor, // 3
         $fecha_pago,        // 4
         $usuario_id,        // 5
         $metodo_pago,       // 6
-        $ref_final          // 7
+        $efectivoPagado,    // 7
+        $ref_final          // 8
     );
     
     $resultado = $stmt->execute();

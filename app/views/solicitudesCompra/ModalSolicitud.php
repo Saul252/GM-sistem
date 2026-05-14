@@ -161,29 +161,83 @@ $('.select2-modal').select2({
 // CALCULAR TOTAL
 // =====================================================
 
-function calcularTotal(input) {
+// 🔥 EVITAR LOOPS
+let recalculandoFila = false;
 
-    const fila = input.closest('tr');
+function calcularTotal(input, origen = '') {
 
-    const cantidad = parseFloat(
-        fila.querySelector('.cantidad').value
-    ) || 0;
+    if (recalculandoFila) return;
 
-    const precioUnitario = parseFloat(
-        fila.querySelector('.precio-unitario').value
-    ) || 0;
+    recalculandoFila = true;
 
-    const factor = parseFloat(
-        fila.querySelector('.unidad-select').value
-    ) || 1;
+    try {
 
-    // 🔥 TOTAL
-    const total = cantidad * precioUnitario * factor;
+        const fila = input.closest('tr');
 
-    fila.querySelector('.precio-total').value =
-        total.toFixed(2);
+        const cantidad = parseFloat(
+            fila.querySelector('.cantidad').value
+        ) || 0;
+
+        const factor = parseFloat(
+            fila.querySelector('.unidad-select').value
+        ) || 1;
+
+        let precioUnitario = parseFloat(
+            fila.querySelector('.precio-unitario').value
+        ) || 0;
+
+        let precioTotal = parseFloat(
+            fila.querySelector('.precio-total').value
+        ) || 0;
+
+        // =====================================================
+        // 🔥 SI MODIFICÓ COSTO TOTAL
+        // =====================================================
+
+        if (origen === 'total') {
+
+            const divisor = cantidad ;
+
+            if (
+                precioTotal > 0 &&
+                divisor > 0
+            ) {
+
+                precioUnitario =
+                    precioTotal / divisor;
+                     if(precioUnitario%1 !=0){
+                    fila.querySelector('.precio-unitario').value =
+                    precioUnitario.toFixed(4);
+
+                }
+                else{
+                    fila.querySelector('.precio-unitario').value =
+                    precioUnitario;
+
+                }
+
+                
+            }
+        }
+
+        // =====================================================
+        // 🔥 SI MODIFICÓ COSTO UNITARIO
+        // =====================================================
+
+        if (origen === 'unitario') {
+
+            precioTotal =
+                cantidad * precioUnitario ;
+
+            fila.querySelector('.precio-total').value =
+                precioTotal.toFixed(2);
+        }
+
+    } finally {
+
+        recalculandoFila = false;
+    }
 }
-
 // =====================================================
 // AGREGAR PRODUCTO
 // =====================================================
@@ -294,47 +348,49 @@ $('#buscadorProductos').on('select2:select', function(e) {
                     class="form-select unidad-select"
                     onchange="calcularTotal(this)"
                 >
-                    <option value="1">
-                        Unidad (${d.um})
-                    </option>
+                   
 
                     <option value="${d.factor}">
-                        Presentación (${d.ur})
+                        (${d.ur})
                     </option>
                 </select>
             </td>
 
             <!-- COSTO UNITARIO -->
-            <td>
-                <input 
-                    type="number"
-                    name="items[${id}][precioUnitario]"
-                    class="form-control precio-unitario"
-                    step="0.01"
-                    min="0"
-                    placeholder="Costo Unitario"
-                    required
-                    oninput="calcularTotal(this)"
-                >
-            </td>
-
-            <!-- COSTO TOTAL -->
-         <td style="min-width:160px;">
+<td>
     <input 
         type="number"
+        lang="en-US"
+        name="items[${id}][precioUnitario]"
+        class="form-control precio-unitario"
+        step="0.01"
+        min="0"
+        placeholder="0.00"
+        required
+        oninput="calcularTotal(this, 'unitario')"
+    >
+</td>
+
+<!-- COSTO TOTAL -->
+<td style="min-width:160px;">
+
+    <input 
+        type="number"
+        lang="en-US"
         name="items[${id}][precio]"
         class="form-control precio-total fw-bold text-success bg-light"
         step="0.01"
-        placeholder="Costo"
-        readonly
+        min="0"
+        placeholder="0.00"
+        oninput="calcularTotal(this, 'total')"
         style="
             font-size:1.1rem;
             height:45px;
             min-width:140px;
         "
     >
-</td>
 
+</td>
             <!-- ELIMINAR -->
             <td>
                 <button 

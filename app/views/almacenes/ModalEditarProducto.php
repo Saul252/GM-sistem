@@ -108,7 +108,7 @@
                             <div class="row g-3 mb-4">
                                 <div class="col-md-4">
                                     <div class="card border-0 shadow-sm p-3 rounded-4">
-                                        <label class="small fw-bold text-muted mb-2">P. Minorista</label>
+                                        <label class="small fw-bold text-muted mb-2">P. Publico</label>
                                         <div class="input-group">
                                             <span
                                                 class="input-group-text bg-transparent border-0 text-success fw-bold">$</span>
@@ -119,7 +119,7 @@
                                 </div>
                                 <div class="col-md-4">
                                     <div class="card border-0 shadow-sm p-3 rounded-4">
-                                        <label class="small fw-bold text-muted mb-2">P. Mayorista</label>
+                                        <label class="small fw-bold text-muted mb-2">P. Constructora</label>
                                         <div class="input-group">
                                             <span
                                                 class="input-group-text bg-transparent border-0 text-success fw-bold">$</span>
