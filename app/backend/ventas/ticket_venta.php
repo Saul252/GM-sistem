@@ -75,393 +75,178 @@ $detallesPago = $stmtPago->get_result();
         @media print { .no-print { display: none; } }
     </style>
 </head>
-<style>
-    *{
-        box-sizing:border-box;
-    }
-
-    body{
-        font-family:'Courier New', monospace;
-        font-size:11px;
-        margin:0;
-        padding:4px;
-        color:#000;
-        background:#fff;
-        width:78mm;
-    }
-
-    .ticket{
-        width:100%;
-    }
-
-    .text-center{
-        text-align:center;
-    }
-
-    .bold{
-        font-weight:bold;
-    }
-
-    .titulo{
-        font-size:15px;
-        font-weight:bold;
-        text-transform:uppercase;
-        line-height:1.2;
-    }
-
-    .subtitulo{
-        font-size:10px;
-        line-height:1.3;
-    }
-
-    .divider{
-        border-top:1px dashed #000;
-        margin:6px 0;
-    }
-
-    table{
-        width:100%;
-        border-collapse:collapse;
-    }
-
-    td,th{
-        padding:2px 0;
-        vertical-align:top;
-    }
-
-    th{
-        font-size:10px;
-        text-transform:uppercase;
-    }
-
-    .item-row{
-        border-bottom:1px dashed #ddd;
-    }
-
-    .producto{
-        font-weight:bold;
-        font-size:11px;
-        margin-bottom:2px;
-        word-break:break-word;
-    }
-
-    .detalle{
-        font-size:10px;
-        line-height:1.2;
-    }
-
-    .entrega{
-        margin-top:3px;
-        padding-left:4px;
-        border-left:2px solid #000;
-        font-size:10px;
-    }
-
-    .total{
-        font-size:15px;
-        font-weight:bold;
-    }
-
-    .metodo-box{
-        margin-top:5px;
-        font-size:10px;
-    }
-
-    .firma{
-        margin-top:18px;
-        text-align:center;
-        font-size:10px;
-    }
-
-    .gracias{
-        text-align:center;
-        margin-top:10px;
-        font-size:11px;
-        font-weight:bold;
-    }
-
-    .no-print{
-        margin-bottom:10px;
-    }
-
-    .no-print button{
-        width:100%;
-        padding:8px;
-        border:none;
-        background:#000;
-        color:#fff;
-        font-weight:bold;
-        border-radius:4px;
-    }
-
-    @media print{
-
-        body{
-            width:78mm;
-            padding:0;
-        }
-
-        .no-print{
-            display:none;
-        }
-
-        @page{
-            margin:2mm;
-        }
-    }
-</style>
-
 <body onload="window.print();">
 
-<div class="ticket">
-
-    <div class="no-print">
-        <button onclick="window.print()">
-            IMPRIMIR TICKET
-        </button>
+    <div class="no-print text-center" style="margin-bottom: 20px;">
+        <button onclick="window.print()" style="padding: 10px; width: 100%;">IMPRIMIR TICKET</button>
     </div>
 
     <div class="text-center">
-
-        <div class="titulo">
-            <?php echo strtoupper($venta['nombre_almacen']); ?>
-        </div>
-
-        <div class="subtitulo">
-            <?php echo $venta['direccion_almacen']; ?>
-        </div>
-
-        <div class="bold" style="margin-top:4px;">
-            <?php echo ($mostrar_precios) ? 'TICKET DE VENTA' : 'VALE DE ENTREGA'; ?>
-        </div>
-
+        <span class="bold" style="font-size: 14px;"><?php echo strtoupper($venta['nombre_almacen']); ?></span><br>
+        <?php echo $venta['direccion_almacen']; ?><br>
+        <span class="bold"><?php echo ($mostrar_precios) ? 'TICKET DE VENTA' : 'VALE DE ENTREGA'; ?></span>
     </div>
 
     <div class="divider"></div>
 
     <table>
-
-        <tr>
-            <td><b>FOLIO:</b></td>
-            <td align="right"><?php echo $venta['folio']; ?></td>
-        </tr>
-
-        <tr>
-            <td><b>FECHA:</b></td>
-            <td align="right">
-                <?php echo date("d/m/Y H:i", strtotime($venta['fecha'])); ?>
-            </td>
-        </tr>
-
+        <tr><td>FOLIO: <?php echo $venta['folio']; ?></td></tr>
+        <tr><td>FECHA: <?php echo date("d/m/Y H:i", strtotime($venta['fecha'])); ?></td></tr>
+        <tr><td>CLIENTE: <?php echo substr($venta['nombre_comercial'], 0, 30); ?></td></tr>
     </table>
 
-    <div style="margin-top:4px;">
-        <b>CLIENTE:</b><br>
-        <?php echo substr($venta['nombre_comercial'], 0, 45); ?>
-    </div>
-
     <div class="divider"></div>
 
     <table>
-
         <thead>
-
             <tr>
-
-                <th align="left">DESC</th>
-
-                <?php if($mostrar_precios): ?>
-                    <th align="right">IMP</th>
-                <?php endif; ?>
-
+                <th align="left">DESC.</th>
+                <?php if($mostrar_precios): ?><th align="right">SUBT.</th><?php endif; ?>
             </tr>
-
         </thead>
-
         <tbody>
+            <?php while($item = $detalles->fetch_assoc()): 
+                // LÓGICA DE CONVERSIÓN
+                $f = ($item['factor'] > 0) ? $item['factor'] : 1;
+                $unidad = $item['unidad_reporte'] ? $item['unidad_reporte'] : $item['unidad_medida'];
+               // Calculamos cuántos factores enteros y cuántas piezas sobran
+              $equiv = floatval($item['odmaEquivalencia'] ?? 1);
+                $nombreMedida=$item['odmaNombre'];
+                $cantEntera = floor($item['cantidad'] / $f);
+                $cantResto = round(fmod($item['cantidad'], $f), 2);
+            ?>
+            <tr class="item-row">
+                <td>
+                    <?php
 
-        <?php while($item = $detalles->fetch_assoc()): 
+// ===============================
+// PRESENTACIÓN BONITA DE CANTIDAD
+// ===============================
 
-            $f = ($item['factor'] > 0) ? $item['factor'] : 1;
-            $unidad = $item['unidad_reporte'] ? $item['unidad_reporte'] : $item['unidad_medida'];
+$cantidadMostrar = $item['cantidad'];
+$unidadMostrar = 'pzas';
+$cantidadMostrar = $item['cantidad'];
+$unidadMostrar = $item['unidad_medida'];
 
-            $equiv = floatval($item['odmaEquivalencia'] ?? 1);
+$equiv = floatval($item['odmaEquivalencia'] ?? 0);
 
-            $cantEntera = floor($item['cantidad'] / $f);
+$cantidadMostrar = $item['cantidad'];
+$unidadMostrar = $item['unidad_medida'];
 
-            $cantResto = round(fmod($item['cantidad'], $f), 2);
+if (
+    isset($item['unidadMedida']) &&
+    $equiv > 0
+) {
 
-            $cantidadMostrar = $item['cantidad'];
-            $unidadMostrar = $item['unidad_medida'];
+    $cantidadConvertida =
+        $item['cantidad'] * $equiv;
 
-            if (
-                isset($item['unidadMedida']) &&
-                $equiv > 0
-            ) {
+    if ($cantidadConvertida <= 1) {
 
-                $cantidadConvertida =
-                    $item['cantidad'] * $equiv;
+        $cantidadMostrar = number_format($cantidadConvertida,3);
+        $unidadMostrar = $item['odmaNombre'];
+    }
+}
 
-                if ($cantidadConvertida >= 1) {
+$cantidadMostrarFormateada =
+    number_format($cantidadMostrar, 1);
 
-                    $cantidadMostrar = number_format($cantidadConvertida,3);
-                    $unidadMostrar = $item['odmaNombre'];
-                }
-            }
 
-            $cantidadMostrarFormateada =
-                number_format($cantidadMostrar, 1);
 
-        ?>
 
-        <tr class="item-row">
+?>
 
-            <td>
+<div class="bold" style="font-size:13px;">
+    <?php echo $item['producto_nombre']; ?>
+</div>
 
-                <div class="producto">
-                    <?php echo $item['producto_nombre']; ?>
-                </div>
+<div style="
+    margin-top:3px;
+    font-size:12px;
+">
+    Cantidad:
+    <span class="bold">
+          <b>
+            <?php if ($cantEntera>0){echo $cantEntera.' ' .$unidad;}?>
+           
+        </b>
+        <?php if ($cantEntera>0 && $cantResto>0){echo'+';}?>
 
-                <div class="detalle">
+        <?php if($cantResto > 0): ?>
+           
+          <b>
+    <?php echo number_format($cantResto, 2) . ' ' . $item['unidad_medida']; ?>
+</b>         <?php endif; ?>
+        <?php if($cantResto < 0){ echo $cantidadMostrarFormateada; ?>
+        <?php echo $unidadMostrar; }?>
+         <?php if($cantResto > 0): ?>
+           
+          <b>
 
-                    <?php echo $cantidadMostrarFormateada; ?>
-                    <?php echo $unidadMostrar; ?>
-<?php if($cantResto > 0): ?>
+    <?php if($unidadMostrar!=$item['unidad_medida']){echo '(' .number_format($cantResto, 2) . ' ' . $item['unidad_medida'].')';} ?>
+</b>         <?php endif; ?>
+    </span>
+</div>
 
-    <?php 
-        $mostrarResto = (
-            $unidadMostrar != $item['unidad_medida']
-            &&
-            floatval($cantidadMostrarFormateada) != floatval($cantResto)
-        );
-    ?>
 
-    <?php if($mostrarResto): ?>
-
-        (
-        <?php echo number_format($cantResto, 2); ?>
-        <?php echo $item['unidad_medida']; ?>
-        )
-
-    <?php endif; ?>
-
-<?php endif; ?>
-
-                </div>
-
-               
-
-            </td>
-
-            <?php if($mostrar_precios): ?>
-
-            <td align="right" class="bold">
-                $<?php echo number_format($item['subtotal'], 2); ?>
-            </td>
-
-            <?php endif; ?>
-
-        </tr>
-
-        <?php endwhile; ?>
-
+                </td>
+                <?php if($mostrar_precios): ?>
+                <td align="right" class="bold">
+                    $<?php echo number_format($item['subtotal'], 2); ?>
+                </td>
+                <?php endif; ?>
+            </tr>
+            <?php endwhile; ?>
         </tbody>
-
     </table>
 
     <div class="divider"></div>
 
     <?php if($mostrar_precios): ?>
+    <table style="font-size: 14px;">
+        <tr class="bold">
+            <td align="right">TOTAL:</td>
+            <td align="right" style="width: 60%;">$<?php echo number_format($venta['subtotal'], 2).' ('.$venta['estado_pago'].')'; ?> </td>
+         
+        </tr>
+    </table>
+   <table style="font-size:14px; width:100%;">
 
-    <table>
+    <?php while($pago = $detallesPago->fetch_assoc()): ?>
 
         <tr>
 
-            <td class="total">
-                TOTAL
+            <td align="right" class="bold">
+                Método de pago:
             </td>
 
-            <td align="right" class="total">
-                $<?php echo number_format($venta['subtotal'], 2); ?>
+            <td align="right" style="width:60%;">
+
+                <?php echo $pago['monto']. ' '.$pago['metodo_pago']; ?>
+
             </td>
 
         </tr>
 
-    </table>
-
-    <div style="font-size:10px; margin-top:2px;">
-        Estado:
-        <b><?php echo $venta['estado_pago']; ?></b>
-    </div>
-
-    <?php while($pago = $detallesPago->fetch_assoc()): ?>
-
-        <div class="metodo-box">
-
-            <div>
-
-                <b>Método:</b>
-
-                <?php
-
-                if(
-                    $pago['metodo_pago']=='Efectivo'
-                    &&
-                    $pago['efectivoPagado']>0
-                ){
-                    echo 'Efectivo $'.$pago['efectivoPagado'];
-                }else{
-                    echo $pago['monto'].' '.$pago['metodo_pago'];
-                }
-
-                ?>
-
-            </div>
-
-            <div>
-
-                <?php
-
-                $cambio = $pago['efectivoPagado'] - $pago['monto'];
-
-                if($cambio >= 0){
-
-                    echo 'Cambio:     $'.number_format($cambio,2);
-
-                }else{
-
-                    echo 'Pendiente: $'.number_format(($cambio*(-1)),2);
-
-                }
-
-                ?>
-
-            </div>
-
-        </div>
-
     <?php endwhile; ?>
 
+</table>
+
+
+
+    
+    <?php else: ?>
+    
     <?php endif; ?>
-
-    <div class="firma">
-
-        ______________________
-        <br>
-        FIRMA DE RECIBIDO
-
+      <div style="margin-top: 30px;" class="text-center">
+       <br> __________________________
+      <br>  FIRMA DE RECIBIDO
     </div>
 
-    <div style="margin-top:10px; font-size:10px;">
-        Vendedor:
-        <?php echo $venta['nombre_vendedor']; ?>
+    <div class="text-center" style="margin-top: 15px;">
+        <p>Vendedor: <?php echo $venta['nombre_vendedor']; ?></p>
+        <p class="bold">¡GRACIAS POR SU COMPRA!</p>
     </div>
-
-    <div class="gracias">
-        ¡GRACIAS POR SU COMPRA!
-    </div>
-
-</div>
 
 </body>
 </html>

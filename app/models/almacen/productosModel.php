@@ -42,21 +42,21 @@ class ProductoModel {
 // 🔹 CREAR OPCIONES DE MEDIDA AUTOMÁTICAS
 
 $factor = floatval($datos['factor_conversion']);
- $medidas = [];
-if($datos['unidad_reporte']==$datos['unidad_medida'])
+$medidas=[];
+if($factor==1)
     {
-        $medidas = [
+$medidas = [
    
     [
         'nombre'       => $datos['unidad_medida'],
         'equivalencia' => 1
     ]
+    
 ];
-
-        
     }
     else{
-            $medidas = [
+        
+$medidas = [
     [
         'nombre'       => $datos['unidad_reporte'],
         'equivalencia' => ($factor > 0 ? (1 / $factor) : 1)
@@ -67,7 +67,6 @@ if($datos['unidad_reporte']==$datos['unidad_medida'])
     ]
 ];
     }
-
 
 foreach ($medidas as $medida) {
 
@@ -92,9 +91,9 @@ foreach ($medidas as $medida) {
                     "iiddd",
                     $productoId,
                     $alm['id'],
-                    $datos['precio_minorista']??0,
-                    $datos['precio_mayorista']??0,
-                    $datos['precio_distribuidor']??0
+                    $datos['precio_minorista'],
+                    $datos['precio_mayorista'],
+                    $datos['precio_distribuidor']
                 );
                 if (!$stmtPrecios->execute()) throw new Exception("Error al insertar precios para el almacén " . $alm['id']);
             }
@@ -207,22 +206,19 @@ public function crearProducto($data)
 // 🔹 CREAR OPCIONES DE MEDIDA AUTOMÁTICAS
 
 $factor = floatval($data['factor_conversion']);
-
- $medidas = [];
-if($data['unidad_reporte']==$data['unidad_medida'])
-    {
-        $medidas = [
-   
+$medidas=[];
+if($factor==1)
+    {$medidas = [
     [
-        'nombre'       => $data['unidad_medida'],
+        'nombre'       => $data['unidad_reporte'],
         'equivalencia' => 1
     ]
+    
 ];
 
-        
     }
     else{
-            $medidas = [
+        $medidas = [
     [
         'nombre'       => $data['unidad_reporte'],
         'equivalencia' => ($factor > 0 ? (1 / $factor) : 1)
@@ -232,8 +228,8 @@ if($data['unidad_reporte']==$data['unidad_medida'])
         'equivalencia' => 1
     ]
 ];
-    }
 
+    }
 
 
 foreach ($medidas as $medida) {

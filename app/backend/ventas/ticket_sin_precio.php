@@ -118,8 +118,8 @@ $detalles = $stmtD->get_result();
                 $f = ($item['factor'] > 0) ? $item['factor'] : 1;
                 $unidad = $item['unidad_reporte'] ?: 'Unid.';
                 $cantEntera = floor($item['cantidad'] / $f);
-                $cantResto = round(fmod($item['cantidad'], $f), 2);
-                  $equiv = floatval($item['odmaEquivalencia'] ?? 1);
+                $cantResto = round(fmod($item['cantidad'], $f), 8);
+                  $equiv = floatval($item['odmaEquivalencia'] ?? 0);
                 $nombreMedida=$item['odmaNombre'];
                 $unidadMedida= $item['unidad_medida'];
 
@@ -135,23 +135,26 @@ $detalles = $stmtD->get_result();
                     <div class="conversion-box">
                         Entrega: <b><?php echo $cantEntera>0?$cantEntera.' '.$unidad:''; ?></b>
                         
-                        <?php if((number_format($cantResto,2)) > 0.00000000) {
+                        <?php if((number_format($cantResto,8)) > 0.00000000) {
                             
                             if($cantEntera>0)
                                 {
                                     echo ' + ';
 
                                 }
-                                if($equiv>=1 )
+                                if((1/$equiv)<=1 )
                                     {
-                                        echo "<b>$cantResto $unidadMedida </b>"; }
+                                       
+                                         $cantidadMedida=$cantResto/(number_format((1/$equiv),2));
+                                        echo $cantidadMedida .' '.$nombreMedida;
+                                      
+                                         }
 
                                     }
                                     else{
-                                        if($cantResto>0)
+                                        if($cantResto>=0)
                                             {
-                                                  $cantidadMedida=$cantResto/(1/$equiv);
-                                        echo "<b>$cantidadMedida $nombreMedida </b>"; 
+                                                  
 
                                             }
                                       

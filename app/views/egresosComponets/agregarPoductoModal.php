@@ -145,17 +145,17 @@
 
                                 <div class="col-md-4">
                                     <label class="form-label small text-muted">Minorista</label>
-                                    <input type="number" name="precio_minorista" class="form-control shadow-sm" value="0">
+                                    <input type="number" step="0.01" name="precio_minorista" class="form-control shadow-sm" value="0">
                                 </div>
 
                                 <div class="col-md-4">
                                     <label class="form-label small text-muted">Mayorista</label>
-                                    <input type="number" name="precio_mayorista" class="form-control shadow-sm"value="0">
+                                    <input type="number" step="0.01" name="precio_mayorista" class="form-control shadow-sm"value="0">
                                 </div>
 
                                 <div class="col-md-4">
                                     <label class="form-label small text-muted">Distribuidor</label>
-                                    <input type="number" name="precio_distribuidor" class="form-control shadow-sm"value="0">
+                                    <input type="number" step="0.01" name="precio_distribuidor" class="form-control shadow-sm"value="0">
                                 </div>
 
                             </div>

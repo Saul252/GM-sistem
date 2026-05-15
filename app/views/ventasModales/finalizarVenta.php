@@ -701,8 +701,13 @@ window.renderCarrito = function() {
     
     // Generamos el HTML en un array para un solo "paint" al final
     const htmlCarrito = window.carrito.map((item, index) => {
+        if(item.cantidad>1)
+        {
+            item.cantidad=item.cantidad.toFixed(4)
+        }
         const cantFactor = Math.floor(item.cantidad / item.factor);
         const cantPza = (item.cantidad % item.factor);
+        console.log(item.cantidad);
         item.subtotal = item.cantidad * item.precio_unitario;
 
         return `

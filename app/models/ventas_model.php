@@ -90,7 +90,7 @@ if ($monto_favor > 0 && $monto_favor == $monto_pagado) {
         
         $id_almacen_vta = intval($carrito[0]['almacen_id']);
         $estado_entrega_vta = ($total_entregado_global >= $total_vendido_global) ? 'entregado' : (($total_entregado_global > 0) ? 'parcial' : 'pendiente');
-        $estado_pago = ($monto_pagado >= $total) ? 'pagado' : (($monto_pagado > 0) ? 'parcial' : 'pendiente');
+        $estado_pago = ($monto_pagado >=number_format($total, 2, '.', '') ) ? 'pagado' : (($monto_pagado > 0) ? 'parcial' : 'pendiente');
 
         // 3. INSERTAR CABECERA DE VENTA
         $sqlV = "INSERT INTO ventas (folio, id_cliente, almacen_id, usuario_id, subtotal, descuento, total, estado_pago, estado_entrega, estado_general, observaciones) 

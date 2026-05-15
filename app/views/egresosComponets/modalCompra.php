@@ -177,6 +177,21 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
     max-height: 200px !important;
     overflow-y: auto !important;
 }
+.select2-container{
+    max-width:100% !important;
+    width:100% !important;
+}
+
+.select2-selection{
+    max-width:100% !important;
+    overflow:hidden !important;
+}
+
+.select2-selection__rendered{
+    white-space:nowrap !important;
+    overflow:hidden !important;
+    text-overflow:ellipsis !important;
+}
 </style>
 <?php require_once __DIR__ . '/agregarPoductoModal.php'; ?>
 <?php require_once __DIR__ . '/modalProveedoresCompra.php'; ?>
@@ -287,28 +302,50 @@ function agregarFilaCompra() {
     const almacenesAMostrar = ES_ADMIN ?
         DATA_COMPRAS.almacenes :
         DATA_COMPRAS.almacenes.filter(alm => alm.id == USER_ALMACEN_ID);
+       
+         const valorTienda= ES_ADMIN ?
+        0 :
+       1;
+       
+        //items[${idUnico}][cantidad_total_piezas]
 
-    almacenesAMostrar.forEach(alm => {
-        const inputBloqueado = !ES_ADMIN ? 'onclick="return false;" style="opacity: 0.7;"' : '';
-        const filaResaltada = alm.id == USER_ALMACEN_ID ? 'table-info' : '';
+   almacenesAMostrar.forEach(alm => {
 
-        filasAlmacenes += `
-        <tr class="${filaResaltada}">
-            <td class="text-center align-middle">
-                <input type="checkbox" name="items[${idUnico}][almacenes][${alm.id}][activo]" 
-                       class="form-check-input check-activo" checked ${inputBloqueado} 
-                       onchange="recalcularTotales(${idUnico})">
-            </td>
-            <td class="small align-middle fw-bold">${alm.nombre}</td>
-            <td>
-                <input type="number" name="items[${idUnico}][almacenes][${alm.id}][cantidad]" 
-                       class="form-control form-control-sm input-reparto border-primary" 
-                       placeholder="0.00" min="0" step="0.01" 
-                       oninput="validarReparto(${idUnico})">
-            </td>
-        </tr>`;
-    });
+    const inputBloqueado = !ES_ADMIN
+        ? 'onclick="return false;" style="opacity:0.7;"'
+        : '';
 
+    const filaResaltada =
+        alm.id == USER_ALMACEN_ID
+            ? 'table-info'
+            : '';
+
+    filasAlmacenes += `
+    <tr class="${filaResaltada}">
+        <td class="text-center align-middle">
+            <input type="checkbox"
+                   name="items[${idUnico}][almacenes][${alm.id}][activo]"
+                   class="form-check-input check-activo"
+                   checked
+                   ${inputBloqueado}
+                   onchange="recalcularTotales(${idUnico})">
+        </td>
+
+        <td class="small align-middle fw-bold">
+            ${alm.nombre}
+        </td>
+
+        <td>
+            <input type="number"
+                   name="items[${idUnico}][almacenes][${alm.id}][cantidad]"
+                   class="form-control form-control-sm input-reparto border-primary"
+                   placeholder="0.00"
+                   min="0"
+                   step="0.01"
+                   oninput="validarReparto(${idUnico})">
+        </td>
+    </tr>`;
+});
     const html = `
 <div class="card mb-4 border-0 shadow-sm rounded-4 item-compra" id="card_item_${idUnico}">
     <div class="card-body p-3">
@@ -457,6 +494,7 @@ function agregarFilaCompra() {
 </div>
 `;
     $('#contenedorItemsCompra').append(html);
+   
     setTimeout(() => {
         $(`#card_item_${idUnico} .select2-compra`).select2({
             theme: 'bootstrap-5',
@@ -464,6 +502,7 @@ function agregarFilaCompra() {
         });
     }, 50);
     actualizarConteo();
+    
 }
 
 function actualizarLabelsUnidad(id, select) {
@@ -660,6 +699,20 @@ function validarReparto(id) {
         card.find('.alert').addClass('alert-info text-dark').removeClass('alert-danger text-danger');
         error.hide();
     }
+     if (!ES_ADMIN) {
+
+    const totalPiezas =
+        document.querySelector(
+            `input[name='items[${id}][cantidad_total_piezas]']`
+        )?.value || 0;
+
+    document.querySelectorAll(
+        `input[name^='items[${id}][almacenes]'][name$='[cantidad]']`
+    ).forEach(input => {
+
+        input.value = totalPiezas;
+    });
+}
 }
 
 function toggleFaltante(id, checkbox) {

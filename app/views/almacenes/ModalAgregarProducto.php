@@ -233,6 +233,7 @@
                                 </tr>
                             </thead>
                             <tbody>
+                               
                                 <?php foreach($almacenes as $a): ?>
                                 <tr>
                                     <td class="text-center">
@@ -241,6 +242,7 @@
                                     </td>
                                     <td class="small fw-bold"><?= htmlspecialchars($a['nombre']) ?></td>
                                     <td>
+                                        
                                         <input type="number" step="0.01" name="almacenes[<?= $a['id'] ?>][stock]"
                                             class="form-control form-control-sm input-calculo border-primary fw-bold text-center"
                                             oninput="validarReparto()" value="0">
