@@ -86,7 +86,7 @@ public function obtenerDetalleCompleto($id) {
     // 2. Productos con FACTOR DE CONVERSIÓN (Esta estaba bien)
     $prods = [];
     $sqlP = "SELECT 
-    dv.*, 
+    dv.*, dv.id as dvid, 
     odma.*,
     p.nombre AS producto, 
     p.sku,
@@ -224,7 +224,7 @@ public function registrarAbono($venta_id, $monto, $usuario_id, $metodo_pago, $fe
     // Si es "Saldo a Favor", copiamos el monto. Si no, 0.00.
     $saldo_favor_valor = ($metodo_pago === 'Saldo a Favor') ? floatval($monto) : 0.00;
 
-    // 3. Definimos el INSERT (8 columnas)
+    // 3. Definimos el INSERT ( columnas)
     $sql = "INSERT INTO historial_pagos (venta_id, monto, saldo_favor, fecha, usuario_id, metodo_pago, EfectivoPagado, referencia) 
             VALUES (?, ?, ?, ?, ?,?, ?, ?)";
     

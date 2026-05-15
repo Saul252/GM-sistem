@@ -583,7 +583,7 @@ let unm=(parseFloat(p.cantidad_entregada)/(1/parseFloat(p.equivalencia)));
          <td class="text-center col-input d-none">
             ${pen.toFixed(4) > 0 ? 
                 `<input type="number" class="form-control form-control-sm input-entrega mx-auto" 
-                    max="${pen}" min="0" value="0" data-id="${p.id}" style="width:70px">` 
+                    max="${pen}" min="0" value="0"data-dvid=${p.dvid} data-id="${p.producto_id}" style="width:70px">` 
                 : '<span class="badge bg-success">Completo</span>'}
         </td>
     </tr>`;
@@ -657,14 +657,22 @@ let unm=(parseFloat(p.cantidad_entregada)/(1/parseFloat(p.equivalencia)));
         const fd = new FormData();
         let ok = false;
 
-        $('.input-entrega').each(function() {
-            const cant = parseFloat($(this).val());
-            if (cant > 0) {
-                // Enviamos el ID del detalle de venta y la cantidad
-                fd.append(`productos[${$(this).data('id')}]`, cant);
-                ok = true;
-            }
-        });
+       $('.input-entrega').each(function() {
+
+    const cant = parseFloat($(this).val());
+
+    console.log($(this).data('dvid'), cant);
+
+    if (cant > 0) {
+
+        fd.append(
+            `productos[${$(this).data('dvid')}]`,
+            cant
+        );
+
+        ok = true;
+    }
+});
 
         if (!ok) return Swal.fire('Atención', 'Indique al menos una cantidad válida para entregar', 'warning');
 

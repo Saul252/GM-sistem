@@ -135,6 +135,9 @@
                                              <input type="number" id="efectivo_recibido"
                                                  class="form-control border-0 bg-success bg-opacity-10 p-2 rounded-3 fw-bold text-success shadow-none text-center"
                                                  placeholder="0.00" step="0.01">
+                                                 <input  id="efectivoPagado"
+                                                 type="hidden">
+                                       
                                          </div>
                                          <div class="col-4">
                                              <label class="small fw-bold text-muted mb-1"
@@ -251,6 +254,7 @@
  </style>
 
  <script>
+    
 async function cargarPersonalDespacho(alm) {
 
     const rutaControlador =
@@ -389,12 +393,16 @@ function calcularCambio() {
     const efectivo = parseFloat(document.getElementById('efectivo_recibido').value) || 0;
     const contenedor = document.getElementById('contenedor_cambio');
     const textoCambio = document.getElementById('texto_cambio');
+    const efectivoPagado= document.getElementById('efectivoPagado');
+     console.log('Dinero',parseFloat(document.getElementById('efectivo_recibido').value) || 0);
+   
 
     if (efectivo > 0) {
         const cambio = efectivo - totalVenta;
 
         // Mostrar el contenedor de cambio
         contenedor.classList.remove('d-none');
+        efectivoPagado.value=efectivo;
 
         if (cambio < 0) {
             // Si falta dinero
@@ -495,95 +503,6 @@ function validarYAgregar(btn) {
     if (typeof agregarProducto === "function") agregarProducto(btn);
     inputCant.value = 1;
 }
-
-// --- 2. LÓGICA DE PROCESAR VENTA CON REDIRECCIÓN OBLIGATORIA ---
-window.procesarVenta = function() {
-    // Validaciones de seguridad antes del envío
-    const idCliente = document.getElementById('selectCliente').value;
-    if (!idCliente || !window.carrito || window.carrito.length === 0) {
-        return Swal.fire('Atención', 'El carrito está vacío o no hay cliente seleccionado.', 'warning');
-    }
-
-    const totalTexto = document.getElementById('totalFinalModal').innerText.replace(/[$,]/g, '');
-    const totalVenta = parseFloat(totalTexto) || 0;
-    const montoPagado = totalVenta;
-    console.log(totalVenta);
-    const btnFinalizar = document.querySelector('#modalFinalizarVenta .btn-success');
-
-    // Preparación de datos para enviar al controlador
-    const datosVenta = {
-        id_cliente: parseInt(idCliente),
-        monto_pagado: montoPagado,
-        total_venta: montoPagado,
-        metodo_pago: document.getElementById('metodo_pago').value,
-        observaciones: document.getElementById('obsVenta').value,
-        carrito: window.carrito
-    };
-
-    if (btnFinalizar) {
-        btnFinalizar.disabled = true;
-        btnFinalizar.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Guardando...';
-    }
-
-    fetch('/cfsistem/app/controllers/cajaRapidaController.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(datosVenta)
-        })
-        .then(res => {
-            if (!res.ok) throw new Error('Error en el servidor');
-            return res.json();
-        })
-        .then(res => {
-            if (res.status === 'success' || res.success) {
-                // Capturamos los datos devueltos por el PHP
-                const movs = res.movimientos || res.debug_id_movimiento || [];
-                const idsStr = Array.isArray(movs) ? movs.join(',') : movs;
-                const idAlmacen = res.almacen_id || 1;
-                const idVenta = res.id_venta;
-
-                Swal.fire({
-                    title: '¡Venta Exitosa!',
-                    html: `<div class="text-center">${res.message}<br><small class="text-muted">Redirigiendo a despacho en patio...</small></div>`,
-                    icon: 'success',
-                    showDenyButton: true,
-                    confirmButtonText: '<i class="bi bi-printer"></i> Ticket',
-                    denyButtonText: '<i class="bi bi-file-earmark-pdf"></i> Nota',
-                    allowOutsideClick: true,
-                    timer: 4000, // 4 segundos para que dé tiempo de elegir impresión
-                    timerProgressBar: true,
-                    confirmButtonColor: '#007aff',
-                    denyButtonColor: '#6c757d',
-
-                }).then((result) => {
-                    // Manejo de la impresión (en ventana nueva)
-                    let printUrl = '';
-                    if (result.isConfirmed) {
-                        printUrl = `/cfsistem/app/backend/ventas/ticket_venta.php?id=${idVenta}`;
-                    } else if (result.isDenied) {
-                        printUrl = `/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=${idVenta}`;
-                    }
-
-                    if (printUrl) window.open(printUrl, '_blank');
-                    // Al cerrarse el modal después de esto, entrará en acción el 'didClose'
-                });
-
-            } else {
-                Swal.fire('Error', res.message || 'Error desconocido', 'error');
-                if (btnFinalizar) {
-                    btnFinalizar.disabled = false;
-                    btnFinalizar.innerHTML = '<i class="bi bi-check-circle-fill"></i> CONFIRMAR Y GUARDAR';
-                }
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            Swal.fire('Error Crítico', 'No se pudo conectar con el servidor.', 'error');
-            if (btnFinalizar) btnFinalizar.disabled = false;
-        });
-};
  </script>
  <script>
 window.procesarVenta = function() {
@@ -619,7 +538,10 @@ window.procesarVenta = function() {
             const btnFinalizar = document.querySelector('#btnFinalizarVenta');
             btnFinalizar.disabled = true;
             btnFinalizar.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Procesando...';
-
+const efectivoPagado = parseFloat(
+    document.getElementById('efectivo_recibido').value
+) || 0;
+    
             // 4. MAPEO DE DATOS COMPLETO (Venta + Logística)
             // --- MAPEO DE DATOS COMPLETO (Venta + Logística Automática) ---
          
@@ -631,6 +553,7 @@ window.procesarVenta = function() {
                 metodo_pago: document.getElementById('metodo_pago').value,
                 total_venta: parseFloat(totalVenta) || 0,
                 observaciones: document.getElementById('obsVenta').value,
+                 efectivoPagado:efectivoPagado,
 
                 // 2. Datos de Logística (Para tu función cajaRapidaEntregarEnPatioCliente)
                 chofer_id: parseInt(document.getElementById('patio_chofer_id').value) || 0,

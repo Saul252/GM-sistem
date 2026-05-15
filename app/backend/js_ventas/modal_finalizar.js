@@ -22,7 +22,7 @@ console.log('unidaditem',item.unidadMedidaNombre);
 
         // Cálculos dinámicos de lo que se está ENTREGANDO
         const fEntregar = Math.floor(item.entrega_hoy / item.factor);
-        const pEntregar = Math.round((item.entrega_hoy % item.factor) * 100) / 100;
+        const pEntregar = (item.entrega_hoy % item.factor);
         console.log(item.unidad_medida);
         let leyenda='';
          let cantidadT=item.cantidad;
@@ -32,7 +32,7 @@ console.log('unidaditem',item.unidadMedidaNombre);
              leyenda =
     '1 ' + item.unidadMedidaNombre +
     ' = ' +
-    (1 / item.unidadEquivalencia).toFixed(3) +
+    (1 / item.unidadEquivalencia) +
     ' de ' +
     item.unidad_medida +
     '\n';
@@ -74,9 +74,8 @@ console.log('unidaditem',item.unidadMedidaNombre);
                            class="form-control text-center input-entrega-modal" 
                            data-index="${index}" 
               value="${
-    item.cantidad % 1 !== 0
-        ? item.cantidad.toFixed(3)
-        : item.cantidad
+    
+        item.cantidad
 }"
                            min="0" 
                            max="${item.cantidad}"

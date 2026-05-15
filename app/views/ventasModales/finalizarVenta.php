@@ -622,10 +622,12 @@ window.agregarProducto = function(btn) {
     const nombre = fila.cells[1].innerText; 
     const cantidadInput = fila.querySelector(".cantidad");
     const modoVenta = fila.querySelector(".select-modo-venta")?.value || 'individual';
-    const modoVent = fila.querySelector(".select-modo-venta");
-        const unidad_medida =
-    modoVent.options[modoVent.selectedIndex].dataset.nombre;
-    console.log(unidad_medida);
+    const modoVent =
+    fila.querySelector(".select-modo-venta");
+
+const unidad_medida =
+    modoVent?.options?.[modoVent.selectedIndex]?.dataset?.nombre || 'PZA';
+     console.log(unidad_medida);
 const select =
     fila.querySelector('.medidas_adicionales');
 
@@ -637,7 +639,10 @@ const medidaId =
     const medidaNombre =
     select.options[select.selectedIndex].dataset.nombre; 
 
-
+if (equivalencia <= 0) {
+        Swal.fire('Atención', 'Ingresa una cantidad válida', 'warning');
+        return;
+    }
 console.log(equivalencia);
 console.log(medidaId,medidaNombre);
 
@@ -648,7 +653,8 @@ select.selectedIndex = 0;
     let cantidadBase = (modoVenta === 'referencia') ? factor : (parseFloat(cantidadInput.value) || 0);
 
     const selectPrecio = fila.querySelector(".select-precio");
-    const precioUnitario = parseFloat(selectPrecio.value) || 0;
+    const selectPrecioInput = fila.querySelector(".input-precio");
+    const precioUnitario = parseFloat(selectPrecioInput.value) || 0;
     const textoPrecio = selectPrecio.options[selectPrecio.selectedIndex].text.toLowerCase();
     const tipo_p = textoPrecio.includes("dist") ? "distribuidor" : (textoPrecio.includes("may") ? "mayorista" : "minorista");
 
@@ -696,7 +702,7 @@ window.renderCarrito = function() {
     // Generamos el HTML en un array para un solo "paint" al final
     const htmlCarrito = window.carrito.map((item, index) => {
         const cantFactor = Math.floor(item.cantidad / item.factor);
-        const cantPza = (Math.round((item.cantidad % item.factor) * 1000) / 1000);
+        const cantPza = (item.cantidad % item.factor);
         item.subtotal = item.cantidad * item.precio_unitario;
 
         return `
@@ -705,12 +711,12 @@ window.renderCarrito = function() {
                 <td><div class="fw-bold" style="font-size: 0.8rem;">${item.nombre}</div></td>
                 <td>
                     <input type="number" class="form-control form-control-sm text-center input-factor-cambio" 
-                        data-index="${index}" value="${(cantFactor<1 &&cantFactor>0)?cantFactor.toFixed(3):cantFactor}" min="0" step="1">
+                        data-index="${index}" value="${(cantFactor<1 &&cantFactor>0)?cantFactor:cantFactor}" min="0" step="1">
                 </td>
                 <td>
                 
                     <input type="number" class="form-control form-control-sm text-center input-pza-cambio" 
-                        data-index="${index}" value="${(cantPza<1&& cantPza>0)?cantPza.toFixed(3):cantPza}" min="0" step="any">
+                        data-index="${index}" value="${(cantPza<1&& cantPza>0)?cantPza:cantPza}" min="0" step="any">
               
                 </td>
                 <td class="text-end fw-bold subtotal-celda">$${item.subtotal.toFixed(2)}</td>

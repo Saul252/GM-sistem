@@ -117,7 +117,9 @@
                                     <td><?= htmlspecialchars($p['almacen_nombre']) ?></td>
 
                                     <td>
-                                        <select class="form-select form-select-sm select-precio">
+                                        <div class="d-flex gap-1">
+
+    <select class="form-select form-select-sm select-precio">
                                             <option value="<?= $p['precio_minorista'] ?>">Publico -
                                                 $<?= number_format($p['precio_minorista'],2) ?></option>
                                             <option value="<?= $p['precio_mayorista'] ?>">Constructora -
@@ -125,6 +127,12 @@
                                             <option value="<?= $p['precio_distribuidor'] ?>">Distribuidor -
                                                 $<?= number_format($p['precio_distribuidor'],2) ?></option>
                                         </select>
+    <input
+        type="number"
+        step="0.01"
+        class="form-control form-control-sm input-precio"
+        value="<?= $p['precio_minorista'] ?>">
+</div>
                                     </td>
 
                             
@@ -368,6 +376,22 @@
     });
     </script>
     <script>
+        document.addEventListener('change', function(e){
+
+    if(
+        e.target.classList.contains('select-precio')
+    ){
+
+        const fila =
+            e.target.closest('tr');
+
+        const inputPrecio =
+            fila.querySelector('.input-precio');
+
+        inputPrecio.value =
+            parseFloat(e.target.value).toFixed(2);
+    }
+});
     document.addEventListener('input', actualizarCantidadReal);
     document.addEventListener('change', actualizarCantidadReal);
 
@@ -400,7 +424,7 @@
         const totalReal =
             cantidadUsuario / equivalencia;
 
-        inputReal.value = totalReal.toFixed(6);
+        inputReal.value = totalReal;
 
         console.log({
             usuario: cantidadUsuario,

@@ -150,15 +150,12 @@ function guardarProvRapido(e) {
                     text: 'Se agregó y seleccionó automáticamente',
                     timer: 1800,
                     showConfirmButton: false
-                }).then(() => location.reload());
+                })// 🔄 recarga automática
 
-
-                // cerrar modal
-                bootstrap.Modal.getInstance(document.getElementById('modalNuevoProveedorRapido')).hide();
-                form.reset();
-
+ bootstrap.Modal.getInstance(document.getElementById('modalNuevoProveedorRapido')).hide();
+            form.reset();
                 // 🔥 actualizar select
-
+            actualizarListaProveedores(nombre);
 
             } else {
                 Swal.fire('Error', data.message || 'No se pudo guardar', 'error');

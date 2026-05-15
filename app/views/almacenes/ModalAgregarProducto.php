@@ -295,7 +295,7 @@
 
     // Número detectado
     const matchNumero = limpio.match(/\d+/);
-    let numero = matchNumero ? matchNumero[0] : '';
+    let numero = matchNumero ? matchNumero[0] :1;
      numerorandom= Math.floor(Math.random() * 10000); // 0 - 9999
 
     return numero ? `${prefijo}-${numero}-${numerorandom}` : prefijo;

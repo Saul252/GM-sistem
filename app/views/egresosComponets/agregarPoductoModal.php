@@ -137,18 +137,25 @@
                     <!-- 🔹 BLOQUE: PRECIOS -->
                     <div class="card border-0 shadow-sm rounded-4">
                         <div class="card-body">
-                          
+                            <h6 class="fw-bold mb-3 text-dark">
+                                <i class="bi bi-cash-coin me-2"></i>Precios de Venta
+                            </h6>
 
                             <div class="row g-3">
 
                                 <div class="col-md-4">
-                                  
-                                    <input type="hidden" value="0" name="precio_minorista" class="form-control shadow-sm">
-                              
-                                    
-                                    <input type="hidden" value="0" name="precio_mayorista" class="form-control shadow-sm">
-                               
-                                      <input type="hidden" value="0" name="precio_distribuidor" class="form-control shadow-sm">
+                                    <label class="form-label small text-muted">Minorista</label>
+                                    <input type="number" name="precio_minorista" class="form-control shadow-sm" value="0">
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted">Mayorista</label>
+                                    <input type="number" name="precio_mayorista" class="form-control shadow-sm"value="0">
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted">Distribuidor</label>
+                                    <input type="number" name="precio_distribuidor" class="form-control shadow-sm"value="0">
                                 </div>
 
                             </div>
@@ -223,7 +230,7 @@ function generarSKU(nombre) {
 
     // buscar número en todo el texto
     const matchNumero = limpio.match(/\d+/);
-    let numero = matchNumero ? matchNumero[0] : '';
+    let numero = matchNumero ? matchNumero[0] : 1;
  numerorandom= Math.floor(Math.random() * 10000); // 0 - 9999
 
     return numero ? `${prefijo}-${numero}-${numerorandom}` : prefijo;

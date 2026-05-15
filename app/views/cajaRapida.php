@@ -258,8 +258,9 @@
                                     <th>Producto</th>
                                     <th>Stock</th>
                                     <th>Almacén</th>
-                                    <th>Precio</th>
-                                    <th width="110">Venta por</th>
+                                    <th width="150">Precio</th>
+                                    <th width="110"></th>
+                                    <th width="150">Venta por</th>
                                    
                                    
                                      <th width="90">Cant</th>
@@ -285,7 +286,8 @@
                                     <td><?= htmlspecialchars($p['almacen_nombre']) ?></td>
 
                                     <td>
-                                        <select class="form-select form-select-sm select-precio">
+                                       
+    <select class="form-select form-select-sm select-precio">
                                             <option value="<?= $p['precio_minorista'] ?>">Publico -
                                                 $<?= number_format($p['precio_minorista'],2) ?></option>
                                             <option value="<?= $p['precio_mayorista'] ?>">Constructora -
@@ -293,6 +295,16 @@
                                             <option value="<?= $p['precio_distribuidor'] ?>">Distribuidor -
                                                 $<?= number_format($p['precio_distribuidor'],2) ?></option>
                                         </select>
+                                        </td>
+                                        <td>
+    <input
+        type="number"
+        step="0.01"
+        class="form-control form-control-sm input-precio"
+        value="<?= $p['precio_minorista'] ?>">
+</div>
+                                  
+                             
                                     </td>
 
                             
@@ -529,9 +541,12 @@ window.validarYAgregar = function(btn) {
     let cantidadAAgregar = parseFloat(cantidadInput.value) || 0;
     
     const modoVenta = fila.querySelector(".select-modo-venta")?.value || 'individual';
-       const modoVent = fila.querySelector(".select-modo-venta");
-        const unidad_medida =
-    modoVent.options[modoVent.selectedIndex].dataset.nombre;
+       const modoVent =
+    fila.querySelector(".select-modo-venta");
+
+const unidad_medida =
+    modoVent?.options?.[modoVent.selectedIndex]?.dataset?.nombre || 'PZA';console.log(modoVenta);
+       
     console.log(unidad_medida);
 const select =
     fila.querySelector('.medidas_adicionales');
@@ -555,8 +570,9 @@ console.log(medidaId,medidaNombre);
     }
 
     const selectPrecio = fila.querySelector(".select-precio");
-    const precioUnitario = parseFloat(selectPrecio.value) || 0;
-    
+   
+    const selectPrecioInput = fila.querySelector(".input-precio");
+    const precioUnitario = parseFloat(selectPrecioInput.value) || 0; 
     let textoPrecio = selectPrecio.options[selectPrecio.selectedIndex].text.toLowerCase();
     let tipo_p = textoPrecio.includes("dist") ? "distribuidor" : (textoPrecio.includes("may") ? "mayorista" : "minorista");
 
@@ -826,7 +842,24 @@ function actualizarCantidadReal(e) {
         equivalencia,
         real: totalReal
     });
-}</script>
+}
+            document.addEventListener('change', function(e){
+
+    if(
+        e.target.classList.contains('select-precio')
+    ){
+
+        const fila =
+            e.target.closest('tr');
+
+        const inputPrecio =
+            fila.querySelector('.input-precio');
+
+        inputPrecio.value =
+            parseFloat(e.target.value).toFixed(2);
+    }
+});
+</script>
 
 </body>
 

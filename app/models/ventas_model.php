@@ -174,6 +174,7 @@ if ($monto_favor > 0 && $monto_favor == $monto_pagado) {
                                                VALUES (?, 'salida', ?, ?, ?, ?, ?)");
                 $stmtMov->bind_param("idiiss", $p_id, $cant_real, $alm_id, $id_usuario, $id_venta, $mov_obs);
                 $stmtMov->execute();
+                
             }
         }
 
@@ -189,6 +190,81 @@ if ($monto_favor > 0 && $monto_favor == $monto_pagado) {
     } catch (Exception $e) {
         $conexion->rollback();
         return ['status' => 'error', 'message' => $e->getMessage()];
+    }
+}
+public static function actualizarEntregasCompletas($conexion, $id_venta)
+{
+
+    // 🔥 Traer todos los detalles de la venta
+    $stmtDV = $conexion->prepare("
+        SELECT id, cantidad
+        FROM detalle_venta
+        WHERE venta_id = ?
+    ");
+
+    $stmtDV->bind_param("i", $id_venta);
+
+    $stmtDV->execute();
+
+    $resDV = $stmtDV->get_result();
+
+    while ($dv = $resDV->fetch_assoc()) {
+
+        $dvid = intval($dv['id']);
+
+        $cantidadVendida =
+            floatval($dv['cantidad']);
+
+        // =========================================
+        // SUMAR ENTREGAS DE ESE DETALLE
+        // =========================================
+
+        $stmtSUM = $conexion->prepare("
+            SELECT IFNULL(SUM(cantidad),0) AS total
+            FROM detalle_entrega
+            WHERE detalle_venta_id = ?
+        ");
+
+        $stmtSUM->bind_param("i", $dvid);
+
+        $stmtSUM->execute();
+
+        $rowSUM =
+            $stmtSUM->get_result()->fetch_assoc();
+
+        $totalEntregado =
+            floatval($rowSUM['total']);
+
+        // =========================================
+        // REVISAR DIFERENCIA
+        // =========================================
+
+        $diferencia =
+            abs($cantidadVendida - $totalEntregado);
+
+        // =========================================
+        // SI YA ESTÁ COMPLETO
+        // =========================================
+
+        if ($diferencia < 0.01) {
+
+            $stmtUPD = $conexion->prepare("
+                UPDATE detalle_venta
+                SET
+                    estado_entrega = 'entregado',
+                    cantidad_entregada = ?
+                WHERE id = ?
+            ");
+
+            // 🔥 guarda exacta la cantidad vendida
+            $stmtUPD->bind_param(
+                "di",
+                $cantidadVendida,
+                $dvid
+            );
+
+            $stmtUPD->execute();
+        }
     }
 }
    public static function cancelarVenta($conexion, $id_venta, $id_usuario, $motivo = 'Cancelación de venta') {

@@ -49,6 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($data['accion'])) {
             $resultado = VentasModel::procesarVenta($conexion, $data, $id_usuario);
             
             if ($resultado['status'] === 'success') {
+                
                 $id_venta     = $resultado['id_venta'] ?? 0;
                 $id_cliente   = intval($data['id_cliente'] ?? 0);
                 $fecha_actual = date('Y-m-d H:i:s');
@@ -69,7 +70,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($data['accion'])) {
                     $clientesModel->abono_saldos_log($id_cliente, $id_venta, $falta_pagar, $id_usuario, 'CARGO_DEUDA_VENTA', $fecha_actual);
                     error_log("CF_SYSTEM_LOG: Deuda generada: {$falta_pagar}");
                 }
+
             }
+            VentasModel::actualizarEntregasCompletas(
+    $conexion,
+    $resultado['id_venta']
+);
 
             echo json_encode($resultado);
         }
