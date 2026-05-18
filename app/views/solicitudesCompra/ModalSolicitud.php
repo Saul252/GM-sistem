@@ -350,7 +350,7 @@ $('#buscadorProductos').on('select2:select', function(e) {
                 >
                    
 
-                    <option value="${d.factor}">
+                    <option value="1">
                         (${d.ur})
                     </option>
                 </select>

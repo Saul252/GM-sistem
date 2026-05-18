@@ -76,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         try {
                             $datosPatio = [
                                 'movimiento_id'      => $idMov,
-                                'chofer_id'          => $data['chofer_id'] ?? 0,
+                                'chofer_id'          => $data['chofer_id'] ?? 1,
                                 'usuario_sistema_id' => $usuarioSistemaId,
                                 'observaciones'      => $data['observaciones_entrega'] ?? 'Entrega Directa en Patio',
                                 'tripulantes'        => $data['tripulantes'] ?? []

@@ -544,7 +544,7 @@ const efectivoPagado = parseFloat(
     
             // 4. MAPEO DE DATOS COMPLETO (Venta + Logística)
             // --- MAPEO DE DATOS COMPLETO (Venta + Logística Automática) ---
-         
+         console.log( 'chofer',parseInt(document.getElementById('patio_chofer_id').value) || 0);
             const datosVenta = {
                 // 1. Datos de la Transacción
                 id_cliente: parseInt(idCliente),

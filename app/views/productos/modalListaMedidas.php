@@ -418,7 +418,7 @@ MODAL EDITAR MEDIDA
                                    class="form-control"
                                    id="edit_equivalencia"
                                    name="equivalencia"
-                                   step="0.0001"
+                                   step="0.000000001"
                                    min="0.0001"
                                    required>
 

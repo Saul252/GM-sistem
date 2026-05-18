@@ -238,7 +238,7 @@ MODAL CREAR MEDIDA ADICIONAL
                             <input type="number"
                                    id="cantidadConversion"
                                    class="form-control text-center fw-bold"
-                                   step="0.0001"
+                                   step="0.00000001"
                                    min="0"
                                    placeholder="Escribe una cantidad">
 
@@ -269,7 +269,7 @@ MODAL CREAR MEDIDA ADICIONAL
                                    id="equivalencia"
                                    name="equivalencia"
                                    class="form-control"
-                                   step="0.001"
+                                   step="0.000000001"
                                    readonly>
 
                         </div>

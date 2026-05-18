@@ -147,8 +147,8 @@ class cajaRapidaModel {
                 $cant_ped  = floatval($item['cantidad']);
                 $idunidadMedida=floatval($item['idunidadMedida']?? 0);
                 $cant_real = floatval($item['entrega_hoy']);
-                $prec      = floatval($item['precio_unitario']);
-                $subt      = floatval($item['subtotal']);
+                $prec      = floatval($item['precio_unitario']??0);
+                $subt      = floatval($item['subtotal']??0);
                 
                 $st_fila = ($cant_real >= $cant_ped) ? 'entregado' : (($cant_real > 0) ? 'parcial' : 'pendiente');
                 

@@ -98,93 +98,329 @@ public function iniciarReparto($datos) {
     }
 }
 public function entregarEnPatioCliente($datos) {
-    try {
-        // --- PARÁMETROS ---
-        $vehiculo_virtual_id = 999; 
-        $movimiento_id       = intval($datos['movimiento_id']);
-        $trabajador_id       = intval($datos['chofer_id']); 
-        $usuario_operador_id = intval($datos['usuario_sistema_id']); 
-        $observaciones       = !empty($datos['observaciones']) ? $datos['observaciones'] : 'Entrega Directa en Patio';
-        $tripulantes         = isset($datos['tripulantes']) && is_array($datos['tripulantes']) ? $datos['tripulantes'] : [];
 
-        // --- 1. VALIDACIÓN DE INTEGRIDAD ---
-        $sqlCheck = "SELECT rp.id FROM transporte_rutas_puntos rp
-                     INNER JOIN transporte_repartos_maestro trm ON rp.reparto_id = trm.id
-                     WHERE trm.entrega_venta_id = ? 
-                     AND trm.estado_reparto != 'cancelado' LIMIT 1";
-        
-        $stmtCheck = $this->db->prepare($sqlCheck);
-        $stmtCheck->bind_param("i", $movimiento_id);
-        $stmtCheck->execute();
-        
-        if ($stmtCheck->get_result()->num_rows > 0) {
-            throw new Exception("Ya existe un proceso de entrega activo para este despacho.");
+    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+
+    try {
+
+        // =====================================================
+        // PARÁMETROS
+        // =====================================================
+
+        $vehiculo_virtual_id = 999;
+
+        $movimiento_id       = intval($datos['movimiento_id'] ?? 0);
+        $trabajador_id       = intval($datos['chofer_id'] ?? 0);
+        $usuario_operador_id = intval($datos['usuario_sistema_id'] ?? 0);
+
+        $observaciones = !empty($datos['observaciones'])
+            ? trim($datos['observaciones'])
+            : 'Entrega Directa en Patio';
+
+        $tripulantes = (
+            isset($datos['tripulantes']) &&
+            is_array($datos['tripulantes'])
+        ) ? $datos['tripulantes'] : [];
+
+        // =====================================================
+        // VALIDACIONES BÁSICAS
+        // =====================================================
+
+        if ($movimiento_id <= 0) {
+            throw new Exception("Movimiento inválido.");
         }
+
+        if ($usuario_operador_id <= 0) {
+            throw new Exception("Usuario operador inválido.");
+        }
+
+        // =====================================================
+        // VALIDAR VEHÍCULO
+        // =====================================================
+
+        $sqlVeh = "
+            SELECT id
+            FROM transporte_vehiculos
+            WHERE id = ?
+            LIMIT 1
+        ";
+
+        $stmtVeh = $this->db->prepare($sqlVeh);
+
+        if (!$stmtVeh) {
+            throw new Exception(
+                "Error prepare vehículo: " . $this->db->error
+            );
+        }
+
+        $stmtVeh->bind_param("i", $vehiculo_virtual_id);
+
+        if (!$stmtVeh->execute()) {
+            throw new Exception(
+                "Error execute vehículo: " . $stmtVeh->error
+            );
+        }
+
+        $stmtVeh->store_result();
+
+        if ($stmtVeh->num_rows <= 0) {
+            throw new Exception(
+                "El vehículo virtual {$vehiculo_virtual_id} no existe."
+            );
+        }
+
+        // =====================================================
+        // VALIDAR DUPLICADOS
+        // =====================================================
+
+        $sqlCheck = "
+            SELECT rp.id
+            FROM transporte_rutas_puntos rp
+            INNER JOIN transporte_repartos_maestro trm
+                ON rp.reparto_id = trm.id
+            WHERE trm.entrega_venta_id = ?
+            AND trm.estado_reparto != 'cancelado'
+            LIMIT 1
+        ";
+
+        $stmtCheck = $this->db->prepare($sqlCheck);
+
+        if (!$stmtCheck) {
+            throw new Exception(
+                "Error prepare check: " . $this->db->error
+            );
+        }
+
+        $stmtCheck->bind_param("i", $movimiento_id);
+
+        if (!$stmtCheck->execute()) {
+            throw new Exception(
+                "Error execute check: " . $stmtCheck->error
+            );
+        }
+
+        $stmtCheck->store_result();
+
+        if ($stmtCheck->num_rows > 0) {
+            throw new Exception(
+                "Ya existe un proceso de entrega activo para este despacho."
+            );
+        }
+
+        // =====================================================
+        // ARMAR TRIPULACIÓN
+        // =====================================================
+
+        if ($trabajador_id > 0) {
+            array_unshift($tripulantes, $trabajador_id);
+        }
+
+        $tripulantes = array_unique(
+            array_map('intval', $tripulantes)
+        );
+
+        // =====================================================
+        // INICIAR TRANSACCIÓN
+        // =====================================================
 
         $this->db->begin_transaction();
 
-        // --- 2. CREAR EL MAESTRO DEL REPARTO ---
-        // Estado 'completado' y registramos hora de llegada inmediata
-        $estado_maestro = 'completado'; 
+        // =====================================================
+        // INSERT MAESTRO
+        // =====================================================
 
-        $sqlM = "INSERT INTO transporte_repartos_maestro (
-                    vehiculo_id, 
-                    usuario_encargado_id, 
-                    entrega_venta_id, 
-                    fecha_programada, 
-                    estado_reparto,
-                    hora_llegada_real
-                ) VALUES (?, ?, ?, CURDATE(), ?, NOW())";
-        
+        $estado_maestro = 'completado';
+
+        $sqlM = "
+            INSERT INTO transporte_repartos_maestro (
+                vehiculo_id,
+                usuario_encargado_id,
+                entrega_venta_id,
+                fecha_programada,
+                estado_reparto,
+                hora_llegada_real
+            )
+            VALUES (
+                ?,
+                ?,
+                ?,
+                CURDATE(),
+                ?,
+                NOW()
+            )
+        ";
+
         $stmtM = $this->db->prepare($sqlM);
-        $stmtM->bind_param("iiis", $vehiculo_virtual_id, $usuario_operador_id, $movimiento_id, $estado_maestro);
-        $stmtM->execute();
-        $reparto_id = $this->db->insert_id;
 
-        // --- 3. INSERTAR EL PUNTO DE RUTA ---
-        $estado_punto = 'visitado'; 
-        $descripcion  = "ENTREGA EN PATIO: " . $observaciones;
+        if (!$stmtM) {
+            throw new Exception(
+                "Error prepare maestro: " . $this->db->error
+            );
+        }
 
-        $sqlP = "INSERT INTO transporte_rutas_puntos (
-                    reparto_id, 
-                    orden_visita, 
-                    descripcion_punto, 
-                    estado_punto
-                ) VALUES (?, 1, ?, ?)";
-        
+        $stmtM->bind_param(
+            "iiis",
+            $vehiculo_virtual_id,
+            $usuario_operador_id,
+            $movimiento_id,
+            $estado_maestro
+        );
+
+        if (!$stmtM->execute()) {
+            throw new Exception(
+                "Error execute maestro: " . $stmtM->error
+            );
+        }
+
+        $reparto_id = intval($this->db->insert_id);
+
+        if ($reparto_id <= 0) {
+            throw new Exception(
+                "No se generó reparto_id."
+            );
+        }
+
+        // =====================================================
+        // INSERT PUNTO RUTA
+        // =====================================================
+
+        $estado_punto = 'visitado';
+
+        $descripcion = "ENTREGA EN PATIO: " . $observaciones;
+
+        $sqlP = "
+            INSERT INTO transporte_rutas_puntos (
+                reparto_id,
+                orden_visita,
+                descripcion_punto,
+                estado_punto
+            )
+            VALUES (?, 1, ?, ?)
+        ";
+
         $stmtP = $this->db->prepare($sqlP);
-        $stmtP->bind_param("iss", $reparto_id, $descripcion, $estado_punto);
-        $stmtP->execute();
 
-        // --- 4. REGISTRAR TRIPULACIÓN ---
+        if (!$stmtP) {
+            throw new Exception(
+                "Error prepare punto: " . $this->db->error
+            );
+        }
+
+        $stmtP->bind_param(
+            "iss",
+            $reparto_id,
+            $descripcion,
+            $estado_punto
+        );
+
+        if (!$stmtP->execute()) {
+            throw new Exception(
+                "Error execute punto: " . $stmtP->error
+            );
+        }
+
+        // =====================================================
+        // INSERT TRIPULANTES
+        // =====================================================
+
         if (!empty($tripulantes)) {
-            $sqlT = "INSERT INTO transporte_tripulantes_detalle (reparto_id, usuario_id) VALUES (?, ?)";
+
+            $sqlT = "
+                INSERT INTO transporte_tripulantes_detalle (
+                    reparto_id,
+                    usuario_id
+                )
+                VALUES (?, ?)
+            ";
+
             $stmtT = $this->db->prepare($sqlT);
-            foreach ($tripulantes as $u_id) {
-                $uid = intval($u_id);
-                $stmtT->bind_param("ii", $reparto_id, $uid);
-                $stmtT->execute();
+
+            if (!$stmtT) {
+                throw new Exception(
+                    "Error prepare tripulantes: " . $this->db->error
+                );
+            }
+
+            foreach ($tripulantes as $uid) {
+
+                $uid = intval($uid);
+
+                if ($uid <= 0) {
+                    continue;
+                }
+
+                $stmtT->bind_param(
+                    "ii",
+                    $reparto_id,
+                    $uid
+                );
+
+                if (!$stmtT->execute()) {
+                    throw new Exception(
+                        "Error execute tripulante {$uid}: " .
+                        $stmtT->error
+                    );
+                }
             }
         }
 
-        // --- 5. ASEGURAR DISPONIBILIDAD DEL VEHÍCULO VIRTUAL ---
-        // Forzamos que el 999 siempre esté listo para el siguiente cliente
-        $sqlV = "UPDATE transporte_vehiculos SET estado_unidad = 'disponible' WHERE id = ?";
+        // =====================================================
+        // LIBERAR VEHÍCULO
+        // =====================================================
+
+        $sqlV = "
+            UPDATE transporte_vehiculos
+            SET estado_unidad = 'disponible'
+            WHERE id = ?
+        ";
+
         $stmtV = $this->db->prepare($sqlV);
+
+        if (!$stmtV) {
+            throw new Exception(
+                "Error prepare vehículo update: " . $this->db->error
+            );
+        }
+
         $stmtV->bind_param("i", $vehiculo_virtual_id);
-        $stmtV->execute();
+
+        if (!$stmtV->execute()) {
+            throw new Exception(
+                "Error execute vehículo update: " . $stmtV->error
+            );
+        }
+
+        // =====================================================
+        // COMMIT
+        // =====================================================
 
         $this->db->commit();
-        
+
         return [
-            'success' => true,
+            'success'    => true,
             'reparto_id' => $reparto_id,
-            'message' => '¡Entrega finalizada! El mostrador sigue disponible para otros clientes.'
+            'message'    => 'Entrega finalizada correctamente.'
         ];
 
     } catch (Exception $e) {
-        if (isset($this->db) && $this->db->in_transaction) $this->db->rollback();
-        throw $e;
+
+        if (
+            isset($this->db) &&
+            $this->db->errno == 0 &&
+            $this->db->in_transaction
+        ) {
+            $this->db->rollback();
+        }
+
+        error_log(
+            "ERROR entregarEnPatioCliente: " .
+            $e->getMessage()
+        );
+
+        return [
+            'success' => false,
+            'message' => $e->getMessage()
+        ];
     }
 }
 
