@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost
--- Tiempo de generación: 24-04-2026 a las 01:54:46
+-- Tiempo de generación: 18-05-2026 a las 17:12:11
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -335,7 +335,8 @@ CREATE TABLE `detalle_solicitud_compra` (
   `id` int(11) NOT NULL,
   `solicitud_id` int(11) NOT NULL,
   `producto_id` int(11) NOT NULL,
-  `cantidad` decimal(10,2) NOT NULL
+  `cantidad` decimal(10,2) NOT NULL,
+  `costo` float DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -362,6 +363,7 @@ CREATE TABLE `detalle_venta` (
   `venta_id` int(11) NOT NULL,
   `producto_id` int(11) NOT NULL,
   `cantidad` decimal(10,2) NOT NULL,
+  `unidadMedida` int(11) DEFAULT 0,
   `cantidad_entregada` decimal(10,2) NOT NULL DEFAULT 0.00,
   `precio_unitario` decimal(10,2) NOT NULL,
   `tipo_precio` enum('minorista','mayorista','distribuidor') NOT NULL,
@@ -470,6 +472,7 @@ CREATE TABLE `historial_pagos` (
   `monto` decimal(10,2) NOT NULL,
   `saldo_favor` decimal(10,2) DEFAULT 0.00,
   `metodo_pago` varchar(50) DEFAULT NULL,
+  `efectivoPagado` float DEFAULT 0,
   `referencia` varchar(100) DEFAULT NULL,
   `fecha` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -487,6 +490,24 @@ CREATE TABLE `inventario` (
   `stock` decimal(10,2) DEFAULT 0.00,
   `stock_minimo` decimal(10,2) DEFAULT 0.00,
   `stock_maximo` decimal(10,2) DEFAULT 0.00
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `kardex_movimientos_lotes`
+--
+
+CREATE TABLE `kardex_movimientos_lotes` (
+  `id` int(11) NOT NULL,
+  `movimiento_id` int(11) NOT NULL,
+  `lote_origen_id` int(11) NOT NULL,
+  `lote_destino_id` int(11) NOT NULL,
+  `producto_id` int(11) NOT NULL,
+  `cantidad` decimal(10,2) NOT NULL,
+  `usuario_id` int(11) NOT NULL,
+  `fecha` datetime DEFAULT current_timestamp(),
+  `observaciones` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -582,7 +603,7 @@ CREATE TABLE `modulos` (
 CREATE TABLE `movimientos` (
   `id` int(11) NOT NULL,
   `producto_id` int(11) NOT NULL,
-  `tipo` enum('entrada','salida','traspaso','ajuste') NOT NULL,
+  `tipo` enum('entrada','salida','traspaso','ajuste','merma') NOT NULL,
   `cantidad` decimal(10,2) DEFAULT NULL,
   `almacen_origen_id` int(11) DEFAULT NULL,
   `almacen_destino_id` int(11) DEFAULT NULL,
@@ -594,6 +615,20 @@ CREATE TABLE `movimientos` (
   `referencia_id` int(11) DEFAULT NULL,
   `observaciones` text DEFAULT NULL,
   `fecha` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `opciones_de_medida_adicional`
+--
+
+CREATE TABLE `opciones_de_medida_adicional` (
+  `id` int(11) NOT NULL,
+  `producto_id` int(11) NOT NULL,
+  `nombre` varchar(150) NOT NULL,
+  `equivalencia` decimal(20,9) DEFAULT 0.000000000,
+  `creado_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -668,6 +703,7 @@ CREATE TABLE `precios_producto` (
 
 CREATE TABLE `prestamos` (
   `id` int(11) NOT NULL,
+  `gasto_id` int(11) NOT NULL,
   `trabajador_id` int(11) NOT NULL,
   `almacen_id` int(11) NOT NULL,
   `monto_total` decimal(12,2) NOT NULL,
@@ -729,9 +765,16 @@ CREATE TABLE `proveedores` (
   `rfc` varchar(13) DEFAULT NULL,
   `correo` varchar(100) DEFAULT NULL,
   `telefono` varchar(20) DEFAULT NULL,
+  `telefono2` varchar(125) DEFAULT NULL,
+  `extencion` int(11) DEFAULT NULL,
   `direccion` text DEFAULT NULL,
+  `colonia` varchar(250) NOT NULL,
+  `ciudad` varchar(250) NOT NULL,
+  `numeroExt` varchar(11) DEFAULT NULL,
+  `numeroInt` varchar(11) DEFAULT NULL,
   `activo` tinyint(1) DEFAULT 1,
-  `creado_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `creado_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `almacen_id` int(11) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -937,6 +980,18 @@ CREATE TABLE `traspasos` (
   `estado` enum('pendiente','aprobado','rechazado','cancelado') DEFAULT 'pendiente',
   `fecha_solicitud` timestamp NOT NULL DEFAULT current_timestamp(),
   `fecha_autorizacion` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `unidades_medida`
+--
+
+CREATE TABLE `unidades_medida` (
+  `id` int(11) NOT NULL,
+  `nombre` varchar(50) DEFAULT NULL,
+  `clave` varchar(10) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -1201,6 +1256,16 @@ ALTER TABLE `inventario`
   ADD KEY `producto_id` (`producto_id`);
 
 --
+-- Indices de la tabla `kardex_movimientos_lotes`
+--
+ALTER TABLE `kardex_movimientos_lotes`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_lote_origen` (`lote_origen_id`),
+  ADD KEY `idx_lote_destino` (`lote_destino_id`),
+  ADD KEY `idx_producto` (`producto_id`),
+  ADD KEY `idx_fecha` (`fecha`);
+
+--
 -- Indices de la tabla `lotes_ingresos_detalle`
 --
 ALTER TABLE `lotes_ingresos_detalle`
@@ -1254,6 +1319,13 @@ ALTER TABLE `movimientos`
   ADD KEY `usuario_autoriza_id` (`usuario_autoriza_id`),
   ADD KEY `usuario_envia_id` (`usuario_envia_id`),
   ADD KEY `usuario_recibe_id` (`usuario_recibe_id`);
+
+--
+-- Indices de la tabla `opciones_de_medida_adicional`
+--
+ALTER TABLE `opciones_de_medida_adicional`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `fk_medida_producto` (`producto_id`);
 
 --
 -- Indices de la tabla `pagos_cuentas_por_pagar`
@@ -1420,6 +1492,12 @@ ALTER TABLE `traspasos`
   ADD KEY `almacen_destino_id` (`almacen_destino_id`),
   ADD KEY `usuario_solicita_id` (`usuario_solicita_id`),
   ADD KEY `usuario_autoriza_id` (`usuario_autoriza_id`);
+
+--
+-- Indices de la tabla `unidades_medida`
+--
+ALTER TABLE `unidades_medida`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indices de la tabla `usuarios`
@@ -1607,6 +1685,12 @@ ALTER TABLE `inventario`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT de la tabla `kardex_movimientos_lotes`
+--
+ALTER TABLE `kardex_movimientos_lotes`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT de la tabla `lotes_ingresos_detalle`
 --
 ALTER TABLE `lotes_ingresos_detalle`
@@ -1640,6 +1724,12 @@ ALTER TABLE `modulos`
 -- AUTO_INCREMENT de la tabla `movimientos`
 --
 ALTER TABLE `movimientos`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `opciones_de_medida_adicional`
+--
+ALTER TABLE `opciones_de_medida_adicional`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -1766,6 +1856,12 @@ ALTER TABLE `transporte_vehiculos`
 -- AUTO_INCREMENT de la tabla `traspasos`
 --
 ALTER TABLE `traspasos`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT de la tabla `unidades_medida`
+--
+ALTER TABLE `unidades_medida`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -1945,6 +2041,12 @@ ALTER TABLE `movimientos`
   ADD CONSTRAINT `movimientos_ibfk_5` FOREIGN KEY (`usuario_autoriza_id`) REFERENCES `usuarios` (`id`),
   ADD CONSTRAINT `movimientos_ibfk_6` FOREIGN KEY (`usuario_envia_id`) REFERENCES `usuarios` (`id`),
   ADD CONSTRAINT `movimientos_ibfk_7` FOREIGN KEY (`usuario_recibe_id`) REFERENCES `usuarios` (`id`);
+
+--
+-- Filtros para la tabla `opciones_de_medida_adicional`
+--
+ALTER TABLE `opciones_de_medida_adicional`
+  ADD CONSTRAINT `fk_medida_producto` FOREIGN KEY (`producto_id`) REFERENCES `productos` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Filtros para la tabla `pagos_cuentas_por_pagar`

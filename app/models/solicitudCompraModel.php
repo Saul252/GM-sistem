@@ -74,8 +74,31 @@ class SolicitudCompra {
 public function obtenerDetalle($id) {
     $sql = "SELECT d.*, p.nombre as producto_nombre, p.sku, p.unidad_medida, 
                    p.unidad_reporte, p.factor_conversion, s.almacen_id as almacen_origen_id,
-                   a.nombre as almacen_nombre,prov.id as proveedor_id, prov.nombre_comercial as proveedor_nombre
-            FROM detalle_solicitud_compra d
+                   a.nombre as almacen_nombre,prov.id as proveedor_id, prov.nombre_comercial as proveedor_nombre, 
+                   
+                    CONCAT(
+        prov.direccion, ' ',
+        prov.numeroExt, ' ',
+        IFNULL(prov.numeroInt, ''), ', ',
+        prov.colonia, ', ',
+        prov.ciudad
+    ) AS dp_direccion,
+
+    prov.rfc        AS dp_rfc,
+    prov.correo     AS dp_correo,
+    prov.telefono   AS dp_telefono,
+    prov.telefono2  AS dp_telefono2,
+    prov.extencion  AS dp_extencion,
+    prov.direccion  AS dp_direccion,
+    prov.colonia    AS dp_colonia,
+    prov.ciudad     AS dp_ciudad,
+    prov.numeroExt  AS dp_numeroExt,
+    prov.numeroInt  AS dp_numeroInt,
+    prov.activo     AS dp_activo,
+    prov.creado_at  AS dp_creado_at
+
+                      
+                               FROM detalle_solicitud_compra d
             INNER JOIN productos p ON d.producto_id = p.id
             INNER JOIN solicitudes_compra s ON d.solicitud_id = s.id
             INNER JOIN almacenes a ON s.almacen_id = a.id

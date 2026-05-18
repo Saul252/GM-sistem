@@ -1,15 +1,17 @@
+<div id="printSection">
 <div class="modal fade" id="modalVerDetalle" tabindex="-1" aria-hidden="true" data-bs-focus="false">
     <div class="modal-dialog modal-xl"> <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
             <div class="modal-body p-0" id="ticketContenido">
                 </div>
             <div class="modal-footer border-0 bg-light justify-content-center">
-                <button type="button" class="btn btn-dark btn-sm px-4 rounded-pill" onclick="window.print()">
+                <button type="button" class="btn btn-dark btn-sm px-4 rounded-pill" onclick="imprimirTicket()"">
                     <i class="bi bi-printer me-2"></i>Imprimir Ticket
                 </button>
                 <button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-pill" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <style>
@@ -66,6 +68,44 @@
     body {
         background-color: white !important;
     }
+#printSection{
+    display:none;
+}
+
+@media print {
+
+    body *{
+        visibility:hidden !important;
+    }
+
+    #printSection,
+    #printSection *{
+        visibility:visible !important;
+    }
+
+    #printSection{
+        display:block !important;
+        position:absolute;
+        left:0;
+        top:0;
+        width:100%;
+        background:#fff;
+    }
+
+    .modal,
+    .modal-dialog,
+    .modal-content,
+    .modal-body,
+    .modal-footer,
+    .modal-backdrop{
+        display:none !important;
+    }
+
+    @page{
+        size:portrait;
+        margin:5mm;
+    }
+}
 
 }
 </style>
@@ -244,7 +284,9 @@ console.log(c.categoria_nombre );
                     <div class="col-4"><div style="border-top: 2px solid #333; margin: 0 15px;" class="pt-2 small fw-bold">SOLICITADO POR</div></div>
                     <div class="col-4"><div style="border-top: 2px solid #333; margin: 0 15px;" class="pt-2 small fw-bold">ALMACÉN / RECIBO</div></div>
                     <div class="col-4"><div style="border-top: 2px solid #333; margin: 0 15px;" class="pt-2 small fw-bold">AUTORIZACIÓN</div></div>
-                </div>
+                 <div class="row mt-5 pt-4 text-center" id="finImpresion">
+                    </div>
+               
             </div>`;
 
         $('#ticketContenido').html(docHTML);
@@ -252,5 +294,19 @@ console.log(c.categoria_nombre );
         const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
         modalInstance.show();
     });
+}
+</script>
+<script>
+function imprimirTicket() {
+
+    const contenido = document.getElementById('ticketContenido').innerHTML;
+
+    const areaPrint = document.getElementById('printSection');
+
+    areaPrint.innerHTML = contenido;
+
+    window.print();
+
+    areaPrint.innerHTML = '';
 }
 </script>

@@ -67,7 +67,7 @@
 
 
                                     <label class="form-label small fw-bold text-secondary">UNIDAD BASE (VENTA)</label>
-                                    <select id="u_mayoreo" name="unidad_reporte"
+                                    <select required id="u_mayoreo" name="unidad_reporte"
                                         class="form-select border-0 shadow-sm fw-bold">
                                         <option value="">Seleccione...</option>
                                         <?php foreach($unidadesMedida as $j): ?>
@@ -81,7 +81,7 @@
                                 <div class="col-md-4">
 
                                     <label class="form-label small fw-bold text-secondary">UNIDAD BASE (VENTA)</label>
-                                    <select name="unidad_medida" id="u_base"
+                                    <select required name="unidad_medida" id="u_base"
                                         class="form-select border-0 shadow-sm fw-bold">
                                         <option value="">Seleccione...</option>
                                         <?php foreach($unidadesMedida as $j): ?>

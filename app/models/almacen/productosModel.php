@@ -107,6 +107,148 @@ foreach ($medidas as $medida) {
             return false;
         }
     }
+   public function guardarCompletoMultiALmacen($datos) {
+        try {
+            $this->db->begin_transaction();
+
+            // 1. Insertar en la tabla 'productos'
+            $sqlProd = "INSERT INTO productos (
+                sku, nombre, descripcion, unidad_medida, unidad_reporte, 
+                factor_conversion, fiscal_clave_prod, fiscal_clave_unidad, 
+                precio_adquisicion, impuesto_iva, categoria_id, activo
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1)";
+
+            $stmt = $this->db->prepare($sqlProd);
+            $stmt->bind_param(
+                "sssssdssddi",
+                $datos['sku'],
+                $datos['nombre'],
+                $datos['descripcion'],
+                $datos['unidad_medida'],
+                $datos['unidad_reporte'],
+                $datos['factor_conversion'],
+                $datos['fiscal_clave_prod'],
+                $datos['fiscal_clave_unidad'], // Clave unidad SAT
+                $datos['precio_adquisicion'],
+                $datos['impuesto_iva'],
+                $datos['categoria_id']
+            );
+
+            if (!$stmt->execute()) throw new Exception("Error al insertar producto");
+            
+            $productoId = $this->db->insert_id;
+// 🔹 CREAR OPCIONES DE MEDIDA AUTOMÁTICAS
+
+$factor = floatval($datos['factor_conversion']);
+$medidas=[];
+if($factor==1)
+    {
+$medidas = [
+   
+    [
+        'nombre'       => $datos['unidad_medida'],
+        'equivalencia' => 1
+    ]
+    
+];
+    }
+    else{
+        
+$medidas = [
+    [
+        'nombre'       => $datos['unidad_reporte'],
+        'equivalencia' => ($factor > 0 ? (1 / $factor) : 1)
+    ],
+    [
+        'nombre'       => $datos['unidad_medida'],
+        'equivalencia' => 1
+    ]
+];
+    }
+
+foreach ($medidas as $medida) {
+
+    $this->guardarOpcionMedida([
+        'producto_id'  => $productoId,
+        'nombre'       => $medida['nombre'],
+        'equivalencia' => $medida['equivalencia']
+    ]);
+}
+$resAlmacenes = $this->db->query("
+    SELECT id 
+    FROM almacenes 
+    WHERE activo = 1
+");
+
+$sqlPrecios = "
+    INSERT INTO precios_producto (
+        producto_id,
+        almacen_id,
+        precio_minorista,
+        precio_mayorista,
+        precio_distribuidor
+    ) VALUES (?, ?, ?, ?, ?)
+";
+
+$stmtPrecios = $this->db->prepare($sqlPrecios);
+
+$stmtInv = $this->db->prepare("
+    INSERT INTO inventario
+    (almacen_id, producto_id, stock, stock_minimo)
+    VALUES (?, ?, ?, ?)
+");
+
+if (!$stmtInv) {
+    throw new Exception("Error prepare inventario");
+}
+
+while ($alm = $resAlmacenes->fetch_assoc()) {
+
+    $almacen_id = $alm['id'];
+
+    // PRECIOS
+    $stmtPrecios->bind_param(
+        "iiddd",
+        $productoId,
+        $almacen_id,
+        $datos['precio_minorista'],
+        $datos['precio_mayorista'],
+        $datos['precio_distribuidor']
+    );
+
+    if (!$stmtPrecios->execute()) {
+        throw new Exception(
+            "Error al insertar precios para el almacén " . $almacen_id
+        );
+    }
+
+    // INVENTARIO
+    $stock = 0;
+    $min   = 0;
+
+    $stmtInv->bind_param(
+        "iidd",
+        $almacen_id,
+        $productoId,
+        $stock,
+        $min
+    );
+
+    if (!$stmtInv->execute()) {
+        throw new Exception(
+            "Error inventario: " . $stmtInv->error
+        );
+    }
+}
+            $this->db->commit();
+            return $productoId;
+
+        } catch (Exception $e) {
+            $this->db->rollback();
+            error_log($e->getMessage());
+            return false;
+        }
+    }
 
     public function existeSku($sku) {
         $stmt = $this->db->prepare("SELECT id FROM productos WHERE sku = ?");
@@ -249,15 +391,11 @@ foreach ($medidas as $medida) {
 $min = floatval($datos['stock_minimo'] ?? 0);
 
 // 👉 si no hay stock, precios en 0
-if ($stock <= 0) {
-    $p_minorista = 0;
-    $p_mayorista = 0;
-    $p_distribuidor = 0;
-} else {
+
     $p_minorista = floatval($datos['precio_minorista'] ?? 0);
     $p_mayorista = floatval($datos['precio_mayorista'] ?? 0);
     $p_distribuidor = floatval($datos['precio_distribuidor'] ?? 0);
-}
+
             // INVENTARIO
             $stmtInv = $this->db->prepare("INSERT INTO inventario 
                 (almacen_id, producto_id, stock, stock_minimo) 
@@ -325,6 +463,329 @@ if ($stock > 0) {
             }
         }
         }
+
+$resAlmacenes = $this->db->query("
+    SELECT id 
+    FROM almacenes 
+    WHERE activo = 1
+");
+
+$sqlPrecios = "
+    INSERT INTO precios_producto (
+        producto_id,
+        almacen_id,
+        precio_minorista,
+        precio_mayorista,
+        precio_distribuidor
+    ) VALUES (?, ?, ?, ?, ?)
+";
+
+$stmtPrecios = $this->db->prepare($sqlPrecios);
+
+$stmtInv = $this->db->prepare("
+    INSERT INTO inventario
+    (almacen_id, producto_id, stock, stock_minimo)
+    VALUES (?, ?, ?, ?)
+");
+
+if (!$stmtInv) {
+    throw new Exception("Error prepare inventario");
+}
+
+while ($alm = $resAlmacenes->fetch_assoc()) {
+
+    $almacen_id = $alm['id'];
+
+    // PRECIOS
+    $stmtPrecios->bind_param(
+        "iiddd",
+        $producto_id,
+        $almacen_id,
+        $datos['precio_minorista'],
+        $datos['precio_mayorista'],
+        $datos['precio_distribuidor']
+    );
+
+    if (!$stmtPrecios->execute()) {
+        throw new Exception(
+            "Error al insertar precios para el almacén " . $almacen_id
+        );
+    }
+
+    // INVENTARIO
+    $stock = 0;
+    $min   = 0;
+
+    $stmtInv->bind_param(
+        "iidd",
+        $almacen_id,
+        $producto_id,
+        $stock,
+        $min
+    );
+
+    if (!$stmtInv->execute()) {
+        throw new Exception(
+            "Error inventario: " . $stmtInv->error
+        );
+    }
+}
+
+        $this->db->commit();
+        return ['status' => true];
+
+    } catch (Exception $e) {
+
+        $this->db->rollback();
+        error_log("ERROR crearProducto: " . $e->getMessage());
+
+        return [
+            'status' => false,
+            'msg' => $e->getMessage()
+        ];
+    }
+}
+public function crearProductoMultiAlmacen($data)
+{
+    $this->db->begin_transaction();
+
+    try {
+
+        // 🔹 VALIDAR SKU
+        $checkSku = $this->db->prepare("SELECT id FROM productos WHERE sku = ?");
+        if (!$checkSku) throw new Exception("Error prepare SKU");
+
+        $checkSku->bind_param("s", $data['sku']);
+        $checkSku->execute();
+
+        if ($checkSku->get_result()->num_rows > 0) {
+            throw new Exception("El SKU '{$data['sku']}' ya está registrado.");
+        }
+
+        // 🔹 INSERT PRODUCTO
+        $stmtProd = $this->db->prepare("INSERT INTO productos 
+            (sku, nombre, descripcion, unidad_medida, unidad_reporte, factor_conversion, fiscal_clave_prod, fiscal_clave_unidad, precio_adquisicion, impuesto_iva, categoria_id) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+        if (!$stmtProd) throw new Exception("Error prepare producto");
+
+        $stmtProd->bind_param(
+            "sssssdsssdd",
+            $data['sku'],
+            $data['nombre'],
+            $data['descripcion'],
+            $data['unidad_medida'],
+            $data['unidad_reporte'],
+            $data['factor_conversion'],
+            $data['fiscal_clave_prod'],
+            $data['fiscal_clave_unit'],
+            $data['precio_adquisicion'],
+            $data['impuesto_iva'],
+            $data['categoria_id']
+        );
+
+        if (!$stmtProd->execute()) {
+            throw new Exception("Error al insertar producto: " . $stmtProd->error);
+        }
+
+        $producto_id = $this->db->insert_id;
+        // 🔹 CREAR OPCIÓN DE MEDIDA AUTOMÁTICA
+// 🔹 CREAR OPCIONES DE MEDIDA AUTOMÁTICAS
+
+$factor = floatval($data['factor_conversion']);
+$medidas=[];
+if($factor==1)
+    {$medidas = [
+    [
+        'nombre'       => $data['unidad_reporte'],
+        'equivalencia' => 1
+    ]
+    
+];
+
+    }
+    else{
+        $medidas = [
+    [
+        'nombre'       => $data['unidad_reporte'],
+        'equivalencia' => ($factor > 0 ? (1 / $factor) : 1)
+    ],
+    [
+        'nombre'       => $data['unidad_medida'],
+        'equivalencia' => 1
+    ]
+];
+
+    }
+
+
+foreach ($medidas as $medida) {
+
+    $this->guardarOpcionMedida([
+        'producto_id'  => $producto_id,
+        'nombre'       => $medida['nombre'],
+        'equivalencia' => $medida['equivalencia']
+    ]);
+}
+
+        // 🔹 ALMACENES
+        foreach ($data['almacenes'] as $almacen_id => $datos) {
+
+           $stock = isset($datos['stock']) ? floatval($datos['stock']) : 0;
+
+$min = floatval($datos['stock_minimo'] ?? 0);
+
+// 👉 si no hay stock, precios en 0
+
+    $p_minorista = floatval($datos['precio_minorista'] ?? 0);
+    $p_mayorista = floatval($datos['precio_mayorista'] ?? 0);
+    $p_distribuidor = floatval($datos['precio_distribuidor'] ?? 0);
+
+            // INVENTARIO
+            $stmtInv = $this->db->prepare("INSERT INTO inventario 
+                (almacen_id, producto_id, stock, stock_minimo) 
+                VALUES (?, ?, ?, ?)");
+
+            if (!$stmtInv) throw new Exception("Error prepare inventario");
+
+            $stmtInv->bind_param("iidd", $almacen_id, $producto_id, $stock, $min);
+
+            if (!$stmtInv->execute()) {
+                throw new Exception("Error inventario: " . $stmtInv->error);
+            }
+            
+if ($stock > 0) {
+            // 🔹 PROTEGER DIVISIÓN
+            $precioIndividual = $stock > 0 ? ($data['precio_adquisicion'] / $stock) : 0;
+
+            $codigo_lote = "L-" . $data['sku'] . "-" . date('His');
+
+            $stmtLote = $this->db->prepare("INSERT INTO lotes_stock 
+                (producto_id, almacen_id, codigo_lote, cantidad_inicial, cantidad_actual, precio_compra_unitario, estado_lote) 
+                VALUES (?, ?, ?, ?, ?, ?, 'activo')");
+
+            if (!$stmtLote) throw new Exception("Error prepare lote");
+
+            $stmtLote->bind_param("iisddd", $producto_id, $almacen_id, $codigo_lote, $stock, $stock, $precioIndividual);
+
+            if (!$stmtLote->execute()) {
+                throw new Exception("Error lote: " . $stmtLote->error);
+            }
+
+            // PRECIOS
+            $stmtPre = $this->db->prepare("INSERT INTO precios_producto 
+                (producto_id, almacen_id, precio_minorista, precio_mayorista, precio_distribuidor) 
+                VALUES (?, ?, ?, ?, ?)");
+
+            if (!$stmtPre) throw new Exception("Error prepare precios");
+
+            $stmtPre->bind_param("iiddd", $producto_id, $almacen_id, $p_minorista, $p_mayorista, $p_distribuidor);
+
+            if (!$stmtPre->execute()) {
+                throw new Exception("Error precios: " . $stmtPre->error);
+            }
+
+            // MOVIMIENTO
+            $obs = "Carga inicial (Lote: $codigo_lote)";
+
+            $stmtMov = $this->db->prepare("INSERT INTO movimientos 
+                (producto_id, tipo, cantidad, almacen_destino_id, usuario_registra_id, observaciones) 
+                VALUES (?, 'entrada', ?, ?, ?, ?)");
+
+            if (!$stmtMov) throw new Exception("Error prepare movimiento");
+
+            $stmtMov->bind_param(
+                "idiis",
+                $producto_id,
+                $stock,
+                $almacen_id,
+                $data['usuario_id'],
+                $obs
+            );
+
+            if (!$stmtMov->execute()) {
+                throw new Exception("Error movimiento: " . $stmtMov->error);
+            }
+        }
+        }
+$idsExcluir = array_keys($data['almacenes']);
+
+$sql = "
+    SELECT id
+    FROM almacenes
+    WHERE activo = 1
+";
+
+if (!empty($idsExcluir)) {
+
+    $idsExcluir = array_map('intval', $idsExcluir);
+
+    $sql .= " AND id NOT IN (" . implode(',', $idsExcluir) . ")";
+}
+
+$resAlmacenes = $this->db->query($sql);
+
+$sqlPrecios = "
+    INSERT INTO precios_producto (
+        producto_id,
+        almacen_id,
+        precio_minorista,
+        precio_mayorista,
+        precio_distribuidor
+    ) VALUES (?, ?, ?, ?, ?)
+";
+
+$stmtPrecios = $this->db->prepare($sqlPrecios);
+
+$stmtInv = $this->db->prepare("
+    INSERT INTO inventario
+    (almacen_id, producto_id, stock, stock_minimo)
+    VALUES (?, ?, ?, ?)
+");
+
+if (!$stmtInv) {
+    throw new Exception("Error prepare inventario");
+}
+
+while ($alm = $resAlmacenes->fetch_assoc()) {
+
+    $almacen_id = $alm['id'];
+
+    // PRECIOS
+    $stmtPrecios->bind_param(
+        "iiddd",
+        $producto_id,
+        $almacen_id,
+         $p_minorista = floatval($datos['precio_minorista'] ?? 0),
+    $p_mayorista = floatval($datos['precio_mayorista'] ?? 0),
+    $p_distribuidor = floatval($datos['precio_distribuidor'] ?? 0),
+
+    );
+
+    if (!$stmtPrecios->execute()) {
+        throw new Exception(
+            "Error al insertar precios para el almacén " . $almacen_id
+        );
+    }
+
+    // INVENTARIO
+    $stock = 0;
+    $min   = 0;
+
+    $stmtInv->bind_param(
+        "iidd",
+        $almacen_id,
+        $producto_id,
+        $stock,
+        $min
+    );
+
+    if (!$stmtInv->execute()) {
+        throw new Exception(
+            "Error inventario: " . $stmtInv->error
+        );
+    }
+}
 
         $this->db->commit();
         return ['status' => true];

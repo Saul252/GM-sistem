@@ -143,6 +143,43 @@ class AlmacenController {
     }
 
     public function guardarProducto() {
+        while (ob_get_level()) ob_end_clean(); // Asegurar respuesta limpia, quitar despues para un solo almacen ya que este es para cf
+        header('Content-Type: application/json');
+
+        $datos = [
+            'sku'                 => trim($_POST['sku'] ?? ''),
+            'nombre'              => trim($_POST['nombre'] ?? ''),
+            'categoria_id'        => $_POST['categoria_id'] ?? null,
+            'unidad_medida'       => $_POST['unidad_medida'] ?? 'PZA',
+            'unidad_reporte'      => $_POST['unidad_reporte'] ?? '',
+            'factor_conversion'   => floatval($_POST['factor_conversion'] ?? 1),
+            'precio_adquisicion'  => 0,
+            'impuesto_iva'        => floatval($_POST['impuesto_iva'] ?? 16.00),
+            'descripcion'         => $_POST['description'] ?? '',
+            'fiscal_clave_prod'   => $_POST['fiscal_clave_prod'] ?? '',
+            'fiscal_clave_unidad'   => $_POST['fiscal_clave_unidad'] ?? '',
+            'precio_minorista'    => floatval($_POST['precio_minorista'] ?? 0),
+            'precio_mayorista'    => floatval($_POST['precio_mayorista'] ?? 0),
+            'precio_distribuidor' => floatval($_POST['precio_distribuidor'] ?? 0)
+        ];
+
+        if (empty($datos['sku']) || empty($datos['nombre'])) {
+            echo json_encode(['status' => 'error', 'message' => 'SKU y Nombre son obligatorios']);
+            exit;
+        }
+ //$nuevoId = $this->productoModel->guardarCompleto($datos);//este es el original para un solo almacen
+        $nuevoId = $this->productoModel->guardarCompletoMultiALmacen($datos);
+
+        if ($nuevoId) {
+            echo json_encode(['status' => 'success', 'message' => 'Producto registrado exitosamente', 'id' => $nuevoId]);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Error al guardar el producto.']);
+        }
+        exit;
+    }
+    // Añade este método antes del final de la llave de la clase }
+
+    public function guardarProductoUnsoloAlmacen() {//es igual que guardar producto(la que esta arriba pero este es para solo guardar en un solo almacen)
         while (ob_get_level()) ob_end_clean(); // Asegurar respuesta limpia
         header('Content-Type: application/json');
 
@@ -177,7 +214,6 @@ class AlmacenController {
         }
         exit;
     }
-    // Añade este método antes del final de la llave de la clase }
 public function obtenerListaAlmacenes() {
     // 1. Limpiamos cualquier salida previa (espacios, warnings, etc)
     while (ob_get_level()) ob_end_clean(); 
@@ -237,7 +273,7 @@ header('Content-Type: application/json');
         }
 
         // 🔹 3. Llamar al modelo PRO
-        $resultado = $this->productoModel->crearProducto($data);
+        $resultado = $this->productoModel->crearProductoMultiAlmacen($data);
                // 🔹 4. Respuesta
         if ($resultado['status']) {
             echo json_encode([

@@ -490,81 +490,338 @@ error_reporting(E_ALL);
         </div>
     </div>
 </div>
-    <div class="modal fade" id="modalImprimirSolicitud" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
-                <div class="modal-header bg-dark text-white border-0">
-                    <h5 class="fw-bold mb-0"><i class="bi bi-printer me-2"></i>Vista de Impresión</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-0">
-                    <div id="areaImpresion" class="p-5 bg-white">
-                        <div class="d-flex justify-content-between align-items-start mb-4">
-                            <div>
-                                <h2 class="fw-bold text-uppercase mb-0">Solicitud de Compra</h2>
-                                <p class="text-muted mb-0" id="print-folio">FOLIO: #00000</p>
-                            </div>
-                            <div class="text-end">
-                                <h5 class="fw-bold mb-0">cfsistem</h5>
-                                <p class="small text-muted mb-0" id="print-fecha">Fecha: --/--/----</p>
+   <div class="modal fade" id="modalImprimirSolicitud" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
+            <div class="modal-header bg-gradient text-white border-0" style="background: linear-gradient(135deg, #2c3e50 0%, #4a6572 100%);">
+                <h5 class="fw-bold mb-0"><i class="bi bi-printer me-2"></i>Vista de Impresión</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="areaImpresion" class="p-5 bg-white" style="min-height: 600px;">
+                    <!-- Encabezado -->
+                    <div class="d-flex justify-content-between align-items-start mb-4">
+                        <div>
+                            <h2 class="fw-bold text-uppercase mb-0" style="color: #2c3e50;">Solicitud de Compra</h2>
+                            <p class="text-muted mb-0" id="print-folio">FOLIO: #00000</p>
+                        </div>
+                        <div class="text-end">
+                            <h5 class="fw-bold mb-0" style="color: #4a6572;">cfsistem</h5>
+                            <p class="small text-muted mb-0" id="print-fecha">Fecha: --/--/----</p>
+                        </div>
+                    </div>
+
+                    <div class="mb-4" style="height: 2px; background: linear-gradient(90deg, rgba(44,62,80,0.8) 0%, rgba(74,101,114,0.8) 100%);"></div>
+
+                    <!-- Información principal -->
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <div class="card border-0 shadow-sm h-100" style="border-radius: 10px; background-color: #f8f9fa;">
+                                <div class="card-body p-3">
+                                    <h6 class="text-muted mb-2" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">ALMACÉN DESTINO</h6>
+                                    <p class="fw-bold mb-0" id="print-almacen" style="font-size: 1.1rem;">---</p>
+                                </div>
                             </div>
                         </div>
-
-                        <hr>
-
-                        <div class="row mb-4">
-                            <div class="col-6">
-                                <label class="small text-muted d-block">ALMACÉN DESTINO:</label>
-                                <span class="fw-bold" id="print-almacen">---</span>
-                            </div>
-                            <div class="col-6">
-                                <label class="small text-muted d-block">PROVEEDOR :</label>
-                                <span class="fw-bold" id="print-proveedor">---</span>
+                        <div class="col-md-6">
+                            <div class="card border-0 shadow-sm h-100" style="border-radius: 10px; background-color: #f8f9fa;">
+                                <div class="card-body p-3">
+                                    <h6 class="text-muted mb-2" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">PROVEEDOR</h6>
+                                    <p class="fw-bold mb-2" id="print-proveedor" style="font-size: 1.1rem;">---</p>
+                                    <div class="row">
+                                        <div class="col-12 mb-1">
+                                            <span class="small text-muted">RFC:</span>
+                                            <span class="fw-bold ms-1" id="print-rfc">---</span>
+                                        </div>
+                                        <div class="col-12 mb-1">
+                                            <span class="small text-muted">DIRECCIÓN:</span>
+                                            <span class="fw-bold ms-1" id="print-direccion">---</span>
+                                        </div>
+                                        <div class="col-6 mb-1">
+                                            <span class="small text-muted">TELÉFONO:</span>
+                                            <span class="fw-bold ms-1" id="print-telefono">---</span>
+                                        </div>
+                                        <div class="col-6 mb-1">
+                                            <span class="small text-muted">TELÉFONO2:</span>
+                                            <span class="fw-bold ms-1" id="print-telefono2">---</span>
+                                        </div>
+                                        <div class="col-12">
+                                            <span class="small text-muted">EXTENSIÓN:</span>
+                                            <span class="fw-bold ms-1" id="print-extencion">---</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
+                    </div>
 
-                        <table class="table table-bordered align-middle">
-                            <thead class="table-light">
+                    <!-- Tabla -->
+                    <div class="table-responsive mb-4">
+                        <table class="table table-hover align-middle" style="border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                            <thead style="background: linear-gradient(135deg, #2c3e50 0%, #4a6572 100%); color: white;">
                                 <tr>
-                                    <th>Descripción del Material</th>
-                                    <th width="120" class="text-center">Cantidad</th>
-                                    <th width="150">Unidad Mayor</th>
-                                       <th width="150">Unidad Menor</th>
-                                          <th width="150">Costo</th>
+                                    <th style="border: none; padding: 12px 15px;">Descripción del Material</th>
+                                    <th width="120" class="text-center" style="border: none; padding: 12px 15px;">Cantidad</th>
+                                
+                                    <th width="150" style="border: none; padding: 12px 15px;">Costo Unitario</th>
+                                    
+                                    <th width="150" style="border: none; padding: 12px 15px;">Costo Total</th>
                                 </tr>
                             </thead>
-                            <tbody id="print-tabla-cuerpo">
+                            <tbody id="print-tabla-cuerpo" style="background-color: white;">
+                                <!-- Las filas se agregarán dinámicamente -->
                             </tbody>
                         </table>
+                    </div>
 
-                        <div class="mt-5 pt-4">
-                            <div class="row text-center">
-                                <div class="col-4">
-                                    <div style="border-top: 1px solid #000; margin: 0 20px;"></div>
-                                    <small>Solicita</small>
+                    <!-- Firmas -->
+                    <div class="mt-5 pt-4">
+                        <div class="row text-center">
+                            <div class="col-4">
+                                <div class="d-flex flex-column align-items-center">
+                                    <div style="width: 150px; height: 1px; background-color: #2c3e50; margin-bottom: 8px;"></div>
+                                    <small class="text-muted" style="text-transform: uppercase; letter-spacing: 0.5px;">Solicita</small>
                                 </div>
-                                <div class="col-4">
-                                    <div style="border-top: 1px solid #000; margin: 0 20px;"></div>
-                                    <small>Autoriza</small>
+                            </div>
+                            <div class="col-4">
+                                <div class="d-flex flex-column align-items-center">
+                                    <div style="width: 150px; height: 1px; background-color: #2c3e50; margin-bottom: 8px;"></div>
+                                    <small class="text-muted" style="text-transform: uppercase; letter-spacing: 0.5px;">Autoriza</small>
                                 </div>
-                                <div class="col-4">
-                                    <div style="border-top: 1px solid #000; margin: 0 20px;"></div>
-                                    <small>Recibe (Compras)</small>
+                            </div>
+                            <div class="col-4">
+                                <div class="d-flex flex-column align-items-center">
+                                    <div style="width: 150px; height: 1px; background-color: #2c3e50; margin-bottom: 8px;"></div>
+                                    <small class="text-muted" style="text-transform: uppercase; letter-spacing: 0.5px;">Recibe (Compras)</small>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer border-0 bg-light">
-                    <button type="button" class="btn btn-secondary rounded-pill px-4"
-                        data-bs-dismiss="modal">Cerrar</button>
-                    <button type="button" class="btn btn-primary rounded-pill px-4" onclick="ejecutarImpresion()">
-                        <i class="bi bi-printer-fill me-2"></i> Imprimir Ahora
-                    </button>
-                </div>
+            </div>
+            <div class="modal-footer border-0 bg-light" style="border-radius: 0 0 15px 15px;">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-2"></i>Cerrar
+                </button>
+                <button type="button" class="btn btn-primary rounded-pill px-4" onclick="ejecutarImpresion()" style="background: linear-gradient(135deg, #2c3e50 0%, #4a6572 100%); border: none;">
+                    <i class="bi bi-printer-fill me-2"></i> Imprimir Ahora
+                </button>
             </div>
         </div>
     </div>
+</div>
+<style>
+/* Estilos generales para el modal */
+#modalImprimirSolicitud .modal-content {
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+#modalImprimirSolicitud .modal-header {
+    background: linear-gradient(135deg, #2c3e50 0%, #4a6572 100%);
+    color: white;
+    border: none;
+    padding: 1.5rem;
+}
+
+#modalImprimirSolicitud .modal-body {
+    padding: 0;
+}
+
+#modalImprimirSolicitud .modal-footer {
+    background-color: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    padding: 1.5rem;
+}
+
+/* Estilos para el área de impresión */
+#areaImpresion {
+    padding: 2rem;
+    background-color: white;
+    min-height: 600px;
+}
+
+/* Encabezado del documento */
+#areaImpresion h2 {
+    color: #2c3e50;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+#areaImpresion h5 {
+    color: #4a6572;
+    font-weight: 600;
+}
+
+/* Tarjetas de información */
+.card {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para la tabla */
+.table {
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.table thead th {
+    background: linear-gradient(135deg, #2c3e50 0%, #4a6572 100%);
+    color: white;
+    border: none;
+    padding: 12px 15px;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.table tbody tr:nth-child(odd) {
+    background-color: #f8f9fa;
+}
+
+.table tbody tr:hover {
+    background-color: #e9ecef;
+}
+
+/* Líneas de separación */
+.divider {
+    height: 2px;
+    background: linear-gradient(90deg, rgba(44,62,80,0.8) 0%, rgba(74,101,114,0.8) 100%);
+    margin: 1.5rem 0;
+}
+
+/* Sección de firmas */
+.signature-line {
+    width: 150px;
+    height: 1px;
+    background-color: #2c3e50;
+    margin-bottom: 8px;
+}
+
+.signature-label {
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+/* Estilos para impresión */
+@media print {
+    /* Ocultar elementos innecesarios */
+    body * {
+        visibility: hidden;
+    }
+    
+    #modalImprimirSolicitud, #modalImprimirSolicitud * {
+        visibility: visible;
+    }
+    
+    #modalImprimirSolicitud {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+    
+    /* Ajustes para el modal al imprimir */
+    .modal {
+        position: static !important;
+        display: block !important;
+        overflow: visible !important;
+    }
+    
+    .modal-dialog {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        position: static !important;
+        transform: none !important;
+    }
+    
+    .modal-content {
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+    }
+    
+    .modal-header, .modal-footer {
+        display: none !important;
+    }
+    
+    /* Ajustes para el área de impresión */
+    #areaImpresion {
+        padding: 1.5rem;
+        background-color: white !important;
+        color: black !important;
+    }
+    
+    /* Asegurar colores legibles en impresión */
+    #areaImpresion * {
+        color: black !important;
+        background-color: white !important;
+    }
+    
+    /* Ajustes para la tabla al imprimir */
+    .table {
+        box-shadow: none !important;
+    }
+    
+    .table thead th {
+        background-color: #f0f0f0 !important;
+        color: black !important;
+        border: 1px solid #ddd !important;
+    }
+    
+    .table tbody tr {
+        background-color: white !important;
+    }
+    
+    .table tbody tr:nth-child(odd) {
+        background-color: #f9f9f9 !important;
+    }
+    
+    /* Ajustes para las tarjetas al imprimir */
+    .card {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+        background-color: white !important;
+    }
+    
+    /* Optimizar saltos de página */
+    .table {
+        page-break-inside: auto;
+    }
+    
+    tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+    
+    /* Ajustes de fuentes para impresión */
+    h2 {
+        font-size: 1.5rem !important;
+    }
+    
+    h5 {
+        font-size: 1.1rem !important;
+    }
+    
+    /* Ajustes para las firmas */
+    .signature-line {
+        background-color: black !important;
+    }
+}
+</style>
 
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -1216,6 +1473,13 @@ function actualizarGranTotal() {
             $('#print-fecha').text(`Fecha: ${new Date().toLocaleDateString()}`);
             $('#print-almacen').text(infoBase.almacen_nombre);
             $('#print-proveedor').text(infoBase.proveedor_nombre || 'No especificado');
+             $('#print-direccion').text(infoBase.dp_direccion || 'No especificado');
+              $('#print-rfc').text(infoBase.dp_rfc|| 'No especificado');
+               $('#print-telefono').text(infoBase.dp_telefono|| 'No especificado');
+
+ $('#print-telefono2').text(infoBase.dp_telefono2|| 'No especificado');
+  $('#print-extenecion').text(infoBase.dp_extencion|| 'No especificado');
+
 
             let html = '';
 
@@ -1225,8 +1489,10 @@ function actualizarGranTotal() {
                 const uBase = i.unidad_medida || 'pzas';
                 const uRep = i.unidad_reporte || 'Mayoreo';
                 const costo=i.costo;
+               
 
                 const cantidad = parseFloat(i.cantidad) || 0;
+ costoUnitario= costo/cantidad;
 
                 // 🔥 SOPORTE PARA FACTORES DECIMALES (ej: 1.5)
                 let cantMayoreo = 0;
@@ -1240,7 +1506,7 @@ function actualizarGranTotal() {
                     cantMayoreo = (cantidad / factor).toFixed(2);
                     cantSueltas = 0;
                 }
-
+ const costoMayor=costoUnitario*factor;
                 const totalUnidades = (cantidad / factor).toFixed(2);
 
                 html += `
@@ -1257,16 +1523,13 @@ function actualizarGranTotal() {
 <td class="text-center text-primary fw-bold">
                         ${totalUnidades} ${uRep}
                     </td>
-                    <td class="text-center">
-                        <div><b>${cantMayoreo}</b> ${uRep}</div>
-                      
-                    </td>
-                    <td class="text-center fw-bold">
-                        ${cantidad} ${uBase}
-                    </td>
+                   
 
                     
-                     
+                                          
+<td class="text-center text-primary fw-bold">
+                        ${costoMayor} x ${uRep}
+                    </td>
 
                     <td class="text-center text-primary fw-bold">
                         ${costo}
