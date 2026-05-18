@@ -71,7 +71,8 @@ public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_a
                 v.id as venta_id,
                 c.nombre_comercial as cliente,
                 v.folio as folio_venta,
-                p.nombre as prod_nombre, p.sku, p.factor_conversion, p.unidad_reporte,
+                p.nombre as prod_nombre, p.sku, p.factor_conversion, p.unidad_reporte,p.unidad_medida ,
+
                 a1.nombre as origen_nombre,
                 u1.nombre as usuario_nombre,
                 IF(rsl.id IS NOT NULL, 1, 0) as ya_despachado,
@@ -85,6 +86,7 @@ public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_a
             LEFT JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
             LEFT JOIN transmutacion_detalle td ON m.id = td.movimiento_id
             LEFT JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id
+            
             $where 
             ORDER BY m.fecha DESC"; // Ordenar por fecha (más reciente arriba)
 
@@ -105,6 +107,7 @@ public function listarSalidasPendientes($filtros, $almacen_usuario_sesion, $es_a
                 'sku'               => $row['sku'],
                 'cantidad'          => $row['cantidad'],
                 'factor_conversion' => $row['factor_conversion'],
+                'unidad_medida'    => $row['unidad_medida'] ?? 'PZA',
                 'unidad_reporte'    => $row['unidad_reporte'] ?? 'PZA',
                 'origen'            => $row['origen_nombre'] ?? '---',
                 'u_reg'             => $row['usuario_nombre'] ?? 'Sist.',
@@ -281,7 +284,7 @@ public function obtenerTotalesSalidas($filtros, $almacen_usuario_sesion, $es_adm
         try {
             $resMov = $this->db->query("
                 SELECT m.producto_id, m.almacen_origen_id, m.cantidad, 
-                       p.factor_conversion, p.unidad_reporte 
+                       p.factor_conversion, p.unidad_reporte,p.unidad_medida
                 FROM movimientos m 
                 INNER JOIN productos p ON m.producto_id = p.id 
                 WHERE m.id = $idMovimiento");
@@ -339,6 +342,7 @@ public function obtenerTotalesSalidas($filtros, $almacen_usuario_sesion, $es_adm
                 p.nombre as producto,
                 p.sku,
                 p.unidad_reporte,
+                p.unidad_medida,
                 p.factor_conversion,
                 a_orig.nombre as almacen_origen,
                 u_patio.nombre as usuario_despacho,
@@ -373,9 +377,9 @@ public function obtenerTotalesSalidas($filtros, $almacen_usuario_sesion, $es_adm
         if ($factor > 1 && $cant >= $factor) {
             $unidades = floor($cant / $factor);
             $resto = round($cant % $factor, 2);
-            $data['cantidad_convertida'] = "$unidades " . $data['unidad_reporte'] . ($resto > 0 ? " + $resto pzas" : "");
+            $data['cantidad_convertida'] = "$unidades " . $data['unidad_reporte'] . ($resto > 0 ? " + $resto " .$data['unidad_medida']  : "");
         } else {
-            $data['cantidad_convertida'] = "$cant pzas";
+            $data['cantidad_convertida'] = "$cant ".$data['unidad_medida'];
         }
     }
     return $data;
@@ -1107,6 +1111,7 @@ public function obtenerDatosVentaCompletaImpresion($idVenta) {
                 p.nombre as producto,
                 p.sku,
                 p.unidad_reporte,
+                p.unidad_medida,
                 p.factor_conversion,
                 dv.cantidad as cantidad_pactada,
                 /* Obtenemos los lotes vinculados a este detalle de venta específico */
@@ -1129,10 +1134,17 @@ public function obtenerDatosVentaCompletaImpresion($idVenta) {
         
         // Formateo de cantidad estilo "10 Bultos + 2 pzas"
         if ($factor > 1 && $cant >= $factor) {
-            $unidades = floor($cant / $factor);
-            $resto = round($cant % $factor, 2);
-            $row['cantidad_convertida'] = "$unidades " . $row['unidad_reporte'] . ($resto > 0 ? " + $resto pzas" : "");
-        } else {
+
+    $unidades = floor($cant / $factor);
+    $resto = round($cant % $factor, 2);
+
+    $row['cantidad_convertida'] =
+        "$unidades " . $row['unidad_reporte'] .
+        ($resto > 0
+            ? " + " . $resto . " " . $row['unidad_medida']
+            : "");
+
+} else {
             $row['cantidad_convertida'] = "$cant pzas";
         }
         $productos[] = $row;
@@ -1145,8 +1157,10 @@ public function obtenerAuditoriaFinancieraVenta($idVenta) {
                 p.id as producto_id,
                 p.nombre as producto,
                 p.sku,
+                p.factor_conversion,
                 dv.cantidad as cantidad_total,
                 p.unidad_reporte,
+                p.unidad_medida,
                 p.factor_conversion,
                 /* Detalle de lotes financiero */
                 (SELECT GROUP_CONCAT(

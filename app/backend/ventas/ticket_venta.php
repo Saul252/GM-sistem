@@ -214,19 +214,57 @@ $cantidadMostrarFormateada =
 
     <?php while($pago = $detallesPago->fetch_assoc()): ?>
 
-        <tr>
+      <tr>
+    <td colspan="4" style="border-top:1px dashed #000; padding-top:6px;"></td>
+</tr>
 
-            <td align="right" class="bold">
-                Método de pago:
-            </td>
+<tr>
+    <td class="bold" style="padding:4px 0;">
+        Método de pago:
+    </td>
 
-            <td align="right" style="width:60%;">
+    <td colspan="3" style="padding:4px 0;">
+        <?php echo htmlspecialchars($pago['metodo_pago']); ?>
+    </td>
+</tr>
 
-                <?php echo $pago['monto']. ' '.$pago['metodo_pago']; ?>
+<tr>
+    <td class="bold" style="padding:4px 0;">
+        Total pagado:
+    </td>
 
-            </td>
+    <td colspan="3" style="padding:4px 0;">
+        $<?php echo number_format($pago['monto'], 2); ?>
+    </td>
+</tr>
 
-        </tr>
+<?php if ($pago['metodo_pago'] == 'Efectivo') : ?>
+
+<tr>
+    <td class="bold" style="padding:4px 0;">
+        Efectivo recibido:
+    </td>
+
+    <td colspan="3" style="padding:4px 0;">
+        $<?php echo number_format($pago['efectivoPagado'], 2); ?>
+    </td>
+</tr>
+
+<tr>
+    <td class="bold" style="padding:4px 0;">
+        Cambio:
+    </td>
+
+    <td colspan="3" style="padding:4px 0;">
+        $<?php echo number_format(($pago['efectivoPagado'] - $pago['monto']), 2); ?>
+    </td>
+</tr>
+
+<?php endif; ?>
+
+<tr>
+    <td colspan="4" style="border-bottom:1px dashed #000; padding-bottom:6px;"></td>
+</tr>
 
     <?php endwhile; ?>
 

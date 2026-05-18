@@ -267,7 +267,7 @@ $(document).ready(function() {
     /**
      * AJUSTE: Función de formateo para mostrar Unidades de Reporte (Ej: Toneladas)
      */
-    function formatQty(cantidad, factor, unidad) {
+    function formatQty(cantidad, factor, unidad,unidad_medida) {
         const cant = parseFloat(cantidad);
         const fac = parseFloat(factor || 1);
         
@@ -275,9 +275,9 @@ $(document).ready(function() {
             const uReporte = Math.floor(cant / fac);
             const resto = Math.round((cant % fac) * 100) / 100;
             return `<div class="fw-bold text-dark fs-6">${uReporte} ${unidad}</div>` +
-                   (resto > 0 ? `<small class="text-muted">+ ${resto} pzas</small>` : '');
+                   (resto > 0 ? `<small class="text-muted">+ ${resto} ${unidad_medida}</small>` : '');
         }
-        return `<div class="fw-bold text-dark fs-6">${cant} <small class="fw-normal text-muted">pzas</small></div>`;
+        return `<div class="fw-bold text-dark fs-6">${cant} <small class="fw-normal text-muted">${unidad_medida}</small></div>`;
     }
 
 function renderWidgetGanancias(data) {
@@ -489,7 +489,7 @@ function cargarEntregas() {
                             </div>`;
                     }
                     prodCol = `<b>${m.producto}</b><br><small class="text-primary font-monospace">${m.sku}</small>`;
-                    cantCol = `<div class="text-center">${formatQty(m.cantidad, m.factor_conversion, m.unidad_reporte)}</div>`;
+                    cantCol = `<div class="text-center">${formatQty(m.cantidad, m.factor_conversion, m.unidad_reporte,m.unidad_medida)}</div>`;
                 }
 
                 // Insertar los datos procesados en la fila del DataTable 
@@ -539,7 +539,7 @@ $('#checkAgruparVenta').on('change', cargarEntregas);
             }
 
             // Calculamos visualmente el total en unidades de reporte para el encabezado del modal
-            const textoTotal = formatQty(res.total_solicitado, res.factor_conversion, res.unidad_reporte);
+            const textoTotal = formatQty(res.total_solicitado, res.factor_conversion, res.unidad_reporte,res.unidad_medida);
 
             let html = `
                 <div class="text-center mb-4">
@@ -565,9 +565,9 @@ $('#checkAgruparVenta').on('change', cargarEntregas);
                     <tr>
                         <td><code class="text-dark fw-bold">${l.codigo}</code></td>
                         <td>${l.fecha_entrada}</td>
-                        <td class="text-end text-muted">${l.cantidad_en_lote} pzas</td>
-                        <td class="text-end fw-bold text-primary">-${l.cantidad_a_extraer} pzas</td>
-                        <td class="text-end">${l.saldo_final <= 0 ? '<span class="badge bg-danger">AGOTADO</span>' : l.saldo_final + ' pzas'}</td>
+                        <td class="text-end text-muted">${l.cantidad_en_lote} ${l.unidad_medida}</td>
+                        <td class="text-end fw-bold text-primary">-${l.cantidad_a_extraer} ${l.unidad_medida}</td>
+                        <td class="text-end">${l.saldo_final <= 0 ? '<span class="badge bg-danger">AGOTADO</span>' : l.saldo_final + l.unidad_medida}</td>
                     </tr>`;
             });
 
@@ -576,7 +576,7 @@ $('#checkAgruparVenta').on('change', cargarEntregas);
             if (res.pendiente > 0) {
                 html += `<div class="alert alert-danger mt-3 d-flex align-items-center">
                     <i class="bi bi-exclamation-octagon-fill fs-4 me-2"></i> 
-                    <div><b>Inconsistencia:</b> Stock insuficiente. Faltan ${res.pendiente} pzas.</div>
+                    <div><b>Inconsistencia:</b> Stock insuficiente. Faltan ${res.pendiente} ${res.unidad_medida} </div>
                 </div>`;
                 $('#btnConfirmarFinal').prop('disabled', true).addClass('d-none');
             } else {
@@ -643,6 +643,72 @@ $('#checkAgruparVenta').on('change', cargarEntregas);
             
             // Reutilizamos exactamente tu estructura de "Simular"
             let html = `
+            <style>
+
+@media print {
+
+    body * {
+        visibility: hidden !important;
+    }
+
+    #modalSimulacion,
+    #modalSimulacion * {
+        visibility: visible !important;
+    }
+
+    #modalSimulacion {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        background: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+
+    #modalSimulacion .modal-dialog {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    #modalSimulacion .modal-content {
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        background: #fff !important;
+    }
+
+    #modalSimulacion .modal-header,
+    #modalSimulacion .modal-footer,
+    #btnImprimirModal,
+    #btnConfirmarFinal,
+    .btn-close {
+        display: none !important;
+    }
+
+    #documentoPatio {
+        padding: 20px !important;
+        font-size: 12px !important;
+        color: #000 !important;
+    }
+
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+    }
+
+    table th,
+    table td {
+        border: 1px solid #000 !important;
+        padding: 6px !important;
+    }
+
+}
+</style>
                 <div class="text-center mb-4">
                     <h4 class="mb-1 text-uppercase fw-bold">Vale de Entrega (Patio)</h4>
                     <p class="text-muted small">Folio de Movimiento: #<b>${d.movimiento_id}</b></p>
@@ -671,7 +737,7 @@ $('#checkAgruparVenta').on('change', cargarEntregas);
                         <tbody style="font-size: 0.85rem;">
                             <tr>
                                 <td class="py-2 font-monospace text-dark">${d.detalle_lotes.replace(/\n/g, '<br>')}</td>
-                                <td class="text-end fw-bold text-primary py-2">${d.cantidad_total} pzas</td>
+                                <td class="text-end fw-bold text-primary py-2">${d.cantidad_total} ${d.unidad_medida} </td>
                             </tr>
                         </tbody>
                     </table>
@@ -729,6 +795,72 @@ window.verDetalleGanancia = function(id) {
 
                         filasLotes += `
                             <tr>
+                            <style>
+
+@media print {
+
+    body * {
+        visibility: hidden !important;
+    }
+
+    #modalSimulacion,
+    #modalSimulacion * {
+        visibility: visible !important;
+    }
+
+    #modalSimulacion {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        background: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+
+    #modalSimulacion .modal-dialog {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    #modalSimulacion .modal-content {
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        background: #fff !important;
+    }
+
+    #modalSimulacion .modal-header,
+    #modalSimulacion .modal-footer,
+    #btnImprimirModal,
+    #btnConfirmarFinal,
+    .btn-close {
+        display: none !important;
+    }
+
+    #documentoPatio {
+        padding: 20px !important;
+        font-size: 12px !important;
+        color: #000 !important;
+    }
+
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+    }
+
+    table th,
+    table td {
+        border: 1px solid #000 !important;
+        padding: 6px !important;
+    }
+
+}
+</style>
                                 <td class="font-monospace text-start ps-2">${c[0]}</td>
                                 <td>${cant}</td>
                                 <td class="text-end text-muted">$ ${cost.toFixed(2)}</td>
@@ -910,107 +1042,294 @@ window.verDetalleGananciaVenta = function(idVenta) {
 });
 
 window.verDetalleDespachoAlmacen = function(idVenta) {
-    // UI Inicial
+
     $('#loader').removeClass('d-none');
-    
-    $.getJSON('entregasController.php', { ajax: 'obtenerAuditoriaVenta', id_venta: idVenta }, function(res) {
-        if(res.success) {
+
+    $.getJSON('entregasController.php', {
+        ajax: 'obtenerAuditoriaVenta',
+        id_venta: idVenta
+    }, function(res) {
+
+        if (res.success) {
+
             const r = res.data;
 
-            // 1. Generar el HTML para cada producto (Enfoque Logístico)
-            let htmlProductos = r.productos.map(p => {
-                
-                // Procesar solo Lotes y Cantidades
+            let htmlProductos = r.productos.map((p, index) => {
+
                 let filasLotes = '';
+
                 if (p.detalle_financiero) {
+
                     p.detalle_financiero.split('___').forEach(reg => {
+
                         const c = reg.split('|');
-                        if (c.length === 4) {
+
+
+
+                        if (c.length >= 2) {
+                            document.getElementById('btnConfirmarFinal').style.display = 'none !important';
+                            
                             filasLotes += `
-                                <tr class="border-bottom">
-                                    <td class="py-2 ps-3 fw-bold text-dark" style="font-size: 0.9rem;">
-                                        <i class="fas fa-barcode me-2 text-muted"></i>${c[0]}
+                                         <style>
+
+@media print {
+#btnConfirmarFinal {
+display:none !important}
+
+
+
+    body * {
+        visibility: hidden !important;
+    }
+
+    #modalSimulacion,
+    #modalSimulacion * {
+        visibility: visible !important;
+    }
+
+    #modalSimulacion {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        background: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+
+    #modalSimulacion .modal-dialog {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    #modalSimulacion .modal-content {
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        background: #fff !important;
+    }
+
+    #modalSimulacion .modal-header,
+    #modalSimulacion .modal-footer,
+    #btnImprimirModal,
+    #btnConfirmarFinal,
+    .btn-close {
+        display: none !important;
+    }
+
+    #documentoPatio {
+        padding: 20px !important;
+        font-size: 12px !important;
+        color: #000 !important;
+    }
+
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+    }
+
+    table th,
+    table td {
+        border: 1px solid #000 !important;
+        padding: 6px !important;
+    }
+        .bi-check-circle{
+        display:hidden;
+                                }
+
+}
+</style>
+                                <tr>
+                                
+                                    <td class="py-1 ps-2">
+                                        ${c[0]}
                                     </td>
-                                    <td class="py-2 text-end pe-3">
-                                        <span class="badge bg-primary px-3 py-2" style="font-size: 0.85rem; border-radius: 4px;">
-                                            ${c[1]} pzas
-                                        </span>
+
+                                    <td class="text-end py-1 pe-2 fw-semibold">
+                                        ${c[1]} ${p.unidad_medida || ''}
+                                        
                                     </td>
-                                </tr>`;
+                                </tr>
+                            `;
                         }
                     });
                 }
 
                 return `
-                <div class="card mb-3 border-secondary shadow-none" style="border-radius: 4px; border: 2px solid #dee2e6;">
-                    <div class="card-header bg-dark border-0 py-2" style="border-radius: 0;">
-                        <div class="d-flex justify-content-between align-items-center">
+                    <div class="mb-3 pb-2"
+                        style="
+                            border-bottom:1px dashed #999;
+                        ">
+
+                        <!-- PRODUCTO -->
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+
                             <div>
-                                <small class="text-white-50 d-block fw-bold" style="font-size: 0.6rem; letter-spacing: 1px;">SKU: ${p.sku}</small>
-                                <h5 class="mb-0 fw-bold text-white" style="font-size: 1.1rem;">${p.producto}</h5>
+                                <div class="fw-bold text-uppercase"
+                                    style="font-size:14px;">
+                                    ${index + 1}. ${p.producto}
+                                </div>
+
+                                <div class="text-muted"
+                                    style="font-size:11px;">
+                                    SKU: ${p.sku}
+                                </div>
                             </div>
+
+                            <div class="text-end">
+
+                                <div class="fw-bold"
+                                    style="
+                                        font-size:15px;
+                                        line-height:1;
+                                    ">
+                                    ${p.cantidad_total}
+                                </div>
+
+                                <small class="text-muted">
+                                    ${(p.cantidad/p.factor_conversion>=1)?p.unidad_reporte: p.unidad_medida}
+                                </small>
+
+                            </div>
+
                         </div>
-                    </div>
-                    <div class="card-body p-0">
-                        <table class="table table-hover mb-0">
-                            <thead class="bg-light">
-                                <tr>
-                                    <th class="ps-3 border-0" style="font-size: 0.7rem; color: #6c757d;">UBICACIÓN / LOTE</th>
-                                    <th class="text-end pe-3 border-0" style="font-size: 0.7rem; color: #6c757d;">CANTIDAD A SACAR</th>
+
+                        <!-- LOTES -->
+                        <table class="table table-sm table-borderless mb-0"
+                            style="font-size:12px;">
+
+                            <thead>
+                                <tr style="
+                                    border-bottom:1px solid #ddd;
+                                ">
+                                    <th class="fw-semibold text-muted">
+                                        LOTE / UBICACIÓN
+                                    </th>
+
+                                    <th class="fw-semibold text-muted text-end">
+                                        CANTIDAD
+                                    </th>
                                 </tr>
                             </thead>
+
                             <tbody>
                                 ${filasLotes}
                             </tbody>
+
                         </table>
-                        <div class="bg-light p-2 border-top text-end">
-                            <small class="text-muted fw-bold">TOTAL ARTÍCULO: </small>
-                            <span class="h6 mb-0 fw-bold">${p.cantidad_total} ${p.unidad_reporte || 'pzas'}</span>
-                        </div>
+
                     </div>
-                </div>`;
+                `;
+
             }).join('');
 
-            // 2. Layout Principal (Hoja de Carga)
             let htmlFinal = `
-                <div class="px-1">
-                    <div class="d-flex justify-content-between align-items-end mb-4 border-bottom pb-3 border-dark">
-                        <div>
-                            <h4 class="fw-bold mb-0 text-uppercase" style="letter-spacing: -0.5px;">Orden de Despacho</h4>
-                            <span class="badge bg-warning text-dark">LISTA DE CARGA</span>
+
+                <div style="
+                    background:#fff;
+                    color:#000;
+                    padding:20px;
+                    font-family:'Segoe UI',sans-serif;
+                    border:1px solid #ccc;
+                ">
+
+                    <!-- HEADER -->
+                    <div class="text-center mb-4">
+
+                        <div style="
+                            font-size:22px;
+                            font-weight:700;
+                            letter-spacing:1px;
+                        ">
+                            ORDEN DE DESPACHO
                         </div>
-                        <div class="text-end">
-                            <h5 class="mb-0 fw-bold">FOLIO: ${r.productos[0].folio || 'N/A'}</h5>
-                            <small class="text-muted">Fecha: ${new Date().toLocaleDateString()}</small>
+
+                        <div style="
+                            font-size:12px;
+                            color:#666;
+                        ">
+                            REPORTE DE SALIDA DE ALMACÉN
                         </div>
+
                     </div>
 
+                    <!-- INFO -->
+                    <table class="w-100 mb-4"
+                        style="font-size:12px;">
+
+                        <tr>
+                            <td>
+                                <strong>Folio:</strong>
+                                ${r.productos[0].folio || 'N/A'}
+                            </td>
+
+                            <td class="text-end">
+                                <strong>Fecha:</strong>
+                                ${new Date().toLocaleDateString()}
+                            </td>
+                        </tr>
+
+                    </table>
+
+                    <!-- PRODUCTOS -->
                     ${htmlProductos}
 
-                    <div class="row mt-5 pt-4 text-center">
+                    <!-- FIRMAS -->
+                    <div class="row mt-5 text-center">
+
                         <div class="col-6">
-                            <div class="border-top mx-auto" style="width: 200px; border-color: #000 !important;"></div>
-                            <small class="text-uppercase fw-bold text-muted" style="font-size: 0.6rem;">Firma Almacenista</small>
+
+                            <div style="
+                                border-top:1px solid #000;
+                                width:80%;
+                                margin:auto;
+                                padding-top:4px;
+                                font-size:11px;
+                            ">
+                                ALMACENISTA
+                            </div>
+
                         </div>
+
                         <div class="col-6">
-                            <div class="border-top mx-auto" style="width: 200px; border-color: #000 !important;"></div>
-                            <small class="text-uppercase fw-bold text-muted" style="font-size: 0.6rem;">Firma Chofer / Cliente</small>
+
+                            <div style="
+                                border-top:1px solid #000;
+                                width:80%;
+                                margin:auto;
+                                padding-top:4px;
+                                font-size:11px;
+                            ">
+                                CHOFER / CLIENTE
+                            </div>
+
                         </div>
+
                     </div>
+
                 </div>
             `;
 
-            $('#documentoPatio').html(htmlFinal); 
+            $('#documentoPatio').html(htmlFinal);
+  $('#btnConfirmarFinal').prop('disabled', true).addClass('d-none');
             $('#modalSimulacion').modal('show');
 
         } else {
+
             Swal.fire('Atención', res.message, 'warning');
+
         }
-    }).always(() => $('#loader').addClass('d-none'));
+
+    }).always(() => {
+
+        $('#loader').addClass('d-none');
+
+    });
 };
-
-
-
 
 
 

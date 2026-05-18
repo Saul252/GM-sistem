@@ -47,16 +47,16 @@
                                         </div>
                                     </div>
                                 </div>
-
+ <div class="col-md-6" id="colVehiculo">
+                                    <label class="small fw-bold text-muted mb-1">UNIDAD / VEHÍCULO</label>
+                                    <select id="mv_vehiculo_id" class="form-select border-0 shadow-sm rounded-3 p-3 bg-white"></select>
+                                </div>
                                 <div class="col-md-6">
                                     <label id="lblPersonal" class="small fw-bold text-muted mb-1">CHOFER RESPONSABLE</label>
                                     <select id="mv_chofer_id" class="form-select border-0 shadow-sm rounded-3 p-3 bg-white"></select>
                                 </div>
 
-                                <div class="col-md-6" id="colVehiculo">
-                                    <label class="small fw-bold text-muted mb-1">UNIDAD / VEHÍCULO</label>
-                                    <select id="mv_vehiculo_id" class="form-select border-0 shadow-sm rounded-3 p-3 bg-white"></select>
-                                </div>
+                               
 
                                 <div class="col-12">
                                     <label class="small fw-bold text-muted mb-1">AYUDANTES DE CARGA (OPCIONAL)</label>

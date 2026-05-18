@@ -149,41 +149,66 @@
                                 <th>Responsable</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <?php if (!empty($historial)): ?>
-                                <?php foreach ($historial as $t): ?>
-                                <tr>
-                                    <td><span class="badge bg-light text-dark border">#<?= $t['id'] ?></span></td>
-                                    <td><small><?= date('d/m/Y H:i', strtotime($t['fecha_registro'])) ?></small></td>
-                                    <td>
-                                        <i class="fas fa-minus-circle text-danger me-1"></i>
-                                        <?= htmlspecialchars($t['producto_origen'] ?? 'N/A') ?>
-                                    </td>
-                                    <td class="fw-bold"><?= number_format($t['cant_origen'], 2) ?>
-                                    <?= htmlspecialchars($t['unidad_origen'] ?? 'N/A') ?>
-                                </td>
-                                    <td>
-                                        <i class="fas fa-plus-circle text-success me-1"></i>
-                                        <?= htmlspecialchars($t['producto_destino'] ?? 'N/A') ?>
-                                         <?= htmlspecialchars($t['unidad_destino'] ?? 'N/A') ?>
-                                    </td>
-                                    <td class="fw-bold"><?= number_format($t['cant_destino'], 2) ?>
-                                    <?= htmlspecialchars($t['unidad_destino'] ?? 'N/A') ?>
-                                </td>
-                                    <td>
-                                        <i class="fas fa-user-circle me-1 text-muted"></i>
-                                        <small><?= htmlspecialchars($t['usuario_nombre'] ?? 'Sistema') ?></small>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="7" class="text-center text-muted p-4">
-                                        <i class="fas fa-info-circle me-1"></i> No se encontraron registros de transmutación.
-                                    </td>
-                                </tr>
-                            <?php endif; ?>
-                        </tbody>
+                     <tbody>
+
+<?php if (!empty($historial)): ?>
+
+    <?php foreach ($historial as $t): ?>
+
+        <tr>
+
+            <td>
+                <span class="badge bg-light text-dark border">
+                    #<?= (int)$t['id'] ?>
+                </span>
+            </td>
+
+            <td>
+                <small>
+                    <?= date('d/m/Y H:i', strtotime($t['fecha_registro'])) ?>
+                </small>
+            </td>
+
+            <td>
+                <i class="fas fa-minus-circle text-danger me-1"></i>
+
+                <?= htmlspecialchars($t['producto_origen'] ?? 'N/A') ?>
+            </td>
+
+            <td class="fw-bold">
+                <?= number_format((float)$t['cant_origen'], 2) ?>
+
+                <?= htmlspecialchars($t['unidad_origen'] ?? 'N/A') ?>
+            </td>
+
+            <td>
+                <i class="fas fa-plus-circle text-success me-1"></i>
+
+                <?= htmlspecialchars($t['producto_destino'] ?? 'N/A') ?>
+            </td>
+
+            <td class="fw-bold">
+                <?= number_format((float)$t['cant_destino'], 2) ?>
+
+                <?= htmlspecialchars($t['unidad_destino'] ?? 'N/A') ?>
+            </td>
+
+            <td>
+                <i class="fas fa-user-circle me-1 text-muted"></i>
+
+                <small>
+                    <?= htmlspecialchars($t['usuario_nombre'] ?? 'Sistema') ?>
+                </small>
+            </td>
+
+        </tr>
+
+    <?php endforeach; ?>
+
+<?php endif; ?>
+
+</tbody>
+                        
                     </table>
                 </div>
             </div>
