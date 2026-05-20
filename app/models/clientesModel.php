@@ -28,6 +28,31 @@ public function listarTodos($almacen_id) {
     $stmt->execute();
     return $stmt->get_result();
 }
+public function listarTodosCF($almacen_id) {
+    if ($almacen_id == 0) {
+        // ADMIN: Trae todos, pero agrupados por RFC para no ver 4 veces "Público General"
+        // O simplemente todos si quieres ver el detalle de a qué almacén pertenecen.
+        $sql = "SELECT * FROM clientes 
+                WHERE activo = 1 
+                ORDER BY (rfc = 'XAXX010101000') DESC, nombre_comercial ASC";
+        return $this->db->query($sql);
+    } 
+    
+    // VENDEDOR: Filtro ESTRICTO.
+    // Solo trae los clientes cuyo almacen_id coincida EXACTAMENTE con el del usuario.
+    $sql = "SELECT * FROM clientes 
+        WHERE activo = 1
+        AND (
+            rfc != 'XAXX010101000'
+            OR (rfc = 'XAXX010101000' AND almacen_id = ?)
+        )
+        ORDER BY (rfc = 'XAXX010101000') DESC, nombre_comercial ASC";
+            
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param("i", $almacen_id);
+    $stmt->execute();
+    return $stmt->get_result();
+}
 public function listarTodosViewClientes($almacen_id) {
     if ($almacen_id == 0) {
         // ADMIN: Trae todos, pero agrupados por RFC para no ver 4 veces "Público General"

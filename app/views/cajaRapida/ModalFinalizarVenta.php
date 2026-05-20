@@ -72,20 +72,14 @@
                                          <select id="selectCliente"
                                              class="form-select border-0 bg-light rounded-4 p-2 px-3 shadow-none fw-medium">
                                              <?php foreach($clientes as $c): 
-                                                $almacen_u = $_SESSION['almacen_id'] ?? 0;
-                                                $esAdmin = ($almacen_u == 0);
-                                                $esSuAlmacen = ($c['almacen_id'] == $almacen_u);
-                                                $esGlobal = (is_null($c['almacen_id']) || $c['almacen_id'] == '');
-                                                $esPublicoGeneral = ($c['rfc'] === 'XAXX010101000');
-
-                                                if ($esAdmin || $esSuAlmacen || $esGlobal || $esPublicoGeneral): 
+                                             
                                             ?>
                                              <option value="<?= $c['id'] ?>" data-rfc="<?= $c['rfc'] ?>"
                                                  data-rs="<?= $c['razon_social'] ?>"
                                                  data-regimen="<?= $c['regimen_fiscal'] ?>">
                                                  <?= htmlspecialchars($c['nombre_comercial']) ?>
                                              </option>
-                                             <?php endif; endforeach; ?>
+                                             <?php  endforeach; ?>
                                          </select>
                                          <button class="btn btn-primary rounded-4 ms-2 px-3 shadow-none" type="button"
                                              onclick="abrirModalNuevoCliente()">

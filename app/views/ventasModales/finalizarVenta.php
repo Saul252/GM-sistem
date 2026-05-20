@@ -4,8 +4,8 @@
     border-radius: 16px;
     overflow: hidden;
     margin-top: 10px;
-    border: 1px solid rgba(0,0,0,0.06) !important;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    border: 1px solid rgba(0, 0, 0, 0.06) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
 
 .widget-header-deuda {
@@ -55,8 +55,14 @@
     padding: 10px 12px;
 }
 
-.widget-body::-webkit-scrollbar { width: 3px; }
-.widget-body::-webkit-scrollbar-thumb { background: #d1d1d6; border-radius: 4px; }
+.widget-body::-webkit-scrollbar {
+    width: 3px;
+}
+
+.widget-body::-webkit-scrollbar-thumb {
+    background: #d1d1d6;
+    border-radius: 4px;
+}
 
 .mov-item {
     display: flex;
@@ -66,24 +72,39 @@
     border-radius: 12px;
     padding: 10px 12px;
     margin-bottom: 7px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-    border: 1px solid rgba(0,0,0,0.04);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.04);
     transition: transform 0.15s;
 }
 
-.mov-item:last-child { margin-bottom: 0; }
-.mov-item:hover { transform: translateX(2px); }
+.mov-item:last-child {
+    margin-bottom: 0;
+}
+
+.mov-item:hover {
+    transform: translateX(2px);
+}
 
 .mov-icon {
-    width: 34px; height: 34px;
+    width: 34px;
+    height: 34px;
     border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-size: 1rem;
     flex-shrink: 0;
 }
 
-.mov-icon.cargo   { background: #fff1f0; color: #ff3b30; }
-.mov-icon.abono   { background: #e6faea; color: #28a745; }
+.mov-icon.cargo {
+    background: #fff1f0;
+    color: #ff3b30;
+}
+
+.mov-icon.abono {
+    background: #e6faea;
+    color: #28a745;
+}
 
 .mov-folio {
     font-size: 0.72rem;
@@ -110,19 +131,24 @@
     white-space: nowrap;
 }
 
-.mov-monto.cargo { color: #ff3b30; }
-.mov-monto.abono { color: #28a745; }
+.mov-monto.cargo {
+    color: #ff3b30;
+}
+
+.mov-monto.abono {
+    color: #28a745;
+}
 
 .widget-footer {
     background: white;
     padding: 10px 12px;
-    border-top: 1px solid rgba(0,0,0,0.05);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 /* ── Ficha del cliente ───────────────────────────────── */
 .ficha-cliente {
     background: #f8f9fb;
-    border: 1px solid rgba(0,0,0,0.06);
+    border: 1px solid rgba(0, 0, 0, 0.06);
     border-radius: 14px;
     padding: 12px 14px;
     margin-bottom: 12px;
@@ -146,7 +172,7 @@
 /* ── Bloque de pago ──────────────────────────────────── */
 .pago-block {
     background: #f0faf4;
-    border: 1px solid rgba(40,167,69,0.2);
+    border: 1px solid rgba(40, 167, 69, 0.2);
     border-radius: 14px;
     padding: 14px;
     margin-bottom: 12px;
@@ -178,7 +204,8 @@
 
                     <!-- ── Columna izquierda: detalle de productos ── -->
                     <div class="col-lg-7 p-4 border-end">
-                        <h6 class="text-uppercase fw-bold mb-3 text-primary" style="font-size:0.68rem;letter-spacing:0.08em;">
+                        <h6 class="text-uppercase fw-bold mb-3 text-primary"
+                            style="font-size:0.68rem;letter-spacing:0.08em;">
                             Detalle de Salida de Material
                         </h6>
                         <div class="table-responsive border rounded-3 bg-white mb-3" style="max-height: 320px;">
@@ -198,10 +225,12 @@
                         <!-- Total -->
                         <div style="background:#eff6ff;border-radius:14px;padding:14px 18px;text-align:right;">
                             <input type="hidden" id="descuentoGeneral" value="0">
-                            <div style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6b7280;margin-bottom:2px;">
+                            <div
+                                style="font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#6b7280;margin-bottom:2px;">
                                 Total a Cobrar
                             </div>
-                            <div style="font-size:2rem;font-weight:800;color:#0071e3;letter-spacing:-0.04em;line-height:1;">
+                            <div
+                                style="font-size:2rem;font-weight:800;color:#0071e3;letter-spacing:-0.04em;line-height:1;">
                                 $<span id="totalFinalModal">0.00</span>
                             </div>
                         </div>
@@ -210,7 +239,8 @@
                     <!-- ── Columna derecha: cliente + pago ── -->
                     <div class="col-lg-5 p-4" style="background:#fafafa;">
 
-                        <h6 class="text-uppercase fw-bold mb-3 text-primary" style="font-size:0.68rem;letter-spacing:0.08em;">
+                        <h6 class="text-uppercase fw-bold mb-3 text-primary"
+                            style="font-size:0.68rem;letter-spacing:0.08em;">
                             Información del Cliente
                         </h6>
 
@@ -218,21 +248,14 @@
                         <div class="d-flex gap-2 mb-2">
                             <select id="selectCliente" class="form-select border-primary" style="border-radius:10px;">
                                 <?php foreach($clientes as $c):
-                                    $almacen_usuario = $_SESSION['almacen_id'] ?? 0;
-                                    $esAdmin         = ($almacen_usuario == 0);
-                                    $esSuAlmacen     = ($c['almacen_id'] == $almacen_usuario);
-                                    $esGlobal        = (is_null($c['almacen_id']) || $c['almacen_id'] == '');
-                                    $esPublicoGeneral= ($c['rfc'] === 'XAXX010101000');
-                                    if ($esAdmin || $esSuAlmacen || $esGlobal || $esPublicoGeneral):
+                                    
                                 ?>
-                                <option value="<?= $c['id'] ?>"
-                                    data-rfc="<?= $c['rfc'] ?>"
-                                    data-rs="<?= $c['razon_social'] ?>"
-                                    data-cp="<?= $c['codigo_postal'] ?>"
+                                <option value="<?= $c['id'] ?>" data-rfc="<?= $c['rfc'] ?>"
+                                    data-rs="<?= $c['razon_social'] ?>" data-cp="<?= $c['codigo_postal'] ?>"
                                     data-regimen="<?= $c['regimen_fiscal'] ?>">
                                     <?= htmlspecialchars($c['nombre_comercial']) ?>
                                 </option>
-                                <?php endif; endforeach; ?>
+                                <?php  endforeach; ?>
                             </select>
                             <button class="btn btn-outline-primary flex-shrink-0" type="button"
                                 onclick="abrirModalNuevoCliente()" style="border-radius:10px;">
@@ -264,26 +287,29 @@
                             </div>
 
                             <!-- Footer con botón de abono -->
-                            
+
                         </div>
-<div id="contenedorSaldoFavor" class="p-3 mb-3" style="display:none; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px;">
-    <div class="form-check form-switch">
-        <input class="form-check-input" type="checkbox" id="checkUsarSaldo" onchange="toggleSaldoInput()">
-        <label class="form-check-label fw-bold text-success" for="checkUsarSaldo">
-            ¿Usar saldo a favor en esta compra?
-        </label>
-    </div>
-    
-    <div id="inputSaldoContainer" class="mt-2" style="display:none;">
-        <label class="small text-muted">Cantidad a descontar:</label>
-        <div class="input-group">
-            <span class="input-group-text bg-success text-white border-success">$</span>
-            <input type="number" id="monto_usar_favor" class="form-control border-success fw-bold" 
-                   value="0" step="0.01" min="0" oninput="validarMontoMaximo(this)">
-        </div>
-        <div id="msgMaximo" class="text-muted" style="font-size: 0.7rem;"></div>
-    </div>
-</div>
+                        <div id="contenedorSaldoFavor" class="p-3 mb-3"
+                            style="display:none; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px;">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="checkUsarSaldo"
+                                    onchange="toggleSaldoInput()">
+                                <label class="form-check-label fw-bold text-success" for="checkUsarSaldo">
+                                    ¿Usar saldo a favor en esta compra?
+                                </label>
+                            </div>
+
+                            <div id="inputSaldoContainer" class="mt-2" style="display:none;">
+                                <label class="small text-muted">Cantidad a descontar:</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-success text-white border-success">$</span>
+                                    <input type="number" id="monto_usar_favor"
+                                        class="form-control border-success fw-bold" value="0" step="0.01" min="0"
+                                        oninput="validarMontoMaximo(this)">
+                                </div>
+                                <div id="msgMaximo" class="text-muted" style="font-size: 0.7rem;"></div>
+                            </div>
+                        </div>
                         <!-- Ficha fiscal del cliente -->
                         <div class="ficha-cliente mt-3">
                             <div class="row g-2">
@@ -309,15 +335,17 @@
                                 <div class="col-7">
                                     <label class="form-label small fw-bold mb-1">Monto Recibido</label>
                                     <div class="input-group">
-                                        <span class="input-group-text bg-success text-white border-success fw-bold">$</span>
+                                        <span
+                                            class="input-group-text bg-success text-white border-success fw-bold">$</span>
                                         <input type="number" id="monto_pagar"
-                                            class="form-control border-success fw-bold text-success"
-                                            value="0" step="0.01" min="0" style="border-radius:0 8px 8px 0;">
+                                            class="form-control border-success fw-bold text-success" value="0"
+                                            step="0.01" min="0" style="border-radius:0 8px 8px 0;">
                                     </div>
                                 </div>
                                 <div class="col-5">
                                     <label class="form-label small fw-bold mb-1">Método</label>
-                                    <select id="metodo_pago" class="form-select border-success" style="border-radius:8px;">
+                                    <select id="metodo_pago" class="form-select border-success"
+                                        style="border-radius:8px;">
                                         <option value="Efectivo">Efectivo</option>
                                         <option value="Transferencia">Transferencia</option>
                                         <option value="Tarjeta">Tarjeta</option>
@@ -327,8 +355,7 @@
                             <div id="pago_aviso" class="small mt-2 text-center fw-bold"></div>
                         </div>
 
-                        <textarea id="obsVenta" class="form-control" rows="2"
-                            placeholder="Notas adicionales..."
+                        <textarea id="obsVenta" class="form-control" rows="2" placeholder="Notas adicionales..."
                             style="border-radius:10px;font-size:0.85rem;"></textarea>
                     </div>
 
@@ -347,75 +374,79 @@
 </div>
 
 <script>
-    // Cache de elementos DOM para evitar búsquedas repetidas
-    const elements = {
-        selectCliente: document.getElementById('selectCliente'),
-        f_rfc: document.getElementById('f_rfc'),
-        f_razon_social: document.getElementById('f_razon_social'),
-        f_regimen: document.getElementById('f_regimen'),
-        widgetEstadoCuenta: document.getElementById('widgetEstadoCuenta'),
-        listaMovimientos: document.getElementById('listaMovimientos'),
-        widgetHeader: document.getElementById('widgetHeader'),
-        contenedorSaldoFavor: document.getElementById('contenedorSaldoFavor'),
-        checkUsarSaldo: document.getElementById('checkUsarSaldo'),
-        lblSaldoTotal: document.getElementById('lblSaldoTotal'),
-        txtUltimaCarga: document.getElementById('txtUltimaCarga'),
-        widgetBadge: document.getElementById('widgetBadge'),
-        modalFinalizarVenta: document.getElementById('modalFinalizarVenta')
-    };
+// Cache de elementos DOM para evitar búsquedas repetidas
+const elements = {
+    selectCliente: document.getElementById('selectCliente'),
+    f_rfc: document.getElementById('f_rfc'),
+    f_razon_social: document.getElementById('f_razon_social'),
+    f_regimen: document.getElementById('f_regimen'),
+    widgetEstadoCuenta: document.getElementById('widgetEstadoCuenta'),
+    listaMovimientos: document.getElementById('listaMovimientos'),
+    widgetHeader: document.getElementById('widgetHeader'),
+    contenedorSaldoFavor: document.getElementById('contenedorSaldoFavor'),
+    checkUsarSaldo: document.getElementById('checkUsarSaldo'),
+    lblSaldoTotal: document.getElementById('lblSaldoTotal'),
+    txtUltimaCarga: document.getElementById('txtUltimaCarga'),
+    widgetBadge: document.getElementById('widgetBadge'),
+    modalFinalizarVenta: document.getElementById('modalFinalizarVenta')
+};
 
-    // Cache del formateador de moneda
-    const _fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+// Cache del formateador de moneda
+const _fmt = new Intl.NumberFormat('es-MX', {
+    style: 'currency',
+    currency: 'MXN'
+});
 
-    // Debounce para evitar múltiples peticiones rápidas
-    let debounceTimer;
-    let currentController;
+// Debounce para evitar múltiples peticiones rápidas
+let debounceTimer;
+let currentController;
 
-    elements.selectCliente.addEventListener('change', function() {
-        const selected = this.options[this.selectedIndex];
-        
-        // 1. Actualizar textos de la ficha fiscal
-        elements.f_rfc.textContent = selected?.dataset.rfc || '---';
-        elements.f_razon_social.textContent = selected?.dataset.rs || '---';
-        elements.f_regimen.textContent = selected?.dataset.regimen || '---';
+elements.selectCliente.addEventListener('change', function() {
+    const selected = this.options[this.selectedIndex];
 
-        // 2. Ejecutar consulta de estatus financiero con debounce
-        const idCliente = this.value;
-        if (idCliente) {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => consultarEstatusFinanciero(idCliente), 300);
-        }
-    });
+    // 1. Actualizar textos de la ficha fiscal
+    elements.f_rfc.textContent = selected?.dataset.rfc || '---';
+    elements.f_razon_social.textContent = selected?.dataset.rs || '---';
+    elements.f_regimen.textContent = selected?.dataset.regimen || '---';
 
-    // Función para realizar la petición al servidor
-    function consultarEstatusFinanciero(id) {
-        const $widget = elements.widgetEstadoCuenta;
-        const $lista = elements.listaMovimientos;
-        const $header = elements.widgetHeader;
+    // 2. Ejecutar consulta de estatus financiero con debounce
+    const idCliente = this.value;
+    if (idCliente) {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => consultarEstatusFinanciero(idCliente), 300);
+    }
+});
 
-        if (!$widget || !$lista) return;
+// Función para realizar la petición al servidor
+function consultarEstatusFinanciero(id) {
+    const $widget = elements.widgetEstadoCuenta;
+    const $lista = elements.listaMovimientos;
+    const $header = elements.widgetHeader;
 
-        // Cancelar petición anterior si existe
-        if (currentController) {
-            currentController.abort();
-        }
+    if (!$widget || !$lista) return;
 
-        $widget.style.display = 'block';
-        $lista.innerHTML = `<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-secondary"></div></div>`;
+    // Cancelar petición anterior si existe
+    if (currentController) {
+        currentController.abort();
+    }
 
-        // Usar AbortController para cancelar peticiones
-        currentController = new AbortController();
+    $widget.style.display = 'block';
+    $lista.innerHTML =
+        `<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-secondary"></div></div>`;
 
-        fetch(`/cfsistem/app/controllers/ventasController.php?action=obtenerEstatusCliente&id=${id}`, { 
-            signal: currentController.signal 
+    // Usar AbortController para cancelar peticiones
+    currentController = new AbortController();
+
+    fetch(`/cfsistem/app/controllers/ventasController.php?action=obtenerEstatusCliente&id=${id}`, {
+            signal: currentController.signal
         })
         .then(r => r.json())
         .then(data => {
             currentController = null;
             if (!data || data.nombre_comercial === undefined) throw new Error("Datos no encontrados");
 
-            const res = data; 
-            const saldo = parseFloat(res.saldo_neto || 0); 
+            const res = data;
+            const saldo = parseFloat(res.saldo_neto || 0);
             const condicion = res.estatus_financiero || 'AL DIA';
 
             // --- 1. LÓGICA DEL SWITCH DE SALDO A FAVOR ---
@@ -428,25 +459,26 @@
             if (saldoAFavor > 0) {
                 $panelSaldo.style.display = 'block'; // Muestra el contenedor verde
             } else {
-                $panelSaldo.style.display = 'none';  // Lo oculta si no hay saldo
-                $chkSaldo.checked = false;           // Resetea el switch
-                toggleSaldoInput();                  // Oculta el input de cantidad
+                $panelSaldo.style.display = 'none'; // Lo oculta si no hay saldo
+                $chkSaldo.checked = false; // Resetea el switch
+                toggleSaldoInput(); // Oculta el input de cantidad
             }
             // ----------------------------------------------
 
             // --- Lógica de Colores del Header ---
-            $header.className = ''; 
+            $header.className = '';
             if (condicion === 'CON DEUDA') {
                 $header.classList.add('widget-header-deuda');
             } else if (condicion === 'SALDO A FAVOR') {
-                $header.classList.add('widget-header-ok'); 
+                $header.classList.add('widget-header-ok');
             } else {
                 $header.classList.add('widget-header-neutral');
             }
 
             // Actualizar montos principales
             elements.lblSaldoTotal.textContent = _fmt.format(Math.abs(saldo));
-            elements.txtUltimaCarga.textContent = `Corte: ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+            elements.txtUltimaCarga.textContent =
+                `Corte: ${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
 
             // Badge dinámico - cache de iconos
             const iconMap = {
@@ -465,8 +497,8 @@
             const saldoEnContra = _fmt.format(res.saldo_en_contra || 0);
             const saldoAFavorFmt = _fmt.format(res.saldo_a_favor || 0);
             const estadoColor = saldo > 0 ? 'text-danger' : 'text-success';
-            const estadoTexto = condicion === 'CON DEUDA' ? 'Pendiente de Pago' : 
-                              (condicion === 'SALDO A FAVOR' ? 'Crédito Disponible' : 'Sin Adeudos');
+            const estadoTexto = condicion === 'CON DEUDA' ? 'Pendiente de Pago' :
+                (condicion === 'SALDO A FAVOR' ? 'Crédito Disponible' : 'Sin Adeudos');
 
             $lista.innerHTML = `
                 <div class="p-2 small">
@@ -489,43 +521,44 @@
             currentController = null;
             if (err.name !== 'AbortError') {
                 console.error("Error:", err);
-                $lista.innerHTML = `<div class="text-center p-2 text-danger small">Error al consultar estatus</div>`;
+                $lista.innerHTML =
+                    `<div class="text-center p-2 text-danger small">Error al consultar estatus</div>`;
             }
         });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const select = elements.selectCliente;
+    // Esto dispara el cambio inicial para el cliente seleccionado por defecto
+    if (select) select.dispatchEvent(new Event('change'));
+
+    // También forzamos el disparo cuando el modal de Bootstrap termina de abrirse
+    const modal = elements.modalFinalizarVenta;
+    if (modal) {
+        modal.addEventListener('shown.bs.modal', () => {
+            if (select) select.dispatchEvent(new Event('change'));
+        });
     }
+});
 
-    document.addEventListener('DOMContentLoaded', () => {
-        const select = elements.selectCliente;
-        // Esto dispara el cambio inicial para el cliente seleccionado por defecto
-        if (select) select.dispatchEvent(new Event('change'));
+let saldoDisponibleCliente = 0;
 
-        // También forzamos el disparo cuando el modal de Bootstrap termina de abrirse
-        const modal = elements.modalFinalizarVenta;
-        if (modal) {
-            modal.addEventListener('shown.bs.modal', () => {
-                if (select) select.dispatchEvent(new Event('change'));
-            });
-        }
-    });
+function toggleSaldoInput() {
+    const chk = elements.checkUsarSaldo;
+    const container = document.getElementById('inputSaldoContainer');
+    const input = document.getElementById('monto_usar_favor');
 
-    let saldoDisponibleCliente = 0;
+    container.style.display = chk.checked ? 'block' : 'none';
+    if (!chk.checked) input.value = 0;
+}
 
-    function toggleSaldoInput() {
-        const chk = elements.checkUsarSaldo;
-        const container = document.getElementById('inputSaldoContainer');
-        const input = document.getElementById('monto_usar_favor');
-        
-        container.style.display = chk.checked ? 'block' : 'none';
-        if (!chk.checked) input.value = 0;
+function validarMontoMaximo(input) {
+    const valor = parseFloat(input.value) || 0;
+    if (valor > saldoDisponibleCliente) {
+        input.value = saldoDisponibleCliente;
     }
-
-    function validarMontoMaximo(input) {
-        const valor = parseFloat(input.value) || 0;
-        if (valor > saldoDisponibleCliente) {
-            input.value = saldoDisponibleCliente;
-        }
-    }
-    // Escuchar cuando se activa/desactiva el switch de saldo
+}
+// Escuchar cuando se activa/desactiva el switch de saldo
 document.getElementById('checkUsarSaldo')?.addEventListener('change', function() {
     toggleSaldoInput(); // Muestra/oculta el input
     actualizarTotalesUI(); // Recalcula todo
@@ -538,14 +571,14 @@ document.getElementById('monto_usar_favor')?.addEventListener('input', function(
 });
 </script>
 <script>
-    // Lógica de validación de pago y avisos
+// Lógica de validación de pago y avisos
 document.getElementById('monto_pagar').addEventListener('input', function() {
     const modal = document.getElementById('totalFinalModal');
     const totalOriginal = parseFloat(modal.dataset.totalOriginal) || 0;
     const totalVisual = parseFloat(modal.innerText.replace(/[$,]/g, '')) || 0;
     const chkSaldo = document.getElementById('checkUsarSaldo');
     const aviso = document.getElementById('pago_aviso');
-    
+
     let valorTecleado = parseFloat(this.value) || 0;
 
     // Validación de límites
@@ -575,29 +608,29 @@ document.getElementById('monto_pagar').addEventListener('input', function() {
 
     aviso.innerHTML = estado + leyenda;
 });
-    function validarYAgregar(btn) {
-        const fila = btn.closest('tr');
-        const modo = fila.querySelector('.select-modo-venta')?.value || 'individual';
-        const inputCant = fila.querySelector('.cantidad');
-        const factor = parseFloat(fila.dataset.factor) || 1;
-        const stockDisponible = parseFloat(fila.querySelector('.badge').innerText);
 
-        let cantidadUsuario = parseFloat(inputCant.value) || 0;
-        let cantidadReal = (modo === 'referencia') ? (cantidadUsuario * factor) : cantidadUsuario;
+function validarYAgregar(btn) {
+    const fila = btn.closest('tr');
+    const modo = fila.querySelector('.select-modo-venta')?.value || 'individual';
+    const inputCant = fila.querySelector('.cantidad');
+    const factor = parseFloat(fila.dataset.factor) || 1;
+    const stockDisponible = parseFloat(fila.querySelector('.badge').innerText);
 
-        // if (cantidadReal > stockDisponible) {
-        //     Swal.fire('Stock insuficiente', `No puedes agregar ${cantidadReal} unidades. Stock: ${stockDisponible}`,
-        //         'error');
-        //     return;
-        // }
+    let cantidadUsuario = parseFloat(inputCant.value) || 0;
+    let cantidadReal = (modo === 'referencia') ? (cantidadUsuario * factor) : cantidadUsuario;
 
-        inputCant.value = cantidadReal; // Ajuste temporal para agregarProducto
-        if (typeof agregarProducto === "function") agregarProducto(btn);
-        inputCant.value = 1; // Reset
-    }
-  
+    // if (cantidadReal > stockDisponible) {
+    //     Swal.fire('Stock insuficiente', `No puedes agregar ${cantidadReal} unidades. Stock: ${stockDisponible}`,
+    //         'error');
+    //     return;
+    // }
+
+    inputCant.value = cantidadReal; // Ajuste temporal para agregarProducto
+    if (typeof agregarProducto === "function") agregarProducto(btn);
+    inputCant.value = 1; // Reset
+}
 </script>
-   
+
 <script>
 /**
  * SISTEMA DE VENTAS - Gestión de Carrito (Optimizado)
@@ -605,65 +638,79 @@ document.getElementById('monto_pagar').addEventListener('input', function() {
 window.carrito = window.carrito || [];
 
 // Formateador de moneda reutilizable
-const _fmtMXN = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+const _fmtMXN = new Intl.NumberFormat('es-MX', {
+    style: 'currency',
+    currency: 'MXN'
+});
 
 /**
  * 1. AGREGAR PRODUCTO AL CARRITO
  */
 window.agregarProducto = function(btn) {
     const fila = btn.closest("tr");
-    const { productoId, almacenId, almacen } = btn.dataset;
-    const { factor: fStr, reporteNom } = fila.dataset;
-    
+    const {
+        productoId,
+        almacenId,
+        almacen
+    } = btn.dataset;
+    const {
+        factor: fStr,
+        reporteNom
+    } = fila.dataset;
+
     const producto_id = parseInt(productoId || btn.getAttribute("data-producto-id"));
     const almacen_id = parseInt(almacenId);
     const factor = parseFloat(fStr) || 1;
 
-    const nombre = fila.cells[1].innerText; 
+    const nombre = fila.cells[1].innerText;
     const cantidadInput = fila.querySelector(".cantidad");
     const modoVenta = fila.querySelector(".select-modo-venta")?.value || 'individual';
     const modoVent =
-    fila.querySelector(".select-modo-venta");
+        fila.querySelector(".select-modo-venta");
 
-const unidad_medida =
-    modoVent?.options?.[modoVent.selectedIndex]?.dataset?.nombre || 'PZA';
-     console.log(unidad_medida);
-const select =
-    fila.querySelector('.medidas_adicionales');
+    const unidad_medida =
+        modoVent?.options?. [modoVent.selectedIndex]?.dataset?.nombre || 'PZA';
+    console.log(unidad_medida);
+    const select =
+        fila.querySelector('.medidas_adicionales');
 
-const equivalencia =
-    parseFloat(select.value);
+    const equivalencia =
+        parseFloat(select.value);
 
-const medidaId =
-    select.options[select.selectedIndex].dataset.id;
+    const medidaId =
+        select.options[select.selectedIndex].dataset.id;
     const medidaNombre =
-    select.options[select.selectedIndex].dataset.nombre; 
+        select.options[select.selectedIndex].dataset.nombre;
 
-if (equivalencia <= 0) {
+    if (equivalencia <= 0) {
         Swal.fire('Atención', 'Ingresa una cantidad válida', 'warning');
         return;
     }
-console.log(equivalencia);
-console.log(medidaId,medidaNombre);
+    console.log(equivalencia);
+    console.log(medidaId, medidaNombre);
 
 
-// 🔥 resetear
-select.selectedIndex = 0;
-    
+    // 🔥 resetear
+    select.selectedIndex = 0;
+
     let cantidadBase = (modoVenta === 'referencia') ? factor : (parseFloat(cantidadInput.value) || 0);
-
+cantidadBase=Math.round(cantidadBase * 1000000) / 1000000;
     const selectPrecio = fila.querySelector(".select-precio");
     const selectPrecioInput = fila.querySelector(".input-precio");
     const precioUnitario = parseFloat(selectPrecioInput.value) || 0;
+    console.log('precio Unitario',precioUnitario);
     const textoPrecio = selectPrecio.options[selectPrecio.selectedIndex].text.toLowerCase();
-    const tipo_p = textoPrecio.includes("dist") ? "distribuidor" : (textoPrecio.includes("may") ? "mayorista" : "minorista");
+    const tipo_p = textoPrecio.includes("dist") ? "distribuidor" : (textoPrecio.includes("may") ? "mayorista" :
+        "minorista");
 
     if (cantidadBase <= 0) {
         Swal.fire('Atención', 'Ingresa una cantidad válida', 'warning');
         return;
     }
 
-    const itemExistente = window.carrito.find(item => 
+
+
+    const itemExistente = window.carrito.find(item =>
         item.producto_id === producto_id && item.almacen_id === almacen_id && item.tipo_precio === tipo_p
     );
 
@@ -671,9 +718,9 @@ select.selectedIndex = 0;
         itemExistente.cantidad += cantidadBase;
     } else {
         window.carrito.push({
-            producto_id, 
-            almacen_id, 
-            almacen_nombre: almacen, 
+            producto_id,
+            almacen_id,
+            almacen_nombre: almacen,
             nombre,
             cantidad: cantidadBase,
             entrega_hoy: cantidadBase,
@@ -682,9 +729,9 @@ select.selectedIndex = 0;
             factor: factor,
             unidad_reporte: reporteNom || 'Fact.',
             unidad_medida: unidad_medida || 'Fact.',
-            unidadMedidaSelect:medidaId??'0',
-            unidadMedidaNombre:medidaNombre??'',
-             unidadEquivalencia:equivalencia??1
+            unidadMedidaSelect: medidaId ?? '0',
+            unidadMedidaNombre: medidaNombre ?? '',
+            unidadEquivalencia: equivalencia ?? 1
         });
     }
 
@@ -698,17 +745,22 @@ select.selectedIndex = 0;
 window.renderCarrito = function() {
     const tablaBody = document.querySelector("#tablaCarrito tbody");
     if (!tablaBody) return;
-    
+
     // Generamos el HTML en un array para un solo "paint" al final
     const htmlCarrito = window.carrito.map((item, index) => {
-        if(item.cantidad>1)
-        {
-            item.cantidad=item.cantidad.toFixed(4)
-        }
+        if (item.cantidad > 1) {
+            item.cantidad = Math.round(item.cantidad * 10000) / 10000;       }
         const cantFactor = Math.floor(item.cantidad / item.factor);
         const cantPza = (item.cantidad % item.factor);
-        console.log(item.cantidad);
-        item.subtotal = item.cantidad * item.precio_unitario;
+       
+      
+        //console.log((equivalencia), item.factor);
+        
+      
+      
+            item.subtotal = item.cantidad * (item.precio_unitario);
+       
+
 
         return `
             <tr data-index="${index}">
@@ -724,7 +776,7 @@ window.renderCarrito = function() {
                         data-index="${index}" value="${(cantPza<1&& cantPza>0)?cantPza:cantPza}" min="0" step="any">
               
                 </td>
-                <td class="text-end fw-bold subtotal-celda">$${item.subtotal.toFixed(2)}</td>
+                <td class="text-end fw-bold subtotal-celda">$${Math.round((item.subtotal) * 10000) / 10000}</td>
                 <td>
                     <button type="button" class="btn btn-link text-danger p-0 btn-remove-item" data-index="${index}">
                         <i class="bi bi-x-circle"></i>
@@ -746,16 +798,16 @@ document.addEventListener('input', (e) => {
         const index = target.dataset.index;
         const item = window.carrito[index];
         const tr = target.closest('tr');
-        
+
         const valFactor = parseFloat(tr.querySelector('.input-factor-cambio').value) || 0;
         const valPza = parseFloat(tr.querySelector('.input-pza-cambio').value) || 0;
 
         item.cantidad = (valFactor * item.factor) + valPza;
         item.subtotal = item.cantidad * item.precio_unitario;
         item.entrega_hoy = item.cantidad;
-      
 
-        tr.querySelector('.subtotal-celda').innerText = `$${item.subtotal.toFixed(2)}`;
+
+        tr.querySelector('.subtotal-celda').innerText = `$${Math.round((item.subtotal)* 10000) / 10000}`;
         actualizarTotalesUI();
     }
 });
@@ -774,7 +826,7 @@ document.addEventListener('change', (e) => {
  */
 function actualizarTotalesUI() {
     const totalVentaReal = window.carrito.reduce((acc, item) => acc + (item.cantidad * item.precio_unitario), 0);
-    
+
     const elTotal = document.getElementById("total");
     const elTotalModal = document.getElementById("totalFinalModal");
     const elPago = document.getElementById("monto_pagar");
@@ -786,7 +838,7 @@ function actualizarTotalesUI() {
     if (elTotal) elTotal.innerText = totalVentaReal.toFixed(2);
 
     let montoPorCobrar = totalVentaReal;
-    
+
     // 2. Si el switch está activo, restamos el crédito del total visual
     if (chkSaldo?.checked) {
         const creditoAUsar = parseFloat(elSaldoFavor.value) || 0;
@@ -799,9 +851,9 @@ function actualizarTotalesUI() {
     // 4. Ponemos por defecto el monto a pagar y disparamos el aviso de la leyenda
     if (elPago) {
         elPago.value = montoPorCobrar.toFixed(2);
-        elPago.dispatchEvent(new Event('input')); 
+        elPago.dispatchEvent(new Event('input'));
     }
-}// Eliminar item
+} // Eliminar item
 document.addEventListener('click', (e) => {
     const btnDelete = e.target.closest('.btn-remove-item');
     if (btnDelete) {
@@ -809,18 +861,19 @@ document.addEventListener('click', (e) => {
         window.renderCarrito();
     }
 });
-
 </script>
 
 <script>
-    window.procesarVenta = function() {
+window.procesarVenta = function() {
     // 1. Validaciones de integridad (Sin cambios)
     if (!window.carrito || window.carrito.length === 0) {
         Swal.fire({
             title: 'Carrito vacío',
             text: 'Debes agregar al menos un producto.',
             icon: 'warning',
-            customClass: { popup: 'rounded-4' }
+            customClass: {
+                popup: 'rounded-4'
+            }
         });
         return;
     }
@@ -831,36 +884,39 @@ document.addEventListener('click', (e) => {
             title: 'Falta Cliente',
             text: 'Por favor selecciona un cliente para la venta.',
             icon: 'warning',
-            customClass: { popup: 'rounded-4' }
+            customClass: {
+                popup: 'rounded-4'
+            }
         });
         return;
     }
 
     // 2. Captura de montos y estados
     const elTotalModal = document.getElementById('totalFinalModal');
-    
+
     // El COSTO REAL de la mercancía (lo que vale la nota)
     const totalOriginalVenta = parseFloat(elTotalModal.dataset.totalOriginal) || 0;
-    
+
     // Lo que el cliente paga en efectivo/bancos
     const efectivoRecibido = parseFloat(document.getElementById('monto_pagar').value) || 0;
-    
+
     // Lo que el cliente decide usar de su "bolsa" de saldo a favor
-    const creditoAplicado = document.getElementById('checkUsarSaldo').checked 
-                            ? (parseFloat(document.getElementById('monto_usar_favor').value) || 0) 
-                            : 0;
-    
+    const creditoAplicado = document.getElementById('checkUsarSaldo').checked ?
+        (parseFloat(document.getElementById('monto_usar_favor').value) || 0) :
+        0;
+
     // La suma que cubre la nota (Efectivo + Crédito)
     const pagoTotalEnviado = efectivoRecibido + creditoAplicado;
 
-   let metodoPago = document.getElementById('metodo_pago').value; // Cambia const por let
-const observaciones = document.getElementById('obsVenta').value;
-   
-    if (creditoAplicado==totalOriginalVenta){
-        const metodoPago ="Saldo_a_Favor";
-console.log(metodoPago);
+    let metodoPago = document.getElementById('metodo_pago').value; // Cambia const por let
+    const observaciones = document.getElementById('obsVenta').value;
+    console.log(observaciones);
+
+    if (creditoAplicado == totalOriginalVenta) {
+        const metodoPago = "Saldo_a_Favor";
+        console.log(metodoPago);
     }
-    
+
 
     // 3. Confirmación Visual Estilo iOS
     Swal.fire({
@@ -888,44 +944,51 @@ console.log(metodoPago);
         `,
         icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#007aff', 
+        confirmButtonColor: '#007aff',
         cancelButtonColor: '#8e8e93',
         confirmButtonText: 'Sí, finalizar',
         cancelButtonText: 'Cancelar',
-        customClass: { popup: 'rounded-4 border-0' }
+        customClass: {
+            popup: 'rounded-4 border-0'
+        }
     }).then((result) => {
         if (result.isConfirmed) {
-            
+
             const btnFinalizar = document.querySelector('#modalFinalizarVenta .btn-primary');
-            if(btnFinalizar) btnFinalizar.disabled = true;
-            
+            if (btnFinalizar) btnFinalizar.disabled = true;
+
             Swal.fire({
                 title: 'Procesando...',
                 text: 'Sincronizando stock y saldos...',
                 allowOutsideClick: false,
-                didOpen: () => { Swal.showLoading(); },
-                customClass: { popup: 'rounded-4' }
+                didOpen: () => {
+                    Swal.showLoading();
+                },
+                customClass: {
+                    popup: 'rounded-4'
+                }
             });
 
             // 4. Mapeo del carrito (Lógica de despacho)
             const carritoFinal = window.carrito.map((item, index) => {
-                const inputEntrega = document.querySelector(`.input-entrega-modal[data-index="${index}"]`);
+                const inputEntrega = document.querySelector(
+                    `.input-entrega-modal[data-index="${index}"]`);
                 let entregado = inputEntrega ? parseFloat(inputEntrega.value) : item.cantidad;
-               console.log(item.unidadMedidaNombre);
+                console.log(item.unidadMedidaNombre);
                 return {
                     producto_id: parseInt(item.producto_id),
                     almacen_id: parseInt(item.almacen_id),
                     cantidad: parseFloat(item.cantidad),
-                    entrega_hoy: isNaN(entregado) ? 0 : entregado, 
+                    entrega_hoy: isNaN(entregado) ? 0 : entregado,
                     precio_unitario: parseFloat(item.precio_unitario),
                     subtotal: parseFloat(item.subtotal),
                     tipo_precio: item.tipo_precio,
-                     unidad_base:item. unidad_base,
-                     unidadMedidaNombre:item.unidadMedidaNombre??'',
-                   
-                    idunidadMedida:item.unidadMedidaSelect??0,
-                    unidadEquivalencia:item.unidadEquivalencia??1
-                   
+                    unidad_base: item.unidad_base,
+                    unidadMedidaNombre: item.unidadMedidaNombre ?? '',
+
+                    idunidadMedida: item.unidadMedidaSelect ?? 0,
+                    unidadEquivalencia: item.unidadEquivalencia ?? 1
+
                 };
             });
 
@@ -933,9 +996,9 @@ console.log(metodoPago);
             const datos = {
                 accion: 'guardar_venta',
                 id_cliente: parseInt(idCliente),
-                monto_pagado: efectivoRecibido,       // Dinero real
-                monto_usado_favor: creditoAplicado,   // Lo que se resta de la bolsa
-                total_venta: totalOriginalVenta,      // El costo real (Para calcular deuda)
+                monto_pagado: efectivoRecibido, // Dinero real
+                monto_usado_favor: creditoAplicado, // Lo que se resta de la bolsa
+                total_venta: totalOriginalVenta, // El costo real (Para calcular deuda)
                 metodo_pago: metodoPago,
                 observaciones: observaciones,
                 carrito: carritoFinal,
@@ -943,69 +1006,79 @@ console.log(metodoPago);
             };
 
             fetch('/cfsistem/app/controllers/ventasController.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(datos)
-            })
-            .then(res => res.json())
-            .then(res => {
-                if (res.status === 'success') {
-                    // Lógica de mensajes post-venta (Compara contra el costo real)
-                    const tieneDeuda = pagoTotalEnviado < totalOriginalVenta;
-                    const esEntregaTotal = res.total_entregado >= res.total_pedido;
-                    const iconoFinal = esEntregaTotal ? 'success' : 'warning';
-                    
-                    let htmlExtra = `<p class="mb-2">Folio: <span class="badge bg-light text-dark border">${res.folio}</span></p>`;
-                    
-                    if(tieneDeuda) {
-                        htmlExtra += `
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(datos)
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.status === 'success') {
+                        // Lógica de mensajes post-venta (Compara contra el costo real)
+                        const tieneDeuda = pagoTotalEnviado < totalOriginalVenta;
+                        const esEntregaTotal = res.total_entregado >= res.total_pedido;
+                        const iconoFinal = esEntregaTotal ? 'success' : 'warning';
+
+                        let htmlExtra =
+                            `<p class="mb-2">Folio: <span class="badge bg-light text-dark border">${res.folio}</span></p>`;
+
+                        if (tieneDeuda) {
+                            htmlExtra += `
                             <div class="alert alert-danger py-1 px-2 border-0 mb-2" style="font-size:0.75rem; border-radius:10px;">
                                 <i class="bi bi-exclamation-circle-fill me-1"></i> Saldo pendiente registrado en cuenta
                             </div>`;
-                    }
+                        }
 
-                    Swal.fire({
-                        title: esEntregaTotal ? '¡Venta Exitosa!' : 'Entrega Parcial Registrada',
-                        html: `
+                        Swal.fire({
+                            title: esEntregaTotal ? '¡Venta Exitosa!' :
+                                'Entrega Parcial Registrada',
+                            html: `
                             <div class="alert alert-light border-0 small text-start py-2 mb-3" style="background:#f2f2f7; border-radius:12px;">
                                 ${res.message || 'Operación realizada correctamente.'}
                             </div>
                             ${htmlExtra}
                             <p class="text-muted small mb-0">¿Deseas imprimir el comprobante?</p>
                         `,
-                        icon: iconoFinal,
-                        showDenyButton: true,
-                        showCancelButton: true,
-                        confirmButtonText: '<i class="bi bi-receipt"></i> Con Precios',
-                        denyButtonText: '<i class="bi bi-receipt"></i> Sin Precios',
-                        cancelButtonText: 'Cerrar',
-                        confirmButtonColor: '#34c759', 
-                        denyButtonColor: '#5856d6',    
-                        customClass: { popup: 'rounded-4 border-0 shadow-lg' }
-                    }).then((result) => {
-                        let url = '';
-                        if (result.isConfirmed) url = `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`;
-                        else if (result.isDenied) url = `/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=${res.id_venta}`;
+                            icon: iconoFinal,
+                            showDenyButton: true,
+                            showCancelButton: true,
+                            confirmButtonText: '<i class="bi bi-receipt"></i> Con Precios',
+                            denyButtonText: '<i class="bi bi-receipt"></i> Sin Precios',
+                            cancelButtonText: 'Cerrar',
+                            confirmButtonColor: '#34c759',
+                            denyButtonColor: '#5856d6',
+                            customClass: {
+                                popup: 'rounded-4 border-0 shadow-lg'
+                            }
+                        }).then((result) => {
+                            let url = '';
+                            if (result.isConfirmed) url =
+                                `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`;
+                            else if (result.isDenied) url =
+                                `/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=${res.id_venta}`;
 
-                        if (url !== '') window.open(url, '_blank');
-                        location.reload(); 
-                    });
-                } else {
-                    Swal.fire({
-                        title: 'Error',
-                        text: res.message || 'Error desconocido',
-                        icon: 'error',
-                        customClass: { popup: 'rounded-4' }
-                    });
-                    if(btnFinalizar) btnFinalizar.disabled = false;
-                }
-            })
-            .catch(err => {
-                console.error("Error:", err);
-                Swal.fire('Error Crítico', 'No se pudo conectar con el servidor.', 'error');
-                if(btnFinalizar) btnFinalizar.disabled = false;
-            });
+                            if (url !== '') window.open(url, '_blank');
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: res.message || 'Error desconocido',
+                            icon: 'error',
+                            customClass: {
+                                popup: 'rounded-4'
+                            }
+                        });
+                        if (btnFinalizar) btnFinalizar.disabled = false;
+                    }
+                })
+                .catch(err => {
+                    console.error("Error:", err);
+                    Swal.fire('Error Crítico', 'No se pudo conectar con el servidor.', 'error');
+                    if (btnFinalizar) btnFinalizar.disabled = false;
+                });
         }
     });
 }
- </script>
+</script>

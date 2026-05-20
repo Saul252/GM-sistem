@@ -93,6 +93,7 @@ $detallesPago = $stmtPago->get_result();
         <tr><td>FOLIO: <?php echo $venta['folio']; ?></td></tr>
         <tr><td>FECHA: <?php echo date("d/m/Y H:i", strtotime($venta['fecha'])); ?></td></tr>
         <tr><td>CLIENTE: <?php echo substr($venta['nombre_comercial'], 0, 30); ?></td></tr>
+         <tr><td>Notas: <?php echo substr($venta['observaciones'], 0, 30); ?></td></tr>
     </table>
 
     <div class="divider"></div>

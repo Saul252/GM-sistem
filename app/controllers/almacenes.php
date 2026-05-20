@@ -145,6 +145,18 @@ class AlmacenController {
     public function guardarProducto() {
         while (ob_get_level()) ob_end_clean(); // Asegurar respuesta limpia, quitar despues para un solo almacen ya que este es para cf
         header('Content-Type: application/json');
+        $factor_conversion = floatval($_POST['factor_conversion'] ?? 1);
+if ($factor_conversion <= 0) $factor_conversion = 1;
+
+$p_minorista = floatval($_POST['precio_minorista'] ?? 0);
+$p_mayorista = floatval($_POST['precio_mayorista'] ?? 0);
+$p_distribuidor = floatval($_POST['precio_distribuidor'] ?? 0);
+
+$pmin = $p_minorista > 0 ? ($p_minorista / $factor_conversion) : 0;
+$pmay = $p_mayorista > 0 ? ($p_mayorista / $factor_conversion) : 0;
+$pdi  = $p_distribuidor > 0 ? ($p_distribuidor / $factor_conversion) : 0;
+
+
 
         $datos = [
             'sku'                 => trim($_POST['sku'] ?? ''),
@@ -158,9 +170,9 @@ class AlmacenController {
             'descripcion'         => $_POST['description'] ?? '',
             'fiscal_clave_prod'   => $_POST['fiscal_clave_prod'] ?? '',
             'fiscal_clave_unidad'   => $_POST['fiscal_clave_unidad'] ?? '',
-            'precio_minorista'    => floatval($_POST['precio_minorista'] ?? 0),
-            'precio_mayorista'    => floatval($_POST['precio_mayorista'] ?? 0),
-            'precio_distribuidor' => floatval($_POST['precio_distribuidor'] ?? 0)
+            'precio_minorista'    => $pmin,
+            'precio_mayorista'    => $pmay,
+            'precio_distribuidor' => $pdi
         ];
 
         if (empty($datos['sku']) || empty($datos['nombre'])) {
@@ -340,6 +352,16 @@ public function actualizarProducto()
     header('Content-Type: application/json');
 
     try {
+     $factor_conversion = floatval($_POST['factor_conversion'] ?? 1);
+if ($factor_conversion <= 0) $factor_conversion = 1;
+
+$p_minorista = floatval($_POST['precio_minorista'] ?? 0);
+$p_mayorista = floatval($_POST['precio_mayorista'] ?? 0);
+$p_distribuidor = floatval($_POST['precio_distribuidor'] ?? 0);
+
+$pmin = $p_minorista > 0 ? ($p_minorista / $factor_conversion) : 0;
+$pmay = $p_mayorista > 0 ? ($p_mayorista / $factor_conversion) : 0;
+$pdi  = $p_distribuidor > 0 ? ($p_distribuidor / $factor_conversion) : 0;
 
         $data = [
             'id' => $_POST['producto_id'] ?? 0,
@@ -357,9 +379,9 @@ public function actualizarProducto()
             'factor_conversion' => floatval($_POST['factor_conversion'] ?? 1),
             'unidad_medida' => $_POST['unidad_medida'] ?? '',
 
-            'precio_minorista' => floatval($_POST['precio_minorista'] ?? 0),
-            'precio_mayorista' => floatval($_POST['precio_mayorista'] ?? 0),
-            'precio_distribuidor' => floatval($_POST['precio_distribuidor'] ?? 0),
+            'precio_minorista' => $pmin,
+            'precio_mayorista' => $pmay,
+            'precio_distribuidor' => $pdi,
 
             'stock' => floatval($_POST['stock'] ?? 0),
             'stock_minimo' => floatval($_POST['stock_minimo'] ?? 0),

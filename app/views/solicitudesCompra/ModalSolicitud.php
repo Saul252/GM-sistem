@@ -177,7 +177,7 @@ function calcularTotal(input, origen = '') {
         const cantidad = parseFloat(
             fila.querySelector('.cantidad').value
         ) || 0;
-
+console.log(fila.querySelector('.cantidad').value);
         const factor = parseFloat(
             fila.querySelector('.unidad-select').value
         ) || 1;

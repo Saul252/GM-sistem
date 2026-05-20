@@ -13,7 +13,7 @@ window.abrirModalFinalizar = function() {
     
     window.carrito.forEach((item, index) => {
         if (item.entrega_hoy === undefined || item.entrega_hoy === null) {
-            item.entrega_hoy = item.cantidad.toFixed;
+            item.entrega_hoy = (item.cantidad);
         }
 console.log('unidaditem',item.unidadMedidaNombre);
         // Cálculos iniciales de venta total

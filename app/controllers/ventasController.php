@@ -223,7 +223,7 @@ foreach ($productos as &$producto) {
 unset($producto);
 
 // Clientes (Asegúrate de que listarTodos traiga rfc, razon_social, regimen_fiscal)
-$clientes_res = $clientesModel->listarTodos($almacen_usuario); 
+$clientes_res = $clientesModel->listarTodosCF($almacen_usuario); 
 $clientes = ($clientes_res) ? $clientes_res->fetch_all(MYSQLI_ASSOC) : [];
 
 include __DIR__ . '/../views/ventas_view.php';

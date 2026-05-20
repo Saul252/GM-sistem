@@ -10,16 +10,20 @@ require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../models/ventasEditarModel.php'; 
 require_once __DIR__ . '/../models/clientesModel.php'; 
 require_once __DIR__ . '/../controllers/LayoutController.php';
+require_once __DIR__ . '/../models/almacen/productosModel.php';
 
 protegerPagina('ventas'); 
 $paginaActual = 'ventas';
 class VentaHistorialController {
     private $model;
     private $clientesModel;
+    private $productosModel;
 
     public function __construct($db) {
         $this->model = new VentaHistorialModel($db);
         $this->clientesModel = new clientesModel($db);
+        $this->productosModel = new ProductoModel($db);
+
     }
 
     /**
@@ -38,6 +42,23 @@ class VentaHistorialController {
                 echo json_encode(["status" => "error", "message" => "No se encontró la información para la venta #$id"]);
             } else {
                 echo json_encode($detalle);
+            }
+        } catch (Exception $e) {
+            echo json_encode(["status" => "error", "message" => $e->getMessage()]);
+        }
+    }
+      public function opcionesMedida() {
+        header('Content-Type: application/json');
+        try {
+            $id = intval($_GET['id'] ?? 0);
+            if ($id <= 0) throw new Exception("ID de venta no proporcionado o inválido.");
+            
+           $medidasAdicionales =  $this->productosModel->obtenerMedidasPorProducto($id);
+            
+            if (!$medidasAdicionales) {
+                echo json_encode(["status" => "error", "message" => "No se encontró la información para la venta #$id"]);
+            } else {
+                echo json_encode($medidasAdicionales);
             }
         } catch (Exception $e) {
             echo json_encode(["status" => "error", "message" => $e->getMessage()]);
@@ -193,29 +214,41 @@ public function guardarEdicionVentaSaldoAFavor() {
      * Obtiene el catálogo de productos disponibles para el almacén de la venta.
      * Invocado por: cargarCatalogoProductos() o similar en el JS.
      */
-    public function cargarProductosAlmacen() {
-        header('Content-Type: application/json');
-        try {
-            // Recibimos el almacen_id por GET
-            $almacen_id = intval($_GET['almacen_id'] ?? 0);
-            
-            if ($almacen_id <= 0) {
-                throw new Exception("ID de almacén no proporcionado.");
-            }
-            
-            $productos = $this->model->obtenerProductosAlmacen($almacen_id);
-            
-            echo json_encode([
-                "status" => "success",
-                "data" => $productos
-            ]);
-        } catch (Exception $e) {
-            echo json_encode([
-                "status" => "error", 
-                "message" => $e->getMessage()
-            ]);
+  public function cargarProductosAlmacen() {
+
+    header('Content-Type: application/json');
+
+    try {
+
+        $almacen_id = intval($_GET['almacen_id'] ?? 0);
+
+        if ($almacen_id <= 0) {
+            throw new Exception("ID de almacén no proporcionado.");
         }
+
+        // Productos base
+        $productos = $this->model->obtenerProductosAlmacen($almacen_id);
+
+       foreach ($productos as $i => $producto) {
+
+    $productos[$i]['medidas'] =
+        $this->productosModel
+            ->obtenerMedidasPorProducto($producto['id']);
+}
+
+        echo json_encode([
+            "status" => "success",
+            "data"   => $productos
+        ]);
+
+    } catch (Exception $e) {
+
+        echo json_encode([
+            "status"  => "error",
+            "message" => $e->getMessage()
+        ]);
     }
+}
 
 }
 // --- RUTEADOR DE ACCIONES AJAX ---
@@ -242,6 +275,10 @@ if (isset($_GET['action'])) {
         case 'guardarEntrega':
             $controller->registrarEntrega();
             break;
+            case 'opcionesMedida':
+            $controller->opcionesMedida();
+            break;
+            
         default:
             echo json_encode(["status" => "error", "message" => "Acción '{$_GET['action']}' no reconocida."]);
             break;

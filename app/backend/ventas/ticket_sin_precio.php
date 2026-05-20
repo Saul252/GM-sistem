@@ -101,6 +101,7 @@ $detalles = $stmtD->get_result();
         <div><b>FECHA:</b> <?php echo date("d/m/Y H:i", strtotime($venta['fecha'])); ?></div>
         <div><b>CLIENTE:</b> <?php echo strtoupper($venta['nombre_comercial']); ?></div>
         <div><b>VENDEDOR:</b> <?php echo $venta['nombre_vendedor']; ?></div>
+          <tr><td>Notas: <?php echo substr($venta['observaciones'], 0, 30); ?></td></tr>
     </div>
 
     <div class="divider"></div>

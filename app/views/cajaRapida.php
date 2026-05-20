@@ -4,203 +4,212 @@
 <head>
     <meta charset="UTF-8">
     <title>Ventas | Sistema</title>
-      <?php require_once __DIR__ . '/layout/icono.php' ?>
+    <?php require_once __DIR__ . '/layout/icono.php' ?>
     <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
     <link href="/cfsistem/css/ventas.css" rel="stylesheet">
     <style>
-    
-:root {
-    --primary-color: #007aff; /* Azul iOS */
-    --success-color: #34c759; /* Verde iOS */
-    --bg-light: #f5f5f7;
-    --card-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
-}
+    :root {
+        --primary-color: #007aff;
+        /* Azul iOS */
+        --success-color: #34c759;
+        /* Verde iOS */
+        --bg-light: #f5f5f7;
+        --card-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+    }
 
-.main-content {
-    background-color: var(--bg-light);
-    padding: 40px;
-    min-height: 100vh;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-}
+    .main-content {
+        background-color: var(--bg-light);
+        padding: 40px;
+        min-height: 100vh;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
 
-/* Cambio de nombre del título sin tocar HTML */
-.main-content h2.fw-bold {
-    font-size: 1.8rem;
-    letter-spacing: -0.5px;
-    color: #1d1d1f;
-    visibility: hidden; /* Escondemos el original */
-    position: relative;
-}
+    /* Cambio de nombre del título sin tocar HTML */
+    .main-content h2.fw-bold {
+        font-size: 1.8rem;
+        letter-spacing: -0.5px;
+        color: #1d1d1f;
+        visibility: hidden;
+        /* Escondemos el original */
+        position: relative;
+    }
 
-.main-content h2.fw-bold::after {
-    content: "Caja Rápida"; /* El nuevo nombre */
-    visibility: visible;
-    position: absolute;
-    left: 40px; /* Ajuste por el icono bi-cart-fill */
-    top: 0;
-}
+    .main-content h2.fw-bold::after {
+        content: "Caja Rápida";
+        /* El nuevo nombre */
+        visibility: visible;
+        position: absolute;
+        left: 40px;
+        /* Ajuste por el icono bi-cart-fill */
+        top: 0;
+    }
 
-.main-content h2.fw-bold i {
-    visibility: visible;
-    color: var(--primary-color) !important;
-}
+    .main-content h2.fw-bold i {
+        visibility: visible;
+        color: var(--primary-color) !important;
+    }
 
-/* --- Cards Estilo Elegante --- */
-.card {
-    border: none !important;
-    border-radius: 16px !important;
-    box-shadow: var(--card-shadow) !important;
-    background: #ffffff;
-    transition: transform 0.2s ease;
-}
+    /* --- Cards Estilo Elegante --- */
+    .card {
+        border: none !important;
+        border-radius: 16px !important;
+        box-shadow: var(--card-shadow) !important;
+        background: #ffffff;
+        transition: transform 0.2s ease;
+    }
 
-/* --- Tabla de Productos --- */
-.tabla-productos {
-    border: none !important;
-}
+    /* --- Tabla de Productos --- */
+    .tabla-productos {
+        border: none !important;
+    }
 
-.tabla-productos thead th {
-    background-color: #f8f9fa !important;
-    color: #86868b !important;
-    text-transform: uppercase;
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    border: none !important;
-    padding: 12px;
-}
+    .tabla-productos thead th {
+        background-color: #f8f9fa !important;
+        color: #86868b !important;
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        border: none !important;
+        padding: 12px;
+    }
 
-.tabla-productos tbody tr {
-    border-bottom: 1px solid #f2f2f2;
-    transition: all 0.2s;
-}
+    .tabla-productos tbody tr {
+        border-bottom: 1px solid #f2f2f2;
+        transition: all 0.2s;
+    }
 
-.tabla-productos tbody tr:hover {
-    background-color: #fafafa !important;
-}
+    .tabla-productos tbody tr:hover {
+        background-color: #fafafa !important;
+    }
 
-.tabla-productos td {
-    padding: 14px 12px !important;
-    vertical-align: middle;
-    border: none !important;
-}
+    .tabla-productos td {
+        padding: 14px 12px !important;
+        vertical-align: middle;
+        border: none !important;
+    }
 
-/* Inputs y Selects más limpios */
-.form-control, .form-select {
-    border: 1px solid #d2d2d7 !important;
-    border-radius: 10px !important;
-    font-size: 0.9rem;
-    padding: 0.6rem;
-}
+    /* Inputs y Selects más limpios */
+    .form-control,
+    .form-select {
+        border: 1px solid #d2d2d7 !important;
+        border-radius: 10px !important;
+        font-size: 0.9rem;
+        padding: 0.6rem;
+    }
 
-.form-control:focus, .form-select:focus {
-    border-color: var(--primary-color) !important;
-    box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1) !important;
-}
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--primary-color) !important;
+        box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1) !important;
+    }
 
-/* --- Carrito de Compras Lateral --- */
-.carrito {
-    position: sticky;
-    top: 20px;
-    border-top: 4px solid var(--success-color) !important;
-}
+    /* --- Carrito de Compras Lateral --- */
+    .carrito {
+        position: sticky;
+        top: 20px;
+        border-top: 4px solid var(--success-color) !important;
+    }
 
-#tablaCarrito thead th {
-    font-size: 0.65rem;
-    color: #86868b;
-    border-bottom: 1px solid #eee;
-}
+    #tablaCarrito thead th {
+        font-size: 0.65rem;
+        color: #86868b;
+        border-bottom: 1px solid #eee;
+    }
 
-#tablaCarrito td {
-    font-size: 0.85rem;
-    padding: 8px 4px;
-}
+    #tablaCarrito td {
+        font-size: 0.85rem;
+        padding: 8px 4px;
+    }
 
-#total {
-    color: var(--primary-color);
-}
+    #total {
+        color: var(--primary-color);
+    }
 
-/* --- Botones --- */
-.btn-primary {
-    background-color: var(--primary-color) !important;
-    border: none !important;
-    border-radius: 12px !important;
-    padding: 10px 20px;
-    font-weight: 600;
-}
+    /* --- Botones --- */
+    .btn-primary {
+        background-color: var(--primary-color) !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 10px 20px;
+        font-weight: 600;
+    }
 
-.btn-success {
-    background-color: var(--success-color) !important;
-    border: none !important;
-    border-radius: 10px !important;
-    font-weight: 600;
-}
+    .btn-success {
+        background-color: var(--success-color) !important;
+        border: none !important;
+        border-radius: 10px !important;
+        font-weight: 600;
+    }
 
-.btn-sm {
-    padding: 5px 10px;
-}
+    .btn-sm {
+        padding: 5px 10px;
+    }
 
-/* --- Modal Estilo Apple --- */
-.modal-content {
-    border-radius: 20px !important;
-    overflow: hidden;
-}
+    /* --- Modal Estilo Apple --- */
+    .modal-content {
+        border-radius: 20px !important;
+        overflow: hidden;
+    }
 
-.modal-header {
-    border-bottom: 1px solid #f2f2f2 !important;
-    padding: 1.5rem !important;
-}
+    .modal-header {
+        border-bottom: 1px solid #f2f2f2 !important;
+        padding: 1.5rem !important;
+    }
 
-.bg-dark {
-    background-color: #1d1d1f !important;
-}
+    .bg-dark {
+        background-color: #1d1d1f !important;
+    }
 
-.badge {
-    border-radius: 6px !important;
-    padding: 5px 8px !important;
-    font-weight: 500 !important;
-}
+    .badge {
+        border-radius: 6px !important;
+        padding: 5px 8px !important;
+        font-weight: 500 !important;
+    }
 
-/* Scroll personalizado */
-.tabla-scroll {
-    max-height: 600px;
-    overflow-y: auto;
-}
+    /* Scroll personalizado */
+    .tabla-scroll {
+        max-height: 600px;
+        overflow-y: auto;
+    }
 
-.tabla-scroll::-webkit-scrollbar {
-    width: 6px;
-}
+    .tabla-scroll::-webkit-scrollbar {
+        width: 6px;
+    }
 
-.tabla-scroll::-webkit-scrollbar-thumb {
-    background: #d2d2d7;
-    border-radius: 10px;
-}
+    .tabla-scroll::-webkit-scrollbar-thumb {
+        background: #d2d2d7;
+        border-radius: 10px;
+    }
 
-/* --- Efecto de Botón Flotante para el total --- */
-.bg-primary.bg-opacity-10 {
-    background-color: rgba(0, 122, 255, 0.05) !important;
-    border: 1px dashed var(--primary-color) !important;
-}
-/* --- Corrección de Superposición de Modales --- */
-/* --- Elevación de SweetAlert por encima de los modales --- */
-.swal2-container {
-    z-index: 2000 !important; /* Lo mandamos muy por encima del 1061 de los modales */
-}
+    /* --- Efecto de Botón Flotante para el total --- */
+    .bg-primary.bg-opacity-10 {
+        background-color: rgba(0, 122, 255, 0.05) !important;
+        border: 1px dashed var(--primary-color) !important;
+    }
 
-/* Ajuste preventivo para el fondo oscuro de los modales */
-.modal-backdrop {
-    z-index: 1050 !important; /* Mantenlo bajo para que no tape los modales activos */
-}
+    /* --- Corrección de Superposición de Modales --- */
+    /* --- Elevación de SweetAlert por encima de los modales --- */
+    .swal2-container {
+        z-index: 2000 !important;
+        /* Lo mandamos muy por encima del 1061 de los modales */
+    }
 
-/* Modal base */
-#modalFinalizarVenta {
-    z-index: 1055 !important;
-}
+    /* Ajuste preventivo para el fondo oscuro de los modales */
+    .modal-backdrop {
+        z-index: 1050 !important;
+        /* Mantenlo bajo para que no tape los modales activos */
+    }
 
-/* Modal secundario (el que se abre después) */
-#modalNuevoCliente {
-    z-index: 1061 !important;
-}
+    /* Modal base */
+    #modalFinalizarVenta {
+        z-index: 1055 !important;
+    }
+
+    /* Modal secundario (el que se abre después) */
+    #modalNuevoCliente {
+        z-index: 1061 !important;
+    }
     </style>
 </head>
 
@@ -261,9 +270,9 @@
                                     <th width="150">Precio</th>
                                     <th width="110"></th>
                                     <th width="150">Venta por</th>
-                                   
-                                   
-                                     <th width="90">Cant</th>
+
+
+                                    <th width="90">Cant</th>
                                     <th width="60">Agregar</th>
                                 </tr>
                             </thead>
@@ -274,6 +283,8 @@
                                 <tr data-categoria="<?= $p['categoria_id'] ?>" data-almacen="<?= $p['almacen_id'] ?>"
                                     data-factor="<?= $p['factor_conversion'] ?>"
                                     data-reporte-nom="<?= htmlspecialchars($p['unidad_reporte']) ?>">
+                                    <input type="hidden" class="factorC" value="<?= $p['factor_conversion'] ?>">
+
 
                                     <td><?= $p['sku'] ?></td>
                                     <td><?= htmlspecialchars($p['nombre']) ?></td>
@@ -286,8 +297,8 @@
                                     <td><?= htmlspecialchars($p['almacen_nombre']) ?></td>
 
                                     <td>
-                                       
-    <select class="form-select form-select-sm select-precio">
+
+                                        <select class="form-select form-select-sm select-precio">
                                             <option value="<?= $p['precio_minorista'] ?>">Publico -
                                                 $<?= number_format($p['precio_minorista'],2) ?></option>
                                             <option value="<?= $p['precio_mayorista'] ?>">Constructora -
@@ -295,24 +306,24 @@
                                             <option value="<?= $p['precio_distribuidor'] ?>">Distribuidor -
                                                 $<?= number_format($p['precio_distribuidor'],2) ?></option>
                                         </select>
-                                        </td>
-                                        <td>
-    <input
-        type="number"
-        step="0.01"
-        class="form-control form-control-sm input-precio"
-        value="<?= $p['precio_minorista'] ?>">
-</div>
-                                  
-                             
                                     </td>
+                                    <td>
+                                        <input type="number" step="0.01"
+                                                class="form-control form-control-sm input-precioMayor"
+                                                value="<?= $p['precio_minorista'] ?>">
+                                                <input type="hidden" step="0.01"
+                                                class="form-control form-control-sm input-precio"
+                                                value="<?= $p['precio_minorista'] ?>">
+                                        
+                    </div>
 
-                            
-<td style="width:1px; padding:0; border:none;">
-    <?php if($tieneReporte): ?>
-    <select 
-        class="form-select form-select-sm select-modo-venta"
-        style="
+
+                    </td>
+
+
+                    <td style="width:1px; padding:0; border:none;">
+                        <?php if($tieneReporte): ?>
+                        <select class="form-select form-select-sm select-modo-venta" style="
             opacity:0;
             position:absolute;
             pointer-events:none;
@@ -322,90 +333,88 @@
             border:0;
         ">
 
-        <option value="individual"
-            data-nombre="<?= htmlspecialchars($p['unidad_medida'] ?? 'PZA') ?>">
+                            <option value="individual"
+                                data-nombre="<?= htmlspecialchars($p['unidad_medida'] ?? 'PZA') ?>">
 
-            <?= htmlspecialchars($p['unidad_medida'] ?? 'PZA') ?>
+                                <?= htmlspecialchars($p['unidad_medida'] ?? 'PZA') ?>
 
-        </option>
+                            </option>
 
-        <option value="referencia"
-            data-nombre="<?= htmlspecialchars($p['unidad_reporte']) ?>">
+                            <option value="referencia" data-nombre="<?= htmlspecialchars($p['unidad_reporte']) ?>">
 
-            <?= htmlspecialchars($p['unidad_reporte']) ?>
+                                <?= htmlspecialchars($p['unidad_reporte']) ?>
 
-        </option>
+                            </option>
 
-    </select>
-    <?php else: ?>
-    <span class="d-none">Individual</span>
-    <?php endif; ?>
-                      
-                                        <select class="form-select border-primary medidas_adicionales"
-                                            <?= empty($p['medidas_adicionales']) ? 'disabled' : '' ?>>
-                                              <option value='0'>Seleccione</option>
-                                            <?php foreach($p['medidas_adicionales'] as $ma): ?>
-                                            <option value="<?= $ma['equivalencia'] ?>" data-id="<?= $ma['id'] ?> "
-                                                data-nombre="<?= $ma['nombre'] ?>">
-                                                <?= htmlspecialchars($ma['nombre']) ?>
-                                            </option>
-                                            <?php endforeach; ?>
-                                        </select>
+                        </select>
+                        <?php else: ?>
+                        <span class="d-none">Individual</span>
+                        <?php endif; ?>
 
-                                    
-                                    </td>
+                        <select class="form-select border-primary medidas_adicionales"
+                            <?= empty($p['medidas_adicionales']) ? 'disabled' : '' ?>>
+                            <option value='0'>Seleccione</option>
+                            <?php foreach($p['medidas_adicionales'] as $ma): ?>
+                            <option value="<?= $ma['equivalencia'] ?>" data-id="<?= $ma['id'] ?> "
+                                data-nombre="<?= $ma['nombre'] ?>">
+                                <?= htmlspecialchars($ma['nombre']) ?>
+                            </option>
+                            <?php endforeach; ?>
+                        </select>
 
-                                    <td>
-                                           <input type="number" class="form-control form-control-sm cantidad_usuario"
-                                            min="1" value="1">
 
-                                        <!-- REAL -->
-                                        <input type="hidden" class="cantidad" value="0">
+                    </td>
 
-                                    </td>
+                    <td>
+                        <input type="number" class="form-control form-control-sm cantidad_usuario" min="1" value="1">
 
-                                    <td class="text-center">
-                                        <button type="button" class="btn btn-success btn-sm"
-                                            data-producto-id="<?= $p['id'] ?>" data-almacen-id="<?= $p['almacen_id'] ?>"
-                                            data-almacen="<?= htmlspecialchars($p['almacen_nombre']) ?>"
-                                            onclick="validarYAgregar(this)">
-                                            <i class="bi bi-plus"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+                        <!-- REAL -->
+                        <input type="hidden" class="cantidad" value="0">
 
-            <div class="col-lg-4">
-                <div class="card p-3 carrito">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-bag-fill text-success"></i> Carrito</h5>
-                    <div class="table-responsive">
-                        <table class="table table-sm" id="tablaCarrito">
-                            <thead>
-                                <tr>
-                                    <th>Almacén</th>
-                                    <th>Producto</th>
-                                    <th>Cant. Fact</th>
-                                    <th>Cant. Pza</th>
-                                    <th>Sub</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <hr>
-                    <h4 class="text-end fw-bold">Total: $<span id="total">0.00</span></h4>
-                    <button class="btn btn-primary w-100 mt-3" onclick="abrirModalFinalizar()">
-                        <i class="bi bi-cash-stack"></i> Finalizar Venta
-                    </button>
+                    </td>
+
+                    <td class="text-center">
+                        <button type="button" class="btn btn-success btn-sm" data-producto-id="<?= $p['id'] ?>"
+                            data-almacen-id="<?= $p['almacen_id'] ?>"
+                            data-almacen="<?= htmlspecialchars($p['almacen_nombre']) ?>"
+                            onclick="validarYAgregar(this)">
+                            <i class="bi bi-plus"></i>
+                        </button>
+                    </td>
+                    </tr>
+                    <?php endforeach; ?>
+                    </tbody>
+                    </table>
                 </div>
             </div>
         </div>
+
+        <div class="col-lg-4">
+            <div class="card p-3 carrito">
+                <h5 class="fw-bold mb-3"><i class="bi bi-bag-fill text-success"></i> Carrito</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm" id="tablaCarrito">
+                        <thead>
+                            <tr>
+                                <th>Almacén</th>
+                                <th>Producto</th>
+                                <th>Cant. Fact</th>
+                                <th>Cant. Pza</th>
+                                <th>Sub</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <hr>
+                <h4 class="text-end fw-bold">Total: $<span id="total">0.00</span></h4>
+                <button class="btn btn-primary w-100 mt-3" onclick="abrirModalFinalizar()">
+                    <i class="bi bi-cash-stack"></i> Finalizar Venta
+                </button>
+            </div>
+        </div>
+    </div>
     </div>
 
 
@@ -512,141 +521,145 @@
 
     <?php cargarScripts(); ?>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-   
+
     <script src="/cfsistem/app/backend/js_ventas/filtros.js"></script>
     <script src="/cfsistem/app/backend/js_ventas/nuevo_cliente.js"></script>
-<?php require_once __DIR__ . '/cajaRapida/ModalFinalizarVenta.php'; ?>
-<script>/**
- * SISTEMA DE VENTAS CF SYSTEM - Gestión de Carrito con Validación de Stock
- */
+    <?php require_once __DIR__ . '/cajaRapida/ModalFinalizarVenta.php'; ?>
+    <script>
+    /**
+     * SISTEMA DE VENTAS CF SYSTEM - Gestión de Carrito con Validación de Stock
+     */
 
-window.carrito = window.carrito || [];
+    window.carrito = window.carrito || [];
 
-/**
- * 1. AGREGAR PRODUCTO AL CARRITO
- */
-window.validarYAgregar = function(btn) {
-    const fila = btn.closest("tr");
-    const producto_id = parseInt(btn.dataset.productoId || btn.getAttribute("data-producto-id"));
-    const almacen_id = parseInt(btn.dataset.almacenId);
-    const almacen_nombre = btn.dataset.almacen;
-    
-    // Captura de Stock y Factores
-    const stockMaximo = parseFloat(fila.querySelector(".badge.bg-success").innerText) || 0;
-    const factor = parseFloat(fila.dataset.factor) || 1;
-    const unidadReporte = fila.dataset.reporteNom || 'Fact.';
-    const nombre = fila.cells[1].innerText; 
-    
-    const cantidadInput = fila.querySelector(".cantidad");
-    let cantidadAAgregar = parseFloat(cantidadInput.value) || 0;
-    
-    const modoVenta = fila.querySelector(".select-modo-venta")?.value || 'individual';
-       const modoVent =
-    fila.querySelector(".select-modo-venta");
+    /**
+     * 1. AGREGAR PRODUCTO AL CARRITO
+     */
+    window.validarYAgregar = function(btn) {
+        const fila = btn.closest("tr");
+        const producto_id = parseInt(btn.dataset.productoId || btn.getAttribute("data-producto-id"));
+        const almacen_id = parseInt(btn.dataset.almacenId);
+        const almacen_nombre = btn.dataset.almacen;
 
-const unidad_medida =
-    modoVent?.options?.[modoVent.selectedIndex]?.dataset?.nombre || 'PZA';console.log(modoVenta);
-       
-    console.log(unidad_medida);
-const select =
-    fila.querySelector('.medidas_adicionales');
+        // Captura de Stock y Factores
+        const stockMaximo = parseFloat(fila.querySelector(".badge.bg-success").innerText) || 0;
+        const factor = parseFloat(fila.dataset.factor) || 1;
+        const unidadReporte = fila.dataset.reporteNom || 'Fact.';
+        const nombre = fila.cells[1].innerText;
 
-const equivalencia =
-    parseFloat(select.value);
+        const cantidadInput = fila.querySelector(".cantidad");
+        let cantidadAAgregar = parseFloat(cantidadInput.value) || 0;
 
-const medidaId =
-    select.options[select.selectedIndex].dataset.id;
-    const medidaNombre =
-    select.options[select.selectedIndex].dataset.nombre; 
+        const modoVenta = fila.querySelector(".select-modo-venta")?.value || 'individual';
+        const modoVent =
+            fila.querySelector(".select-modo-venta");
 
+        const unidad_medida =
+            modoVent?.options?. [modoVent.selectedIndex]?.dataset?.nombre || 'PZA';
+        console.log(modoVenta);
 
-console.log(equivalencia);
-console.log(medidaId,medidaNombre);
-    select.selectedIndex = 0;
-    
-    // Si se agrega en modo "Referencia/Reporte" (ej. Tonelada), convertimos a piezas
-    if(modoVenta === 'referencia') {
-        cantidadAAgregar = cantidadAAgregar * factor; 
-    }
+        console.log(unidad_medida);
+        const select =
+            fila.querySelector('.medidas_adicionales');
 
-    const selectPrecio = fila.querySelector(".select-precio");
-   
-    const selectPrecioInput = fila.querySelector(".input-precio");
-    const precioUnitario = parseFloat(selectPrecioInput.value) || 0; 
-    let textoPrecio = selectPrecio.options[selectPrecio.selectedIndex].text.toLowerCase();
-    let tipo_p = textoPrecio.includes("dist") ? "distribuidor" : (textoPrecio.includes("may") ? "mayorista" : "minorista");
+        const equivalencia =
+            parseFloat(select.value);
 
-    if (cantidadAAgregar <= 0) {
-        Swal.fire('Atención', 'Ingresa una cantidad válida', 'warning');
-        return;
-    }
-
-    // Buscar si ya existe en el carrito para validar stock acumulado
-    let itemExistente = window.carrito.find(item => 
-        item.producto_id === producto_id && item.almacen_id === almacen_id && item.tipo_precio === tipo_p
-    );
-
-    let cantidadTotalFutura = (itemExistente ? itemExistente.cantidad : 0) + cantidadAAgregar;
-
-    // VALIDACIÓN DE STOCK FÍSICO
-    if (cantidadTotalFutura > stockMaximo) {
-        Swal.fire('Stock Insuficiente', `No puedes agregar esa cantidad. Stock disponible: ${stockMaximo}`, 'error');
-        return;
-    }
-
-    if (itemExistente) {
-        itemExistente.cantidad = cantidadTotalFutura;
-    } else {
-        window.carrito.push({
-            producto_id, 
-            almacen_id, 
-            almacen_nombre, 
-            nombre,
-            cantidad: cantidadAAgregar,
-            stock_max: stockMaximo, // Guardamos el límite físico
-            entrega_hoy: cantidadAAgregar,
-            precio_unitario: precioUnitario,
-            tipo_precio: tipo_p,
-            factor: factor,
-            unidad_reporte: unidadReporte,
-             unidad_medida: unidad_medida || 'Fact.',
-            unidadMedidaSelect:medidaId??'0',
-            unidadMedidaNombre:medidaNombre??'',
-             unidadEquivalencia:equivalencia??1
-        });
-    }
-
-    window.renderCarrito();
-    cantidadInput.value = 1;
-};
-
-/**
- * 2. RENDERIZAR TABLA (Ajuste de inputs con MAX)
- */
+        const medidaId =
+            select.options[select.selectedIndex].dataset.id;
+        const medidaNombre =
+            select.options[select.selectedIndex].dataset.nombre;
 
 
+        console.log(equivalencia);
+        console.log(medidaId, medidaNombre);
+        select.selectedIndex = 0;
+
+        // Si se agrega en modo "Referencia/Reporte" (ej. Tonelada), convertimos a piezas
+        if (modoVenta === 'referencia') {
+            cantidadAAgregar = cantidadAAgregar * factor;
+        }
+
+        const selectPrecio = fila.querySelector(".select-precio");
+
+        const selectPrecioInput = fila.querySelector(".input-precio");
+        const precioUnitario = parseFloat(selectPrecioInput.value) || 0;
+        let textoPrecio = selectPrecio.options[selectPrecio.selectedIndex].text.toLowerCase();
+        let tipo_p = textoPrecio.includes("dist") ? "distribuidor" : (textoPrecio.includes("may") ? "mayorista" :
+            "minorista");
+
+        if (cantidadAAgregar <= 0) {
+            Swal.fire('Atención', 'Ingresa una cantidad válida', 'warning');
+            return;
+        }
+
+        // Buscar si ya existe en el carrito para validar stock acumulado
+        let itemExistente = window.carrito.find(item =>
+            item.producto_id === producto_id && item.almacen_id === almacen_id && item.tipo_precio === tipo_p
+        );
+
+        let cantidadTotalFutura = (itemExistente ? itemExistente.cantidad : 0) + cantidadAAgregar;
+
+        // VALIDACIÓN DE STOCK FÍSICO
+        if (cantidadTotalFutura > stockMaximo) {
+            Swal.fire('Stock Insuficiente', `No puedes agregar esa cantidad. Stock disponible: ${stockMaximo}`,
+                'error');
+            return;
+        }
+
+        if (itemExistente) {
+            itemExistente.cantidad = cantidadTotalFutura;
+        } else {
+            window.carrito.push({
+                producto_id,
+                almacen_id,
+                almacen_nombre,
+                nombre,
+                cantidad: cantidadAAgregar,
+                stock_max: stockMaximo, // Guardamos el límite físico
+                entrega_hoy: cantidadAAgregar,
+                precio_unitario: precioUnitario,
+                tipo_precio: tipo_p,
+                factor: factor,
+                unidad_reporte: unidadReporte,
+                unidad_medida: unidad_medida || 'Fact.',
+                unidadMedidaSelect: medidaId ?? '0',
+                unidadMedidaNombre: medidaNombre ?? '',
+                unidadEquivalencia: equivalencia ?? 1
+            });
+        }
+
+        window.renderCarrito();
+        cantidadInput.value = 1;
+    };
+
+    /**
+     * 2. RENDERIZAR TABLA (Ajuste de inputs con MAX)
+     */
 
 
 
 
 
 
- 
-window.renderCarrito = function() {
-    const tablaBody = document.querySelector("#tablaCarrito tbody");
-    if (!tablaBody) return;
-    
-    tablaBody.innerHTML = "";
-    
-    window.carrito.forEach((item, index) => {
-        const cantFactor = Math.floor(item.cantidad / item.factor);
-        const cantPza = (item.cantidad % item.factor).toFixed(3);
 
-        item.subtotal = item.cantidad * item.precio_unitario;
 
-        const tr = document.createElement("tr");
-        tr.dataset.index = index;
-        tr.innerHTML = `
+
+    window.renderCarrito = function() {
+        const tablaBody = document.querySelector("#tablaCarrito tbody");
+        if (!tablaBody) return;
+
+        tablaBody.innerHTML = "";
+
+        window.carrito.forEach((item, index) => {
+            const cantFactor = Math.floor(item.cantidad / item.factor);
+            const cantPza = (item.cantidad % item.factor).toFixed(3);
+
+            item.subtotal = item.cantidad * item.precio_unitario;
+
+            const tr = document.createElement("tr");
+            tr.dataset.index = index;
+            tr.innerHTML = `
         
             <td><small>${item.almacen_nombre}</small></td>
             <td><div class="fw-bold" style="font-size: 0.8rem;">${item.nombre}</div></td>
@@ -666,153 +679,161 @@ window.renderCarrito = function() {
                 </button>
             </td>
         `;
-        tablaBody.appendChild(tr);
+            tablaBody.appendChild(tr);
+        });
+
+        actualizarTotalesUI();
+    };
+
+    /**
+     * 3. LÓGICA DE CONTROL DE STOCK DINÁMICO (input)
+     */
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('input-factor-cambio') || e.target.classList.contains(
+                'input-pza-cambio')) {
+            const index = e.target.dataset.index;
+            const item = window.carrito[index];
+            const tr = e.target.closest('tr');
+
+            const inputFactor = tr.querySelector('.input-factor-cambio');
+            const inputPza = tr.querySelector('.input-pza-cambio');
+
+            let valFactor = parseFloat(inputFactor.value) || 0;
+            let valPza = parseFloat(inputPza.value) || 0;
+
+            // Validar primero el Factor contra el stock total
+            let maxFactoresPosibles = Math.floor(item.stock_max / item.factor);
+            if (valFactor > maxFactoresPosibles) {
+                valFactor = maxFactoresPosibles;
+                inputFactor.value = valFactor;
+            }
+
+            // Calcular piezas restantes permitidas basándose en los factores ya puestos
+            let stockRestantePzas = item.stock_max - (valFactor * item.factor);
+
+            if (valPza > stockRestantePzas) {
+                valPza = stockRestantePzas;
+                inputPza.value = valPza;
+                // Feedback visual rápido
+                inputPza.style.borderColor = "#ff3b30";
+                setTimeout(() => inputPza.style.borderColor = "#d2d2d7", 500);
+            }
+
+            // Actualización del objeto
+            item.cantidad = (valFactor * item.factor) + valPza;
+            item.subtotal = item.cantidad * item.precio_unitario;
+            item.entrega_hoy = item.cantidad;
+
+            tr.querySelector('.subtotal-celda').innerText = `$${item.subtotal.toFixed(2)}`;
+            actualizarTotalesUI();
+        }
     });
 
-    actualizarTotalesUI();
-};
-
-/**
- * 3. LÓGICA DE CONTROL DE STOCK DINÁMICO (input)
- */
-document.addEventListener('input', function(e) {
-    if (e.target.classList.contains('input-factor-cambio') || e.target.classList.contains('input-pza-cambio')) {
-        const index = e.target.dataset.index;
-        const item = window.carrito[index];
-        const tr = e.target.closest('tr');
-        
-        const inputFactor = tr.querySelector('.input-factor-cambio');
-        const inputPza = tr.querySelector('.input-pza-cambio');
-
-        let valFactor = parseFloat(inputFactor.value) || 0;
-        let valPza = parseFloat(inputPza.value) || 0;
-
-        // Validar primero el Factor contra el stock total
-        let maxFactoresPosibles = Math.floor(item.stock_max / item.factor);
-        if (valFactor > maxFactoresPosibles) {
-            valFactor = maxFactoresPosibles;
-            inputFactor.value = valFactor;
+    /**
+     * 4. LÓGICA DE NORMALIZACIÓN (change)
+     */
+    document.addEventListener('change', function(e) {
+        if (e.target.classList.contains('input-factor-cambio') || e.target.classList.contains(
+                'input-pza-cambio')) {
+            // Redibujamos para que si puso piezas equivalentes a 1 factor, se "brinde" al campo correcto
+            window.renderCarrito();
         }
+    });
 
-        // Calcular piezas restantes permitidas basándose en los factores ya puestos
-        let stockRestantePzas = item.stock_max - (valFactor * item.factor);
-        
-        if (valPza > stockRestantePzas) {
-            valPza = stockRestantePzas;
-            inputPza.value = valPza;
-            // Feedback visual rápido
-            inputPza.style.borderColor = "#ff3b30"; 
-            setTimeout(() => inputPza.style.borderColor = "#d2d2d7", 500);
-        }
+    /**
+     * 5. ACTUALIZAR INTERFAZ
+     */
+    function actualizarTotalesUI() {
+        let totalAcumulado = window.carrito.reduce((acc, item) => acc + (item.cantidad * item.precio_unitario), 0);
+        const totalStr = totalAcumulado.toFixed(2);
 
-        // Actualización del objeto
-        item.cantidad = (valFactor * item.factor) + valPza;
-        item.subtotal = item.cantidad * item.precio_unitario;
-        item.entrega_hoy = item.cantidad;
+        const elTotal = document.getElementById("total");
+        const elTotalModal = document.getElementById("totalFinalModal");
+        const elPago = document.getElementById("monto_pagar");
 
-        tr.querySelector('.subtotal-celda').innerText = `$${item.subtotal.toFixed(2)}`;
-        actualizarTotalesUI();
-    }
-});
-
-/**
- * 4. LÓGICA DE NORMALIZACIÓN (change)
- */
-document.addEventListener('change', function(e) {
-    if (e.target.classList.contains('input-factor-cambio') || e.target.classList.contains('input-pza-cambio')) {
-        // Redibujamos para que si puso piezas equivalentes a 1 factor, se "brinde" al campo correcto
-        window.renderCarrito();
-    }
-});
-
-/**
- * 5. ACTUALIZAR INTERFAZ
- */
-function actualizarTotalesUI() {
-    let totalAcumulado = window.carrito.reduce((acc, item) => acc + (item.cantidad * item.precio_unitario), 0);
-    const totalStr = totalAcumulado.toFixed(2);
-
-    const elTotal = document.getElementById("total");
-    const elTotalModal = document.getElementById("totalFinalModal");
-    const elPago = document.getElementById("monto_pagar");
-
-    if (elTotal) elTotal.innerText = totalStr;
-    if (elTotalModal) elTotalModal.innerText = totalStr;
-    if (elPago) {
-        elPago.value = totalStr;
-        elPago.dispatchEvent(new Event('input'));
-    }
-}
-
-// Eliminar producto
-document.addEventListener('click', function(e) {
-    const btnDelete = e.target.closest('.btn-remove-item');
-    if (btnDelete) {
-        const index = btnDelete.dataset.index;
-        window.carrito.splice(index, 1);
-        window.renderCarrito();
-    }
-});
-
-/**
- * Soporte para agregar productos al presionar ENTER
- */
-document.addEventListener('keydown', function(e) {
-    // 1. Verificamos que la tecla sea Enter y que el foco esté en un input de cantidad
-    if (e.key === 'Enter' && e.target.classList.contains('cantidad_usuario')) {
-        
-        // Evitamos que el Enter haga un submit accidental del formulario principal
-        e.preventDefault(); 
-
-        // 2. Localizamos la fila (tr) donde se presionó Enter
-        const fila = e.target.closest('tr');
-        
-        // 3. Buscamos el botón de "Agregar" (+) en esa misma fila
-        const btnAgregar = fila.querySelector('button.btn-success');
-
-        if (btnAgregar) {
-            // 4. Ejecutamos la función de agregar que ya tienes definida
-            validarYAgregar(btnAgregar);
-            
-            // Opcional: Feedback visual rápido para el usuario
-            btnAgregar.style.transform = "scale(0.9)";
-            setTimeout(() => btnAgregar.style.transform = "scale(1)", 100);
+        if (elTotal) elTotal.innerText = totalStr;
+        if (elTotalModal) elTotalModal.innerText = totalStr;
+        if (elPago) {
+            elPago.value = totalStr;
+            elPago.dispatchEvent(new Event('input'));
         }
     }
-});
-</script>
- <script>
- document.addEventListener('input', function(e) {
 
-    if (
-        !e.target.classList.contains('cantidad_usuario') &&
-        !e.target.classList.contains('medidas_adicionales')
-    ) {
-        return;
-    }
+    // Eliminar producto
+    document.addEventListener('click', function(e) {
+        const btnDelete = e.target.closest('.btn-remove-item');
+        if (btnDelete) {
+            const index = btnDelete.dataset.index;
+            window.carrito.splice(index, 1);
+            window.renderCarrito();
+        }
+    });
 
-    actualizarCantidadReal(e);
+    /**
+     * Soporte para agregar productos al presionar ENTER
+     */
+    document.addEventListener('keydown', function(e) {
+        // 1. Verificamos que la tecla sea Enter y que el foco esté en un input de cantidad
+        if (e.key === 'Enter' && e.target.classList.contains('cantidad_usuario')) {
 
-});
+            // Evitamos que el Enter haga un submit accidental del formulario principal
+            e.preventDefault();
 
-document.addEventListener('change', function(e) {
+            // 2. Localizamos la fila (tr) donde se presionó Enter
+            const fila = e.target.closest('tr');
 
-    if (
-        !e.target.classList.contains('cantidad_usuario') &&
-        !e.target.classList.contains('medidas_adicionales')
-    ) {
-        return;
-    }
+            // 3. Buscamos el botón de "Agregar" (+) en esa misma fila
+            const btnAgregar = fila.querySelector('button.btn-success');
 
-    actualizarCantidadReal(e);
+            if (btnAgregar) {
+                // 4. Ejecutamos la función de agregar que ya tienes definida
+                validarYAgregar(btnAgregar);
 
-});
+                // Opcional: Feedback visual rápido para el usuario
+                btnAgregar.style.transform = "scale(0.9)";
+                setTimeout(() => btnAgregar.style.transform = "scale(1)", 100);
+            }
+        }
+    });
+    </script>
+    <script>
+    document.addEventListener('input', function(e) {
 
-function actualizarCantidadReal(e) {
+        if (
+            !e.target.classList.contains('cantidad_usuario') &&
+            !e.target.classList.contains('medidas_adicionales')
+        ) {
+            return;
+        }
+
+        actualizarCantidadReal(e);
+
+    });
+
+    document.addEventListener('change', function(e) {
+
+        if (
+            !e.target.classList.contains('cantidad_usuario') &&
+            !e.target.classList.contains('medidas_adicionales')
+        ) {
+            return;
+        }
+
+        actualizarCantidadReal(e);
+
+    });
+
+    function actualizarCantidadReal(e) {
 
     const fila = e.target.closest('tr');
 
     if (!fila) return;
+
+    const inputPrecio =
+        fila.querySelector('.input-precio');
+
+    const inputPrecioMayor =
+        fila.querySelector('.input-precioMayor');
 
     const inputUsuario =
         fila.querySelector('.cantidad_usuario');
@@ -825,17 +846,53 @@ function actualizarCantidadReal(e) {
 
     if (!inputUsuario || !inputReal) return;
 
+    // VALORES
+    const precio =
+        parseFloat(inputPrecioMayor.value) || 0;
+
     const cantidadUsuario =
         parseFloat(inputUsuario.value) || 0;
 
     const equivalencia =
         parseFloat(selectMedida?.value) || 1;
 
+    const factor =
+        fila.querySelector('.factorC');
+
+    const factorC =
+        parseFloat(Math.round((factor.value)) * 100) / 100 || 1;
+
+    // RELACIÓN
+    const equi =
+        Math.round((1 / equivalencia) * 100) / 100;
+
+    console.log('factor', factorC, equi);
+
+    // CONDICIÓN
+    if ((equi == factorC)) {
+
+        console.log('factor');
+
+        const nuevoPrecio =
+            precio / factorC;
+console.log('nuevo',nuevoPrecio,'precio');
+        inputPrecio.value =
+            nuevoPrecio ;
+    }
+    else{
+        const nuevoPrecio =
+             precio;
+console.log(nuevoPrecio);
+        inputPrecio.value =nuevoPrecio;
+          
+
+    }
+
     // REAL
     const totalReal =
         cantidadUsuario / equivalencia;
 
-    inputReal.value = totalReal.toFixed(6);
+    inputReal.value = totalReal;
 
     console.log({
         usuario: cantidadUsuario,
@@ -843,23 +900,29 @@ function actualizarCantidadReal(e) {
         real: totalReal
     });
 }
-            document.addEventListener('change', function(e){
+document.addEventListener('change', function(e) {
 
-    if(
-        e.target.classList.contains('select-precio')
-    ){
+        if (
+            e.target.classList.contains('select-precio')
+        ) {
 
-        const fila =
-            e.target.closest('tr');
+             const fila =
+                e.target.closest('tr');
 
-        const inputPrecio =
-            fila.querySelector('.input-precio');
+            const inputPrecio =
+                fila.querySelector('.input-precio');
 
-        inputPrecio.value =
-            parseFloat(e.target.value).toFixed(2);
-    }
-});
-</script>
+            inputPrecio.value =
+                parseFloat(e.target.value).toFixed(2);
+                
+                const inputPrecioMayor =
+                fila.querySelector('.input-precioMayor');
+
+            inputPrecioMayor.value =
+                parseFloat(e.target.value).toFixed(2);
+        }
+    });
+    </script>
 
 </body>
 

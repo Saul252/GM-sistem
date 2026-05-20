@@ -163,8 +163,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
         // Cambiamos el nombre de la variable para que coincida con la vista
         $almacen_usuario = $_SESSION['almacen_id'] ?? 0; 
 
-        // Pasamos el ID a la función para que filtre automáticamente
-        $clientes = $clientesModel->listarTodosViewClientes($almacen_usuario);
+        // Pasamos el ID a la función para que filtre automáticamente//de momento sera asi
+        //la original no listaera esta $clientes = $clientesModel->listarTodosViewClientes($almacen_usuario);
+        $clientes = $clientesModel->listarTodosCF($almacen_usuario);
           $nclientes = $clientesModel->getResumenClientes($almacen_usuario);
         
         $tituloPagina = "Administración de Clientes";

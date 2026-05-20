@@ -1055,9 +1055,12 @@ console.log('ALMACEN:', almacen_id2);
             const uRep = i.unidad_reporte || 'Mayoreo';
             const costo =i.costo;
             const cantidadSolicitada = parseFloat(i.cantidad) || 0;
+const cantidad = parseFloat(i.cantidad);
 
-            const cantMayoreo = Math.floor(cantidadSolicitada / factor);
-            const cantSueltas = cantidadSolicitada % factor;
+const cantMayoreo = Math.floor(cantidad); // 1
+ const cantSueltas = ((cantidad - cantMayoreo)*factor);    // 0.5
+            
+          
             const totalUnidad=cantidadSolicitada / factor;
 
             html += `
@@ -1073,7 +1076,7 @@ console.log('ALMACEN:', almacen_id2);
                 <td>
                     <label class="small text-muted text-uppercase fw-bold">${uRep}</label>
                     <input type="number" class="form-control form-control-sm i-mayoreo border-success" 
-                        value="${cantMayoreo}" step="1" oninput="recalcularFila(${index})">
+                        value="${cantMayoreo}" step=".01" oninput="recalcularFila(${index})">
                 </td>
 
                 <td>
@@ -1086,7 +1089,7 @@ console.log('ALMACEN:', almacen_id2);
                     <label class="form-label small text-danger fw-semibold mb-1">Faltantes</label>
                     <input type="number"
                         class="form-control form-control-sm border-danger shadow-sm i-faltante"
-                        value="0" min="0" 
+                        value="0"  step=".01min="0" 
                         oninput="recalcularFila(${index})">
 
                     <input type="hidden" id="faltante_${index}"  
@@ -1521,19 +1524,24 @@ function actualizarGranTotal() {
 
                    
 <td class="text-center text-primary fw-bold">
-                        ${totalUnidades} ${uRep}
+                        ${cantidad} ${uRep}
                     </td>
                    
 
                     
-                                          
 <td class="text-center text-primary fw-bold">
-                        ${costoMayor} x ${uRep}
-                    </td>
+    ${costoUnitario.toLocaleString('es-MX', {
+        style: 'currency',
+        currency: 'MXN'
+    })}
+</td>
 
-                    <td class="text-center text-primary fw-bold">
-                        ${costo}
-                    </td>
+<td class="text-center text-primary fw-bold">
+    ${costo.toLocaleString('es-MX', {
+        style: 'currency',
+        currency: 'MXN'
+    })}
+</td>
                 </tr>`;
             });
 

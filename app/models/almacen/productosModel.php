@@ -589,57 +589,69 @@ public function crearProductoMultiAlmacen($data)
         }
 
         $producto_id = $this->db->insert_id;
-        // 🔹 CREAR OPCIÓN DE MEDIDA AUTOMÁTICA
-// 🔹 CREAR OPCIONES DE MEDIDA AUTOMÁTICAS
 
-$factor = floatval($data['factor_conversion']);
-$medidas=[];
-if($factor==1)
-    {$medidas = [
-    [
-        'nombre'       => $data['unidad_reporte'],
-        'equivalencia' => 1
-    ]
-    
-];
+        // 🔹 MEDIDAS
+        $factor = floatval($data['factor_conversion']);
+        $medidas = [];
 
-    }
-    else{
-        $medidas = [
-    [
-        'nombre'       => $data['unidad_reporte'],
-        'equivalencia' => ($factor > 0 ? (1 / $factor) : 1)
-    ],
-    [
-        'nombre'       => $data['unidad_medida'],
-        'equivalencia' => 1
-    ]
-];
+        if ($factor == 1) {
+            $medidas = [
+                [
+                    'nombre' => $data['unidad_reporte'],
+                    'equivalencia' => 1
+                ]
+            ];
+        } else {
+            $medidas = [
+                [
+                    'nombre' => $data['unidad_reporte'],
+                    'equivalencia' => ($factor > 0 ? (1 / $factor) : 1)
+                ],
+                [
+                    'nombre' => $data['unidad_medida'],
+                    'equivalencia' => 1
+                ]
+            ];
+        }
 
-    }
+        foreach ($medidas as $medida) {
+            $this->guardarOpcionMedida([
+                'producto_id'  => $producto_id,
+                'nombre'       => $medida['nombre'],
+                'equivalencia' => $medida['equivalencia']
+            ]);
+        }
 
+        // 🔹 PRECIOS BASE (NORMALIZADOS)
+        $p_minorista = floatval($data['precio_minorista'] ?? 0);
+        $p_mayorista = floatval($data['precio_mayorista'] ?? 0);
+        $p_distribuidor = floatval($data['precio_distribuidor'] ?? 0);
 
-foreach ($medidas as $medida) {
-
-    $this->guardarOpcionMedida([
-        'producto_id'  => $producto_id,
-        'nombre'       => $medida['nombre'],
-        'equivalencia' => $medida['equivalencia']
-    ]);
-}
-
-        // 🔹 ALMACENES
+        // 🔹 ALMACENES SELECCIONADOS
         foreach ($data['almacenes'] as $almacen_id => $datos) {
 
-           $stock = isset($datos['stock']) ? floatval($datos['stock']) : 0;
+            $stock = isset($datos['stock']) ? floatval($datos['stock']) : 0;
+            $min   = floatval($datos['stock_minimo'] ?? 0);
 
-$min = floatval($datos['stock_minimo'] ?? 0);
+            // ✔ PRECIOS POR ALMACÉN (AHORA SÍ DEL POST)
+            $factor_conversion = floatval($data['factor_conversion'] ?? 1);
 
-// 👉 si no hay stock, precios en 0
+if ($factor_conversion <= 0) {
+    $factor_conversion = 1;
+}
 
-    $p_minorista = floatval($datos['precio_minorista'] ?? 0);
-    $p_mayorista = floatval($datos['precio_mayorista'] ?? 0);
-    $p_distribuidor = floatval($datos['precio_distribuidor'] ?? 0);
+// ✔ PRECIOS POR ALMACÉN
+$pm = (!empty($datos['precio_minorista']))
+    ? floatval($datos['precio_minorista']) / $factor_conversion
+    : 0;
+
+$pma = (!empty($datos['precio_mayorista']))
+    ? floatval($datos['precio_mayorista']) / $factor_conversion
+    : 0;
+
+$pdi = (!empty($datos['precio_distribuidor']))
+    ? floatval($datos['precio_distribuidor']) / $factor_conversion
+    : 0;
 
             // INVENTARIO
             $stmtInv = $this->db->prepare("INSERT INTO inventario 
@@ -653,139 +665,131 @@ $min = floatval($datos['stock_minimo'] ?? 0);
             if (!$stmtInv->execute()) {
                 throw new Exception("Error inventario: " . $stmtInv->error);
             }
-            
-if ($stock > 0) {
-            // 🔹 PROTEGER DIVISIÓN
-            $precioIndividual = $stock > 0 ? ($data['precio_adquisicion'] / $stock) : 0;
 
-            $codigo_lote = "L-" . $data['sku'] . "-" . date('His');
+            if ($stock > 0) {
 
-            $stmtLote = $this->db->prepare("INSERT INTO lotes_stock 
-                (producto_id, almacen_id, codigo_lote, cantidad_inicial, cantidad_actual, precio_compra_unitario, estado_lote) 
-                VALUES (?, ?, ?, ?, ?, ?, 'activo')");
+                $precioIndividual = ($data['precio_adquisicion'] > 0 && $stock > 0)
+                    ? ($data['precio_adquisicion'] / $stock)
+                    : 0;
 
-            if (!$stmtLote) throw new Exception("Error prepare lote");
+                $codigo_lote = "L-" . $data['sku'] . "-" . date('His');
 
-            $stmtLote->bind_param("iisddd", $producto_id, $almacen_id, $codigo_lote, $stock, $stock, $precioIndividual);
+                $stmtLote = $this->db->prepare("INSERT INTO lotes_stock 
+                    (producto_id, almacen_id, codigo_lote, cantidad_inicial, cantidad_actual, precio_compra_unitario, estado_lote) 
+                    VALUES (?, ?, ?, ?, ?, ?, 'activo')");
 
-            if (!$stmtLote->execute()) {
-                throw new Exception("Error lote: " . $stmtLote->error);
+                if (!$stmtLote) throw new Exception("Error prepare lote");
+
+                $stmtLote->bind_param(
+                    "iisddd",
+                    $producto_id,
+                    $almacen_id,
+                    $codigo_lote,
+                    $stock,
+                    $stock,
+                    $precioIndividual
+                );
+
+                if (!$stmtLote->execute()) {
+                    throw new Exception("Error lote: " . $stmtLote->error);
+                }
+
+                // MOVIMIENTO
+                $obs = "Carga inicial (Lote: $codigo_lote)";
+
+                $stmtMov = $this->db->prepare("INSERT INTO movimientos 
+                    (producto_id, tipo, cantidad, almacen_destino_id, usuario_registra_id, observaciones) 
+                    VALUES (?, 'entrada', ?, ?, ?, ?)");
+
+                if (!$stmtMov) throw new Exception("Error prepare movimiento");
+
+                $stmtMov->bind_param(
+                    "idiis",
+                    $producto_id,
+                    $stock,
+                    $almacen_id,
+                    $data['usuario_id'],
+                    $obs
+                );
+
+                if (!$stmtMov->execute()) {
+                    throw new Exception("Error movimiento: " . $stmtMov->error);
+                }
             }
 
-            // PRECIOS
+            // 🔹 PRECIOS SIEMPRE (aunque no haya stock)
             $stmtPre = $this->db->prepare("INSERT INTO precios_producto 
                 (producto_id, almacen_id, precio_minorista, precio_mayorista, precio_distribuidor) 
                 VALUES (?, ?, ?, ?, ?)");
 
             if (!$stmtPre) throw new Exception("Error prepare precios");
 
-            $stmtPre->bind_param("iiddd", $producto_id, $almacen_id, $p_minorista, $p_mayorista, $p_distribuidor);
+            $stmtPre->bind_param(
+                "iiddd",
+                $producto_id,
+                $almacen_id,
+                $pm,
+                $pma,
+                $pdi
+            );
 
             if (!$stmtPre->execute()) {
                 throw new Exception("Error precios: " . $stmtPre->error);
             }
+        }
 
-            // MOVIMIENTO
-            $obs = "Carga inicial (Lote: $codigo_lote)";
+        // 🔹 ALMACENES RESTANTES (SIN STOCK NI LOTE)
+        $idsExcluir = array_keys($data['almacenes']);
 
-            $stmtMov = $this->db->prepare("INSERT INTO movimientos 
-                (producto_id, tipo, cantidad, almacen_destino_id, usuario_registra_id, observaciones) 
-                VALUES (?, 'entrada', ?, ?, ?, ?)");
+        $sql = "SELECT id FROM almacenes WHERE activo = 1";
 
-            if (!$stmtMov) throw new Exception("Error prepare movimiento");
+        if (!empty($idsExcluir)) {
+            $idsExcluir = array_map('intval', $idsExcluir);
+            $sql .= " AND id NOT IN (" . implode(',', $idsExcluir) . ")";
+        }
 
-            $stmtMov->bind_param(
-                "idiis",
+        $resAlmacenes = $this->db->query($sql);
+
+        $stmtPrecios = $this->db->prepare("INSERT INTO precios_producto 
+            (producto_id, almacen_id, precio_minorista, precio_mayorista, precio_distribuidor) 
+            VALUES (?, ?, ?, ?, ?)");
+
+        $stmtInv = $this->db->prepare("INSERT INTO inventario
+            (almacen_id, producto_id, stock, stock_minimo)
+            VALUES (?, ?, ?, ?)");
+
+        while ($alm = $resAlmacenes->fetch_assoc()) {
+
+            $almacen_id = $alm['id'];
+
+            $pm = $p_minorista;
+            $pma = $p_mayorista;
+            $pdi = $p_distribuidor;
+
+            $stock = 0;
+            $min   = 0;
+
+            $stmtPrecios->bind_param(
+                "iiddd",
                 $producto_id,
-                $stock,
                 $almacen_id,
-                $data['usuario_id'],
-                $obs
+                $pm,
+                $pma,
+                $pdi
             );
 
-            if (!$stmtMov->execute()) {
-                throw new Exception("Error movimiento: " . $stmtMov->error);
-            }
+            $stmtPrecios->execute();
+
+            $stmtInv->bind_param(
+                "iidd",
+                $almacen_id,
+                $producto_id,
+                $stock,
+                $min
+            );
+
+            $stmtInv->execute();
         }
-        }
-$idsExcluir = array_keys($data['almacenes']);
-
-$sql = "
-    SELECT id
-    FROM almacenes
-    WHERE activo = 1
-";
-
-if (!empty($idsExcluir)) {
-
-    $idsExcluir = array_map('intval', $idsExcluir);
-
-    $sql .= " AND id NOT IN (" . implode(',', $idsExcluir) . ")";
-}
-
-$resAlmacenes = $this->db->query($sql);
-
-$sqlPrecios = "
-    INSERT INTO precios_producto (
-        producto_id,
-        almacen_id,
-        precio_minorista,
-        precio_mayorista,
-        precio_distribuidor
-    ) VALUES (?, ?, ?, ?, ?)
-";
-
-$stmtPrecios = $this->db->prepare($sqlPrecios);
-
-$stmtInv = $this->db->prepare("
-    INSERT INTO inventario
-    (almacen_id, producto_id, stock, stock_minimo)
-    VALUES (?, ?, ?, ?)
-");
-
-if (!$stmtInv) {
-    throw new Exception("Error prepare inventario");
-}
-
-while ($alm = $resAlmacenes->fetch_assoc()) {
-
-    $almacen_id = $alm['id'];
-
-    // PRECIOS
-    $stmtPrecios->bind_param(
-        "iiddd",
-        $producto_id,
-        $almacen_id,
-         $p_minorista = floatval($datos['precio_minorista'] ?? 0),
-    $p_mayorista = floatval($datos['precio_mayorista'] ?? 0),
-    $p_distribuidor = floatval($datos['precio_distribuidor'] ?? 0),
-
-    );
-
-    if (!$stmtPrecios->execute()) {
-        throw new Exception(
-            "Error al insertar precios para el almacén " . $almacen_id
-        );
-    }
-
-    // INVENTARIO
-    $stock = 0;
-    $min   = 0;
-
-    $stmtInv->bind_param(
-        "iidd",
-        $almacen_id,
-        $producto_id,
-        $stock,
-        $min
-    );
-
-    if (!$stmtInv->execute()) {
-        throw new Exception(
-            "Error inventario: " . $stmtInv->error
-        );
-    }
-}
 
         $this->db->commit();
         return ['status' => true];
@@ -1180,6 +1184,40 @@ public function obtenerMedidas()
 
         $medidas[] = $row;
     }
+
+    return $medidas;
+}
+public function obtenerMedidasPorProducto($idProducto)
+{
+    $medidas = [];
+
+    $sql = "
+        SELECT 
+            id,
+            producto_id,
+            nombre,
+            equivalencia
+        FROM opciones_de_medida_adicional
+        WHERE producto_id = ?
+    ";
+
+    $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) {
+        die("Error prepare: " . $this->db->error);
+    }
+
+    $stmt->bind_param("i", $idProducto);
+
+    $stmt->execute();
+
+    $resultado = $stmt->get_result();
+
+    while ($row = $resultado->fetch_assoc()) {
+        $medidas[] = $row;
+    }
+
+    $stmt->close();
 
     return $medidas;
 }

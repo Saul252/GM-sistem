@@ -131,10 +131,11 @@ class cajaRapidaModel {
 }
 
             // 5. CABECERA DE ENTREGA FÍSICA
+            $dat0=$data['observaciones_entrega']??'' ;
             $id_entrega_maestro = null;
             if ($total_entregado_global > 0) {
                 $stmtE = $conexion->prepare("INSERT INTO entregas_venta (venta_id, usuario_id, fecha, observaciones) VALUES (?, ?, NOW(), ?)");
-                $obs_e = "Entrega inicial - Caja Rápida. Folio: $folio";
+                $obs_e = "Entrega inicial - Caja Rápida. Folio: $folio, $dat0";
                 $stmtE->bind_param("iis", $id_venta, $id_usuario, $obs_e);
                 $stmtE->execute();
                 $id_entrega_maestro = $conexion->insert_id;

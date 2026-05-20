@@ -290,6 +290,7 @@ $('.btn-ver-medidas').last() // Selecciona el último botón agregado en el bucl
                 setVal('edit_fiscal_clave_prod', p.fiscal_clave_prod);
                 setVal('edit_fiscal_clave_unidad', p.fiscal_clave_unidad);
                 setVal('edit_impuesto_iva', p.impuesto_iva);
+                
 
                 // 5. Precios
                 setVal('edit_p_min', p.precio_minorista);

@@ -93,7 +93,7 @@
                                     <th>Almacén</th>
                                     <th>Precio</th>
                                     <th width="120">Venta por</th>
-                                   
+
                                     <th width="90">Cant</th>
                                     <th width="60"></th>
                                 </tr>
@@ -105,6 +105,7 @@
                                 <tr data-categoria="<?= $p['categoria_id'] ?>" data-almacen="<?= $p['almacen_id'] ?>"
                                     data-factor="<?= $p['factor_conversion'] ?>"
                                     data-reporte-nom="<?= htmlspecialchars($p['unidad_reporte']) ?>">
+                                    <input type="hidden" class="factorC" value="<?= $p['factor_conversion'] ?>">
 
                                     <td><?= $p['sku'] ?></td>
                                     <td><?= htmlspecialchars($p['nombre']) ?></td>
@@ -119,28 +120,28 @@
                                     <td>
                                         <div class="d-flex gap-1">
 
-    <select class="form-select form-select-sm select-precio">
-                                            <option value="<?= $p['precio_minorista'] ?>">Publico -
-                                                $<?= number_format($p['precio_minorista'],2) ?></option>
-                                            <option value="<?= $p['precio_mayorista'] ?>">Constructora -
-                                                $<?= number_format($p['precio_mayorista'],2) ?></option>
-                                            <option value="<?= $p['precio_distribuidor'] ?>">Distribuidor -
-                                                $<?= number_format($p['precio_distribuidor'],2) ?></option>
-                                        </select>
-    <input
-        type="number"
-        step="0.01"
-        class="form-control form-control-sm input-precio"
-        value="<?= $p['precio_minorista'] ?>">
-</div>
+                                            <select class="form-select form-select-sm select-precio">
+                                                <option value="<?= $p['precio_minorista'] ?>">Publico -
+                                                    $<?= number_format($p['precio_minorista'],2) ?></option>
+                                                <option value="<?= $p['precio_mayorista'] ?>">Constructora -
+                                                    $<?= number_format($p['precio_mayorista'],2) ?></option>
+                                                <option value="<?= $p['precio_distribuidor'] ?>">Distribuidor -
+                                                    $<?= number_format($p['precio_distribuidor'],2) ?></option>
+                                            </select>
+                                            <input type="number" step="0.01"
+                                                class="form-control form-control-sm input-precioMayor"
+                                                value="<?= $p['precio_minorista'] ?>">
+                                                <input type="hidden" step="0.01"
+                                                class="form-control form-control-sm input-precio"
+                                                value="<?= $p['precio_minorista'] ?>">
+                                        </div>
+
                                     </td>
 
-                            
-<td style="width:1px; padding:0; border:none;">
-    <?php if($tieneReporte): ?>
-    <select 
-        class="form-select form-select-sm select-modo-venta"
-        style="
+
+                                    <td style="width:1px; padding:0; border:none;">
+                                        <?php if($tieneReporte): ?>
+                                        <select class="form-select form-select-sm select-modo-venta" style="
             opacity:0;
             position:absolute;
             pointer-events:none;
@@ -150,28 +151,28 @@
             border:0;
         ">
 
-        <option value="individual"
-            data-nombre="<?= htmlspecialchars($p['unidad_medida'] ?? 'PZA') ?>">
+                                            <option value="individual"
+                                                data-nombre="<?= htmlspecialchars($p['unidad_medida'] ?? 'PZA') ?>">
 
-            <?= htmlspecialchars($p['unidad_medida'] ?? 'PZA') ?>
+                                                <?= htmlspecialchars($p['unidad_medida'] ?? 'PZA') ?>
 
-        </option>
+                                            </option>
 
-        <option value="referencia"
-            data-nombre="<?= htmlspecialchars($p['unidad_reporte']) ?>">
+                                            <option value="referencia"
+                                                data-nombre="<?= htmlspecialchars($p['unidad_reporte']) ?>">
 
-            <?= htmlspecialchars($p['unidad_reporte']) ?>
+                                                <?= htmlspecialchars($p['unidad_reporte']) ?>
 
-        </option>
+                                            </option>
 
-    </select>
-    <?php else: ?>
-    <span class="d-none">Individual</span>
-    <?php endif; ?>
-                      
+                                        </select>
+                                        <?php else: ?>
+                                        <span class="d-none">Individual</span>
+                                        <?php endif; ?>
+
                                         <select class="form-select border-primary medidas_adicionales"
                                             <?= empty($p['medidas_adicionales']) ? 'disabled' : '' ?>>
-                                              <option value='0'>Seleccione</option>
+                                            <option value='0'>Seleccione</option>
                                             <?php foreach($p['medidas_adicionales'] as $ma): ?>
                                             <option value="<?= $ma['equivalencia'] ?>" data-id="<?= $ma['id'] ?> "
                                                 data-nombre="<?= $ma['nombre'] ?>">
@@ -376,63 +377,108 @@
     });
     </script>
     <script>
-        document.addEventListener('change', function(e){
+    document.addEventListener('change', function(e) {
 
-    if(
-        e.target.classList.contains('select-precio')
-    ){
+        if (
+            e.target.classList.contains('select-precio')
+        ) {
 
-        const fila =
-            e.target.closest('tr');
+            const fila =
+                e.target.closest('tr');
 
-        const inputPrecio =
-            fila.querySelector('.input-precio');
+            const inputPrecio =
+                fila.querySelector('.input-precio');
 
-        inputPrecio.value =
-            parseFloat(e.target.value).toFixed(2);
-    }
-});
+            inputPrecio.value =
+                parseFloat(e.target.value).toFixed(2);
+                
+                const inputPrecioMayor =
+                fila.querySelector('.input-precioMayor');
+
+            inputPrecioMayor.value =
+                parseFloat(e.target.value).toFixed(2);
+        }
+    });
     document.addEventListener('input', actualizarCantidadReal);
     document.addEventListener('change', actualizarCantidadReal);
 
     function actualizarCantidadReal(e) {
 
-        const fila = e.target.closest('tr');
+    const fila = e.target.closest('tr');
 
-        if (!fila) return;
+    if (!fila) return;
 
-        const inputUsuario =
-            fila.querySelector('.cantidad_usuario');
-            
+    const inputPrecio =
+        fila.querySelector('.input-precio');
 
-        const inputReal =
-            fila.querySelector('.cantidad');
+    const inputPrecioMayor =
+        fila.querySelector('.input-precioMayor');
 
-        const selectMedida =
-            fila.querySelector('.medidas_adicionales');
+    const inputUsuario =
+        fila.querySelector('.cantidad_usuario');
 
-        if (!inputUsuario || !inputReal) return;
+    const inputReal =
+        fila.querySelector('.cantidad');
 
-        const cantidadUsuario =
-            parseFloat(inputUsuario.value) || 0;
+    const selectMedida =
+        fila.querySelector('.medidas_adicionales');
 
-        const equivalencia =
-            parseFloat(selectMedida?.value) || 0;
-  
+    if (!inputUsuario || !inputReal) return;
 
-        // REAL
-        const totalReal =
-            cantidadUsuario / equivalencia;
+    // VALORES
+    const precio =
+        parseFloat(inputPrecioMayor.value) || 0;
 
-        inputReal.value = totalReal;
+    const cantidadUsuario =
+        parseFloat(inputUsuario.value) || 0;
 
-        console.log({
-            usuario: cantidadUsuario,
-            equivalencia,
-            real: totalReal
-        });
+    const equivalencia =
+        parseFloat(selectMedida?.value) || 1;
+
+    const factor =
+        fila.querySelector('.factorC');
+
+    const factorC =
+        parseFloat(Math.round((factor.value)) * 100) / 100 || 1;
+
+    // RELACIÓN
+    const equi =
+        Math.round((1 / equivalencia) * 100) / 100;
+
+    console.log('factor', factorC, equi);
+
+    // CONDICIÓN
+    if ((equi == factorC)) {
+
+        console.log('factor');
+
+        const nuevoPrecio =
+            precio / factorC;
+console.log('nuevo',nuevoPrecio,'precio');
+        inputPrecio.value =
+            nuevoPrecio ;
     }
-    </script>
+    else{
+        const nuevoPrecio =
+             precio;
+console.log(nuevoPrecio);
+        inputPrecio.value =nuevoPrecio;
+          
+
+    }
+
+    // REAL
+    const totalReal =
+        cantidadUsuario / equivalencia;
+
+    inputReal.value = totalReal;
+
+    console.log({
+        usuario: cantidadUsuario,
+        equivalencia,
+        real: totalReal
+    });
+} </script>
 </body>
 
 </html>

@@ -169,7 +169,7 @@ foreach ($productos as &$producto) {
 unset($producto);
 
 $clientesModel = new ClientesModel($conexion);
-$clientes_res = $clientesModel->listarTodos($almacen_usuario); 
+$clientes_res = $clientesModel->listarTodosCF($almacen_usuario); 
 $clientes = []; 
 if ($clientes_res) {
     while($row = $clientes_res->fetch_assoc()){ $clientes[] = $row; }

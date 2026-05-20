@@ -1,4 +1,4 @@
-<div class="modal fade" id="modalNuevoProveedorRapido" tabindex="-1" aria-hidden="true" style="z-index: 1070;">
+<div class="modal fade" id="modalNuevoProveedorRapido" tabindex="-1" aria-hidden="true" >
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-4">
 
@@ -20,22 +20,21 @@
                         </div>
 
                         <div class="col-12">
-                            <select name="almacen_id"
-                                id="almacen_id"
+                            <select name="almacen_id" id="almacen_id"
                                 class="form-select <?= $_SESSION['almacen_id']==0 ? '' : 'bg-light' ?>"
                                 <?= $_SESSION['almacen_id'] != 0 ? 'disabled' : '' ?> required>
 
                                 <?php if ($_SESSION['almacen_id']==0): ?>
-                                    <option value="">Seleccionar ubicación...</option>
+                                <option value="">Seleccionar ubicación...</option>
                                 <?php endif; ?>
 
                                 <?php foreach($almacenes as $a): ?>
-                                    <option value="<?= $a['id'] ?>"
-                                        <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
-                                        <?= $a['nombre'] ?>
-                                    </option>
+                                <option value="<?= $a['id'] ?>"
+                                    <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
+                                    <?= $a['nombre'] ?>
+                                </option>
                                 <?php endforeach; ?>
-                            </select>       
+                            </select>
                         </div>
 
                         <div class="col-12">
@@ -52,16 +51,40 @@
                             <label class="form-label small fw-bold">Teléfono</label>
                             <input type="tel" name="telefono" class="form-control">
                         </div>
-                       
- <div class="col-md-6">
-                        <label class="form-label small fw-bold">Correo</label>
-                        <input type="email" class="form-control" id="correo" name="correo">
-                    </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Teléfono secundario</label>
+                            <input type="tel" name="telefono2" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Extencion</label>
+                            <input type="tel" name="extencion" class="form-control">
+                        </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label small fw-bold">Dirección</label>
-                        <textarea class="form-control" id="direccion" name="direccion"></textarea>
-                    </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Correo</label>
+                            <input type="email" class="form-control" id="correo" name="correo">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Dirección</label>
+                            <textarea class="form-control" id="direccion" name="direccion"></textarea>
+                        </div>
+                           <div class="col-md-6">
+                            <label class="form-label small fw-bold">Numero Exterior</label>
+                            <input type="tel" name="numeroext" class="form-control">
+                        </div>
+                           <div class="col-md-6">
+                            <label class="form-label small fw-bold">Numero Interior</label>
+                            <input type="tel" name="numeroint" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Colonia</label>
+                            <input type="text" class="form-control" id="colonia" name="colonia">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Ciudad</label>
+                            <input type="text" class="form-control" id="ciudad" name="ciudad">
+                        </div>
 
                     </div>
                 </form>
@@ -80,7 +103,7 @@
     </div>
 </div>
 <script>
-    function abrirModalNuevoProveedor() {
+function abrirModalNuevoProveedor() {
     const modal = new bootstrap.Modal(document.getElementById('modalNuevoProveedorRapido'));
     modal.show();
 
@@ -110,44 +133,41 @@ function guardarProvRapido(e) {
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
 
     fetch('/cfsistem/app/controllers/egresosController.php?action=guardarProveedor', {
-        method: 'POST',
-        body: formData
-    })
-    .then(res => {
-        if (!res.ok) throw new Error("Respuesta inválida del servidor");
-        return res.json();
-    })
-    .then(data => {
+            method: 'POST',
+            body: formData
+        })
+        .then(res => {
+            if (!res.ok) throw new Error("Respuesta inválida del servidor");
+            return res.json();
+        })
+        .then(data => {
 
-        if (data.success) {
+            if (data.success) {
 
-           Swal.fire({
-    icon: 'success',
-    title: 'Proveedor registrado',
-    text: 'Se agregó y seleccionó automáticamente',
-    timer: 1800,
-    showConfirmButton: false
-}).then(() => {
-    location.reload(); // 🔄 recarga automática
-});
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Proveedor registrado',
+                    text: 'Se agregó y seleccionó automáticamente',
+                    timer: 1800,
+                    showConfirmButton: false
+                })// 🔄 recarga automática
 
-            // cerrar modal
-            bootstrap.Modal.getInstance(document.getElementById('modalNuevoProveedorRapido')).hide();
+ bootstrap.Modal.getInstance(document.getElementById('modalNuevoProveedorRapido')).hide();
             form.reset();
+                // 🔥 actualizar select
+          
 
-            // 🔥 actualizar select
-           
-        } else {
-            Swal.fire('Error', data.message || 'No se pudo guardar', 'error');
-        }
-    })
-    .catch(err => {
-        console.error(err);
-        Swal.fire('Error', err.message || 'Fallo de conexión', 'error');
-    })
-    .finally(() => {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-save me-2"></i>Registrar y Seleccionar';
-    });
+            } else {
+                Swal.fire('Error', data.message || 'No se pudo guardar', 'error');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            Swal.fire('Error', err.message || 'Fallo de conexión', 'error');
+        })
+        .finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-save me-2"></i>Registrar y Seleccionar';
+        });
 }
 </script>
