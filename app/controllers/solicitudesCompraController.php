@@ -154,37 +154,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     } catch (Exception $e) {
         die("Error fatal: " . $e->getMessage());
     }
-}if (isset($_GET['action']) && $_GET['action'] === 'obtenerDetalle') {
-    // Limpieza de buffer para evitar basura en el JSON
-    if (ob_get_level()) ob_end_clean();
+}
+if (isset($_GET['action']) && $_GET['action'] === 'obtenerDetalle') {
+
     header('Content-Type: application/json; charset=utf-8');
 
     try {
-        $id = intval($_GET['id'] ?? 0);
-        
-        // Llamamos al modelo. Si el modelo tiene 'return', $detalle tendrá los datos.
-        $detalle = $solicitudModel->obtenerDetalle($id);
-        
 
-        if ($detalle === null) {
-            throw new Exception("El modelo no devolvió datos (Void).");
+        $id = (int)($_GET['id'] ?? 0);
+
+        $detalle = $solicitudModel->obtenerDetalle($id);
+
+        if (!$detalle) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Sin datos'
+            ]);
+            exit;
         }
+
         $proveedor_id = $detalle[0]['proveedor_id'] ?? 0;
+
         $deudas = $proveedorModel->ProveedorYDeudaSuma($proveedor_id);
+        $costo_total = $solicitudModel->obtenerCostoTotal($id);
 
         echo json_encode([
             'status' => 'success',
-            'data'   => $detalle,
-            'deuda'  => $deudas
+            'data' => $detalle,
+            'deuda' => $deudas,
+            'costo' => $costo_total
         ]);
 
-
     } catch (Throwable $e) {
+
         echo json_encode([
-            'status'  => 'error', 
+            'status' => 'error',
             'message' => $e->getMessage()
         ]);
     }
+
     exit;
 }
 if (isset($_POST['action']) && $_POST['action'] === 'guardarCompraCompleta') {

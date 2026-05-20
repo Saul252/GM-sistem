@@ -65,8 +65,45 @@ console.log('unidaditem',item.unidadMedidaNombre);
                 </div>
             </td>
             <td class="text-center">
-                <div class="fw-bold" style="font-size: 0.9rem;">${cantFactorVenta>=1?cantFactorVenta:cantidadT.toFixed(3)} ${cantFactorVenta>0?item.unidad_reporte:nombreuni} </div>
-                
+               <div class="fw-bold" style="font-size: 0.9rem;">
+
+${
+    (() => {
+        const EPS = 0.0001;
+
+        const residuo = item.cantidad % item.factor;
+
+        
+
+        if (item.unidadEquivalencia > (Math.floor(item.cantidad / item.factor))) {
+            console.log('unidad especial',(item.cantidad)/(1/item.unidadEquivalencia));
+
+            return (
+               
+                item.cantidad / (1 / item.unidadEquivalencia)
+            ).toFixed(3);
+        }
+
+        const divisionFactor = item.cantidad / item.factor;
+
+        const cantFactorVenta =
+            Math.abs(divisionFactor - 1) < 0.001
+                ? 1
+                : Math.floor(divisionFactor);
+
+        return cantFactorVenta >= 1
+            ? cantFactorVenta
+            : cantidadT.toFixed(3);
+    })()
+}
+
+${
+    cantFactorVenta > 0
+        ? item.unidad_reporte
+        : nombreuni
+}
+
+</div>      
             </td>
             <td>
                 <div class="input-group input-group-sm">

@@ -490,123 +490,135 @@ error_reporting(E_ALL);
         </div>
     </div>
 </div>
-   <div class="modal fade" id="modalImprimirSolicitud" tabindex="-1" aria-hidden="true">
+  <div class="modal fade" id="modalImprimirSolicitud" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
-            <div class="modal-header bg-gradient text-white border-0" style="background: linear-gradient(135deg, #2c3e50 0%, #4a6572 100%);">
-                <h5 class="fw-bold mb-0"><i class="bi bi-printer me-2"></i>Vista de Impresión</h5>
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+
+            <!-- HEADER -->
+            <div class="modal-header text-white border-0"
+                style="background: linear-gradient(135deg, #1f2a37 0%, #334155 100%);">
+                <h5 class="fw-bold mb-0">
+                    <i class="bi bi-printer me-2"></i>Vista de Impresión
+                </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
+
             <div class="modal-body p-0">
-                <div id="areaImpresion" class="p-5 bg-white" style="min-height: 600px;">
-                    <!-- Encabezado -->
+
+                <div id="areaImpresion" class="p-5 bg-white" style="min-height: 650px; font-size: 0.95rem;">
+
+                    <!-- ENCABEZADO -->
                     <div class="d-flex justify-content-between align-items-start mb-4">
                         <div>
-                            <h2 class="fw-bold text-uppercase mb-0" style="color: #2c3e50;">Solicitud de Compra</h2>
-                            <p class="text-muted mb-0" id="print-folio">FOLIO: #00000</p>
+                            <h2 class="fw-bold text-uppercase mb-1" style="color:#1f2a37;">
+                                Solicitud de Compra
+                            </h2>
+                            <div class="text-muted" id="print-folio">FOLIO: #00000</div>
                         </div>
+
                         <div class="text-end">
-                            <h5 class="fw-bold mb-0" style="color: #4a6572;">cfsistem</h5>
-                            <p class="small text-muted mb-0" id="print-fecha">Fecha: --/--/----</p>
+                            <div class="fw-bold" style="color:#334155;">cfsistem</div>
+                            <div class="text-muted small" id="print-fecha">Fecha: --/--/----</div>
                         </div>
                     </div>
 
-                    <div class="mb-4" style="height: 2px; background: linear-gradient(90deg, rgba(44,62,80,0.8) 0%, rgba(74,101,114,0.8) 100%);"></div>
+                    <div class="mb-4"
+                        style="height:2px; background:linear-gradient(90deg,#1f2a37,#334155); opacity:0.8;">
+                    </div>
 
-                    <!-- Información principal -->
-                    <div class="row mb-4">
-                        <div class="col-md-6 mb-3 mb-md-0">
-                            <div class="card border-0 shadow-sm h-100" style="border-radius: 10px; background-color: #f8f9fa;">
-                                <div class="card-body p-3">
-                                    <h6 class="text-muted mb-2" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">ALMACÉN DESTINO</h6>
-                                    <p class="fw-bold mb-0" id="print-almacen" style="font-size: 1.1rem;">---</p>
-                                </div>
-                            </div>
-                        </div>
+                    <!-- INFO -->
+                    <div class="row g-3 mb-4">
+
                         <div class="col-md-6">
-                            <div class="card border-0 shadow-sm h-100" style="border-radius: 10px; background-color: #f8f9fa;">
-                                <div class="card-body p-3">
-                                    <h6 class="text-muted mb-2" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px;">PROVEEDOR</h6>
-                                    <p class="fw-bold mb-2" id="print-proveedor" style="font-size: 1.1rem;">---</p>
-                                    <div class="row">
-                                        <div class="col-12 mb-1">
-                                            <span class="small text-muted">RFC:</span>
-                                            <span class="fw-bold ms-1" id="print-rfc">---</span>
-                                        </div>
-                                        <div class="col-12 mb-1">
-                                            <span class="small text-muted">DIRECCIÓN:</span>
-                                            <span class="fw-bold ms-1" id="print-direccion">---</span>
-                                        </div>
-                                        <div class="col-6 mb-1">
-                                            <span class="small text-muted">TELÉFONO:</span>
-                                            <span class="fw-bold ms-1" id="print-telefono">---</span>
-                                        </div>
-                                        <div class="col-6 mb-1">
-                                            <span class="small text-muted">TELÉFONO2:</span>
-                                            <span class="fw-bold ms-1" id="print-telefono2">---</span>
-                                        </div>
-                                        <div class="col-12">
-                                            <span class="small text-muted">EXTENSIÓN:</span>
-                                            <span class="fw-bold ms-1" id="print-extencion">---</span>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div class="p-3 rounded bg-light border h-100">
+                                <div class="text-uppercase text-muted small mb-1">Almacén destino</div>
+                                <div class="fw-bold" id="print-almacen">---</div>
                             </div>
                         </div>
+
+                        <div class="col-md-6">
+                            <div class="p-3 rounded bg-light border h-100">
+
+                                <div class="text-uppercase text-muted small mb-1">Proveedor</div>
+                                <div class="fw-bold mb-2" id="print-proveedor">---</div>
+
+                                <div class="small"><span class="text-muted">RFC:</span> <span id="print-rfc" class="fw-semibold"></span></div>
+                                <div class="small"><span class="text-muted">Dirección:</span> <span id="print-direccion" class="fw-semibold"></span></div>
+                                <div class="small"><span class="text-muted">Tel:</span> <span id="print-telefono" class="fw-semibold"></span></div>
+                                <div class="small"><span class="text-muted">Tel 2:</span> <span id="print-telefono2" class="fw-semibold"></span></div>
+                                <div class="small"><span class="text-muted">Ext:</span> <span id="print-extencion" class="fw-semibold"></span></div>
+
+                            </div>
+                        </div>
+
                     </div>
 
-                    <!-- Tabla -->
-                    <div class="table-responsive mb-4">
-                        <table class="table table-hover align-middle" style="border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                            <thead style="background: linear-gradient(135deg, #2c3e50 0%, #4a6572 100%); color: white;">
+                    <!-- TABLA -->
+                    <div class="table-responsive mb-3">
+                        <table class="table align-middle">
+
+                            <thead style="background:#1f2a37; color:#fff;">
                                 <tr>
-                                    <th style="border: none; padding: 12px 15px;">Descripción del Material</th>
-                                    <th width="120" class="text-center" style="border: none; padding: 12px 15px;">Cantidad</th>
-                                
-                                    <th width="150" style="border: none; padding: 12px 15px;">Costo Unitario</th>
-                                    
-                                    <th width="150" style="border: none; padding: 12px 15px;">Costo Total</th>
+                                    <th>Descripción</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-center">Costo Unitario</th>
+                                    <th class="text-center">Costo Total</th>
                                 </tr>
                             </thead>
-                            <tbody id="print-tabla-cuerpo" style="background-color: white;">
-                                <!-- Las filas se agregarán dinámicamente -->
-                            </tbody>
+
+                            <tbody id="print-tabla-cuerpo"></tbody>
+
                         </table>
                     </div>
 
-                    <!-- Firmas -->
-                    <div class="mt-5 pt-4">
-                        <div class="row text-center">
-                            <div class="col-4">
-                                <div class="d-flex flex-column align-items-center">
-                                    <div style="width: 150px; height: 1px; background-color: #2c3e50; margin-bottom: 8px;"></div>
-                                    <small class="text-muted" style="text-transform: uppercase; letter-spacing: 0.5px;">Solicita</small>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="d-flex flex-column align-items-center">
-                                    <div style="width: 150px; height: 1px; background-color: #2c3e50; margin-bottom: 8px;"></div>
-                                    <small class="text-muted" style="text-transform: uppercase; letter-spacing: 0.5px;">Autoriza</small>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="d-flex flex-column align-items-center">
-                                    <div style="width: 150px; height: 1px; background-color: #2c3e50; margin-bottom: 8px;"></div>
-                                    <small class="text-muted" style="text-transform: uppercase; letter-spacing: 0.5px;">Recibe (Compras)</small>
-                                </div>
-                            </div>
+                    <!-- TOTAL -->
+                    <div class="text-end mb-4">
+                        <div class="fw-bold fs-5">
+                            Total: <span id="costo_total"></span>
                         </div>
                     </div>
+
+                    <!-- FIRMAS -->
+                    <div class="mt-5 pt-3">
+                        <div class="row text-center">
+
+                            <div class="col-4">
+                                <div class="border-top pt-2">
+                                    <small class="text-muted text-uppercase">Solicita</small>
+                                </div>
+                            </div>
+
+                            <div class="col-4">
+                                <div class="border-top pt-2">
+                                    <small class="text-muted text-uppercase">Autoriza</small>
+                                </div>
+                            </div>
+
+                            <div class="col-4">
+                                <div class="border-top pt-2">
+                                    <small class="text-muted text-uppercase">Recibe</small>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
                 </div>
             </div>
-            <div class="modal-footer border-0 bg-light" style="border-radius: 0 0 15px 15px;">
-                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">
-                    <i class="bi bi-x-circle me-2"></i>Cerrar
+
+            <!-- FOOTER -->
+            <div class="modal-footer bg-light border-0">
+                <button class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">
+                    Cerrar
                 </button>
-                <button type="button" class="btn btn-primary rounded-pill px-4" onclick="ejecutarImpresion()" style="background: linear-gradient(135deg, #2c3e50 0%, #4a6572 100%); border: none;">
-                    <i class="bi bi-printer-fill me-2"></i> Imprimir Ahora
+
+                <button class="btn btn-dark rounded-pill px-4"
+                    style="background: linear-gradient(135deg,#1f2a37,#334155); border:0;"
+                    onclick="ejecutarImpresion()">
+                    Imprimir
                 </button>
             </div>
+
         </div>
     </div>
 </div>
@@ -1461,28 +1473,45 @@ function actualizarGranTotal() {
     /**
      * Llena el modal de impresión con la data de la solicitud
      */
-    function prepararImpresion(id) {
+    
+
+
+function prepararImpresion(id) {
     fetch(`${URL_CONTROLADOR_SOLICITUD}?action=obtenerDetalle&id=${id}`)
-        .then(res => res.json())
+        .then(async (res) => {
+            const text = await res.text(); // 👈 primero ver crudo
+
+            console.log('RAW TEXT RESPONSE:', text);
+
+            try {
+                return JSON.parse(text); // 👈 intento manual
+            } catch (e) {
+                console.error('ERROR JSON:', e);
+                throw new Error('Respuesta no es JSON válido');
+            }
+        })
         .then(res => {
+
+            console.log('RAW RESPONSE OBJ:', res);
+            console.log('STATUS:', res.status);
+            console.log('DATA:', res.data);
+            console.log('COSTO:', res.costo);
 
             if (res.status !== 'success') return;
 
             const data = res.data;
             const infoBase = data[0];
+            const costo = res.costo;
 
-            // 🔹 CABECERA
             $('#print-folio').text(`FOLIO: #${id.toString().padStart(5, '0')}`);
             $('#print-fecha').text(`Fecha: ${new Date().toLocaleDateString()}`);
             $('#print-almacen').text(infoBase.almacen_nombre);
             $('#print-proveedor').text(infoBase.proveedor_nombre || 'No especificado');
-             $('#print-direccion').text(infoBase.dp_direccion || 'No especificado');
-              $('#print-rfc').text(infoBase.dp_rfc|| 'No especificado');
-               $('#print-telefono').text(infoBase.dp_telefono|| 'No especificado');
+            $('#print-direccion').text(infoBase.dp_direccion || 'No especificado');
+            $('#print-rfc').text(infoBase.dp_rfc || 'No especificado');
+            $('#print-telefono').text(infoBase.dp_telefono || 'No especificado');
 
- $('#print-telefono2').text(infoBase.dp_telefono2|| 'No especificado');
-  $('#print-extenecion').text(infoBase.dp_extencion|| 'No especificado');
-
+            $('#costo_total').text(costo.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) || 'nohay costo');
 
             let html = '';
 
@@ -1491,57 +1520,27 @@ function actualizarGranTotal() {
                 const factor = parseFloat(i.factor_conversion) || 1;
                 const uBase = i.unidad_medida || 'pzas';
                 const uRep = i.unidad_reporte || 'Mayoreo';
-                const costo=i.costo;
-               
+                const costo = parseFloat(i.costo) || 0;
 
                 const cantidad = parseFloat(i.cantidad) || 0;
- costoUnitario= costo/cantidad;
 
-                // 🔥 SOPORTE PARA FACTORES DECIMALES (ej: 1.5)
-                let cantMayoreo = 0;
-                let cantSueltas = 0;
-
-                if (factor > 1) {
-                    cantMayoreo = Math.floor(cantidad / factor);
-                    cantSueltas = (cantidad % factor);
-                } else {
-                    // Si factor es decimal tipo 1.5
-                    cantMayoreo = (cantidad / factor).toFixed(2);
-                    cantSueltas = 0;
-                }
- const costoMayor=costoUnitario*factor;
-                const totalUnidades = (cantidad / factor).toFixed(2);
+                const costoUnitario = cantidad > 0 ? (costo / cantidad) : 0;
 
                 html += `
                 <tr>
-                    <td style="width:40%">
-                        <div class="fw-bold">${i.producto_nombre}</div>
-                        <small class="text-muted">SKU: ${i.sku || '-'}</small><br>
-                        <small class="text-muted">
-                            1 ${uRep} = ${factor} ${uBase}
-                        </small>
-                    </td>
+                    <td class="fw-bold">${i.producto_nombre}</td>
 
-                   
-<td class="text-center text-primary fw-bold">
+                    <td class="text-center">
                         ${cantidad} ${uRep}
                     </td>
-                   
 
-                    
-<td class="text-center text-primary fw-bold">
-    ${costoUnitario.toLocaleString('es-MX', {
-        style: 'currency',
-        currency: 'MXN'
-    })}
-</td>
+                    <td class="text-center">
+                        ${costoUnitario.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                    </td>
 
-<td class="text-center text-primary fw-bold">
-    ${costo.toLocaleString('es-MX', {
-        style: 'currency',
-        currency: 'MXN'
-    })}
-</td>
+                    <td class="text-center">
+                        ${costo.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                    </td>
                 </tr>`;
             });
 
@@ -1550,9 +1549,23 @@ function actualizarGranTotal() {
             new bootstrap.Modal(document.getElementById('modalImprimirSolicitud')).show();
         })
         .catch(err => {
-            console.error(err);
+            console.error('FETCH ERROR:', err);
         });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
     /**
      * Llama al comando de impresión del navegador
      */

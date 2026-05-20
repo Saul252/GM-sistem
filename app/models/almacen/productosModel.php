@@ -1165,13 +1165,19 @@ public function obtenerMedidas()
     $medidas = [];
 
     $sql = "
-        SELECT 
-            id,
-            producto_id,
-            nombre,
-            equivalencia
-        FROM opciones_de_medida_adicional
-    ";
+    SELECT 
+        id,
+        producto_id,
+        nombre,
+        equivalencia
+    FROM opciones_de_medida_adicional
+    ORDER BY 
+        CASE 
+            WHEN equivalencia = 1 THEN 0
+            ELSE 1
+        END,
+        equivalencia ASC
+";
 
     $resultado = $this->db->query($sql);
 

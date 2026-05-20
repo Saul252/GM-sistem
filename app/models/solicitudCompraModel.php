@@ -132,6 +132,21 @@ public function obtenerDetalle($id) {
             return false;
         }
     }
+    public function obtenerCostoTotal($id) {
+
+    $sql = "SELECT SUM(d.costo) AS costo_total
+            FROM detalle_solicitud_compra d
+            WHERE d.solicitud_id = ?";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $row = $result->fetch_assoc();
+
+    return (float)($row['costo_total'] ?? 0);
+}
 public function actualizarEstado($id, $almacen_id, $nuevoEstado, $compra_id = null) {
 
     // Forzamos minúsculas para coincidir con ENUM
