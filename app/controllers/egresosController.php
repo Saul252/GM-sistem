@@ -417,38 +417,65 @@ if ($action === 'getProveedoresJSON') {
     }
     exit;
 }
-
 if ($action === 'guardarProveedor') {
-    while (ob_get_level()) ob_end_clean(); 
+
+    while (ob_get_level()) ob_end_clean();
+
     header('Content-Type: application/json; charset=utf-8');
+
     try {
+
         $datos = [
             'nombre_comercial' => trim($_POST['nombre_comercial'] ?? ''),
             'razon_social'     => trim($_POST['razon_social'] ?? ''),
             'rfc'              => trim($_POST['rfc'] ?? 'XAXX010101000'),
             'correo'           => trim($_POST['correo'] ?? ''),
+            'contacto'         => trim($_POST['contacto'] ?? ''),
             'telefono'         => trim($_POST['telefono'] ?? '0'),
             'telefono2'        => trim($_POST['telefono2'] ?? '0'),
             'extencion'        => trim($_POST['extencion'] ?? '0'),
             'almacen_id'       => trim($_POST['almacen_id'] ?? ''),
             'direccion'        => trim($_POST['direccion'] ?? ''),
-            'numeroExt'        => trim($_POST['numeroext'] ?? 0),
-            'numeroInt'        => trim($_POST['numeroint'] ?? 0),
+            'numeroExt'        => trim($_POST['numeroext'] ?? '0'),
+            'numeroInt'        => trim($_POST['numeroint'] ?? '0'),
             'colonia'          => trim($_POST['colonia'] ?? ''),
             'ciudad'           => trim($_POST['ciudad'] ?? '')
         ];
-        if (empty($datos['nombre_comercial'])) throw new Exception("El nombre comercial es obligatorio.");
-        if ($proveedorModel->guardar($datos)) {
-            echo json_encode(['success' => true, 'message' => 'Proveedor guardado', 'nuevo_nombre' => $datos['nombre_comercial']]);
-        } else {
-            throw new Exception("Error interno al registrar.");
+
+        if (empty($datos['nombre_comercial'])) {
+            throw new Exception("El nombre comercial es obligatorio.");
         }
+
+        // guardar respuesta
+        $respuesta = $proveedorModel->guardar($datos);
+
+        // validar success
+        if ($respuesta['success']) {
+
+            echo json_encode([
+                'success'       => true,
+                'message'       => 'Proveedor guardado',
+                'nuevo_nombre'  => $datos['nombre_comercial'],
+                'id'            => $respuesta['id']
+            ]);
+
+        } else {
+
+            throw new Exception(
+                $respuesta['message'] ?? 'Error interno al registrar.'
+            );
+        }
+
     } catch (Exception $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
     }
+
     exit;
 }
-
 if ($action === 'cancelarCompra') {
     if (ob_get_level()) ob_end_clean(); 
     header('Content-Type: application/json; charset=utf-8');

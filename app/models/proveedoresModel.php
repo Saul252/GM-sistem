@@ -222,6 +222,7 @@ public function guardar($datos) {
         nombre_comercial,
         razon_social,
         rfc,
+        contacto,
         correo,
         telefono,
         telefono2,
@@ -235,7 +236,7 @@ public function guardar($datos) {
         creado_at,
         almacen_id
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), ?)";
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), ?)";
 
     $stmt = $this->db->prepare($sql);
 
@@ -248,10 +249,11 @@ public function guardar($datos) {
 
     // 🔹 Tipos correctos
     $stmt->bind_param(
-        "ssssiiisssssi",
+        "sssssiiisssssi",
         $datos['nombre_comercial'], // s
         $datos['razon_social'],     // s
-        $datos['rfc'],              // s
+        $datos['rfc'],    
+        $datos['contacto'],          // s
         $datos['correo'],           // s
         $telefono,                  // i
         $telefono2,                 // i
@@ -282,6 +284,7 @@ public function actualizar($id, $datos) {
     $sql = "UPDATE proveedores 
             SET nombre_comercial = ?, 
                 razon_social = ?, 
+                contacto =?,
                 rfc = ?, 
                 correo = ?, 
                 telefono = ?, 
@@ -299,10 +302,11 @@ public function actualizar($id, $datos) {
     $stmt = $this->db->prepare($sql);
 
     $stmt->bind_param(
-        "ssssssssssssiii",
+        "sssssssssssssiii",
         $datos['nombre_comercial'],
         $datos['razon_social'],
         $datos['rfc'],
+        $datos['correo'],
         $datos['correo'],
         $datos['telefono'],
         $datos['telefono2'],

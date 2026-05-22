@@ -144,6 +144,94 @@ if ($action === 'get_detalle_trazabilidad') {
          * BLOQUE: DETALLE PARA HOJA DE RUTA (NUEVO MODAL AZUL)
          * -----------------------------------------------------------
          */
+        if ($action === 'get_ruta_entrega_venta') {
+
+    if (ob_get_level()) ob_clean();
+
+    header('Content-Type: application/json');
+
+    $idVenta = (int)($_REQUEST['idVenta'] ?? 0);
+
+    // folio ruta
+    $id = trim($_REQUEST['id'] ?? '');
+
+    if ($idVenta <= 0 || empty($id)) {
+
+        echo json_encode([
+            "success" => false,
+            "message" => "Datos de ruta inválidos."
+        ]);
+
+        exit;
+    }
+
+    try {
+
+        $data = $repartoM->obtenerRutaDeEntregaDeVenta(
+            $idVenta,
+            $id
+        );
+
+        if (!empty($data)) {
+
+            echo json_encode([
+                "success" => true,
+                "data" => $data
+            ]);
+
+        } else {
+
+            echo json_encode([
+                "success" => false,
+                "message" => "No se encontraron entregas para el folio: " . $id
+            ]);
+        }
+
+    } catch (Exception $e) {
+
+        echo json_encode([
+            "success" => false,
+            "message" => "Error en el servidor: " . $e->getMessage()
+        ]);
+    }
+
+    exit;
+}
+            if ($action === 'get_repartos_venta') {
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+
+    // Cambiamos a string porque el folio de viaje (RUT-XXXX) no es un entero
+    $id= trim($_REQUEST['id'] ?? '');
+
+    if (empty($id)) {
+        echo json_encode(["success" => false, "message" => "Folio de viaje no válido."]);
+        exit;
+    }
+
+    try {
+        // El modelo busca por el string del folio
+        $data = $repartoM->obtenerEntregasPorVenta($id);
+
+        if (!empty($data)) {
+            echo json_encode([
+                "success" => true,
+                "data"    => $data
+            ]);
+        } else {
+            echo json_encode([
+                "success" => false,
+                "message" => "No se encontraron entregas para el folio: " . $id
+            ]);
+        }
+    } catch (Exception $e) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Error en el servidor: " . $e->getMessage()
+        ]);
+    }
+    exit;
+}
         if ($action === 'get_detalle_ruta_completa') {
     if (ob_get_level()) ob_clean();
     header('Content-Type: application/json');

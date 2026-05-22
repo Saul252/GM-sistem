@@ -1164,7 +1164,7 @@ public function obtenerAuditoriaFinancieraVenta($idVenta) {
                 p.factor_conversion,
                 /* Detalle de lotes financiero */
                 (SELECT GROUP_CONCAT(
-                    CONCAT(ls.codigo_lote, '|', lms.cantidad_salida, '|', lms.costo_compra_historico, '|', lms.precio_venta_pactado) 
+                    CONCAT(ls.codigo_lote, '|', lms.cantidad_salida, '|', lms.costo_compra_historico, '|', lms.precio_venta_pactado, '|', lms.fecha_movimiento) 
                     SEPARATOR '___')
                  FROM lotes_movimientos_salida lms
                  INNER JOIN lotes_stock ls ON lms.lote_id = ls.id

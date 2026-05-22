@@ -38,11 +38,14 @@
         
         if (res.success && res.data) {
             const d = res.data;
-            console.log("hola",res.data.tripulantes)
+            console.log("hola",res.data)
+             const cantidadIni=d.cantidad/d.fc;
+                const cantidad =cantidadIni>=1?cantidadIni:d.cantidad;
+                const unidad =cantidadIni>=1?d.ur:d.um;
 
             // 2. CABECERA
             $('#v_folio_ticket').text(`TICKET: ${d.folio_venta || 'S/N'}`);
-            $('#v_producto_nombre').text(`${d.producto_nombre || 'Producto'} - ${d.cantidad || '0'} pzas`);
+            $('#v_producto_nombre').text(`${d.producto_nombre || 'Producto'} - ${cantidad || '0'}  ${unidad || 'pza'}`);
             
             const nombreCliente = d.cliente ? d.cliente.toUpperCase() : 'VENTA GENERAL';
             $('#v_cliente_final').html(`<i class="bi bi-person-check-fill text-primary me-1"></i> ${nombreCliente}`);

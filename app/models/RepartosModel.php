@@ -765,6 +765,8 @@ public function getDetallesViaje($folio_viaje) {
                     p.nombre AS producto, 
                     p.sku AS sku,
                     p.unidad_medida AS um,
+                    p.unidad_reporte as ur,
+                    p.factor_conversion as fc,
                     m.cantidad, 
                     v.folio AS folio_venta, 
                     c.nombre_comercial AS cliente,
@@ -857,6 +859,9 @@ public function obtenerHistorialFisico($movimiento_id) {
                 m.cantidad,
                 m.fecha as fecha_movimiento,
                 p.nombre as producto_nombre,
+                p.factor_conversion as fc,
+                p.unidad_medida as um,
+                p.unidad_reporte as ur,
                 v.folio as folio_venta,
                 c.nombre_comercial as cliente,
                 
@@ -1163,6 +1168,7 @@ public function obtenerViajesLogistica($folio_folio = null) {
                     trp.estado_punto AS estatus_parada,
                     trp.latitud, 
                     trp.longitud,
+                    v.id as numeroVenta,
                     v.folio AS folio_venta,
                     c.nombre_comercial AS cliente,
                     c.telefono AS tel_cliente,
@@ -1199,7 +1205,223 @@ public function obtenerViajesLogistica($folio_folio = null) {
         throw new Exception("Error en la base de datos: " . $e->getMessage());
     }
 }
+public function obtenerEntregasPorVenta($idVenta){
 
+    $sql = "SELECT 
+                tc.viaje_folio AS folio_viaje,
+                tc.fecha_creacion AS fecha_viaje,
+                trm.hora_llegada_real AS fecha_llegada,
+                trm.estado_reparto AS estatus_logistico,
+                tv.nombre AS unidad_nombre,
+                tv.placas AS unidad_placas,
+                u_chofer.nombre AS nombre_chofer,
+
+                (
+                    SELECT GROUP_CONCAT(u_ayu.nombre SEPARATOR ' / ') 
+                    FROM transporte_tripulantes_detalle ttd
+                    INNER JOIN trabajadores u_ayu 
+                        ON ttd.usuario_id = u_ayu.id
+                    WHERE ttd.reparto_id = tc.reparto_id
+                ) AS ayudantes,
+
+                trp.orden_visita,
+                trp.descripcion_punto AS direccion_entrega,
+                trp.estado_punto AS estatus_parada,
+                trp.latitud, 
+                trp.longitud,
+                  v.id as numeroVenta,
+
+                v.folio AS folio_venta,
+                c.nombre_comercial AS cliente,
+                c.telefono AS tel_cliente,
+
+                GROUP_CONCAT(
+                    CONCAT(
+                        p.nombre,
+                        ' (',
+                        m.cantidad,
+                        ' ',
+                        p.unidad_medida,
+                        ')'
+                    )
+                    SEPARATOR ', '
+                ) AS productos
+
+            FROM transporte_consolidacion tc
+
+            INNER JOIN transporte_repartos_maestro trm 
+                ON tc.reparto_id = trm.id
+
+            INNER JOIN transporte_vehiculos tv 
+                ON tc.vehiculo_id = tv.id
+
+            INNER JOIN transporte_rutas_puntos trp 
+                ON trm.id = trp.reparto_id 
+
+            INNER JOIN movimientos m 
+                ON trm.entrega_venta_id = m.id
+
+            INNER JOIN productos p 
+                ON m.producto_id = p.id
+
+            LEFT JOIN ventas v 
+                ON m.referencia_id = v.id
+
+            LEFT JOIN clientes c 
+                ON v.id_cliente = c.id
+
+            LEFT JOIN trabajadores u_chofer 
+                ON trm.usuario_encargado_id = u_chofer.id
+
+            WHERE v.id = ?
+
+            GROUP BY tc.viaje_folio
+
+            ORDER BY tc.fecha_creacion DESC";
+
+    $stmt = $this->db->prepare($sql);
+
+    $stmt->bind_param("i",$idVenta);
+
+    $stmt->execute();
+
+    $resultado = $stmt->get_result();
+
+    $data = [];
+
+    while($row = $resultado->fetch_assoc()){
+        $data[] = $row;
+    }
+
+    return $data;
+}
+public function obtenerRutaDeEntregaDeVenta($idVenta, $idRuta){
+
+    $sql = "SELECT 
+                t.folio_viaje,
+                t.fecha_viaje,
+                t.fecha_llegada,
+                t.estatus_logistico,
+                t.unidad_nombre,
+                t.unidad_placas,
+                t.nombre_chofer,
+                t.ayudantes,
+                t.orden_visita,
+                t.direccion_entrega,
+                t.estatus_parada,
+                t.latitud,
+                t.longitud,
+                t.numeroVenta,
+                t.folio_venta,
+                t.cliente,
+                t.tel_cliente,
+
+                t.nombreProducto,
+                t.totalCantidad,
+                t.unidadMedida,
+                t.factor,
+                t.unidadReporte
+
+            FROM (
+
+                SELECT 
+                    tc.viaje_folio AS folio_viaje,
+                    tc.fecha_creacion AS fecha_viaje,
+                    trm.hora_llegada_real AS fecha_llegada,
+                    trm.estado_reparto AS estatus_logistico,
+                    tv.nombre AS unidad_nombre,
+                    tv.placas AS unidad_placas,
+                    u_chofer.nombre AS nombre_chofer,
+
+                    (
+                        SELECT GROUP_CONCAT(u_ayu.nombre SEPARATOR ' / ') 
+                        FROM transporte_tripulantes_detalle ttd
+                        INNER JOIN trabajadores u_ayu 
+                            ON ttd.usuario_id = u_ayu.id
+                        WHERE ttd.reparto_id = tc.reparto_id
+                    ) AS ayudantes,
+
+                    trp.orden_visita,
+                    trp.descripcion_punto AS direccion_entrega,
+                    trp.estado_punto AS estatus_parada,
+                    trp.latitud, 
+                    trp.longitud,
+
+                    v.id AS numeroVenta,
+                    v.folio AS folio_venta,
+
+                    c.nombre_comercial AS cliente,
+                    c.telefono AS tel_cliente,
+
+                    p.nombre AS nombreProducto,
+                    p.factor_conversion AS factor,
+                    p.unidad_reporte AS unidadReporte,
+
+                    SUM(m.cantidad) AS totalCantidad,
+
+                    p.unidad_medida AS unidadMedida
+
+                FROM transporte_consolidacion tc
+
+                INNER JOIN transporte_repartos_maestro trm 
+                    ON tc.reparto_id = trm.id
+
+                INNER JOIN transporte_vehiculos tv 
+                    ON tc.vehiculo_id = tv.id
+
+                INNER JOIN transporte_rutas_puntos trp 
+                    ON trm.id = trp.reparto_id 
+
+                INNER JOIN movimientos m 
+                    ON trm.entrega_venta_id = m.id
+
+                INNER JOIN productos p 
+                    ON m.producto_id = p.id
+
+                LEFT JOIN ventas v 
+                    ON m.referencia_id = v.id
+
+                LEFT JOIN clientes c 
+                    ON v.id_cliente = c.id
+
+                LEFT JOIN trabajadores u_chofer 
+                    ON trm.usuario_encargado_id = u_chofer.id
+
+                WHERE v.id = ? 
+                AND tc.viaje_folio = ?
+
+                GROUP BY 
+                    tc.viaje_folio,
+                    p.id
+
+            ) t
+
+            GROUP BY 
+                t.folio_viaje,
+                t.nombreProducto
+
+            ORDER BY t.fecha_viaje DESC";
+
+    $stmt = $this->db->prepare($sql);
+
+    if(!$stmt){
+        die($this->db->error);
+    }
+
+    $stmt->bind_param("is", $idVenta, $idRuta);
+
+    $stmt->execute();
+
+    $resultado = $stmt->get_result();
+
+    $data = [];
+
+    while($row = $resultado->fetch_assoc()){
+        $data[] = $row;
+    }
+
+    return $data;
+}
 public function quitarEntregaDeRuta($entrega_venta_id) {
     try {
         $this->db->begin_transaction();

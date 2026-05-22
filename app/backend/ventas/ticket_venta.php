@@ -241,9 +241,21 @@ $cantidadMostrarFormateada =
 
 <?php if ($pago['metodo_pago'] == 'Efectivo') : ?>
 
-<tr>
+
+    <?php if ($pago['efectivoPagado']>0) : {?>
+      <tr>
     <td class="bold" style="padding:4px 0;">
-        Efectivo recibido:
+      Caja
+    </td>
+
+    <td colspan="3" style="padding:4px 0;">
+       Caja Rapida
+    </td>
+</tr>
+
+    <tr>
+    <td class="bold" style="padding:4px 0;">
+        Efectivo recibido :
     </td>
 
     <td colspan="3" style="padding:4px 0;">
@@ -260,6 +272,7 @@ $cantidadMostrarFormateada =
         $<?php echo number_format(($pago['efectivoPagado'] - $pago['monto']), 2); ?>
     </td>
 </tr>
+<?php } endif; ?>
 
 <?php endif; ?>
 

@@ -50,12 +50,13 @@ window.verEntrega = async function(movimientoId) {
             console.error("Respuesta inesperada:", cleanText);
             throw new Error("El servidor respondió con HTML en lugar de JSON. Revisa el exit; en PHP.");
         }
+        
 
         const res = JSON.parse(cleanText);
         
         if (res.success && res.data) {
             const d = res.data;
-
+console.log(d);
             // 2. Llenado de Cabecera
             $('#v_folio_ticket').text(`TICKET: ${d.folio_venta || 'S/N'}`);
             $('#v_producto_nombre').text(`${d.producto_nombre || 'Producto'} - ${d.cantidad || '0'} pzas`);

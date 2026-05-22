@@ -91,7 +91,72 @@
     opacity: 0.7;
 }
 </style> 
-   
+  <style>
+
+@media print {
+
+    body * {
+        visibility: hidden !important;
+    }
+
+    #modalSimulacion,
+    #modalSimulacion * {
+        visibility: visible !important;
+    }
+
+    #modalSimulacion {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        background: white !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+    }
+
+    #modalSimulacion .modal-dialog {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    #modalSimulacion .modal-content {
+        border: none !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
+        background: #fff !important;
+    }
+
+    #modalSimulacion .modal-header,
+    #modalSimulacion .modal-footer,
+    #btnImprimirModal,
+    #btnConfirmarFinal,
+    .btn-close {
+        display: none !important;
+    }
+
+    #documentoPatio {
+        padding: 20px !important;
+        font-size: 12px !important;
+        color: #000 !important;
+    }
+
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+    }
+
+    table th,
+    table td {
+        border: 1px solid #000 !important;
+        padding: 6px !important;
+    }
+
+}
+</style>  
 </head>
 <body>
 
@@ -639,76 +704,13 @@ $('#checkAgruparVenta').on('change', cargarEntregas);
     
     $.getJSON('entregasController.php', { ajax: 'imprimir', id: id }, function(res) {
         if(res.success) {
+            console.clear();
+            console.log(res);
             const d = res.data;
             
             // Reutilizamos exactamente tu estructura de "Simular"
             let html = `
-            <style>
-
-@media print {
-
-    body * {
-        visibility: hidden !important;
-    }
-
-    #modalSimulacion,
-    #modalSimulacion * {
-        visibility: visible !important;
-    }
-
-    #modalSimulacion {
-        position: absolute !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 100% !important;
-        height: auto !important;
-        background: white !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        overflow: visible !important;
-    }
-
-    #modalSimulacion .modal-dialog {
-        max-width: 100% !important;
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
-    #modalSimulacion .modal-content {
-        border: none !important;
-        box-shadow: none !important;
-        border-radius: 0 !important;
-        background: #fff !important;
-    }
-
-    #modalSimulacion .modal-header,
-    #modalSimulacion .modal-footer,
-    #btnImprimirModal,
-    #btnConfirmarFinal,
-    .btn-close {
-        display: none !important;
-    }
-
-    #documentoPatio {
-        padding: 20px !important;
-        font-size: 12px !important;
-        color: #000 !important;
-    }
-
-    table {
-        width: 100% !important;
-        border-collapse: collapse !important;
-    }
-
-    table th,
-    table td {
-        border: 1px solid #000 !important;
-        padding: 6px !important;
-    }
-
-}
-</style>
+           
                 <div class="text-center mb-4">
                     <h4 class="mb-1 text-uppercase fw-bold">Vale de Entrega (Patio)</h4>
                     <p class="text-muted small">Folio de Movimiento: #<b>${d.movimiento_id}</b></p>
@@ -736,8 +738,10 @@ $('#checkAgruparVenta').on('change', cargarEntregas);
                         </thead>
                         <tbody style="font-size: 0.85rem;">
                             <tr>
-                                <td class="py-2 font-monospace text-dark">${d.detalle_lotes.replace(/\n/g, '<br>')}</td>
-                                <td class="text-end fw-bold text-primary py-2">${d.cantidad_total} ${d.unidad_medida} </td>
+                                <td class="py-2 font-monospace text-dark">${d.detalle_lotes}</td>
+                                  <td class="text-end fw-bold text-primary py-2">${(d.cantidad_total/d.factor_conversion)>=1?(d.cantidad_total/d.factor_conversion):d.cantidad_total} ${(d.cantidad_total/d.factor_conversion)>=1?d.unidad_reporte:d.unidad_medida} </td>
+                          
+                                
                             </tr>
                         </tbody>
                     </table>
@@ -1055,22 +1059,10 @@ window.verDetalleDespachoAlmacen = function(idVenta) {
             const r = res.data;
 
             let htmlProductos = r.productos.map((p, index) => {
+                let totalEntregado=0;
 
-                let filasLotes = '';
-
-                if (p.detalle_financiero) {
-
-                    p.detalle_financiero.split('___').forEach(reg => {
-
-                        const c = reg.split('|');
-
-
-
-                        if (c.length >= 2) {
-                            document.getElementById('btnConfirmarFinal').style.display = 'none !important';
-                            
-                            filasLotes += `
-                                         <style>
+                let filasLotes =`
+                   <style>
 
 @media print {
 #btnConfirmarFinal {
@@ -1142,7 +1134,22 @@ display:none !important}
                                 }
 
 }
-</style>
+</style> ;`
+
+                if (p.detalle_financiero) {
+
+                    p.detalle_financiero.split('___').forEach(reg => {
+
+                        const c = reg.split('|');
+                      
+
+
+
+                        if (c.length >= 2) {
+                            document.getElementById('btnConfirmarFinal').style.display = 'none !important';
+                             totalEntregado=totalEntregado+ Number(c[1])??0;
+                            filasLotes += `
+                                      
                                 <tr>
                                 
                                     <td class="py-1 ps-2">
@@ -1150,7 +1157,12 @@ display:none !important}
                                     </td>
 
                                     <td class="text-end py-1 pe-2 fw-semibold">
-                                        ${c[1]} ${p.unidad_medida || ''}
+                                      ${(c[1]/p.factor_conversion)>=1?(c[1]/p.factor_conversion):c[1]} ${(c[1]/p.factor_conversion)>=1?p.unidad_reporte:p.unidad_medida || ''}
+                                     
+                                        
+                                    </td>
+                                    <td class="text-end py-1 pe-2 fw-semibold">
+                                     ${c[4]}
                                         
                                     </td>
                                 </tr>
@@ -1187,12 +1199,11 @@ display:none !important}
                                         font-size:15px;
                                         line-height:1;
                                     ">
-                                    ${p.cantidad_total}
+                                  Venta Total:   ${(p.cantidad_total/p.factor_conversion)>1?(p.cantidad_total/p.factor_conversion):p.cantidad_total} ${(p.cantidad_total/p.factor_conversion)>1?p.unidad_reporte:p.unidad_medida || ''}
+                                     
+                                   
                                 </div>
 
-                                <small class="text-muted">
-                                    ${(p.cantidad/p.factor_conversion>=1)?p.unidad_reporte: p.unidad_medida}
-                                </small>
 
                             </div>
 
@@ -1213,12 +1224,19 @@ display:none !important}
                                     <th class="fw-semibold text-muted text-end">
                                         CANTIDAD
                                     </th>
+                                     <th class="fw-semibold text-muted text-end">
+                                        FECHA DE SALIDA
+                                    </th>
                                 </tr>
                             </thead>
 
                             <tbody>
                                 ${filasLotes}
+                                <td></td>
+                                <td>Total Entregado:</td>
+                                <td> ${(totalEntregado/p.factor_conversion)>=1?(totalEntregado/p.factor_conversion)+' '+ p.unidad_reporte:totalEntregado+ ' '+ p.unidad_medida}</td>
                             </tbody>
+
 
                         </table>
 

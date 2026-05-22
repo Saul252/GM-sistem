@@ -83,6 +83,7 @@ window.abrirModalEdicionViaje = async function(folio, vehiculoId) {
         
         if (!viaje.success) throw new Error(viaje.message);
         const info = viaje.data;
+        console.log(viaje.data);
 
         // Seteo de vehículo
         $('#edit_vehiculo_id').val(info.vehiculo_id);
@@ -115,13 +116,17 @@ window.abrirModalEdicionViaje = async function(folio, vehiculoId) {
         let hMat = '';
         if(info.materiales && info.materiales.length > 0) {
             info.materiales.forEach(m => {
+                const cantidadIni=m.cantidad/m.fc;
+                const cantidad =cantidadIni>=1?cantidadIni:m.cantidad;
+                const unidad =cantidadIni>=1?m.ur:m.um;
+                
                 hMat += `
                     <div class="list-group-item border-0 border-bottom p-3 bg-white item-entrega" id="item_mov_${m.movimiento_id}" data-movid="${m.movimiento_id}">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div>
                                 <span class="badge bg-light text-primary mb-1" style="font-size: 0.65rem;">SKU: ${m.sku || 'N/A'}</span>
                                 <div class="fw-bold text-dark" style="font-size: 0.9rem;">${m.producto}</div>
-                                <small class="text-muted fw-bold">Cant: ${parseFloat(m.cantidad).toFixed(2)} ${m.um || ''}</small>
+                                <small class="text-muted fw-bold">Cant: ${parseFloat(cantidad).toFixed(2)} ${unidad|| ''}</small>
                             </div>
                             <div class="text-end">
                                 <span class="d-block fw-bold text-primary small" style="font-size: 0.75rem;">${m.cliente || 'Público General'}</span>

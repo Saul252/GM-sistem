@@ -46,7 +46,10 @@
                             <label class="form-label small fw-bold">RFC</label>
                             <input type="text" name="rfc" class="form-control" maxlength="13">
                         </div>
-
+ <div class="col-md-6">
+                            <label class="form-label small fw-bold">Contacto interno</label>
+                            <input type="text" name="contacto" class="form-control">
+                        </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Teléfono</label>
                             <input type="tel" name="telefono" class="form-control">

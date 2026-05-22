@@ -124,205 +124,337 @@
                 </h5>
                 <button class="btn-close" data-bs-dismiss="modal"></button>
             </div>
+<style>
+#formProveedor .card-seccion{
+    border: 1px solid #eef1f5;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,.04);
+    padding: 18px;
+    height: 100%;
+}
+
+#formProveedor .titulo-seccion{
+    font-size: .78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #6c757d;
+    letter-spacing: .6px;
+    margin-bottom: 1rem;
+}
+
+#formProveedor .form-label{
+    font-size: .78rem;
+    font-weight: 600;
+    color: #6c757d;
+    margin-bottom: .35rem;
+}
+
+#formProveedor .form-control,
+#formProveedor .form-select{
+    border-radius: 14px;
+    border: 1px solid #e4e7ec;
+    min-height: 46px;
+    font-size: .92rem;
+    transition: all .2s ease;
+    box-shadow: none;
+}
+
+#formProveedor textarea.form-control{
+    min-height: 90px;
+}
+
+#formProveedor .form-control:focus,
+#formProveedor .form-select:focus{
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 .15rem rgba(79,70,229,.12);
+}
+
+#formProveedor .input-group-text{
+    border-radius: 14px 0 0 14px;
+    background: #f8fafc;
+    border-color: #e4e7ec;
+}
+
+#formProveedor .btn-guardar{
+    border-radius: 14px;
+    padding: .8rem 1.6rem;
+    font-weight: 600;
+    border: none;
+    background: linear-gradient(135deg,#4f46e5,#7c3aed);
+    box-shadow: 0 8px 20px rgba(79,70,229,.25);
+}
+
+#formProveedor .btn-cancelar{
+    border-radius: 14px;
+    padding: .8rem 1.6rem;
+    font-weight: 600;
+}
+
+#formProveedor .header-form{
+    background: linear-gradient(135deg,#4f46e5,#7c3aed);
+    border-radius: 18px;
+    padding: 18px 22px;
+    color: #fff;
+    margin-bottom: 1rem;
+}
+
+#formProveedor .header-form h5{
+    margin: 0;
+    font-weight: 700;
+}
+
+#formProveedor .header-form small{
+    opacity: .85;
+}
+</style>
+
 <form id="formProveedor">
 
     <div class="modal-body px-4 py-3">
 
+        <div class="header-form">
+            <h5>Gestión de proveedor</h5>
+            <small>Información general, contacto y ubicación</small>
+        </div>
+
         <input type="hidden" id="proveedor_id" name="id">
 
-        <!-- GRID -->
-        <div class="row g-3">
+        <div class="row g-4">
 
-            <!-- ALMACEN -->
-            <div class="col-md-6">
-                <label class="form-label small text-muted">Almacén</label>
+            <!-- INFORMACION GENERAL -->
+            <div class="col-lg-6">
+                <div class="card-seccion">
 
-                <select name="almacen_id"
-                    id="almacen_id"
-                    class="form-select rounded-3 <?= $_SESSION['almacen_id']==0 ? '' : 'bg-light' ?>"
-                    <?= $_SESSION['almacen_id'] != 0 ? 'disabled' : '' ?>
-                    required>
+                    <div class="titulo-seccion">
+                        <i class="bi bi-building me-1"></i>
+                        Información General
+                    </div>
 
-                    <?php if ($_SESSION['almacen_id']==0): ?>
-                        <option value="">Seleccionar ubicación...</option>
-                    <?php endif; ?>
+                    <div class="row g-3">
 
-                    <?php foreach($almacenes as $a): ?>
-                        <option value="<?= $a['id'] ?>"
-                            <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
-                            <?= $a['nombre'] ?>
-                        </option>
-                    <?php endforeach; ?>
+                        <div class="col-md-6">
+                            <label class="form-label">Almacén</label>
 
-                </select>
+                            <select name="almacen_id"
+                                id="almacen_id"
+                                class="form-select <?= $_SESSION['almacen_id']==0 ? '' : 'bg-light' ?>"
+                                <?= $_SESSION['almacen_id'] != 0 ? 'disabled' : '' ?>
+                                required>
 
-                <?php if ($_SESSION['almacen_id'] != 0): ?>
-                    <input type="hidden"
-                        name="almacen_id"
-                        value="<?= $_SESSION['almacen_id'] ?>">
-                <?php endif; ?>
+                                <?php if ($_SESSION['almacen_id']==0): ?>
+                                    <option value="">Seleccionar ubicación...</option>
+                                <?php endif; ?>
+
+                                <?php foreach($almacenes as $a): ?>
+                                    <option value="<?= $a['id'] ?>"
+                                        <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
+                                        <?= $a['nombre'] ?>
+                                    </option>
+                                <?php endforeach; ?>
+
+                            </select>
+
+                            <?php if ($_SESSION['almacen_id'] != 0): ?>
+                                <input type="hidden"
+                                    name="almacen_id"
+                                    value="<?= $_SESSION['almacen_id'] ?>">
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Estado</label>
+
+                            <select class="form-select"
+                                id="activo"
+                                name="activo">
+
+                                <option value="1">🟢 Activo</option>
+                                <option value="0">⚫ Inactivo</option>
+
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Nombre Comercial</label>
+
+                            <input type="text"
+                                class="form-control"
+                                id="nombre_comercial"
+                                name="nombre_comercial">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">Razón Social</label>
+
+                            <input type="text"
+                                class="form-control"
+                                id="razon_social"
+                                name="razon_social">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label">RFC</label>
+
+                            <input type="text"
+                                class="form-control text-uppercase"
+                                id="rfc"
+                                name="rfc">
+                        </div>
+
+                    </div>
+
+                </div>
             </div>
 
-            <!-- ESTADO -->
-            <div class="col-md-6">
-                <label class="form-label small text-muted">Estado</label>
+            <!-- CONTACTO -->
+            <div class="col-lg-6">
+                <div class="card-seccion">
 
-                <select class="form-select rounded-3"
-                    id="activo"
-                    name="activo">
+                    <div class="titulo-seccion">
+                        <i class="bi bi-person-lines-fill me-1"></i>
+                        Información de Contacto
+                    </div>
 
-                    <option value="1">🟢 Activo</option>
-                    <option value="0">⚫ Inactivo</option>
+                    <div class="row g-3">
 
-                </select>
-            </div>
+                        <div class="col-12">
+                            <label class="form-label">Correo</label>
 
-            <!-- NOMBRE COMERCIAL -->
-            <div class="col-md-6">
-                <label class="form-label small text-muted">Nombre Comercial</label>
+                            <input type="email"
+                                class="form-control"
+                                id="correo"
+                                name="correo">
+                        </div>
 
-                <input type="text"
-                    class="form-control rounded-3"
-                    id="nombre_comercial"
-                    name="nombre_comercial">
-            </div>
+                        <div class="col-12">
+                            <label class="form-label">Contacto</label>
 
-            <!-- RAZON SOCIAL -->
-            <div class="col-md-6">
-                <label class="form-label small text-muted">Razón Social</label>
+                            <input type="text"
+                                class="form-control"
+                                id="contacto"
+                                name="contacto">
+                        </div>
 
-                <input type="text"
-                    class="form-control rounded-3"
-                    id="razon_social"
-                    name="razon_social">
-            </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Teléfono</label>
 
-            <!-- RFC -->
-            <div class="col-md-6">
-                <label class="form-label small text-muted">RFC</label>
+                            <input type="text"
+                                class="form-control"
+                                id="telefono"
+                                name="telefono">
+                        </div>
 
-                <input type="text"
-                    class="form-control rounded-3 text-uppercase"
-                    id="rfc"
-                    name="rfc">
-            </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Teléfono 2</label>
 
-            <!-- CORREO -->
-            <div class="col-md-6">
-                <label class="form-label small text-muted">Correo</label>
+                            <input type="text"
+                                class="form-control"
+                                id="telefono2"
+                                name="telefono2">
+                        </div>
 
-                <input type="email"
-                    class="form-control rounded-3"
-                    id="correo"
-                    name="correo">
-            </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Extensión</label>
 
-            <!-- TELEFONO -->
-            <div class="col-md-4">
-                <label class="form-label small text-muted">Teléfono</label>
+                            <input type="text"
+                                class="form-control"
+                                id="extencion"
+                                name="extencion">
+                        </div>
 
-                <input type="text"
-                    class="form-control rounded-3"
-                    id="telefono"
-                    name="telefono">
-            </div>
+                    </div>
 
-            <!-- TELEFONO 2 -->
-            <div class="col-md-4">
-                <label class="form-label small text-muted">Teléfono secundario</label>
-
-                <input type="text"
-                    class="form-control rounded-3"
-                    id="telefono2"
-                    name="telefono2">
-            </div>
-
-            <!-- EXTENSION -->
-            <div class="col-md-4">
-                <label class="form-label small text-muted">Extensión</label>
-
-                <input type="text"
-                    class="form-control rounded-3"
-                    id="extencion"
-                    name="extencion">
+                </div>
             </div>
 
             <!-- DIRECCION -->
             <div class="col-12">
-                <label class="form-label small text-muted">Dirección</label>
+                <div class="card-seccion">
 
-                <textarea class="form-control rounded-3"
-                    rows="2"
-                    id="direccion"
-                    name="direccion"></textarea>
-            </div>
+                    <div class="titulo-seccion">
+                        <i class="bi bi-geo-alt-fill me-1"></i>
+                        Dirección
+                    </div>
 
-            <!-- NUMERO EXTERIOR -->
-            <div class="col-md-6">
-                <label class="form-label small text-muted">Número Exterior</label>
+                    <div class="row g-3">
 
-                <input type="text"
-                    class="form-control rounded-3"
-                    id="numeroExt"
-                    name="numeroExt">
-            </div>
+                        <div class="col-12">
+                            <label class="form-label">Dirección</label>
 
-            <!-- NUMERO INTERIOR -->
-            <div class="col-md-6">
-                <label class="form-label small text-muted">Número Interior</label>
+                            <textarea class="form-control"
+                                id="direccion"
+                                name="direccion"></textarea>
+                        </div>
 
-                <input type="text"
-                    class="form-control rounded-3"
-                    id="numeroInt"
-                    name="numeroInt">
-            </div>
+                        <div class="col-md-3">
+                            <label class="form-label">No. Exterior</label>
 
-            <!-- COLONIA -->
-            <div class="col-md-6">
-                <label class="form-label small text-muted">Colonia</label>
+                            <input type="text"
+                                class="form-control"
+                                id="numeroExt"
+                                name="numeroExt">
+                        </div>
 
-                <input type="text"
-                    class="form-control rounded-3"
-                    id="colonia"
-                    name="colonia">
-            </div>
+                        <div class="col-md-3">
+                            <label class="form-label">No. Interior</label>
 
-            <!-- CIUDAD -->
-            <div class="col-md-6">
-                <label class="form-label small text-muted">Ciudad</label>
+                            <input type="text"
+                                class="form-control"
+                                id="numeroInt"
+                                name="numeroInt">
+                        </div>
 
-                <input type="text"
-                    class="form-control rounded-3"
-                    id="ciudad"
-                    name="ciudad">
-            </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Colonia</label>
 
-            <!-- FECHA -->
-            <div class="col-md-6">
-                <label class="form-label small text-muted">Fecha creación</label>
+                            <input type="text"
+                                class="form-control"
+                                id="colonia"
+                                name="colonia">
+                        </div>
 
-                <input type="text"
-                    class="form-control rounded-3 bg-light"
-                    id="creado_at"
-                    readonly>
+                        <div class="col-md-3">
+                            <label class="form-label">Ciudad</label>
+
+                            <input type="text"
+                                class="form-control"
+                                id="ciudad"
+                                name="ciudad">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Fecha creación</label>
+
+                            <input type="text"
+                                class="form-control bg-light"
+                                id="creado_at"
+                                readonly>
+                        </div>
+
+                    </div>
+
+                </div>
             </div>
 
         </div>
+
     </div>
 
-    <!-- FOOTER -->
     <div class="modal-footer border-0 px-4 pb-4">
 
         <button type="button"
-            class="btn btn-light rounded-3 px-4"
+            class="btn btn-light btn-cancelar"
             data-bs-dismiss="modal">
             Cancelar
         </button>
 
         <button type="button"
-            class="btn btn-primary rounded-3 px-4 shadow-sm"
+            class="btn btn-primary btn-guardar"
             onclick="guardarProveedor()">
-            💾 Guardar cambios
+
+            <i class="bi bi-check2-circle me-1"></i>
+            Guardar proveedor
         </button>
 
     </div>
@@ -424,6 +556,7 @@ async function editarProveedor(id) {
         document.getElementById('razon_social').value = p.razon_social || '';
         document.getElementById('rfc').value = p.rfc || '';
         document.getElementById('correo').value = p.correo || '';
+        document.getElementById('contacto').value = p.contacto || '';
         document.getElementById('telefono').value = p.telefono || '';
         document.getElementById('telefono2').value = p.telefono2 || 0;
         document.getElementById('extencion').value = p.extencion || 0;

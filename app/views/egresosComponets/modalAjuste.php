@@ -51,8 +51,10 @@
                             <i class="bi bi-arrow-repeat me-1"></i> Ajustar compra
                         </button>
 
-                        <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold shadow">
+                        <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold shadow"
+                         onclick="procesarAjuste()">
                             <i class="bi bi-check-circle-fill me-1"></i> Registrar entrada
+                            
                         </button>
 
                     </div>
@@ -145,6 +147,7 @@ function aplicarFaltantesCompra() {
 }
 
 function abrirModalAjuste(id, folio) {
+    
     const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalAjusteFaltante'));
     document.getElementById('folioAjuste').innerText = folio;
     document.getElementById('ajuste_compra_id').value = id;
@@ -181,16 +184,34 @@ function abrirModalAjuste(id, folio) {
                                 </div>
                             </td>
                             <td class="small fw-semibold text-secondary">${alm.nombre}</td>
-                            <td>
-                                <input type="number" 
-                                       name="distribucion[${p.producto_id}][${alm.id}]" 
-                                       class="form-control form-control-sm border-danger input-dist bg-light" 
-                                       data-prod-id="${p.producto_id}"
-                                       data-max="${p.cantidad_pendiente}"
-                                       disabled 
-                                       placeholder="0.00" 
-                                       step="any" min="0">
-                            </td>
+                            
+                           <td>
+    <input type="number" 
+       name="distribucion[${p.producto_id}][${alm.id}]1" 
+       class="form-control form-control-sm border-danger input-dist bg-light" 
+       data-prod-id="${p.producto_id}"
+       data-max="${p.cantidad_pendiente}"
+       disabled 
+       placeholder="0.00" 
+       step=".01" 
+       min="0"
+       oninput="recalcularRestante(${p.producto_id},${p.factor_conversion})">
+ <input type="hidden" 
+       name="distribucion[${p.producto_id}][${alm.id}]" 
+       class="form-control form-control-sm border-danger input-dist bg-light" 
+       data-prod-id="${p.producto_id}"
+       data-max="${p.cantidad_pendiente}"
+       disabled 
+       placeholder="0.00" 
+       step=".01" 
+       min="0"
+       oninput="recalcularRestante(${p.producto_id},${p.factor_conversion})">
+
+    <div class="small text-danger fw-bold mt-2 restante-prod"
+         data-restante="${p.producto_id}">
+        Restante por asignar: ${(p.cantidad_pendiente)/p.factor_conversion}
+    </div>
+</td>
                         </tr>`;
                 });
 
@@ -202,7 +223,7 @@ function abrirModalAjuste(id, folio) {
                             <div class="card-header bg-white border-bottom-0 py-3 d-flex justify-content-between align-items-center">
                                 <h6 class="fw-bold mb-0 text-dark">${p.nombre}</h6>
                                 <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle">
-                                    Pendiente: ${p.cantidad_pendiente}
+                                    Pendiente: ${(p.cantidad_pendiente)/(p.factor_conversion)} ${p.unidad_reporte}
                                 </span>
                             </div>
                             <div class="card-body pt-0">
@@ -269,7 +290,124 @@ function procesarAjuste() {
     });
 }
 </script>
+<script>
 
+function toggleAlmacen(check, prodId, almId) {
+
+    const inputVisible = document.querySelector(
+        `input[name="distribucion[${prodId}][${almId}]1"]`
+    );
+
+    const inputHidden = document.querySelector(
+        `input[name="distribucion[${prodId}][${almId}]"]`
+    );
+
+    if (check.checked) {
+
+        inputVisible.disabled = false;
+        inputHidden.disabled = false;
+
+        inputVisible.classList.remove('bg-light');
+
+        inputVisible.focus();
+
+    } else {
+
+        inputVisible.disabled = true;
+        inputHidden.disabled = true;
+
+        inputVisible.value = '';
+        inputHidden.value = '';
+
+        inputVisible.classList.add('bg-light');
+
+        recalcularRestante(prodId);
+    }
+}
+
+function recalcularRestante(prodId, factor = 1) {
+
+    // INPUTS VISIBLES
+    const inputs = document.querySelectorAll(
+        `input[name^="distribucion[${prodId}]"][name$="]1"]`
+    );
+
+    let suma = 0;
+    let maximo = 0;
+
+    inputs.forEach(input => {
+
+        if (!input.disabled) {
+
+            const valor = parseFloat(input.value) || 0;
+
+            // SUMA EN PIEZAS
+            suma += valor * factor;
+
+            maximo = parseFloat(input.dataset.max) || 0;
+
+            // ACTUALIZA EL HIDDEN
+            const hiddenName =
+                input.name.replace(']1', ']');
+
+            const hidden =
+                document.querySelector(
+                    `input[name="${hiddenName}"]`
+                );
+
+            if (hidden) {
+
+                hidden.value =
+                    (valor * factor).toFixed(2);
+            }
+        }
+    });
+
+    suma =
+        Math.round(suma * 1000) / 1000;
+
+    const restante =
+        (Math.round((maximo - suma) * 1000) / 1000)/factor;
+
+    // TEXTO RESTANTE
+    const textos = document.querySelectorAll(
+        `.restante-prod[data-restante="${prodId}"]`
+    );
+
+    textos.forEach(texto => {
+
+        texto.innerHTML =
+            `Restante por asignar: <b>${restante}</b>`;
+    });
+
+    // VALIDAR EXCESO
+    if (suma > maximo) {
+
+        Swal.fire({
+            icon: 'warning',
+            title: 'Cantidad excedida',
+            text: `No puedes asignar más de ${maximo}`
+        });
+
+        const ultimoInput = document.activeElement;
+
+        if (ultimoInput) {
+
+            const actual =
+                parseFloat(ultimoInput.value) || 0;
+
+            const exceso =
+                (suma - maximo) / factor;
+
+            ultimoInput.value =
+                Math.max(0, actual - exceso).toFixed(2);
+        }
+
+        recalcularRestante(prodId, factor);
+    }
+}
+
+</script>
 <style>
 .pointer {
     cursor: pointer;

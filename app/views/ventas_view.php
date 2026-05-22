@@ -460,7 +460,7 @@ console.log('nuevo',nuevoPrecio,'precio');
     }
     else{
         const nuevoPrecio =
-             precio;
+             Math.round(precio * 100) / 100 ;
 console.log(nuevoPrecio);
         inputPrecio.value =nuevoPrecio;
           

@@ -1100,13 +1100,13 @@ const cantMayoreo = Math.floor(cantidad); // 1
                 <td>
                     <label class="form-label small text-danger fw-semibold mb-1">Faltantes</label>
                     <input type="number"
+                    id="faltante_${index}"
                         class="form-control form-control-sm border-danger shadow-sm i-faltante"
-                        value="0"  step=".01min="0" 
+                          name="items[${index}][cantidad_faltante]
+                        value="0"  step=".01"min="0" 
                         oninput="recalcularFila(${index})">
 
-                    <input type="hidden" id="faltante_${index}"  
-                        name="items[${index}][cantidad_faltante]" 
-                        class="hidden-faltante" value="0">
+                   
                 </td>
 
                 <td>
@@ -1174,8 +1174,8 @@ function recalcularFila(index) {
     const mayoreo = parseFloat(fila.find('.i-mayoreo').val()) || 0;
     const sueltas = parseFloat(fila.find('.i-sueltas').val()) || 0;
 
-    let faltante = parseFloat(fila.find('.i-faltante').val()) || 0;
-    const excedente = parseFloat(fila.find('.i-excedente').val()) || 0;
+    let faltante = parseFloat(fila.find('.i-faltante').val()*factor) || 0;
+    const excedente = parseFloat(fila.find('.i-excedente').val()) *factor|| 0;
 
     const costoTotalRenglon = parseFloat(fila.find('.i-costo-total').val()) || 0;
 
@@ -1194,7 +1194,7 @@ function recalcularFila(index) {
     fila.find('.h-total-piezas').val(totalPiezasFinal);
 
     // actualizar hidden faltante
-    fila.find('.hidden-faltante').val(faltante);
+   
 
     let precioUnitario = totalBase > 0
         ? costoTotalRenglon / totalBase
@@ -1262,7 +1262,7 @@ function actualizarGranTotal() {
             console.warn('Producto inválido en fila:', index);
             return;
         }
-
+ const factor = parseFloat(fila.find('.h-factor').val()) || 1;
         detalle.push({
 
             producto_id: productoId,
@@ -1275,9 +1275,9 @@ function actualizarGranTotal() {
                 fila.find('.i-sueltas').val()
             ) || 0,
 
-            cantidad_excedente: excedente,
+            cantidad_excedente: (excedente*factor),
 
-            cantidad_faltante: faltante,
+            cantidad_faltante: (faltante*factor),
 
             total_item: costoTotal,
 

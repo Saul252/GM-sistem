@@ -602,7 +602,7 @@ public function aplicarFaltantesCompra($compra_id) {
     $sql = "SELECT 
                 f.producto_id, 
                 f.cantidad_pendiente, 
-                p.nombre 
+                p.nombre,p.factor_conversion,p.unidad_medida, p.unidad_reporte
             FROM faltantes_ingreso f
             INNER JOIN productos p ON f.producto_id = p.id
             WHERE f.compra_id = ?";

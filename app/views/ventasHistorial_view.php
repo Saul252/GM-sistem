@@ -132,7 +132,7 @@
                         <div class="col-md-2">
                             <label class="form-label small fw-bold">Periodo</label>
                             <select id="f_rango" class="form-select form-select-sm" onchange="togglePerso()">
-
+  <option value="semana">Semana</option>
                                 <option value="hoy">Hoy</option>
                                 <option value="ayer">Ayer</option>
                                 <option value="semana">Semana</option>
@@ -225,6 +225,7 @@
                                     <i class="bi bi-cash"></i> Registrar Abono
                                 </button>
                             </div>
+
                             <div class="text-end pe-3">
 
 
@@ -372,6 +373,33 @@
                                         </table>
                                     </div>
                                 </div>
+                                <div class="col-md-12 mt-3">
+                                    <h6 class="small fw-bold text-uppercase text-muted">
+                                        <i class="bi bi-map"></i>
+                                        Repartos
+                                    </h6>
+
+                                    <div class="table-responsive border rounded" style="max-height: 220px;">
+                                        <table class="table table-sm align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr class="small text-uppercase">
+                                                    <th># Reparto</th>
+                                                    <th>Fecha Entrega</th>
+                                                    <th>Estado</th>
+                                                    <th class="text-center">Ruta</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody id="tbodyRepartos" class="small">
+
+                                                <!-- ejemplo -->
+                                               
+                                                
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -379,9 +407,38 @@
             </div>
         </div>
     </div>
+<div class="modal fade" id="modalImprimirRuta" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
 
+            <div class="modal-header bg-light align-items-center py-3">
+                <h5 class="modal-title d-flex align-items-center gap-2 fw-bold text-dark">
+                    <i class="bi bi-receipt text-primary"></i>
+                    Ruta de Reparto: <span id="folioRutaPrint" class="text-primary"></span>
+                </h5>
+
+                <div class="d-flex gap-2 ms-auto me-2">
+                    <button class="btn btn-primary btn-sm px-3 d-flex align-items-center gap-1" onclick="imprimirModalRuta()">
+                        <span>🖨</span> Imprimir
+                    </button>
+                </div>
+
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body p-0" id="contenidoRutaPrint">
+                <!-- AQUÍ SE RENDERIZA TODO -->
+            </div>
+
+        </div>
+    </div>
+</div>
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <?php require_once __DIR__ . '/ventasHistorialModales/registarAbono.php'; ?>
     <?php require_once __DIR__ . '/entregasComponets/modalEntregaVentas.php'; ?>
@@ -410,6 +467,7 @@
         try {
             const res = await fetch(`${URL_CONTROLLER}?${params.toString()}`);
             const data = await res.json();
+
 
             $('#tablaVentas tbody').html(data.map(v => {
                 let total = parseFloat(v.total) || 0;
@@ -506,7 +564,10 @@
 
             }
             const res = await fetch(`${URL_CONTROLLER}?action=obtenerDetalle&id=${id}`);
+           cargarRepartos(id);
             const data = await res.json();
+           
+            
             ventaActual = data;
 
             $('#spanFolio').text(data.info.folio);
@@ -531,27 +592,35 @@
             // --- RENDERIZADO DE PRODUCTOS CON CONVERSIÓN ---
             $('#tbodyDetalle').html(data.productos.map(p => {
                 let cant = parseFloat(p.cantidad) || 0;
-                let pendiente =( cant - (parseFloat(p.cantidad_entregada) || 0)).toFixed(1);
+                let pendiente = (cant - (parseFloat(p.cantidad_entregada) || 0)).toFixed(3);
+
                 let factor = parseFloat(p.factor_conversion) || 1;
-              let pen=Number(pendiente);
-              console.log({
-    pen,
-    tipo: typeof pen,
-    comparacion: pen > 0
-});
+                let cantPendiente = pendiente / factor;
+
+                let pen = Number(pendiente);
+                let pendi = Number(cantPendiente);
+                let disponible = (p.disponible / factor);
+                console.log(disponible);
+                let entregada = p.cantidad_entregada / factor;
+
+                console.log({
+                    pen,
+                    tipo: typeof pen,
+                    comparacion: pen > 0
+                });
                 // 1. Definimos qué se verá en la columna "Venta"
                 let visualizacionVenta = "";
                 let infoEquivalenciaSub = "";
-let unm=(parseFloat(p.cantidad_entregada)/(1/parseFloat(p.equivalencia)));
-                    console.log(unm);
-                    unm=unm %1 !==0?unm.toFixed(0):unm;
+                let unm = (parseFloat(p.cantidad_entregada) / (1 / parseFloat(p.equivalencia)));
+                console.log(unm);
+                unm = unm % 1 !== 0 ? unm.toFixed(0) : unm;
                 if (factor > 1 && cant >= factor) {
                     // Si alcanza el factor (Ej: 20 bultos >= 20 factor)
                     let unidadesMayores = (cant / factor);
                     // Formateamos para que si es entero no muestre .00 (Ej: 1 en vez de 1.00)
                     let totalUnidadesStr = Number.isInteger(unidadesMayores) ? unidadesMayores :
                         unidadesMayores.toFixed(2);
-                    
+
 
                     // Lo que se verá grande en la celda
                     visualizacionVenta =
@@ -576,14 +645,25 @@ let unm=(parseFloat(p.cantidad_entregada)/(1/parseFloat(p.equivalencia)));
         ${cant <1?visualizacionVenta +' ('+unm + ' '+p.nombre+')':visualizacionVenta}
             
         </td>
-        <td class="text-center">${p.cantidad_entregada <1?p.cantidad_entregada + p.unidad_medida+' ('+unm +' '+ p.nombre+')':p.cantidad_entregada +p.unidad_medida}</td>
-        <td class="text-center text-success fw-bold">${p.disponible} ${p.unidad_medida}</td>
+        <td class="text-center">${entregada>1?entregada+ p.unidad_reporte:p.cantidad_entregada +p.unidad_medida}</td>
+        <td class="text-center text-success fw-bold">${disponible>=1?disponible.toFixed(3):p.disponible} ${disponible>=1?p.unidad_reporte:p.unidad_medida}</td>
         
-        <td class="text-center text-danger fw-bold">${pen} ${p.unidad_medida}</td>
+        <td class="text-center text-danger fw-bold">${(cantPendiente>=1?cantPendiente.toFixed(3):pen)} ${cantPendiente>=1?p.unidad_reporte:p.unidad_medida}</td>
          <td class="text-center col-input d-none">
             ${pen.toFixed(4) > 0 ? 
-                `<input type="number" class="form-control form-control-sm input-entrega mx-auto" 
-                    max="${pen}" min="0" value="0"data-dvid=${p.dvid} data-id="${p.producto_id}" style="width:70px">` 
+                `<input type="number" class="form-control form-control-sm input-entrega1 mx-auto" 
+                    max="${pen<=p.disponible?
+                    (pendi>=1?pendi:pen)
+                    :disponible>1?disponible:p.disponible
+                   }" min="00.1" value="0"data-dvid=${p.dvid} data-id="${p.producto_id}" data-factor="${
+                    (pendi>=1&& disponible>=1)?factor:1
+                    
+                   }" step="0.01"style="width:70px">
+                   <input type="hidden" class="form-control form-control-sm input-entrega mx-auto" 
+                     min="0" value="0"data-dvid=${p.dvid} data-id="${p.producto_id}" style="width:70px">
+                     <span class="badge bg-success">${
+                    (pendi>=1&& disponible>=1)?p.unidad_reporte:p.unidad_medida}</span>` 
+                     
                 : '<span class="badge bg-success">Completo</span>'}
         </td>
     </tr>`;
@@ -653,26 +733,135 @@ let unm=(parseFloat(p.cantidad_entregada)/(1/parseFloat(p.equivalencia)));
             console.error("Error al obtener detalle:", error);
         }
     }
+    document.addEventListener('input', e => {
+
+        if (e.target.classList.contains('input-entrega1')) {
+
+            const max = Number(e.target.max);
+            const min = Number(e.target.min);
+            const factor = Number(e.target.dataset.factor);
+
+            let value = Number(e.target.value);
+
+            if (value > max) {
+                value = max;
+            }
+
+            if (value < min) {
+                value = min;
+            }
+
+            e.target.value = value;
+
+            // buscar el input hermano
+            const contenedor = e.target.parentElement;
+
+            const inputEntrega = contenedor.querySelector('.input-entrega');
+
+            if (inputEntrega) {
+                inputEntrega.value = (value * factor);
+            }
+        }
+    });
+    async function cargarRepartos(idVenta) {
+
+    const resp = await fetch(
+        `/cfsistem/app/controllers/repartosController.php?action=get_repartos_venta&id=${idVenta}`
+    );
+
+    const repartoViaje = await resp.json();
+
+    const tbody = document.getElementById('tbodyRepartos');
+    tbody.innerHTML = '';
+
+    if (!repartoViaje.success) return;
+
+    // ================================
+    // AGRUPAR POR FOLIO VIAJE
+    // ================================
+    const grupos = {};
+   
+    repartoViaje.data.forEach(item => {
+
+        if (!grupos[item.folio_viaje]) {
+
+            grupos[item.folio_viaje] = {
+                folio_viaje: item.folio_viaje,
+                fecha_viaje: item.fecha_viaje,
+                estatus_logistico: item.estatus_logistico,
+                productos: [],
+                clientes: new Set()
+            };
+        }
+
+        grupos[item.folio_viaje].productos.push(item.productos);
+        grupos[item.folio_viaje].clientes.add(item.cliente);
+    });
+
+    // ================================
+    // RENDER TABLA
+    // ================================
+    Object.values(grupos).forEach(g => {
+
+        const estadoClass =
+            g.estatus_logistico === 'completado'
+                ? 'bg-success'
+                : 'bg-warning text-dark';
+
+        const tr = `
+            <tr>
+
+                <td class="fw-bold">
+                    ${g.folio_viaje}
+                </td>
+
+                <td>
+                    ${g.fecha_viaje}
+                </td>
+
+                <td>
+                    <span class="badge ${estadoClass}">
+                        ${g.estatus_logistico}
+                    </span>
+                </td>
+
+                <td class="text-center">
+
+                    <button class="btn btn-sm btn-outline-primary"
+                      onclick="imprimirRuta('${idVenta}','${g.folio_viaje}')">
+
+                        <i class="bi bi-printer"></i>
+                        Imprimir Ruta 
+                    </button>
+
+                </td>
+
+            </tr>
+        `;
+
+        tbody.insertAdjacentHTML('beforeend', tr);
+    });
+}
     async function procesarEntrega() {
         const fd = new FormData();
         let ok = false;
 
-       $('.input-entrega').each(function() {
+        $('.input-entrega').each(function() {
 
-    const cant = parseFloat($(this).val());
+            const cant = parseFloat($(this).val());
 
-    console.log($(this).data('dvid'), cant);
+            console.log($(this).data('dvid'), cant);
 
-    if (cant > 0) {
+            if (cant > 0) {
 
-        fd.append(
-            `productos[${$(this).data('dvid')}]`,
-            cant
-        );
+                fd.append(
+                    `productos[${$(this).data('dvid')}]`,
+                    cant
+                );
 
-        ok = true;
-    }
-});
+                ok = true;
+            }
+        });
 
         if (!ok) return Swal.fire('Atención', 'Indique al menos una cantidad válida para entregar', 'warning');
 
@@ -820,7 +1009,435 @@ let unm=(parseFloat(p.cantidad_entregada)/(1/parseFloat(p.equivalencia)));
             }
         }
     }
-    </script>
+   async function imprimirRuta(idVenta, folioViaje) {
+
+    document.getElementById('folioRutaPrint').textContent = folioViaje;
+
+    const respuesta = await fetch(
+        `/cfsistem/app/controllers/repartosController.php?action=get_ruta_entrega_venta&idVenta=${idVenta}&id=${encodeURIComponent(folioViaje)}`
+    );
+
+    const data = await respuesta.json();
+
+    console.log(data);
+
+    if (!data.success) return;
+
+    const cont = document.getElementById('contenidoRutaPrint');
+    const datos = data.data;
+
+    // =========================================
+    // DATOS GENERALES
+    // =========================================
+    const info = datos[0];
+
+    // =========================================
+    // AGRUPAR PRODUCTOS
+    // =========================================
+    const productosAgrupados = {};
+
+    datos.forEach(item => {
+        const key = item.nombreProducto;
+        if (!productosAgrupados[key]) {
+            productosAgrupados[key] = {
+                nombreProducto: item.nombreProducto,
+                totalCantidad: 0,
+                unidadMedida: item.unidadMedida,
+                unidadReporte: item.unidadReporte,
+                factor: item.factor
+            };
+        }
+        productosAgrupados[key].totalCantidad += parseFloat(item.totalCantidad || 0);
+    });
+
+    // =========================================
+    // GENERAR FILAS
+    // =========================================
+    let filas = '';
+
+    Object.values(productosAgrupados).forEach((prod, i) => {
+        const total = prod.totalCantidad / prod.factor;
+        const totalCantidad = total >= 1 ? total : prod.totalCantidad;
+        const unidad = total >= 1 ? prod.unidadReporte : prod.unidadMedida;
+
+        // Formatear dinámicamente el color del badge del estado en la tabla
+        let badgeColor = 'bg-warning text-dark';
+        if (info.estatus_logistico === 'completado') badgeColor = 'bg-success text-white';
+        if (info.estatus_logistico === 'en_transito') badgeColor = 'bg-primary text-white';
+
+        filas += `
+            <tr>
+                <td class="text-muted fw-semibold">${i + 1}</td>
+                <td style="max-width:350px;" class="fw-medium text-dark">${prod.nombreProducto}</td>
+                <td style="max-width:250px;" class="fw-bold text-primary">
+                    ${parseFloat(totalCantidad).toFixed(2)} <span class="text-muted fw-normal small">${unidad}</span>
+                </td>
+                <td style="max-width:250px;" class="text-muted small">${info.direccion_entrega ?? '-'}</td>
+                <td class="text-center">
+                    <span class="badge ${badgeColor} text-capitalize font-monospace">${info.estatus_logistico}</span>
+                </td>
+            </tr>
+        `;
+    });
+
+    // Formatear color de estatus general
+    let generalBadgeColor = 'bg-warning text-dark';
+    if (info.estatus_logistico === 'completado') generalBadgeColor = 'bg-success text-white';
+    if (info.estatus_logistico === 'en_transito') generalBadgeColor = 'bg-primary text-white';
+
+    // =========================================
+    // HTML GENERADO
+    // =========================================
+    let html = `
+        <div class="hoja-ruta-container p-4">
+
+            <!-- HEADER INTERNO -->
+            <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+                <div>
+                    <h4 class="fw-bold text-dark m-0 d-flex align-items-center gap-2">
+                        <span>🚚</span> Hoja de Ruta
+                    </h4>
+                    <div class="text-muted small mt-1">
+                        Folio de viaje: <span class="fw-bold text-dark font-monospace">${info.folio_viaje}</span>
+                    </div>
+                </div>
+
+                <div class="text-end">
+                    <div class="small text-muted mb-1">Fecha de Salida</div>
+                    <div class="fw-bold text-dark">${info.fecha_viaje ?? '-'}</div>
+                </div>
+            </div>
+<style>
+
+.info-grid{
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    width: 100%;
+}
+
+/* tarjeta */
+.info-box{
+    border:1px solid #e9e9e9;
+    border-radius:8px;
+    padding:10px 12px;
+    background:#fff;
+
+    /* CLAVE: evita deformación en modal */
+    min-width: 0;
+}
+
+/* títulos */
+.info-title{
+    font-size:10.5px;
+    color:#6c757d;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+    margin-bottom:4px;
+}
+
+/* valor */
+.info-value{
+    font-size:13px;
+    font-weight:600;
+    line-height:1.2;
+
+    /* evita desbordes en modal */
+    white-space: normal;
+    word-break: break-word;
+}
+
+/* subtítulo */
+.info-sub{
+    font-size:11.5px;
+    color:#666;
+}
+</style>
+            <!-- BLOQUES DE INFORMACIÓN PRINCIPAL -->
+          <div class="info-grid">
+
+    <div class="info-box">
+        <div class="info-title">Unidad de Transporte</div>
+        <div class="info-value">${info.unidad_nombre ?? '-'}</div>
+        <div class="info-sub mt-1">
+            Placas: <span class="fw-semibold">${info.unidad_placas ?? '-'}</span>
+        </div>
+    </div>
+
+    <div class="info-box">
+        <div class="info-title">Operador / Chofer</div>
+        <div class="info-value">${info.nombre_chofer ?? '-'}</div>
+        <div class="info-sub mt-1 text-muted">Asignado de ruta</div>
+    </div>
+
+    <div class="info-box">
+        <div class="info-title">Cliente Destino</div>
+        <div class="info-value">${info.cliente ?? '-'}</div>
+        <div class="info-sub mt-1">
+            Tel: <span class="fw-semibold">${info.tel_cliente ?? 'Sin teléfono'}</span>
+        </div>
+    </div>
+
+</div>
+
+            <!-- SECCIÓN DE DETALLES / TABLA -->
+            <div class="table-responsive border rounded mb-4">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th style="width: 5%">#</th>
+                            <th style="width: 40%">Producto descripción</th>
+                            <th style="width: 20%">Cantidad total</th>
+                            <th style="width: 23%">Dirección de entrega</th>
+                            <th style="width: 12%" class="text-center">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filas}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- ÁREA DE FIRMAS FORMALIZADA -->
+            <div class="firmas-container pt-4">
+                <div class="row g-5">
+                    <div class="col-6">
+                        <div class="firma-box">
+                            <div class="firma-linea"></div>
+                            <div class="firma-nombre">Firma Chofer / Transportista</div>
+                            <div class="text-muted small">Nombre y Fecha</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="firma-box">
+                            <div class="firma-linea"></div>
+                            <div class="firma-nombre">Firma Cliente / Recibe</div>
+                            <div class="text-muted small">Sello y Firma de conformidad</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    `;
+
+    cont.innerHTML = html;
+
+    const modal = new bootstrap.Modal(document.getElementById('modalImprimirRuta'));
+    modal.show();
+}
+function imprimirModalRuta() {
+
+    const contenido = document.getElementById('contenidoRutaPrint').innerHTML;
+    // Se abre en un formato horizontal adecuado para media hoja
+    const ventana = window.open('', '_blank', 'width=950,height=650');
+
+    ventana.document.write(`
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <title>Hoja de Ruta</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+            <style>
+                body {
+                    font-family: 'Segoe UI', Arial, sans-serif;
+                    background: #f8f9fa;
+                    color: #333;
+                    padding: 15px;
+                    font-size: 11.5px; /* Un poco más compacta para media hoja */
+                }
+
+                /* Contenedor tipo hoja limpia ajustable */
+                .ticket {
+                    width: 100%;
+                    max-width: 820px;
+                    margin: auto;
+                    background: #fff;
+                    border: 1px solid #e0e0e0;
+                    border-radius: 12px;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+                    overflow: hidden;
+                }
+
+                .hoja-ruta-container {
+                    padding: 20px !important;
+                }
+
+                /* Cajas de datos estilizadas */
+                .info-box {
+                    border: 1px solid #e2e8f0;
+                    border-radius: 8px;
+                    padding: 10px 12px;
+                    background: #f8fafc;
+                    height: 100%;
+                }
+
+                .info-title {
+                    font-size: 10px;
+                    color: #64748b;
+                    text-transform: uppercase;
+                    letter-spacing: .6px;
+                    font-weight: 700;
+                    margin-bottom: 3px;
+                }
+
+                .info-value {
+                    font-size: 12.5px;
+                    font-weight: 600;
+                    color: #1e293b;
+                    line-height: 1.2;
+                }
+
+                .info-sub {
+                    font-size: 11px;
+                    color: #64748b;
+                }
+
+                /* Tablas pulidas */
+                table thead th {
+                    background-color: #f1f5f9 !important;
+                    color: #475569 !important;
+                    font-size: 10px;
+                    text-transform: uppercase;
+                    letter-spacing: .5px;
+                    font-weight: 700;
+                    padding: 8px 10px !important;
+                    border-bottom: 2px solid #e2e8f0 !important;
+                }
+
+                table tbody td {
+                    
+                  
+                    font-size: 11.5px;
+                }
+
+                /* Sección de Firmas estructurada */
+                .firmas-container {
+                    page-break-inside: avoid;
+                }
+
+                .firma-box {
+                    text-align: center;
+                    padding: 5px;
+                }
+
+                .firma-linea {
+                    width: 75%;
+                    margin: 35px auto 5px auto;
+                    border-top: 1px solid #94a3b8;
+                }
+
+                .firma-nombre {
+                    font-size: 11px;
+                    font-weight: 600;
+                    color: #1e293b;
+                }
+@media print {
+    .info-grid{
+        display: grid !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 10px !important;
+    }
+}
+                /* Forzado estricto de Media Hoja (Formato Horizontal Compacto) */
+                @media print {
+                   
+                    body {
+                        background: #f8f9fa !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                        padding: 0 !important;
+                    }
+                    .ticket {
+                        width: 100% !important; /* Toma el ancho horizontal disponible sin estirarse verticalmente */
+                        max-width: 100% !important;
+                        background: #fff !important;
+                        border: 1px solid #e0e0e0 !important;
+                        border-radius: 12px !important;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+                        margin: 0 auto !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
+                    .no-print {
+                        display: none !important;
+                    }
+                    tr { 
+                        page-break-inside: avoid !important; 
+                    }
+                    .info-box {
+                        background: #f8fafc !important;
+                        border: 1px solid #e2e8f0 !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
+                    table thead th {
+                        background-color: #f1f5f9 !important;
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
+                }
+                    table {
+    border-collapse: collapse !important;
+}
+
+/* 🔥 CLAVE: elimina espacio interno de TODAS las celdas */
+table tbody td {
+    padding: 2px 6px !important;
+    margin: 0 !important;
+    line-height: 1.1 !important;
+    vertical-align: middle !important;
+}
+
+/* elimina espacio extra de párrafos y saltos */
+table p {
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* elimina saltos visuales tipo bloque */
+table br {
+    display: none !important;
+}
+
+/* si quieres aún MÁS compacto */
+.table-compact td {
+    padding: 1px 4px !important;
+}
+            </style>
+        </head>
+        <body>
+
+            <div class="text-end mb-3 no-print" style="max-width: 850px; margin: auto;">
+                <button class="btn btn-dark px-4 shadow-sm fw-semibold" onclick="window.print()">
+                    🖨 Enviar a Impresora
+                </button>
+            </div>
+
+            <div class="ticket">
+                <div class="hoja-ruta-container">
+                    ${contenido}
+                </div>
+            </div>
+
+            <!-- Disparador automático de impresión al terminar de cargar -->
+            <script>
+                window.onload = function() {
+                    setTimeout(function() {
+                        window.print();
+                    }, 300);
+                };
+            <\/script>
+
+        </body>
+        </html>
+    `);
+
+    ventana.document.close();
+    ventana.focus();
+}
+   </script>
 </body>
 
 </html>

@@ -118,6 +118,7 @@
                                 </thead>
                                 <tbody>
                                 </tbody>
+                               
                             </table>
 
                             <div id="emptyState" class="text-center py-5 text-muted">
@@ -128,6 +129,23 @@
                                 <small>Utiliza el buscador de arriba para añadir artículos</small>
                             </div>
                         </div>
+                         <div class="text-end mt-3">
+
+    <small class="d-block text-muted fw-semibold mb-1"
+        style="letter-spacing:.5px;">
+        COSTO TOTAL DE COMPRA
+    </small>
+
+    <div id="costoTotalCompra"
+        class="fw-bold text-success"
+        style="
+            font-size:2rem;
+            line-height:1;
+        ">
+        $0.00
+    </div>
+
+</div>
                     </div>
 
                     <div class="modal-footer border-0 p-4">
@@ -163,8 +181,8 @@ $('.select2-modal').select2({
 
 // 🔥 EVITAR LOOPS
 let recalculandoFila = false;
-
-function calcularTotal(input, origen = '') {
+let totaLCompra;
+function calcularTotal(input) {
 
     if (recalculandoFila) return;
 
@@ -177,61 +195,42 @@ function calcularTotal(input, origen = '') {
         const cantidad = parseFloat(
             fila.querySelector('.cantidad').value
         ) || 0;
-console.log(fila.querySelector('.cantidad').value);
-        const factor = parseFloat(
-            fila.querySelector('.unidad-select').value
-        ) || 1;
 
-        let precioUnitario = parseFloat(
+        const precioUnitario = parseFloat(
             fila.querySelector('.precio-unitario').value
         ) || 0;
 
-        let precioTotal = parseFloat(
-            fila.querySelector('.precio-total').value
-        ) || 0;
+        // =====================================
+        // CALCULAR TOTAL
+        // =====================================
 
-        // =====================================================
-        // 🔥 SI MODIFICÓ COSTO TOTAL
-        // =====================================================
+        const precioTotal =
+            cantidad * precioUnitario;
 
-        if (origen === 'total') {
+        fila.querySelector('.precio-total').value =
+            precioTotal.toFixed(2);
 
-            const divisor = cantidad ;
+        // =====================================
+        // SUMAR TODO
+        // =====================================
 
-            if (
-                precioTotal > 0 &&
-                divisor > 0
-            ) {
+        totaLCompra = 0;
 
-                precioUnitario =
-                    precioTotal / divisor;
-                     if(precioUnitario%1 !=0){
-                    fila.querySelector('.precio-unitario').value =
-                    precioUnitario.toFixed(4);
+        document.querySelectorAll('.precio-total')
+            .forEach(el => {
 
-                }
-                else{
-                    fila.querySelector('.precio-unitario').value =
-                    precioUnitario;
+                totaLCompra +=
+                    parseFloat(el.value) || 0;
+            });
+           const cT = document.getElementById('costoTotalCompra');
 
-                }
+cT.textContent = totaLCompra.toLocaleString('es-MX', {
+    style: 'currency',
+    currency: 'MXN'
+});
 
-                
-            }
-        }
-
-        // =====================================================
-        // 🔥 SI MODIFICÓ COSTO UNITARIO
-        // =====================================================
-
-        if (origen === 'unitario') {
-
-            precioTotal =
-                cantidad * precioUnitario ;
-
-            fila.querySelector('.precio-total').value =
-                precioTotal.toFixed(2);
-        }
+console.log(totaLCompra);
+        console.log(totaLCompra);
 
     } finally {
 
