@@ -97,18 +97,25 @@ function verEvidenciasPorFolio(viajeFolio) {
                     // Verificamos si existe la evidencia
                   // Si alguna de las dos fotos tiene contenido, consideramos que ya existe evidencia
 const existeEvidencia = (entrega.foto_1 || entrega.foto_2);
+const cantidadIni=entrega.totalCantidad/entrega.fc;
+                const cantidad =cantidadIni>=1?cantidadIni:entrega.totalCantidad;
+                const unidad =cantidadIni>=1?entrega.ur:entrega.um;
                     html += `
                     <div class="entrega-item-card animate__animated animate__fadeInUp mb-4 p-3 border rounded-4 bg-white shadow-sm">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div>
                                 <h6 class="fw-bold mb-0" style="color: #1d1d1f;">${entrega.cliente}</h6>
                                 <p class="text-muted mb-0" style="font-size: 0.75rem;">
-                                    <i class="bi bi-geo-alt-fill text-danger"></i> ${entrega.direccion}
+                                    <i class="bi bi-geo-alt-fill text-danger"></i> ${entrega.direccion_entrega}
+                                </p>
+                                 <h6 class="fw-bold mb-0" style="color: #1d1d1f;">${entrega.nombreProducto}</h6>
+                                <p class="text-muted mb-0" style="font-size: 0.75rem;">
+                                     ${cantidad + unidad}
                                 </p>
                             </div>
                             <div class="d-flex flex-column align-items-end gap-1">
                                 <span class="badge rounded-pill ${existeEvidencia ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'} border px-3" style="font-size: 0.65rem;">
-                                    ${entrega.estatus_entrega || 'PENDIENTE'}
+                                    ${entrega.estatus_logistico || 'PENDIENTE'}
                                 </span>
                                 ${esSupervisor ? `
                                     <div class="btn-group mt-1">
@@ -118,7 +125,7 @@ const existeEvidencia = (entrega.foto_1 || entrega.foto_2);
                                                 <i class="bi bi-pencil-square"></i>
                                             </button>
                                             
-                                            <button class="btn btn-sm btn-outline-danger border-0 p-1" onclick="confirmarEliminarEvidencia(${entrega.id_movimiento})" title="Eliminar evidencia">
+                                            <button class="btn btn-sm btn-outline-danger border-0 p-1" onclick="confirmarEliminarEvidencia(${entrega.mid})" title="Eliminar evidencia">
                                                 <i class="bi bi-trash3-fill"></i>
                                             </button>
                                         ` : `
@@ -131,6 +138,7 @@ const existeEvidencia = (entrega.foto_1 || entrega.foto_2);
                                 ` : ''}
                             </div>
                         </div>
+
 
                         <div class="my-3 p-2 rounded-3 bg-light" style="border-left: 3px solid #007aff;">
                             <p class="mb-0 text-dark italic" style="font-size: 0.8rem;">

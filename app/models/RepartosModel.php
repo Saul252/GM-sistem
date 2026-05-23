@@ -2115,50 +2115,168 @@ public function obtenerViajesLogisticaParaEntrega($folio_viaje = null) {
         return [];
     }
 }
-public function getEvidenciasPorFolioRuta($folio_viaje) {
-    try {
-        $base_path = "/cfsistem/"; 
+public function getEvidenciasPorFolioRuta($idRuta)
+{
+    $sql = "        SELECT 
+            t.folio_viaje,
+            t.fecha_viaje,
+            t.fecha_llegada,
+            t.estatus_logistico,
+            t.unidad_nombre,
+            t.unidad_placas,
+            t.nombre_chofer,
+            t.ayudantes,
+            t.orden_visita,
+            t.direccion_entrega,
+            t.estatus_parada,
+            t.latitud,
+            t.longitud,
+            t.numeroVenta,
+            t.folio_venta,
+            t.cliente,
+            t.tel_cliente,
+            t.vehiculo_id,
+        
 
-        $sql = "SELECT 
-                    crv.id AS evidencia_id, 
-                    trp.id AS id_movimiento, 
-                    v.folio AS venta_folio,
-                    v.id AS id_venta,          -- Agregado para nuevas inserciones
-                    trm.vehiculo_id,           -- Agregado para nuevas inserciones
-                    c.nombre_comercial AS cliente,
-                    trp.descripcion_punto AS direccion,
-                    crv.estatus AS estatus_entrega,
-                    crv.fecha,
-                    crv.hora,
-                    crv.comentario,
-                    -- URL completa para mostrar
-                    IF(crv.fotografia_entrega IS NOT NULL AND crv.fotografia_entrega != '', 
-                       CONCAT('$base_path', crv.fotografia_entrega), NULL) AS foto_1,
-                    IF(crv.fotografia_nota IS NOT NULL AND crv.fotografia_nota != '', 
-                       CONCAT('$base_path', crv.fotografia_nota), NULL) AS foto_2
-                FROM transporte_consolidacion tc
-                INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
-                INNER JOIN transporte_rutas_puntos trp ON trm.id = trp.reparto_id 
-                INNER JOIN movimientos m ON trm.entrega_venta_id = m.id
-                LEFT JOIN ventas v ON m.referencia_id = v.id
-                LEFT JOIN clientes c ON v.id_cliente = c.id
-                -- CAMBIO CRÍTICO: LEFT JOIN para traer puntos sin evidencia aún
-                LEFT JOIN confirmacion_reparto_viaje crv ON trp.id = crv.id_movimiento
-                WHERE tc.viaje_folio = ?
-                GROUP BY trp.id 
-                -- Ordenamos por el orden de visita para que el supervisor vea la ruta lógica
-                ORDER BY trp.orden_visita ASC";
+            t.nombreProducto,
+            t.totalCantidad,
+            t.um,
+            t.fc,
+            t.ur,
+            t.mid,
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("s", $folio_viaje);
-        $stmt->execute();
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    } catch (Exception $e) {
-        error_log("Error getEvidenciasPorFolioRuta: " . $e->getMessage());
-        return [];
+            t.foto_1,
+            t.foto_2,
+            t.estatus_entrega,
+            t.fecha,
+            t.hora,
+            t.comentario
+
+        FROM (
+
+            SELECT 
+                tc.viaje_folio AS folio_viaje,
+                tc.fecha_creacion AS fecha_viaje,
+
+                trm.hora_llegada_real AS fecha_llegada,
+                trm.estado_reparto AS estatus_logistico,
+
+                tv.nombre AS unidad_nombre,
+                tv.placas AS unidad_placas,
+
+                u_chofer.nombre AS nombre_chofer,
+
+                (
+                    SELECT GROUP_CONCAT(u_ayu.nombre SEPARATOR ' / ') 
+                    FROM transporte_tripulantes_detalle ttd
+                    INNER JOIN trabajadores u_ayu 
+                        ON ttd.usuario_id = u_ayu.id
+                    WHERE ttd.reparto_id = tc.reparto_id
+                ) AS ayudantes,
+
+                trp.id AS id_movimiento,
+                m.id as mid,
+                trp.orden_visita,
+                trp.descripcion_punto AS direccion_entrega,
+                trp.estado_punto AS estatus_parada,
+                trp.latitud, 
+                trp.longitud,
+                 tv.id as vehiculo_id,
+
+                v.id AS numeroVenta,
+                v.folio AS folio_venta,
+
+                c.nombre_comercial AS cliente,
+                c.telefono AS tel_cliente,
+
+                p.nombre AS nombreProducto,
+                p.factor_conversion AS fc,
+                p.unidad_reporte AS ur,
+
+                SUM(m.cantidad) AS totalCantidad,
+
+                p.unidad_medida AS um,
+
+                IFNULL(
+                    CONCAT('/cfsistem/', NULLIF(crv.fotografia_entrega, '')),
+                    NULL
+                ) AS foto_1,
+
+                IFNULL(
+                    CONCAT('/cfsistem/', NULLIF(crv.fotografia_nota, '')),
+                    NULL
+                ) AS foto_2,
+
+                crv.estatus AS estatus_entrega,
+                crv.fecha,
+                crv.hora,
+                crv.comentario
+
+            FROM transporte_consolidacion tc
+
+            INNER JOIN transporte_repartos_maestro trm 
+                ON tc.reparto_id = trm.id
+
+            INNER JOIN transporte_vehiculos tv 
+                ON tc.vehiculo_id = tv.id
+
+            INNER JOIN transporte_rutas_puntos trp 
+                ON trm.id = trp.reparto_id 
+
+            INNER JOIN movimientos m 
+                ON trm.entrega_venta_id = m.id
+
+            LEFT JOIN confirmacion_reparto_viaje crv
+                ON crv.id_movimiento = m.id
+
+
+            INNER JOIN productos p 
+                ON m.producto_id = p.id
+
+            LEFT JOIN ventas v 
+                ON m.referencia_id = v.id
+
+            LEFT JOIN clientes c 
+                ON v.id_cliente = c.id
+
+            LEFT JOIN trabajadores u_chofer 
+                ON trm.usuario_encargado_id = u_chofer.id
+
+            WHERE  tc.viaje_folio = ?
+
+            GROUP BY 
+                trp.id,
+                p.id
+
+        ) t
+
+        GROUP BY 
+            t.id_movimiento,
+            t.nombreProducto
+
+        ORDER BY t.orden_visita ASC
+    ";
+
+    $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) {
+        die($this->db->error);
     }
-}
-public function actualizarEvidencia($id, $comentario, $foto_entrega = null, $foto_nota = null) {
+
+    $stmt->bind_param("s",  $idRuta);
+
+    $stmt->execute();
+
+    $resultado = $stmt->get_result();
+
+    $data = [];
+
+    while ($row = $resultado->fetch_assoc()) {
+        $data[] = $row;
+    }
+
+    return $data;
+}public function actualizarEvidencia($id, $comentario, $foto_entrega = null, $foto_nota = null) {
     $set = "comentario = ?";
     $params = [$comentario];
     $types = "s";

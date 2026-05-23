@@ -1088,23 +1088,25 @@ const cantMayoreo = Math.floor(cantidad); // 1
                 <td>
                     <label class="small text-muted text-uppercase fw-bold">${uRep}</label>
                     <input type="number" class="form-control form-control-sm i-mayoreo border-success" 
-                        value="${cantMayoreo}" step=".01" oninput="recalcularFila(${index})">
+                        value="${cantMayoreo}" step=".01" oninput="recalcularFila(${index})" readonly>
                 </td>
 
                 <td>
                     <label class="small text-muted text-uppercase fw-bold">${uBase}</label>
                     <input type="number" class="form-control form-control-sm i-sueltas border-primary" 
-                        value="${cantSueltas}" step="0.01" oninput="recalcularFila(${index})">
+                        value="${cantSueltas}" step="0.01" oninput="recalcularFila(${index})" readonly>
                 </td>
 
                 <td>
                     <label class="form-label small text-danger fw-semibold mb-1">Faltantes</label>
-                    <input type="number"
-                    id="faltante_${index}"
-                        class="form-control form-control-sm border-danger shadow-sm i-faltante"
-                          name="items[${index}][cantidad_faltante]
-                        value="0"  step=".01"min="0" 
-                        oninput="recalcularFila(${index})">
+                  <input type="number"
+    id="faltante_${index}"
+    class="form-control form-control-sm border-danger shadow-sm i-faltante"
+    name="items[${index}][cantidad_faltante]"
+    value="0"
+    step=".01"
+    min="0"
+    oninput="recalcularFila(${index})">
 
                    
                 </td>

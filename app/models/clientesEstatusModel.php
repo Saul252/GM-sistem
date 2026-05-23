@@ -214,7 +214,7 @@ public function obtenerExpedienteCompleto($id_cliente) {
 
         // 3. Detalle de pagos (Usa la variable corregida)
         $sqlPagos = "SELECT 
-                        hp.monto, hp.fecha, u.nombre as usuario_recibio
+                        hp.monto, hp.fecha, u.nombre as usuario_recibio, hp.metodo_pago,hp.saldo_favor
                      FROM historial_pagos hp
                      INNER JOIN usuarios u ON hp.usuario_id = u.id
                      WHERE hp.venta_id = ?

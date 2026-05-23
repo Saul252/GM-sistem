@@ -293,9 +293,20 @@ $('.btn-ver-medidas').last() // Selecciona el último botón agregado en el bucl
                 
 
                 // 5. Precios
-                setVal('edit_p_min', p.precio_minorista);
-                setVal('edit_p_may', p.precio_mayorista);
-                setVal('edit_p_dist', p.precio_distribuidor);
+              setVal(
+  'edit_p_min',
+  (Math.round((p.precio_minorista * p.factor_conversion) * 100) / 100).toFixed(1)
+);
+
+setVal(
+  'edit_p_may',
+  (Math.round((p.precio_mayorista * p.factor_conversion) * 100) / 100).toFixed(1)
+);
+
+setVal(
+  'edit_p_dist',
+  (Math.round((p.precio_distribuidor * p.factor_conversion) * 100) / 100).toFixed(1)
+);
 
                 // 6. Stock
                 const selectUnidad = document.getElementById('edit_unidad_reporte');

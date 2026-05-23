@@ -830,8 +830,8 @@
                     <button class="btn btn-sm btn-outline-primary"
                       onclick="imprimirRuta('${idVenta}','${g.folio_viaje}')">
 
-                        <i class="bi bi-printer"></i>
-                        Imprimir Ruta 
+                      
+                        Ver Reparto 
                     </button>
 
                 </td>
@@ -1099,12 +1099,14 @@
                     </h4>
                     <div class="text-muted small mt-1">
                         Folio de viaje: <span class="fw-bold text-dark font-monospace">${info.folio_viaje}</span>
+                    </div><div class="text-muted small mt-1">
+                        Registro de viaje: <span class="fw-bold text-dark font-monospace">${info.fecha_viaje ?? '-'}</span>
                     </div>
                 </div>
 
                 <div class="text-end">
-                    <div class="small text-muted mb-1">Fecha de Salida</div>
-                    <div class="fw-bold text-dark">${info.fecha_viaje ?? '-'}</div>
+                    <div class="small text-muted mb-1">Fecha de Salida:____________________</div>
+                    <div class="small text-muted mb-1">Fecha de llegada:____________________</div>
                 </div>
             </div>
 <style>
@@ -1201,20 +1203,27 @@
             <!-- ÁREA DE FIRMAS FORMALIZADA -->
             <div class="firmas-container pt-4">
                 <div class="row g-5">
-                    <div class="col-6">
+                    <div class="col-4">
                         <div class="firma-box">
                             <div class="firma-linea"></div>
                             <div class="firma-nombre">Firma Chofer / Transportista</div>
                             <div class="text-muted small">Nombre y Fecha</div>
                         </div>
                     </div>
-                    <div class="col-6">
+                    <div class="col-4">
                         <div class="firma-box">
                             <div class="firma-linea"></div>
                             <div class="firma-nombre">Firma Cliente / Recibe</div>
                             <div class="text-muted small">Sello y Firma de conformidad</div>
                         </div>
                     </div>
+                    <div class="col-4">
+                       <div class="info-box">
+        <div class="info-sub mt-1">Observaciones y Comentarios:</div>
+        
+    </div>
+                     
+                    
                 </div>
             </div>
 

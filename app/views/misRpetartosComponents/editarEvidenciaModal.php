@@ -187,7 +187,7 @@ console.log("Objeto recibido en modal:", data);
 
 // Intentamos obtener el ID de la confirmación (evidencia_id) 
 // Si no existe, tomamos el del movimiento (id_movimiento)
-const idFinal =  data.id_movimiento || 0;
+const idFinal =  data.mid || 0;
 
 console.log("ID Final asignado:", idFinal);
 
@@ -222,22 +222,22 @@ if(document.getElementById('m_id_visible')) {
 
     // 4. Mapeo de datos (Ajustado a los nombres que vienen de tu SQL)
     // Usamos evidencia_id o id_movimiento según lo que envíe tu controlador
-    const idMovimiento = data.id_movimiento || 0;
+    const idMovimiento = idFinal|| 0;
     
     document.getElementById('m_mov_id').value = idMovimiento;
     if(document.getElementById('m_id_visible')) {
         document.getElementById('m_id_visible').innerText = idMovimiento;
     }
     
-    document.getElementById('m_venta_id').value = data.venta_folio || data.id_venta || 0;
+    document.getElementById('m_venta_id').value = data.numeroVenta ?? 0;
     
     // Si vehiculo_id no viene en el JSON de evidencias, podrías necesitarlo en el objeto
     if(document.getElementById('m_vehiculo_id')) {
         document.getElementById('m_vehiculo_id').value = data.vehiculo_id || 0; 
     }
 
-    document.getElementById('m_cliente_full').innerText = `${data.cliente || 'S/N'} (${data.venta_folio || 'S/F'})`;
-    document.getElementById('m_direccion_full').innerText = data.direccion || 'Sin dirección';
+    document.getElementById('m_cliente_full').innerText = `${data.cliente || 'S/N'} (${data.folio_venta || 'S/F'})`;
+    document.getElementById('m_direccion_full').innerText = data.direccion_entrega || 'Sin dirección';
 
     // 5. Lógica de "Modificar" (Siempre será edición si entramos desde el monitor de evidencias)
     titulo.innerText = "Modificar Entrega";
@@ -248,7 +248,7 @@ if(document.getElementById('m_id_visible')) {
     btnGuardar.disabled = false;
 
     // Llenar campos de texto
-    document.getElementById('m_estatus_select').value = data.estatus_entrega || "Entregado";
+    document.getElementById('m_estatus_select').value = data.estatus_logistico || "Entregado";
     document.getElementById('m_comentario').value = data.comentario || "";
 
     // 6. Previsualización de fotos cargadas (foto_1 y foto_2)

@@ -158,33 +158,31 @@ if ($action === 'get_monitor_entregas') {
     ]);
     exit;
 }  // ... dentro de tu switch o bloques if de action ...
-
 if ($action === 'get_evidencias_por_folio') {
-    $folio = $_GET['folio'] ?? '';
-    
-    if (!empty($folio)) {
-        // IMPORTANTE: Usamos $repartoM que es tu instancia
-        $data = $repartoM->getEvidenciasPorFolioRuta($folio); 
-        $res = [];
-        
-        foreach ($data as $r) {
-            $res[] = [
-                "id_movimiento"     => $r['id_movimiento'] ?? '0',
-                "cliente"     => $r['cliente'] ?? 'Cliente General',
-                "venta_folio" => $r['venta_folio'] ?? 'S/F',
-                "direccion"   => $r['direccion'] ?? 'Dirección no registrada',
-                "comentario"  => $r['comentario'] ?? 'Sin observaciones',
-                "fecha"       => $r['fecha'] . " " . $r['hora'],
-                "estado"      => $r['estatus_entrega'] ?? 'Entregado',
-                "foto_1"      => $r['foto_1'], // Ya trae la ruta desde el modelo
-                "foto_2"      => $r['foto_2']  // Ya trae la ruta desde el modelo
-            ];
-        }
-        
-        echo json_encode(["success" => true, "data" => $res]);
-    } else {
-        echo json_encode(["success" => false, "message" => "Folio de viaje no proporcionado"]);
+
+    header('Content-Type: application/json');
+
+    $folio = trim($_GET['folio'] ?? '');
+
+    if ($folio === '') {
+
+        echo json_encode([
+            "success" => false,
+            "message" => "Folio de viaje no proporcionado"
+        ]);
+
+        exit;
     }
+
+    $data = $repartoM->getEvidenciasPorFolioRuta($folio);
+
+  
+    echo json_encode([
+        "success" => true,
+        "total"   => 0,
+        "data"    => $data
+    ]);
+
     exit;
 }
   // --- ACCIÓN: OBTENER DETALLE DE TRAZABILIDAD (MONITOR) ---

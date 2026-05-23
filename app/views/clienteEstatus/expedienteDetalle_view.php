@@ -58,6 +58,9 @@
         <a href="/cfsistem/app/controllers/clientesEstatusController.php" class="btn btn-sm btn-outline-secondary rounded-pill">
             <i class="bi bi-arrow-left"></i> Volver al Listado
         </a>
+     <button class="btn btn-dark btn-sm" onclick="imprimirEstadoCuenta()">
+    <i class="bi bi-printer"></i> Imprimir
+</button>
     </div>
 </header>
 
@@ -217,7 +220,7 @@
     </div>
     <?php endforeach; ?>
 </div>
-
+z
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -237,7 +240,10 @@ function renderCharts() {
         type: 'doughnut',
         data: {
             datasets: [{
-                data: [<?= floatval($resumen['total_pagado']) ?>, <?= max(0, floatval($resumen['saldo_total'])) ?>],
+                data: [
+    <?= isset($resumen['total_pagado']) ? floatval($resumen['total_pagado']) : 0 ?>,
+    <?= isset($resumen['saldo_total']) ? max(0, floatval($resumen['saldo_total'])) : 0 ?>
+],
                 backgroundColor: ['#1cc88a', '#e74a3b'],
                 borderWidth: 0
             }]
@@ -310,7 +316,7 @@ function procesarAjusteContable(monto) {
     // Ajustamos la llamada para que coincida con tu estructura de 'accion'
     $.post('/cfsistem/app/controllers/clienteExpedienteController.php', {
         accion: 'saldar_deuda_con_favor', // El nombre del case que definimos
-        id_cliente: <?= $id_cliente ?>,
+       id_cliente: <?= json_encode($id_cliente ?? 0) ?>,
         monto_a_usar: monto
     }, function(res) {
         if(res.status === 'success') {
@@ -328,6 +334,261 @@ function procesarAjusteContable(monto) {
     }, 'json').fail(function() {
         Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
     });
+}
+
+
+
+
+
+</script>
+<script>
+    async function imprimirEstadoCuenta() {
+           const urlParams = new URLSearchParams(window.location.search);
+const id = urlParams.get('id');
+
+console.log("ID:", id);
+
+
+
+    const res = await fetch(
+        `/cfsistem/app/controllers/clienteExpedienteController.php?action=getEstadoCuentaCliente&id_cliente=${id}`
+    );
+
+    const data = await res.json();
+
+    console.log("DATA:", data);
+
+    
+    
+
+   
+
+    if (!data || data.status !== 'success') {
+        Swal.fire('Error', 'No se pudo cargar el estado de cuenta', 'error');
+        return;
+    }
+
+    const { cliente, expediente = [], resumen = {} } = data;
+
+    const w = window.open('', '_blank', 'width=1100,height=700');
+
+    if (!w) {
+        Swal.fire('Error', 'El navegador bloqueó la ventana emergente', 'error');
+        return;
+    }
+
+    let html = '';
+
+   expediente.forEach(v => {
+
+    const deuda = (parseFloat(v.total) || 0) - (parseFloat(v.total_pagado) || 0);
+
+    let productos = '';
+    (v.productos || []).forEach(p => {
+        
+    });
+
+  let pagos = '';
+let saldo = parseFloat(v.total) || 0;
+const diasTranscurridos = (fecha) => {
+    const inicio = new Date(fecha);
+    const hoy = new Date();
+    return Math.floor((hoy - inicio) / (1000 * 60 * 60 * 24));
+};
+
+(v.pagos || []).forEach(p => {
+
+    const monto = parseFloat(p.monto) || 0;
+
+    // restas el pago al saldo
+    saldo -= monto;
+
+    pagos += `
+       
+            <td style="padding:6px 8px;">${p.fecha}</td>
+            <td style="padding:6px 8px;">${p.metodo_pago || 'N/A'}</td>
+            <td style="text-align:right;">$ ${monto.toFixed(2)}</td>
+            <td style="text-align:right; font-weight:bold; color:#dc2626;">
+                $ ${saldo.toFixed(2)}
+            </td>
+        
+    `;
+});
+
+    html += `
+    <div style="
+        margin-bottom:20px;
+        border:1px solid #e5e7eb;
+        border-radius:10px;
+        overflow:hidden;
+        font-family: Arial;
+        background:#fff;
+    ">
+
+        <!-- ENCABEZADO DEL FOLIO -->
+      
+     
+
+       
+
+        <!-- Informacion -->
+        <div ">
+          
+
+            <table width="100%" cellpadding="6" cellspacing="0" style="font-size:13px;">
+                <thead style="background:#f9fafb;">
+                    <tr>
+                        <th style="text-align:left;">Fecha</th>
+                        <th style="text-align:left;">Folio de venta</th>
+                       
+                        
+                        <th style="text-align:right;">Total Compra</th>
+                         
+                        <th style="text-align:left;">Fecha de pago</th>
+                        <th style="text-align:left;">Método</th>
+                        <th style="text-align:right;">Monto</th>
+                        <th style="text-align:right;">Saldo</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+<tr>
+<th>
+    ${v.fecha} <br>
+    <small style="color:#6b7280;">
+        ${diasTranscurridos(v.fecha)} días
+    </small>
+</th>
+<th> ${v.folio}</th>
+<th> ${v.total}</th>
+                    ${pagos}
+                     </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+    `;
+});
+    const doc = `
+        <html>
+        <head>
+            <title>Estado de Cuenta</title>
+            <style>
+                body { font-family: Arial; font-size: 12px; padding: 20px; }
+                table { border-collapse: collapse; width: 100%; }
+                th, td { border: 1px solid #ccc; padding: 5px; }
+                th { background: #eee; }
+                h2 { margin-bottom: 5px; }
+            </style>
+        </head>
+        <body>
+
+          
+
+
+        
+
+
+
+
+
+
+
+
+        <div style="
+    font-family: Arial, sans-serif;
+    border-bottom: 2px solid #007aff;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+">
+
+    <h2 style="
+        margin: 0;
+        font-size: 20px;
+        color: #1f2937;
+    ">
+        ${cliente.nombre_comercial}
+    </h2>
+
+    <p style="
+        margin: 4px 0;
+        color: #6b7280;
+        font-size: 12px;
+    ">
+        RFC: <b style="color:#111827">${cliente.rfc}</b>
+    </p>
+
+    <p style="
+        margin: 4px 0 0;
+        color: #6b7280;
+        font-size: 12px;
+    ">
+        Dirección: <b style="color:#111827">${cliente.direccion}</b>
+    </p>
+</div>
+
+<!-- KPIs -->
+<div style="
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    font-family: Arial;
+">
+
+    <div style="
+        flex: 1;
+        background: #f3f4f6;
+        border-left: 4px solid #3b82f6;
+        padding: 10px;
+        border-radius: 8px;
+    ">
+        <div style="font-size: 10px; color: #6b7280;">TOTAL COMPRADO</div>
+        <div style="font-size: 16px; font-weight: bold; color:#111827;">
+            $${(resumen.total_comprado || 0).toLocaleString('es-MX', {minimumFractionDigits:2})}
+        </div>
+    </div>
+
+    <div style="
+        flex: 1;
+        background: #f3f4f6;
+        border-left: 4px solid #10b981;
+        padding: 10px;
+        border-radius: 8px;
+    ">
+        <div style="font-size: 10px; color: #6b7280;">TOTAL PAGADO</div>
+        <div style="font-size: 16px; font-weight: bold; color:#111827;">
+            $${(resumen.total_pagado || 0).toLocaleString('es-MX', {minimumFractionDigits:2})}
+        </div>
+    </div>
+
+    <div style="
+        flex: 1;
+        background: #f3f4f6;
+        border-left: 4px solid #ef4444;
+        padding: 10px;
+        border-radius: 8px;
+    ">
+        <div style="font-size: 10px; color: #6b7280;">SALDO</div>
+        <div style="font-size: 16px; font-weight: bold; color:#111827;">
+            $${(resumen.saldo_total || 0).toLocaleString('es-MX', {minimumFractionDigits:2})}
+        </div>
+    </div>
+
+</div>
+
+            ${html}
+
+        </body>
+        </html>
+    `;
+
+    w.document.write(doc);
+    w.document.close();
+
+    w.onload = () => {
+        w.print();
+    };
 }
 </script>
 

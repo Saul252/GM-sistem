@@ -18,6 +18,61 @@ if (isset($_GET['action'])) {
     
     try {
         switch ($_GET['action']) {
+            case 'getEstadoCuentaCliente':
+
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+
+    try {
+
+        $id_cliente = intval($_GET['id_cliente'] ?? 0);
+
+        if ($id_cliente <= 0) {
+            throw new Exception("ID de cliente inválido.");
+        }
+
+        // MODELOS
+        
+      
+        // DATA BASE
+        $cliente = $model->obtenerDatosBasicos($id_cliente);
+
+        if (!$cliente) {
+            throw new Exception("Cliente no encontrado.");
+        }
+
+        $expediente = $model->obtenerExpedienteCompleto($id_cliente);
+
+        $estatusCliente = $clientesModel->obtenerEstatus($conexion, $id_cliente);
+
+        // RESUMEN
+        $resumen = [
+            'total_comprado' => array_sum(array_column($expediente, 'total')),
+            'total_pagado'   => array_sum(array_column($expediente, 'total_pagado')),
+        ];
+
+        $resumen['saldo_total'] =
+            $resumen['total_comprado'] - $resumen['total_pagado'];
+
+        echo json_encode([
+            'status' => 'success',
+            'cliente' => $cliente,
+            'estatus' => $estatusCliente,
+            'expediente' => $expediente,
+            'resumen' => $resumen
+        ]);
+
+    } catch (Throwable $e) {
+
+        error_log("ERROR getEstadoCuentaCliente: " . $e->getMessage());
+
+        echo json_encode([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+
+    exit;
         
   case 'guardarAbono':
     if (ob_get_level()) ob_clean();

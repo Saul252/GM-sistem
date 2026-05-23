@@ -375,6 +375,7 @@ window.cargarMonitorViajes = async function() {
         body.html('<tr><td colspan="5" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary"></div></td></tr>');
         const resp = await fetch(`/cfsistem/app/controllers/misRepartosController.php?action=listar_viajes_activos`);
         const res = await resp.json();
+        console.log(res.data);
         const filtrados = esSupervisor ? res.data : (res.data || []).filter(v => 
             (v.chofer || '').toUpperCase().includes(filtroNombre) || (v.tripulantes || '').toUpperCase().includes(filtroNombre)
         );
@@ -400,12 +401,33 @@ window.cargarMonitorViajes = async function() {
                            class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm" style="font-size: 0.7rem;">
                             <i class="bi bi-camera-fill me-1"></i> GESTIONAR
                         </a>
+                         <button class="btn btn-finish btn-sm d-flex align-items-center justify-content-center" 
+                                    onclick="finalizarViaje(${v.vehiculo_id}, '${v.viaje_folio}')"
+                                    style="background: #14c41d; color: #fff; border: none; border-radius: 10px; padding: 6px 14px; font-weight: 600; font-size: 0.68rem;">
+                                <i class="bi bi-check2-all me-1"></i> FINALIZAR
+                            </button>
                     </td>
                 </tr>
             `);
         });
     } catch (e) { body.html('<tr><td colspan="5" class="text-center text-danger py-4">Error de conexión</td></tr>'); }
 };
+window.finalizarViaje = async function(vehiculoId, folioRuta) {
+        if (!confirm(`¿Confirmar llegada de la unidad ${folioRuta}?`)) return;
+        try {
+            const formData = new FormData();
+            formData.append('vehiculo_id', vehiculoId);
+            formData.append('viaje_folio', folioRuta);
+            const resp = await fetch(`/cfsistem/app/controllers/repartosController.php?action=finalizar_viaje`, { method: 'POST', body: formData });
+            const res = await resp.json();
+            if (res.success) {
+                Swal.fire('Éxito', res.message, 'success');
+                cargarMonitorViajes();
+                cargarPendientes();
+            }
+        } catch (e) { console.error(e); }
+    };
+
 </script>
 </body>
 </html>
