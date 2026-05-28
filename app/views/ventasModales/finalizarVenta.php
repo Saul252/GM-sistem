@@ -264,31 +264,22 @@
                         </div>
 
                         <!-- Widget Estado de Cuenta — FUERA del input-group -->
-                        <div id="widgetEstadoCuenta" style="display:none;">
-                            <!-- Header dinámico (se reemplaza por JS) -->
-                            <div id="widgetHeader" class="widget-header-neutral">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <div class="widget-saldo-label">
-                                            <i class="bi bi-wallet2 me-1"></i>Estado de Cuenta
-                                        </div>
-                                        <div class="widget-saldo-monto" id="lblSaldoTotal">$0.00</div>
-                                    </div>
-                                    <span id="txtUltimaCarga" class="widget-update-time"></span>
-                                </div>
-                                <div id="widgetBadge" class="mt-2"></div>
-                            </div>
+                        <div id="widgetEstadoCuenta" style="<?= ($_SESSION['almacen_id']==0) ? '' : 'display:none;' ?>">
+    <!-- Header dinámico (se reemplaza por JS) -->
+    <div id="widgetHeader" class="widget-header-neutral">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <div class="widget-saldo-label">
+                    <i class="bi bi-wallet2 me-1"></i>Estado de Cuenta
+                </div>
+                <div class="widget-saldo-monto" id="lblSaldoTotal">$0.00</div>
+            </div>
+            <span id="txtUltimaCarga" class="widget-update-time"></span>
+        </div>
+        <div id="widgetBadge" class="mt-2"></div>
+    </div>
+</div>
 
-                            <!-- Lista de movimientos -->
-                            <div class="widget-body" id="listaMovimientos">
-                                <div class="text-center py-4 text-muted small">
-                                    <div class="spinner-border spinner-border-sm"></div>
-                                </div>
-                            </div>
-
-                            <!-- Footer con botón de abono -->
-
-                        </div>
                         <div id="contenedorSaldoFavor" class="p-3 mb-3"
                             style="display:none; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px;">
                             <div class="form-check form-switch">

@@ -248,8 +248,7 @@ console.log(c.categoria_nombre );
                             <div class="h6 mb-1 fw-bold text-primary">${c.proveedorNombre || c.beneficiario}</div>
                             
                             <small class="d-block text-muted">Método: ${c.metodo_pago || 'N/A'}</small>
-                            ${c.documento_url ? `<a href="${c.documento_url}" target="_blank" class="btn btn-link btn-sm p-0 text-decoration-none"><i class="bi bi-file-earmark-pdf"></i> Ver Comprobante</a>` : '<small class="text-muted">Sin adjunto</small>'}
-                        </div>
+                             </div>
                     </div>
                 </div>
 

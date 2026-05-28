@@ -848,6 +848,7 @@ error_reporting(E_ALL);
 
        <?php require_once __DIR__ . '/solicitudesCompra/ModalSolicitud.php'; ?>
         <?php require_once __DIR__ . '/egresosComponets/agregarPoductoModal.php'; ?>
+        <?php require_once __DIR__ . '/egresosComponets/modalProveedoresCompra.php'; ?>
     <script>
     const URL_CONTROLADOR_SOLICITUD = '../controllers/solicitudesCompraController.php';
 
@@ -1554,20 +1555,6 @@ function prepararImpresion(id) {
             console.error('FETCH ERROR:', err);
         });
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
     /**
      * Llama al comando de impresión del navegador
      */
@@ -1611,6 +1598,20 @@ function prepararImpresion(id) {
 
         ventana.document.close();
     }
+    function actualizarListaProveedores() {
+    fetch('egresosController.php?action=getProveedoresJSON')
+        .then(res => res.json())
+        .then(data => {
+            let $select = $('#select_proveedor');
+            $select.empty().append('<option value="">Seleccione o busque un proveedor...</option>');
+
+            data.forEach(p => {
+                $select.append(new Option(p.nombre_comercial, p.nombre_comercial));
+            });
+
+            $select.trigger('change');
+        });
+}
     </script>
 </body>
 

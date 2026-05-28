@@ -321,6 +321,9 @@ if (final) final.innerText = v.fecha_llegada || 'En ruta';
            let contador = 1;
 
 registros.forEach(item => {
+    let cantidad=item.cantidad/item.fcr;
+
+    let cantidadUnidad=cantidad>=1? cantidad +' '+ item.urr:item.cantidad+' '+ item.um;
 
     const mapsUrl = (item.latitud && item.longitud) 
         ? `<a href="https://www.google.com/maps?q=${item.latitud},${item.longitud}" target="_blank" class="btn btn-sm btn-outline-primary" style="border-radius: 10px;"><i class="fas fa-map-marker-alt"></i></a>`
@@ -337,7 +340,7 @@ registros.forEach(item => {
         </td>
         <td><code class="text-primary">${item.folio_venta}</code></td>
         <td>${item.producto_nombre} <br> <small class="text-muted">${item.um || ''}</small></td>
-        <td class="text-center fw-bold">${parseFloat(item.cantidad).toFixed(2)}</td>
+        <td class="text-center fw-bold">${cantidadUnidad}</td>
         <td class="text-center">${mapsUrl}</td>
     </tr>`;
 

@@ -1173,8 +1173,11 @@ public function obtenerViajesLogistica($folio_folio = null) {
                     c.nombre_comercial AS cliente,
                     c.telefono AS tel_cliente,
                     p.nombre AS producto_nombre,
+                    p.factor_conversion as fcr,
+                    
                     m.cantidad,
                     p.unidad_medida AS um,
+                    p.unidad_reporte as urr,
                     p.sku AS SKU
                 FROM transporte_consolidacion tc
                 INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id

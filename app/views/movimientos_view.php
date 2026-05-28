@@ -183,13 +183,14 @@
         function formatQty(m) {
             const cant = parseFloat(m.cantidad);
             const factor = parseFloat(m.factor_conversion);
+            const unidad =m.unidad_medida;
             if(factor > 1 && cant >= factor) {
                 const uReporte = Math.floor(cant / factor);
                 const resto = Math.round((cant % factor) * 100) / 100;
                 return `<div class="fw-bold text-dark">${uReporte} ${m.unidad_reporte}</div>` +
-                       (resto > 0 ? `<small class="text-muted">+ ${resto} pzas</small>` : '');
+                       (resto > 0 ? `<small class="text-muted">+ ${resto} ${m.unidad_medida}</small>` : '');
             }
-            return `<div class="fw-bold text-dark">${cant} <small class="fw-normal">pzas</small></div>`;
+            return `<div class="fw-bold text-dark">${cant} <small class="fw-normal">${unidad} </small></div>`;
         }
 
         function cargarHistorial() {

@@ -9,16 +9,23 @@ require_once __DIR__ . '/../models/ventasHistorialModel.php';
 $model = new ClientesEstatusModel($conexion);
 $clientesModel=new clientesModel($conexion);
 $ventasModel = new VentaHistorialModel($conexion); // Instancia para manejar la lógica de caja
-
 $id_cliente = intval($_GET['id'] ?? $_POST['id_cliente'] ?? 0);
-// --- RUTAS AJAX ---
+
+/**
+ * FECHAS
+ * Si NO vienen fechas:
+ * -> cargar automáticamente MES ACTUAL
+ */
+
+$fecha_inicio = $_GET['fecha_inicio'] ?? date('Y-m-01');
+$fecha_fin    = $_GET['fecha_fin'] ?? date('Y-m-t');
 if (isset($_GET['action'])) {
     if (ob_get_level()) ob_clean(); // Limpiar basura de salida
     header('Content-Type: application/json');
     
     try {
         switch ($_GET['action']) {
-            case 'getEstadoCuentaCliente':
+         case 'getEstadoCuentaCliente':
 
     if (ob_get_level()) ob_clean();
     header('Content-Type: application/json');
@@ -31,21 +38,35 @@ if (isset($_GET['action'])) {
             throw new Exception("ID de cliente inválido.");
         }
 
-        // MODELOS
-        
-      
-        // DATA BASE
+        // 🆕 FILTROS DE FECHA (NUEVO)
+        $fecha_inicio = $_GET['fecha_inicio'] ?? null;
+        $fecha_fin    = $_GET['fecha_fin'] ?? null;
+
+        // VALIDACIÓN FLEXIBLE
+        if ($fecha_inicio && !strtotime($fecha_inicio)) {
+            throw new Exception("Fecha inicio inválida.");
+        }
+
+        if ($fecha_fin && !strtotime($fecha_fin)) {
+            throw new Exception("Fecha fin inválida.");
+        }
+
+        // DATA
         $cliente = $model->obtenerDatosBasicos($id_cliente);
 
         if (!$cliente) {
             throw new Exception("Cliente no encontrado.");
         }
 
-        $expediente = $model->obtenerExpedienteCompleto($id_cliente);
+        // 🆕 EXPEDIENTE AHORA FILTRABLE
+        $expediente = $model->obtenerExpedienteCompletoFecha(
+            $id_cliente,
+            $fecha_inicio,
+            $fecha_fin
+        );
 
         $estatusCliente = $clientesModel->obtenerEstatus($conexion, $id_cliente);
 
-        // RESUMEN
         $resumen = [
             'total_comprado' => array_sum(array_column($expediente, 'total')),
             'total_pagado'   => array_sum(array_column($expediente, 'total_pagado')),
@@ -59,7 +80,11 @@ if (isset($_GET['action'])) {
             'cliente' => $cliente,
             'estatus' => $estatusCliente,
             'expediente' => $expediente,
-            'resumen' => $resumen
+            'resumen' => $resumen,
+            'filtros' => [
+                'fecha_inicio' => $fecha_inicio,
+                'fecha_fin' => $fecha_fin
+            ]
         ]);
 
     } catch (Throwable $e) {
@@ -175,7 +200,9 @@ $cliente = $model->obtenerDatosBasicos($id_cliente);
 $estatusCliente=$clientesModel->obtenerEstatus($conexion,$id_cliente);
 if (!$cliente) die("Cliente no encontrado.");
 
-$expediente = $model->obtenerExpedienteCompleto($id_cliente);
+$expediente = $model->obtenerExpedienteCompletoFecha($id_cliente,
+            $fecha_inicio,
+            $fecha_fin);
 $resumen = [
     'total_comprado' => array_sum(array_column($expediente, 'total')),
     'total_pagado'   => array_sum(array_column($expediente, 'total_pagado')),

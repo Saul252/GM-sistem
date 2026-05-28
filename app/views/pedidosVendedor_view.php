@@ -397,6 +397,7 @@
                                                 data-factor="<?= $p['factor_conversion'] ?>"
                                                 data-um="<?= $p['unidad_medida'] ?? 'PZA' ?>"
                                                 data-ur="<?= $p['unidad_reporte'] ?? '' ?>"
+                                                data-precio="<?= $p['precio'] ?? '' ?>"
                                                 data-tiene-factor="<?= $tieneFactor ? '1' : '0' ?>">
                                             [<?= $p['sku'] ?>] <?= htmlspecialchars($p['nombre']) ?> 
                                             <?= $tieneFactor ? "({$p['unidad_reporte']})" : "" ?>

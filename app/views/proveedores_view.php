@@ -240,7 +240,7 @@
                                 id="almacen_id"
                                 class="form-select <?= $_SESSION['almacen_id']==0 ? '' : 'bg-light' ?>"
                                 <?= $_SESSION['almacen_id'] != 0 ? 'disabled' : '' ?>
-                                required>
+                                >
 
                                 <?php if ($_SESSION['almacen_id']==0): ?>
                                     <option value="">Seleccionar ubicación...</option>
@@ -261,6 +261,12 @@
                                     value="<?= $_SESSION['almacen_id'] ?>">
                             <?php endif; ?>
                         </div>
+                         
+                            <input type="hidden"
+                                class="form-control"
+                                id="almacen_id2"
+                                name="almacen_id2">
+                      
 
                         <div class="col-md-6">
                             <label class="form-label">Estado</label>
@@ -565,7 +571,11 @@ async function editarProveedor(id) {
         document.getElementById('colonia').value = p.colonia || '';
         document.getElementById('numeroExt').value = p.numeroExt || '';
         document.getElementById('numeroInt').value = p.numeroInt || '';
-        document.getElementById('almacen_id').value = p.almacen_id || 0;
+             const almacenInput = document.getElementById('almacen_id');
+
+document.getElementById('almacen_id').value = p.almacen_id || 0;
+document.getElementById('almacen_id2').value = p.almacen_id || 0
+;
         document.getElementById('activo').value = p.activo ?? 1;
         document.getElementById('creado_at').value = p.creado_at || '';
 
@@ -666,10 +676,10 @@ function guardarProveedor() {
 
     // 🔥 ALMACEN
     const almacen = document.getElementById('almacen_id');
-
+const almacen2 = document.getElementById('almacen_id2');
     formData.append(
         'almacen_id',
-        almacen.value || 0
+        almacen.value==0?  almacen2.value:0|| 0
     );
 
     // 🔥 ESTADO

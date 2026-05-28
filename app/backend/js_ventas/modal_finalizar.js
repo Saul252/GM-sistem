@@ -59,7 +59,7 @@ console.log('unidaditem',item.unidadMedidaNombre);
                 <small class="text-muted d-block">${item.almacen_nombre} | ${item.tipo_precio.toUpperCase()}</small>
                 
                 <div class="mt-1" style="font-size: 0.7rem; color: #055160; background: #e3f2fd; padding: 4px 8px; border-radius: 4px; border-left: 3px solid #0d6efd;">
-                    <i class="bi bi-info-circle-fill"></i> Factor: 1 <b>${item.unidad_reporte}</b> = <b>${item.factor}</b> pzas.<br>
+                    <i class="bi bi-info-circle-fill"></i> Factor: 1 <b>${item.unidad_reporte}</b> = <b>${item.factor}</b> ${item.unidad_medida}<br>
                     Vendido:${leyenda}  ${cantFactorVenta>0?item.unidad_reporte:''} ${piezasRestantesVenta > 0 ? piezasRestantesVenta + ' pzas' : ''}<br>
                     
                 </div>
@@ -110,10 +110,7 @@ ${
                     <input type="number" 
                            class="form-control text-center input-entrega-modal" 
                            data-index="${index}" 
-              value="${
-    
-        item.cantidad
-}"
+              value="0"
                            min="0" 
                            max="${item.cantidad}"
                            step="0.01">

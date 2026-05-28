@@ -173,6 +173,81 @@ public function registrarAbono($venta_id, $monto, $usuario_id) {
  * Obtiene el comparativo mensual de Ventas vs Pagos de los últimos 6 meses
  * Ideal para alimentar gráficas de barras o líneas.
  */
+public function obtenerExpedienteCompletoFecha($id_cliente, $fecha_inicio = null, $fecha_fin = null)
+{
+    // 1. QUERY PRINCIPAL DE VENTAS (con filtros opcionales)
+    $sqlVentas = "SELECT v.id as venta_id, v.folio, v.fecha, v.total, v.estado_pago, v.id_cliente as cliente_id, v.estado_general,
+                         (SELECT IFNULL(SUM(monto), 0) FROM historial_pagos WHERE venta_id = v.id) as total_pagado
+                  FROM ventas v
+                  WHERE v.id_cliente = ? AND v.estado_general = 'activa'";
+
+    $params = [$id_cliente];
+    $types = "i";
+
+    // 🆕 FILTRO FECHA INICIO
+    if (!empty($fecha_inicio)) {
+        $sqlVentas .= " AND v.fecha >= ?";
+        $params[] = $fecha_inicio;
+        $types .= "s";
+    }
+
+    // 🆕 FILTRO FECHA FIN
+    if (!empty($fecha_fin)) {
+        $sqlVentas .= " AND v.fecha <= ?";
+        $params[] = $fecha_fin;
+        $types .= "s";
+    }
+
+    $sqlVentas .= " ORDER BY v.fecha DESC";
+
+    $stmtVentas = $this->db->prepare($sqlVentas);
+    $stmtVentas->bind_param($types, ...$params);
+    $stmtVentas->execute();
+    $ventas = $stmtVentas->get_result()->fetch_all(MYSQLI_ASSOC);
+
+    $expediente = [];
+
+    foreach ($ventas as $venta) {
+
+        $v_id = $venta['venta_id'];
+
+        // 2. PRODUCTOS
+        $sqlDetalle = "SELECT 
+                            IFNULL(lms.cantidad_salida, dv.cantidad) as cantidad, 
+                            dv.cantidad_entregada,
+                            dv.precio_unitario as precio_venta,
+                            p.nombre as producto, 
+                            p.sku,
+                            IFNULL(ls.codigo_lote, 'S/L') as lote_codigo
+                       FROM detalle_venta dv
+                       INNER JOIN productos p ON dv.producto_id = p.id
+                       LEFT JOIN lotes_movimientos_salida lms ON dv.id = lms.detalle_venta_id
+                       LEFT JOIN lotes_stock ls ON lms.lote_id = ls.id
+                       WHERE dv.venta_id = ?";
+
+        $stmtDet = $this->db->prepare($sqlDetalle);
+        $stmtDet->bind_param("i", $v_id);
+        $stmtDet->execute();
+        $venta['productos'] = $stmtDet->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        // 3. PAGOS
+        $sqlPagos = "SELECT 
+                        hp.monto, hp.fecha, u.nombre as usuario_recibio, hp.metodo_pago, hp.saldo_favor
+                     FROM historial_pagos hp
+                     INNER JOIN usuarios u ON hp.usuario_id = u.id
+                     WHERE hp.venta_id = ?
+                     ORDER BY hp.fecha ASC";
+
+        $stmtPagos = $this->db->prepare($sqlPagos);
+        $stmtPagos->bind_param("i", $v_id);
+        $stmtPagos->execute();
+        $venta['pagos'] = $stmtPagos->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        $expediente[] = $venta;
+    }
+
+    return $expediente;
+}
 public function obtenerExpedienteCompleto($id_cliente) {
     // 1. Obtenemos todas las ventas (Mantenemos tu alias venta_id igual)
     $sqlVentas = "SELECT v.id as venta_id, v.folio, v.fecha, v.total, v.estado_pago, v.id_cliente as cliente_id, v.estado_general,

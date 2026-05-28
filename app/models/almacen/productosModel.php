@@ -886,6 +886,109 @@ public function obtenerProductoPorAlmacen($productoId, $almacenId)
         ];
     }
 }
+public function obtenerProductos($almacen_id = 0)
+{
+    $productos = [];
+
+    $sql = "
+        SELECT 
+            p.id, 
+            p.sku, 
+            p.nombre, 
+            p.unidad_medida, 
+            p.unidad_reporte, 
+            p.factor_conversion, 
+            p.categoria_id,
+            i.stock, 
+            i.almacen_id, 
+            a.nombre AS almacen_nombre,
+            pp.precio_minorista, 
+            pp.precio_mayorista, 
+            pp.precio_distribuidor
+        FROM productos p
+        INNER JOIN inventario i ON p.id = i.producto_id
+        INNER JOIN almacenes a ON i.almacen_id = a.id
+        LEFT JOIN precios_producto pp 
+            ON (p.id = pp.producto_id AND i.almacen_id = pp.almacen_id)
+        WHERE p.activo = 1
+    ";
+
+    if ($almacen_id > 0) {
+        $sql .= " AND i.almacen_id = ?";
+    }
+
+    $sql .= " ORDER BY a.nombre ASC, p.nombre ASC";
+
+    $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) {
+        die("Error prepare: " . $this->db->error);
+    }
+
+    if ($almacen_id > 0) {
+        $stmt->bind_param("i", $almacen_id);
+    }
+
+    $stmt->execute();
+
+    $resultado = $stmt->get_result();
+
+    while ($row = $resultado->fetch_assoc()) {
+        $productos[] = $row;
+    }
+
+    $stmt->close();
+
+    return $productos;
+}
+public function obtenerTodosProductos($almacen_id = 0)
+{
+    $productos = [];
+
+    // 🔥 fallback a almacén 1 si viene 0
+    if ($almacen_id == 0) {
+        $almacen_id = 1;
+    }
+
+    $sql = "
+        SELECT 
+            p.id as producto_id, 
+            p.sku, 
+            p.nombre, 
+            p.unidad_medida, 
+            p.unidad_reporte, 
+            p.factor_conversion, 
+            p.categoria_id,
+            pp.precio_minorista, 
+            pp.precio_mayorista, 
+            pp.precio_distribuidor
+        FROM productos p
+        LEFT JOIN precios_producto pp 
+            ON p.id = pp.producto_id 
+           AND pp.almacen_id = ?
+        ORDER BY p.nombre ASC
+    ";
+
+    $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) {
+        die("Error prepare: " . $this->db->error);
+    }
+
+    $stmt->bind_param("i", $almacen_id);
+
+    $stmt->execute();
+
+    $resultado = $stmt->get_result();
+
+    while ($row = $resultado->fetch_assoc()) {
+        $productos[] = $row;
+    }
+
+    $stmt->close();
+
+    return $productos;
+}
 public function actualizarProductoCompleto($data)
 {
     $this->db->begin_transaction();

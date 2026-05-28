@@ -86,7 +86,7 @@ class cajaRapidaModel {
             $resFolio = $conexion->query("SELECT MAX(id) as ultimo_id FROM ventas");
             $filaFolio = $resFolio->fetch_assoc();
             $proximo_id = ($filaFolio['ultimo_id'] ?? 0) + 1;
-            $folio = "V-" . str_pad($proximo_id, 2, "0", STR_PAD_LEFT);
+            $folio = "VCR-" . str_pad($proximo_id, 2, "0", STR_PAD_LEFT);
             
             // Asumimos el almacén del primer producto del carrito para la cabecera
             $id_almacen_vta = intval($carrito[0]['almacen_id']);

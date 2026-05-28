@@ -123,7 +123,7 @@ $detallesPago = $stmtPago->get_result();
 // ===============================
 // PRESENTACIÓN BONITA DE CANTIDAD
 // ===============================
-
+ $nombreMedida=$item['odmaNombre'];
 $cantidadMostrar = $item['cantidad'];
 $unidadMostrar = 'pzas';
 $cantidadMostrar = $item['cantidad'];
@@ -153,7 +153,8 @@ $cantidadMostrarFormateada =
     number_format($cantidadMostrar, 1);
 
 
-
+$equiv2=$equiv>=1?1:$equiv;
+$cantidadReal=$item['cantidad']*$equiv2;
 
 ?>
 
@@ -161,31 +162,10 @@ $cantidadMostrarFormateada =
     <?php echo $item['producto_nombre']; ?>
 </div>
 
-<div style="
-    margin-top:3px;
-    font-size:12px;
-">
+<div style="margin-top:3px;font-size:12px;">
     Cantidad:
     <span class="bold">
-          <b>
-            <?php if ($cantEntera>0){echo $cantEntera.' ' .$unidad;}?>
-           
-        </b>
-        <?php if ($cantEntera>0 && $cantResto>0){echo'+';}?>
-
-        <?php if($cantResto > 0): ?>
-           
-          <b>
-    <?php echo number_format($cantResto, 2) . ' ' . $item['unidad_medida']; ?>
-</b>         <?php endif; ?>
-        <?php if($cantResto < 0){ echo $cantidadMostrarFormateada; ?>
-        <?php echo $unidadMostrar; }?>
-         <?php if($cantResto > 0): ?>
-           
-          <b>
-
-    <?php if($unidadMostrar!=$item['unidad_medida']){echo '(' .number_format($cantResto, 2) . ' ' . $item['unidad_medida'].')';} ?>
-</b>         <?php endif; ?>
+       <?php echo number_format($cantidadReal,3).'  '.$item['odmaNombre'] ?>
     </span>
 </div>
 
@@ -194,6 +174,9 @@ $cantidadMostrarFormateada =
                 <?php if($mostrar_precios): ?>
                 <td align="right" class="bold">
                     $<?php echo number_format($item['subtotal'], 2); ?>
+                    <br>
+                       <?php echo '( $' .number_format(($item['subtotal'])/$cantidadReal).' X ' .$item['odmaNombre'].' )'; ?>
+
                 </td>
                 <?php endif; ?>
             </tr>

@@ -161,7 +161,7 @@
                          </div>
                      </div>
 
-                     <div class="col-12">
+                     <div style=" display:none;"  class="col-12">
                          <div class="card border-0 shadow-sm" style="border-radius: 1.5rem;">
                              <div class="card-body p-4">
                                  <h6 class="text-uppercase fw-bold mb-4 text-secondary"
@@ -169,7 +169,7 @@
                                      <i class="bi bi-truck me-2 text-primary"></i>Datos de Despacho
                                  </h6>
                                  <div class="row g-3">
-                                     <div class="col-md-4">
+                                    <div style=" display:none;" class="col-md-4">
                                          <div class="p-3 rounded-4 bg-light">
                                              <label class="form-label small fw-bold text-muted mb-1"
                                                  style="font-size: 0.6rem;">DESPACHADOR RESPONSABLE</label>
@@ -179,7 +179,7 @@
                                              </select>
                                          </div>
                                      </div>
-                                     <div class="col-md-4">
+                                     <div style=" display:none;" class="col-md-4">
                                          <div class="p-3 rounded-4 bg-light">
                                              <label class="form-label small fw-bold text-muted mb-1"
                                                  style="font-size: 0.6rem;">AYUDANTES (MULTIPLE)</label>
@@ -189,7 +189,7 @@
                                              </select>
                                          </div>
                                      </div>
-                                     <div class="col-md-4">
+                                    <div style=" display:none;" class="col-md-4">
                                          <div class="p-3 rounded-4 bg-light">
                                              <label class="form-label small fw-bold text-muted mb-1"
                                                  style="font-size: 0.6rem;">OBSERVACIONES DE ENTREGA</label>
@@ -695,7 +695,7 @@ window.abrirModalFinalizar = function() {
                 <small class="text-muted d-block">${item.almacen_nombre} | ${item.tipo_precio.toUpperCase()}</small>
                 
                 <div class="mt-1" style="font-size: 0.7rem; color: #055160; background: #e3f2fd; padding: 4px 8px; border-radius: 4px; border-left: 3px solid #0d6efd;">
-                    <i class="bi bi-info-circle-fill"></i> Factor: 1 <b>${item.unidad_reporte}</b> = <b>${item.factor}</b> pzas.<br>
+                    <i class="bi bi-info-circle-fill"></i> Factor: 1 <b>${item.unidad_reporte}</b> = <b>${item.factor}</b>${item.unidad_medida}<br>
                    Vendido:${leyenda}  ${cantFactorVenta>0?item.unidad_reporte:''} ${piezasRestantesVenta > 0 ? piezasRestantesVenta + ' pzas' : ''}<br>
                     
                </div>

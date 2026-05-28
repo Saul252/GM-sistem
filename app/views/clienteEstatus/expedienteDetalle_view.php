@@ -58,6 +58,25 @@
         <a href="/cfsistem/app/controllers/clientesEstatusController.php" class="btn btn-sm btn-outline-secondary rounded-pill">
             <i class="bi bi-arrow-left"></i> Volver al Listado
         </a>
+        <div style="display:flex; gap:10px; align-items:end; margin-bottom:15px; flex-wrap:wrap;">
+
+    <div>
+        <label style="font-size:12px;">Fecha inicio</label>
+        <input type="date" id="fecha_inicio" class="form-control">
+    </div>
+
+    <div>
+        <label style="font-size:12px;">Fecha fin</label>
+        <input type="date" id="fecha_fin" class="form-control">
+    </div>
+
+    <button class="btn btn-primary" onclick="filtrarExpediente()">
+        Filtrar
+    </button>
+
+   
+
+</div>
      <button class="btn btn-dark btn-sm" onclick="imprimirEstadoCuenta()">
     <i class="bi bi-printer"></i> Imprimir
 </button>
@@ -121,6 +140,7 @@
  
 
     <h5 class="fw-bold mb-3 text-dark">Folios Detallados</h5>
+    
 
     <?php foreach ($expediente as $v): 
         // USAMOS EL ID REAL (venta_id o id como fallback)
@@ -164,23 +184,31 @@
             <div class="col-md-8 p-3">
                 <table class="table table-sm table-borderless align-middle mb-0" style="font-size: 0.85rem;">
                     <thead class="text-muted border-bottom">
-                        <tr><th>PRODUCTO</th><th class="text-center">CANT.</th><th class="text-end">SUBTOTAL</th></tr>
+                        <tr><th>Fecha</th><th class="text-center">Folio </th><th class="text-end">SUBTOTAL</th><th>Tickets</th></tr>
                     </thead>
                     <tbody>
-                        <?php if(empty($v['productos'])): ?>
-                            <tr><td colspan="3" class="text-center py-3 text-muted">No hay detalles de productos.</td></tr>
-                        <?php else: ?>
-                            <?php foreach($v['productos'] as $p): ?>
+                        
                             <tr>
+                               <td class="text-center">
+    <?= $v['fecha'] ?? 0; ?>
+</td></td>
                                 <td>
-                                    <div class="fw-bold text-dark"><?= htmlspecialchars($p['producto']) ?></div>
-                                    <div class="text-muted" style="font-size: 0.7rem;">Lote: <?= $p['lote_codigo'] ?></div>
+                                    
+                                    <div class="text-muted" style="font-size: 0.7rem;"> <?=  $v['venta_id'] ?? $v['id'];?></div>
                                 </td>
-                                <td class="text-center"><?= number_format($p['cantidad'], 0) ?></td>
-                                <td class="text-end fw-bold">$ <?= number_format($p['cantidad'] * $p['precio_venta'], 2) ?></td>
+                                           
+                                <td class="text-end fw-bold">$ <?=   $v['total'] ?? 0;?></td>
+                                <td>
+                                    <a class="btn btn-sm btn-primary shadow-sm" href="/cfsistem/app/backend/ventas/ticket_venta.php?id=<?=  $v['venta_id'] ?? $v['id'];?>" target="_blank">
+                            <i class="bi bi-currency-dollar"></i> Ticket
+                        </a>
+                        <a class="btn btn-sm btn-info text-white shadow-sm" href="/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=<?=  $v['venta_id'] ?? $v['id'];?>" target="_blank" title="Imprimir Remisión sin Precios">
+                            <i class="bi bi-file-earmark-text"></i> Remisión
+                        </a>
+
+                                </td>
                             </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
+                          
                     </tbody>
                 </table>
             </div>
@@ -220,7 +248,7 @@
     </div>
     <?php endforeach; ?>
 </div>
-z
+
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -350,9 +378,19 @@ console.log("ID:", id);
 
 
 
+       const fechaInicio = document.getElementById('fecha_inicio').value;
+    const fechaFin    = document.getElementById('fecha_fin').value;
+
     const res = await fetch(
-        `/cfsistem/app/controllers/clienteExpedienteController.php?action=getEstadoCuentaCliente&id_cliente=${id}`
+        `/cfsistem/app/controllers/clienteExpedienteController.php?action=getEstadoCuentaCliente&id_cliente=${id}&fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`
     );
+
+   
+
+/**
+ * AUTO CARGA
+ */
+
 
     const data = await res.json();
 
@@ -396,22 +434,33 @@ const diasTranscurridos = (fecha) => {
     return Math.floor((hoy - inicio) / (1000 * 60 * 60 * 24));
 };
 
-(v.pagos || []).forEach(p => {
-
+(v.pagos || []).forEach((p, index) => {
     const monto = parseFloat(p.monto) || 0;
-
-    // restas el pago al saldo
     saldo -= monto;
 
     pagos += `
-       
-            <td style="padding:6px 8px;">${p.fecha}</td>
-            <td style="padding:6px 8px;">${p.metodo_pago || 'N/A'}</td>
-            <td style="text-align:right;">$ ${monto.toFixed(2)}</td>
+        <tr>
+            ${
+                index === 0
+                ? `
+                    <td rowspan="${v.pagos.length}">${v.fecha}<br>
+                        <small>${diasTranscurridos(v.fecha)} días</small>
+                    </td>
+                    <td rowspan="${v.pagos.length}">${v.folio}</td>
+                    <td rowspan="${v.pagos.length}" style="text-align:right;">
+                        $${parseFloat(v.total).toFixed(2)}
+                    </td>
+                `
+                : ''
+            }
+
+            <td>${p.fecha}</td>
+            <td>${p.metodo_pago || 'N/A'}</td>
+            <td style="text-align:right;">$${monto.toFixed(2)}</td>
             <td style="text-align:right; font-weight:bold; color:#dc2626;">
-                $ ${saldo.toFixed(2)}
+                $${saldo.toFixed(2)}
             </td>
-        
+        </tr>
     `;
 });
 
@@ -434,37 +483,23 @@ const diasTranscurridos = (fecha) => {
         <!-- Informacion -->
         <div ">
           
+<table width="100%" cellpadding="6" cellspacing="0" style="font-size:13px;">
+    <thead style="background:#f9fafb;">
+        <tr>
+            <th style="text-align:left;">Fecha</th>
+            <th style="text-align:left;">Folio de venta</th>
+            <th style="text-align:right;">Total Compra</th>
+            <th style="text-align:left;">Fecha de pago</th>
+            <th style="text-align:left;">Método</th>
+            <th style="text-align:right;">Monto</th>
+            <th style="text-align:right;">Saldo</th>
+        </tr>
+    </thead>
 
-            <table width="100%" cellpadding="6" cellspacing="0" style="font-size:13px;">
-                <thead style="background:#f9fafb;">
-                    <tr>
-                        <th style="text-align:left;">Fecha</th>
-                        <th style="text-align:left;">Folio de venta</th>
-                       
-                        
-                        <th style="text-align:right;">Total Compra</th>
-                         
-                        <th style="text-align:left;">Fecha de pago</th>
-                        <th style="text-align:left;">Método</th>
-                        <th style="text-align:right;">Monto</th>
-                        <th style="text-align:right;">Saldo</th>
-
-                    </tr>
-                </thead>
-                <tbody>
-<tr>
-<th>
-    ${v.fecha} <br>
-    <small style="color:#6b7280;">
-        ${diasTranscurridos(v.fecha)} días
-    </small>
-</th>
-<th> ${v.folio}</th>
-<th> ${v.total}</th>
-                    ${pagos}
-                     </tr>
-                </tbody>
-            </table>
+    <tbody>
+        ${pagos}
+    </tbody>
+</table>
         </div>
 
     </div>
@@ -590,6 +625,24 @@ const diasTranscurridos = (fecha) => {
         w.print();
     };
 }
+</script>
+<script>
+  function filtrarExpediente(){
+    const fechaInicio = document.getElementById('fecha_inicio').value;
+    const fechaFin    = document.getElementById('fecha_fin').value;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+
+    console.log("ID:", id);
+
+    // REDIRECCIÓN
+    window.location.href =
+        `/cfsistem/app/controllers/clienteExpedienteController.php?id=${id}&fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
+
+
+  }
+    
 </script>
 
 </body>

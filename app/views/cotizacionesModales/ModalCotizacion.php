@@ -1,4 +1,4 @@
-<div class="modal fade" id="modalSolicitud" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalCotizacion" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content"
             style="border-radius: 20px; border: none; overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.2);">
@@ -20,67 +20,47 @@
                 <div class="modal-body px-4">
                     <div class="row g-3 mb-4 p-3 rounded-4 bg-light shadow-sm align-items-end">
 
+               
+<div class="col-md-3">
+    <label class="form-label small fw-bold">
+        <i class="bi bi-box-seam"></i> Almacén de Cargo
+    </label>
+
+    <div class="input-group shadow-sm">
+        <select 
+            name="almacen_id" 
+            id="almacen_id"
+            class="form-select"
+            required
+        >
+            <option value="">Seleccionar ubicación...</option>
+
+            <?php foreach($almacenes as $a): ?>
+                <option value="<?= $a['id'] ?>">
+                    <?= $a['nombre'] ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+</div>
                         <div class="col-md-3">
-                            <label class="form-label small fw-bold">
-                                <i class="bi bi-box-seam"></i> Almacén de Cargo
-                            </label>
-
-                            <?php $es_admin = ($_SESSION['rol_id'] == 1); ?>
-
-                            <div class="input-group shadow-sm">
-                                <select id="almacen_id_cabecera_visual" name="almacen_id" id="almacen_id"
-                                    class="form-select <?= $es_admin ? '' : 'bg-light' ?>"
-                                    <?= !$es_admin ? 'disabled' : 'name="almacen_id_cabecera"' ?> required>
-
-                                    <?php if ($es_admin): ?>
-                                    <option value="">Seleccionar ubicación...</option>
-                                    <?php endif; ?>
-
-                                    <?php foreach($almacenes as $a): ?>
-                                    <option value="<?= $a['id'] ?>"
-                                        <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
-                                        <?= $a['nombre'] ?>
-                                    </option>
-                                    <?php endforeach; ?>
-                                </select>
-
-                                <?php if (!$es_admin): ?>
-                                <span class="input-group-text bg-light text-muted">
-                                    <i class="bi bi-lock-fill"></i>
-                                </span>
-                                <?php endif; ?>
-                            </div>
-
-                            <?php if (!$es_admin): ?>
-                            <input type="hidden" name="almacen_id_cabecera" value="<?= $_SESSION['almacen_id'] ?>">
-                            <small class="text-muted">
-                                Privilegios de sede actual
-                            </small>
-                            <?php endif; ?>
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold text-muted text-uppercase">Proveedor
-                                Sugerido</label>
-                            <select name="proveedor_id" class="form-select select2-modal" required>
-                                <option value="">Seleccionar proveedor...</option>
-                                <?php foreach($proveedores as $p): ?>
+                            <label class="form-label small fw-bold text-muted text-uppercase">Cliente</label>
+                            <select name="cliente_id" id="cliente_id"class="form-select select2-modal" required>
+                                <option value="">Seleccionar cliente...</option>
+                                <?php foreach($clientes as $p): ?>
                                 <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?>
                                 </option>
                                 <?php endforeach; ?>
                             </select>
-                               <button class="btn btn-outline-success" type="button"
-                                            onclick="abrirModalNuevoProveedor()">
-                                            <i class="bi bi-plus-lg"></i>
-                                        </button>
+                         
                         </div>
 
                         <div class="col-md-6">
-                            
+
                             <label class="form-label small fw-bold text-muted text-uppercase">Añadir Producto (SKU o
                                 Nombre)</label>
                             <div class="input-group">
-                                
+
 
                                 <select id="buscadorProductos" class="form-select select2-modal border-start-0">
                                     <option value="">Escribe para buscar...</option>
@@ -111,8 +91,9 @@
                                     <th class="ps-4" style="width: 45%;">Producto</th>
                                     <th style="width: 20%;">Cantidad</th>
                                     <th style="width: 25%;">Presentación / Unidad</th>
-                                    <th style="width: 25%;">PrecioUnitario</th>
-                                    <th style="width: 50%;">Precio</th>
+                                    <th style="width: 25%;">Tipo de precio</th>
+                                    <th  class="ps-4">Precio Unitario</th>
+                                    <th style="width: 50%";>Precio</th>
                                     <th style="width: 10%;" class="text-end pe-4">Acción</th>
                                 </tr>
                             </thead>
@@ -141,6 +122,14 @@
         ">
                             $0.00
                         </div>
+                         <input 
+            type="number"
+            id="totalCotizacion"
+            name="totalCotizacion"
+            
+           
+           >
+            
 
                     </div>
                 </div>
@@ -160,7 +149,7 @@
 </div>
 
 <script>
-const URL_CONTROLADOR = '../controllers/solicitudesCompraController.php';
+const URL_CONTROLADOR = '../controllers/cotizacionesController.php';
 
 // =====================================================
 // SELECT2
@@ -168,7 +157,7 @@ const URL_CONTROLADOR = '../controllers/solicitudesCompraController.php';
 
 $('.select2-modal').select2({
     theme: 'bootstrap-5',
-    dropdownParent: $('#modalSolicitud')
+    dropdownParent: $('#modalCotizacion')
 });
 
 // =====================================================
@@ -193,50 +182,56 @@ function calcularTotalSol(input) {
             fila.querySelector('.cantidad').value
         ) || 0;
 
-        const precioUnitario = parseFloat(
+        const precioUnitarioOriginal = parseFloat(
             fila.querySelector('.precio-unitario').value
         ) || 0;
 
-        // =====================================
-        // CALCULAR TOTAL
-        // =====================================
+        // ✅ obtener select correcto
+        const selectUnidad = fila.querySelector('.unidad-select');
 
-        const precioTotal =
-            cantidad * precioUnitario;
-        console.log(precioTotal);
+        // ✅ obtener equivalencia del option seleccionado
+        const equivalencia = parseFloat(
+            selectUnidad?.selectedOptions[0]?.dataset?.equivalencia
+        ) || 0;
+
+        console.log('equivalencia:', equivalencia);
+
+        // 🔥 APLICAR equivalencia al precio
+        const precioUnitarioAjustado =
+            precioUnitarioOriginal;
+
+        // 🔥 TOTAL
+        const precioTotal = (cantidad) * precioUnitarioAjustado;
+
+        console.log('precio ajustado:', precioUnitarioAjustado);
+        console.log('total:', precioTotal);
 
         fila.querySelector('.precio-total').value =
             precioTotal.toFixed(2);
 
         // =====================================
-        // SUMAR TODO
+        // SUMA GENERAL
         // =====================================
 
-        totaLCompra = 0;
-        console.log('hola');
+        let totaLCompra = 0;
 
         document.querySelectorAll('.precio-total')
             .forEach(el => {
-
-                totaLCompra +=
-                    parseFloat(el.value) || 0;
+                totaLCompra += parseFloat(el.value) || 0;
             });
-        const cT = document.getElementById('costoTotalCompra');
-        console.log(cT);
 
-        cT.textContent = totaLCompra.toLocaleString('es-MX', {
-            style: 'currency',
-            currency: 'MXN'
-        });
-
-        console.log(totaLCompra);
-        console.log(totaLCompra);
+        document.getElementById('costoTotalCompra')
+            .textContent = totaLCompra.toLocaleString('es-MX', {
+                style: 'currency',
+                currency: 'MXN'
+            });
+             document.getElementById('totalCotizacion').value=totaLCompra;
 
     } finally {
-
         recalculandoFila = false;
     }
 }
+
 // =====================================================
 // AGREGAR PRODUCTO
 // =====================================================
@@ -245,14 +240,17 @@ async function recargarProductos() {
     try {
 
         const resp = await fetch(
-            `/cfsistem/app/controllers/egresosController.php?action=obtenerProductosSelect`
+            `/cfsistem/app/controllers/cotizacionesController.php?action=obtenerProductos`
         );
 
+
         const res = await resp.json();
+        console.log(res);
 
         if (!res.success) {
             throw new Error(res.message);
         }
+
 
         const select = document.getElementById('buscadorProductos');
 
@@ -266,14 +264,19 @@ async function recargarProductos() {
         // 🔥 volver a llenar
         res.data.forEach(pr => {
 
+
             const option = document.createElement('option');
 
             option.value = pr.producto_id;
 
             option.dataset.nombre = pr.nombre;
+            option.dataset.medidas = JSON.stringify(pr.medidas_adicionales || []);
             option.dataset.sku = pr.sku;
             option.dataset.um = pr.unidad_medida;
             option.dataset.ur = pr.unidad_reporte;
+            option.dataset.preMin = pr.precio_minorista;
+            option.dataset.preMat = pr.precio_mayorista;
+            option.dataset.preDis = pr.precio_distribuidor;
             option.dataset.factor = pr.factor_conversion || 1;
 
             option.textContent =
@@ -314,102 +317,171 @@ $('#buscadorProductos').on('select2:select', function(e) {
     }
 
     $('#emptyState').addClass('d-none');
+    const medidas = JSON.parse(d.medidas || '[]');
+
+    let opcionesUnidad = ``;
+    console.log(medidas);
+    medidas.forEach(m => {
+
+        opcionesUnidad += `
+   
+    <option 
+        value="${m.id}"
+        data-equivalencia="${m.equivalencia}"
+        data-medida-id="${m.id}"
+    >
+        ${m.nombre}
+    </option>
+
+    `;
+    });
 
     // AGREGAR FILA
     $('#tablaDetalle tbody').append(`
 
-        <tr id="fila-${id}">
+<tr id="fila-${id}">
 
-            <!-- PRODUCTO -->
-            <td class="ps-4">
-                <b>${d.nombre}</b><br>
-                <small class="text-muted">${d.sku}</small>
-            </td>
+    <!-- PRODUCTO -->
+    <td class="ps-4">
+        <b>${d.nombre}</b><br>
+        <small class="text-muted">${d.sku}</small>
+    </td>
 
-            <!-- CANTIDAD -->
-            <td>
-                <input 
-                    type="number"
-                    name="items[${id}][cant]"
-                    class="form-control cantidad"
-                    step="0.01"
-                    value="1"
-                    min="0.01"
-                    required
-                    oninput="calcularTotalSol(this)"
-                >
-            </td>
+    <!-- CANTIDAD -->
+    <td>
+        <input 
+            type="number"
+            name="items[${id}][cant]"
+            class="form-control cantidad"
+            step="0.01"
+            value="0"
+            min="0.01"
+            required
+            oninput="calcularTotalSol(this)">
+        
+    </td>
 
-            <!-- UNIDAD -->
-            <td>
-                <select 
-                    name="items[${id}][unidad]" 
-                    class="form-select unidad-select"
-                    onchange="calcularTotalSol(this)"
-                >
-                   
-
-                    <option value="1">
-                        (${d.ur})
-                    </option>
-                </select>
-            </td>
-
-            <!-- COSTO UNITARIO -->
+    <!-- UNIDAD -->
+    <td>
+        <select 
+            name="items[${id}][unidad]" 
+            class="form-select unidad-select unidad"
+            onchange="calcularPreciosugerido(this)">
+           <option 
+    value="0"
+    data-equivalencia="0"
+    data-medida-id="0">
+    Seleccione
+    </option>
+            ${opcionesUnidad}
+        </select>
+        
+    </td>
+    
 <td>
-    <input 
-        type="number"
-        lang="en-US"
-        name="items[${id}][precioUnitario]"
-        class="form-control precio-unitario"
-        step="0.01"
-        min="0"
-        placeholder="0.00"
-        required
-        oninput="calcularTotalSol(this, 'unitario')"
-    >
+    <select 
+        name="items[${id}][tipoPrecio]" 
+        class="form-select tipoPrecio-select tipoPrecio"
+        onchange="calcularPreciosugerido(this)"
+    > <option value="seleccionar" data-precio="0">
+          seleccione
+        </option>
+        <option value="minorista" data-precio="${d.preMin }">
+            Min ${d.preMin * d.factor} x ${d.ur}
+        </option>
+
+        <option value="mayorista" data-precio="${d.preMat }">
+            May ${d.preMat* d.factor} x ${d.ur}
+        </option>
+
+        <option value="distribuidor" data-precio="${d.preDis }">
+            Dis ${d.preDis* d.factor} x ${d.ur}
+        </option>
+    </select>
 </td>
+    <!-- COSTO UNITARIO -->
+    <td>
+        <input 
+            type="number"
+            lang="en-US"
+            name="items[${id}][precioUnitario]"
+            class="form-control precio-unitario precio_unitario"
+            step="0.01"
+            
+            min="0"
+            placeholder="0.00"
+            required
+            oninput="calcularTotalSol(this)"
+        >
+    </td>
 
-<!-- COSTO TOTAL -->
-<td style="min-width:160px;">
+    <!-- COSTO TOTAL -->
+    <td style="min-width:160px;">
+        <input 
+            type="number"
+            lang="en-US"
+            name="items[${id}][precio]"
+            class="form-control precio-total fw-bold text-success bg-light"
+            step="0.01"
+            min="0"
+            placeholder="0.00"
+            oninput="calcularTotalSol(this)"
+            style="
+                font-size:1.1rem;
+                height:45px;
+                min-width:140px;
+            "
+        >
+    </td>
 
-    <input 
-        type="number"
-        lang="en-US"
-        name="items[${id}][precio]"
-        class="form-control precio-total fw-bold text-success bg-light"
-        step="0.01"
-        min="0"
-        placeholder="0.00"
-        oninput="calcularTotalSol(this, 'total')"
-        style="
-            font-size:1.1rem;
-            height:45px;
-            min-width:140px;
-        "
-    >
+    <!-- ELIMINAR -->
+    <td>
+        <button 
+            type="button"
+            class="btn btn-link text-danger"
+            onclick="quitarFila(${id})"
+        >
+            <i class="bi bi-trash"></i>
+        </button>
+    </td>
 
-</td>
-            <!-- ELIMINAR -->
-            <td>
-                <button 
-                    type="button"
-                    class="btn btn-link text-danger"
-                    onclick="quitarFila(${id})"
-                >
-                    <i class="bi bi-trash"></i>
-                </button>
-            </td>
-
-        </tr>
-    `);
-
+</tr>
+`);
     // LIMPIAR SELECT
     $(this).val(null).trigger('change');
 });
 
+function calcularPreciosugerido(select) {
+
+    const fila = select.closest('tr');
+
+    const inputPrecio = fila.querySelector('.precio-unitario');
+
+    const unidadSelect = fila.querySelector('.unidad-select');
+    const tipoSelect = fila.querySelector('.tipoPrecio-select');
+
+    const unidadOption = unidadSelect.options[unidadSelect.selectedIndex];
+    const tipoOption = tipoSelect.options[tipoSelect.selectedIndex];
+
+    const equivalencia = Number(unidadOption?.dataset.equivalencia || 1);
+    const precioBase = Number(tipoOption?.dataset.precio || 0);
+
+    const sugerido = precioBase / equivalencia;
+
+    // SOLO PLACEHOLDER
+    inputPrecio.placeholder = sugerido.toFixed(4);
+}
+document.addEventListener('input', function(e) {
+
+    if (e.target.classList.contains('precio-unitario')) {
+        e.target.dataset.editado = "1";
+    }
+});
 // =====================================================
 // GUARDAR SOLICITUD
+// =====================================================
+// // =====================================================
+// CONVERTIR A COMPRA
 // =====================================================
 
 $('#formSolicitud').on('submit', async function(e) {
@@ -417,15 +489,42 @@ $('#formSolicitud').on('submit', async function(e) {
     e.preventDefault();
 
     if (!$('#tablaDetalle tbody tr').length) {
-
-        Swal.fire(
-            'Error',
-            'Agregue productos',
-            'warning'
-        );
-
+        Swal.fire('Error', 'Agregue productos', 'warning');
         return;
     }
+
+   const payload = {
+    almacen_id: $('#almacen_id').val(),
+    cliente_id: $('#cliente_id').val(),
+    totalCotizacion: $('#totalCotizacion').val(),
+    items: []
+};
+    $('#tablaDetalle tbody tr').each(function() {
+
+        const fila = $(this);
+        const id = fila.attr('id').replace('fila-', '');
+
+        const unidadSelect = fila.find('.unidad-select option:selected');
+        const tipoPrecioSelect = fila.find('.tipoPrecio-select option:selected');
+
+        payload.items.push({
+            producto_id: id,
+
+            cantidad: fila.find('.cantidad').val(),
+
+            unidad: unidadSelect.val(),
+            unidad_id: unidadSelect.data('medida-id'),
+            equivalencia: unidadSelect.data('equivalencia'),
+
+            tipoPrecio: tipoPrecioSelect.val(),
+
+            precioUnitario: fila.find('.precio-unitario').val(),
+
+            precio: fila.find('.precio-total').val()
+        });
+    });
+
+    console.log('JSON ENVIADO:', payload);
 
     Swal.fire({
         title: 'Guardando...',
@@ -435,14 +534,17 @@ $('#formSolicitud').on('submit', async function(e) {
 
     try {
 
-        const resp = await fetch(
-            `${URL_CONTROLADOR}?action=guardar`, {
-                method: 'POST',
-                body: new FormData(this)
-            }
-        );
+        const resp = await fetch(`${URL_CONTROLADOR}?action=guardar`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
 
         const res = await resp.json();
+
+        console.log('RESPUESTA:', res);
 
         if (res.status === 'success') {
 
@@ -457,77 +559,63 @@ $('#formSolicitud').on('submit', async function(e) {
             location.reload();
 
         } else {
-
-            Swal.fire(
-                'Error',
-                res.message,
-                'error'
-            );
+            Swal.fire('Error', res.message, 'error');
         }
 
     } catch (e) {
-
-        Swal.fire(
-            'Error',
-            'Fallo de conexión',
-            'error'
-        );
+        console.error(e);
+        Swal.fire('Error', 'Fallo de conexión', 'error');
     }
 });
+// $('#formConvertirCompra').on('submit', async function(e) {
 
-// =====================================================
-// CONVERTIR A COMPRA
-// =====================================================
+//     e.preventDefault();
 
-$('#formConvertirCompra').on('submit', async function(e) {
+//     Swal.fire({
+//         title: 'Procesando ingreso...',
+//         allowOutsideClick: false,
+//         didOpen: () => Swal.showLoading()
+//     });
 
-    e.preventDefault();
+//     try {
 
-    Swal.fire({
-        title: 'Procesando ingreso...',
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
-    });
+//         const resp = await fetch(
+//             `${URL_CONTROLADOR}?action=convertirACompra`, {
+//                 method: 'POST',
+//                 body: new FormData(this)
+//             }
+//         );
 
-    try {
+//         const res = await resp.json();
 
-        const resp = await fetch(
-            `${URL_CONTROLADOR}?action=convertirACompra`, {
-                method: 'POST',
-                body: new FormData(this)
-            }
-        );
+//         if (res.status === 'success') {
 
-        const res = await resp.json();
+//             await Swal.fire({
+//                 icon: 'success',
+//                 title: 'Ingresado',
+//                 text: res.message
+//             });
 
-        if (res.status === 'success') {
+//             location.reload();
 
-            await Swal.fire({
-                icon: 'success',
-                title: 'Ingresado',
-                text: res.message
-            });
+//         } else {
 
-            location.reload();
+//             Swal.fire(
+//                 'Error',
+//                 res.message,
+//                 'error'
+//             );
+//         }
 
-        } else {
+//     } catch (e) {
 
-            Swal.fire(
-                'Error',
-                res.message,
-                'error'
-            );
-        }
-
-    } catch (e) {
-
-        Swal.fire(
-            'Error',
-            'Fallo de conexión',
-            'error'
-        );
-    }
-});
+//         Swal.fire(
+//             'Error',
+//             'Fallo de conexión',
+//             'error'
+//         );
+//     }
+// });
 
 // =====================================================
 // ELIMINAR FILA
@@ -547,7 +635,7 @@ function quitarFila(id) {
 // NUEVA SOLICITUD
 // =====================================================
 
-function nuevaSolicitud() {
+function nuevaCotizacion() {
 
     $('#formSolicitud')[0].reset();
 
@@ -555,7 +643,7 @@ function nuevaSolicitud() {
 
     $('#emptyState').removeClass('d-none');
 
-    $('#modalSolicitud').modal('show');
+    $('#modalCotizacion').modal('show');
     recargarProductos();
 }
 </script>

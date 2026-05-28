@@ -192,6 +192,297 @@ if ($monto_favor > 0 && $monto_favor == $monto_pagado) {
         return ['status' => 'error', 'message' => $e->getMessage()];
     }
 }
+public static function procesarVentaDesdeCotizacion($conexion, $data, $id_usuario)
+{
+    $conexion->begin_transaction();
+
+    try {
+
+        // =========================
+        // DATOS GENERALES
+        // =========================
+        $descuento     = floatval($data['descuento'] ?? 0);
+        $obs           = $data['observaciones'] ?? '';
+        $monto_pagado  = floatval($data['monto_pagado'] ?? 0);
+        $monto_favor   = floatval($data['monto_usado_favor'] ?? 0);
+        $efectivoPagado = floatval($data['efectivoPagado'] ?? 0);
+
+        // ahora el carrito ES el mismo array
+        $carrito = array_filter($data, 'is_array');
+
+        if (empty($carrito)) {
+            throw new Exception("No hay productos para procesar");
+        }
+
+        // =========================
+        // MÉTODO DE PAGO
+        // =========================
+        if ($monto_favor > 0 && $monto_favor == $monto_pagado) {
+            $metodo_pago = 'Saldo a Favor';
+        } else {
+            $metodo_pago = $data['metodo_pago'] ?? 'Efectivo';
+        }
+
+        $subtotal = 0;
+        $total_vendido_global = 0;
+        $total_entregado_global = 0;
+
+        $cliente_id = 0;
+        $usuario_id = $id_usuario;
+
+        // =========================
+        // VALIDAR STOCK
+        // =========================
+        foreach ($carrito as $key => $item) {
+
+            $p_id = intval($item['producto_id'] ?? 0);
+            $alm_id = intval($item['almacen_origen_id'] ?? 0);
+            $entrega_solicitada = floatval($item['entrega_hoy'] ?? 0);
+
+            $cliente_id = intval($item['cliente_id'] ?? 0);
+
+            $stmtS = $conexion->prepare("
+                SELECT stock 
+                FROM inventario 
+                WHERE producto_id = ? AND almacen_id = ?
+                FOR UPDATE
+            ");
+
+            $stmtS->bind_param("ii", $p_id, $alm_id);
+            $stmtS->execute();
+
+            $stockActual = floatval(
+                $stmtS->get_result()->fetch_assoc()['stock'] ?? 0
+            );
+
+            if ($entrega_solicitada > $stockActual) {
+                $carrito[$key]['entrega_hoy'] = $stockActual;
+            }
+
+            $subtotal += floatval($item['subtotal'] ?? 0);
+            $total_vendido_global += floatval($item['cantidad'] ?? 0);
+            $total_entregado_global += floatval($carrito[$key]['entrega_hoy'] ?? 0);
+        }
+
+        $total = $subtotal - $descuento;
+
+        // =========================
+        // FOLIO
+        // =========================
+        $resFolio = $conexion->query("SELECT MAX(id) as ultimo_id FROM ventas");
+        $filaFolio = $resFolio->fetch_assoc();
+
+        $proximo_id = intval($filaFolio['ultimo_id'] ?? 0) + 1;
+        $folio = "VC-" . str_pad($proximo_id, 5, "0", STR_PAD_LEFT);
+
+        $id_almacen_vta = intval($carrito[0]['almacen_origen_id'] ?? 0);
+
+        $estado_entrega_vta =
+            ($total_entregado_global >= $total_vendido_global)
+                ? 'entregado'
+                : (($total_entregado_global > 0) ? 'parcial' : 'pendiente');
+
+        $estado_pago =
+            ($monto_pagado >= $total)
+                ? 'pagado'
+                : (($monto_pagado > 0) ? 'parcial' : 'pendiente');
+
+        // =========================
+        // CABECERA VENTA
+        // =========================
+        $sqlV = "
+            INSERT INTO ventas (
+                folio,
+                id_cliente,
+                almacen_id,
+                usuario_id,
+                subtotal,
+                descuento,
+                total,
+                estado_pago,
+                estado_entrega,
+                estado_general,
+                observaciones
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activa', ?)
+        ";
+
+        $stmtV = $conexion->prepare($sqlV);
+
+        $stmtV->bind_param(
+            "siiidddsss",
+            $folio,
+            $cliente_id,
+            $id_almacen_vta,
+            $usuario_id,
+            $subtotal,
+            $descuento,
+            $total,
+            $estado_pago,
+            $estado_entrega_vta,
+            $obs
+        );
+
+        $stmtV->execute();
+
+        $id_venta = $conexion->insert_id;
+
+        // =========================
+        // REGISTRAR PAGO
+        // =========================
+        if ($monto_pagado > 0) {
+
+            $referencia = $data['referencia'] ?? '';
+
+            $stmtP = $conexion->prepare("
+                INSERT INTO historial_pagos
+                (
+                    venta_id,
+                    usuario_id,
+                    monto,
+                    saldo_favor,
+                    metodo_pago,
+                    efectivoPagado,
+                    referencia
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ");
+
+            $stmtP->bind_param(
+                "iiddsds",
+                $id_venta,
+                $id_usuario,
+                $monto_pagado,
+                $monto_favor,
+                $metodo_pago,
+                $efectivoPagado,
+                $referencia
+            );
+
+            $stmtP->execute();
+        }
+
+        // =========================
+        // ENTREGA
+        // =========================
+        $id_entrega_maestro = null;
+
+        if ($total_entregado_global > 0) {
+
+            $obs_e = "Entrega inicial. Folio: $folio";
+
+            $stmtE = $conexion->prepare("
+                INSERT INTO entregas_venta
+                (venta_id, usuario_id, fecha, observaciones)
+                VALUES (?, ?, NOW(), ?)
+            ");
+
+            $stmtE->bind_param("iis", $id_venta, $id_usuario, $obs_e);
+            $stmtE->execute();
+
+            $id_entrega_maestro = $conexion->insert_id;
+        }
+
+        // =========================
+        // DETALLE
+        // =========================
+        foreach ($carrito as $item) {
+
+            $p_id = intval($item['producto_id'] ?? 0);
+            $alm_id = intval($item['almacen_origen_id'] ?? 0);
+
+            $cant_ped = floatval($item['cantidad'] ?? 0);
+            $cant_real = floatval($item['entrega_hoy'] ?? 0);
+
+            $idunidadMedida = intval($item['unidadMedida'] ?? 0);
+
+            $prec = floatval($item['precio_unitario'] ?? 0);
+            $subt = floatval($item['subtotal'] ?? 0);
+
+            $st_fila =
+                ($cant_real >= $cant_ped)
+                    ? 'entregado'
+                    : (($cant_real > 0) ? 'parcial' : 'pendiente');
+
+            $sqlD = "
+                INSERT INTO detalle_venta
+                (
+                    venta_id,
+                    producto_id,
+                    cantidad,
+                    unidadMedida,
+                    cantidad_entregada,
+                    precio_unitario,
+                    subtotal,
+                    estado_entrega
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ";
+
+            $stmtD = $conexion->prepare($sqlD);
+
+            $stmtD->bind_param(
+                "iiddddds",
+                $id_venta,
+                $p_id,
+                $cant_ped,
+                $idunidadMedida,
+                $cant_real,
+                $prec,
+                $subt,
+                $st_fila
+            );
+
+            $stmtD->execute();
+
+            $id_detalle_venta = $conexion->insert_id;
+
+            if ($cant_real > 0 && $id_entrega_maestro) {
+
+                $stmtDE = $conexion->prepare("
+                    INSERT INTO detalle_entrega
+                    (entrega_id, detalle_venta_id, cantidad)
+                    VALUES (?, ?, ?)
+                ");
+
+                $stmtDE->bind_param(
+                    "iid",
+                    $id_entrega_maestro,
+                    $id_detalle_venta,
+                    $cant_real
+                );
+
+                $stmtDE->execute();
+
+                $stmtInv = $conexion->prepare("
+                    UPDATE inventario
+                    SET stock = stock - ?
+                    WHERE producto_id = ? AND almacen_id = ?
+                ");
+
+                $stmtInv->bind_param("dii", $cant_real, $p_id, $alm_id);
+                $stmtInv->execute();
+            }
+        }
+
+        $conexion->commit();
+
+        return [
+            'status' => 'success',
+            'id_venta' => $id_venta,
+            'folio' => $folio
+        ];
+
+    } catch (Exception $e) {
+
+        $conexion->rollback();
+
+        return [
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ];
+    }
+}
 public static function actualizarEntregasCompletas($conexion, $id_venta)
 {
 

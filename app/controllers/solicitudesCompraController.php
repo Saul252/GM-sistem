@@ -120,7 +120,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'eliminar') {
     try {
         $id = intval($_POST['id'] ?? 0);
         if ($id <= 0) throw new Exception("ID no válido.");
-        if ($solicitudModel->eliminar($id)) {
+        if ($solicitudModel->cancelarOrden($id)) {
             echo json_encode(['status' => 'success', 'message' => 'Eliminado.']);
         } else {
             throw new Exception("Error al eliminar.");

@@ -49,7 +49,7 @@ class MovimientoModel {
         // Consulta usando tus nombres de columna actuales
         $sql = "SELECT 
                     m.*, 
-                    p.nombre as prod_nombre, p.sku, p.factor_conversion, p.unidad_reporte,
+                    p.nombre as prod_nombre, p.sku, p.factor_conversion, p.unidad_reporte,p.unidad_medida,
                     a1.nombre as origen_nombre, a2.nombre as destino_nombre, 
                     u1.nombre as usuario_nombre, u3.nombre as usuario_recibe_nombre
                 FROM movimientos m 
@@ -99,6 +99,7 @@ class MovimientoModel {
                     'cantidad'          => $row['cantidad'],
                     'factor_conversion' => $row['factor_conversion'] ?? 1,
                     'unidad_reporte'    => $row['unidad_reporte'] ?? 'PZA',
+                    'unidad_medida'     =>$row['unidad_medida'] ?? 'PZA',
                     'origen'            => $row['origen_nombre'] ?? '---',
                     'destino'           => $row['destino_nombre'] ?? '---',
                     'almacen_origen_id' => $row['almacen_origen_id'],

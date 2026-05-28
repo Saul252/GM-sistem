@@ -188,7 +188,7 @@ function abrirModalAjuste(id, folio) {
                            <td>
     <input type="number" 
        name="distribucion[${p.producto_id}][${alm.id}]1" 
-       class="form-control form-control-sm border-danger input-dist bg-light" 
+       class="form-control form-control-sm border-danger input-dist1 bg-light" 
        data-prod-id="${p.producto_id}"
        data-max="${p.cantidad_pendiente}"
        disabled 
@@ -254,6 +254,7 @@ function procesarAjuste() {
             const max = parseFloat(input.dataset.max);
 
             sumasGlobales[prodId] = (sumasGlobales[prodId] || 0) + cant;
+           
 
             if (sumasGlobales[prodId] > max) {
                 erroresExceso.push(
@@ -343,8 +344,9 @@ function recalcularRestante(prodId, factor = 1) {
 
             // SUMA EN PIEZAS
             suma += valor * factor;
-
+            
             maximo = parseFloat(input.dataset.max) || 0;
+            
 
             // ACTUALIZA EL HIDDEN
             const hiddenName =

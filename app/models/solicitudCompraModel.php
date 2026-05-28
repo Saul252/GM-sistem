@@ -113,6 +113,40 @@ public function obtenerDetalle($id) {
     // IMPORTANTE: Aquí es donde entregamos los datos al controlador
     return $result->fetch_all(MYSQLI_ASSOC); 
 }
+public function cancelarOrden($id) {
+    try {
+        // Verificar estado actual
+        $stmtCheck = $this->db->prepare("
+            SELECT estado 
+            FROM solicitudes_compra 
+            WHERE id = ?
+        ");
+        
+        $stmtCheck->bind_param("i", $id);
+        $stmtCheck->execute();
+
+        $res = $stmtCheck->get_result()->fetch_assoc();
+
+        // Solo permitir cancelar si está pendiente
+        if (!$res || $res['estado'] !== 'pendiente') {
+            return false;
+        }
+
+        // Cambiar estado a cancelado
+        $stmt = $this->db->prepare("
+            UPDATE solicitudes_compra 
+            SET estado = 'cancelado' 
+            WHERE id = ?
+        ");
+
+        $stmt->bind_param("i", $id);
+
+        return $stmt->execute();
+
+    } catch (Exception $e) {
+        return false;
+    }
+}
     public function eliminar($id) {
         try {
             // Verificar estado con MySQLi

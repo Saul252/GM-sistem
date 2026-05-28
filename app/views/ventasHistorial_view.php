@@ -642,7 +642,9 @@
             ${infoEquivalenciaSub}
         </td>
         <td class="text-center">
-        ${cant <1?visualizacionVenta +' ('+unm + ' '+p.nombre+')':visualizacionVenta}
+        ${cant} ${cant/factor>=1?p.unidad_reporte:p.unidad_medida} 
+      
+        (${ p.equivalencia>=1?cant/(1/p.equivalencia).toFixed(2):(cant*(p.equivalencia)).toFixed(2)} ${p.nombre})
             
         </td>
         <td class="text-center">${entregada>1?entregada+ p.unidad_reporte:p.cantidad_entregada +p.unidad_medida}</td>
@@ -651,16 +653,18 @@
         <td class="text-center text-danger fw-bold">${(cantPendiente>=1?cantPendiente.toFixed(3):pen)} ${cantPendiente>=1?p.unidad_reporte:p.unidad_medida}</td>
          <td class="text-center col-input d-none">
             ${pen.toFixed(4) > 0 ? 
-                `<input type="number" class="form-control form-control-sm input-entrega1 mx-auto" 
-                    max="${pen<=p.disponible?
-                    (pendi>=1?pendi:pen)
-                    :disponible>1?disponible:p.disponible
-                   }" min="00.1" value="0"data-dvid=${p.dvid} data-id="${p.producto_id}" data-factor="${
-                    (pendi>=1&& disponible>=1)?factor:1
-                    
-                   }" step="0.01"style="width:70px">
+                `<input type="number"
+    class="form-control form-control-sm input-entrega1 mx-auto"
+    max="${pen<=p.disponible ? (pendi>=1 ? pendi : pen) : (disponible>1 ? disponible : p.disponible)}"
+    min="0"
+    step="0.01"
+    value="0.00"
+    data-dvid="${p.dvid}"
+    data-id="${p.producto_id}"
+    data-factor="${(pendi>=1 && disponible>=1) ? factor : 1}"
+    style="width:70px">
                    <input type="hidden" class="form-control form-control-sm input-entrega mx-auto" 
-                     min="0" value="0"data-dvid=${p.dvid} data-id="${p.producto_id}" style="width:70px">
+                    value="0"data-dvid=${p.dvid} data-id="${p.producto_id}" style="width:70px"step="0.01" min="0">
                      <span class="badge bg-success">${
                     (pendi>=1&& disponible>=1)?p.unidad_reporte:p.unidad_medida}</span>` 
                      
@@ -735,33 +739,41 @@
     }
     document.addEventListener('input', e => {
 
-        if (e.target.classList.contains('input-entrega1')) {
+      if (e.target.classList.contains('input-entrega1')) {
 
-            const max = Number(e.target.max);
-            const min = Number(e.target.min);
-            const factor = Number(e.target.dataset.factor);
+    const max = parseFloat(e.target.max) || 0;
+    const min = parseFloat(e.target.min) || 0;
+    const factor = parseFloat(e.target.dataset.factor) || 1;
 
-            let value = Number(e.target.value);
+    let value = e.target.value;
 
-            if (value > max) {
-                value = max;
-            }
+    // 👉 PERMITIR BORRADO COMPLETO
+    if (value === "") {
+        const contenedor = e.target.parentElement;
+        const inputEntrega = contenedor.querySelector('.input-entrega');
 
-            if (value < min) {
-                value = min;
-            }
-
-            e.target.value = value;
-
-            // buscar el input hermano
-            const contenedor = e.target.parentElement;
-
-            const inputEntrega = contenedor.querySelector('.input-entrega');
-
-            if (inputEntrega) {
-                inputEntrega.value = (value * factor);
-            }
+        if (inputEntrega) {
+            inputEntrega.value = "";
         }
+        return; // 🔥 importante: no seguir procesando
+    }
+
+    value = parseFloat(value);
+
+    if (isNaN(value)) return;
+
+    if (value > max) value = max;
+    if (value < min) value = min;
+
+    e.target.value = value;
+
+    const contenedor = e.target.parentElement;
+    const inputEntrega = contenedor.querySelector('.input-entrega');
+
+    if (inputEntrega) {
+        inputEntrega.value = (value * factor).toFixed(2);
+    }
+}
     });
     async function cargarRepartos(idVenta) {
 
@@ -1095,8 +1107,9 @@
             <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
                 <div>
                     <h4 class="fw-bold text-dark m-0 d-flex align-items-center gap-2">
-                        <span>🚚</span> Hoja de Ruta
+                        <span>🚚</span> Venta ${idVenta}: Hoja de Ruta
                     </h4>
+
                     <div class="text-muted small mt-1">
                         Folio de viaje: <span class="fw-bold text-dark font-monospace">${info.folio_viaje}</span>
                     </div><div class="text-muted small mt-1">
