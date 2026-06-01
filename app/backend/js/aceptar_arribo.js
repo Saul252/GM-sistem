@@ -31,8 +31,8 @@
             formData.append('id', movId);
 
             // 4. Petición al Backend
-            fetch('/cfsistem/app/controllers/traspasosController.php?action=recibirTraspaso', {
-                    method: 'POST',
+           fetch('/cfsistem/app/controllers/traspasosController.php?action=recibirTraspaso', {
+                     method: 'POST',
                     body: formData
                 })
                 .then(response => {

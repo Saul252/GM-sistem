@@ -443,8 +443,8 @@ error_reporting(E_ALL);
                             <th class="ps-4">Producto</th>
                             <th>Mayoreo</th>
                             <th>Sueltas</th>
-                            <th>Faltantes</th>
-                            <th>Excedentes</th>
+                            <th>LLegado</th>
+                           
                             <th>Costo</th>
                             <th class="text-end pe-4">Total</th>
 
@@ -1098,28 +1098,39 @@ const cantMayoreo = Math.floor(cantidad); // 1
                         value="${cantSueltas}" step="0.01" oninput="recalcularFila(${index})" readonly>
                 </td>
 
-                <td>
-                    <label class="form-label small text-danger fw-semibold mb-1">Faltantes</label>
-                  <input type="number"
-    id="faltante_${index}"
-    class="form-control form-control-sm border-danger shadow-sm i-faltante"
-    name="items[${index}][cantidad_faltante]"
-    value="0"
-    step=".01"
-    min="0"
-    oninput="recalcularFila(${index})">
+                
+                    
+          <td>
+    <label class="form-label small text-success fw-semibold mb-1">Llegado</label>
 
-                   
-                </td>
+    <input type="number"
+        id="llegado_${index}"
+        class="form-control form-control-sm border-success shadow-sm i-llegado"
+        name="items[${index}][cantidad_llegado]"
+        value="${cantidadSolicitada}"
+        step=".01"
+        min="0"
+        oninput="recalcularFila(${index})">
 
-                <td>
-                    <label class="form-label small text-success fw-semibold mb-1">Excedente</label>
-                    <input type="number"
-                        name="items[${index}][cantidad_excedente]"
-                        class="form-control form-control-sm border-success shadow-sm i-excedente"
-                        value="0" min="0" step="0.01"
-                        oninput="recalcularFila(${index})">
-                </td>
+    <input type="hidden"
+        id="faltante_${index}"
+        class="form-control form-control-sm border-danger shadow-sm i-faltante"
+        name="items[${index}][cantidad_faltante]"
+        value="0"
+        step=".01"
+        min="0"
+        >
+
+
+
+    <input type="hidden"
+        name="items[${index}][cantidad_excedente]"
+        class="form-control form-control-sm border-success shadow-sm i-excedente"
+        value="0"
+        min="0"
+        step="0.01"
+        >
+</td>
 
                 <td>
                     <label class="small text-muted fw-bold">Costo Total Renglón</label>
@@ -1150,8 +1161,13 @@ const cantMayoreo = Math.floor(cantidad); // 1
 
                 <td class="text-end bg-light-subtle">
                     <div class="h5 mb-0 fw-bold text-primary s-total-piezas">0</div>
-                    <small class="text-muted">${uBase}</small>
+                    
+                    <small class="text-muted umedida" >${cantMayoreo>=1?uRep: uBase}</small>
+                    <div>                    <small class=" mb-0 text-danger s-faltantes-piezas"></small>
+                    <small class=" mb-0  text-success s-exedentes-piezas"></small>
+                    <small class=" mb-0  text-dark s-unidad-piezas"></small>
                     <input type="hidden" class="h-total-piezas">
+                    </div>
                 </td>
             </tr>`;
         });
@@ -1176,28 +1192,60 @@ function recalcularFila(index) {
     const factor = parseFloat(fila.find('.h-factor').val()) || 1;
     const mayoreo = parseFloat(fila.find('.i-mayoreo').val()) || 0;
     const sueltas = parseFloat(fila.find('.i-sueltas').val()) || 0;
+    const llegado = parseFloat((fila.find('.i-llegado').val()) || 0)*factor;
+   const unidadTexto = fila.find('.umedida').text().trim();
 
-    let faltante = parseFloat(fila.find('.i-faltante').val()*factor) || 0;
-    const excedente = parseFloat(fila.find('.i-excedente').val()) *factor|| 0;
+    let faltante = (parseFloat(fila.find('.i-faltante').val()) || 0) * factor;
+    let excedente = (parseFloat(fila.find('.i-excedente').val()) || 0) * factor;
 
     const costoTotalRenglon = parseFloat(fila.find('.i-costo-total').val()) || 0;
 
     const totalBase = (mayoreo * factor) + sueltas;
 
-    // 🔴 evitar faltante mayor al total
-    if (faltante > totalBase) faltante = totalBase;
+    if (llegado > totalBase) {
+        let total = llegado - totalBase;
+        fila.find('.i-excedente').val(total/factor);
+        fila.find('.i-faltante').val(0);
+        fila.find('.s-faltantes-piezas').text('');
+        fila.find('.s-exedentes-piezas').text(total/factor);
+        fila.find('.s-unidad-piezas').text(unidadTexto);
+        excedente = total ;
+        faltante = 0;
+    }
+
+    if (llegado < totalBase) {
+        let total = totalBase - llegado;
+        fila.find('.i-faltante').val(total/factor);
+        fila.find('.i-excedente').val(0);
+        fila.find('.s-exedentes-piezas').text();
+        
+        fila.find('.s-faltantes-piezas').text(total/factor);
+        fila.find('.s-unidad-piezas').text(unidadTexto);
+        
+        faltante = total ;
+        excedente = 0;
+    }
+    if(llegado==totalBase){
+        fila.find('.s-faltantes-piezas').text('');
+         fila.find('.s-exedentes-piezas').text('');
+
+    }
 
     const totalPiezasFinal = totalBase - faltante + excedente;
+    mayoreo>=1?
 
-    const displayTotal = Number.isInteger(totalPiezasFinal)
-        ? totalPiezasFinal
-        : totalPiezasFinal.toFixed(2);
+    fila.find('.s-total-piezas').text(
+        Number.isInteger(totalPiezasFinal/factor)
+            ? totalPiezasFinal/factor
+            : (totalPiezasFinal/factor).toFixed(2)
+    ):fila.find('.s-total-piezas').text(
+        Number.isInteger(totalPiezasFinal)
+            ? totalPiezasFinal
+            : (totalPiezasFinal).toFixed(2)
+    );
+     
 
-    fila.find('.s-total-piezas').text(displayTotal);
     fila.find('.h-total-piezas').val(totalPiezasFinal);
-
-    // actualizar hidden faltante
-   
 
     let precioUnitario = totalBase > 0
         ? costoTotalRenglon / totalBase
@@ -1205,14 +1253,15 @@ function recalcularFila(index) {
 
     fila.find('.h-precio-lote').val(precioUnitario.toFixed(4));
 
-    fila.find('.s-precio-lote').text('$ ' + precioUnitario.toLocaleString(undefined, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 4
-    }));
+    fila.find('.s-precio-lote').text(
+        '$ ' + precioUnitario.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 4
+        })
+    );
 
     actualizarGranTotal();
 }
-
 function actualizarGranTotal() {
     let granTotal = 0;
     $('.i-costo-total').each(function() {
@@ -1278,9 +1327,9 @@ function actualizarGranTotal() {
                 fila.find('.i-sueltas').val()
             ) || 0,
 
-            cantidad_excedente: (excedente*factor),
+            cantidad_excedente: (excedente),
 
-            cantidad_faltante: (faltante*factor),
+            cantidad_faltante: (faltante),
 
             total_item: costoTotal,
 

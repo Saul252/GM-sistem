@@ -473,6 +473,7 @@ public function recibirTraspaso($movimiento_id, $usuario_id, $rol_id)
 
         $porRestar = $cantidad;
         $precio_historico = 0;
+        $lotesAfectados = [];
 
         while ($lote = $resLotes->fetch_assoc()) {
 
@@ -495,6 +496,11 @@ public function recibirTraspaso($movimiento_id, $usuario_id, $rol_id)
             $up->execute();
 
             $porRestar -= $aQuitar;
+
+            $lotesAfectados[] = [
+                'lote_id' => $idLote,
+                'cantidad' => $aQuitar
+            ];
         }
 
         if ($porRestar > 0) {
@@ -525,6 +531,44 @@ public function recibirTraspaso($movimiento_id, $usuario_id, $rol_id)
             $precio_final
         );
         $stmtNewLote->execute();
+
+        $idLoteNuevo = $this->db->insert_id;
+
+        // =========================================
+        // 🔻 KARDEX
+        // =========================================
+        $observaciones = 'Arribo autorizado';
+
+        $stmtKardex = $this->db->prepare("
+            INSERT INTO kardex_movimientos_lotes (
+                movimiento_id,
+                lote_origen_id,
+                lote_destino_id,
+                producto_id,
+                cantidad,
+                usuario_id,
+                observaciones
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        ");
+
+        foreach ($lotesAfectados as $lote) {
+
+            $loteOrigen = (int)$lote['lote_id'];
+            $cantidadLote = (float)$lote['cantidad'];
+
+            $stmtKardex->bind_param(
+                "iiiidis",
+                $movimiento_id,
+                $loteOrigen,
+                $idLoteNuevo,
+                $p_id,
+                $cantidadLote,
+                $usuario_id,
+                $observaciones
+            );
+
+            $stmtKardex->execute();
+        }
 
         // =========================================
         // 🔻 INVENTARIO DESTINO

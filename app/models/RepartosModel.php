@@ -1635,6 +1635,141 @@ public function procesarDespachoFisicoMasivo($idsMovimientos) {
         return ['success' => false, 'message' => "Error: " . $e->getMessage()];
     }
 }
+public function procesarDespachoFisicoMasivoConlotes($idsMovimientos, $lotes) {
+    if (empty($idsMovimientos)) {
+        return ['success' => false, 'message' => 'No se proporcionaron IDs para procesar.'];
+    }
+
+    $this->db->begin_transaction();
+
+    try {
+        $id_usuario = $_SESSION['usuario_id'] ?? 0;
+        if ($id_usuario <= 0) {
+            throw new Exception("Error: Sesión de usuario no válida.");
+        }
+
+        foreach ($idsMovimientos as $index => $idMovimiento) {
+            $idMovimiento = intval($idMovimiento);
+
+            // 1. Obtener movimiento
+            $sqlMov = "SELECT m.id, m.producto_id, m.almacen_origen_id, m.cantidad,
+                              dv.id as det_venta_id, dv.precio_unitario as precio_pactado,
+                              ev.id as entrega_id
+                       FROM movimientos m
+                       LEFT JOIN detalle_venta dv 
+                            ON m.referencia_id = dv.venta_id 
+                           AND m.producto_id = dv.producto_id
+                       LEFT JOIN entregas_venta ev 
+                            ON dv.venta_id = ev.venta_id
+                       WHERE m.id = $idMovimiento 
+                       LIMIT 1";
+
+            $resMov = $this->db->query($sqlMov);
+            $mov = $resMov->fetch_assoc();
+
+            if (!$mov) {
+                throw new Exception("Movimiento ID $idMovimiento no encontrado.");
+            }
+
+            $prod_id           = intval($mov['producto_id']);
+            $alm_id            = intval($mov['almacen_origen_id']);
+            $cantidad_restante = floatval($mov['cantidad']);
+            $entrega_id        = intval($mov['entrega_id'] ?? 0);
+            $det_venta_id      = intval($mov['det_venta_id'] ?? 0);
+            $precio_pactado    = floatval($mov['precio_pactado'] ?? 0);
+
+            // ===================================================
+            // SI EXISTE LOTE ESPECÍFICO -> USAR ESE
+            // SI NO -> FIFO NORMAL
+            // ===================================================
+            $loteSeleccionado = isset($lotes[$index]) ? intval($lotes[$index]) : 0;
+
+            if ($loteSeleccionado > 0) {
+                $sqlLotes = "SELECT id, cantidad_actual, precio_compra_unitario
+                             FROM lotes_stock
+                             WHERE id = $loteSeleccionado
+                               AND producto_id = $prod_id
+                               AND almacen_id = $alm_id
+                               AND cantidad_actual > 0";
+            } else {
+                $sqlLotes = "SELECT id, cantidad_actual, precio_compra_unitario
+                             FROM lotes_stock
+                             WHERE producto_id = $prod_id
+                               AND almacen_id = $alm_id
+                               AND cantidad_actual > 0
+                               AND estado_lote = 'activo'
+                             ORDER BY fecha_ingreso ASC, id ASC";
+            }
+
+            $resLotes = $this->db->query($sqlLotes);
+
+            if ($resLotes->num_rows == 0 && $cantidad_restante > 0) {
+                throw new Exception("Sin stock en lotes para producto ID: $prod_id");
+            }
+
+            // 3. Descontar
+            while ($cantidad_restante > 0 && $lote = $resLotes->fetch_assoc()) {
+
+                $lote_id         = intval($lote['id']);
+                $stock_lote      = floatval($lote['cantidad_actual']);
+                $costo_historico = floatval($lote['precio_compra_unitario']);
+
+                $a_tomar          = min($cantidad_restante, $stock_lote);
+                $nuevo_stock_lote = $stock_lote - $a_tomar;
+                $nuevo_estado     = ($nuevo_stock_lote <= 0) ? 'agotado' : 'activo';
+
+                $this->db->query("
+                    UPDATE lotes_stock
+                    SET cantidad_actual = $nuevo_stock_lote,
+                        estado_lote = '$nuevo_estado'
+                    WHERE id = $lote_id
+                ");
+
+                $sqlSalida = "INSERT INTO lotes_movimientos_salida
+                              (lote_id, entrega_venta_id, detalle_venta_id,
+                               cantidad_salida, costo_compra_historico, precio_venta_pactado)
+                              VALUES
+                              ($lote_id, $entrega_id, $det_venta_id,
+                               $a_tomar, $costo_historico, $precio_pactado)";
+
+                if (!$this->db->query($sqlSalida)) {
+                    throw new Exception("Error al insertar salida de lote.");
+                }
+
+                $cantidad_restante -= $a_tomar;
+            }
+
+            if ($cantidad_restante > 0) {
+                throw new Exception("Stock insuficiente para movimiento $idMovimiento");
+            }
+
+            // 4. Registrar salida física
+            $sqlPuente = "INSERT INTO registro_salida_lotes
+                         (movimiento_id, usuario_patio_id, usuario_despacho_id)
+                         VALUES
+                         ($idMovimiento, $id_usuario, $id_usuario)";
+
+            if (!$this->db->query($sqlPuente)) {
+                throw new Exception("Error en registro físico: " . $this->db->error);
+            }
+        }
+
+        $this->db->commit();
+
+        return [
+            'success' => true,
+            'message' => count($idsMovimientos) . ' productos despachados correctamente.'
+        ];
+
+    } catch (Exception $e) {
+        $this->db->rollback();
+
+        return [
+            'success' => false,
+            'message' => "Error: " . $e->getMessage()
+        ];
+    }
+}
 public function listarIdsPendientesPorVenta($venta_id) {
     $venta_id = intval($venta_id);
 
@@ -1703,7 +1838,7 @@ public function simularDespachoLotesMasivo($idsMovimientos) {
         $idsString = implode(',', $idsClean);
 
         // 1. Obtenemos todos los movimientos de una sola vez
-        $sqlMovs = "SELECT m.id, m.producto_id, m.almacen_origen_id, m.cantidad, 
+        $sqlMovs = "SELECT m.id, m.producto_id, m.almacen_origen_id, m.cantidad, p.id as producto_id,
                            p.nombre as prod_nombre, p.factor_conversion, p.unidad_reporte 
                     FROM movimientos m 
                     INNER JOIN productos p ON m.producto_id = p.id 
@@ -1747,6 +1882,8 @@ public function simularDespachoLotesMasivo($idsMovimientos) {
             // 3. Agrupamos el resultado por ID de movimiento
             $resultados[] = [
                 'movimiento_id'     => $movId,
+                'producto_id'       =>$mov['producto_id'],
+                'almacen_id'=>$mov['almacen_origen_id'],
                 'producto'          => $mov['prod_nombre'],
                 'total_solicitado'  => $mov['cantidad'],
                 'unidad_reporte'    => $mov['unidad_reporte'],

@@ -40,25 +40,29 @@
                                 </select>
                             </div>
 
-                            <div class="col-md-12 mb-3">
+                            <div class=" row mb-3">
                                 <label class="form-label fw-bold">4. Cantidad a Traspasar</label>
-                                <div class="input-group">
+                                <div class=" col-md-6 mb-3" > 
                                     <input type="number" id="traspaso_factor_input" class="form-control text-center"
-                                        placeholder="0" min="0">
+                                        placeholder="0" min="0" step="0.01">
                                     <span class="input-group-text" id="label_unidad_reporte"
                                         style="min-width: 80px;">Unid.</span>
+</div>
+                                   <div id="bloque_traspaso" class="col-md-6 mb-3">
+    <input type="number" id="traspaso_piezas_input" class="form-control text-center"
+        placeholder="0" min="0" step=".01">
 
-                                    <input type="number" id="traspaso_piezas_input" class="form-control text-center"
-                                        placeholder="0" min="0" step="any">
-                                    <span class="input-group-text">Pzas.</span>
-                                </div>
+    <span class="input-group-text" id="label_unidad_medida"
+        style="min-width: 80px;">Unid.</span>
+</div>
+                                
 
                                 <input type="hidden" name="cantidad" id="cantidad_traspaso_final" required>
 
                                 <div id="resumen_conversion"
                                     class="mt-2 p-2 rounded bg-light border-start border-4 border-primary"
                                     style="display:none; font-size: 0.9rem;">
-                                    <strong>Movimiento total:</strong> <span id="txt_total_pzas">0</span> piezas.
+                                    <strong>Movimiento total:</strong> <span id="txt_total_pzas">0</span> <span id="unidadF"></span>
                                 </div>
                             </div>
                         </div>

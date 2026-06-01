@@ -1,7 +1,7 @@
 /**
  * 4. FUNCIÓN PARA ABRIR EL MODAL DE FINALIZACIÓN
  */
-window.abrirModalFinalizar = function() {
+window.abrirModalFinalizar = function () {
     if (!window.carrito || window.carrito.length === 0) {
         Swal.fire('Carrito vacío', 'Agrega productos antes de finalizar la venta.', 'warning');
         return;
@@ -9,124 +9,104 @@ window.abrirModalFinalizar = function() {
 
     const tabla = document.getElementById("tablaConfirmacion");
     if (!tabla) return;
+
     tabla.innerHTML = "";
-    
+
     window.carrito.forEach((item, index) => {
+
         if (item.entrega_hoy === undefined || item.entrega_hoy === null) {
-            item.entrega_hoy = (item.cantidad);
+            item.entrega_hoy = item.cantidad;
         }
-console.log('unidaditem',item.unidadMedidaNombre);
-        // Cálculos iniciales de venta total
+
         const cantFactorVenta = Math.floor(item.cantidad / item.factor);
         const piezasRestantesVenta = Math.round((item.cantidad % item.factor) * 100) / 100;
 
-        // Cálculos dinámicos de lo que se está ENTREGANDO
-        const fEntregar = Math.floor(item.entrega_hoy / item.factor);
-        const pEntregar = (item.entrega_hoy % item.factor);
-        console.log(item.unidad_medida);
-        let leyenda='';
-         let cantidadT=item.cantidad;
-         if(item.cantidad<1)
-           {
-              cantidadT=item.unidadEquivalencia>0?(item.cantidad/(1/item.unidadEquivalencia)):item.cantidad;
-             leyenda =
-    '1 ' + item.unidadMedidaNombre +
-    ' = ' +
-    (1 / item.unidadEquivalencia) +
-    ' de ' +
-    item.unidad_medida +
-    '\n';
-       
+        let leyenda = '';
+        let cantidadT = item.cantidad;
 
-           }
-         let nombreuni='';
-         let unidadNombre='';
-        if(cantFactorVenta==0 ){
-            nombreuni=item.unidadMedidaNombre;
-          unidadNombre=item.unidad_medida;
+        if (item.cantidad < 1) {
+            cantidadT = item.unidadEquivalencia > 0
+                ? (item.cantidad / (1 / item.unidadEquivalencia))
+                : item.cantidad;
 
+            leyenda =
+                '1 ' + item.unidadMedidaNombre +
+                ' = ' +
+                (1 / item.unidadEquivalencia) +
+                ' de ' +
+                item.unidad_medida;
         }
-        else{
-             nombreuni=item.unidad_medida;
 
+        let nombreuni = '';
+
+        if (cantFactorVenta == 0) {
+            nombreuni = item.unidadMedidaNombre;
+        } else {
+            nombreuni = item.unidad_medida;
         }
-        
 
         const tr = document.createElement("tr");
+
         tr.innerHTML = `
             <td>
                 <div class="fw-bold" style="font-size: 0.85rem;">${item.nombre}</div>
-                <small class="text-muted d-block">${item.almacen_nombre} | ${item.tipo_precio.toUpperCase()}</small>
-                
+                <small class="text-muted d-block">
+                    ${item.almacen_nombre} | ${item.tipo_precio.toUpperCase()}
+                </small>
+
                 <div class="mt-1" style="font-size: 0.7rem; color: #055160; background: #e3f2fd; padding: 4px 8px; border-radius: 4px; border-left: 3px solid #0d6efd;">
-                    <i class="bi bi-info-circle-fill"></i> Factor: 1 <b>${item.unidad_reporte}</b> = <b>${item.factor}</b> ${item.unidad_medida}<br>
-                    Vendido:${leyenda}  ${cantFactorVenta>0?item.unidad_reporte:''} ${piezasRestantesVenta > 0 ? piezasRestantesVenta + ' pzas' : ''}<br>
-                    
+                    <i class="bi bi-info-circle-fill"></i>
+                    Factor: 1 <b>${item.unidad_reporte}</b> = <b>${item.factor}</b> ${item.unidad_medida}<br>
+                    Vendido: ${leyenda}
+                    ${cantFactorVenta > 0 ? item.unidad_reporte : ''}
+                    ${piezasRestantesVenta > 0 ? piezasRestantesVenta + ' ' + item.unidad_medida : ''}
                 </div>
             </td>
+
             <td class="text-center">
-               <div class="fw-bold" style="font-size: 0.9rem;">
-
-${
-    (() => {
-        const EPS = 0.0001;
-
-        const residuo = item.cantidad % item.factor;
-
-        
-
-        if (item.unidadEquivalencia > (Math.floor(item.cantidad / item.factor))) {
-            console.log('unidad especial',(item.cantidad)/(1/item.unidadEquivalencia));
-
-            return (
-               
-                item.cantidad / (1 / item.unidadEquivalencia)
-            ).toFixed(3);
-        }
-
-        const divisionFactor = item.cantidad / item.factor;
-
-        const cantFactorVenta =
-            Math.abs(divisionFactor - 1) < 0.001
-                ? 1
-                : Math.floor(divisionFactor);
-
-        return cantFactorVenta >= 1
-            ? cantFactorVenta
-            : cantidadT.toFixed(3);
-    })()
-}
-
-${
-    cantFactorVenta > 0
-        ? item.unidad_reporte
-        : nombreuni
-}
-
-</div>      
+                <div class="fw-bold" style="font-size: 0.9rem;">
+                    ${cantFactorVenta >= 1 ? cantFactorVenta : cantidadT.toFixed(3)}
+                    ${cantFactorVenta > 0 ? item.unidad_reporte : nombreuni}
+                </div>
             </td>
+
             <td>
                 <div class="input-group input-group-sm">
-                    <input type="number" 
-                           class="form-control text-center input-entrega-modal" 
-                           data-index="${index}" 
-              value="0"
-                           min="0" 
-                           max="${item.cantidad}"
-                           step="0.01">
-                    <span class="input-group-text"><i class="bi bi-box-seam"></i></span>
+                    <input type="number"
+                        class="form-control text-center input-entrega-modal"
+                        data-index="${index}"
+                        value="0"
+                        min="0"
+                        max="${item.cantidad}"
+                        step="0.01">
+
+                    <span class="input-group-text">
+                        ${cantFactorVenta > 0 ? item.unidad_reporte : nombreuni}
+                    </span>
                 </div>
-                <small class="text-muted d-block text-center" style="font-size: 0.65rem;">Piezas a entregar hoy</small>
+
+                <small class="text-muted d-block text-center" style="font-size: 0.65rem;">
+                    Por entregar hoy
+                </small>
             </td>
-            <td class="text-end fw-bold">$${item.subtotal.toFixed(2)}</td>
+
+            <td class="text-end fw-bold">
+                $${item.subtotal.toFixed(2)}
+            </td>
+
+            
         `;
+
         tabla.appendChild(tr);
+
+        // YA EXISTE EN EL DOM
+       
     });
 
-    // Llamada segura a la función local
     window.recalcularTotalModal();
 
     const modalElement = document.getElementById('modalFinalizarVenta');
+
     if (modalElement) {
         const myModal = new bootstrap.Modal(modalElement);
         myModal.show();
@@ -185,3 +165,92 @@ window.recalcularTotalModal = function() {
         }
     }
 });
+// document.addEventListener('change', function (e) {
+
+//     if (e.target.matches('select[name^="merma_lote_"]')) {
+
+//         const index = e.target.name.split('_').pop();
+//         const item = window.carrito[index];
+
+//         const loteId = e.target.value;
+
+//         if (!loteId) return;
+
+//         const optionSeleccionada = e.target.options[e.target.selectedIndex];
+//         const stockLote = parseFloat(optionSeleccionada.dataset.stock || 0);
+
+//         console.log('Índice:', index);
+//         console.log('Producto:', item.nombre);
+//         console.log('Lote seleccionado:', loteId);
+//         console.log('Stock lote:', stockLote);
+
+//         // Guardar lote en carrito
+//         item.lote_id = loteId;
+       
+
+//         // Validar entrega vs stock del lote
+//         if (item.entrega_hoy > stockLote) {
+//             Swal.fire(
+//                 'Stock insuficiente',
+//                 `El lote solo tiene ${stockLote}`,
+//                 'warning'
+//             );
+
+//             item.entrega_hoy = stockLote;
+
+//             const inputEntrega = document.querySelector(
+//                 `.input-entrega-modal[data-index="${index}"]`
+//             );
+
+//             if (inputEntrega) {
+//                 inputEntrega.value = stockLote;
+//             }
+//         }
+//     }
+// });
+// async function lotesporPropducto(producto_id, almacen_id, index) {
+//     const loteSelect = document.querySelector(
+//         `[name="merma_lote_${index}"]`
+//     );
+
+//     if (!loteSelect) {
+//         console.error(`No existe merma_lote_${index}`);
+//         return;
+//     }
+
+//     try {
+//         const response = await fetch(
+//             `/cfsistem/app/controllers/mermasController.php?action=obtenerLotes&producto_id=${producto_id}&almacen_id=${almacen_id}`
+//         );
+
+//         if (!response.ok) {
+//             throw new Error('Error HTTP: ' + response.status);
+//         }
+
+//         const lotes = await response.json();
+
+//         console.log('Lotes:', lotes);
+
+//         loteSelect.innerHTML = '<option value="">Seleccione lote</option>';
+
+//         if (!Array.isArray(lotes)) {
+//             throw new Error('La respuesta no es un array');
+//         }
+
+//         lotes.forEach(l => {
+//             const option = document.createElement('option');
+//             option.value = l.id;
+//             option.textContent = `${l.codigo_lote} (Disp: ${l.cantidad_actual})`;
+//             option.dataset.stock = l.cantidad_actual;
+
+//             loteSelect.appendChild(option);
+//         });
+
+//         loteSelect.disabled = false;
+
+//     } catch (e) {
+//         console.error('Error cargando lotes:', e);
+//         loteSelect.innerHTML = '<option value="">Error al cargar</option>';
+//     }
+// }                   
+                              

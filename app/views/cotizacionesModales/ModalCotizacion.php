@@ -9,7 +9,7 @@
                             <i class="bi bi-file-earmark-plus fs-4"></i>
                         </div>
                         <div>
-                            <h4 class="fw-bold mb-0">Nueva Solicitud de Compra</h4>
+                            <h4 class="fw-bold mb-0">Nueva Cotizacion</h4>
                             <p class="text-muted small mb-0">Complete los datos para requerir materiales al almacén
                             </p>
                         </div>
@@ -123,7 +123,7 @@
                             $0.00
                         </div>
                          <input 
-            type="number"
+            type="hidden"
             id="totalCotizacion"
             name="totalCotizacion"
             

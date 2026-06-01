@@ -156,7 +156,7 @@ function abrirModalAjuste(id, folio) {
     contenedor.innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border text-danger"></div></div>';
 
     modal.show();
-
+ const almacenes = <?= json_encode($almacenUsuario) ?>;
     fetch(`/cfsistem/app/controllers/egresosController.php?action=obtenerFaltantes&compra_id=${id}`)
         .then(res => res.json())
         .then(data => {
@@ -174,7 +174,9 @@ function abrirModalAjuste(id, folio) {
                         </thead>
                         <tbody>`;
 
-                window.DATA_COMPRAS.almacenes.forEach(alm => {
+   
+
+                almacenes.forEach(alm => {
                     tablaAlmacenes += `
                         <tr>
                             <td class="text-center">

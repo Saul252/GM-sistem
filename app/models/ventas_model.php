@@ -147,6 +147,7 @@ if ($monto_favor > 0 && $monto_favor == $monto_pagado) {
             $cant_real = floatval($item['entrega_hoy']); 
             $prec      = floatval($item['precio_unitario']);
             $subt      = floatval($item['subtotal']);
+            $lote_id= intval($item['lote_id']);
             
             $st_fila = ($cant_real >= $cant_ped) ? 'entregado' : (($cant_real > 0) ? 'parcial' : 'pendiente');
             
@@ -156,6 +157,33 @@ if ($monto_favor > 0 && $monto_favor == $monto_pagado) {
             $stmtD->bind_param("iiddddds", $id_venta, $p_id, $cant_ped,$idunidadMedida, $cant_real, $prec, $subt, $st_fila);
             $stmtD->execute();
             $id_detalle_venta = $conexion->insert_id;
+               $estado = 'reservado';
+if($lote_id!=0)
+    {
+$stmtLote = $conexion->prepare("
+    UPDATE lotes_stock 
+    SET estado_lote = ? 
+    WHERE id = ?
+");//lotes_reservados
+
+$stmtLote->bind_param("si", $estado, $lote_id);
+$stmtLote->execute();
+$sqlR = "INSERT INTO lotes_reservados (lote_id, venta_id) 
+         VALUES (?, ?)";
+
+$stmtR = $conexion->prepare($sqlR);
+
+if (!$stmtR) {
+    throw new Exception("Error preparando reserva: " . $conexion->error);
+}
+
+$stmtR->bind_param("ii", $lote_id, $id_venta);
+
+if (!$stmtR->execute()) {
+    throw new Exception("Error guardando reserva: " . $stmtR->error);
+}
+    }
+       
 
             if ($cant_real > 0 && $id_entrega_maestro) {
                 // Detalle entrega
@@ -174,6 +202,8 @@ if ($monto_favor > 0 && $monto_favor == $monto_pagado) {
                                                VALUES (?, 'salida', ?, ?, ?, ?, ?)");
                 $stmtMov->bind_param("idiiss", $p_id, $cant_real, $alm_id, $id_usuario, $id_venta, $mov_obs);
                 $stmtMov->execute();
+             
+
                 
             }
         }

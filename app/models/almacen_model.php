@@ -35,7 +35,7 @@ class AlmacenModel {
 }
 
     public function getInventario($almacen_id = 0) {
-        $sql = "SELECT p.id, p.sku, p.nombre,p.descripcion, p.categoria_id, p.factor_conversion, p.unidad_reporte,c.nombre AS categoria_nombre,
+        $sql = "SELECT p.id, p.sku, p.nombre,p.descripcion, p.categoria_id, p.factor_conversion, p.unidad_reporte,p.unidad_medida,c.nombre AS categoria_nombre,
 
                        i.stock, i.almacen_id, a.nombre AS almacen_nombre
                 FROM inventario i

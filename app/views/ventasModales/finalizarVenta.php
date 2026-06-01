@@ -216,6 +216,7 @@
                                         <th class="text-center">Venta</th>
                                         <th class="text-center">Entregar Hoy</th>
                                         <th class="text-end pe-3">Subtotal</th>
+                                        <th class="text-end pe-3"style="display:none">Lote</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tablaConfirmacion"></tbody>
@@ -264,22 +265,32 @@
                         </div>
 
                         <!-- Widget Estado de Cuenta — FUERA del input-group -->
-                        <div id="widgetEstadoCuenta" style="<?= ($_SESSION['almacen_id']==0) ? '' : 'display:none;' ?>">
-    <!-- Header dinámico (se reemplaza por JS) -->
-    <div id="widgetHeader" class="widget-header-neutral">
-        <div class="d-flex justify-content-between align-items-start">
-            <div>
-                <div class="widget-saldo-label">
-                    <i class="bi bi-wallet2 me-1"></i>Estado de Cuenta
-                </div>
-                <div class="widget-saldo-monto" id="lblSaldoTotal">$0.00</div>
-            </div>
-            <span id="txtUltimaCarga" class="widget-update-time"></span>
-        </div>
-        <div id="widgetBadge" class="mt-2"></div>
-    </div>
-</div>
+                         <div  style="<?= ($_SESSION['almacen_id']==0) ? '' : 'display:none;' ?>">
+                        <div id="widgetEstadoCuenta" style="display:none;">
+                            <!-- Header dinámico (se reemplaza por JS) -->
+                            <div id="widgetHeader" class="widget-header-neutral">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <div class="widget-saldo-label">
+                                            <i class="bi bi-wallet2 me-1"></i>Estado de Cuenta
+                                        </div>
+                                        <div class="widget-saldo-monto" id="lblSaldoTotal">$0.00</div>
+                                    </div>
+                                    <span id="txtUltimaCarga" class="widget-update-time"></span>
+                                </div>
+                                <div id="widgetBadge" class="mt-2"></div>
+                            </div>
 
+                            <!-- Lista de movimientos -->
+                            <div class="widget-body" id="listaMovimientos">
+                                <div class="text-center py-4 text-muted small">
+                                    <div class="spinner-border spinner-border-sm"></div>
+                                </div>
+                            </div>
+
+                            <!-- Footer con botón de abono -->
+
+                        </div>
                         <div id="contenedorSaldoFavor" class="p-3 mb-3"
                             style="display:none; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px;">
                             <div class="form-check form-switch">
@@ -300,6 +311,7 @@
                                 </div>
                                 <div id="msgMaximo" class="text-muted" style="font-size: 0.7rem;"></div>
                             </div>
+                        </div>
                         </div>
                         <!-- Ficha fiscal del cliente -->
                         <div class="ficha-cliente mt-3">
@@ -340,6 +352,7 @@
                                         <option value="Efectivo">Efectivo</option>
                                         <option value="Transferencia">Transferencia</option>
                                         <option value="Tarjeta">Tarjeta</option>
+                                        <option value="Efectivo">Pendiente</option>
                                     </select>
                                 </div>
                             </div>
@@ -407,7 +420,22 @@ elements.selectCliente.addEventListener('change', function() {
         debounceTimer = setTimeout(() => consultarEstatusFinanciero(idCliente), 300);
     }
 });
-
+async function lotesporPropducto(){
+   try {
+            const response = await fetch(`${baseUrl}?action=obtenerProductosAlmacen&almacen_id=${}`);
+            const productos = await response.json();
+            productoSelect.innerHTML = '<option value="">Seleccione producto</option>';
+            productos.forEach(p => {
+                const option = new Option(`${p.sku} - ${p.nombre} (Stock: ${p.stock})`, p.id);
+                productoSelect.appendChild(option);
+            });
+            productoSelect.disabled = false;
+        } catch (e) {
+            productoSelect.innerHTML = '<option>Error al cargar</option>';
+        }
+                                
+                              
+}
 // Función para realizar la petición al servidor
 function consultarEstatusFinanciero(id) {
     const $widget = elements.widgetEstadoCuenta;
@@ -962,12 +990,14 @@ window.procesarVenta = function() {
 
             // 4. Mapeo del carrito (Lógica de despacho)
             const carritoFinal = window.carrito.map((item, index) => {
+                
                 const inputEntrega = document.querySelector(
                     `.input-entrega-modal[data-index="${index}"]`);
                 let entregado = inputEntrega ? parseFloat(inputEntrega.value) : item.cantidad;
-                console.log(item.unidadMedidaNombre);
+                console.log(item.lote_id);
                 return {
                     producto_id: parseInt(item.producto_id),
+                    lote_id:parseInt(item.lote_id??0),
                     almacen_id: parseInt(item.almacen_id),
                     cantidad: parseFloat(item.cantidad),
                     entrega_hoy: isNaN(entregado) ? 0 : entregado,

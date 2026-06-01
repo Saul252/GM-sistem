@@ -847,6 +847,7 @@ $almacen_actual= $_SESSION['almacen_id'];
     // 7. Carga de Catálogos para la Vista
     $listaCategoriasGastos = $gastosCategorias->listarTodas();
     $almacenes = $egresoModel->obtenerAlmacenesActivos();
+    $almacenUsuario= $almacenMo->getAlmacenes($almacen_actual);
     $productos = $comprasModel->obtenerProductos(); 
     $listaProductos= $productosModel->listarTodo();
     $proveedores = $proveedorModel->listarTodosProveedorsYDeuda(0); 

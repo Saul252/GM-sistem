@@ -6,13 +6,13 @@
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../controllers/LayoutController.php';
-require_once __DIR__ . '/../models/lotesHistorialModel.php';
+require_once __DIR__ . '/../models/comprasHistorialModel.php';
 require_once __DIR__ . '/../models/almacen_model.php';
 require_once __DIR__ . '/../models/productosModel.php';
 
 protegerPagina('historialLotes');
 
-$model = new HistorialLotesModel($conexion);
+$model = new HistorialComprasModel($conexion);
 $productosModel = new ProductosModel($conexion);
 $paginaActual = 'historialLotes';
 
@@ -181,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
         $listaAlmacenes = $almacenes; 
         $productos = $productosModel->listarProductosConStock($almacen_usuario);
 
-        require_once __DIR__ . '/../views/historial_lotes_view.php';
+        require_once __DIR__ . '/../views/compras_historial.php';
     } catch (Exception $e) {
         die("Error al cargar la vista: " . $e->getMessage());
     }

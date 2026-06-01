@@ -71,7 +71,42 @@ class VentaHistorialModel {
         }
     }
 
-public function obtenerDetalleCompleto($id) {
+public function historialPagos($id) {
+    $id = intval($id);
+    // 4. Historial de Pagos
+    $historialPagos = [];
+    $sqlPagos = "SELECT histpa.fecha, histpa.monto, histpa.metodo_pago, histpa.referencia, u.nombre as usuario_nombre, venta.total as total
+                 FROM historial_pagos histpa
+                 JOIN usuarios u ON histpa.usuario_id = u.id 
+                 join ventas venta on venta.id=histpa.venta_id
+                 WHERE histpa.venta_id = $id 
+                 ORDER BY histpa.fecha DESC";
+    $resPagos = $this->db->query($sqlPagos);
+    while($pago = $resPagos->fetch_assoc()){ 
+        $historialPagos[] = $pago; 
+    }
+}
+public function faltantePago($venta_id)
+{
+    $venta_id = intval($venta_id);
+
+    $sql = "SELECT 
+                COALESCE(SUM(histpa.monto), 0) AS total_pagado,
+                v.total
+            FROM ventas v
+            LEFT JOIN historial_pagos histpa 
+                ON histpa.venta_id = v.id
+            WHERE v.id = $venta_id
+            GROUP BY v.total
+            LIMIT 1";
+
+    $res = $this->db->query($sql);
+    return $res ? $res->fetch_assoc() : [
+        'total_pagado' => 0,
+        'total' => 0
+    ];
+}
+    public function obtenerDetalleCompleto($id) {
     $id = intval($id);
     
     // 1. Info de la venta (Cabecera)
@@ -215,9 +250,9 @@ WHERE dv.venta_id = $id";
     }
 }
 
-public function registrarAbono($venta_id, $monto, $usuario_id, $metodo_pago, $fecha_pago, $referencia = null) {
+public function registrarAbono($venta_id, $monto, $usuario_id, $metodo_pago, $fecha_pago, $referencia = '') {
     // 1. Lógica para la referencia: cadena vacía por defecto
-    $ref_final = (!empty($referencia)) ? $referencia : "";
+    $ref_final= $referencia;
     $efectivoPagado=0;
 
     // 2. Lógica para saldo_favor: 

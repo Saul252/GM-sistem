@@ -13,11 +13,12 @@ $modulos = [
     // =========================
     ['id' => 'ventas', 'url' => '/cfsistem/app/controllers/ventasController.php', 'icon' => 'bi-cart-check', 'class' => 'icon-ventas', 'label' => 'Ventas', 'desc' => 'Salidas'],
     ['id' => 'cajaRapida', 'url' => '/cfsistem/app/controllers/cajaRapidaController.php', 'icon' => 'bi-lightning-charge', 'class' => 'icon-ventas', 'label' => 'Caja Rapida', 'desc' => 'Salidas en existencia'],
-    ['id' => 'cotizaciones', 'url' => '/cfsistem/app/controllers/cotizacionesCotizaciones.php', 'icon' => 'bi-file-earmark-text', 'class' => 'icon-clientes', 'label' => 'Cotizaciones', 'desc' => 'Cotizaciones'],
+    ['id' => 'cotizaciones', 'url' => '/cfsistem/app/controllers/cotizacionesController.php', 'icon' => 'bi-file-earmark-text', 'class' => 'icon-clientes', 'label' => 'Cotizaciones', 'desc' => 'Cotizaciones'],
     ['id' => 'clientes', 'url' => '/cfsistem/app/controllers/clientesController.php', 'icon' => 'bi-person-lines-fill', 'class' => 'icon-clientes', 'label' => 'Clientes', 'desc' => 'Cartera'],
     ['id' => 'clientesEstatus', 'url' => '/cfsistem/app/controllers/clientesEstatusController.php', 'icon' => 'bi-person-check', 'class' => 'text-success', 'label' => 'Estatus', 'desc' => 'Créditos'],
     ['id' => 'pedidosVendedor', 'url' => '/cfsistem/app/controllers/pedidosVendedorController.php', 'icon' => 'bi-person-badge-fill', 'class' => 'text-warning', 'label' => 'Pedidos Vendedor', 'desc' => 'Preventa'],
     ['id' => 'ventashistorial', 'url' => '/cfsistem/app/controllers/ventasHistorialController.php', 'icon' => 'bi-receipt', 'class' => 'icon-historial', 'label' => 'Historial de Ventas', 'desc' => 'Historial de Ventas'],
+['id' => 'registrarPagos', 'url' => '/cfsistem/app/controllers/registrarPagosController.php', 'icon' => 'bi-receipt', 'class' => 'icon-historial', 'label' => 'Registrar Pagos a Ventas', 'desc' => 'Registrar Pagos a ventas'],
 
     // =========================
     // COMPRAS Y PROVEEDORES

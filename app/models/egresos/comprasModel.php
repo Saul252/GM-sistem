@@ -624,11 +624,27 @@ public function procesarAjusteFaltante($compra_id, $distribucion, $user_id) {
         $stmtC = $this->db->prepare($sqlC);
         $stmtC->bind_param("i", $compra_id);
         $stmtC->execute();
-        $resC = $stmtC->get_result()->fetch_assoc();
+         $resC = $stmtC->get_result()->fetch_assoc();
         $folio = $resC['folio'] ?? 'S/F';
+        
 
         foreach ($distribucion as $p_id => $almacenes) {
-            $total_recibido_producto = 0;
+             $sqldc = "SELECT id, precio_unitario ,subtotal
+              FROM detalle_compra 
+              WHERE compra_id = ? AND producto_id = ?";
+
+    $stmtdc = $this->db->prepare($sqldc);
+    $stmtdc->bind_param("ii", $compra_id, $p_id);
+    $stmtdc->execute();
+
+    $resdc = $stmtdc->get_result()->fetch_assoc();
+
+    $id_dc = $resdc['id'] ?? 0;
+    $precio_unitario = $resdc['precio_unitario'] ?? 0;
+
+    $subtotal = $resdc['subtotal'] ?? 0;
+
+    $total_recibido_producto = 0;
 
             foreach ($almacenes as $alm_id => $cantidad) {
                 $cantidad = floatval($cantidad);
@@ -636,11 +652,33 @@ public function procesarAjusteFaltante($compra_id, $distribucion, $user_id) {
 
                 $total_recibido_producto += $cantidad;
 
+
                 // A. Actualizar Inventario (Suma en el almacén destino seleccionado)
                 $sqlInv = "INSERT INTO inventario (almacen_id, producto_id, stock) 
                            VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE stock = stock + VALUES(stock)";
                 $stmtInv = $this->db->prepare($sqlInv);
                 $stmtInv->bind_param("iid", $alm_id, $p_id, $cantidad);
+
+                        $codigo_lote = "LOTE-" . $compra_id . "-" . $p_id . "-" . $alm_id;
+
+                        $sqlL = "INSERT INTO lotes_stock 
+                        (producto_id, almacen_id, codigo_lote, cantidad_inicial, cantidad_actual, precio_compra_unitario, estado_lote) 
+                        VALUES (?, ?, ?, ?, ?, ?, 'activo')";
+
+                        $stmtL = $this->db->prepare($sqlL);
+                        $stmtL->bind_param("iisddd", $p_id, $alm_id, $codigo_lote, $cantidad, $cantidad, $precio_unitario);
+                        $stmtL->execute();
+
+                        $lote_id = $stmtL->insert_id;
+
+                        // Relación lote-detalle
+                        $sqlLI = "INSERT INTO lotes_ingresos_detalle 
+                                  (lote_id, detalle_compra_id, cantidad_recibida, costo_aplicado) 
+                                  VALUES (?, ?, ?, ?)";
+                        $stmtLI = $this->db->prepare($sqlLI);
+                        $stmtLI->bind_param("iidd", $lote_id, $id_dc, $cantidad, $subtotal);
+                        $stmtLI->execute();
+
                 $stmtInv->execute();
 
                 // B. Registrar Movimiento (Kardex)

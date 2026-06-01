@@ -111,9 +111,6 @@ function toggleFormRuta(esRuta) {
 /**
  * Abre el modal y carga los datos de la venta y recursos de la sucursal
  */
-let sim;
-window.carrito=0;
-
 async function abrirModalDespachoVentaTotal(ventaId, almacenId) {
     const URL_ENTREGAS = 'entregasController.php'; 
     const modalElement = document.getElementById('modalDespachoVentaTotal');
@@ -144,42 +141,20 @@ async function abrirModalDespachoVentaTotal(ventaId, almacenId) {
         
         // 2. Simular Stock para el listado
         const respSim = await fetch(`${URL_ENTREGAS}?ajax=simular_masivo&${paramsLotes}`);
-         sim = await respSim.json();
-         window.carrito = sim.data || [];
-         
+        const sim = await respSim.json();
         if (!sim.success) throw new Error(sim.message);
 
         txtFolio.innerHTML = `<i class="bi bi-hash opacity-50"></i>${ventaId}`;
-        console.log(sim);
         
-      contenedor.innerHTML = ''; // limpiar
-
-sim.data.forEach((item, index) => {
-    console.log('item',item);
-
-    const div = document.createElement("div");
-    div.className = "mb-2 p-2 bg-white rounded-3 border shadow-sm small d-flex justify-content-between align-items-center";
-
-    div.innerHTML = `
-        <div class="fw-bold text-dark">
-            <i class="bi bi-caret-right-fill text-success me-1"></i>
-            ${item.producto}
-        </div>
-
-        <span class="badge bg-success-subtle text-success border border-success-subtle">
-            ${parseFloat(item.total_solicitado)} PZA
-        </span>
-
-        <select name="merma_lote_${index}" class="form-select">
-            <option value="">Seleccione lote</option>
-        </select>
-    `;
-
-    contenedor.appendChild(div);
-
-    // IMPORTANTE: ya existe en el DOM
-    lotesporPropducto(item.producto_id, item.almacen_id, index);
-});
+        let htmlItems = '';
+        sim.data.forEach(item => {
+            htmlItems += `
+                <div class="mb-2 p-2 bg-white rounded-3 border shadow-sm small d-flex justify-content-between align-items-center">
+                    <div class="fw-bold text-dark"><i class="bi bi-caret-right-fill text-success me-1"></i>${item.producto}</div>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle">${parseFloat(item.total_solicitado)} PZA</span>
+                </div>`;
+        });
+        contenedor.innerHTML = htmlItems;
 
         // 3. Cargar Recursos (Choferes, Vehículos)
         const [respDetalle, respRecursos] = await Promise.all([
@@ -339,51 +314,7 @@ sim.data.forEach((item, index) => {
         contenedor.innerHTML = `<div class="alert alert-danger mx-2 small">${err.message}</div>`;
     }
 }
-document.addEventListener('change', function (e) {
 
-    if (e.target.matches('select[name^="merma_lote_"]')) {
-
-        const index = e.target.name.split('_').pop();
-        const item = window.carrito[index];
-
-        const loteId = e.target.value;
-
-        if (!loteId) return;
-
-        const optionSeleccionada = e.target.options[e.target.selectedIndex];
-        const stockLote = parseFloat(optionSeleccionada.dataset.stock || 0);
-
-        console.log('Índice:', index);
-        console.log('Producto:', item.nombre);
-        console.log('Lote seleccionado:', loteId);
-        console.log('Stock lote:', stockLote);
-        item.lote=loteId
-        item.loteNombre=item.nombre;
-        
-
-        
-       
-
-        // Validar entrega vs stock del lote
-        if (item.entrega_hoy > stockLote) {
-            Swal.fire(
-                'Stock insuficiente',
-                `El lote solo tiene ${stockLote}`,
-                'warning'
-            );
-
-            item.entrega_hoy = stockLote;
-
-            const inputEntrega = document.querySelector(
-                `.input-entrega-modal[data-index="${index}"]`
-            );
-
-            if (inputEntrega) {
-                inputEntrega.value = stockLote;
-            }
-        }
-    }
-});
 /**
  * Envío final de los datos al servidor
  */
@@ -396,25 +327,18 @@ async function ejecutarSalidaMasivaFinal(ids, boton) {
 
     boton.disabled = true;
     boton.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Procesando...`;
-    console.log(window.carrito);
 
     try {
-      const formData = new FormData();
-
-formData.append('ajax', 'despachar_venta_completaConLotes');
-formData.append('tipo_logistica', tipo);
-formData.append('vehiculo_id', tipo === 'ruta' ? $('#mv_vehiculo_id').val() : 0);
-formData.append('chofer_id', $('#mv_chofer_id').val());
-formData.append('direccion', $('#mv_direccion').val() || '');
-
-const tripulantes = $('#mv_tripulantes').val() || [];
-tripulantes.forEach(tId => formData.append('tripulantes[]', tId));
-
-// enviar movimiento + lote asociado
-ids.forEach((id, index) => {
-    formData.append('ids_movimientos[]', id);
-    formData.append('lotes[]', window.carrito[index]?.lote || '');
-});
+        const formData = new FormData();
+        formData.append('ajax', 'despachar_venta_completa'); 
+        formData.append('tipo_logistica', tipo);
+        formData.append('vehiculo_id', tipo === 'ruta' ? $('#mv_vehiculo_id').val() : 0);
+        formData.append('chofer_id', $('#mv_chofer_id').val());
+        formData.append('direccion', $('#mv_direccion').val() || '');
+        
+        const tripulantes = $('#mv_tripulantes').val() || [];
+        tripulantes.forEach(tId => formData.append('tripulantes[]', tId));
+        ids.forEach(id => formData.append('ids_movimientos[]', id));
 
         const resp = await fetch('entregasController.php', { method: 'POST', body: formData });
         const res = await resp.json();
@@ -429,52 +353,6 @@ ids.forEach((id, index) => {
         Swal.fire('Error de Despacho', e.message, 'error');
         boton.disabled = false;
         boton.innerHTML = '<i class="bi bi-check-circle me-2"></i>Confirmar Despacho';
-    }
-}
-
-async function lotesporPropducto(producto_id, almacen_id, index) {
-    const loteSelect = document.querySelector(
-        `[name="merma_lote_${index}"]`
-    );
-
-    if (!loteSelect) {
-        console.error(`No existe merma_lote_${index}`);
-        return;
-    }
-
-    try {
-        const response = await fetch(
-            `/cfsistem/app/controllers/mermasController.php?action=obtenerLotes&producto_id=${producto_id}&almacen_id=${almacen_id}`
-        );
-
-        if (!response.ok) {
-            throw new Error('Error HTTP: ' + response.status);
-        }
-
-        const lotes = await response.json();
-
-        console.log('Lotes:', lotes);
-
-        loteSelect.innerHTML = '<option value="">Seleccione lote</option>';
-
-        if (!Array.isArray(lotes)) {
-            throw new Error('La respuesta no es un array');
-        }
-
-        lotes.forEach(l => {
-            const option = document.createElement('option');
-            option.value = l.id;
-            option.textContent = `${l.codigo_lote} (Disp: ${l.cantidad_actual})`;
-            option.dataset.stock = l.cantidad_actual;
-
-            loteSelect.appendChild(option);
-        });
-
-        loteSelect.disabled = false;
-
-    } catch (e) {
-        console.error('Error cargando lotes:', e);
-        loteSelect.innerHTML = '<option value="">Error al cargar</option>';
     }
 }
 </script>

@@ -23,7 +23,31 @@ class ProductosModel {
      * Obtiene productos vinculando Stock y Precios de un almacén específico
      */
 
+ public function listarProductosTodos($almacen_id)
+{
+    $sql = "SELECT 
+                p.id,
+                p.nombre,
+                i.stock
+            FROM productos p
+            INNER JOIN inventario i 
+                ON p.id = i.producto_id
+            WHERE i.almacen_id = ?";
 
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param("i", $almacen_id);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+
+    $data = [];
+
+    while ($row = $result->fetch_assoc()) {
+        $data[] = $row;
+    }
+
+    return $data;
+}
    public function listarProductosConStock($almacen_id)
 {
     $sql = "SELECT 
