@@ -308,6 +308,7 @@ body {
                                                     <th>Fecha</th>
                                                     <th>Monto</th>
                                                     <th>Método</th>
+                                                    <th>REFERENCIA</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="tbodyPagos"></tbody>
@@ -656,6 +657,16 @@ $('#boton').html(htmlboton);
             <td>
                 <span class="badge bg-light text-dark border fw-normal">${p.metodo_pago}</span>
                 <div class="text-muted" style="font-size:0.65rem">Recibió: ${p.usuario_nombre}</div>
+            </td>
+             <td>
+            <span>
+    ${
+        p.metodo_pago !== 'Efectivo' &&
+        p.metodo_pago !== 'Saldo a Favor'
+            ? (p.referencia ?? '')
+            : '-'
+    }
+</span> 
             </td>
         </tr>
     `).join(''));

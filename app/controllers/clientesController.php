@@ -57,19 +57,31 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardar') {
     try {
         $id = intval($_POST['cliente_id'] ?? 0);
 
-        $datos = [
-            'nombre_comercial' => trim($_POST['nombre_comercial'] ?? ''),
-            'razon_social'     => trim($_POST['razon_social'] ?? ''),
-            'rfc'              => strtoupper(trim($_POST['rfc'] ?? '')),
-            'regimen_fiscal'   => $_POST['regimen_fiscal'] ?? '',
-            'codigo_postal'    => $_POST['codigo_postal'] ?? '',
-            'correo'           => $_POST['correo'] ?? '',
-            'telefono'         => $_POST['telefono'] ?? '',
-            'direccion'        => $_POST['direccion'] ?? '',
-            'uso_cfdi'         => $_POST['uso_cfdi'] ?? 'G03',
-            // AGREGAMOS ESTA LÍNEA: Captura el almacen_id del select (Admin) o del hidden (Vendedor)
-            'almacen_id'       => $_POST['almacen_id'] ?? null 
-        ];
+   $datos = [
+    'nombre_comercial' => trim($_POST['nombre_comercial'] ?? ''),
+    'razon_social'     => trim($_POST['razon_social'] ?? ''),
+    'rfc'              => strtoupper(trim($_POST['rfc'] ?? '')),
+    'regimen_fiscal'   => $_POST['regimen_fiscal'] ?? '',
+    'codigo_postal'    => $_POST['codigo_postal'] ?? '',
+    'correo'           => $_POST['correo'] ?? '',
+    'telefono'         => $_POST['telefono'] ?? '',
+    'contacto'         => $_POST['contacto'] ?? '',
+
+    'calle'            => $_POST['calle'] ?? '',
+    'colonia'          => $_POST['colonia'] ?? '',
+    'pueblo'           => $_POST['pueblo'] ?? '',
+    'ciudad'           => $_POST['ciudad'] ?? '',
+
+    'direccion'        =>
+       'calle '. ($_POST['calle'] ?? '') . ', ' .
+       'col '. ($_POST['colonia'] ?? '') . ', ' .
+        'pueblo '.($_POST['pueblo'] ?? '') . ', ' .
+       'ciudad '. ($_POST['ciudad'] ?? ''),
+
+    'uso_cfdi'         => $_POST['uso_cfdi'] ?? 'G03',
+
+    'almacen_id'       => $_POST['almacen_id'] ?? null
+];
 
         if (empty($datos['nombre_comercial']) || empty($datos['rfc'])) {
             throw new Exception("Nombre comercial y RFC son campos obligatorios.");

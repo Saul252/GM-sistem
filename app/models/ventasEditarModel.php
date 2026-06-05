@@ -88,9 +88,9 @@ class VentaHistorialModel {
     
 
    
-    public function registrarAbono($venta_id, $monto, $usuario_id) {
+    public function registrarAbono($venta_id, $monto, $usuario_id,$referencia) {
          $metodo_pago="";
-    $referencia="";
+   
         $stmt = $this->db->prepare("INSERT INTO historial_pagos (venta_id, usuario_id, monto, saldo_favor, metodo_pago, referencia) VALUES (?, ?, ?, ?, ?, ?)");
         $stmt->bind_param("iiddss", $venta_id, $usuario_id, $monto, $monto, $metodo_pago, $referencia);
         if ($stmt->execute()) {

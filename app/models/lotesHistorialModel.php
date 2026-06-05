@@ -92,89 +92,204 @@ ORDER BY ls.fecha_ingreso DESC";
     // =====================================================
     // 🧾 VENTAS POR LOTE (SIN CAMBIO)
     // =====================================================
-    public function obtenerVentasLote($lote_id) {
+  public function obtenerVentasLote($lote_id) {
 
-    $sql = "SELECT 
-    tipo_movimiento,
-    documento,
-    cliente_proveedor,
-    codigo_lote,
-    fecha_lote,
-    fecha_movimiento,
-    cantidad_inicial,
-    
-    -- CANTIDAD ACTUAL: Es la inicial menos lo que salió en movimientos anteriores
-    cantidad_inicial - COALESCE(SUM(cantidad_salida) OVER (
-        ORDER BY fecha_movimiento ASC, movimiento_id ASC 
-        ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
-    ), 0) AS cantidad_actual,
-    
-    cantidad_salida,
-    
-    -- SALDO FINAL: Es la inicial menos todo lo que ha salido hasta este momento
-    cantidad_inicial - SUM(cantidad_salida) OVER (
-        ORDER BY fecha_movimiento ASC, movimiento_id ASC
-    ) AS saldo_final,
-    
-    costo_unitario,
-    precio_venta,
-    ganancia,
-    referencia_extra
-FROM (
-    -- TU CONSULTA ORIGINAL (Simplificada para que el cálculo lo haga el bloque de arriba)
-    SELECT 
-        'VENTA' AS tipo_movimiento, v.id AS documento_id, v.folio AS documento, c.nombre_comercial AS cliente_proveedor,
-        lt.id AS lote_id, lt.codigo_lote, lt.fecha_ingreso AS fecha_lote, lms.id AS movimiento_id, lms.fecha_movimiento AS fecha_movimiento,
-        lt.cantidad_inicial, lms.cantidad_salida, lms.costo_compra_historico AS costo_unitario, lms.precio_venta_pactado AS precio_venta,
-        (lms.precio_venta_pactado - lms.costo_compra_historico) * lms.cantidad_salida AS ganancia, '-' AS referencia_extra
-    FROM lotes_movimientos_salida lms
-    INNER JOIN lotes_stock lt ON lt.id = lms.lote_id
-    INNER JOIN detalle_venta dv ON dv.id = lms.detalle_venta_id
-    INNER JOIN ventas v ON v.id = dv.venta_id
-    INNER JOIN clientes c ON c.id = v.id_cliente
-    WHERE lt.id = ?
+   $sql = "SELECT 
+        tipo_movimiento,
+        almacen_id,
+        producto_id,
+        nombre,
+        producto,
+        documento,
+        cliente_proveedor,
+        codigo_lote,
+        fecha_lote,
+        fecha_movimiento,
+        cantidad_inicial,
 
-    UNION ALL
+        -- 1. Cantidad disponible ANTES del movimiento actual
+        cantidad_inicial - COALESCE(SUM(cantidad_salida) OVER (
+            PARTITION BY codigo_lote 
+            ORDER BY fecha_movimiento, orden_registro -- <--- Usamos un criterio de orden único y limpio
+            ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
+        ), 0) AS cantidad_actual,
 
-    SELECT 
-        'TRASPASO', m.id, COALESCE(m.referencia_id, '-'), '-', 
-        lt.id, lt.codigo_lote, lt.fecha_ingreso, m.id, m.fecha, 
-        lt.cantidad_inicial, m.cantidad, 0, 0, 0, COALESCE(m.observaciones, '-')
-    FROM movimientos m
-    JOIN kardex_movimientos_lotes km ON km.movimiento_id = m.id
-    JOIN lotes_stock lt ON km.lote_origen_id = lt.id
-    WHERE lt.id = ?
+        -- 2. La salida física de este registro
+        cantidad_salida,
 
-    UNION ALL
+        -- 3. Saldo remanente DESPUÉS del movimiento actual
+        cantidad_inicial - SUM(cantidad_salida) OVER (
+            PARTITION BY codigo_lote 
+            ORDER BY fecha_movimiento, orden_registro
+        ) AS saldo_final,
 
-    SELECT 
-        'AJUSTE', m.id, '-', '-', 
-        lt.id, lt.codigo_lote, lt.fecha_ingreso, m.id, m.fecha, 
-        lt.cantidad_inicial, m.cantidad, 0, 0, 0, COALESCE(m.observaciones, '-')
-    FROM movimientos m
-    JOIN transmutacion_detalle td ON m.id = td.movimiento_id
-    JOIN lotes_stock lt ON td.lote_id = lt.id
-    WHERE lt.id = ?
+        costo_unitario,
+        precio_venta,
+        ganancia,
+        referencia_extra,
+        almacen_destino,
+        lote_destino_traspaso,
+        unidad_medida,
+        unidad_reporte,
+        factor,
+        subtotal
 
-    UNION ALL
+    FROM (
 
-    SELECT 
-        'MERMA', m.id, '-', '-', 
-        lt.id, lt.codigo_lote, lt.fecha_ingreso, m.id, m.fecha, 
-        lt.cantidad_inicial, m.cantidad, 0, 0, 0, COALESCE(m.observaciones, '-')
-    FROM movimientos m
-    JOIN mermas merma ON m.id = merma.movimiento_id
-    JOIN lotes_stock lt ON merma.lote_id = lt.id
-    WHERE lt.id = ?
-) AS t
-ORDER BY fecha_movimiento DESC, movimiento_id DESC;";
+        -- VENTAS
+        SELECT 
+            'VENTA' AS tipo_movimiento,
+            a.nombre,
+            a.id as almacen_id,
+            pro.nombre AS producto,
+            pro.id as producto_id,
+            v.folio AS documento,
+            c.nombre_comercial AS cliente_proveedor,
+            lt.codigo_lote,
+            lt.fecha_ingreso AS fecha_lote,
+            lms.id AS orden_registro, -- ID único para ordenar este bloque
+            lms.fecha_movimiento,
+            lt.cantidad_inicial,
+            lms.cantidad_salida,
+            lms.costo_compra_historico AS costo_unitario,
+            lms.precio_venta_pactado AS precio_venta,
+            (lms.precio_venta_pactado - lms.costo_compra_historico) * lms.cantidad_salida AS ganancia,
+            '-' AS referencia_extra,
+            '-' as almacen_destino,
+            '-' as lote_destino_traspaso,
+            pro.unidad_medida,
+            pro.unidad_reporte,
+            pro.factor_conversion as factor,
+            dv.subtotal as subtotal
+        FROM lotes_movimientos_salida lms
+        INNER JOIN lotes_stock lt ON lt.id = lms.lote_id
+        INNER JOIN detalle_venta dv ON dv.id = lms.detalle_venta_id
+        INNER JOIN ventas v ON v.id = dv.venta_id
+        INNER JOIN clientes c ON c.id = v.id_cliente
+        INNER JOIN almacenes a ON a.id = v.almacen_id
+        INNER JOIN productos pro ON pro.id = lt.producto_id -- CORRECCIÓN: Directo desde el lote para evitar duplicados de compra
+        WHERE lt.id = ?
+
+        UNION ALL
+
+        -- TRASPASOS
+        SELECT 
+            'TRASPASO',
+            a.nombre,
+            a.id as almacen_id,
+            pro.nombre,
+            pro.id as producto_id,
+            COALESCE(m.referencia_id,'-'),
+            a2.nombre,
+            lt.codigo_lote,
+            lt.fecha_ingreso,
+            m.id AS orden_registro,
+            m.fecha,
+            lt.cantidad_inicial,
+            km.cantidad,
+            lt.precio_compra_unitario as costo_unitario,
+            0,
+            0,
+            km.lote_destino_id,
+            a2.id as almacen_destino,
+            lt2.codigo_lote as lote_destino_traspaso,
+            pro.unidad_medida,
+            pro.unidad_reporte,
+            pro.factor_conversion as factor,
+            0
+        FROM movimientos m
+        JOIN kardex_movimientos_lotes km ON km.movimiento_id = m.id
+        JOIN lotes_stock lt ON km.lote_origen_id = lt.id
+        JOIN lotes_stock lt2 on km.lote_destino_id = lt2.id
+        JOIN almacenes a2 on a2.id = lt2.almacen_id
+        INNER JOIN productos pro ON pro.id = lt.producto_id -- CORRECCIÓN: Directo desde el lote
+        INNER JOIN almacenes a ON a.id = m.almacen_origen_id
+        WHERE lt.id = ?
+
+        UNION ALL
+
+        -- AJUSTES
+        SELECT 
+            'AJUSTE',
+            a.nombre,
+            a.id as almacen_id,
+            pro.nombre,
+            pro.id as producto_id,
+            '-',
+            '-',
+            lt.codigo_lote,
+            lt.fecha_ingreso,
+            m.id AS orden_registro,
+            m.fecha,
+            lt.cantidad_inicial,
+            m.cantidad,
+            0,
+            0,
+            0,
+            COALESCE(m.observaciones, '-'),
+            0,
+            0,
+            pro.unidad_medida,
+            pro.unidad_reporte,
+            pro.factor_conversion as factor,
+            0
+        FROM movimientos m
+        JOIN transmutacion_detalle td ON m.id = td.movimiento_id
+        JOIN lotes_stock lt ON td.lote_id = lt.id
+        INNER JOIN productos pro ON pro.id = lt.producto_id -- CORRECCIÓN: Directo desde el lote
+        INNER JOIN almacenes a ON a.id = m.almacen_origen_id
+        WHERE lt.id = ?
+
+        UNION ALL
+
+        -- MERMAS
+        SELECT 
+            'MERMA',
+            a.nombre,
+            a.id as almacen_id,
+            pro.nombre,
+            pro.id as producto_id,
+            '-',
+            '-',
+            lt.codigo_lote,
+            lt.fecha_ingreso,
+            m.id AS orden_registro,
+            m.fecha,
+            lt.cantidad_inicial,
+            m.cantidad,
+            0,
+            0,
+            0,
+            COALESCE(m.observaciones, '-'),
+            0,
+            0,
+            pro.unidad_medida,
+            pro.unidad_reporte,
+            pro.factor_conversion as factor,
+            0
+        FROM movimientos m
+        JOIN mermas merma ON m.id = merma.movimiento_id
+        JOIN lotes_stock lt ON merma.lote_id = lt.id
+        INNER JOIN productos pro ON pro.id = lt.producto_id -- CORRECCIÓN: Directo desde el lote
+        INNER JOIN almacenes a ON a.id = m.almacen_origen_id
+        WHERE lt.id = ?
+
+    ) AS t
+
+    -- CORRECCIÓN: El ordenamiento final debe ser estrictamente por fecha para no quebrar los saldos acumulados
+    ORDER BY fecha_movimiento, orden_registro";
 
     $stmt = $this->db->prepare($sql);
 
-    // 🔥 FIX: ahora sí 4 parámetros correctos
+    if (!$stmt) {
+        throw new Exception($this->db->error);
+    }
+
     $stmt->bind_param("iiii", $lote_id, $lote_id, $lote_id, $lote_id);
 
-    $stmt->execute();
+    if (!$stmt->execute()) {
+        throw new Exception($stmt->error);
+    }
 
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }

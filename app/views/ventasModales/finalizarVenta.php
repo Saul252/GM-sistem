@@ -216,7 +216,6 @@
                                         <th class="text-center">Venta</th>
                                         <th class="text-center">Entregar Hoy</th>
                                         <th class="text-end pe-3">Subtotal</th>
-                                        <th class="text-end pe-3"style="display:none">Lote</th>
                                     </tr>
                                 </thead>
                                 <tbody id="tablaConfirmacion"></tbody>
@@ -264,55 +263,121 @@
                             </button>
                         </div>
 
-                        <!-- Widget Estado de Cuenta — FUERA del input-group -->
-                         <div  style="<?= ($_SESSION['almacen_id']==0) ? '' : 'display:none;' ?>">
-                        <div id="widgetEstadoCuenta" style="display:none;">
-                            <!-- Header dinámico (se reemplaza por JS) -->
-                            <div id="widgetHeader" class="widget-header-neutral">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div>
-                                        <div class="widget-saldo-label">
-                                            <i class="bi bi-wallet2 me-1"></i>Estado de Cuenta
-                                        </div>
-                                        <div class="widget-saldo-monto" id="lblSaldoTotal">$0.00</div>
-                                    </div>
-                                    <span id="txtUltimaCarga" class="widget-update-time"></span>
-                                </div>
-                                <div id="widgetBadge" class="mt-2"></div>
-                            </div>
+                       <div class="dropdown mt-2">
+    <style>
+        /* Botón estilo iOS con efecto Glassmorphism sutil */
+        #btnDropdownEstado {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1c1c1e;
+            border-radius: 12px;
+            padding: 11px 16px;
+            background: rgba(242, 242, 247, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-                            <!-- Lista de movimientos -->
-                            <div class="widget-body" id="listaMovimientos">
-                                <div class="text-center py-4 text-muted small">
-                                    <div class="spinner-border spinner-border-sm"></div>
-                                </div>
-                            </div>
+        #btnDropdownEstado:hover, #btnDropdownEstado:focus {
+            background: rgba(230, 230, 235, 0.9);
+            border-color: rgba(0, 0, 0, 0.1);
+            transform: scale(0.99);
+        }
 
-                            <!-- Footer con botón de abono -->
+        /* Menú desplegable flotante estilo tarjeta premium iOS */
+        .dropdown-menu {
+            border: 1px solid rgba(0, 0, 0, 0.08) !important;
+            border-radius: 16px !important;
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08), 0 5px 15px rgba(0, 0, 0, 0.04) !important;
+            padding: 16px !important;
+            animation: iosFadeIn 0.2s cubic-bezier(0.1, 0.76, 0.55, 0.94);
+        }
 
+        /* Animación suave de aparición */
+        @keyframes iosFadeIn {
+            from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        /* Contenedor interno de movimientos con scroll nativo fluido */
+        #listaMovimientos {
+            max-height: 260px;
+            overflow-y: auto;
+            padding-right: 2px;
+        }
+
+        /* Scrollbar estético ultra fino tipo iOS */
+        #listaMovimientos::-webkit-scrollbar {
+            width: 4px;
+        }
+        #listaMovimientos::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #listaMovimientos::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 10px;
+        }
+        #listaMovimientos::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+    </style>
+
+    <button class="btn w-100 text-start dropdown-toggle d-flex justify-content-between align-items-center" type="button" id="btnDropdownEstado" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+        <span><i class="bi bi-wallet2 me-2 text-primary"></i>Gestión de Cuenta</span>
+    </button>
+
+    <div class="dropdown-menu dropdown-menu-end shadow-lg" aria-labelledby="btnDropdownEstado" style="min-width: 340px; max-width: 420px;">
+        
+        <div id="widgetEstadoCuenta" style="display:none;">
+            <div id="widgetHeader" class="widget-header-neutral">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="widget-saldo-label">
+                            <i class="bi bi-wallet2 me-1"></i>Estado de Cuenta
                         </div>
-                        <div id="contenedorSaldoFavor" class="p-3 mb-3"
-                            style="display:none; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px;">
-                            <div class="form-check form-switch">
-                                <input class="form-check-input" type="checkbox" id="checkUsarSaldo"
-                                    onchange="toggleSaldoInput()">
-                                <label class="form-check-label fw-bold text-success" for="checkUsarSaldo">
-                                    ¿Usar saldo a favor en esta compra?
-                                </label>
-                            </div>
+                        <div class="widget-saldo-monto" id="lblSaldoTotal">$0.00</div>
+                    </div>
+                    <span id="txtUltimaCarga" class="widget-update-time"></span>
+                </div>
+                <div id="widgetBadge" class="mt-2"></div>
+            </div>
 
-                            <div id="inputSaldoContainer" class="mt-2" style="display:none;">
-                                <label class="small text-muted">Cantidad a descontar:</label>
-                                <div class="input-group">
-                                    <span class="input-group-text bg-success text-white border-success">$</span>
-                                    <input type="number" id="monto_usar_favor"
-                                        class="form-control border-success fw-bold" value="0" step="0.01" min="0"
-                                        oninput="validarMontoMaximo(this)">
-                                </div>
-                                <div id="msgMaximo" class="text-muted" style="font-size: 0.7rem;"></div>
-                            </div>
-                        </div>
-                        </div>
+            <div class="widget-body" id="listaMovimientos">
+                <div class="text-center py-4 text-muted small">
+                    <div class="spinner-border spinner-border-sm"></div>
+                </div>
+            </div>
+
+            </div>
+
+        <div id="contenedorSaldoFavor" class="p-3 mb-2 mt-2"
+            style="display:none; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px;">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="checkUsarSaldo"
+                    onchange="toggleSaldoInput()">
+                <label class="form-check-label fw-bold text-success" for="checkUsarSaldo">
+                    ¿Usar saldo a favor en esta compra?
+                </label>
+            </div>
+
+            <div id="inputSaldoContainer" class="mt-2" style="display:none;">
+                <label class="small text-muted">Cantidad a descontar:</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-success text-white border-success">$</span>
+                    <input type="number" id="monto_usar_favor"
+                        class="form-control border-success fw-bold" value="0" step="0.01" min="0"
+                        oninput="validarMontoMaximo(this)">
+                </div>
+                <div id="msgMaximo" class="text-muted" style="font-size: 0.7rem;"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
                         <!-- Ficha fiscal del cliente -->
                         <div class="ficha-cliente mt-3">
                             <div class="row g-2">
@@ -336,7 +401,7 @@
                             <div class="pago-title"><i class="bi bi-cash-coin me-1"></i>Registro de Pago</div>
                             <div class="row g-2">
                                 <div class="col-7">
-                                    <label class="form-label small fw-bold mb-1">Monto Recibido</label>
+                                    
                                     <div class="input-group">
                                         <span
                                             class="input-group-text bg-success text-white border-success fw-bold">$</span>
@@ -346,15 +411,25 @@
                                     </div>
                                 </div>
                                 <div class="col-5">
-                                    <label class="form-label small fw-bold mb-1">Método</label>
-                                    <select id="metodo_pago" class="form-select border-success"
-                                        style="border-radius:8px;">
-                                        <option value="Efectivo">Efectivo</option>
-                                        <option value="Transferencia">Transferencia</option>
-                                        <option value="Tarjeta">Tarjeta</option>
-                                        <option value="Efectivo">Pendiente</option>
-                                    </select>
-                                </div>
+                                     <select id="metodo_pago" class="form-select fw-bold" onchange="verificarMetodoPago(this.value)">
+        <option value="Efectivo">Efectivo</option>
+        <option value="Transferencia">Transferencia</option>
+        <option value="Tarjeta">Tarjeta</option>
+        
+    </select>
+</div>
+
+<div class="mb-3" id="contenedorReferencia" style="display:none;">
+    <label class="form-label small fw-bold text-secondary text-uppercase">
+        Referencia
+    </label>
+    <input 
+        type="text" 
+        id="inputReferencia" 
+        class="form-control"
+        placeholder="Ingrese referencia"
+    >
+</div>
                             </div>
                             <div id="pago_aviso" class="small mt-2 text-center fw-bold"></div>
                         </div>
@@ -378,6 +453,23 @@
 </div>
 
 <script>
+      function verificarMetodoPago(metodo) {
+    
+
+    const contenedor = document.getElementById('contenedorReferencia');
+    const input = document.getElementById('inputReferencia');
+
+    if (!contenedor || !input) return;
+
+    if (metodo === 'Tarjeta' || metodo === 'Transferencia') {
+        contenedor.style.display = 'block';
+        input.required = true;
+    } else {
+        contenedor.style.display = 'none';
+        input.required = false;
+        input.value = '';
+    }
+}
 // Cache de elementos DOM para evitar búsquedas repetidas
 const elements = {
     selectCliente: document.getElementById('selectCliente'),
@@ -420,22 +512,7 @@ elements.selectCliente.addEventListener('change', function() {
         debounceTimer = setTimeout(() => consultarEstatusFinanciero(idCliente), 300);
     }
 });
-async function lotesporPropducto(){
-   try {
-            const response = await fetch(`${baseUrl}?action=obtenerProductosAlmacen&almacen_id=${}`);
-            const productos = await response.json();
-            productoSelect.innerHTML = '<option value="">Seleccione producto</option>';
-            productos.forEach(p => {
-                const option = new Option(`${p.sku} - ${p.nombre} (Stock: ${p.stock})`, p.id);
-                productoSelect.appendChild(option);
-            });
-            productoSelect.disabled = false;
-        } catch (e) {
-            productoSelect.innerHTML = '<option>Error al cargar</option>';
-        }
-                                
-                              
-}
+
 // Función para realizar la petición al servidor
 function consultarEstatusFinanciero(id) {
     const $widget = elements.widgetEstadoCuenta;
@@ -927,7 +1004,8 @@ window.procesarVenta = function() {
     // La suma que cubre la nota (Efectivo + Crédito)
     const pagoTotalEnviado = efectivoRecibido + creditoAplicado;
 
-    let metodoPago = document.getElementById('metodo_pago').value; // Cambia const por let
+    let metodoPago = document.getElementById('metodo_pago').value; 
+     let referencia = document.getElementById('inputReferencia').value;// Cambia const por let
     const observaciones = document.getElementById('obsVenta').value;
     console.log(observaciones);
 
@@ -990,14 +1068,12 @@ window.procesarVenta = function() {
 
             // 4. Mapeo del carrito (Lógica de despacho)
             const carritoFinal = window.carrito.map((item, index) => {
-                
                 const inputEntrega = document.querySelector(
                     `.input-entrega-modal[data-index="${index}"]`);
                 let entregado = inputEntrega ? parseFloat(inputEntrega.value) : item.cantidad;
-                console.log(item.lote_id);
+                console.log(item.unidadMedidaNombre);
                 return {
                     producto_id: parseInt(item.producto_id),
-                    lote_id:parseInt(item.lote_id??0),
                     almacen_id: parseInt(item.almacen_id),
                     cantidad: parseFloat(item.cantidad),
                     entrega_hoy: isNaN(entregado) ? 0 : entregado,
@@ -1021,6 +1097,7 @@ window.procesarVenta = function() {
                 monto_usado_favor: creditoAplicado, // Lo que se resta de la bolsa
                 total_venta: totalOriginalVenta, // El costo real (Para calcular deuda)
                 metodo_pago: metodoPago,
+                referencia:referencia??'',
                 observaciones: observaciones,
                 carrito: carritoFinal,
                 usar_saldo_favor: creditoAplicado > 0 ? 1 : 0

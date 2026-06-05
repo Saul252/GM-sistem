@@ -87,12 +87,13 @@
                         <table class="table table-bordered table-hover tabla-productos">
                             <thead class="table-dark">
                                 <tr>
+                                    <th>Almacén</th>
                                     <th>SKU</th>
                                     <th>Producto</th>
                                     <th>Stock</th>
-                                    <th>Almacén</th>
-                                    <th>Precio</th>
                                     <th width="120">Venta por</th>
+                                    <th>Precio</th>
+                                    
 
                                     <th width="90">Cant</th>
                                     <th width="60"></th>
@@ -106,38 +107,31 @@
                                     data-factor="<?= $p['factor_conversion'] ?>"
                                     data-reporte-nom="<?= htmlspecialchars($p['unidad_reporte']) ?>">
                                     <input type="hidden" class="factorC" value="<?= $p['factor_conversion'] ?>">
-
+                                    <td><?= htmlspecialchars($p['almacen_nombre']) ?></td>
                                     <td><?= $p['sku'] ?></td>
                                     <td><?= htmlspecialchars($p['nombre']) ?></td>
                                     <td>
-                                        <span class="badge bg-success"><?= $p['stock'] ?></span>
-                                        <small class="d-block text-muted" style="font-size: 0.65rem;">
-                                            <?= htmlspecialchars($p['unidad_medida'] ?? 'unid.') ?>
-                                        </small>
+                                       <?php
+$cantidad = $p['stock'] / $p['factor_conversion'];
+
+if ($cantidad <= 0) {
+    $color = 'bg-danger';       // Sin stock
+} elseif ($cantidad <= 5) {
+    $color = 'bg-warning text-dark'; // Stock bajo
+} elseif ($cantidad <= 20) {
+    $color = 'bg-info text-dark';    // Stock medio
+} else {
+    $color = 'bg-success';      // Stock alto
+}
+?>
+
+<span class="badge <?= $color ?>">
+    <?= $cantidad >= 1
+        ? number_format($cantidad, 2) . ' ' . $p['unidad_reporte']
+        : number_format($p['stock'], 2) . ' ' . $p['unidad_medida']
+    ?>
+</span> 
                                     </td>
-                                    <td><?= htmlspecialchars($p['almacen_nombre']) ?></td>
-
-                                    <td>
-                                        <div class="d-flex gap-1">
-
-                                            <select class="form-select form-select-sm select-precio">
-                                                <option value="<?= $p['precio_minorista'] ?>">Publico -
-                                                    $<?= number_format($p['precio_minorista'],2) ?></option>
-                                                <option value="<?= $p['precio_mayorista'] ?>">Constructora -
-                                                    $<?= number_format($p['precio_mayorista'],2) ?></option>
-                                                <option value="<?= $p['precio_distribuidor'] ?>">Distribuidor -
-                                                    $<?= number_format($p['precio_distribuidor'],2) ?></option>
-                                            </select>
-                                            <input type="number" step="0.01"
-                                                class="form-control form-control-sm input-precioMayor"
-                                                value="<?= $p['precio_minorista'] ?>">
-                                                <input type="hidden" step="0.01"
-                                                class="form-control form-control-sm input-precio"
-                                                value="<?= $p['precio_minorista'] ?>">
-                                        </div>
-
-                                    </td>
-
 
                                     <td style="width:1px; padding:0; border:none;">
                                         <?php if($tieneReporte): ?>
@@ -182,6 +176,29 @@
                                         </select>
 
                                     </td>
+                                    <td>
+                                        <div class="d-flex gap-1">
+
+                                            <select class="form-select form-select-sm select-precio">
+                                                <option value="<?= $p['precio_minorista'] ?>">Publico -
+                                                    $<?= number_format($p['precio_minorista'],2) ?></option>
+                                                <option value="<?= $p['precio_mayorista'] ?>">Constructora -
+                                                    $<?= number_format($p['precio_mayorista'],2) ?></option>
+                                                <option value="<?= $p['precio_distribuidor'] ?>">Distribuidor -
+                                                    $<?= number_format($p['precio_distribuidor'],2) ?></option>
+                                            </select>
+                                            <input type="number" step="0.01"
+                                                class="form-control form-control-sm input-precioMayor"
+                                                value="<?= $p['precio_minorista'] ?>">
+                                            <input type="hidden" step="0.01"
+                                                class="form-control form-control-sm input-precio"
+                                                value="<?= $p['precio_minorista'] ?>">
+                                        </div>
+
+                                    </td>
+
+
+
                                     <td>
                                         <!-- usuario -->
                                         <input type="number" class="form-control form-control-sm cantidad_usuario"
@@ -265,6 +282,12 @@
                                     placeholder="Nombre legal completo">
                             </div>
 
+ <div class="col-md-12">
+                                <label class="form-label fw-bold">Contacto *</label>
+                                <input type="text" name="contacto" class="form-control"
+                                    placeholder="Contacto" >
+                            </div>
+
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">RFC *</label>
                                 <input type="text" name="rfc" class="form-control text-uppercase" maxlength="13"
@@ -301,10 +324,25 @@
                                 <input type="tel" name="telefono" class="form-control" placeholder="55 0000 0000">
                             </div>
 
-                            <div class="col-md-12">
-                                <label class="form-label fw-bold">Dirección Completa</label>
-                                <textarea name="direccion" class="form-control" rows="2"
-                                    placeholder="Calle, número, colonia..."></textarea>
+                           <div class="col-md-12">
+                                <label class="form-label fw-bold">Calle</label>
+                                <textarea name="calle" class="form-control" rows="2"
+                                    placeholder="Calle y número"></textarea>
+                            </div>
+                             <div class="col-md-12">
+                                <label class="form-label fw-bold">Colonia</label>
+                                <textarea name="colonia" class="form-control" rows="2"
+                                    placeholder="Colonia..."></textarea>
+                            </div>
+                             <div class="col-md-12">
+                                <label class="form-label fw-bold">Pueblo</label>
+                                <textarea name="pueblo" class="form-control" rows="2"
+                                    placeholder="Pueblo"></textarea>
+                            </div>
+                             <div class="col-md-12">
+                                <label class="form-label fw-bold">Ciudad</label>
+                                <textarea name="ciudad" class="form-control" rows="2"
+                                    placeholder="Ciudad"></textarea>
                             </div>
                             <div class="row g-3">
                                 <?php if ($almacen_usuario == 0): ?>
@@ -349,6 +387,7 @@
 
 
     <script>
+        
     /**
      * Soporte para agregar productos al presionar ENTER
      */
@@ -391,8 +430,8 @@
 
             inputPrecio.value =
                 parseFloat(e.target.value).toFixed(2);
-                
-                const inputPrecioMayor =
+
+            const inputPrecioMayor =
                 fila.querySelector('.input-precioMayor');
 
             inputPrecioMayor.value =
@@ -404,81 +443,81 @@
 
     function actualizarCantidadReal(e) {
 
-    const fila = e.target.closest('tr');
+        const fila = e.target.closest('tr');
 
-    if (!fila) return;
+        if (!fila) return;
 
-    const inputPrecio =
-        fila.querySelector('.input-precio');
+        const inputPrecio =
+            fila.querySelector('.input-precio');
 
-    const inputPrecioMayor =
-        fila.querySelector('.input-precioMayor');
+        const inputPrecioMayor =
+            fila.querySelector('.input-precioMayor');
 
-    const inputUsuario =
-        fila.querySelector('.cantidad_usuario');
+        const inputUsuario =
+            fila.querySelector('.cantidad_usuario');
 
-    const inputReal =
-        fila.querySelector('.cantidad');
+        const inputReal =
+            fila.querySelector('.cantidad');
 
-    const selectMedida =
-        fila.querySelector('.medidas_adicionales');
+        const selectMedida =
+            fila.querySelector('.medidas_adicionales');
 
-    if (!inputUsuario || !inputReal) return;
+        if (!inputUsuario || !inputReal) return;
 
-    // VALORES
-    const precio =
-        parseFloat(inputPrecioMayor.value) || 0;
+        // VALORES
+        const precio =
+            parseFloat(inputPrecioMayor.value) || 0;
 
-    const cantidadUsuario =
-        parseFloat(inputUsuario.value) || 0;
+        const cantidadUsuario =
+            parseFloat(inputUsuario.value) || 0;
 
-    const equivalencia =
-        parseFloat(selectMedida?.value) || 1;
+        const equivalencia =
+            parseFloat(selectMedida?.value) || 1;
 
-    const factor =
-        fila.querySelector('.factorC');
+        const factor =
+            fila.querySelector('.factorC');
 
-    const factorC =
-        parseFloat(Math.round((factor.value)) * 100) / 100 || 1;
+        const factorC =
+            parseFloat(Math.round((factor.value)) * 100) / 100 || 1;
 
-    // RELACIÓN
-    const equi =
-        Math.round((1 / equivalencia) * 100) / 100;
+        // RELACIÓN
+        const equi =
+            Math.round((1 / equivalencia) * 100) / 100;
 
-    console.log('factor', factorC, equi);
+        console.log('factor', factorC, equi);
 
-    // CONDICIÓN
-    if ((equi == factorC)) {
+        // CONDICIÓN
+        if ((equi == factorC)) {
 
-        console.log('factor');
+            console.log('factor');
 
-        const nuevoPrecio =
-            precio / factorC;
-console.log('nuevo',nuevoPrecio,'precio');
-        inputPrecio.value =
-            nuevoPrecio ;
+            const nuevoPrecio =
+                precio / factorC;
+            console.log('nuevo', nuevoPrecio, 'precio');
+            inputPrecio.value =
+                nuevoPrecio;
+        } else {
+            const nuevoPrecio =
+                Math.round(precio * 100) / 100;
+            console.log(nuevoPrecio);
+            inputPrecio.value = nuevoPrecio;
+
+
+        }
+
+        // REAL
+        const totalReal =
+            cantidadUsuario / equivalencia;
+
+        inputReal.value = totalReal;
+
+        console.log({
+            usuario: cantidadUsuario,
+            equivalencia,
+            real: totalReal
+        });
     }
-    else{
-        const nuevoPrecio =
-             Math.round(precio * 100) / 100 ;
-console.log(nuevoPrecio);
-        inputPrecio.value =nuevoPrecio;
-          
-
-    }
-
-    // REAL
-    const totalReal =
-        cantidadUsuario / equivalencia;
-
-    inputReal.value = totalReal;
-
-    console.log({
-        usuario: cantidadUsuario,
-        equivalencia,
-        real: totalReal
-    });
-} </script>
+    </script>
 </body>
 
 </html>

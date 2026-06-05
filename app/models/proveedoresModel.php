@@ -189,6 +189,75 @@ public function ProveedorYDeudaSuma($id) {
 
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
+
+public function validarPosibleDuplicado($datos)
+{
+     $sql = "SELECT
+                id,
+                nombre_comercial,
+                rfc,
+                contacto,
+                telefono,
+                telefono2
+            FROM proveedores
+            WHERE activo = 1";
+
+    $result = $this->db->query($sql);
+
+    while ($row = $result->fetch_assoc()) {
+
+        $coincidencias = 0;
+
+        if (
+            !empty($datos['rfc']) &&
+            strtoupper(trim($datos['rfc'])) === strtoupper(trim($row['rfc']))
+        ) {
+            $coincidencias++;
+        }
+
+        if (
+            !empty($datos['nombre_comercial']) &&
+            strtoupper(trim($datos['nombre_comercial'])) === strtoupper(trim($row['nombre_comercial']))
+        ) {
+            $coincidencias++;
+        }
+
+        if (
+            !empty($datos['contacto']) &&
+            strtoupper(trim($datos['contacto'])) === strtoupper(trim($row['contacto']))
+        ) {
+            $coincidencias++;
+        }
+
+        if (
+            !empty($datos['telefono']) &&
+            (string)$datos['telefono'] === (string)$row['telefono']
+        ) {
+            $coincidencias++;
+        }
+
+        if (
+            !empty($datos['telefono2']) &&
+            (
+                (string)$datos['telefono2'] === (string)$row['telefono'] ||
+                (string)$datos['telefono2'] === (string)$row['telefono2']
+            )
+        ) {
+            $coincidencias++;
+        }
+
+        if ($coincidencias >= 2) {
+            return [
+                'success' => false,
+                'message' => 'Posible proveedor duplicado detectado.'
+            ];
+        }
+    }
+
+    return [
+        'success' => true
+    ];
+}
 public function obtenerProveedorPorNombre($nombre) {
     $sql = "
         SELECT 

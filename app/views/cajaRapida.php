@@ -262,17 +262,18 @@
                     <div class="table-responsive tabla-scroll">
                         <table class="table table-bordered table-hover tabla-productos">
                             <thead class="table-dark">
-                                <tr>
+                                <tr> <th>Almacén</th>
                                     <th>SKU</th>
                                     <th>Producto</th>
                                     <th>Stock</th>
-                                    <th>Almacén</th>
-                                    <th width="150">Precio</th>
-                                    <th width="110"></th>
+                                   
                                     <th width="150">Venta por</th>
 
 
                                     <th width="90">Cant</th>
+                                    <th width="150">Precio</th>
+                                    <th width="110"></th>
+                                    
                                     <th width="60">Agregar</th>
                                 </tr>
                             </thead>
@@ -285,7 +286,7 @@
                                     data-reporte-nom="<?= htmlspecialchars($p['unidad_reporte']) ?>">
                                     <input type="hidden" class="factorC" value="<?= $p['factor_conversion'] ?>">
 
-
+ <td><?= htmlspecialchars($p['almacen_nombre']) ?></td>
                                     <td><?= $p['sku'] ?></td>
                                     <td><?= htmlspecialchars($p['nombre']) ?></td>
                                     <td>
@@ -294,7 +295,7 @@
                                             <?= htmlspecialchars($p['unidad_medida'] ?? 'unid.') ?>
                                         </small>
                                     </td>
-                                    <td><?= htmlspecialchars($p['almacen_nombre']) ?></td>
+                                   
 
                                     <td>
 
@@ -315,7 +316,7 @@
                                                 class="form-control form-control-sm input-precio"
                                                 value="<?= $p['precio_minorista'] ?>">
                                         
-                    </div>
+                   
 
 
                     </td>
@@ -430,7 +431,7 @@
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
                             aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
+                   <div class="modal-body">
                         <input type="hidden" name="almacen_id" value="<?= $almacen_usuario ?>">
 
                         <div class="row g-3">
@@ -439,7 +440,11 @@
                                 <input type="text" name="nombre_comercial" class="form-control"
                                     placeholder="Ej. Materiales El Centro" required>
                             </div>
-
+ <div class="col-md-12">
+                                <label class="form-label fw-bold">Contacto *</label>
+                                <input type="text" name="contacto" class="form-control"
+                                    placeholder="Contacto" >
+                            </div>
                             <div class="col-md-12">
                                 <label class="form-label fw-bold">Razón Social</label>
                                 <input type="text" name="razon_social" class="form-control"
@@ -482,10 +487,25 @@
                                 <input type="tel" name="telefono" class="form-control" placeholder="55 0000 0000">
                             </div>
 
-                            <div class="col-md-12">
-                                <label class="form-label fw-bold">Dirección Completa</label>
-                                <textarea name="direccion" class="form-control" rows="2"
-                                    placeholder="Calle, número, colonia..."></textarea>
+                             <div class="col-md-12">
+                                <label class="form-label fw-bold">Calle</label>
+                                <textarea name="calle" class="form-control" rows="2"
+                                    placeholder="Calle y número"></textarea>
+                            </div>
+                             <div class="col-md-12">
+                                <label class="form-label fw-bold">Colonia</label>
+                                <textarea name="colonia" class="form-control" rows="2"
+                                    placeholder="Colonia..."></textarea>
+                            </div>
+                             <div class="col-md-12">
+                                <label class="form-label fw-bold">Pueblo</label>
+                                <textarea name="pueblo" class="form-control" rows="2"
+                                    placeholder="Pueblo"></textarea>
+                            </div>
+                             <div class="col-md-12">
+                                <label class="form-label fw-bold">Ciudad</label>
+                                <textarea name="ciudad" class="form-control" rows="2"
+                                    placeholder="Ciudad"></textarea>
                             </div>
                             <div class="row g-3">
                                 <?php if ($almacen_usuario == 0): ?>
@@ -653,7 +673,8 @@
 
         window.carrito.forEach((item, index) => {
             const cantFactor = Math.floor(item.cantidad / item.factor);
-            const cantPza = (item.cantidad % item.factor).toFixed(3);
+         const cantPza = Math.round((item.cantidad % item.factor) * 10000) / 10000;
+
 
             item.subtotal = item.cantidad * item.precio_unitario;
 
@@ -859,12 +880,17 @@
     const factor =
         fila.querySelector('.factorC');
 
-    const factorC =
-        parseFloat(Math.round((factor.value)) * 100) / 100 || 1;
+    const valor = parseFloat(factor.value);
 
+const factorC = isNaN(valor)
+    ? 1
+    : Math.round(valor * 1000) / 1000;
     // RELACIÓN
-    const equi =
-        Math.round((1 / equivalencia) * 100) / 100;
+   
+
+const equi = 1 / Math.round(equivalencia);
+
+console.log(equi); // 0.16666666666666666
 
     console.log('factor', factorC, equi);
 
@@ -890,7 +916,7 @@ console.log(nuevoPrecio);
 
     // REAL
     const totalReal =
-        cantidadUsuario / equivalencia;
+        Math.round((cantidadUsuario / equivalencia)* 10000000) / 10000000;
 
     inputReal.value = totalReal;
 

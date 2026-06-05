@@ -136,13 +136,25 @@
                                          <div class="col-4">
                                              <label class="small fw-bold text-muted mb-1"
                                                  style="font-size: 0.6rem;">MÉTODO</label>
-                                             <select id="metodo_pago"
+                                             <select id="metodo_pago" onchange="verificarMetodoPago(this.value)"
                                                  class="form-select border-0 bg-light p-2 rounded-3 shadow-none fw-bold small">
                                                  <option value="Efectivo">Efectivo</option>
                                                  <option value="Transferencia">Transferencia</option>
                                                  <option value="Tarjeta">Tarjeta</option>
                                              </select>
                                          </div>
+
+<div class="mb-3" id="contenedorReferencia" style="display:none;">
+    <label class="form-label small fw-bold text-secondary text-uppercase">
+        Referencia
+    </label>
+    <input 
+        type="text" 
+        id="inputReferencia" 
+        class="form-control"
+        placeholder="Ingrese referencia"
+    >
+</div>
                                      </div>
 
                                      <div id="contenedor_cambio" class="mt-3 p-3 rounded-4 text-center d-none"
@@ -248,7 +260,23 @@
  </style>
 
  <script>
+          function verificarMetodoPago(metodo) {
     
+
+    const contenedor = document.getElementById('contenedorReferencia');
+    const input = document.getElementById('inputReferencia');
+
+    if (!contenedor || !input) return;
+
+    if (metodo === 'Tarjeta' || metodo === 'Transferencia') {
+        contenedor.style.display = 'block';
+        input.required = true;
+    } else {
+        contenedor.style.display = 'none';
+        input.required = false;
+        input.value = '';
+    }
+}
 async function cargarPersonalDespacho(alm) {
 
     const rutaControlador =
@@ -535,6 +563,7 @@ window.procesarVenta = function() {
 const efectivoPagado = parseFloat(
     document.getElementById('efectivo_recibido').value
 ) || 0;
+ let referencia = document.getElementById('inputReferencia').value;
     
             // 4. MAPEO DE DATOS COMPLETO (Venta + Logística)
             // --- MAPEO DE DATOS COMPLETO (Venta + Logística Automática) ---
@@ -545,6 +574,7 @@ const efectivoPagado = parseFloat(
                 id_almacen: parseInt(document.getElementById('modal_select_almacen')?.value || 0),
                 monto_pagado: parseFloat(montoPagado) || 0,
                 metodo_pago: document.getElementById('metodo_pago').value,
+                referencia:referencia??'',
                 total_venta: parseFloat(totalVenta) || 0,
                 observaciones: document.getElementById('obsVenta').value,
                  efectivoPagado:efectivoPagado,

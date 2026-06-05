@@ -46,6 +46,7 @@ window.abrirModalFinalizar = function () {
         }
 
         const tr = document.createElement("tr");
+        console.log(item.unidad_medida);
 
         tr.innerHTML = `
             <td>
@@ -161,7 +162,7 @@ window.recalcularTotalModal = function() {
         
         const elDesglose = document.getElementById(`desglose-entrega-${index}`);
         if (elDesglose) {
-            elDesglose.innerHTML = `Entregando: ${f} ${item.unidad_reporte} + ${p} pzas.`;
+            elDesglose.innerHTML = `Entregando: ${f} ${item.unidad_reporte} + ${p}${item.unidad_medida}.`;
         }
     }
 });

@@ -153,7 +153,7 @@ if (factor && factor > 0) {
                     movimientos.forEach(mov => {
                         detalleMovimientos += `
                             <div class="small p-1 mb-1 bg-white border-start border-success border-3 shadow-sm" style="font-size: 0.7rem;">
-                                <i class="bi bi-arrow-right text-success"></i> ${mov} ${item.unidad_medida}
+                                <i class="bi bi-arrow-right text-success"></i>${item.producto_id} ${mov} ${item.unidad_medida}
                             </div>`;
                     });
                 }
@@ -179,6 +179,13 @@ if (factor && factor > 0) {
                     <td class="text-center bg-light">
                         <span class="d-block fw-bold">${esCompra ? totalComprado+" " +item.unidad_reporte:totalComprado}</span>
                         <small class="text-muted">(${esCompra ? unidadc+ ' '+ item.unidad_medida : 'unidades'})</small>
+                         ${esCompra ? `
+                      <td class="text-center text-success fw-bold bg-light">
+                         <span class="d-block fw-bold">${totalr} ${item.unidad_reporte}</span>
+                    
+                        
+                         <small class="text-muted">(${esCompra ? parseFloat(item.cantidad_recibida || 0)+" " +item.unidad_medida : 'unidades'})</small>
+                        </td>` : ''}
                     </td>
                     ${esCompra ? `
                      <td class="text-center text-success fw-bold bg-light">
@@ -196,15 +203,10 @@ if (factor && factor > 0) {
                       <small class="text-muted">${esCompra ? item.cantidad_faltante + " "+ item.unidad_medida : 'unidades'}</small>
                       ` : '0'}
                       </td>
-                        <td class="text-center text-success fw-bold bg-light">
-                         <span class="d-block fw-bold">${totalr} ${item.unidad_reporte}</span>
-                    
-                        
-                         <small class="text-muted">(${esCompra ? parseFloat(item.cantidad_recibida || 0)+" " +item.unidad_medida : 'unidades'})</small>
-                         </td>
+                     
                         
                     ` : ''}
-                    <td class="text-center">$${esCompra ?parseFloat(item.precio_unitario).toFixed(2)+ " x "+item.unidad_medida: parseFloat(item.precio_unitario).toFixed(2)} </td>
+                    <td class="text-center">$${esCompra ?totalr>=1?parseFloat((item.precio_unitario)*factor).toFixed(2)+ " x "+item.unidad_reporte:item.precio_unitario+ " x "+item.unidad_medida: parseFloat(item.precio_unitario).toFixed(2)} </td>
                     <td class="text-end fw-bold">$${parseFloat(item.subtotal).toFixed(2)}</td>
                 </tr>`;
         });
@@ -259,8 +261,9 @@ console.log(c.categoria_nombre );
                                 <th style="width: 10%">SKU</th>
                                 <th style="width: ${esCompra ? '40%' : '55%'}">Descripción</th>
                                ${esCompra ? '<th class="text-center">Cant. Comprada</th>' : '<th class="text-center">Cantidad</th>'} 
-                                 ${esCompra ? '<th class="text-center">Cantidad Execedente</th><th class="text-center">Pend.</th>' : ''}
                                 ${esCompra ? '<th class="text-center">Recibido</th>' : ''}
+                                 ${esCompra ? '<th class="text-center">Cantidad Execedente</th><th class="text-center">Pend.</th>' : ''}
+                               
                                 <th class="text-end">P. Unit</th>
                                 <th class="text-end">Total</th>
                             </tr>

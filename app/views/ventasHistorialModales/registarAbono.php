@@ -26,6 +26,17 @@
                         <option id="optionSaldoFavor" value="Saldo a Favor" style="display:none; background-color: #e3f2fd; color: #0d6efd;"></option>
                     </select>
                 </div>
+                              <div class="mb-3" id="contenedorReferencia" style="display:none;">
+    <label class="form-label small fw-bold text-secondary text-uppercase">
+        Referencia
+    </label>
+    <input 
+        type="text" 
+        id="inputReferencia" 
+        class="form-control"
+        placeholder="Ingrese referencia"
+    >
+</div>
 
                 <hr class="my-3 opacity-10">
 
@@ -102,6 +113,8 @@ function verificarMetodoPago(metodo) {
     const totalVenta = parseFloat(ventaActual.info.total || 0);
     const pagado = parseFloat(ventaActual.info.total_pagado || 0);
     const saldoPendiente = parseFloat((totalVenta - pagado).toFixed(2));
+      const contenedor = document.getElementById('contenedorReferencia');
+    const input = document.getElementById('inputReferencia');
 
     if (metodo === 'Saldo a Favor') {
         const montoAuto = Math.min(favorDisp, saldoPendiente);
@@ -109,6 +122,15 @@ function verificarMetodoPago(metodo) {
         $('#infoSaldo').html(`<i class="bi bi-info-circle-fill"></i> Disponible a favor: $${favorDisp.toFixed(2)}`)
                       .removeClass('bg-light text-dark').addClass('bg-info text-white');
     } else {
+           if (metodo === 'Tarjeta' || metodo === 'Transferencia') {
+        contenedor.style.display = 'block';
+        input.required = true;
+    } else {
+        contenedor.style.display = 'none';
+        input.required = false;
+        input.value = '';
+    }
+
         $('#inputMontoAbono').val(saldoPendiente.toFixed(2));
         $('#infoSaldo').text('Saldo máximo: $' + saldoPendiente.toFixed(2))
                       .removeClass('bg-info text-white').addClass('bg-light text-dark');
@@ -150,6 +172,7 @@ async function guardarAbonoModal() {
     const monto = parseFloat($('#inputMontoAbono').val());
     const metodo = $('#selectMetodoPago').val();
     const favorDisp = parseFloat($('#modal_favor_disponible').val()) || 0;
+      const refrencia = $('#inputReferencia').val()??'';
     
     // Validación de Saldo a Favor
     if (metodo === 'Saldo a Favor' && monto > (favorDisp + 0.01)) {
@@ -172,6 +195,8 @@ async function guardarAbonoModal() {
     fd.append('monto', monto);
     fd.append('metodo_pago', metodo);
     fd.append('fecha_pago', fechaFinal);
+     fd.append('referencia', refrencia);
+
 
     try {
         Swal.fire({ title: 'Guardando...', didOpen: () => Swal.showLoading() });

@@ -43,7 +43,7 @@ $f_fin = !empty($_GET['f_fin'])
 // =====================================================
 // 🔥 ACCIÓN: OBTENER LOTES
 // =====================================================
-if (isset($_GET['action']) && $_GET['action'] === 'obtenerLotes') {
+if (isset($_GET['action']) && $_GET['action'] === 'obtenerCompras') {
     if (ob_get_level()) ob_clean();
     header('Content-Type: application/json');
 
@@ -57,17 +57,15 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerLotes') {
 
         list($fecha_inicio, $fecha_fin) = obtenerFechas();
 
-        if ($producto_id <= 0) {
-            throw new Exception("Producto inválido.");
-        }
+        
 
-        $data = $model->obtenerLotes($producto_id, $almacen_id, $fecha_inicio, $fecha_fin);
-        $suma = $model->obtenerTotalesLotes($producto_id, $almacen_id, $fecha_inicio, $fecha_fin);
+        $data = $model->obtenerLotes( $almacen_id, $fecha_inicio, $fecha_fin);
+      
 
         echo json_encode([
             'success' => true,
             'data' => $data,
-            'totales' => $suma
+           
         ]);
 
     } catch (Throwable $e) {
@@ -137,10 +135,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerConsumoLotes') {
     }
     exit;
 }
-
-// =====================================================
-// 🔄 VENTAS POR LOTE (Individual)
-// =====================================================
 if (isset($_GET['action']) && $_GET['action'] === 'obtenerVentasLote') {
     if (ob_get_level()) ob_clean();
     header('Content-Type: application/json');
@@ -156,6 +150,44 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerVentasLote') {
     }
     exit;
 }
+// =====================================================
+// 🔄 VENTAS POR LOTE (Individual)
+// =====================================================
+if (isset($_GET['action']) && $_GET['action'] === 'obtenerVentasCompra') {
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+
+    try {
+        $compra = intval($_GET['compra_id'] ?? 0);
+        $producto=intval($_GET['producto_id'] ?? 0);
+        if ($compra <= 0) throw new Exception("Compra inválida.");
+
+        $reparto = $model->obtenerDistribucionCompra($compra,$producto);
+        $data = $model->obtenerVentasCompra($compra);
+        echo json_encode(['success' => true, 
+        'reparto'=>$reparto,
+        'data' => $data]);
+    } catch (Throwable $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit;
+}
+if (isset($_GET['action']) && $_GET['action'] === 'obtenerDesglose') {
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+
+    try {
+        $compra = intval($_GET['compra_id'] ?? 0);
+        if ($compra <= 0) throw new Exception("Compra inválida.");
+
+        $data = $model->obtenerVentasCompra($compra);
+        echo json_encode(['success' => true, 'data' => $data]);
+    } catch (Throwable $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit;
+}
+
 
 // =====================================================
 // 📦 PRODUCTOS

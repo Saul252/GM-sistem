@@ -297,6 +297,7 @@ public function obtenerDetalleCompleto($tipo, $id) {
     $response = ['tipo_documento' => $tipo];
 
     if ($tipo === 'compra') {
+
         // CABECERA COMPRAS
         $sql = "SELECT c.*, a.nombre as almacen_nombre, u.nombre as usuario_nombre, p.nombre_comercial as proveedorNombre
                 FROM compras c 
@@ -304,52 +305,88 @@ public function obtenerDetalleCompleto($tipo, $id) {
                 JOIN proveedores p ON c.proveedor = p.id 
                 JOIN usuarios u ON c.usuario_registra_id = u.id 
                 WHERE c.id = ?";
+
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param("i", $id);
         $stmt->execute();
         $response['cabecera'] = $stmt->get_result()->fetch_assoc();
 
-        // DETALLE COMPRAS CON TRAZABILIDAD (9 y 9 en Rancho...)
-        $sqlDet = "SELECT dc.*, p.sku, p.nombre as producto_nombre, p.unidad_medida, p.unidad_reporte, p.factor_conversion as factor_prod,
-                    (SELECT GROUP_CONCAT(CONCAT(a.nombre, ' [', m.cantidad, ']') SEPARATOR '||')
-                     FROM movimientos m 
-                     JOIN almacenes a ON m.almacen_destino_id = a.id
-                     WHERE m.referencia_id = dc.compra_id AND m.producto_id = dc.producto_id AND m.tipo = 'entrada') as desglose_movimientos,
-                    (SELECT IFNULL(SUM(m.cantidad), 0) FROM movimientos m 
-                     WHERE m.referencia_id = dc.compra_id AND m.producto_id = dc.producto_id AND m.tipo = 'entrada') as cantidad_recibida
+        // DETALLE COMPRAS
+        $sqlDet = "SELECT 
+                        dc.*, 
+                        p.sku, 
+                        p.nombre as producto_nombre, 
+                        p.unidad_medida, 
+                        p.unidad_reporte, 
+                        p.factor_conversion as factor_prod,
+                        p.id as producto_id,
+
+                        (SELECT GROUP_CONCAT(
+                            CONCAT(a.nombre, ' [', m.cantidad, ']') 
+                            SEPARATOR '||'
+                        )
+                         FROM movimientos m 
+                         JOIN almacenes a ON m.almacen_destino_id = a.id
+                         WHERE m.referencia_id = dc.compra_id 
+                           AND m.producto_id = dc.producto_id 
+                           AND m.tipo = 'entrada'
+                        ) as desglose_movimientos,
+
+                        (SELECT IFNULL(SUM(m.cantidad), 0) 
+                         FROM movimientos m 
+                         WHERE m.referencia_id = dc.compra_id 
+                           AND m.producto_id = dc.producto_id 
+                           AND m.tipo = 'entrada'
+                        ) as cantidad_recibida
+
                    FROM detalle_compra dc
                    JOIN productos p ON dc.producto_id = p.id
                    WHERE dc.compra_id = ?";
+
         $stmtDet = $this->db->prepare($sqlDet);
         $stmtDet->bind_param("i", $id);
         $stmtDet->execute();
+
         $response['items'] = $stmtDet->get_result()->fetch_all(MYSQLI_ASSOC);
 
+        // AGREGAR DISTRIBUCIÓN POR PRODUCTO
+        foreach ($response['items'] as &$item) {
+            $item['distribucion'] = $this->obtenerDistribucionCompra(
+                $id,
+                $item['producto_id']
+            );
+        }
+
     } else {
-       // --- MEJORA EN CABECERA GASTOS ---
-        // Agregamos JOIN a la tabla de categorías para obtener el nombre
-       $sql = "SELECT g.*, a.nombre as almacen_nombre, u.nombre as usuario_nombre, 
-               gc.nombre as categoria_nombre 
-        FROM gastos g 
-        JOIN almacenes a ON g.almacen_id = a.id 
-        JOIN usuarios u ON g.usuario_registra_id = u.id 
-        LEFT JOIN gastos_categorias gc ON g.categoria_id = gc.id 
-        WHERE g.id = ?";
 
-$stmt = $this->db->prepare($sql);
-if (!$stmt) throw new Exception("Error en SQL Gastos: " . $this->db->error);
+        // CABECERA GASTOS
+        $sql = "SELECT g.*, a.nombre as almacen_nombre, u.nombre as usuario_nombre, 
+                       gc.nombre as categoria_nombre 
+                FROM gastos g 
+                JOIN almacenes a ON g.almacen_id = a.id 
+                JOIN usuarios u ON g.usuario_registra_id = u.id 
+                LEFT JOIN gastos_categorias gc ON g.categoria_id = gc.id 
+                WHERE g.id = ?";
 
-$stmt->bind_param("i", $id);
-$stmt->execute();
-$response['cabecera'] = $stmt->get_result()->fetch_assoc();
+        $stmt = $this->db->prepare($sql);
 
-// DETALLE GASTOS
-$sqlDet = "SELECT * FROM detalle_gasto WHERE gasto_id = ?";
-$stmtDet = $this->db->prepare($sqlDet);
-$stmtDet->bind_param("i", $id);
-$stmtDet->execute();
-$response['items'] = $stmtDet->get_result()->fetch_all(MYSQLI_ASSOC);
+        if (!$stmt) {
+            throw new Exception("Error en SQL Gastos: " . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
+        $response['cabecera'] = $stmt->get_result()->fetch_assoc();
+
+        // DETALLE GASTOS
+        $sqlDet = "SELECT * FROM detalle_gasto WHERE gasto_id = ?";
+        $stmtDet = $this->db->prepare($sqlDet);
+        $stmtDet->bind_param("i", $id);
+        $stmtDet->execute();
+
+        $response['items'] = $stmtDet->get_result()->fetch_all(MYSQLI_ASSOC);
     }
+
     return $response;
 }
 public function obtenerDetalleCompletoPago($id) {
@@ -396,6 +433,34 @@ public function obtenerDetalleCompletoPago($id) {
        
 
      
+    return $response;
+}
+public function obtenerDistribucionCompra($id, $pro_id) {
+
+    $sql = "SELECT 
+                a.nombre,
+                lt.almacen_id,
+                lid.lote_id,
+                lt.cantidad_inicial
+            FROM lotes_ingresos_detalle lid
+            JOIN detalle_compra dc ON lid.detalle_compra_id = dc.id
+            JOIN lotes_stock lt ON lt.id = lid.lote_id
+            JOIN almacenes a ON a.id = lt.almacen_id
+            WHERE dc.compra_id = ?
+              AND dc.producto_id = ?";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param("ii", $id, $pro_id);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+
+    $response = [];
+
+    while ($row = $result->fetch_assoc()) {
+        $response[] = $row;
+    }
+
     return $response;
 }
 public function obtenerSumaEgresos($desde, $hasta, $almacen_id = 0, $tipo_filtro = 'todos') {

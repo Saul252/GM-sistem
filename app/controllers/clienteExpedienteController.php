@@ -113,6 +113,7 @@ if (isset($_GET['action'])) {
         $met  = $_POST['metodo_pago'] ?? 'Efectivo'; 
         $u_id = $_SESSION['usuario_id'] ?? 1;
         $fec  = !empty($_POST['fecha_pago']) ? $_POST['fecha_pago'] : date('Y-m-d H:i:s');
+        $referencia=$_POST['referencia'] ?? '';
         $c_id = intval($_POST['cliente_id'] ?? 0);
 
         // --- 1. VALIDACIÓN ---
@@ -159,7 +160,7 @@ if (isset($_GET['action'])) {
         // --- 3. REGISTRO EN HISTORIAL Y ACTUALIZACIÓN DE NOTA ---
         
         // Registrar en la tabla de pagos/abonos de la venta
-        if (!$ventasModel->registrarAbono($v_id, $amt, $u_id, $met, $fec)) {
+        if (!$ventasModel->registrarAbono($v_id, $amt, $u_id, $met, $fec,$referencia)) {
             throw new Exception("Error al registrar el movimiento en el historial de pagos.");
         }
 

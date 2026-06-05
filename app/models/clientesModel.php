@@ -77,31 +77,147 @@ public function listarTodosViewClientes($almacen_id) {
 }
 
  public function guardar($datos) {
-    // 1. Lógica de asignación de Almacén
-    $almacen_id_sesion = $_SESSION['almacen_id'] ?? 0; 
-    
+
+    // 1. Lógica de asignación de almacén
+    $almacen_id_sesion = $_SESSION['almacen_id'] ?? 0;
+
     if ($almacen_id_sesion == 0) {
-        $almacen_id_insertar = (!empty($datos['almacen_id'])) ? intval($datos['almacen_id']) : null;
+        $almacen_id_insertar = !empty($datos['almacen_id'])
+            ? intval($datos['almacen_id'])
+            : null;
     } else {
         $almacen_id_insertar = $almacen_id_sesion;
     }
 
-    // 2. Validación de RFC duplicado (Corregida para usar el almacén de destino)
-    // Buscamos si el RFC ya existe en el almacén donde se va a guardar
-    $checkSql = "SELECT id FROM clientes WHERE rfc = ? AND almacen_id = ? AND activo = 1";
+    // 2. Validar RFC duplicado
+    $checkSql = "SELECT id
+                 FROM clientes
+                 WHERE rfc = ?
+                 AND almacen_id = ?
+                 AND activo = 1";
+
     $stmtCheck = $this->db->prepare($checkSql);
-    $stmtCheck->bind_param("si", $datos['rfc'], $almacen_id_insertar);
+
+    if (!$stmtCheck) {
+        throw new Exception("Error al preparar validación RFC: " . $this->db->error);
+    }
+
+    $stmtCheck->bind_param(
+        "si",
+        $datos['rfc'],
+        $almacen_id_insertar
+    );
+
     $stmtCheck->execute();
-    
+
     if ($stmtCheck->get_result()->num_rows > 0) {
         throw new Exception("El RFC ya está registrado en la sucursal seleccionada.");
     }
 
-    // 3. Generamos Token y Estado
-    $api_token = bin2hex(random_bytes(16)); 
+    // 3. Generar token
+    $api_token = bin2hex(random_bytes(16));
     $activo = 1;
 
-    // 4. Limpieza de datos (Prevenir errores de bind_param con nulos)
+    // 4. Limpieza de datos
+    $nombre_comercial = $datos['nombre_comercial'] ?? '';
+    $contacto         = !empty($datos['contacto']) ? $datos['contacto'] : null;
+    $razon_social     = !empty($datos['razon_social']) ? $datos['razon_social'] : null;
+    $rfc              = $datos['rfc'] ?? '';
+    $regimen_fiscal   = !empty($datos['regimen_fiscal']) ? $datos['regimen_fiscal'] : null;
+    $codigo_postal    = $datos['codigo_postal'] ?? null;
+    $correo           = !empty($datos['correo']) ? $datos['correo'] : null;
+    $telefono         = !empty($datos['telefono']) ? $datos['telefono'] : null;
+    $direccion        = !empty($datos['direccion']) ? $datos['direccion'] : null;
+    $uso_cfdi         = !empty($datos['uso_cfdi']) ? $datos['uso_cfdi'] : 'G03';
+
+    // 5. Insertar
+    $sql = "INSERT INTO clientes (
+                nombre_comercial,
+                contacto,
+                razon_social,
+                rfc,
+                regimen_fiscal,
+                codigo_postal,
+                correo,
+                telefono,
+                direccion,
+                uso_cfdi,
+                almacen_id,
+                api_token,
+                activo
+            ) VALUES (
+                ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+            )";
+
+    $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) {
+        throw new Exception("Error al preparar INSERT: " . $this->db->error);
+    }
+
+    $stmt->bind_param(
+        "ssssssssssisi",
+        $nombre_comercial,
+        $contacto,
+        $razon_social,
+        $rfc,
+        $regimen_fiscal,
+        $codigo_postal,
+        $correo,
+        $telefono,
+        $direccion,
+        $uso_cfdi,
+        $almacen_id_insertar,
+        $api_token,
+        $activo
+    );
+
+    if (!$stmt->execute()) {
+        throw new Exception("Error al guardar cliente: " . $stmt->error);
+    }
+
+    return [
+        'success'   => true,
+        'id'        => $this->db->insert_id,
+        'api_token' => $api_token,
+        'message'   => 'Cliente guardado correctamente'
+    ];
+}
+public function actualizar($id, $datos) {
+
+    $almacen_id_sesion = $_SESSION['almacen_id'] ?? 0;
+
+    // Validar RFC duplicado
+    $checkSql = "SELECT id
+                 FROM clientes
+                 WHERE rfc = ?
+                 AND id != ?
+                 AND activo = 1";
+
+    if ($almacen_id_sesion > 0) {
+        $checkSql .= " AND almacen_id = " . intval($almacen_id_sesion);
+    }
+
+    $stmtCheck = $this->db->prepare($checkSql);
+
+    if (!$stmtCheck) {
+        throw new Exception("Error al preparar validación RFC: " . $this->db->error);
+    }
+
+    $stmtCheck->bind_param(
+        "si",
+        $datos['rfc'],
+        $id
+    );
+
+    $stmtCheck->execute();
+
+    if ($stmtCheck->get_result()->num_rows > 0) {
+        throw new Exception("El RFC ingresado ya está registrado con otro cliente.");
+    }
+
+    // Limpieza de datos
+    $contacto       = !empty($datos['contacto']) ? $datos['contacto'] : null;
     $razon_social   = !empty($datos['razon_social']) ? $datos['razon_social'] : null;
     $regimen_fiscal = !empty($datos['regimen_fiscal']) ? $datos['regimen_fiscal'] : null;
     $correo         = !empty($datos['correo']) ? $datos['correo'] : null;
@@ -109,102 +225,70 @@ public function listarTodosViewClientes($almacen_id) {
     $direccion      = !empty($datos['direccion']) ? $datos['direccion'] : null;
     $uso_cfdi       = !empty($datos['uso_cfdi']) ? $datos['uso_cfdi'] : 'G03';
 
-    // 5. Inserción
-    $sql = "INSERT INTO clientes (
-        nombre_comercial, razon_social, rfc, regimen_fiscal, 
-        codigo_postal, correo, telefono, direccion, uso_cfdi, 
-        almacen_id, api_token, activo
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-    $stmt = $this->db->prepare($sql);
-
-    // sssssssssisi -> 12 parámetros
-    $stmt->bind_param("sssssssssisi", 
-        $datos['nombre_comercial'], // 1
-        $razon_social,              // 2 (Limpiado)
-        $datos['rfc'],              // 3
-        $regimen_fiscal,            // 4 (Limpiado)
-        $datos['codigo_postal'],    // 5
-        $correo,                    // 6 (Limpiado)
-        $telefono,                  // 7 (Limpiado)
-        $direccion,                 // 8 (Limpiado)
-        $uso_cfdi,                  // 9 (Limpiado)
-        $almacen_id_insertar,       // 10
-        $api_token,                 // 11
-        $activo                     // 12
-    );
-
-    if ($stmt->execute()) {
-        return [
-            'success' => true, 
-            'id' => $this->db->insert_id, 
-            'api_token' => $api_token,
-            'message' => 'Cliente guardado correctamente'
-        ];
-    }
-    
-    return false;
-}
-public function actualizar($id, $datos) {
-    $almacen_id_sesion = $_SESSION['almacen_id'] ?? 0;
-
-    // 1. Validación de RFC duplicado
-    // Buscamos si el RFC ya existe en OTRO registro que no sea este ($id)
-    $checkSql = "SELECT id FROM clientes 
-                 WHERE rfc = ? AND id != ? AND activo = 1";
-    
-    // Si no es admin, limitamos la búsqueda de duplicados a su propio almacén
-    if ($almacen_id_sesion > 0) {
-        $checkSql .= " AND almacen_id = " . intval($almacen_id_sesion);
-    }
-
-    $stmtCheck = $this->db->prepare($checkSql);
-    $stmtCheck->bind_param("si", $datos['rfc'], $id);
-    $stmtCheck->execute();
-    
-    if ($stmtCheck->get_result()->num_rows > 0) {
-        throw new Exception("El RFC ingresado ya está registrado con otro cliente.");
-    }
-
-    // 2. Construcción dinámica del SQL
-    // Empezamos con los campos básicos
+    // Campos base
     $campos = [
-        "nombre_comercial = ?", "razon_social = ?", "rfc = ?", 
-        "regimen_fiscal = ?", "codigo_postal = ?", "correo = ?", 
-        "telefono = ?", "direccion = ?", "uso_cfdi = ?"
+        "nombre_comercial = ?",
+        "contacto = ?",
+        "razon_social = ?",
+        "rfc = ?",
+        "regimen_fiscal = ?",
+        "codigo_postal = ?",
+        "correo = ?",
+        "telefono = ?",
+        "direccion = ?",
+        "uso_cfdi = ?"
     ];
-    $params = [
-        $datos['nombre_comercial'], $datos['razon_social'], $datos['rfc'],
-        $datos['regimen_fiscal'], $datos['codigo_postal'], $datos['correo'],
-        $datos['telefono'], $datos['direccion'], $datos['uso_cfdi']
-    ];
-    $tipos = "sssssssss";
 
-    // --- EL CAMBIO CLAVE ---
-    // Si el usuario es ADMIN y envió un nuevo almacen_id, lo agregamos al UPDATE
+    $params = [
+        $datos['nombre_comercial'],
+        $contacto,
+        $razon_social,
+        $datos['rfc'],
+        $regimen_fiscal,
+        $datos['codigo_postal'],
+        $correo,
+        $telefono,
+        $direccion,
+        $uso_cfdi
+    ];
+
+    $tipos = "ssssssssss";
+
+    // Solo admin puede cambiar almacén
     if ($almacen_id_sesion == 0 && isset($datos['almacen_id'])) {
+
         $campos[] = "almacen_id = ?";
         $params[] = intval($datos['almacen_id']);
         $tipos .= "i";
     }
 
-    $sql = "UPDATE clientes SET " . implode(", ", $campos) . " WHERE id = ?";
-    
-    // Seguridad para no-admins
+    $sql = "UPDATE clientes
+            SET " . implode(", ", $campos) . "
+            WHERE id = ?";
+
     if ($almacen_id_sesion > 0) {
         $sql .= " AND almacen_id = " . intval($almacen_id_sesion);
     }
 
-    // Agregamos el ID al final de los parámetros
     $params[] = $id;
     $tipos .= "i";
 
     $stmt = $this->db->prepare($sql);
-    
-    // Usamos call_user_func_array porque el número de parámetros es dinámico (si cambió almacén o no)
+
+    if (!$stmt) {
+        throw new Exception("Error al preparar UPDATE: " . $this->db->error);
+    }
+
     $stmt->bind_param($tipos, ...$params);
 
-    return $stmt->execute();
+    if (!$stmt->execute()) {
+        throw new Exception("Error al actualizar cliente: " . $stmt->error);
+    }
+
+    return [
+        'success' => true,
+        'message' => 'Cliente actualizado correctamente'
+    ];
 }
 public function cambiarEstado($id, $estado, $almacen_id = 0) {
         // SQL con candado de seguridad por almacén

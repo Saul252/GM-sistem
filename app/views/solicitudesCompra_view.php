@@ -1327,9 +1327,9 @@ function actualizarGranTotal() {
                 fila.find('.i-sueltas').val()
             ) || 0,
 
-            cantidad_excedente: (excedente),
+            cantidad_excedente: (excedente*factor),
 
-            cantidad_faltante: (faltante),
+            cantidad_faltante: (faltante*factor),
 
             total_item: costoTotal,
 

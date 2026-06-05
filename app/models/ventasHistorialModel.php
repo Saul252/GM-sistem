@@ -250,7 +250,7 @@ WHERE dv.venta_id = $id";
     }
 }
 
-public function registrarAbono($venta_id, $monto, $usuario_id, $metodo_pago, $fecha_pago, $referencia = '') {
+public function registrarAbono($venta_id, $monto, $usuario_id, $metodo_pago, $fecha_pago, $referencia ) {
     // 1. Lógica para la referencia: cadena vacía por defecto
     $ref_final= $referencia;
     $efectivoPagado=0;

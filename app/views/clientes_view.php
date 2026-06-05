@@ -207,13 +207,34 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
                                 <label class="form-label small fw-bold text-muted">RAZÓN SOCIAL</label>
                                 <input type="text" name="razon_social" id="razon_social" class="form-control rounded-3">
                             </div>
+
+ <div class="col-md-12">
+                                <label class="form-label fw-bold">Contacto *</label>
+                                <input type="text" name="contacto" id="contacto"class="form-control"
+                                    placeholder="Contacto" >
+                            </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold text-muted">RFC *</label>
                                 <input type="text" name="rfc" id="rfc" class="form-control text-uppercase rounded-3" maxlength="13" required>
                             </div>
                             <div class="col-md-12">
-                                <label class="form-label fw-bold">Dirección Completa</label>
-                                <textarea name="direccion" id="direccion" class="form-control" rows="2"
+                                <label class="form-label fw-bold">Calle</label>
+                                <textarea name="calle" id="calle"class="form-control" rows="2"
+                                    placeholder="Calle, número, colonia..."></textarea>
+                            </div>
+                             <div class="col-md-12">
+                                <label class="form-label fw-bold">Colonia</label>
+                                <textarea name="colonia" id="colonia" class="form-control" rows="2"
+                                    placeholder="Colonia"></textarea>
+                            </div>
+                             <div class="col-md-12">
+                                <label class="form-label fw-bold">Pueblo</label>
+                                <textarea name="pueblo" id="pueblo" class="form-control" rows="2"
+                                    placeholder="Pueblo"></textarea>
+                            </div>
+                             <div class="col-md-12">
+                                <label class="form-label fw-bold">Ciudad</label>
+                                <textarea name="ciudad" id="ciudad" class="form-control" rows="2"
                                     placeholder="Calle, número, colonia..."></textarea>
                             </div>
                             <div class="col-md-6">
@@ -321,11 +342,24 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
                 const c = res.data;
                 $('#modalTitulo').text('Actualizar Cliente');
                 $('#cliente_id').val(c.id);
+                 $('#contacto').val(c.contacto);
                 $('#nombre_comercial').val(c.nombre_comercial);
                 $('#razon_social').val(c.razon_social);
                 $('#rfc').val(c.rfc);
-                 $('#direccion').val(c.direccion);
+                $('#telefono').val(c.telefono);
+                 const direccion = c.direccion || '';
+
+const calle = (direccion.match(/calle\s(.*?)(?=,\scol|$)/i) || [,''])[1];
+const colonia = (direccion.match(/col\s(.*?)(?=,\spueblo|$)/i) || [,''])[1];
+const pueblo = (direccion.match(/pueblo\s(.*?)(?=,\sciudad|$)/i) || [,''])[1];
+const ciudad = (direccion.match(/ciudad\s(.*)$/i) || [,''])[1];
+
+$('#calle').val(calle.trim());
+$('#colonia').val(colonia.trim());
+$('#pueblo').val(pueblo.trim());
+$('#ciudad').val(ciudad.trim());
                 $('#correo').val(c.correo);
+                $('#codigo_postal').val(c.codigo_postal);
                 $('#almacen_id_modal').val(c.almacen_id);
                 $('#modalCliente').modal('show');
             }

@@ -1,297 +1,542 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Expediente: <?= htmlspecialchars($cliente['nombre_comercial']) ?> | CF System</title>
-    
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <style>
-        :root {
-            --bs-primary: #007aff;
-            --bs-info: #3abaf4;
-            --bs-success: #1cc88a;
-            --bs-danger: #e74a3b;
-            --bs-warning: #f6c23e;
-            --bg-light: #f8f9fc;
-        }
+    :root {
+        --bs-primary: #007aff;
+        --bs-info: #3abaf4;
+        --bs-success: #1cc88a;
+        --bs-danger: #e74a3b;
+        --bs-warning: #f6c23e;
+        --bg-light: #f8f9fc;
+    }
 
-        body { background-color: var(--bg-light); font-family: 'Inter', sans-serif; color: #4e73df; }
-        .header-expediente { background: white; border-bottom: 1px solid #e3e6f0; padding: 1rem 2rem; }
+    body {
+        background-color: var(--bg-light);
+        font-family: 'Inter', sans-serif;
+        color: #4e73df;
+    }
 
-        .kpi-widget {
-            background: white; border-radius: 12px; padding: 1.25rem; border: none;
-            border-left: 4px solid #e3e6f0; box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1); height: 100%;
-        }
-        .kpi-label { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
-        .kpi-value { font-size: 1.4rem; font-weight: 700; color: #5a5c69; }
-        
-        .border-left-primary { border-left-color: var(--bs-primary) !important; }
-        .border-left-success { border-left-color: var(--bs-success) !important; }
-        .border-left-danger { border-left-color: var(--bs-danger) !important; }
-        .border-left-info { border-left-color: var(--bs-info) !important; }
+    .header-expediente {
+        background: white;
+        border-bottom: 1px solid #e3e6f0;
+        padding: 1rem 2rem;
+    }
 
-        .folio-container { background: white; border-radius: 12px; border: 1px solid #e3e6f0; margin-bottom: 2rem; overflow: hidden; }
-        
-        .folio-debe { border-left: 5px solid var(--bs-danger); }
-        .folio-liquidado { border-left: 5px solid var(--bs-success); background-color: #f6fff9; }
-        .folio-favor { border-left: 5px solid var(--bs-info); background-color: #f0f7ff; }
-        .folio-cancelado { border-left: 5px solid #858796; background-color: #f8f9fc; }
+    .kpi-widget {
+        background: white;
+        border-radius: 12px;
+        padding: 1.25rem;
+        border: none;
+        border-left: 4px solid #e3e6f0;
+        box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
+        height: 100%;
+    }
 
-        .folio-header { background-color: rgba(0,0,0,0.02); padding: 1rem 1.5rem; border-bottom: 1px solid #e3e6f0; }
-        .col-pagos { background-color: #fafbfc; border-left: 1px solid #e3e6f0; padding: 1.5rem; }
-        .payment-pill { background: white; border: 1px solid #e3e6f0; border-left: 4px solid var(--bs-success); border-radius: 8px; padding: 10px; margin-bottom: 8px; }
+    .kpi-label {
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
+    }
+
+    .kpi-value {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #5a5c69;
+    }
+
+    .border-left-primary {
+        border-left-color: var(--bs-primary) !important;
+    }
+
+    .border-left-success {
+        border-left-color: var(--bs-success) !important;
+    }
+
+    .border-left-danger {
+        border-left-color: var(--bs-danger) !important;
+    }
+
+    .border-left-info {
+        border-left-color: var(--bs-info) !important;
+    }
+
+    .folio-container {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #e3e6f0;
+        margin-bottom: 2rem;
+        overflow: hidden;
+    }
+
+    .folio-debe {
+        border-left: 5px solid var(--bs-danger);
+    }
+
+    .folio-liquidado {
+        border-left: 5px solid var(--bs-success);
+        background-color: #f6fff9;
+    }
+
+    .folio-favor {
+        border-left: 5px solid var(--bs-info);
+        background-color: #f0f7ff;
+    }
+
+    .folio-cancelado {
+        border-left: 5px solid #858796;
+        background-color: #f8f9fc;
+    }
+
+    .folio-header {
+        background-color: rgba(0, 0, 0, 0.02);
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e3e6f0;
+    }
+
+    .col-pagos {
+        background-color: #fafbfc;
+        border-left: 1px solid #e3e6f0;
+        padding: 1.5rem;
+    }
+
+    .payment-pill {
+        background: white;
+        border: 1px solid #e3e6f0;
+        border-left: 4px solid var(--bs-success);
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 8px;
+    }
     </style>
 </head>
+
 <body>
 
-<header class="header-expediente shadow-sm mb-4">
-    <div class="container-fluid d-flex justify-content-between align-items-center">
-        <div>
-            <h4 class="fw-bold mb-0 text-dark"><?= htmlspecialchars($cliente['nombre_comercial']) ?></h4>
-            <span class="badge bg-primary-subtle text-primary">RFC: <?= htmlspecialchars($cliente['rfc']) ?></span>
-        </div>
-        <a href="/cfsistem/app/controllers/clientesEstatusController.php" class="btn btn-sm btn-outline-secondary rounded-pill">
-            <i class="bi bi-arrow-left"></i> Volver al Listado
-        </a>
-        <div style="display:flex; gap:10px; align-items:end; margin-bottom:15px; flex-wrap:wrap;">
+    <header class="header-expediente shadow-sm mb-4">
+        <div class="container-fluid d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="fw-bold mb-0 text-dark"><?= htmlspecialchars($cliente['nombre_comercial']) ?></h4>
+                <span class="badge bg-primary-subtle text-primary">RFC: <?= htmlspecialchars($cliente['rfc']) ?></span>
+            </div>
+            <a href="/cfsistem/app/controllers/clientesEstatusController.php"
+                class="btn btn-sm btn-outline-secondary rounded-pill">
+                <i class="bi bi-arrow-left"></i> Volver al Listado
+            </a>
+            <div style="display:flex; gap:10px; align-items:end; margin-bottom:15px; flex-wrap:wrap;">
 
-    <div>
-        <label style="font-size:12px;">Fecha inicio</label>
-        <input type="date" id="fecha_inicio" class="form-control">
-    </div>
+             
+  
+   <?php
+   date_default_timezone_set('America/Mexico_City');
+$fechaInicio = $_GET['fecha_inicio'] ?? date('Y-m-01');
+$fechaFin    = $_GET['fecha_fin'] ?? date('Y-m-t');
+?>
 
-    <div>
-        <label style="font-size:12px;">Fecha fin</label>
-        <input type="date" id="fecha_fin" class="form-control">
-    </div>
-
-    <button class="btn btn-primary" onclick="filtrarExpediente()">
-        Filtrar
-    </button>
-
-   
-
+<div>
+    <label style="font-size:12px;">Fecha inicio</label>
+    <input
+        type="date"
+        id="fecha_inicio"
+        class="form-control"
+        value="<?= htmlspecialchars($fechaInicio) ?>">
 </div>
-     <button class="btn btn-dark btn-sm" onclick="imprimirEstadoCuenta()">
-    <i class="bi bi-printer"></i> Imprimir
-</button>
-    </div>
-</header>
+
+<div>
+    <label style="font-size:12px;">Fecha fin</label>
+    <input
+        type="date"
+        id="fecha_fin"
+        class="form-control"
+        value="<?= htmlspecialchars($fechaFin) ?>">
+</div>
+
+                <button class="btn btn-primary" onclick="filtrarExpediente()">
+                    Filtrar
+                </button>
 
 
-<div class="container-fluid px-4">
 
-    <?php if ($resumen['saldo_total'] < -0.01): ?>
-    <div class="alert alert-info border-0 shadow-sm mb-4 d-flex align-items-center p-3" style="border-radius: 12px;">
-        <i class="bi bi-info-square-fill fs-3 me-3 text-info"></i>
-        <div>
-            <h5 class="mb-0 fw-bold">Saldo a Favor General</h5>
-            <span>El cliente tiene <b>$ <?= number_format(abs($resumen['saldo_total']), 2) ?></b> disponible.</span>
+            </div>
+            <button class="btn btn-dark btn-sm" onclick="imprimirEstadoCuenta()">
+                <i class="bi bi-printer"></i> Imprimir
+            </button>
         </div>
-    </div>
-    <?php endif; ?>
-    <div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="kpi-widget border-left-primary">
-            <div class="kpi-label text-primary">Compras Totales</div>
-            <div class="kpi-value">$ <?= number_format($resumen['total_comprado'], 2) ?></div>
-        </div>
-    </div>
+    </header>
 
-    <div class="col-md-3">
-        <div class="kpi-widget border-left-success">
-            <div class="kpi-label text-success">Total Pagado</div>
-            <div class="kpi-value">$ <?= number_format($resumen['total_pagado'], 2) ?></div>
-        </div>
-    </div>
 
-    <?php 
+    <div class="container-fluid px-4">
+
+        <?php if ($resumen['saldo_total'] < -0.01): ?>
+        <div class="alert alert-info border-0 shadow-sm mb-4 d-flex align-items-center p-3"
+            style="border-radius: 12px;">
+            <i class="bi bi-info-square-fill fs-3 me-3 text-info"></i>
+            <div>
+                <h5 class="mb-0 fw-bold">Saldo a Favor General</h5>
+                <span>El cliente tiene <b>$ <?= number_format(abs($resumen['saldo_total']), 2) ?></b> disponible.</span>
+            </div>
+        </div>
+        <?php endif; ?>
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="kpi-widget border-left-primary">
+                    <div class="kpi-label text-primary">Compras Totales</div>
+                    <div class="kpi-value">$ <?= number_format($resumen['total_comprado'], 2) ?></div>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="kpi-widget border-left-success">
+                    <div class="kpi-label text-success">Total Pagado</div>
+                    <div class="kpi-value">$ <?= number_format($resumen['total_pagado'], 2) ?></div>
+                </div>
+            </div>
+
+            <?php 
         $saldoReal = $resumen['saldo_total']; 
         $esSaldoAFavor = $saldoReal < -0.01;
         $claseColor = $esSaldoAFavor ? 'border-left-info' : 'border-left-danger';
     ?>
 
-    <div class="col-md-3">
-        <div class="kpi-widget <?= $claseColor ?>">
-            <div class="kpi-label <?= $esSaldoAFavor ? 'text-info' : 'text-danger' ?>"><?= $esSaldoAFavor ? 'A Favor' : 'Saldo Pendiente' ?></div>
-            <div class="kpi-value <?= $esSaldoAFavor ? 'text-info' : 'text-danger' ?>">
-                $ <?= number_format(abs($saldoReal), 2) ?>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-3">
-        <div class="kpi-widget d-flex align-items-center justify-content-between border-left-primary">
-            <div style="width: 60px; height: 60px;"><canvas id="chartDona"></canvas></div>
-            <div class="text-end">
-                <div class="kpi-label">Estatus</div>
-                <div class="fw-bold text-dark"><?= round(($resumen['total_pagado'] / max($resumen['total_comprado'], 1)) * 100) ?>%</div>
-            </div>
-        </div>
-    </div>
-
-    
-  
- 
-
-    <h5 class="fw-bold mb-3 text-dark">Folios Detallados</h5>
-    
-
-    <?php foreach ($expediente as $v): 
-        // USAMOS EL ID REAL (venta_id o id como fallback)
-        $idActual = $v['venta_id'] ?? $v['id'];
-        
-        $esCancelada = (isset($v['estado_general']) && $v['estado_general'] == 'cancelada');
-        $saldoFolio = floatval($v['total']) - floatval($v['total_pagado']);
-        $folioLiquidado = abs($saldoFolio) <= 0.01;
-        $folioAFavorIndividual = $saldoFolio < -0.01;
-        
-        $claseStatus = "folio-debe"; 
-        if ($esCancelada) $claseStatus = "folio-cancelado";
-        elseif ($folioAFavorIndividual) $claseStatus = "folio-favor";
-        elseif ($folioLiquidado) $claseStatus = "folio-liquidado";
-    ?>
-    <div class="folio-container shadow-sm <?= $claseStatus ?>">
-        
-        <div class="folio-header d-flex justify-content-between align-items-center">
-            <div>
-                <span class="fw-bold <?= $esCancelada ? 'text-muted text-decoration-line-through' : 'text-dark' ?>">#<?= $idActual ?></span>
-                <small class="text-muted ms-3"><?= date('d/m/Y', strtotime($v['fecha'])) ?></small>
-                <span class="badge bg-light text-dark border ms-2"><?= htmlspecialchars($v['folio'] ?? 'S/F') ?></span>
-            </div>
-            <div class="d-flex align-items-center">
-                <?php if ($esCancelada): ?>
-                    <span class="badge bg-secondary rounded-pill px-3">CANCELADA</span>
-                <?php elseif ($folioAFavorIndividual): ?>
-                    <span class="badge bg-info rounded-pill px-3">A FAVOR: $ <?= number_format(abs($saldoFolio), 2) ?></span>
-                <?php elseif ($folioLiquidado): ?>
-                    <span class="badge bg-success rounded-pill px-3"><i class="bi bi-check-lg"></i> LIQUIDADO</span>
-                <?php else: ?>
-                   <button type="button" class="btn btn-primary btn-sm px-4 shadow-sm" 
-                           onclick="abrirFlujoAbono(<?= intval($idActual) ?>, <?= intval($v['cliente_id']) ?>, '<?= $v['folio'] ?>', <?= floatval($saldoFolio) ?>)">
-                        <i class="bi bi-plus-circle me-1"></i> ABONAR
-                   </button>
-                <?php endif; ?>
-            </div>
-        </div>
-
-        <div class="row g-0">
-            <div class="col-md-8 p-3">
-                <table class="table table-sm table-borderless align-middle mb-0" style="font-size: 0.85rem;">
-                    <thead class="text-muted border-bottom">
-                        <tr><th>Fecha</th><th class="text-center">Folio </th><th class="text-end">SUBTOTAL</th><th>Tickets</th></tr>
-                    </thead>
-                    <tbody>
-                        
-                            <tr>
-                               <td class="text-center">
-    <?= $v['fecha'] ?? 0; ?>
-</td></td>
-                                <td>
-                                    
-                                    <div class="text-muted" style="font-size: 0.7rem;"> <?=  $v['venta_id'] ?? $v['id'];?></div>
-                                </td>
-                                           
-                                <td class="text-end fw-bold">$ <?=   $v['total'] ?? 0;?></td>
-                                <td>
-                                    <a class="btn btn-sm btn-primary shadow-sm" href="/cfsistem/app/backend/ventas/ticket_venta.php?id=<?=  $v['venta_id'] ?? $v['id'];?>" target="_blank">
-                            <i class="bi bi-currency-dollar"></i> Ticket
-                        </a>
-                        <a class="btn btn-sm btn-info text-white shadow-sm" href="/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=<?=  $v['venta_id'] ?? $v['id'];?>" target="_blank" title="Imprimir Remisión sin Precios">
-                            <i class="bi bi-file-earmark-text"></i> Remisión
-                        </a>
-
-                                </td>
-                            </tr>
-                          
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="col-md-4 col-pagos">
-                <p class="kpi-label mb-2">Flujo de Dinero</p>
-                <div class="pagos-lista" style="max-height: 150px; overflow-y: auto;">
-                    <?php if(empty($v['pagos'])): ?>
-                        <p class="text-muted small">Sin registros de pago.</p>
-                    <?php else: ?>
-                        <?php foreach($v['pagos'] as $pago): ?>
-                        <div class="payment-pill d-flex justify-content-between align-items-center shadow-sm">
-                            <div>
-                                <span class="fw-bold text-success" style="font-size: 0.85rem;">$ <?= number_format($pago['monto'], 2) ?></span><br>
-                                <span class="text-muted" style="font-size: 0.65rem;">
-                                    <i class="bi bi-calendar-event"></i> <?= date('d/m/y', strtotime($pago['fecha'])) ?>
-                                </span>
-                            </div>
-                            <i class="bi bi-person-check text-muted" title="Recibió: <?= htmlspecialchars($pago['usuario_recibio']) ?>"></i>
-                        </div>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-                
-                <div class="pt-2 mt-2 border-top">
-                    <div class="d-flex justify-content-between small"><span>Total Folio:</span><b>$ <?= number_format($v['total'], 2) ?></b></div>
-                    <div class="d-flex justify-content-between small text-success"><span>Abonado:</span><b>$ <?= number_format($v['total_pagado'], 2) ?></b></div>
-                    <div class="d-flex justify-content-between border-top mt-1 pt-1">
-                        <span class="small fw-bold">Balance:</span>
-                        <b class="<?= ($saldoFolio < -0.01) ? 'text-info' : 'text-danger' ?>">
-                            $ <?= number_format(abs($saldoFolio), 2) ?> 
-                        </b>         
+            <div class="col-md-3">
+                <div class="kpi-widget <?= $claseColor ?>">
+                    <div class="kpi-label <?= $esSaldoAFavor ? 'text-info' : 'text-danger' ?>">
+                        <?= $esSaldoAFavor ? 'A Favor' : 'Saldo Pendiente' ?></div>
+                    <div class="kpi-value <?= $esSaldoAFavor ? 'text-info' : 'text-danger' ?>">
+                        $ <?= number_format(abs($saldoReal), 2) ?>
                     </div>
                 </div>
             </div>
+
+            <div class="col-md-3">
+                <div class="kpi-widget d-flex align-items-center justify-content-between border-left-primary">
+                    <div style="width: 60px; height: 60px;"><canvas id="chartDona"></canvas></div>
+                    <div class="text-end">
+                        <div class="kpi-label">Estatus</div>
+                        <div class="fw-bold text-dark">
+                            <?= round(($resumen['total_pagado'] / max($resumen['total_comprado'], 1)) * 100) ?>%</div>
+                    </div>
+                </div>
+            </div>
+
+
+
+
+<div class="d-flex justify-content-center">
+    <div class="card border-0 shadow-sm mb-3" style="width: 60%; max-width: 1200px;">
+
+<h5 class="fw-bold mb-3 text-dark">Folios Detallados</h5>
+
+        <div class="table-responsive">
+            <table class="table align-middle table-hover mb-0">
+                <tr>
+                    <th scope="col" class="ps-3">Fecha</th>
+                    <th scope="col">Folio Interno</th>
+                    <th scope="col" class="text-end">Total Facturado</th>
+                    <th scope="col" class="text-end">Total Abonado</th>
+                    <th scope="col" class="text-end">Saldo</th>
+                    <th scope="col" class="text-center">Estado / Acción</th>
+                    <th scope="col" class="text-center pe-3">Opciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($expediente as $v):
+                    $idActual = $v['venta_id'] ?? $v['id'];
+                    $esCancelada = (isset($v['estado_general']) && $v['estado_general'] == 'cancelada');
+                    $saldoFolio = floatval($v['total']) - floatval($v['total_pagado']);
+                    $folioLiquidado = abs($saldoFolio) <= 0.01;
+                    $folioAFavorIndividual = $saldoFolio < -0.01;
+                ?>
+                <tr>
+                    <td class="ps-3">
+                     
+                        <small class="text-muted"><?= date('d/m/Y', strtotime($v['fecha'])) ?></small>
+                    </td>
+
+                    <td>
+                        <span class="badge bg-light text-dark border">
+                            <?= htmlspecialchars($v['folio']) ?>
+                        </span>
+                    </td>
+
+                    <td class="text-end fw-semibold text-dark">
+                        $<?= number_format($v['total'], 2) ?>
+                    </td>
+
+                    <td class="text-end fw-semibold text-success">
+                        $<?= number_format($v['total_pagado'], 2) ?>
+                    </td>
+
+                    <td class="text-end fw-bold <?= $saldoFolio > 0 ? 'text-danger' : 'text-info' ?>">
+                        $<?= number_format(abs($saldoFolio), 2) ?>
+                    </td>
+
+                    <td class="text-center">
+                        <?php if ($esCancelada): ?>
+                            <span class="badge bg-secondary px-3 py-2">CANCELADA</span>
+                        <?php elseif ($folioLiquidado): ?>
+                            <span class="badge bg-success px-3 py-2">LIQUIDADO</span>
+                        <?php elseif ($folioAFavorIndividual): ?>
+                            <span class="badge bg-info px-3 py-2">A FAVOR</span>
+                        <?php else: ?>
+                            <button
+                                class="btn btn-primary btn-sm px-3"
+                                onclick="abrirFlujoAbono(
+                                    <?= intval($idActual) ?>,
+                                    <?= intval($v['cliente_id']) ?>,
+                                    '<?= $v['folio'] ?>',
+                                    <?= floatval($saldoFolio) ?>
+                                )">
+                                <i class="bi bi-plus-circle"></i> Abonar
+                            </button>
+                        <?php endif; ?>
+                    </td>
+
+                    <td class="text-center pe-3">
+                        <div class="d-flex gap-1 justify-content-center">
+                            <a class="btn btn-outline-primary btn-sm" 
+                               href="/cfsistem/app/backend/ventas/ticket_venta.php?id=<?= $idActual ?>" 
+                               target="_blank" title="Ticket">
+                                <i class="bi bi-receipt"></i>
+                            </a>
+                            <a class="btn btn-outline-secondary btn-sm" 
+                               href="/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=<?= $idActual ?>" 
+                               target="_blank" title="Remisión">
+                                <i class="bi bi-file-earmark-text"></i>
+                            </a>
+                            <button class="btn btn-sm btn-dark" 
+        onclick="verDetalle(<?= intval($idActual) ?>)" 
+        title="Ver Detalle">
+    <i class="bi bi-eye-fill"></i>
+</button>
+                        </div>
+                    </td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="modalDetalle" tabindex="-1">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+
+            <div class="modal-header bg-dark text-white">
+                <h6 class="modal-title fw-bold">
+                    Información Venta: <span id="spanFolio" class="text-warning"></span>
+                </h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body p-0">
+                <div class="row g-0">
+
+                    <div class="col-md-3 bg-light border-end p-4">
+
+                        <div class="mb-3">
+                            <small class="text-uppercase text-muted fw-bold">Cliente</small>
+                            <div id="detCliente" class="fw-semibold"></div>
+                        </div>
+
+                        <div class="mb-4">
+                            <small class="text-uppercase text-muted fw-bold">Almacén</small>
+                            <div id="detAlmacen" class="fw-semibold"></div>
+                        </div>
+
+                        <div class="card border-0 shadow-sm mb-3">
+                            <div class="card-body text-center">
+
+                                <div class="mb-3">
+                                    <small class="text-uppercase text-muted fw-bold d-block">
+                                        Total de Venta
+                                    </small>
+                                    <span id="detTotalLabel" class="fs-5 fw-bold text-primary">
+                                        $0.00
+                                    </span>
+                                </div>
+
+                                <hr>
+
+                                <div>
+                                    <small class="text-uppercase text-muted fw-bold d-block">
+                                        Saldo Pendiente
+                                    </small>
+                                    <span id="detSaldoLabel" class="fs-4 fw-bold text-danger">
+                                        $0.00
+                                    </span>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div id="boton"></div>
+                    </div>
+
+                    <div class="col-md-9 p-4">
+
+                        <div class="card border-0 shadow-sm mb-3">
+                            <div class="card-header bg-white fw-bold small text-uppercase text-muted">
+                                Productos
+                            </div>
+                            <div class="table-responsive" style="max-height: 180px;">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr class="small text-uppercase">
+                                            <th>Producto</th>
+                                            <th class="text-center">Venta</th>
+                                            <th class="text-center">Surtido</th>
+                                            <th class="text-center text-danger">Falta</th>
+                                            <th class="text-center d-none">Entrega</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tbodyDetalle"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+
+                            <div class="col-12">
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-header bg-white fw-bold small text-uppercase text-muted">
+                                        Historial de Pagos
+                                    </div>
+                                    <div class="table-responsive" style="max-height: 180px;">
+                                        <table class="table table-sm align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr class="small text-uppercase">
+                                                    <th>Fecha</th>
+                                                    <th>Monto</th>
+                                                    <th>Método</th>
+                                                    <th>REFERENCIA</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tbodyPagos"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12 d-none">
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-header bg-white fw-bold small text-uppercase text-muted">
+                                        Historial de Entregas
+                                    </div>
+                                    <div class="table-responsive" style="max-height: 180px;">
+                                        <table class="table table-sm align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr class="small text-uppercase">
+                                                    <th>Fecha</th>
+                                                    <th>Responsable</th>
+                                                    <th>Producto</th>
+                                                    <th class="text-center">Cant</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tbodyHistorial"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12 d-none">
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-header bg-white fw-bold small text-uppercase text-muted">
+                                        Repartos
+                                    </div>
+                                    <div class="table-responsive" style="max-height: 220px;">
+                                        <table class="table table-sm align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr class="small text-uppercase">
+                                                    <th># Reparto</th>
+                                                    <th>Fecha Entrega</th>
+                                                    <th>Estado</th>
+                                                    <th class="text-center">Ruta</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="tbodyRepartos"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
-    <?php endforeach; ?>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<?php require_once __DIR__ . '/../ventasHistorialModales/registarAbonoCliente.php' ?>
+    <?php require_once __DIR__ . '/../ventasHistorialModales/registarAbonoCliente.php' ?>
+     
 
-<script>
-$(document).ready(function() { 
-    renderCharts(); 
-});
+    <script>
+          const modalNuevoAbonoObj = new bootstrap.Modal('#modalNuevoAbono');
 
-function renderCharts() {
-    const ctx = document.getElementById('chartDona');
-    if (!ctx) return;
-    
-    new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            datasets: [{
-                data: [
-    <?= isset($resumen['total_pagado']) ? floatval($resumen['total_pagado']) : 0 ?>,
-    <?= isset($resumen['saldo_total']) ? max(0, floatval($resumen['saldo_total'])) : 0 ?>
-],
-                backgroundColor: ['#1cc88a', '#e74a3b'],
-                borderWidth: 0
-            }]
-        },
-        options: { 
-            cutout: '75%', 
-            plugins: { legend: { display: false } },
-            responsive: true,
-            maintainAspectRatio: false
-        }
+         
+    let ventaActual = null;
+    // La ruta al controlador (ajusta si el nombre del archivo varía)
+    const URL_CONTROLLER = '../controllers/ventasHistorialController.php';
+    $(document).ready(function() {
+        renderCharts();
     });
-}
-function abrirModalSaldarFavor(favorDisponible, deudaPendiente) {
-    // Calculamos el límite: no podemos usar más de lo que hay, ni pagar más de lo que se debe
-    const montoMaximo = Math.min(favorDisponible, deudaPendiente);
 
-    Swal.fire({
-        title: 'Compensación de Saldos',
-        icon: 'info',
-        html: `
+    function renderCharts() {
+        const ctx = document.getElementById('chartDona');
+        if (!ctx) return;
+
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [
+                        <?= isset($resumen['total_pagado']) ? floatval($resumen['total_pagado']) : 0 ?>,
+                        <?= isset($resumen['saldo_total']) ? max(0, floatval($resumen['saldo_total'])) : 0 ?>
+                    ],
+                    backgroundColor: ['#1cc88a', '#e74a3b'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                cutout: '75%',
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    }
+
+    function abrirModalSaldarFavor(favorDisponible, deudaPendiente) {
+        // Calculamos el límite: no podemos usar más de lo que hay, ni pagar más de lo que se debe
+        const montoMaximo = Math.min(favorDisponible, deudaPendiente);
+
+        Swal.fire({
+            title: 'Compensación de Saldos',
+            icon: 'info',
+            html: `
             <div class="text-start border-bottom pb-2 mb-3" style="font-size: 0.9rem;">
                 <div class="d-flex justify-content-between mb-1">
                     <span>Saldo a Favor:</span>
@@ -315,335 +560,601 @@ function abrirModalSaldarFavor(favorDisponible, deudaPendiente) {
                 </p>
             </div>
         `,
-        showCancelButton: true,
-        confirmButtonText: 'Aplicar Ajuste',
-        cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#f6c23e',
-        reverseButtons: true,
-        preConfirm: () => {
-            const monto = document.getElementById('monto_cruce').value;
-            if (!monto || monto <= 0 || monto > montoMaximo) {
-                Swal.showValidationMessage(`Monto inválido. Máximo permitido: $${montoMaximo.toFixed(2)}`);
+            showCancelButton: true,
+            confirmButtonText: 'Aplicar Ajuste',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#f6c23e',
+            reverseButtons: true,
+            preConfirm: () => {
+                const monto = document.getElementById('monto_cruce').value;
+                if (!monto || monto <= 0 || monto > montoMaximo) {
+                    Swal.showValidationMessage(
+                        `Monto inválido. Máximo permitido: $${montoMaximo.toFixed(2)}`);
+                }
+                return monto;
             }
-            return monto;
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            procesarAjusteContable(result.value);
-        }
-    });
-}
-
-function procesarAjusteContable(monto) {
-    Swal.fire({ 
-        title: 'Procesando ajuste...', 
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading() 
-    });
-
-    // Ajustamos la llamada para que coincida con tu estructura de 'accion'
-    $.post('/cfsistem/app/controllers/clienteExpedienteController.php', {
-        accion: 'saldar_deuda_con_favor', // El nombre del case que definimos
-       id_cliente: <?= json_encode($id_cliente ?? 0) ?>,
-        monto_a_usar: monto
-    }, function(res) {
-        if(res.status === 'success') {
-            Swal.fire({
-                title: '¡Éxito!',
-                text: res.message,
-                icon: 'success',
-                confirmButtonColor: '#007aff'
-            }).then(() => {
-                location.reload(); // Recarga para actualizar los KPIs con los nuevos saldos
-            });
-        } else {
-            Swal.fire('Error', res.message || 'Error al procesar el ajuste.', 'error');
-        }
-    }, 'json').fail(function() {
-        Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
-    });
-}
-
-
-
-
-
-</script>
-<script>
-    async function imprimirEstadoCuenta() {
-           const urlParams = new URLSearchParams(window.location.search);
-const id = urlParams.get('id');
-
-console.log("ID:", id);
-
-
-
-       const fechaInicio = document.getElementById('fecha_inicio').value;
-    const fechaFin    = document.getElementById('fecha_fin').value;
-
-    const res = await fetch(
-        `/cfsistem/app/controllers/clienteExpedienteController.php?action=getEstadoCuentaCliente&id_cliente=${id}&fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`
-    );
-
-   
-
-/**
- * AUTO CARGA
- */
-
-
-    const data = await res.json();
-
-    console.log("DATA:", data);
-
-    
-    
-
-   
-
-    if (!data || data.status !== 'success') {
-        Swal.fire('Error', 'No se pudo cargar el estado de cuenta', 'error');
-        return;
+        }).then((result) => {
+            if (result.isConfirmed) {
+                procesarAjusteContable(result.value);
+            }
+        });
     }
 
-    const { cliente, expediente = [], resumen = {} } = data;
+    function procesarAjusteContable(monto) {
+        Swal.fire({
+            title: 'Procesando ajuste...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
 
-    const w = window.open('', '_blank', 'width=1100,height=700');
-
-    if (!w) {
-        Swal.fire('Error', 'El navegador bloqueó la ventana emergente', 'error');
-        return;
-    }
-
-    let html = '';
-
-   expediente.forEach(v => {
-
-    const deuda = (parseFloat(v.total) || 0) - (parseFloat(v.total_pagado) || 0);
-
-    let productos = '';
-    (v.productos || []).forEach(p => {
-        
-    });
-
-  let pagos = '';
-let saldo = parseFloat(v.total) || 0;
-const diasTranscurridos = (fecha) => {
-    const inicio = new Date(fecha);
-    const hoy = new Date();
-    return Math.floor((hoy - inicio) / (1000 * 60 * 60 * 24));
-};
-
-(v.pagos || []).forEach((p, index) => {
-    const monto = parseFloat(p.monto) || 0;
-    saldo -= monto;
-
-    pagos += `
-        <tr>
-            ${
-                index === 0
-                ? `
-                    <td rowspan="${v.pagos.length}">${v.fecha}<br>
-                        <small>${diasTranscurridos(v.fecha)} días</small>
-                    </td>
-                    <td rowspan="${v.pagos.length}">${v.folio}</td>
-                    <td rowspan="${v.pagos.length}" style="text-align:right;">
-                        $${parseFloat(v.total).toFixed(2)}
-                    </td>
-                `
-                : ''
+        // Ajustamos la llamada para que coincida con tu estructura de 'accion'
+        $.post('/cfsistem/app/controllers/clienteExpedienteController.php', {
+            accion: 'saldar_deuda_con_favor', // El nombre del case que definimos
+            id_cliente: <?= json_encode($id_cliente ?? 0) ?>,
+            monto_a_usar: monto
+        }, function(res) {
+            if (res.status === 'success') {
+                Swal.fire({
+                    title: '¡Éxito!',
+                    text: res.message,
+                    icon: 'success',
+                    confirmButtonColor: '#007aff'
+                }).then(() => {
+                    location.reload(); // Recarga para actualizar los KPIs con los nuevos saldos
+                });
+            } else {
+                Swal.fire('Error', res.message || 'Error al procesar el ajuste.', 'error');
             }
+        }, 'json').fail(function() {
+            Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+        });
+    }
+    </script>
+   <script>
+async function imprimirEstadoCuenta() {
+    try {
 
-            <td>${p.fecha}</td>
-            <td>${p.metodo_pago || 'N/A'}</td>
-            <td style="text-align:right;">$${monto.toFixed(2)}</td>
-            <td style="text-align:right; font-weight:bold; color:#dc2626;">
-                $${saldo.toFixed(2)}
-            </td>
-        </tr>
-    `;
-});
+        const params = new URLSearchParams(window.location.search);
+        const id = params.get('id');
 
-    html += `
-    <div style="
-        margin-bottom:20px;
-        border:1px solid #e5e7eb;
-        border-radius:10px;
-        overflow:hidden;
-        font-family: Arial;
-        background:#fff;
-    ">
+        const fechaInicio = document.getElementById('fecha_inicio')?.value || '';
+        const fechaFin = document.getElementById('fecha_fin')?.value || '';
 
-        <!-- ENCABEZADO DEL FOLIO -->
-      
-     
+        const res = await fetch(
+            `/cfsistem/app/controllers/clienteExpedienteController.php?action=getEstadoCuentaCliente&id_cliente=${id}&fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`
+        );
 
-       
+        const data = await res.json();
 
-        <!-- Informacion -->
-        <div ">
-          
-<table width="100%" cellpadding="6" cellspacing="0" style="font-size:13px;">
-    <thead style="background:#f9fafb;">
-        <tr>
-            <th style="text-align:left;">Fecha</th>
-            <th style="text-align:left;">Folio de venta</th>
-            <th style="text-align:right;">Total Compra</th>
-            <th style="text-align:left;">Fecha de pago</th>
-            <th style="text-align:left;">Método</th>
-            <th style="text-align:right;">Monto</th>
-            <th style="text-align:right;">Saldo</th>
-        </tr>
-    </thead>
+        if (data?.status !== 'success') {
+            return Swal.fire(
+                'Error',
+                'No se pudo cargar el estado de cuenta',
+                'error'
+            );
+        }
 
-    <tbody>
-        ${pagos}
-    </tbody>
-</table>
-        </div>
+        const {
+            cliente,
+            expediente = [],
+            resumen = {}
+        } = data;
 
-    </div>
-    `;
-});
-    const doc = `
+        const w = window.open('', '_blank', 'width=1100,height=700');
+
+        if (!w) {
+            return Swal.fire(
+                'Error',
+                'El navegador bloqueó la ventana emergente',
+                'error'
+            );
+        }
+
+        const diasTranscurridos = (fecha) => {
+            const inicio = new Date(fecha);
+            return Math.floor(
+                (Date.now() - inicio.getTime()) / 86400000
+            );
+        };
+
+        const formatoMoneda = (valor) =>
+            `$${parseFloat(valor || 0).toFixed(2)}`;
+
+        // SOLO FILAS
+        const filas = expediente.map(v => `
+            <tr>
+                <td>
+                  <small style="font-size:11px;color:#6c757d;">
+        ${new Date(v.fecha).toLocaleDateString('es-MX', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        })}
+    </small>
+                    <br>
+                   <small style="font-size:11px;color:#6c757d;">${diasTranscurridos(v.fecha)} días</small>
+                </td>
+
+                <td>${v.folio}</td>
+
+                <td style="text-align:right;">
+                    ${formatoMoneda(v.total)}
+                </td>
+
+                <td style="text-align:right;">
+                    ${formatoMoneda(v.total_pagado)}
+                </td>
+
+                <td style="text-align:right;">
+                    ${formatoMoneda(
+                        (parseFloat(v.total) || 0) -
+                        (parseFloat(v.total_pagado) || 0)
+                    )}
+                </td>
+            </tr>
+        `).join('');
+
+        const doc = `
         <html>
         <head>
             <title>Estado de Cuenta</title>
             <style>
-                body { font-family: Arial; font-size: 12px; padding: 20px; }
-                table { border-collapse: collapse; width: 100%; }
-                th, td { border: 1px solid #ccc; padding: 5px; }
-                th { background: #eee; }
-                h2 { margin-bottom: 5px; }
+                body{
+                    font-family:Arial,sans-serif;
+                    font-size:12px;
+                    padding:20px;
+                }
+
+                table{
+                    border-collapse:collapse;
+                    width:100%;
+                }
+
+                th,td{
+                    border:1px solid #ccc;
+                    padding:8px;
+                }
+
+                th{
+                    background:#f3f4f6;
+                }
             </style>
         </head>
+
         <body>
 
-          
+            <div style="
+                border-bottom:2px solid #007aff;
+                padding-bottom:12px;
+                margin-bottom:20px;
+            ">
+                <h2 style="margin:0;color:#1f2937;">
+                    ${cliente.nombre_comercial}
+                </h2>
 
+                <p style="margin:4px 0;color:#6b7280;">
+                    RFC:
+                    <b>${cliente.rfc || ''}</b>
+                </p>
 
-        
+                <p style="margin:4px 0;color:#6b7280;">
+                    Dirección:
+                    <b>${cliente.direccion || ''}</b>
+                </p>
+            </div>
 
+            <div style="
+                display:flex;
+                gap:10px;
+                margin-bottom:20px;
+            ">
 
+                <div style="
+                    flex:1;
+                    background:#f3f4f6;
+                    border-left:4px solid #3b82f6;
+                    padding:10px;
+                    border-radius:8px;
+                ">
+                    <div style="font-size:10px;color:#6b7280;">
+                        TOTAL COMPRADO
+                    </div>
 
+                    <div style="font-size:16px;font-weight:bold;">
+                        $${(resumen.total_comprado || 0)
+                            .toLocaleString('es-MX',{minimumFractionDigits:2})}
+                    </div>
+                </div>
 
+                <div style="
+                    flex:1;
+                    background:#f3f4f6;
+                    border-left:4px solid #10b981;
+                    padding:10px;
+                    border-radius:8px;
+                ">
+                    <div style="font-size:10px;color:#6b7280;">
+                        TOTAL PAGADO
+                    </div>
 
+                    <div style="font-size:16px;font-weight:bold;">
+                        $${(resumen.total_pagado || 0)
+                            .toLocaleString('es-MX',{minimumFractionDigits:2})}
+                    </div>
+                </div>
 
+                <div style="
+                    flex:1;
+                    background:#f3f4f6;
+                    border-left:4px solid #ef4444;
+                    padding:10px;
+                    border-radius:8px;
+                ">
+                    <div style="font-size:10px;color:#6b7280;">
+                        SALDO
+                    </div>
 
+                    <div style="font-size:16px;font-weight:bold;">
+                        $${(resumen.saldo_total || 0)
+                            .toLocaleString('es-MX',{minimumFractionDigits:2})}
+                    </div>
+                </div>
 
-        <div style="
-    font-family: Arial, sans-serif;
-    border-bottom: 2px solid #007aff;
-    padding-bottom: 12px;
-    margin-bottom: 20px;
-">
+            </div>
 
-    <h2 style="
-        margin: 0;
-        font-size: 20px;
-        color: #1f2937;
-    ">
-        ${cliente.nombre_comercial}
-    </h2>
+            <div style="
+            
+                border:1px solid #e5e7eb;
+                border-radius:10px;
+                overflow:hidden;
+                background:#fff;
+            ">
 
-    <p style="
-        margin: 4px 0;
-        color: #6b7280;
-        font-size: 12px;
-    ">
-        RFC: <b style="color:#111827">${cliente.rfc}</b>
-    </p>
+                <table cellpadding="6" cellspacing="0" style="width:50%; margin:0 auto;">
+                    <thead>
+                        <tr>
+                            <th style="text-align:left;">Fecha</th>
+                            <th style="text-align:left;">Folio de venta</th>
+                            <th style="text-align:right;">Total Compra</th>
+                            <th style="text-align:right;">Abono</th>
+                            <th style="text-align:right;">Saldo</th>
+                        </tr>
+                    </thead>
 
-    <p style="
-        margin: 4px 0 0;
-        color: #6b7280;
-        font-size: 12px;
-    ">
-        Dirección: <b style="color:#111827">${cliente.direccion}</b>
-    </p>
-</div>
+                    <tbody>
+                        ${filas}
+                    </tbody>
+                </table>
 
-<!-- KPIs -->
-<div style="
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    font-family: Arial;
-">
-
-    <div style="
-        flex: 1;
-        background: #f3f4f6;
-        border-left: 4px solid #3b82f6;
-        padding: 10px;
-        border-radius: 8px;
-    ">
-        <div style="font-size: 10px; color: #6b7280;">TOTAL COMPRADO</div>
-        <div style="font-size: 16px; font-weight: bold; color:#111827;">
-            $${(resumen.total_comprado || 0).toLocaleString('es-MX', {minimumFractionDigits:2})}
-        </div>
-    </div>
-
-    <div style="
-        flex: 1;
-        background: #f3f4f6;
-        border-left: 4px solid #10b981;
-        padding: 10px;
-        border-radius: 8px;
-    ">
-        <div style="font-size: 10px; color: #6b7280;">TOTAL PAGADO</div>
-        <div style="font-size: 16px; font-weight: bold; color:#111827;">
-            $${(resumen.total_pagado || 0).toLocaleString('es-MX', {minimumFractionDigits:2})}
-        </div>
-    </div>
-
-    <div style="
-        flex: 1;
-        background: #f3f4f6;
-        border-left: 4px solid #ef4444;
-        padding: 10px;
-        border-radius: 8px;
-    ">
-        <div style="font-size: 10px; color: #6b7280;">SALDO</div>
-        <div style="font-size: 16px; font-weight: bold; color:#111827;">
-            $${(resumen.saldo_total || 0).toLocaleString('es-MX', {minimumFractionDigits:2})}
-        </div>
-    </div>
-
-</div>
-
-            ${html}
+            </div>
 
         </body>
         </html>
-    `;
+        `;
 
-    w.document.write(doc);
-    w.document.close();
+        w.document.write(doc);
+        w.document.close();
 
-    w.onload = () => {
-        w.print();
-    };
+        w.onload = () => {
+            w.print();
+        };
+
+    } catch (error) {
+        console.error(error);
+
+        Swal.fire(
+            'Error',
+            'Ocurrió un error al generar el estado de cuenta',
+            'error'
+        );
+    }
 }
 </script>
-<script>
-  function filtrarExpediente(){
-    const fechaInicio = document.getElementById('fecha_inicio').value;
-    const fechaFin    = document.getElementById('fecha_fin').value;
+    <script>
+    function filtrarExpediente() {
+        const fechaInicio = document.getElementById('fecha_inicio').value;
+        const fechaFin = document.getElementById('fecha_fin').value;
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.get('id');
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get('id');
 
-    console.log("ID:", id);
+        console.log("ID:", id);
 
-    // REDIRECCIÓN
-    window.location.href =
-        `/cfsistem/app/controllers/clienteExpedienteController.php?id=${id}&fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
+        // REDIRECCIÓN
+        window.location.href =
+            `/cfsistem/app/controllers/clienteExpedienteController.php?id=${id}&fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
 
 
-  }
+    }
+    </script>
+    <script>
+        async function verDetalle(id) {
+    console.log(id);
+    let venta=parseInt(id);
+    try {
+        // 🔥 OBTENER IDS PENDIENTES
+        const respIds = await fetch(
+            `../controllers/entregasController.php?ajax=get_ids_pendientes_venta&venta_id=${id}`
+        );
+        const resNAlmacen = await fetch(
+            `../controllers/entregasController.php?ajax=obtener_id_almacen&id=${venta}`
+        );
+
+        const dataAlmacen = await resNAlmacen.json();
+        const almacen_id_conseguido = dataAlmacen.almacen.almacen_id;
+        console.log(dataAlmacen.almacen.almacen_id);
+
+        const dataIds = await respIds.json();
+        console.log(dataIds.ids);
+
+        // =====================================================
+        // 🔥 HABILITAR / DESHABILITAR BOTÓN GESTIÓN
+        // =====================================================
+        if (Array.isArray(dataIds.ids) && dataIds.ids.length > 0) {
+            console.log('hola');
+            $('#btnGestionVenta')
+                .removeClass('d-none')
+                .prop('disabled', false)
+                .attr(
+                    'onclick',
+                    `abrirModalDespachoVentaTotal(${id}, ${almacen_id_conseguido})`
+                );
+        } else {
+            $('#btnGestionVenta')
+                .addClass('d-none')
+                .prop('disabled', true)
+                .removeAttr('onclick');
+        }
+
+        const res = await fetch(`/cfsistem/app/controllers/ventasHistorialController.php?action=obtenerDetalle&id=${id}`);
+        cargarRepartos(id);
+        const data = await res.json();
+       
+        
+
+        $('#spanFolio').text(data.info.folio);
+        $('#detCliente').text(data.info.nombre_comercial);
+        $('#detAlmacen').text(data.info.almacen);
+
+        // =====================================================
+        // CORRECCIÓN: PRIMERO INYECTAMOS EL BOTÓN EN EL DOM
+        // =====================================================
+        const htmlboton = `
+            <button id="btnAbonar"
+                class="btn btn-primary w-100 fw-bold shadow-sm"
+                onclick="abrirNuevoAbono(${id})">
+                <i class="bi bi-cash-coin me-1"></i> Registrar Abono
+            </button>
+        `;
+        $('#boton').html(htmlboton);
+
+        // =====================================================
+        // AHORA QUE EXISTE, VALIDAMOS EL SALDO Y SU VISIBILIDAD
+        // =====================================================
+        const total = parseFloat(data.info.total) || 0;
+        const pagado = parseFloat(data.info.total_pagado) || 0;
+        const deuda = total - pagado;
+        $('#detTotalLabel').text('$' + total.toFixed(2));
+
+        if (deuda <= 0) {
+            $('#detSaldoLabel').text('LIQUIDADO').removeClass('text-danger').addClass('text-success');
+            $('#btnAbonar').addClass('d-none'); // <-- Ya funciona porque el botón ya existe
+        } else {
+            $('#detSaldoLabel').text('$' + deuda.toFixed(2)).removeClass('text-success').addClass('text-danger');
+            $('#btnAbonar').removeClass('d-none');
+        }
+
+        // --- RENDERIZADO DE PRODUCTOS CON CONVERSIÓN ---
+        $('#tbodyDetalle').html(data.productos.map(p => {
+            let cant = parseFloat(p.cantidad) || 0;
+            let pendiente = (cant - (parseFloat(p.cantidad_entregada) || 0)).toFixed(3);
+
+            let factor = parseFloat(p.factor_conversion) || 1;
+            let cantPendiente = pendiente / factor;
+
+            let pen = Number(pendiente);
+            let pendi = Number(cantPendiente);
+            let disponible = (p.disponible / factor);
+            console.log(disponible);
+            let entregada = p.cantidad_entregada / factor;
+
+            console.log({
+                pen,
+                tipo: typeof pen,
+                comparacion: pen > 0
+            });
+
+            let visualizacionVenta = "";
+            let infoEquivalenciaSub = "";
+            let unm = (parseFloat(p.cantidad_entregada) / (1 / parseFloat(p.equivalencia)));
+            console.log(unm);
+            unm = unm % 1 !== 0 ? unm.toFixed(0) : unm;
+
+            if (factor > 1 && cant >= factor) {
+                let unidadesMayores = (cant / factor);
+                let totalUnidadesStr = Number.isInteger(unidadesMayores) ? unidadesMayores : unidadesMayores.toFixed(2);
+
+                visualizacionVenta = `<span class="fw-bold">${totalUnidadesStr} ${p.unidad_reporte}</span> <br> <small class="text-muted">(${cant} ${p.unidad_medida})</small>`;
+                infoEquivalenciaSub = `<div class="text-muted small" style="font-size: 0.65rem;">1 ${p.unidad_reporte} = ${factor} ${p.unidad_medida}</div>`;
+            } else {
+                visualizacionVenta = `<span>${cant} ${p.unidad_medida}</span>`;
+            }
+
+            return `<tr>
+                <td>
+                    <div class="fw-bold text-dark">${p.producto}</div>
+                    ${infoEquivalenciaSub}
+                </td>
+                <td class="text-center">
+                    ${cant} ${cant/factor>=1?p.unidad_reporte:p.unidad_medida} 
+                    (${ p.equivalencia>=1?cant/(1/p.equivalencia).toFixed(2):(cant*(p.equivalencia)).toFixed(2)} ${p.nombre})
+                </td>
+                <td class="text-center">${entregada>1?entregada+ p.unidad_reporte:p.cantidad_entregada +p.unidad_medida}</td>
+                <td class="text-center text-danger fw-bold">${(cantPendiente>=1?cantPendiente.toFixed(3):pen)} ${cantPendiente>=1?p.unidad_reporte:p.unidad_medida}</td>
+                <td class="text-center col-input d-none">
+                    ${pen.toFixed(4) > 0 ? 
+                        `<input type="number"
+                            class="form-control form-control-sm input-entrega1 mx-auto"
+                            max="${pen<=p.disponible ? (pendi>=1 ? pendi : pen) : (disponible>1 ? disponible : p.disponible)}"
+                            min="0"
+                            step="0.01"
+                            value="0.00"
+                            data-dvid="${p.dvid}"
+                            data-id="${p.producto_id}"
+                            data-factor="${(pendi>=1 && disponible>=1) ? factor : 1}"
+                            style="width:70px">
+                        <input type="hidden" class="form-control form-control-sm input-entrega mx-auto" 
+                            value="0" data-dvid=${p.dvid} data-id="${p.producto_id}" style="width:70px" step="0.01" min="0">
+                        <span class="badge bg-success">${(pendi>=1&& disponible>=1)?p.unidad_reporte:p.unidad_medida}</span>` 
+                    : '<span class="badge bg-success">Completo</span>'}
+                </td>
+            </tr>`;
+        }).join(''));
+
+        // --- RENDERIZADO DE HISTORIAL DE ENTREGAS ---
+        $('#tbodyHistorial').html(data.historial && data.historial.length > 0 ? data.historial.map(h => {
+                let cantH = parseFloat(h.cantidad) || 0;
+                let factorH = parseFloat(h.factor_conversion) || 1;
+                let uReporteH = h.unidad_reporte || '';
+                let uMedidaH = h.unidad_medida || '';
+                let visualizacionHistorial = "";
+
+                if (factorH > 1 && cantH >= factorH) {
+                    let unidadesMayoresH = (cantH / factorH);
+                    let totalUnidadesStrH = Number.isInteger(unidadesMayoresH) ? unidadesMayoresH : unidadesMayoresH.toFixed(2);
+                    visualizacionHistorial = `<span class="fw-bold text-primary">${totalUnidadesStrH} ${uReporteH}</span><br><small class="text-muted">(${cantH} ${uMedidaH})</small>`;
+                } else {
+                    visualizacionHistorial = `<span>${cantH} ${uMedidaH}</span>`;
+                }
+
+                return `<tr>
+                    <td class="small">${h.fecha}</td>
+                    <td class="small">${h.usuario_nombre}</td>
+                    <td><div class="fw-bold" style="font-size:0.85rem;">${h.producto}</div></td>
+                    <td class="text-center">${visualizacionHistorial}</td>
+                </tr>`;
+            }).join('') :
+            '<tr><td colspan="4" class="text-center text-muted p-3">No hay entregas registradas</td></tr>'
+        );
+
+        // --- RENDERIZADO DE HISTORIAL DE PAGOS ---
+        if (data.pagos && data.pagos.length > 0) {
+            $('#tbodyPagos').html(data.pagos.map(p => `
+                <tr>
+                    <td class="small">${p.fecha}</td>
+                    <td class="fw-bold text-success">$${parseFloat(p.monto).toFixed(2)}</td>
+                    <td>
+                        <span class="badge bg-light text-dark border fw-normal">${p.metodo_pago}</span>
+                        <div class="text-muted" style="font-size:0.65rem">Recibió: ${p.usuario_nombre}</div>
+                    </td>
+                    <td>
+                     <span>
+    ${
+        p.metodo_pago !== 'Efectivo' &&
+        p.metodo_pago !== 'Saldo a Favor'
+            ? (p.referencia ?? '')
+            : '-'
+    }
+</span> 
+                </tr>
+            `).join(''));
+        } else {
+            $('#tbodyPagos').html('<tr><td colspan="3" class="text-center text-muted p-3">No hay abonos registrados</td></tr>');
+        }
+
+     const modalObj = new bootstrap.Modal('#modalDetalle');
+        modalObj.show();
+    } catch (error) {
+        console.error("Error al obtener detalle:", error);
+    }
+}
+   async function cargarRepartos(idVenta) {
+
+    const resp = await fetch(
+        `/cfsistem/app/controllers/repartosController.php?action=get_repartos_venta&id=${idVenta}`
+    );
+
+    const repartoViaje = await resp.json();
+
+    const tbody = document.getElementById('tbodyRepartos');
+    tbody.innerHTML = '';
+
+    if (!repartoViaje.success) return;
+
+    // ================================
+    // AGRUPAR POR FOLIO VIAJE
+    // ================================
+    const grupos = {};
+   
+    repartoViaje.data.forEach(item => {
+
+        if (!grupos[item.folio_viaje]) {
+
+            grupos[item.folio_viaje] = {
+                folio_viaje: item.folio_viaje,
+                fecha_viaje: item.fecha_viaje,
+                estatus_logistico: item.estatus_logistico,
+                productos: [],
+                clientes: new Set()
+            };
+        }
+
+        grupos[item.folio_viaje].productos.push(item.productos);
+        grupos[item.folio_viaje].clientes.add(item.cliente);
+    });
+
+    // ================================
+    // RENDER TABLA
+    // ================================
+    Object.values(grupos).forEach(g => {
+
+        const estadoClass =
+            g.estatus_logistico === 'completado'
+                ? 'bg-success'
+                : 'bg-warning text-dark';
+
+        const tr = `
+            <tr>
+
+                <td class="fw-bold">
+                    ${g.folio_viaje}
+                </td>
+
+                <td>
+                    ${g.fecha_viaje}
+                </td>
+
+                <td>
+                    <span class="badge ${estadoClass}">
+                        ${g.estatus_logistico}
+                    </span>
+                </td>
+
+                <td class="text-center">
+
+                    <button class="btn btn-sm btn-outline-primary"
+                      onclick="imprimirRuta('${idVenta}','${g.folio_viaje}')">
+
+                      
+                        Ver Reparto 
+                    </button>
+
+                </td>
+
+            </tr>
+        `;
+
+        tbody.insertAdjacentHTML('beforeend', tr);
+    });
+}
     
-</script>
+    function togglePerso() {
+        $('#div_p').toggleClass('d-none', $('#f_rango').val() !== 'personalizado');
+        getVentas();
+    }
+
+    </script>
 
 </body>
+
 </html>

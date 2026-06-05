@@ -41,6 +41,17 @@
                         <?php endif; ?>
                     </select>
                 </div>
+                <div class="mb-3" id="contenedorReferencia" style="display:none;">
+    <label class="form-label small fw-bold text-secondary text-uppercase">
+        Referencia
+    </label>
+    <input 
+        type="text" 
+        id="inputReferencia" 
+        class="form-control"
+        placeholder="Ingrese referencia"
+    >
+</div>
 
                 <hr class="my-3 opacity-10">
 
@@ -77,6 +88,8 @@ $(document).ready(function() {
 function verificarMetodoPago(metodo) {
     const favorDisponible = parseFloat($('#modal_favor_disponible').val()) || 0;
     const saldoPendienteVenta = parseFloat($('#modal_saldo_max').val()) || 0;
+     const contenedor = document.getElementById('contenedorReferencia');
+    const input = document.getElementById('inputReferencia');
 
     if (metodo === 'Saldo a Favor') {
         // Ponemos el menor entre lo que debe y lo que tiene a favor
@@ -90,6 +103,14 @@ function verificarMetodoPago(metodo) {
         $('#inputMontoAbono').val(saldoPendienteVenta.toFixed(2));
         $('#infoSaldo').text('Saldo máximo: $' + saldoPendienteVenta.toFixed(2))
                       .removeClass('bg-info text-white').addClass('bg-light text-dark');
+    }
+    if (metodo === 'Tarjeta' || metodo === 'Transferencia') {
+        contenedor.style.display = 'block';
+        input.required = true;
+    } else {
+        contenedor.style.display = 'none';
+        input.required = false;
+        input.value = '';
     }
 }
 
@@ -155,6 +176,7 @@ async function guardarAbonoModal() {
     const idCliente = $('#modal_cliente_id').val();
     const monto = parseFloat($('#inputMontoAbono').val());
     const metodo = $('#selectMetodoPago').val();
+     const refrencia = $('#inputReferencia').val()??'';
     const favorDisp = parseFloat($('#modal_favor_disponible').val()) || 0;
     const saldoMax = parseFloat($('#modal_saldo_max').val());
     
@@ -177,6 +199,7 @@ async function guardarAbonoModal() {
     fd.append('monto', monto);
     fd.append('metodo_pago', metodo);
     fd.append('fecha_pago', fechaFinal);
+    fd.append('referencia', refrencia);
 
     try {
         Swal.fire({ title: 'Procesando...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });

@@ -87,6 +87,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardarAbono') {
         $u_id = $_SESSION['usuario_id'] ?? 1;
         $fec  = !empty($_POST['fecha_pago']) ? $_POST['fecha_pago'] : date('Y-m-d H:i:s');
         $c_id = intval($_POST['cliente_id'] ?? 0);
+        $referencia=$_POST['referencia'] ?? '';
 
         // --- 1. VALIDACIÓN ---
         if ($amt <= 0) throw new Exception("El monto debe ser mayor a 0.");
@@ -113,7 +114,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardarAbono') {
         }
 
         // --- 3. REGISTRO EN HISTORIAL ---
-        if (!$ventasModel->registrarAbono($v_id, $amt, $u_id, $met, $fec)) {
+        if (!$ventasModel->registrarAbono($v_id, $amt, $u_id, $met, $fec,$referencia)) {
             throw new Exception("Error al registrar el movimiento en el historial.");
         }
 

@@ -367,6 +367,7 @@
                                                     <th>Fecha</th>
                                                     <th>Monto</th>
                                                     <th>Método</th>
+                                                    <th>Referencia</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="tbodyPagos" class="small"></tbody>
@@ -642,12 +643,13 @@
             ${infoEquivalenciaSub}
         </td>
         <td class="text-center">
-        ${cant} ${cant/factor>=1?p.unidad_reporte:p.unidad_medida} 
+        ${ p.equivalencia>=1?cant/(1/p.equivalencia).toFixed(2):(cant*(p.equivalencia)).toFixed(2)} ${p.nombre}
+        
       
-        (${ p.equivalencia>=1?cant/(1/p.equivalencia).toFixed(2):(cant*(p.equivalencia)).toFixed(2)} ${p.nombre})
+        (${cant} ${p.unidad_medida})
             
         </td>
-        <td class="text-center">${entregada>1?entregada+ p.unidad_reporte:p.cantidad_entregada +p.unidad_medida}</td>
+        <td class="text-center">${entregada>1?entregada+' '+ p.unidad_reporte:p.cantidad_entregada +' '+p.unidad_medida}</td>
         <td class="text-center text-success fw-bold">${disponible>=1?disponible.toFixed(3):p.disponible} ${disponible>=1?p.unidad_reporte:p.unidad_medida}</td>
         
         <td class="text-center text-danger fw-bold">${(cantPendiente>=1?cantPendiente.toFixed(3):pen)} ${cantPendiente>=1?p.unidad_reporte:p.unidad_medida}</td>
@@ -721,8 +723,19 @@
             <td class="small">${p.fecha}</td>
             <td class="fw-bold text-success">$${parseFloat(p.monto).toFixed(2)}</td>
             <td>
-                <span class="badge bg-light text-dark border fw-normal">${p.metodo_pago}</span>
+                <span class="badge bg-light text-dark border fw-normal">${p.metodo_pago} </span>
+               
                 <div class="text-muted" style="font-size:0.65rem">Recibió: ${p.usuario_nombre}</div>
+            </td>
+            <td>
+            <span>
+    ${
+        p.metodo_pago !== 'Efectivo' &&
+        p.metodo_pago !== 'Saldo a Favor'
+            ? (p.referencia ?? '')
+            : '-'
+    }
+</span> 
             </td>
         </tr>
     `).join(''));

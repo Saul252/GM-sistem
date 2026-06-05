@@ -358,6 +358,23 @@ if ($action === 'obtenerDetalleMovimiento') {
     }
     exit;
 }
+if ($action === 'obtenerDistribucionProducto') {
+    while (ob_get_level()) ob_end_clean(); 
+    header('Content-Type: application/json');
+    $producto = $_GET['tipo'] ?? '';
+    $id = intval($_GET['id'] ?? 0);
+    try {
+        $resultado = $egresoModel->obtenerDistribucionCompra($id, $producto);
+        if ($resultado && $resultado['cabecera']) {
+            echo json_encode(['success' => true, 'cabecera' => $resultado['cabecera'], 'items' => $resultado['items']]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'No se encontró el registro.']);
+        }
+    } catch (Exception $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit;
+}
 if ($action === 'obtenerDetallePago') {
     while (ob_get_level()) ob_end_clean(); 
     header('Content-Type: application/json');

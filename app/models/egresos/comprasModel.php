@@ -659,7 +659,7 @@ public function procesarAjusteFaltante($compra_id, $distribucion, $user_id) {
                 $stmtInv = $this->db->prepare($sqlInv);
                 $stmtInv->bind_param("iid", $alm_id, $p_id, $cantidad);
 
-                        $codigo_lote = "LOTE-" . $compra_id . "-" . $p_id . "-" . $alm_id;
+                        $codigo_lote = "LOTE-A-" . $compra_id . "-" . $p_id . "-" . $alm_id;
 
                         $sqlL = "INSERT INTO lotes_stock 
                         (producto_id, almacen_id, codigo_lote, cantidad_inicial, cantidad_actual, precio_compra_unitario, estado_lote) 
