@@ -2203,28 +2203,36 @@ public function contarTotalEntregasRuta($almacen_id = 0, $fecha_inicio = null, $
 }
 public function obtenerViajesLogisticaParaEntrega($folio_viaje = null) {
     try {
-        // Ruta base para tus imágenes (ajusta según tu carpeta real)
+        // Ruta base para tus imágenes
         $base_path = "/cfsistem/"; 
 
+        // 1. Definimos la base del SELECT con agrupaciones estrictas
         $sql = "SELECT 
-                    trp.id AS id_movimiento,
                     v.id AS id_venta,
-                    trm.vehiculo_id,
-                    tc.viaje_folio AS folio_viaje,
-                    trp.descripcion_punto AS direccion_entrega,
-                    trp.estado_punto AS estatus_parada,
-                    v.folio AS folio_venta,
-                    c.nombre_comercial AS cliente,
-                    p.nombre AS producto_nombre,
-                    m.cantidad,
-                    p.unidad_medida AS um,
-                    crv.id AS id_evidencia,
-                    IF(crv.id IS NOT NULL, 1, 0) AS ya_entregado,
-                    -- Concatenamos la ruta si existe la foto
-                    IF(crv.fotografia_entrega IS NOT NULL AND crv.fotografia_entrega != '', CONCAT('$base_path', crv.fotografia_entrega), NULL) AS foto_registrada,
-                    IF(crv.fotografia_nota IS NOT NULL AND crv.fotografia_nota != '', CONCAT('$base_path', crv.fotografia_nota), NULL) AS nota_registrada,
-                    crv.estatus AS estatus_evidencia,
-                    crv.comentario AS comentario_evidencia
+                    MAX(v.folio) AS folio_venta,
+                    MAX(c.nombre_comercial) AS cliente,
+                    MAX(trm.vehiculo_id) AS vehiculo_id,
+                    MAX(tc.viaje_folio) AS folio_viaje,
+                    MAX(trp.descripcion_punto) AS direccion_entrega,
+                    MAX(trp.estado_punto) AS estatus_parada,
+                    MAX(crv.id) AS id_evidencia,
+                    MAX(crv.estatus) AS estatus_evidencia,
+                    MAX(crv.comentario) AS comentario_evidencia,
+                    MAX(IF(crv.id IS NOT NULL, 1, 0)) AS ya_entregado,
+                    
+                    -- Trae el último ID de movimiento de esta venta (evita desgloses)
+                    MAX(trp.id) AS ids_movimientos_grupo,
+                    
+                    -- Evidencias fotográficas concatenando la variable PHP correctamente
+                    MAX(IF(crv.fotografia_entrega IS NOT NULL AND crv.fotografia_entrega != '', CONCAT('" . $base_path . "', crv.fotografia_entrega), NULL)) AS foto_registrada,
+                    MAX(IF(crv.fotografia_nota IS NOT NULL AND crv.fotografia_nota != '', CONCAT('" . $base_path . "', crv.fotografia_nota), NULL)) AS nota_registrada,
+                    
+                    -- 🔥 Agrupamos los productos de la misma venta en una sola celda
+                    GROUP_CONCAT(p.nombre SEPARATOR ', ') AS productos,
+                    GROUP_CONCAT(CONCAT(m.cantidad, ' ', p.unidad_medida) SEPARATOR ', ') AS cantidades_detalladas,
+                    
+                    -- Sumamos las cantidades de los productos que integran esta venta
+                    SUM(m.cantidad) AS total_piezas_venta
                 FROM transporte_consolidacion tc
                 INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
                 INNER JOIN transporte_rutas_puntos trp ON trm.id = trp.reparto_id 
@@ -2232,15 +2240,18 @@ public function obtenerViajesLogisticaParaEntrega($folio_viaje = null) {
                 INNER JOIN productos p ON m.producto_id = p.id
                 LEFT JOIN ventas v ON m.referencia_id = v.id
                 LEFT JOIN clientes c ON v.id_cliente = c.id
-                LEFT JOIN confirmacion_reparto_viaje crv ON trp.id = crv.id_movimiento";
+                LEFT JOIN confirmacion_reparto_viaje crv ON v.id = crv.id_venta";
 
+        // 2. El WHERE siempre debe ir ANTES del GROUP BY en SQL
         if (!empty($folio_viaje)) {
             $sql .= " WHERE tc.viaje_folio = ?";
         }
 
-        $sql .= " GROUP BY trp.id ORDER BY trp.orden_visita ASC";
+        // 3. Añadimos el agrupamiento por venta al final con espacio preventivo
+        $sql .= " GROUP BY v.id";
 
         $stmt = $this->db->prepare($sql);
+        
         if (!empty($folio_viaje)) {
             $stmt->bind_param("s", $folio_viaje);
         }
@@ -2250,6 +2261,73 @@ public function obtenerViajesLogisticaParaEntrega($folio_viaje = null) {
         
         if (ob_get_level()) ob_clean();
         return $res;
+        
+    } catch (Exception $e) {
+        error_log("Error CF System: " . $e->getMessage());
+        return [];
+    }
+}
+public function evidenciaEntregaVenta($folio_viaje = null) {
+    try {
+        // Ruta base para tus imágenes
+        $base_path = "/cfsistem/"; 
+
+        // 1. Definimos la base del SELECT con agrupaciones estrictas
+        $sql = "SELECT 
+                    v.id AS id_venta,
+                    MAX(v.folio) AS folio_venta,
+                    MAX(c.nombre_comercial) AS cliente,
+                    MAX(trm.vehiculo_id) AS vehiculo_id,
+                    MAX(tc.viaje_folio) AS folio_viaje,
+                    MAX(trp.descripcion_punto) AS direccion_entrega,
+                    MAX(trp.estado_punto) AS estatus_parada,
+                    MAX(crv.id) AS id_evidencia,
+                    MAX(crv.estatus) AS estatus_evidencia,
+                    MAX(crv.comentario) AS comentario_evidencia,
+                    MAX(IF(crv.id IS NOT NULL, 1, 0)) AS ya_entregado,
+                    
+                    -- Trae el último ID de movimiento de esta venta (evita desgloses)
+                    MAX(trp.id) AS ids_movimientos_grupo,
+                    
+                    -- Evidencias fotográficas concatenando la variable PHP correctamente
+                    MAX(IF(crv.fotografia_entrega IS NOT NULL AND crv.fotografia_entrega != '', CONCAT('" . $base_path . "', crv.fotografia_entrega), NULL)) AS foto_registrada,
+                    MAX(IF(crv.fotografia_nota IS NOT NULL AND crv.fotografia_nota != '', CONCAT('" . $base_path . "', crv.fotografia_nota), NULL)) AS nota_registrada,
+                    
+                    -- 🔥 Agrupamos los productos de la misma venta en una sola celda
+                    GROUP_CONCAT(p.nombre SEPARATOR ', ') AS productos,
+                    GROUP_CONCAT(CONCAT(m.cantidad, ' ', p.unidad_medida) SEPARATOR ', ') AS cantidades_detalladas,
+                    
+                    -- Sumamos las cantidades de los productos que integran esta venta
+                    SUM(m.cantidad) AS total_piezas_venta
+                FROM transporte_consolidacion tc
+                INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
+                INNER JOIN transporte_rutas_puntos trp ON trm.id = trp.reparto_id 
+                INNER JOIN movimientos m ON trm.entrega_venta_id = m.id
+                INNER JOIN productos p ON m.producto_id = p.id
+                LEFT JOIN ventas v ON m.referencia_id = v.id
+                LEFT JOIN clientes c ON v.id_cliente = c.id
+                LEFT JOIN confirmacion_reparto_viaje crv ON v.id = crv.id_venta";
+
+        // 2. El WHERE siempre debe ir ANTES del GROUP BY en SQL
+        if (!empty($folio_viaje)) {
+            $sql .= " WHERE tc.viaje_folio = ?";
+        }
+
+        // 3. Añadimos el agrupamiento por venta al final con espacio preventivo
+        $sql .= " GROUP BY v.id";
+
+        $stmt = $this->db->prepare($sql);
+        
+        if (!empty($folio_viaje)) {
+            $stmt->bind_param("s", $folio_viaje);
+        }
+
+        $stmt->execute();
+        $res = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        
+        if (ob_get_level()) ob_clean();
+        return $res;
+        
     } catch (Exception $e) {
         error_log("Error CF System: " . $e->getMessage());
         return [];

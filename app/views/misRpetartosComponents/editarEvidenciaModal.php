@@ -118,7 +118,7 @@
                         <div id="m_direccion_full" class="small text-muted"></div>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-3" style="display:none;">
                         <label class="info-label">Estado de la Visita</label>
                         <select name="estatus_entrega" id="m_estatus_select" class="form-select border-0 bg-light rounded-3 shadow-none">
                             <option value="Entregado">Entregado Total</option>
@@ -187,7 +187,7 @@ console.log("Objeto recibido en modal:", data);
 
 // Intentamos obtener el ID de la confirmación (evidencia_id) 
 // Si no existe, tomamos el del movimiento (id_movimiento)
-const idFinal =  data.mid || 0;
+const idFinal =  data.id_venta || 0;
 
 console.log("ID Final asignado:", idFinal);
 
@@ -229,7 +229,7 @@ if(document.getElementById('m_id_visible')) {
         document.getElementById('m_id_visible').innerText = idMovimiento;
     }
     
-    document.getElementById('m_venta_id').value = data.numeroVenta ?? 0;
+    document.getElementById('m_venta_id').value = data.id_venta ?? 0;
     
     // Si vehiculo_id no viene en el JSON de evidencias, podrías necesitarlo en el objeto
     if(document.getElementById('m_vehiculo_id')) {
@@ -252,13 +252,13 @@ if(document.getElementById('m_id_visible')) {
     document.getElementById('m_comentario').value = data.comentario || "";
 
     // 6. Previsualización de fotos cargadas (foto_1 y foto_2)
-    if (data.foto_1 && data.foto_1.length > 5) {
-        previewMat.src = data.foto_1 + "?t=" + new Date().getTime();
+    if (data.foto_registrada && data.foto_registrada.length > 5) {
+        previewMat.src = data.foto_registrada + "?t=" + new Date().getTime();
         previewMat.style.display = 'block';
         if(txtMat) txtMat.classList.remove('d-none');
     }
-    if (data.foto_2 && data.foto_2.length > 5) {
-        previewNota.src = data.foto_2 + "?t=" + new Date().getTime();
+    if (data.nota_registrada && data.nota_registrada.length > 5) {
+        previewNota.src = data.nota_registrada + "?t=" + new Date().getTime();
         previewNota.style.display = 'block';
         if(txtNota) txtNota.classList.remove('d-none');
     }

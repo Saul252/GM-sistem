@@ -185,6 +185,33 @@ if ($action === 'get_evidencias_por_folio') {
 
     exit;
 }
+if ($action === 'get_evidencias_por_venta') {
+
+    header('Content-Type: application/json');
+
+    $folio = trim($_GET['folio'] ?? '');
+
+    if ($folio === '') {
+
+        echo json_encode([
+            "success" => false,
+            "message" => "Folio de viaje no proporcionado"
+        ]);
+
+        exit;
+    }
+
+    $data = $repartoM->evidenciaEntregaVenta($folio);
+
+  
+    echo json_encode([
+        "success" => true,
+        "total"   => 0,
+        "data"    => $data
+    ]);
+
+    exit;
+}
   // --- ACCIÓN: OBTENER DETALLE DE TRAZABILIDAD (MONITOR) ---
 if ($action === 'get_detalle_trazabilidad') {
     if (ob_get_level()) ob_clean();

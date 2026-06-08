@@ -175,7 +175,7 @@ $folio_viaje = $_GET['folio'] ?? '';
                         <div id="m_direccion_full" class="small text-muted"></div>
                     </div>
 
-                    <div class="mb-3">
+                    <div class="mb-3" style="display:none;">
                         <label class="info-label">Estado de la Visita</label>
                         <select name="estatus_entrega" id="m_estatus_select" class="form-select border-0 bg-light rounded-3 shadow-none">
                             <option value="Entregado">Entregado Total</option>
@@ -241,6 +241,7 @@ function cargarEntregas() {
         .then(res => res.json())
         .then(res => {
             container.innerHTML = '';
+            console.log(res.data);
             datosTemporales = res.data || [];
 
             if(datosTemporales.length === 0) {
@@ -267,9 +268,8 @@ function cargarEntregas() {
                             
                             <div class="p-3 rounded-4 mb-3 bg-light" style="font-size: 0.85rem; border: 1px solid #f2f2f7;">
                                 <div class="info-label">Material a entregar:</div>
-                                <div class="fw-bold text-dark">${item.producto_nombre}</div>
-                                <div class="text-secondary mt-1">Cantidad: ${item.cantidad} ${item.um || ''}</div>
-                            </div>
+                                <div class="fw-bold text-dark">${item.productos}</div>
+                                </div>
 
                             ${!esVisitado ? 
                                 `<button class="btn btn-primary-ios w-100" onclick="abrirModalPorIndex(${index})">
@@ -310,7 +310,7 @@ function abrirModalPorIndex(index) {
     txtMat.classList.add('d-none');
     txtNota.classList.add('d-none');
 
-    const idMovimiento = data.id_movimiento || 0;
+    const idMovimiento = data.id_venta || 0;
     document.getElementById('m_mov_id').value = idMovimiento;
     document.getElementById('m_id_visible').innerText = idMovimiento;
     document.getElementById('m_venta_id').value = data.id_venta || 0;

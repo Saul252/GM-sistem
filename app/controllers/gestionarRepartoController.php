@@ -40,7 +40,7 @@ if (isset($_REQUEST['action'])) {
             echo json_encode(["success" => true, "data" => $entregas]);
             exit;
         }
-
+ 
         // ACCIÓN: GUARDAR EVIDENCIA
   if ($action === 'subir_evidencia_reparto') {
     try {

@@ -213,6 +213,10 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
                                 <input type="text" name="contacto" id="contacto"class="form-control"
                                     placeholder="Contacto" >
                             </div>
+                            <div class="col-md-12">
+                                <label class="form-label small fw-bold text-muted">TELEFONO</label>
+                                <input type="text" name="telefono" id="telefono" class="form-control rounded-3">
+                            </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold text-muted">RFC *</label>
                                 <input type="text" name="rfc" id="rfc" class="form-control text-uppercase rounded-3" maxlength="13" required>

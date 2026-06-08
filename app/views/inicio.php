@@ -35,6 +35,7 @@ $modulos = [
     ['id' => 'Mermas', 'url' => '/cfsistem/app/controllers/mermasController.php', 'icon' => 'bi-exclamation-triangle', 'class' => 'icon-mermas', 'label' => 'Mermas', 'desc' => 'Pérdidas'],
     ['id' => 'transmutaciones', 'url' => '/cfsistem/app/controllers/transmutacionesController.php', 'icon' => 'bi-arrow-repeat', 'class' => 'icon-transmutaciones', 'label' => 'Conversiones', 'desc' => 'Procesos'],
     ['id' => 'historialLotes', 'url' => '/cfsistem/app/controllers/lotesHistorialController.php', 'icon' => 'bi-clock-history', 'label' => 'Historial de Lotes', 'desc' => 'Historial de lotes'],
+['id' => 'compraslHistorial', 'url' => '/cfsistem/app/controllers/compraslotesHistorialController.php', 'icon' => 'bi-clock-history', 'label' => 'Historial de compras', 'desc' => 'Historial de compras'],
 
     // =========================
     // FINANZAS Y TESORERÍA

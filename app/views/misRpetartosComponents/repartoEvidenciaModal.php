@@ -82,7 +82,7 @@ function verEvidenciasPorFolio(viajeFolio) {
         url: '/cfsistem/app/controllers/misRepartosController.php',
         type: 'GET',
         data: { 
-            action: 'get_evidencias_por_folio', 
+            action: 'get_evidencias_por_venta', 
             folio: viajeFolio 
         },
         dataType: 'json',
@@ -92,11 +92,15 @@ function verEvidenciasPorFolio(viajeFolio) {
                 console.log(response.data);
                 response.data.forEach((entrega, index) => {
                    
-                    const entregaJson = JSON.stringify(entrega).replace(/"/g, '&quot;');
+                    const entregaJson = JSON.stringify(entrega)
+    .replace(/\\n/g, ' ')
+    .replace(/\\r/g, ' ')
+    .replace(/"/g, '&quot;'); // Protege las comillas dobles
                     
                     // Verificamos si existe la evidencia
                   // Si alguna de las dos fotos tiene contenido, consideramos que ya existe evidencia
-const existeEvidencia = (entrega.foto_1 || entrega.foto_2);
+const existeEvidencia = (entrega.foto_registrada || entrega.nota_registrada);
+console.log(existeEvidencia);
 const cantidadIni=entrega.totalCantidad/entrega.fc;
                 const cantidad =cantidadIni>=1?cantidadIni:entrega.totalCantidad;
                 const unidad =cantidadIni>=1?entrega.ur:entrega.um;
@@ -108,14 +112,12 @@ const cantidadIni=entrega.totalCantidad/entrega.fc;
                                 <p class="text-muted mb-0" style="font-size: 0.75rem;">
                                     <i class="bi bi-geo-alt-fill text-danger"></i> ${entrega.direccion_entrega}
                                 </p>
-                                 <h6 class="fw-bold mb-0" style="color: #1d1d1f;">${entrega.nombreProducto}</h6>
-                                <p class="text-muted mb-0" style="font-size: 0.75rem;">
-                                     ${cantidad + unidad}
-                                </p>
+                                 <h6 class="fw-bold mb-0" style="color: #1d1d1f;">${entrega.productos}</h6>
+                              
                             </div>
                             <div class="d-flex flex-column align-items-end gap-1">
                                 <span class="badge rounded-pill ${existeEvidencia ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'} border px-3" style="font-size: 0.65rem;">
-                                    ${entrega.estatus_logistico || 'PENDIENTE'}
+                                    ${entrega.estatus_evidencia|| 'PENDIENTE'}
                                 </span>
                                 ${esSupervisor ? `
                                     <div class="btn-group mt-1">
@@ -125,7 +127,7 @@ const cantidadIni=entrega.totalCantidad/entrega.fc;
                                                 <i class="bi bi-pencil-square"></i>
                                             </button>
                                             
-                                            <button class="btn btn-sm btn-outline-danger border-0 p-1" onclick="confirmarEliminarEvidencia(${entrega.mid})" title="Eliminar evidencia">
+                                            <button class="btn btn-sm btn-outline-danger border-0 p-1" onclick="confirmarEliminarEvidencia(${entrega.id_venta})" title="Eliminar evidencia">
                                                 <i class="bi bi-trash3-fill"></i>
                                             </button>
                                         ` : `
@@ -147,25 +149,23 @@ const cantidadIni=entrega.totalCantidad/entrega.fc;
                         </div>
 
                         <div class="row g-2">
-                            ${entrega.foto_1 ? `
+                            ${entrega.foto_registrada? `
                                 <div class="col-6">
                                     <span class="d-block mb-1 text-muted fw-bold" style="font-size: 0.6rem; text-transform: uppercase;">Material</span>
-                                    <img src="${entrega.foto_1}" class="img-fluid rounded-3 shadow-sm border" style="height: 100px; width: 100%; object-fit: cover; cursor: pointer;" onclick="window.open(this.src, '_blank')">
+                                    <img src="${entrega.foto_registrada}" class="img-fluid rounded-3 shadow-sm border" style="height: 100px; width: 100%; object-fit: cover; cursor: pointer;" onclick="window.open(this.src, '_blank')">
                                 </div>` : ''}
                             
-                            ${entrega.foto_2 ? `
+                            ${entrega.nota_registrada ? `
                                 <div class="col-6">
                                     <span class="d-block mb-1 text-muted fw-bold" style="font-size: 0.6rem; text-transform: uppercase;">Nota</span>
-                                    <img src="${entrega.foto_2}" class="img-fluid rounded-3 shadow-sm border" style="height: 100px; width: 100%; object-fit: cover; cursor: pointer;" onclick="window.open(this.src, '_blank')">
+                                    <img src="${entrega.nota_registrada}" class="img-fluid rounded-3 shadow-sm border" style="height: 100px; width: 100%; object-fit: cover; cursor: pointer;" onclick="window.open(this.src, '_blank')">
                                 </div>` : ''}
                         </div>
 
                         <div class="mt-3 pt-2 border-top d-flex justify-content-between align-items-center">
-                            <small class="text-muted" style="font-size: 0.65rem;">
-                                <i class="bi bi-calendar3 me-1"></i> ${entrega.fecha || '--'} ${entrega.hora || '--'}
-                            </small>
+                            
                             <small class="fw-bold text-primary" style="font-size: 0.7rem;">
-                                Venta: #${entrega.venta_folio || 'S/F'}
+                                Venta: #${entrega.id_venta || 'S/F'}
                             </small>
                         </div>
                     </div>`;
