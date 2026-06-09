@@ -104,6 +104,7 @@
                 <input type="hidden" name="id_movimiento" id="m_mov_id">
                 <input type="hidden" name="id_venta" id="m_venta_id">
                 <input type="hidden" name="vehiculo_id" id="m_vehiculo_id">
+                 <input type="text" name="folio" id="folio" >
                 <input type="hidden" name="action" value="subir_evidencia_reparto">
 
                 <div class="modal-body px-4">
@@ -171,7 +172,7 @@ const API_URL = "/cfsistem/app/controllers/misRepartosController.php";
 /**
  * Recibe el índice y la cadena JSON serializada desde el onclick
  */
-function abrirModalPorIndex(index, entregaJsonRaw) {
+function abrirModalPorIndex(index, entregaJsonRaw,viajeFolio) {
     
     // 1. Convertir el texto JSON de nuevo a Objeto
     let data;
@@ -219,6 +220,7 @@ if(document.getElementById('m_id_visible')) {
     previewNota.style.display = 'none';
     if(txtMat) txtMat.classList.add('d-none');
     if(txtNota) txtNota.classList.add('d-none');
+     document.getElementById('folio').value =viajeFolio;
 
     // 4. Mapeo de datos (Ajustado a los nombres que vienen de tu SQL)
     // Usamos evidencia_id o id_movimiento según lo que envíe tu controlador

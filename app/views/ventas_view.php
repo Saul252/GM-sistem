@@ -91,7 +91,7 @@
                                     <th>SKU</th>
                                     <th>Producto</th>
                                     <th>Stock</th>
-                                    <th width="120">Venta por</th>
+                                    <th width="120">Unidad</th>
                                     <th>Precio</th>
                                     
 

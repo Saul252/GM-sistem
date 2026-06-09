@@ -12,17 +12,77 @@ class TrabajadorModel {
         $res = $this->db->query($sql);
         return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
     }
+     public function subirDocumentoCompra($id, $nombre_evidencia, $documento_url)
+{
+    $sql = "INSERT INTO documentos_trabajadores
+            (trabajador_id, nombre, direccion)
+            VALUES (?, ?, ?)";
+
+    $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) {
+        throw new Exception("Error al preparar consulta: " . $this->db->error);
+    }
+
+    $stmt->bind_param(
+        "iss",
+        $id,
+        $nombre_evidencia,
+        $documento_url
+    );
+
+    if (!$stmt->execute()) {
+        throw new Exception("Error al guardar documento: " . $stmt->error);
+    }
+
+    $documento_id = $stmt->insert_id;
+
+    $stmt->close();
+
+    return [
+        'success' => true,
+        'documento_id' => $documento_id,
+        'message' => 'Documento guardado correctamente'
+    ];
+}
 public function listarTrabajadores($almacen_id = 0) {
 
     if ($almacen_id == 0) {
         // 🔥 ADMIN → todos
-        $sql = "SELECT t.*, a.nombre as nombreAlmacen FROM trabajadores t
+        $sql = "SELECT t.*, a.nombre as nombreAlmacen,
+          ( SELECT GROUP_CONCAT(
+        CONCAT(
+            IFNULL(nombre, ''),
+            '|||',
+            IFNULL(direccion, ''),
+            '|||',
+            IFNULL(id, '')
+        )
+        SEPARATOR ';;;'
+    )
+    FROM documentos_trabajadores dt
+    WHERE dt.trabajador_id = t.id and dt.activo=1
+) AS documentos_url
+        FROM trabajadores t
         Join almacenes a on t.almacen_id =a.id
         ORDER BY nombre ASC";
         $stmt = $this->db->prepare($sql);
     } else {
         // 🔒 SUCURSAL → solo su almacén
-        $sql = "SELECT t.*, a.nombre as nombreAlmacen
+        $sql = "SELECT t.*, a.nombre as nombreAlmacen,
+         ( SELECT GROUP_CONCAT(
+        CONCAT(
+            IFNULL(nombre, ''),
+            '|||',
+            IFNULL(direccion, ''),
+            '|||',
+            IFNULL(id, '')
+        )
+        SEPARATOR ';;;'
+    )
+    FROM documentos_trabajadores dt
+    WHERE dt.trabajador_id = t.id and dt.activo=1
+) AS documentos_url
 FROM trabajadores t
 JOIN almacenes a ON t.almacen_id = a.id
 WHERE t.almacen_id = ?
@@ -36,6 +96,7 @@ ORDER BY nombre ASC;";
 
     return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
 }
+
     // NUEVO: Listar por almacén específico
     public function listarPorAlmacen($almacen_id) {
         $id = intval($almacen_id);
@@ -149,4 +210,19 @@ public function nombreTrabajador($id)
 
     return $row['nombre'] ?? null;
 }
+
+public function eliminarDocumento( $id_documento) {
+
+    $sql = "UPDATE documentos_trabajadores
+            SET activo = 0
+            WHERE id = ?";
+
+    $stmt = $this->db->prepare($sql);
+    if (!$stmt) return false;
+
+    $stmt->bind_param("i", $id_documento);
+
+    return $stmt->execute();
+}
+    // NUEVO: Listar vehículos por almacén específico
 }

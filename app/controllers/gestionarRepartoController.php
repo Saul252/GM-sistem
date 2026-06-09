@@ -72,6 +72,7 @@ if (isset($_REQUEST['action'])) {
             'vehiculo_id'        => intval($_POST['vehiculo_id'] ?? 0),
             'fotografia_entrega' => $foto_entrega,
             'fotografia_nota'    => $foto_nota,
+            'folio'              =>$_POST['folio'] ?? '',
             'estatus_entrega'    => $_POST['estatus_entrega'] ?? 'Entregado',
             'comentario'         => $_POST['comentario'] ?? ''
         ];

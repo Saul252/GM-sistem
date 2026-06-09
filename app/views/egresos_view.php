@@ -453,27 +453,112 @@
                         <?php endif; ?>
                     </td>
 
-                    <td class="text-center">
-                        <?php if(!empty($e['documento_url'])): ?>
-                            <a href="../../<?= ($e['tipo']=='gasto'?'uploads/gastos/':'') . $e['documento_url'] ?>"
-                                target="_blank" class="btn btn-sm btn-outline-primary border-0 rounded-circle">
-                                <i class="bi bi-file-earmark-text-fill"></i>
-                            </a>
-                        <?php else: ?>
-                            <i class="bi bi-slash-circle text-muted opacity-25"></i>
-                        <?php endif; ?>
-                        <?php if(!empty($e['tipo']=='compra'||$e['tipo']=='gasto')): ?>
-                        <button class="btn btn-sm btn-outline-primary rounded-pill"
+                 <td class="text-center">
+
+    <div class="d-flex justify-content-center align-items-center gap-1">
+
+        <?php if (!empty($e['documento_url'])): ?>
+
+            <?php $documentos = explode(';;;', $e['documento_url']); ?>
+
+            <div class="dropdown">
+
+                <button
+                    class="btn btn-sm btn-light border position-relative"
+                    type="button"
+                    data-bs-toggle="dropdown">
+
+                    <i class="bi bi-folder2-open text-success"></i>
+
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">
+                        <?= count($documentos) ?>
+                    </span>
+
+                </button>
+
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="min-width:320px;">
+
+                    <li>
+                        <h6 class="dropdown-header">
+                            <i class="bi bi-files me-1"></i>
+                            Documentos adjuntos
+                              <button class="btn btn-sm btn-outline-primary rounded-pill"
     onclick="subirDocumentoCompra(
         <?= $e['id'] ?>, 
         '<?= $e['folio'] ?? ''?>', 
         '<?= $e['documento_url'] ?? ''?>',
         '<?= $e['tipo'] ?? ''?>'
     )">
-    <i class="bi bi-upload"></i>
+   Agregar Nuevo <i class="bi bi-upload"></i>
+</button>
+                        </h6>
+                    </li>
+
+                    <?php foreach ($documentos as $doc): ?>
+
+                        <?php
+                        $partes = explode('|||', $doc);
+
+                        $nombre = $partes[0] ?? '';
+                        $direccion = $partes[1] ?? '';
+                        $idDoc = $partes[2] ?? 0;
+
+                        if (empty($direccion)) continue;
+                        ?>
+
+                        <li>
+                            <div class="dropdown-item d-flex justify-content-between align-items-center py-2">
+
+                                <a href="../../<?= $direccion ?>"
+                                   target="_blank"
+                                   class="text-decoration-none text-dark flex-grow-1">
+
+                                    <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+
+                                    <span class="small">
+                                        <?= htmlspecialchars($nombre) ?>
+                                    </span>
+
+                                </a>
+
+                                <button
+                                    class="btn btn-sm btn-outline-danger border-0"
+                                    title="Eliminar documento"
+                                    onclick="eliminarDocumento(<?= $idDoc ?>)">
+
+                                    <i class="bi bi-trash"></i>
+
+                                </button>
+
+                            </div>
+                        </li>
+
+                    <?php endforeach; ?>
+
+                </ul>
+
+            </div>
+
+        <?php endif; ?>
+
+        <?php if ($e['tipo'] == 'compra' || $e['tipo'] == 'gasto'): ?>
+  <?php if (empty($e['documento_url'])): ?>
+           <button class="btn btn-sm btn-outline-primary rounded-pill"
+    onclick="subirDocumentoCompra(
+        <?= $e['id'] ?>, 
+        '<?= $e['folio'] ?? ''?>', 
+        '<?= $e['documento_url'] ?? ''?>',
+        '<?= $e['tipo'] ?? ''?>'
+    )">
+  Agregar  <i class="bi bi-upload"></i>
 </button>
 <?php endif; ?>
-                    </td>
+
+        <?php endif; ?>
+
+    </div>
+
+</td>
 
                     <td class="text-end pe-4">
                         <div class="d-flex justify-content-end gap-1">
@@ -743,6 +828,9 @@ function confirmarCancelacionGasto(id, folio) {
     });
 }
 function subirDocumentoCompra(compra_id, folio, documento_actual = '',tipo) {
+    
+                console.log('gasto');
+           
 
     Swal.fire({
         title: 'Documento de Compra',
@@ -779,6 +867,7 @@ function subirDocumentoCompra(compra_id, folio, documento_actual = '',tipo) {
             formData.append('folio', folio);
             formData.append('documento', file);
              formData.append('tipo', tipo);
+             
 
             try {
                 const response = await fetch('/cfsistem/app/controllers/egresosController.php?action=subirDocumento', {
@@ -826,7 +915,79 @@ function subirDocumentoCompra(compra_id, folio, documento_actual = '',tipo) {
             cargarCompras();
         }
     });
-}</script>
+}
+
+function eliminarDocumento(id) {
+    
+                console.log('gasto');
+           
+
+    Swal.fire({
+        title: 'Eliminar Documento',
+        
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Guardar',
+        confirmButtonColor: '#ed0909',
+        focusConfirm: false,
+
+        preConfirm: async () => {
+
+         
+
+            const formData = new FormData();
+            
+             formData.append('id', id);
+             
+
+            try {
+                const response = await fetch('/cfsistem/app/controllers/egresosController.php?action=eliminarDocumento', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                // 🔥 LEEMOS COMO TEXTO PRIMERO (ANTI "Unexpected token <")
+                const text = await response.text();
+                console.log('RESPUESTA CRUDA:', text);
+
+                let res;
+                try {
+                    res = JSON.parse(text);
+                } catch (e) {
+                    throw new Error('El servidor no devolvió JSON válido');
+                }
+
+                if (!res.success) {
+                    throw new Error(res.message || 'Error al subir archivo');
+                }
+
+                return res;
+
+            } catch (err) {
+                Swal.showValidationMessage(err.message);
+                return false;
+            }
+        }
+
+    }).then(result => {
+
+        if (!result.isConfirmed || !result.value) return;
+
+       Swal.fire({
+    icon: 'success',
+    title: 'Eliminado',
+    text: 'Documento eliminado correctamente',
+    timer: 1800,
+    showConfirmButton: false
+}).then(() => {
+    location.reload();
+});
+        if (typeof cargarCompras === 'function') {
+            cargarCompras();
+        }
+    });
+}
+</script>
 
 </body>
 

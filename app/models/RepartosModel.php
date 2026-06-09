@@ -2005,60 +2005,181 @@ public function getCargaPendienteChofer($trabajador_id = null, $reparto_id_espec
 
     return $this->db->query($sql)->fetch_all(MYSQLI_ASSOC);
 }
-
-public function registrarEntregaMovimiento($datos) {
+public function registrarEntregaMovimiento($datos)
+{
     try {
+
         $this->db->begin_transaction();
 
         $id_mov   = intval($datos['id_movimiento']);
         $id_ven   = intval($datos['id_venta']);
         $id_tra   = intval($datos['trabajador_id'] ?? 0);
         $id_veh   = intval($datos['vehiculo_id']);
-        $foto_ent = !empty($datos['fotografia_entrega']) ? $datos['fotografia_entrega'] : null;
-        $foto_not = !empty($datos['fotografia_nota']) ? $datos['fotografia_nota'] : null;
-        $estatus  = $datos['estatus_entrega']; 
-        $coment   = $datos['comentario'] ?? '';
 
-        // CONSTRUCCIÓN DINÁMICA DEL UPDATE
-        // Solo actualizamos las fotos si el string NO está vacío.
-        $updateFields = [
-            "estatus = VALUES(estatus)",
-            "comentario = VALUES(comentario)",
-            "hora = CURTIME()"
-        ];
+        $foto_ent = !empty($datos['fotografia_entrega'])
+            ? $datos['fotografia_entrega']
+            : null;
 
-        if ($foto_ent !== null) {
-            $updateFields[] = "fotografia_entrega = VALUES(fotografia_entrega)";
+        $foto_not = !empty($datos['fotografia_nota'])
+            ? $datos['fotografia_nota']
+            : null;
+
+        $estatus = $datos['estatus_entrega'];
+        $coment  = $datos['comentario'] ?? '';
+        $folio   = $datos['folio'] ?? '';
+
+        // ==========================================
+        // VERIFICAR SI YA EXISTE
+        // ==========================================
+
+        $sqlR = "
+            SELECT id
+            FROM confirmacion_reparto_viaje
+            WHERE id_venta = ?
+            AND reparto_folio = ?
+            LIMIT 1
+        ";
+
+        $stmtR = $this->db->prepare($sqlR);
+        $stmtR->bind_param("is", $id_ven, $folio);
+        $stmtR->execute();
+
+        $registro = $stmtR->get_result()->fetch_assoc();
+
+        // ==========================================
+        // UPDATE
+        // ==========================================
+
+        if ($registro) {
+
+            $sqlUP = "
+                UPDATE confirmacion_reparto_viaje
+                SET
+                    comentario = ?,
+                    estatus = ?,
+                    hora = CURTIME()
+            ";
+
+            $params = [$coment, $estatus];
+            $types  = "ss";
+
+            if ($foto_ent !== null) {
+                $sqlUP .= ", fotografia_entrega = ?";
+                $params[] = $foto_ent;
+                $types .= "s";
+            }
+
+            if ($foto_not !== null) {
+                $sqlUP .= ", fotografia_nota = ?";
+                $params[] = $foto_not;
+                $types .= "s";
+            }
+
+            $sqlUP .= "
+                WHERE id_venta = ?
+                AND reparto_folio = ?
+            ";
+
+            $params[] = $id_ven;
+            $params[] = $folio;
+            $types .= "is";
+
+            $stmtUP = $this->db->prepare($sqlUP);
+
+            if (!$stmtUP) {
+                throw new Exception($this->db->error);
+            }
+
+            $stmtUP->bind_param($types, ...$params);
+
+            if (!$stmtUP->execute()) {
+                throw new Exception($stmtUP->error);
+            }
+
+        } else {
+
+            // ==========================================
+            // INSERT
+            // ==========================================
+
+            $sqlEv = "
+                INSERT INTO confirmacion_reparto_viaje (
+                    id_movimiento,
+                    id_venta,
+                    reparto_folio,
+                    trabajador_id,
+                    vehiculo_id,
+                    fecha,
+                    hora,
+                    fotografia_entrega,
+                    fotografia_nota,
+                    estatus,
+                    comentario
+                )
+                VALUES (
+                    ?, ?, ?, ?, ?,
+                    CURDATE(),
+                    CURTIME(),
+                    ?, ?, ?, ?
+                )
+            ";
+
+            $stmtEv = $this->db->prepare($sqlEv);
+
+            if (!$stmtEv) {
+                throw new Exception($this->db->error);
+            }
+
+            $stmtEv->bind_param(
+                "iisiissss",
+                $id_mov,
+                $id_ven,
+                $folio,
+                $id_tra,
+                $id_veh,
+                $foto_ent,
+                $foto_not,
+                $estatus,
+                $coment
+            );
+
+            if (!$stmtEv->execute()) {
+                throw new Exception("Error al guardar evidencia: " . $stmtEv->error);
+            }
         }
-        if ($foto_not !== null) {
-            $updateFields[] = "fotografia_nota = VALUES(fotografia_nota)";
-        }
 
-        $sqlEv = "INSERT INTO confirmacion_reparto_viaje (
-                    id_movimiento, id_venta, trabajador_id, vehiculo_id, 
-                    fecha, hora, fotografia_entrega, fotografia_nota, estatus, comentario
-                ) VALUES (?, ?, ?, ?, CURDATE(), CURTIME(), ?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE " . implode(", ", $updateFields);
-        
-        $stmtEv = $this->db->prepare($sqlEv);
-        $stmtEv->bind_param("iiiissss", 
-            $id_mov, $id_ven, $id_tra, $id_veh, $foto_ent, $foto_not, $estatus, $coment
-        );
-        
-        if (!$stmtEv->execute()) throw new Exception("Error al guardar evidencia: " . $stmtEv->error);
+        // ==========================================
+        // ACTUALIZAR PUNTO DE RUTA
+        // ==========================================
 
-        // Actualizar estatus del punto de ruta a visitado
-        $sqlPunto = "UPDATE transporte_rutas_puntos SET estado_punto = 'visitado', llegada_real = NOW() WHERE id = ?";
+        $sqlPunto = "
+            UPDATE transporte_rutas_puntos
+            SET estado_punto = 'visitado',
+                llegada_real = NOW()
+            WHERE id = ?
+        ";
+
         $stmtP = $this->db->prepare($sqlPunto);
         $stmtP->bind_param("i", $id_mov);
-        $stmtP->execute();
+
+        if (!$stmtP->execute()) {
+            throw new Exception($stmtP->error);
+        }
 
         $this->db->commit();
+
         return true;
+
     } catch (Exception $e) {
-        if ($this->db->in_transaction) $this->db->rollback();
-        error_log("Error registrarEntregaMovimiento: " . $e->getMessage());
-        throw new Exception($e->getMessage());
+
+        $this->db->rollback();
+
+        error_log(
+            "Error registrarEntregaMovimiento: " .
+            $e->getMessage()
+        );
+
+        throw $e;
     }
 }
 public function getMonitorEntregasRuta(
@@ -2218,14 +2339,14 @@ public function obtenerViajesLogisticaParaEntrega($folio_viaje = null) {
                     MAX(crv.id) AS id_evidencia,
                     MAX(crv.estatus) AS estatus_evidencia,
                     MAX(crv.comentario) AS comentario_evidencia,
-                    MAX(IF(crv.id IS NOT NULL, 1, 0)) AS ya_entregado,
+                    MAX(IF(crv.id IS NOT NULL AND crv.reparto_folio=? , 1, 0)) AS ya_entregado,
                     
                     -- Trae el último ID de movimiento de esta venta (evita desgloses)
                     MAX(trp.id) AS ids_movimientos_grupo,
                     
                     -- Evidencias fotográficas concatenando la variable PHP correctamente
-                    MAX(IF(crv.fotografia_entrega IS NOT NULL AND crv.fotografia_entrega != '', CONCAT('" . $base_path . "', crv.fotografia_entrega), NULL)) AS foto_registrada,
-                    MAX(IF(crv.fotografia_nota IS NOT NULL AND crv.fotografia_nota != '', CONCAT('" . $base_path . "', crv.fotografia_nota), NULL)) AS nota_registrada,
+                    MAX(IF(crv.fotografia_entrega IS NOT NULL AND crv.reparto_folio=? AND crv.fotografia_entrega != '', CONCAT('" . $base_path . "', crv.fotografia_entrega), NULL)) AS foto_registrada,
+                    MAX(IF(crv.fotografia_nota IS NOT NULL  AND crv.reparto_folio=? AND crv.fotografia_nota != '', CONCAT('" . $base_path . "', crv.fotografia_nota), NULL)) AS nota_registrada,
                     
                     -- 🔥 Agrupamos los productos de la misma venta en una sola celda
                     GROUP_CONCAT(p.nombre SEPARATOR ', ') AS productos,
@@ -2240,7 +2361,9 @@ public function obtenerViajesLogisticaParaEntrega($folio_viaje = null) {
                 INNER JOIN productos p ON m.producto_id = p.id
                 LEFT JOIN ventas v ON m.referencia_id = v.id
                 LEFT JOIN clientes c ON v.id_cliente = c.id
-                LEFT JOIN confirmacion_reparto_viaje crv ON v.id = crv.id_venta";
+               LEFT JOIN confirmacion_reparto_viaje crv
+    ON v.id = crv.id_venta
+    AND crv.reparto_folio = tc.viaje_folio";
 
         // 2. El WHERE siempre debe ir ANTES del GROUP BY en SQL
         if (!empty($folio_viaje)) {
@@ -2253,7 +2376,7 @@ public function obtenerViajesLogisticaParaEntrega($folio_viaje = null) {
         $stmt = $this->db->prepare($sql);
         
         if (!empty($folio_viaje)) {
-            $stmt->bind_param("s", $folio_viaje);
+            $stmt->bind_param("ssss", $folio_viaje,$folio_viaje,$folio_viaje,$folio_viaje);
         }
 
         $stmt->execute();
@@ -2284,14 +2407,14 @@ public function evidenciaEntregaVenta($folio_viaje = null) {
                     MAX(crv.id) AS id_evidencia,
                     MAX(crv.estatus) AS estatus_evidencia,
                     MAX(crv.comentario) AS comentario_evidencia,
-                    MAX(IF(crv.id IS NOT NULL, 1, 0)) AS ya_entregado,
+                     MAX(IF(crv.id IS NOT NULL AND crv.reparto_folio=? , 1, 0)) AS ya_entregado,
                     
                     -- Trae el último ID de movimiento de esta venta (evita desgloses)
                     MAX(trp.id) AS ids_movimientos_grupo,
                     
                     -- Evidencias fotográficas concatenando la variable PHP correctamente
-                    MAX(IF(crv.fotografia_entrega IS NOT NULL AND crv.fotografia_entrega != '', CONCAT('" . $base_path . "', crv.fotografia_entrega), NULL)) AS foto_registrada,
-                    MAX(IF(crv.fotografia_nota IS NOT NULL AND crv.fotografia_nota != '', CONCAT('" . $base_path . "', crv.fotografia_nota), NULL)) AS nota_registrada,
+                    MAX(IF(crv.fotografia_entrega IS NOT NULL AND crv.reparto_folio=? AND crv.fotografia_entrega != '', CONCAT('" . $base_path . "', crv.fotografia_entrega), NULL)) AS foto_registrada,
+                    MAX(IF(crv.fotografia_nota IS NOT NULL  AND crv.reparto_folio=? AND crv.fotografia_nota != '', CONCAT('" . $base_path . "', crv.fotografia_nota), NULL)) AS nota_registrada,
                     
                     -- 🔥 Agrupamos los productos de la misma venta en una sola celda
                     GROUP_CONCAT(p.nombre SEPARATOR ', ') AS productos,
@@ -2306,7 +2429,9 @@ public function evidenciaEntregaVenta($folio_viaje = null) {
                 INNER JOIN productos p ON m.producto_id = p.id
                 LEFT JOIN ventas v ON m.referencia_id = v.id
                 LEFT JOIN clientes c ON v.id_cliente = c.id
-                LEFT JOIN confirmacion_reparto_viaje crv ON v.id = crv.id_venta";
+               LEFT JOIN confirmacion_reparto_viaje crv
+    ON v.id = crv.id_venta
+    AND crv.reparto_folio = tc.viaje_folio";
 
         // 2. El WHERE siempre debe ir ANTES del GROUP BY en SQL
         if (!empty($folio_viaje)) {
@@ -2319,7 +2444,7 @@ public function evidenciaEntregaVenta($folio_viaje = null) {
         $stmt = $this->db->prepare($sql);
         
         if (!empty($folio_viaje)) {
-            $stmt->bind_param("s", $folio_viaje);
+            $stmt->bind_param("ssss", $folio_viaje,$folio_viaje,$folio_viaje,$folio_viaje);
         }
 
         $stmt->execute();

@@ -107,6 +107,7 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                             <th>Teléfono</th>
                             <th>Rol / Puesto</th>
                             <th>Almacén</th>
+                            <th>Documentos</th>
                             <th>Estado</th>
                             <th class="text-end">Acciones</th>
                         </tr>
@@ -128,6 +129,116 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                             <td>
                                 <span class="small text-muted"><i class="bi bi-geo-alt"></i> <?= $t['nombreAlmacen'] ?></span>
                             </td>
+                                                         <td class="text-center">
+
+    <div class="d-flex justify-content-center align-items-center gap-1">
+
+        <?php if (!empty($t['documentos_url'])): ?>
+
+            <?php $documentos = explode(';;;', $t['documentos_url']); ?>
+
+            <div class="dropdown">
+
+                <button
+                    class="btn btn-sm btn-light border position-relative"
+                    type="button"
+                    data-bs-toggle="dropdown">
+
+                    <i class="bi bi-folder2-open text-dark"></i>
+
+                  
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success">
+                        <?= count($documentos) ?>
+                    </span>
+
+                </button>
+
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="min-width:320px;">
+
+                    <li>
+                        <h6 class="dropdown-header">
+                            <i class="bi bi-files me-1"></i>
+                            Documentos adjuntos
+                               <button class="btn btn-sm btn-outline-primary rounded-pill"
+    onclick="subirDocumentoCompra(
+        <?= $t['id'] ?>
+        
+    )">
+   Cargar Nuevo <i class="bi bi-upload"></i>
+</button>
+                        </h6>
+                    </li>
+                 
+
+                    <?php foreach ($documentos as $doc): ?>
+                      
+
+                        <?php
+                        $partes = explode('|||', $doc);
+
+                        $nombre = $partes[0] ?? '';
+                        $direccion = $partes[1] ?? '';
+                        $idDoc = $partes[2] ?? 0;
+
+                        if (empty($direccion)) continue;
+                        ?>
+
+                        <li>
+                            <div class="dropdown-item d-flex justify-content-between align-items-center py-2">
+
+                                <a href="../../<?= $direccion ?>"
+                                   target="_blank"
+                                   class="text-decoration-none text-dark flex-grow-1">
+
+                                  <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+
+                                    <span class="small">
+                                        <?= htmlspecialchars($nombre) ?>
+                                    </span>
+
+                                </a>
+
+                                <button
+                                    class="btn btn-sm btn-outline-danger border-0"
+                                    title="Eliminar documento"
+                                    onclick="eliminarDocumento(<?= $idDoc ?>)">
+
+                                    <i class="bi bi-trash"></i>
+
+                                </button>
+
+                            </div>
+                        </li>
+
+                    <?php endforeach; ?>
+
+                </ul>
+
+            </div>
+           
+
+        <?php endif; ?>
+           <?php if (empty($t['documentos_url'])): ?>
+
+       
+         <button class="btn btn-sm btn-outline-primary rounded-pill"
+    onclick="subirDocumentoCompra(
+        <?= $t['id'] ?>
+        
+    )">
+ Agregar   <i class="bi bi-upload"></i>
+</button>
+ <?php endif; ?>
+
+       
+
+           
+
+        
+
+    </div>
+
+</td>
                             <td>
                                 <?php 
                                     $claseEstado = match($t['estado']) {
@@ -202,6 +313,7 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                                     <input type="hidden" name="almacen_id" id="t_almacen_id" value="<?= $_SESSION['almacen_id'] ?>">
                                 <?php endif; ?>
                             </div>
+                            
 
                             <div class="col-md-12">
                                 <label class="form-label fw-bold small">Estado Laboral</label>
@@ -313,6 +425,177 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
         $('#filtroRol').val('');
         tabla.search('').column(2).search('').draw();
     }
+
+
+function subirDocumentoCompra(trabajador_id) {
+    
+                
+           
+
+    Swal.fire({
+        title: 'Documento de Vehiculo',
+        html: `
+            <div class="text-start">
+                <label class="fw-bold small mb-2">Subir / Reemplazar documento</label>
+                <input type="file" id="swal_file_doc" class="form-control mb-2" accept=".pdf,image/*">
+                
+                
+            </div>
+        `,
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Guardar',
+        confirmButtonColor: '#198754',
+        focusConfirm: false,
+
+        preConfirm: async () => {
+
+            const fileInput = document.getElementById('swal_file_doc');
+            const file = fileInput?.files[0];
+
+            if (!file) {
+                Swal.showValidationMessage('Selecciona un archivo');
+                return false;
+            }
+
+            const formData = new FormData();
+            
+            formData.append('trabajador_id', trabajador_id);
+           
+            formData.append('documento', file);
+            console.log(file,trabajador_id);
+            
+             
+
+            try {
+
+    const response = await fetch(
+        '/cfsistem/app/controllers/trabajadoresController.php?action=subirDocumento',
+        {
+            method: 'POST',
+            body: formData
+        }
+    );
+
+    console.log('Status:', response.status);
+
+    const text = await response.text();
+
+    console.log('Respuesta completa:', text);
+
+    if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+    }
+
+    let res;
+
+    try {
+        res = JSON.parse(text);
+    } catch {
+        throw new Error('El servidor devolvió HTML o texto inválido');
+    }
+
+    if (!res.success) {
+        throw new Error(res.message || 'Error al subir archivo');
+    }
+
+    return res;
+
+} catch (err) {
+    console.error(err);
+    Swal.showValidationMessage(err.message);
+    return false;
+}
+        }
+
+    }).then(result => {
+
+        if (!result.isConfirmed || !result.value) return;
+
+       Swal.fire({
+    icon: 'success',
+    title: 'Guardado',
+    text: 'Documento actualizado correctamente',
+    timer: 1800,
+    showConfirmButton: false
+}).then(() => {
+    location.reload();
+});
+       
+    });
+}
+
+function eliminarDocumento(id) {
+    
+                console.log('gasto');
+           
+
+    Swal.fire({
+        title: 'Eliminar Documento',
+        
+        icon: 'info',
+        showCancelButton: true,
+        confirmButtonText: 'Guardar',
+        confirmButtonColor: '#ed0909',
+        focusConfirm: false,
+
+        preConfirm: async () => {
+
+         
+
+            const formData = new FormData();
+            
+             formData.append('id', id);
+             
+
+            try {
+                const response = await fetch('/cfsistem/app/controllers/trabajadoresController.php?action=eliminarDocumento', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                // 🔥 LEEMOS COMO TEXTO PRIMERO (ANTI "Unexpected token <")
+                const text = await response.text();
+                console.log('RESPUESTA CRUDA:', text);
+
+                let res;
+                try {
+                    res = JSON.parse(text);
+                } catch (e) {
+                    throw new Error('El servidor no devolvió JSON válido');
+                }
+
+                if (!res.success) {
+                    throw new Error(res.message || 'Error al subir archivo');
+                }
+
+                return res;
+
+            } catch (err) {
+                Swal.showValidationMessage(err.message);
+                return false;
+            }
+        }
+
+    }).then(result => {
+
+        if (!result.isConfirmed || !result.value) return;
+
+       Swal.fire({
+    icon: 'success',
+    title: 'Eliminado',
+    text: 'Documento eliminado correctamente',
+    timer: 1800,
+    showConfirmButton: false
+}).then(() => {
+    location.reload();
+});
+        if (typeof cargarCompras === 'function') {
+            cargarCompras();
+        }
+    });
+}
     </script>
+    
 </body>
 </html>

@@ -320,6 +320,7 @@ if ($action === 'get_detalle_trazabilidad') {
             'id_venta'           => intval($_POST['id_venta'] ?? 0),
             'trabajador_id'      => $id_ejecutor ?? 0, // Asegúrate que esta variable exista
             'vehiculo_id'        => intval($_POST['vehiculo_id'] ?? 0),
+            'folio'              =>$_POST['folio'] ?? '',
             'fotografia_entrega' => $foto_entrega,
             'fotografia_nota'    => $foto_nota,
             'estatus_entrega'    => $_POST['estatus_entrega'] ?? 'Entregado',

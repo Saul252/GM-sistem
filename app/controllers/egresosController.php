@@ -196,10 +196,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'subirD
 
         
         
-        $compra_id = intval($_POST['compra_id'] ?? 0);
+        $id = intval($_POST['compra_id'] ?? 0);
         $folio = $_POST['folio'] ?? '';
+        $tipo = $_POST['tipo'] ?? '';
 
-        if ($compra_id <= 0) {
+        if ($id <= 0) {
             throw new Exception("Compra inválida");
         }
 
@@ -214,9 +215,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'subirD
         if (!is_dir($ruta_carpeta)) mkdir($ruta_carpeta, 0777, true);
 
         $ext = pathinfo($documento['name'], PATHINFO_EXTENSION);
-        $nombre = "compra_" . preg_replace('/[^a-zA-Z0-9]/', '_', $folio) . "_" . time() . "." . $ext;
+        $nombre = $tipo . preg_replace('/[^a-zA-Z0-9]/', '_', $folio) . "_" . time() . "." . $ext;
 
         $destino = $ruta_carpeta . $nombre;
+
 
         if (!move_uploaded_file($documento['tmp_name'], $destino)) {
             throw new Exception("No se pudo guardar el archivo");
@@ -225,7 +227,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'subirD
         $documento_url = "uploads/compras/" . $nombre;
 
         // 🔥 GUARDAR EN BD
-        $ok = $comprasModel->actualizarDocumentoCompra($compra_id, $documento_url);
+        $ok = $comprasModel->subirDocumentoCompra($tipo,$id,$nombre, $documento_url);
 
         if (!$ok) {
             throw new Exception("Error al guardar en BD");
@@ -234,6 +236,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'subirD
         echo json_encode([
             'success' => true,
             'url' => $documento_url
+        ]);
+
+    } catch (Throwable $e) {
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+    }
+
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'eliminarDocumento') {
+
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+
+    try {
+
+        
+        
+        $id = intval($_POST['id'] ?? 0);
+        
+
+        if ($id <= 0) {
+            throw new Exception("Elemento inválida");
+        }
+
+       
+
+        // 🔥 ELIMINAR EN BD
+        $ok = $comprasModel->eliminarDocumento($id);
+
+        if (!$ok) {
+            throw new Exception("Error al guardar en BD");
+        }
+
+        echo json_encode([
+            'success' => true,
+            'url' => $id
         ]);
 
     } catch (Throwable $e) {

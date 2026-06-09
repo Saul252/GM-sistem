@@ -49,7 +49,20 @@ public function obtenerTodosLosEgresosFiltros(
             c.total, 
             COALESCE(c.metodo_pago, 'efectivo') AS metodo_pago,
             'compra' AS tipo, 
-            c.documento_url, 
+           (
+    SELECT GROUP_CONCAT(
+        CONCAT(
+            IFNULL(nombre, ''),
+            '|||',
+            IFNULL(direccion, ''),
+            '|||',
+            IFNULL(id, '')
+        )
+        SEPARATOR ';;;'
+    )
+    FROM documentos_egresos de
+    WHERE de.compra_id = c.id and de.activo=1
+) AS documento_url, 
             0 AS categoria_id,
             IFNULL((SELECT SUM(cantidad_pendiente) FROM faltantes_ingreso WHERE compra_id = c.id), 0) AS piezas_faltantes,
             a.nombre AS almacen_nombre, 
@@ -60,6 +73,7 @@ public function obtenerTodosLosEgresosFiltros(
         JOIN almacenes a ON c.almacen_id = a.id
         LEFT JOIN cuentas_por_pagar cpp ON cpp.id_referencia_origen = c.id
         LEFT JOIN proveedores pro ON c.proveedor = pro.id
+       
         WHERE (c.fecha_compra BETWEEN ? AND ?) 
         AND c.estado != 'cancelada'
         $whereAlmacen $whereMetodo $whereDeuda)";
@@ -80,11 +94,26 @@ public function obtenerTodosLosEgresosFiltros(
         $parts[] = "(SELECT 
             g.id, g.folio, g.fecha_gasto AS fecha, g.beneficiario AS entidad,
             g.total, COALESCE(g.metodo_pago, 'efectivo') AS metodo_pago,
-            'gasto' AS tipo, g.documento_url AS documento_url, g.categoria_id,
+            'gasto' AS tipo, (
+    SELECT GROUP_CONCAT(
+        CONCAT(
+            IFNULL(nombre,''),
+            '|||',
+            IFNULL(direccion,''),
+             '|||',
+            IFNULL(id,'')
+           
+        )
+        SEPARATOR ';;;'
+    )
+    FROM documentos_egresos de
+    WHERE de.gasto_id = g.id and de.activo=1
+) AS documento_url, g.categoria_id,
             0 AS piezas_faltantes, a.nombre AS almacen_nombre, g.estado,
             0 AS tiene_deuda, 0 AS pagado_cpp
         FROM gastos g
         JOIN almacenes a ON g.almacen_id = a.id
+        
         WHERE (g.fecha_gasto BETWEEN ? AND ?) AND g.estado != 'cancelado'
         $whereAlmacen $whereCat $whereMetodo)";
 

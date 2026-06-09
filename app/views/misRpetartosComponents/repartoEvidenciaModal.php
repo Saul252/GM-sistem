@@ -123,7 +123,7 @@ const cantidadIni=entrega.totalCantidad/entrega.fc;
                                     <div class="btn-group mt-1">
                                         ${existeEvidencia ? `
                                             <button class="btn btn-sm btn-outline-primary border-0 p-1" 
-                                                onclick="abrirModalPorIndex(${index}, '${entregaJson}')">
+                                                onclick="abrirModalPorIndex(${index}, '${entregaJson}','${viajeFolio}')">
                                                 <i class="bi bi-pencil-square"></i>
                                             </button>
                                             
@@ -132,7 +132,7 @@ const cantidadIni=entrega.totalCantidad/entrega.fc;
                                             </button>
                                         ` : `
                                             <button class="btn btn-sm btn-primary rounded-pill px-3 fw-bold" style="font-size: 0.6rem;"
-                                                onclick="abrirModalPorIndex(${index}, '${entregaJson}')">
+                                                onclick="abrirModalPorIndex(${index}, '${entregaJson}',',${viajeFolio}')">
                                                 <i class="bi bi-plus-circle me-1"></i> SUBIR
                                             </button>
                                         `}

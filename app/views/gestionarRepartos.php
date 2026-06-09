@@ -162,7 +162,7 @@ $folio_viaje = $_GET['folio'] ?? '';
                 <input type="hidden" name="id_venta" id="m_venta_id">
                 <input type="hidden" name="vehiculo_id" id="m_vehiculo_id">
                 <input type="hidden" name="action" value="subir_evidencia_reparto">
-
+ <input type="hidden" name="folio" id="folio" value="<?php echo htmlspecialchars($folio_viaje); ?>">
                 <div class="modal-body px-4">
                     <div id="alertaEdicion" class="alert alert-warning py-2 small mb-3 rounded-4 d-none">
                         <i class="bi bi-pencil-square me-2"></i> Estás editando una entrega existente.
@@ -373,12 +373,7 @@ document.getElementById('formEvidencia').onsubmit = function(e) {
     const formData = new FormData(this);
     const esEdicion = document.getElementById('tituloModal').innerText.includes("Modificar");
 
-    if(!esEdicion) {
-        if(!document.getElementById('input-foto').files[0] || !document.getElementById('input-foto-nota').files[0]) {
-            Swal.fire('Atención', 'Es obligatorio capturar ambas fotos.', 'warning');
-            return;
-        }
-    }
+   
 
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Guardando...';

@@ -847,6 +847,9 @@ error_reporting(E_ALL);
         const cantidad = parseFloat(i.cantidad) || 0;
          canti=cantidad/i.equivalencia;
          data[index].cantidadR = parseFloat(canti);
+         data[index].entrega_hoy =0;
+         document.getElementById('montoPago').value= data[index].total;
+         datost=data;
         
          
 
@@ -882,7 +885,7 @@ document.querySelectorAll('.entrega-hoy').forEach(input => {
         
 
 
-        data[index].entrega_hoy = parseFloat((this.value*data[index].cantidadR)) || 0;
+        data[index].entrega_hoy = parseFloat((this.value*(1/data[index].equivalencia))) || 0;
         data[index].monto_pagado = parseFloat(
             document.getElementById('montoPago').value
         ) || 0;
@@ -1151,7 +1154,7 @@ $('#boton').html(htmlboton);
     }
 async function convertirToCompra(data, id) {
     try {
-        console.log('data',datost);
+        console.log('data 1',datost);
 
         const payload = {
             accion: 'guardar_venta',

@@ -10,17 +10,63 @@ class CompraModel {
     /**
      * Obtiene productos activos para el selector de compras
      * @param string $termino Buscador opcional para Select2 o filtros
-     */
-public function actualizarDocumentoCompra($id, $documento_url) {
+     */public function subirDocumentoCompra($tipo, $id, $nombre_evidencia, $documento_url)
+{
+    $tipo_doc = '';
+    $compra_id = 0;
+    $gasto_id = 0;
 
-    $sql = "UPDATE compras 
-            SET documento_url = ?
+    if ($tipo === 'gasto') {
+        $tipo_doc = 'gasto';
+        $gasto_id = (int)$id;
+    } else {
+        $tipo_doc = 'compra';
+        $compra_id = (int)$id;
+    }
+
+    $sqldoc = "INSERT INTO documentos_egresos
+        (tipo, compra_id, gasto_id, nombre, direccion)
+        VALUES (?, ?, ?, ?, ?)";
+
+    $stmtdoc = $this->db->prepare($sqldoc);
+
+    if (!$stmtdoc) {
+        throw new Exception("Error al preparar consulta: " . $this->db->error);
+    }
+
+    $stmtdoc->bind_param(
+        "siiss",
+        $tipo_doc,
+        $compra_id,
+        $gasto_id,
+        $nombre_evidencia,
+        $documento_url
+    );
+
+    if (!$stmtdoc->execute()) {
+        throw new Exception("Error al guardar documento: " . $stmtdoc->error);
+    }
+
+    $documento_id = $stmtdoc->insert_id;
+
+    $stmtdoc->close();
+
+    return [
+        'success' => true,
+        'documento_id' => $documento_id,
+        'message' => 'Documento guardado correctamente.'
+    ];
+}
+public function eliminarDocumento( $id_documento) {
+
+    $sql = "UPDATE documentos_egresos
+            SET activo = 0
             WHERE id = ?";
 
     $stmt = $this->db->prepare($sql);
     if (!$stmt) return false;
 
-    $stmt->bind_param("si", $documento_url, $id);
+    $stmt->bind_param("i", $id_documento);
 
     return $stmt->execute();
 }
@@ -29,16 +75,9 @@ public function guardarCompraCompleta($items, $folio, $proveedor, $evidencia, $a
     try {
         // --- 1. Gestión de Evidencia ---
         $documento_url = null;
-        if ($evidencia && $evidencia['error'] === UPLOAD_ERR_OK) {
-            $ruta_carpeta = $_SERVER['DOCUMENT_ROOT'] . "/cfsistem/uploads/compras/";
-            if (!is_dir($ruta_carpeta)) { mkdir($ruta_carpeta, 0777, true); }
-            $extension = pathinfo($evidencia['name'], PATHINFO_EXTENSION);
-            $nombre_archivo = "compra_" . preg_replace('/[^a-zA-Z0-9]/', '_', $folio) . "_" . time() . "." . $extension;
-            $ruta_destino = $ruta_carpeta . $nombre_archivo;
-            if (move_uploaded_file($evidencia['tmp_name'], $ruta_destino)) {
-                $documento_url = "uploads/compras/" . $nombre_archivo;
-            }
-        }
+        $nombre_evidencia='';
+       
+
 
         // --- 2. Totales iniciales ---
         $total_final = 0;
@@ -49,6 +88,7 @@ public function guardarCompraCompleta($items, $folio, $proveedor, $evidencia, $a
             $total_final += floatval($item['total_item']);
             if (floatval($item['cantidad_faltante'] ?? 0) > 0) $tiene_faltantes_global = 1;
         }
+        $tipo='compra';
 
         // --- 3. Insertar Cabecera de Compra ---
          $sqlC = "INSERT INTO compras 
@@ -57,10 +97,43 @@ public function guardarCompraCompleta($items, $folio, $proveedor, $evidencia, $a
 
         $stmtC = $this->db->prepare($sqlC);
         $stmtC->bind_param("ssidsisi", $folio, $proveedor, $almacen_id, $total_final, $metodo_pago, $user_id, $documento_url, $tiene_faltantes_global);
-
-        if (!$stmtC->execute()) { throw new Exception("Error en cabecera: " . $stmtC->error); }
+ if (!$stmtC->execute()) { throw new Exception("Error en cabecera: " . $stmtC->error); }
         $compra_id = $stmtC->insert_id;
+         if ($evidencia && $evidencia['error'] === UPLOAD_ERR_OK) {
+            $ruta_carpeta = $_SERVER['DOCUMENT_ROOT'] . "/cfsistem/uploads/compras/";
+            if (!is_dir($ruta_carpeta)) { mkdir($ruta_carpeta, 0777, true); }
+            $extension = pathinfo($evidencia['name'], PATHINFO_EXTENSION);
+            $nombre_evidencia=$evidencia['name'];
+            $nombre_archivo = "compra_" . preg_replace('/[^a-zA-Z0-9]/', '_', $folio) . "_" . time() . "." . $extension;
+            $ruta_destino = $ruta_carpeta . $nombre_archivo;
+            if (move_uploaded_file($evidencia['tmp_name'], $ruta_destino)) {
+                $documento_url = "uploads/compras/" . $nombre_archivo;
+            }
+        }
+      if ($documento_url) {
 
+    $tipo_doc = 'compra';
+    $gasto_id = 0;
+
+    $sqldoc = "INSERT INTO documentos_egresos
+    (tipo, compra_id, gasto_id, nombre, direccion)
+    VALUES (?, ?, ?, ?, ?)";
+
+    $stmtdoc = $this->db->prepare($sqldoc);
+
+    $stmtdoc->bind_param(
+        "siiss",
+        $tipo_doc,
+        $compra_id,
+        $gasto_id,
+        $nombre_evidencia,
+        $documento_url
+    );
+
+    if (!$stmtdoc->execute()) {
+        throw new Exception("Error al guardar documento: " . $stmtdoc->error);
+    }
+}
         // --- 4. Procesar Items ---
         foreach ($items as $item) {
 

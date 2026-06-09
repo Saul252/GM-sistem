@@ -47,7 +47,121 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
     exit;
 }
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'subirDocumento') {
 
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+
+    try {
+
+        $id = intval($_POST['vehiculo_id'] ?? 0);
+
+        if ($id <= 0) {
+            throw new Exception("Vehículo inválido");
+        }
+
+        $documento = $_FILES['documento'] ?? null;
+
+        if (!$documento || $documento['error'] !== UPLOAD_ERR_OK) {
+            throw new Exception("Error al subir archivo");
+        }
+
+        // Carpeta destino
+        $ruta_carpeta = $_SERVER['DOCUMENT_ROOT'] . "/cfsistem/uploads/vehiculos_document/";
+
+        if (!is_dir($ruta_carpeta)) {
+            mkdir($ruta_carpeta, 0777, true);
+        }
+
+        if (!is_writable($ruta_carpeta)) {
+            throw new Exception("La carpeta no tiene permisos de escritura");
+        }
+
+        // Nombre del archivo
+        $ext = strtolower(pathinfo($documento['name'], PATHINFO_EXTENSION));
+        $base = pathinfo($documento['name'], PATHINFO_FILENAME);
+
+        $nombre = "vehiculo_" .
+            preg_replace('/[^a-zA-Z0-9]/', '_', $base) .
+            "_" .
+            time() .
+            "." .
+            $ext;
+
+        $destino = $ruta_carpeta . $nombre;
+
+        if (!move_uploaded_file($documento['tmp_name'], $destino)) {
+            throw new Exception("No se pudo guardar el archivo");
+        }
+
+        // Ruta que se guarda en BD
+        $documento_url = "uploads/vehiculos_document/" . $nombre;
+
+        // Guardar en BD
+        $resultado = $vehiculoModel->subirDocumentoCompra(
+            $id,
+            $documento['name'],
+            $documento_url
+        );
+
+        echo json_encode([
+            'success' => true,
+            'url' => $documento_url,
+            'documento_id' => $resultado['documento_id'] ?? 0
+        ]);
+
+    } catch (Throwable $e) {
+
+        error_log("ERROR SUBIR DOCUMENTO VEHICULO: " . $e->getMessage());
+
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+    }
+
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'eliminarDocumento') {
+
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+
+    try {
+
+        
+        
+        $id = intval($_POST['id'] ?? 0);
+        
+
+        if ($id <= 0) {
+            throw new Exception("Elemento inválida");
+        }
+
+       
+
+        // 🔥 ELIMINAR EN BD
+        $ok = $vehiculoModel->eliminarDocumento($id);
+
+        if (!$ok) {
+            throw new Exception("Error al guardar en BD");
+        }
+
+        echo json_encode([
+            'success' => true,
+            'url' => $id
+        ]);
+
+    } catch (Throwable $e) {
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+    }
+
+    exit;
+}
 // --- CARGA DE LA VISTA (GET) ---
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     try {

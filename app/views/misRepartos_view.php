@@ -402,7 +402,7 @@ window.cargarMonitorViajes = async function() {
                             <i class="bi bi-camera-fill me-1"></i> GESTIONAR
                         </a>
                          <button class="btn btn-finish btn-sm d-flex align-items-center justify-content-center" 
-                                    onclick="finalizarViaje(${v.vehiculo_id}, '${v.viaje_folio}')"
+                                    onclick="finalizar(${v.vehiculo_id}, '${v.viaje_folio}')"
                                     style="background: #14c41d; color: #fff; border: none; border-radius: 10px; padding: 6px 14px; font-weight: 600; font-size: 0.68rem;">
                                 <i class="bi bi-check2-all me-1"></i> FINALIZAR
                             </button>
@@ -412,21 +412,116 @@ window.cargarMonitorViajes = async function() {
         });
     } catch (e) { body.html('<tr><td colspan="5" class="text-center text-danger py-4">Error de conexión</td></tr>'); }
 };
-window.finalizarViaje = async function(vehiculoId, folioRuta) {
-        if (!confirm(`¿Confirmar llegada de la unidad ${folioRuta}?`)) return;
-        try {
-            const formData = new FormData();
-            formData.append('vehiculo_id', vehiculoId);
-            formData.append('viaje_folio', folioRuta);
-            const resp = await fetch(`/cfsistem/app/controllers/repartosController.php?action=finalizar_viaje`, { method: 'POST', body: formData });
-            const res = await resp.json();
-            if (res.success) {
-                Swal.fire('Éxito', res.message, 'success');
-                cargarMonitorViajes();
-                cargarPendientes();
+async function finalizar (vehiculoId, folioRuta) {
+     
+         const container = document.getElementById('contenedor-entregas');
+    fetch(`/cfsistem/app/controllers/gestionarRepartoController.php?action=get_entregas_folio&folio=${folioRuta}`)
+        .then(res => res.json())
+        .then(res => {
+          
+            console.log(res.data);
+            datosTemporales = res.data || [];
+
+            if(datosTemporales.length === 0) {
+                    return;
             }
-        } catch (e) { console.error(e); }
+            let proseguir=1;
+
+            datosTemporales.forEach((item, index) => {
+            
+              if (item.foto_registrada == null && item.nota_registrada == null) {
+
+    Swal.fire({
+        icon: 'warning',
+        title: 'Evidencias pendientes',
+        html: `
+            La entrega <b>${item.id_venta}</b> no tiene foto ni nota registradas.
+        `,
+        confirmButtonText: 'Entendido'
+    });
+
+    proseguir = 0;
+    return;
+}
+              if(proseguir==1)
+              {
+                finalizarViaje(vehiculoId, folioRuta);
+     
+              }
+             
+                
+               
+            });
+        })
+        .catch(err => {
+            console.error(err);
+                });
+                   
     };
+    window.finalizarViaje = async function(vehiculoId, folioRuta) {
+       const result = await Swal.fire({
+    title: '¿Finalizar viaje?',
+    text: `¿Confirmar llegada de la unidad ${folioRuta}?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, finalizar',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#198754'
+});
+
+if (!result.isConfirmed) return;
+
+try {
+
+    const formData = new FormData();
+    formData.append('vehiculo_id', vehiculoId);
+    formData.append('viaje_folio', folioRuta);
+
+    const resp = await fetch(
+        '/cfsistem/app/controllers/repartosController.php?action=finalizar_viaje',
+        {
+            method: 'POST',
+            body: formData
+        }
+    );
+
+    const res = await resp.json();
+
+    if (res.success) {
+
+        await Swal.fire({
+            icon: 'success',
+            title: 'Éxito',
+            text: res.message,
+            timer: 2000,
+            showConfirmButton: false
+        }).then(() => location.reload())
+
+       
+
+    } else {
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: res.message || 'No se pudo finalizar el viaje'
+        });
+
+    }
+
+} catch (e) {
+
+    console.error(e);
+
+    Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Ocurrió un problema al comunicarse con el servidor'
+    });
+
+}
+    };
+
 
 </script>
 </body>
