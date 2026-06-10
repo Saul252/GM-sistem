@@ -59,10 +59,11 @@
                             <?php endif; ?>
                         </div>
 
-                        <div class="col-md-3">
+                        <div class="col-md-4">
+                            <div class="input-group">
                             <label class="form-label small fw-bold text-muted text-uppercase">Proveedor
                                 Sugerido</label>
-                            <select name="proveedor_id" class="form-select select2-modal" required>
+                            <select name="proveedor_id" id="proveedor_id"class="form-select select2-modal" required>
                                 <option value="">Seleccionar proveedor...</option>
                                 <?php foreach($proveedores as $p): ?>
                                 <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?>
@@ -74,8 +75,9 @@
                                             <i class="bi bi-plus-lg"></i>
                                         </button>
                         </div>
+                        </div>
 
-                        <div class="col-md-6">
+                        <div class="col-md-4">
                             
                             <label class="form-label small fw-bold text-muted text-uppercase">Añadir Producto (SKU o
                                 Nombre)</label>

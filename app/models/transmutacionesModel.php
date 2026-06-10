@@ -150,7 +150,7 @@ public function registrarTransmutacion($datos) {
     return (float)($res['precio_compra_unitario'] ?? 0);
 }
     public function obtenerDestinosCompatibles($producto_origen_id) {
-        $sql = "SELECT p.id, p.nombre, p.sku, c.rendimiento_teorico 
+        $sql = "SELECT p.id, p.nombre,p.unidad_medida, p.sku, c.rendimiento_teorico 
                 FROM config_transmutaciones c
                 INNER JOIN productos p ON c.producto_destino_id = p.id
                 WHERE c.producto_origen_id = ?";

@@ -101,15 +101,7 @@
     <div class="card-ios">
         <div class="d-flex justify-content-between align-items-center p-3 header-movil">
             <h6 class="m-0 fw-bold">Monitor de Entregas</h6>
-            <select id="filtro_almacen_monitor" class="form-select form-select-sm border-0 bg-light" onchange="cargarMonitor()">
-                <?php if ($almacen_sesion == 0): ?>
-                  
-            <option value="0">Todos los Almacenes</option>
-  <?php endif?>
-                <?php foreach ($listaAlmacenes as $alm): ?>
-                    <option value="<?= $alm['id'] ?>"><?= $alm['nombre'] ?></option>
-                <?php endforeach; ?>
-            </select>
+           
         </div>
     </div>
 
@@ -148,7 +140,7 @@ $(document).ready(function() {
 
 function cargarMonitor() {
     offsetActual = 0;
-    const idAlmacen = $('#filtro_almacen_monitor').val();
+    const idAlmacen = $('#filtroAlmacen').val();
     $('#tbodyMonitor').html('<tr><td colspan="8" class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary"></div></td></tr>');
 
     $.ajax({
@@ -257,7 +249,7 @@ function renderizarFilas(data, append) {
 }
 function cargarMas() {
     offsetActual += limiteCarga;
-    const idAlmacen = $('#filtro_almacen_monitor').val();
+    const idAlmacen = $('#filtroAlmacen').val();
     $.ajax({
         url: '/cfsistem/app/controllers/repartosController.php',
         type: 'GET',

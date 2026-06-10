@@ -74,7 +74,7 @@
                     <div class="input-group input-group-lg shadow-sm">
                         <span class="input-group-text bg-danger text-white border-0">$</span>
                         <input type="number" name="precio_adquisicion"
-                            class="form-control border-0 fw-bold text-danger" step="0.01" placeholder="0.00" required>
+                            class="form-control border-0 fw-bold text-danger" value="0"step="0.01" placeholder="0.00" required>
                     </div>
                 </div>
 

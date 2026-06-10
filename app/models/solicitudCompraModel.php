@@ -55,7 +55,7 @@ class SolicitudCompra {
     }
 }
     public function listar($es_admin, $almacen_id) {
-        $sql = "SELECT s.*,c.tiene_faltantes, p.nombre_comercial as proveedor_nombre, a.nombre as almacen_nombre, u.nombre as admin_nombre
+        $sql = "SELECT s.*,c.tiene_faltantes as faltantes, p.nombre_comercial as proveedor_nombre, a.nombre as almacen_nombre, u.nombre as admin_nombre
                 FROM solicitudes_compra s
                 LEFT JOIN proveedores p ON s.proveedor_id = p.id
                 left join compras c on s.compra_id_final=c.id

@@ -189,10 +189,10 @@ if ($cantidad <= 0) {
                                             </select>
                                             <input type="number" step="0.01"
                                                 class="form-control form-control-sm input-precioMayor"
-                                                value="<?= $p['precio_minorista'] ?>">
+                                                value="<?= $p['precio_minorista'] ??0?>">
                                             <input type="hidden" step="0.01"
                                                 class="form-control form-control-sm input-precio"
-                                                value="<?= $p['precio_minorista'] ?>">
+                                                value="<?= $p['precio_minorista']??0 ?>">
                                         </div>
 
                                     </td>

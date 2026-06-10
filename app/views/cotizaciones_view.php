@@ -824,6 +824,7 @@ error_reporting(E_ALL);
 
 
     <?php require_once __DIR__ . '/cotizacionesModales/ModalCotizacion.php'; ?>
+    <?php require_once __DIR__ . '/cotizacionesModales/nuevoClienteModal.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/agregarPoductoModal.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/modalProveedoresCompra.php'; ?>
     <script>

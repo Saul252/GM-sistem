@@ -537,6 +537,87 @@ public function listarSoloDespachadosPatio($almacen_id = 0) {
     }
     return $data;
 }
+public function listarSoloDespachadosPatioFecha($almacen_id = 0, $fecha_inicio = null, $fecha_fin = null) {
+
+    $sql = "SELECT 
+                m.id as movimiento_id,
+                v.folio as folio_venta,
+                m.fecha as fecha_movimiento,
+                c.nombre_comercial as cliente,
+                p.nombre as producto,
+                p.sku,
+                p.unidad_medida,
+                p.unidad_reporte,
+                p.factor_conversion,
+                m.almacen_origen_id,
+                m.cantidad,
+                a.nombre as almacen_origen,
+                rsl.fecha_despacho,
+                u.nombre as despacho_por,
+                1 as ya_despachado,
+                IFNULL(trm.estado_reparto, 'pendiente') as estado_reparto
+            FROM movimientos m
+            INNER JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
+            INNER JOIN productos p ON m.producto_id = p.id
+            LEFT JOIN ventas v ON m.referencia_id = v.id
+            LEFT JOIN clientes c ON v.id_cliente = c.id
+            LEFT JOIN almacenes a ON m.almacen_origen_id = a.id
+            LEFT JOIN usuarios u ON rsl.usuario_patio_id = u.id
+            LEFT JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id
+            LEFT JOIN transmutacion_detalle td ON m.id = td.movimiento_id
+            WHERE m.tipo = 'salida'
+              AND td.id IS NULL
+              AND (v.id IS NULL OR v.estado_general = 'activa')
+              AND (trm.estado_reparto IS NULL OR trm.estado_reparto != 'cancelado')";
+
+    if (intval($almacen_id) > 0) {
+        $sql .= " AND m.almacen_origen_id = " . intval($almacen_id);
+    }
+
+    if (!empty($fecha_inicio)) {
+        $sql .= " AND DATE(rsl.fecha_despacho) >= '" . $this->db->real_escape_string($fecha_inicio) . "'";
+    }
+
+    if (!empty($fecha_fin)) {
+        $sql .= " AND DATE(rsl.fecha_despacho) <= '" . $this->db->real_escape_string($fecha_fin) . "'";
+    }
+
+    $sql .= " ORDER BY rsl.fecha_despacho DESC";
+
+    $res = $this->db->query($sql);
+    $data = [];
+
+    if ($res) {
+        while ($row = $res->fetch_assoc()) {
+
+            $row['fecha_format'] = !empty($row['fecha_despacho'])
+                ? date('d/m/Y H:i', strtotime($row['fecha_despacho']))
+                : 'S/F';
+
+            $cantidad = floatval($row['cantidad']);
+            $factor   = floatval($row['factor_conversion'] ?? 1);
+            $u_rep    = $row['unidad_reporte'] ?: 'Unid.';
+            $u_med    = $row['unidad_medida'] ?: 'Pz';
+
+            if ($factor > 1) {
+                $enteros   = (int) floor($cantidad / $factor);
+                $sobrantes = fmod($cantidad, $factor);
+
+                if ($sobrantes > 0) {
+                    $row['cantidad_display'] = "{$enteros} {$u_rep} + {$sobrantes} {$u_med}";
+                } else {
+                    $row['cantidad_display'] = "{$enteros} {$u_rep}";
+                }
+            } else {
+                $row['cantidad_display'] = "{$cantidad} {$u_med}";
+            }
+
+            $data[] = $row;
+        }
+    }
+
+    return $data;
+}
 public function getDetalleParaDespacho($movimiento_id) {
     $sql = "SELECT 
                 m.id AS movimiento_id,

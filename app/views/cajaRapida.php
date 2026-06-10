@@ -266,13 +266,17 @@
                                     <th>SKU</th>
                                     <th>Producto</th>
                                     <th>Stock</th>
+                                      
                                    
-                                    <th width="150">Venta por</th>
+                                    <th width="150">Unidad</th>
+                                    <th width="150">Tipo Cliente</th>
+                                  
+                                    <th width="110">Precio</th>
 
 
                                     <th width="90">Cant</th>
-                                    <th width="150">Precio</th>
-                                    <th width="110"></th>
+                                    
+                                    
                                     
                                     <th width="60">Agregar</th>
                                 </tr>
@@ -296,33 +300,7 @@
                                         </small>
                                     </td>
                                    
-
-                                    <td>
-
-                                        <select class="form-select form-select-sm select-precio">
-                                            <option value="<?= $p['precio_minorista'] ?>">Publico -
-                                                $<?= number_format($p['precio_minorista'],2) ?></option>
-                                            <option value="<?= $p['precio_mayorista'] ?>">Constructora -
-                                                $<?= number_format($p['precio_mayorista'],2) ?></option>
-                                            <option value="<?= $p['precio_distribuidor'] ?>">Distribuidor -
-                                                $<?= number_format($p['precio_distribuidor'],2) ?></option>
-                                        </select>
-                                    </td>
-                                    <td>
-                                        <input type="number" step="0.01"
-                                                class="form-control form-control-sm input-precioMayor"
-                                                value="<?= $p['precio_minorista'] ?>">
-                                                <input type="hidden" step="0.01"
-                                                class="form-control form-control-sm input-precio"
-                                                value="<?= $p['precio_minorista'] ?>">
-                                        
-                   
-
-
-                    </td>
-
-
-                    <td style="width:1px; padding:0; border:none;">
+   <td style="width:1px; padding:0; border:none;">
                         <?php if($tieneReporte): ?>
                         <select class="form-select form-select-sm select-modo-venta" style="
             opacity:0;
@@ -365,7 +343,34 @@
 
 
                     </td>
+                                    <td>
 
+                                        <select class="form-select form-select-sm select-precio">
+                                            <option value="<?= $p['precio_minorista'] ?>">Publico -
+                                                $<?= number_format($p['precio_minorista'],2) ?></option>
+                                            <option value="<?= $p['precio_mayorista'] ?>">Constructora -
+                                                $<?= number_format($p['precio_mayorista'],2) ?></option>
+                                            <option value="<?= $p['precio_distribuidor'] ?>">Distribuidor -
+                                                $<?= number_format($p['precio_distribuidor'],2) ?></option>
+                                        </select>
+                                    </td>
+                                    
+
+                                    <td>
+                                        <input type="number" step="0.01"
+                                                class="form-control form-control-sm input-precioMayor"
+                                                value="<?= $p['precio_minorista']??0 ?>">
+                                                <input type="hidden" step="0.01"
+                                                class="form-control form-control-sm input-precio"
+                                                value="<?= $p['precio_minorista'] ?>">
+                                        
+                   
+
+
+                    </td>
+
+
+                 
                     <td>
                         <input type="number" class="form-control form-control-sm cantidad_usuario" min="1" value="1">
 

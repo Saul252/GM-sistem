@@ -387,5 +387,7 @@ if ($action === 'get_detalle_trazabilidad') {
 $paginaActual = 'misRepartos';
 protegerPagina('misRepartos'); 
 $tituloPagina = $es_supervisor ? "Monitor Global de Logística" : "Mis Repartos";
+$es_admin =  $_SESSION['almacen_id'] === 0 ?true:false;
+
 $listaAlmacenes = $almacenModel->getAlmacenes($_SESSION['almacen_id']); 
 require_once __DIR__ . '/../views/misRepartos_view.php';

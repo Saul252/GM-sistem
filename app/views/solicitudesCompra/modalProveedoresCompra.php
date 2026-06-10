@@ -135,7 +135,7 @@ function guardarProvRapido(e) {
     // 🔥 UI loading
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Guardando...';
-
+let res=
     fetch('/cfsistem/app/controllers/egresosController.php?action=guardarProveedor', {
             method: 'POST',
             body: formData
@@ -154,8 +154,8 @@ function guardarProvRapido(e) {
                     text: 'Se agregó y seleccionó automáticamente',
                     timer: 1800,
                     showConfirmButton: false
-                })// 🔄 recarga automática
-  const select_proveedor = document.getElementById('proveedor_id');
+                })// 🔄 recarga 
+                const select_proveedor = document.getElementById('proveedor_id');
             
             // --- LÓGICA DE ACTUALIZACIÓN DINÁMICA ---
             if (select_proveedor) {
@@ -176,10 +176,11 @@ function guardarProvRapido(e) {
     .trigger('change');
               
             }
+
  bootstrap.Modal.getInstance(document.getElementById('modalNuevoProveedorRapido')).hide();
             form.reset();
                 // 🔥 actualizar select
-            actualizarListaProveedores(nombre);
+            
 
             } else {
                 Swal.fire('Error', data.message || 'No se pudo guardar', 'error');

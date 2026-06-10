@@ -55,6 +55,7 @@ class AlmacenModel {
                 p.id, 
                 p.sku, 
                 p.nombre, 
+                p.unidad_medida,
                 i.stock, 
                 i.almacen_id, 
                 a.nombre AS almacen_nombre

@@ -298,21 +298,19 @@ if ($action === 'get_detalle_trazabilidad') {
          * BLOQUE: MONITOR DE ENTREGAS COMPLETADAS
          * -----------------------------------------------------------
          */
+if ($action === 'get_monitor_entregas') {
+    header('Content-Type: application/json');
 
-       if ($action === 'get_monitor_entregas') {
-    header('Content-Type: application/json'); // Importante declarar el tipo de contenido al inicio
-
-    // 1. Obtenemos el almacén (del filtro o de la sesión)
     $almacen_id = isset($_GET['almacen_id']) ? intval($_GET['almacen_id']) : intval($_SESSION['almacen_id'] ?? 0);
-    
-    // 2. Parámetros de paginación (opcionales, por defecto 0 y 25)
     $inicio = isset($_GET['inicio']) ? intval($_GET['inicio']) : 0;
     $limite = isset($_GET['limite']) ? intval($_GET['limite']) : 25;
     
-    // 3. Llamamos a la función pasando los 3 parámetros requeridos
-    $registros = $repartoM->getMonitorEntregas($almacen_id, $inicio, $limite);
+    // CORRECCIÓN: "Y" mayúscula para asegurar 4 dígitos (ej: 2026-06-10)
+    $fecha_inicio = $_GET['fecha_inicio'] ?? date('Y-m-01');
+    $fecha_fin    = $_GET['fecha_fin'] ?? date('Y-m-d');
     
-    // 4. Verificamos si es un array (aunque esté vacío, el modelo debería devolver [])
+    $registros = $repartoM->getMonitorEntregas($almacen_id, $inicio, $limite, $fecha_inicio, $fecha_fin);
+    
     if (is_array($registros)) {
         echo json_encode([
             "success" => true, 
@@ -493,11 +491,15 @@ if ($action === 'actualizar_logistica_completa') {
 }
 // --- 
        if ($action === 'listar_pendientes_ruta') {
+        $fecha_inicio = $_GET['fecha_inicio'] ?? date('y-m-01');
+$fecha_fin    = $_GET['fecha_fin'] ?? date('y-m-d');
     // Tomamos el almacen_id del GET (filtro) o de la sesión (por defecto)
     $almacen_id = isset($_GET['almacen_id']) ? intval($_GET['almacen_id']) : intval($_SESSION['almacen_id'] ?? 0);
     
     // El modelo ya devuelve el array con 'cantidad_display' incluido
-    $lista = $entregaM->listarSoloDespachadosPatio($almacen_id);
+    $lista = $entregaM->listarSoloDespachadosPatioFecha($almacen_id, $fecha_inicio,
+    $fecha_fin
+);
     
     header('Content-Type: application/json');
     echo json_encode([
@@ -561,6 +563,7 @@ if ($action === 'actualizar_logistica_completa') {
 $almacen_sesion = intval($_SESSION['almacen_id'] ?? 0);
 $unidadesLibres = $vehiculoM->listarPorAlmacen($almacen_sesion);
 $totalUnidadesLibres = count($unidadesLibres);
+$es_admin =  $_SESSION['almacen_id'] === 0 ?true:false;
 
 // Obtener lista de almacenes para el select del Administrador
 $listaAlmacenes = $almacenModel->getAlmacenes($almacen_sesion); 

@@ -44,6 +44,7 @@
     </div>
 </div>
                         <div class="col-md-3">
+                             <div class="input-group">
                             <label class="form-label small fw-bold text-muted text-uppercase">Cliente</label>
                             <select name="cliente_id" id="cliente_id"class="form-select select2-modal" required>
                                 <option value="">Seleccionar cliente...</option>
@@ -52,7 +53,11 @@
                                 </option>
                                 <?php endforeach; ?>
                             </select>
-                         
+                           <button class="btn btn-outline-primary flex-shrink-0" type="button"
+                                onclick="abrirModalNuevoCliente()" style="border-radius:10px;">
+                                <i class="bi bi-person-plus"></i>
+                            </button>
+                        </div>
                         </div>
 
                         <div class="col-md-6">

@@ -106,7 +106,7 @@ public function crear($data, $items) {
                 LEFT JOIN usuarios u ON co.usuario_id = u.id";
         
         if (!$es_admin) {
-            $sql .= " WHERE s.almacen_id = " . intval($almacen_id);
+            $sql .= " WHERE co.almacen_id = " . intval($almacen_id);
         }
         
         $sql .= " ORDER BY co.fecha DESC";

@@ -477,6 +477,82 @@ public function listarViajesActivos($almacen_id = 0) {
     $res = $this->db->query($sql);
     return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
 }
+public function listarViajesActivosRepartos($almacen_id = 0, $fecha_inicio = null, $fecha_fin = null) {
+
+    $almacen_id = intval($almacen_id);
+
+    $sql = "SELECT 
+                tc.viaje_folio,
+                tc.vehiculo_id,
+                tv.nombre as unidad,
+                tv.placas,
+                (SELECT nombre 
+                 FROM trabajadores 
+                 WHERE id = trm.usuario_encargado_id 
+                 LIMIT 1) as chofer,
+
+                (SELECT GROUP_CONCAT(tr.nombre SEPARATOR ', ') 
+                 FROM transporte_tripulantes_detalle ttd
+                 INNER JOIN trabajadores tr ON ttd.usuario_id = tr.id
+                 WHERE ttd.reparto_id = trm.id) as tripulantes,
+
+                GROUP_CONCAT(
+                    DISTINCT CONCAT(
+                        '• <b>[', COALESCE(v.folio, 'S/F'), ']</b> ',
+                        m.cantidad, ' ', p.unidad_medida,
+                        ' - ', p.nombre
+                    ) 
+                    SEPARATOR '<br>'
+                ) as detalles_carga
+
+            FROM transporte_consolidacion tc
+            INNER JOIN transporte_repartos_maestro trm 
+                ON tc.reparto_id = trm.id
+            INNER JOIN transporte_vehiculos tv 
+                ON tc.vehiculo_id = tv.id
+            LEFT JOIN movimientos m 
+                ON trm.entrega_venta_id = m.id
+            LEFT JOIN productos p 
+                ON m.producto_id = p.id
+            LEFT JOIN ventas v 
+                ON m.referencia_id = v.id
+
+            WHERE tc.estatus_consolidado = 'abierto'";
+
+    $params = [];
+    $types = '';
+
+    if ($almacen_id > 0) {
+        $sql .= " AND v.almacen_id = ?";
+        $params[] = $almacen_id;
+        $types .= 'i';
+    }
+
+    if (!empty($fecha_inicio)) {
+        $sql .= " AND DATE(tc.fecha_creacion) >= ?";
+        $params[] = $fecha_inicio;
+        $types .= 's';
+    }
+
+    if (!empty($fecha_fin)) {
+        $sql .= " AND DATE(tc.fecha_creacion) <= ?";
+        $params[] = $fecha_fin;
+        $types .= 's';
+    }
+
+    $sql .= " GROUP BY tc.viaje_folio, tc.vehiculo_id, tv.nombre, tv.placas";
+    $sql .= " ORDER BY tc.viaje_folio DESC";
+
+    $stmt = $this->db->prepare($sql);
+
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
+    }
+
+    $stmt->execute();
+
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
 public function listarHistorialDeRepartos($almacen_id = 0) {
     $almacen_id = intval($almacen_id);
     
@@ -946,52 +1022,44 @@ public function getTripulantesPorReparto($reparto_id) {
     $stmt->bind_param("i", $reparto_id);
     $stmt->execute();
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
-public function getMonitorEntregas($almacen_id = 0, $inicio = 0, $limite = 25) {
+}public function getMonitorEntregas($almacen_id = 0, $inicio = 0, $limite = 25, $fecha_inicio = null, $fecha_fin = null) {
     if (ob_get_level()) ob_clean();
 
-    // Filtro dinámico por almacén
+    // ✅ 2. Asignamos las fechas dinámicas dentro de la función si no se enviaron
+    if (!$fecha_inicio) {
+        $fecha_inicio = date('Y-m-01'); // 'Y' mayúscula para 4 dígitos (Ej. 2026-06-01)
+    }
+    if (!$fecha_fin) {
+        $fecha_fin = date('Y-m-t'); // 'Y' mayúscula para 4 dígitos (Ej. 2026-06-30)
+    }if (ob_get_level()) ob_clean();
+
     $where_almacen = ($almacen_id > 0) ? " AND m.almacen_origen_id = ? " : "";
 
     $sql = "SELECT 
-                -- 1. IDs CRÍTICOS PARA EL MODAL (Agregados)
                 m.id AS movimiento_id, 
                 trm.id AS reparto_id,
-                
-                -- Agrupador: Si hay viaje consolidado, colapsa por folio de viaje, si no, por movimiento
                 IFNULL(tc.viaje_folio, CONCAT('MOV-', m.id)) AS grupo_id,
                 v.id AS venta_id,
                 tc.viaje_folio AS numero_ruta,
                 IF(tc.viaje_folio IS NOT NULL, 'RUTA', 'MOSTRADOR') AS tipo_salida,
-                
-                -- Identificador Visual: Folio de Viaje o Folio de Venta
                 COALESCE(tc.viaje_folio, v.folio) AS identificador_visual,
-                
-                -- Cliente
                 CASE 
                     WHEN tc.viaje_folio IS NOT NULL THEN 'VARIOS CLIENTES (RUTA)'
                     ELSE c.nombre_comercial
                 END AS cliente_display,
-                
-                -- Producto
                 CASE 
                     WHEN tc.viaje_folio IS NOT NULL THEN 'MATERIALES DIVERSOS (CARGA CONSOLIDADA)'
                     ELSE p.nombre 
                 END AS producto_nombre,
-
                 SUM(m.cantidad) as total_bultos,
                 p.unidad_reporte,
                 p.unidad_medida,
                 p.factor_conversion,
-
-                -- Vehículo y Responsable Operativo
                 CASE 
                     WHEN tc.viaje_folio IS NOT NULL THEN IFNULL(tv.nombre, 'POR ASIGNAR') 
                     ELSE 'RECOLECCIÓN PROPIA' 
                 END AS vehiculo,
                 COALESCE(t_chofer.nombre, t_patio.nombre, u_reg.nombre, 'POR ASIGNAR') AS responsable,
-
-                -- Extracción de Lotes
                 (SELECT GROUP_CONCAT(DISTINCT ls.codigo_lote SEPARATOR ', ')
                  FROM lotes_movimientos_salida lms
                  INNER JOIN lotes_stock ls ON lms.lote_id = ls.id
@@ -1000,8 +1068,6 @@ public function getMonitorEntregas($almacen_id = 0, $inicio = 0, $limite = 25) {
                      SELECT dv.id FROM detalle_venta dv WHERE dv.venta_id = v.id
                  ))
                 ) AS lotes_involucrados,
-                
-                -- Fecha con formato para el JS
                 DATE_FORMAT(MAX(IFNULL(rsl.fecha_despacho, m.fecha)), '%d/%m/%Y %H:%i') AS fecha_evento
 
             FROM movimientos m
@@ -1009,18 +1075,16 @@ public function getMonitorEntregas($almacen_id = 0, $inicio = 0, $limite = 25) {
             INNER JOIN ventas v ON m.referencia_id = v.id
             LEFT JOIN clientes c ON v.id_cliente = c.id
             LEFT JOIN usuarios u_reg ON m.usuario_registra_id = u_reg.id
-            
-            -- Logística
             LEFT JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id AND trm.estado_reparto != 'cancelado'
             LEFT JOIN transporte_vehiculos tv ON trm.vehiculo_id = tv.id
             LEFT JOIN transporte_consolidacion tc ON trm.id = tc.reparto_id
             LEFT JOIN trabajadores t_chofer ON trm.usuario_encargado_id = t_chofer.id
-            
-            -- Patio
             LEFT JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
             LEFT JOIN trabajadores t_patio ON rsl.usuario_despacho_id = t_patio.id 
 
             WHERE m.tipo = 'salida' 
+            -- CORRECCIÓN: Filtramos por la fecha del movimiento para no matar el LEFT JOIN, y usamos ?
+            AND DATE(m.fecha) >= ? AND DATE(m.fecha) <= ?
             $where_almacen
 
             GROUP BY grupo_id
@@ -1029,10 +1093,13 @@ public function getMonitorEntregas($almacen_id = 0, $inicio = 0, $limite = 25) {
 
     $stmt = $this->db->prepare($sql);
     
+    // CORRECCIÓN: Agregar las fechas al bind_param de forma dinámica
     if ($almacen_id > 0) {
-        $stmt->bind_param("iii", $almacen_id, $inicio, $limite);
+        // "ssiii" -> String (fecha_ini), String (fecha_fin), Int (almacen), Int (inicio), Int (limite)
+        $stmt->bind_param("ssiii", $fecha_inicio, $fecha_fin, $almacen_id, $inicio, $limite);
     } else {
-        $stmt->bind_param("ii", $inicio, $limite);
+        // "ssii" -> String (fecha_ini), String (fecha_fin), Int (inicio), Int (limite)
+        $stmt->bind_param("ssii", $fecha_inicio, $fecha_fin, $inicio, $limite);
     }
 
     $stmt->execute();
@@ -1040,7 +1107,6 @@ public function getMonitorEntregas($almacen_id = 0, $inicio = 0, $limite = 25) {
     $data = [];
 
     while ($row = $result->fetch_assoc()) {
-        // Lógica de visualización de cantidades (Conversión a Enteros/Restos)
         if ($row['numero_ruta'] != null) {
             $row['lectura_fisica'] = "CARGA CONSOLIDADA";
         } else {

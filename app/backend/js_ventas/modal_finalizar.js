@@ -39,14 +39,14 @@ window.abrirModalFinalizar = function () {
 
         let nombreuni = '';
 
-        if (cantFactorVenta == 0) {
+        if (item.cantidad<1) {
             nombreuni = item.unidadMedidaNombre;
         } else {
             nombreuni = item.unidad_medida;
         }
 
         const tr = document.createElement("tr");
-        console.log(item.unidad_medida);
+        console.log(item.unidad_medida,cantFactorVenta);
 
         tr.innerHTML = `
             <td>
@@ -67,7 +67,7 @@ window.abrirModalFinalizar = function () {
             <td class="text-center">
                 <div class="fw-bold" style="font-size: 0.9rem;">
                     ${cantFactorVenta >= 1 ? cantFactorVenta : cantidadT.toFixed(3)}
-                    ${cantFactorVenta > 0 ? item.unidad_reporte : nombreuni}
+                    ${cantFactorVenta >0 ? item.unidad_reporte : nombreuni}
                 </div>
             </td>
 

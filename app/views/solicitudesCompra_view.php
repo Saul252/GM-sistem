@@ -119,12 +119,8 @@ error_reporting(E_ALL);
                                 ?>
                                 <span class="badge badge-status <?= $clase ?> rounded-pill"><?= $status ?></span>
                             </td>
-                            <td class="text-end">
-                                 <button class="btn btn-sm btn-outline-danger py-0 px-2" 
-                                    onclick="abrirModalAjuste(<?= $s['compra_id_final'] ?>, '<?= $s['compra_id_final'] ?>')">
-                                <i class="bi bi-wrench-adjustable"></i>
-                            </button>
-
+                              <td class="text-end">
+                     
                                 <?php if($status === 'PENDIENTE'): ?>
                                 <button class="btn btn-sm btn-white border shadow-sm"
                                     onclick="gestionarSolicitud(<?= $s['id'] ?>)">
@@ -852,7 +848,7 @@ error_reporting(E_ALL);
 
        <?php require_once __DIR__ . '/solicitudesCompra/ModalSolicitud.php'; ?>
         <?php require_once __DIR__ . '/egresosComponets/agregarPoductoModal.php'; ?>
-        <?php require_once __DIR__ . '/egresosComponets/modalProveedoresCompra.php'; ?>
+        <?php require_once __DIR__ . '/solicitudesCompra/modalProveedoresCompra.php'; ?>
         <?php require_once __DIR__ . '/egresosComponets/modalAjuste.php'; ?>
     <script>
     const URL_CONTROLADOR_SOLICITUD = '../controllers/solicitudesCompraController.php';
@@ -1667,6 +1663,7 @@ function prepararImpresion(id) {
         });
 }
     </script>
+    
 </body>
 
 </html>

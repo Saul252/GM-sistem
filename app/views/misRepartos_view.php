@@ -133,9 +133,25 @@
                 </h6>
                 
                  <!-- 🔥 NUEVO -->
-   <span class="small text-muted">Fecha de Inicio:</span>  <input type="date" id="fecha_inicio_monitor" class="form-control form-control-sm" style="width:auto;" onchange="cargarMonitor(1)">
-    
-    <span class="small text-muted">Fecha de Fin:</span> <input type="date" id="fecha_fin_monitor" class="form-control form-control-sm" style="width:auto;" onchange="cargarMonitor(1)">
+<span class="small text-muted">Fecha de Inicio:</span>
+<input
+    type="date"
+    id="fecha_inicio_monitor"
+    value="<?= date('Y-m-01') ?>"
+    class="form-control form-control-sm"
+    style="width:auto;"
+    onchange="cargarMonitor(1)"
+>
+
+<span class="small text-muted">Fecha de Fin:</span>
+<input
+    type="date"
+    id="fecha_fin_monitor"
+    value="<?= date('Y-m-t') ?>"
+    class="form-control form-control-sm"
+    style="width:auto;"
+    onchange="cargarMonitor(1)"
+>
 
 
                 
@@ -143,7 +159,8 @@
                 <div class="d-flex align-items-center gap-2">
                     <span class="small text-muted">Almacén:</span>
                     <select id="filtro_almacen_monitor" class="form-select form-select-sm border rounded-3" style="width: auto;" onchange="cargarMonitor(1)">
-                        <option value="0">Todos</option>
+              
+<?php if ($es_admin): ?><option value="0">Todos</option>  <?php endif; ?>
                         <?php if(isset($listaAlmacenes)) foreach ($listaAlmacenes as $alm): ?>
                             <option value="<?= $alm['id'] ?>"><?= $alm['nombre'] ?></option>
                         <?php endforeach; ?>

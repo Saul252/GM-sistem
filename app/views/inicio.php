@@ -18,7 +18,7 @@ $modulos = [
     ['id' => 'clientesEstatus', 'url' => '/cfsistem/app/controllers/clientesEstatusController.php', 'icon' => 'bi-person-check', 'class' => 'text-success', 'label' => 'Estatus', 'desc' => 'Créditos'],
     ['id' => 'pedidosVendedor', 'url' => '/cfsistem/app/controllers/pedidosVendedorController.php', 'icon' => 'bi-person-badge-fill', 'class' => 'text-warning', 'label' => 'Pedidos Vendedor', 'desc' => 'Preventa'],
     ['id' => 'ventashistorial', 'url' => '/cfsistem/app/controllers/ventasHistorialController.php', 'icon' => 'bi-receipt', 'class' => 'icon-historial', 'label' => 'Historial de Ventas', 'desc' => 'Historial de Ventas'],
-['id' => 'registrarPagos', 'url' => '/cfsistem/app/controllers/registrarPagosController.php', 'icon' => 'bi-receipt', 'class' => 'icon-historial', 'label' => 'Registrar Pagos a Ventas', 'desc' => 'Registrar Pagos a ventas'],
+['id' => 'registrarPagos', 'url' => '/cfsistem/app/controllers/registrarPagosController.php', 'icon' => 'bi-journal-text', 'class' => 'icon-historial', 'label' => 'Registrar Pagos a Ventas', 'desc' => 'Registrar Pagos a ventas'],
 
     // =========================
     // COMPRAS Y PROVEEDORES
@@ -35,7 +35,7 @@ $modulos = [
     ['id' => 'Mermas', 'url' => '/cfsistem/app/controllers/mermasController.php', 'icon' => 'bi-exclamation-triangle', 'class' => 'icon-mermas', 'label' => 'Mermas', 'desc' => 'Pérdidas'],
     ['id' => 'transmutaciones', 'url' => '/cfsistem/app/controllers/transmutacionesController.php', 'icon' => 'bi-arrow-repeat', 'class' => 'icon-transmutaciones', 'label' => 'Conversiones', 'desc' => 'Procesos'],
     ['id' => 'historialLotes', 'url' => '/cfsistem/app/controllers/lotesHistorialController.php', 'icon' => 'bi-clock-history', 'label' => 'Historial de Lotes', 'desc' => 'Historial de lotes'],
-['id' => 'compraslHistorial', 'url' => '/cfsistem/app/controllers/compraslotesHistorialController.php', 'icon' => 'bi-clock-history', 'label' => 'Historial de compras', 'desc' => 'Historial de compras'],
+['id' => 'comprasHistorial', 'url' => '/cfsistem/app/controllers/comprasHistorialController.php', 'icon' => 'bi-collection', 'label' => 'Historial de compras', 'desc' => 'Historial de compras'],
 
     // =========================
     // FINANZAS Y TESORERÍA

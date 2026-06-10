@@ -18,8 +18,6 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
      <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
        <link href="/cfsistem/css/repartos.css" rel="stylesheet">
-   
-
 </head>
 <body>
     <?php if (function_exists('renderizarLayout')) { renderizarLayout($paginaActual); } ?>
@@ -41,15 +39,25 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
         </div>
 
         <div class="row g-3 mb-4 animate__animated animate__fadeInUp">
-            <div class="col-md-8">
+            <div class="col-md-5">
                 <div class="card-premium p-2 px-3 mb-0 d-flex align-items-center shadow-sm" style="border-radius: 16px;">
                     <i class="bi bi-search text-muted me-3 fs-5"></i>
                     <input type="text" id="buscarSalida" class="form-control border-0 bg-transparent py-2 shadow-none" placeholder="Buscar por folio, cliente o producto...">
                 </div>
             </div>
-            <div class="col-md-4">
-                <select id="filtroAlmacen" class="form-select-ios h-100 w-100 shadow-sm" onchange="cargarPendientes(); cargarMonitorViajes();">
-                    <option value="0">🌐 Todas las Sucursales</option>
+            
+            <div class="col-md-4 d-flex align-items-center gap-2">
+                <label class="form-label mb-0 fw-bold text-muted small">Rango:</label>
+                <input type="date" id="inicio" class="form-control shadow-sm" style="width:auto; border-radius: 12px;">
+                <span class="text-muted">-</span>
+                <input type="date" id="fin" class="form-control shadow-sm" style="width:auto; border-radius: 12px;">
+            </div>
+
+            <div class="col-md-3">
+                <select id="filtroAlmacen" class="form-select-ios h-100 w-100 shadow-sm" onchange="cargarPendientes(); cargarMonitorViajes();cargarPendientes()" style="border-radius: 12px;">
+                    <?php if ($es_admin): ?>
+                        <option value="0">🌐 Todas las Sucursales</option>
+                    <?php endif;?>
                     <?php if(isset($listaAlmacenes)) foreach($listaAlmacenes as $alm): ?>
                         <option value="<?= $alm['id'] ?>">📍 <?= $alm['nombre'] ?></option>
                     <?php endforeach; ?>
@@ -78,8 +86,7 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
                                 <th class="text-end pe-4">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody id="bodyMonitorViajes">
-                            </tbody>
+                        <tbody id="bodyMonitorViajes"></tbody>
                     </table>
                 </div>
             </div>
@@ -106,8 +113,7 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
                             <th class="text-end pe-4">Gestión</th>
                         </tr>
                     </thead>
-                    <tbody id="bodyPendientes">
-                        </tbody>
+                    <tbody id="bodyPendientes"></tbody>
                 </table>
             </div>
 
@@ -123,135 +129,92 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
     <?php require_once __DIR__ . '/entregasComponets/repartoModal.php'; ?>
-<?php require_once __DIR__ . '/entregasComponets/editarRepartoModal.php'; ?>
-<?php require_once __DIR__ . '/entregasComponets/minitordeHistorialDeReparto.php'; ?>
-<?php require_once __DIR__ . '/entregasComponets/modalVerEntrega.php' ?>
+    <?php require_once __DIR__ . '/entregasComponets/editarRepartoModal.php'; ?>
+    <?php require_once __DIR__ . '/entregasComponets/minitordeHistorialDeReparto.php'; ?>
+    <?php require_once __DIR__ . '/entregasComponets/modalVerEntrega.php'; ?>
 
     <script>
-    // --- LÓGICA DE MONITOR DE VIAJES ---
-   window.cargarMonitorViajes = async function() {
-    const body = $('#bodyMonitorViajes');
-    const almacenId = $('#filtroAlmacen').val() || 0;
-    
-    try {
-        body.html('<tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary spinner-border-sm"></div><div class="mt-2 text-muted small">Consultando satélite...</div></td></tr>');
-        
-        const resp = await fetch(`/cfsistem/app/controllers/repartosController.php?action=listar_viajes_activos&almacen_id=${almacenId}`);
-        const result = await resp.json();
-        const data = result.data || result; 
+    window.cargarMonitorViajes = async function() {
+        // ... (Tu código actual de cargarMonitorViajes no cambia) ...
+        const body = $('#bodyMonitorViajes');
+        const almacenId = $('#filtroAlmacen').val() || 0;
+        try {
+            body.html('<tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary spinner-border-sm"></div><div class="mt-2 text-muted small">Consultando satélite...</div></td></tr>');
+            const resp = await fetch(`/cfsistem/app/controllers/repartosController.php?action=listar_viajes_activos&almacen_id=${almacenId}`);
+            const result = await resp.json();
+            const data = result.data || result; 
 
-        if (!data || data.length === 0) {
-            body.html('<tr><td colspan="5" class="text-center py-5 text-muted opacity-50"><i class="bi bi-geo-alt fs-2 d-block mb-2"></i> No hay unidades activas en ruta</td></tr>');
-            return;
-        }
-
-        body.empty();
-        data.forEach(v => {
-            const listaAyudantes = v.tripulantes 
-                ? `<div class="small text-muted fw-medium"><i class="bi bi-people-fill me-1 text-primary"></i> ${v.tripulantes}</div>`
-                : `<span class="badge bg-light text-secondary fw-normal border" style="font-size:0.6rem;">Solo Conductor</span>`;
-
-            body.append(`
-                <tr class="animate__animated animate__fadeIn border-bottom" style="border-color: #f2f2f7 !important;">
-                    <td class="ps-4">
-                        <div class="fw-bold text-dark" style="font-size:0.95rem; letter-spacing:-0.01em;">${v.unidad}</div>
-                        <div class="badge-folio mt-1"><i class="bi bi-hash"></i>${v.viaje_folio}</div>
-                        <div class="small text-muted mt-1" style="font-size:0.7rem;">📍 ${v.almacen_nombre || 'N/A'}</div>
-                    </td>
-                    <td>
-                        <div class="d-flex align-items-center">
-                            <div class="avatar-chofer me-3">
-                                <i class="bi bi-person-badge"></i>
+            if (!data || data.length === 0) {
+                body.html('<tr><td colspan="5" class="text-center py-5 text-muted opacity-50"><i class="bi bi-geo-alt fs-2 d-block mb-2"></i> No hay unidades activas en ruta</td></tr>');
+                return;
+            }
+            body.empty();
+            data.forEach(v => {
+                const listaAyudantes = v.tripulantes ? `<div class="small text-muted fw-medium"><i class="bi bi-people-fill me-1 text-primary"></i> ${v.tripulantes}</div>` : `<span class="badge bg-light text-secondary fw-normal border" style="font-size:0.6rem;">Solo Conductor</span>`;
+                body.append(`
+                    <tr class="animate__animated animate__fadeIn border-bottom" style="border-color: #f2f2f7 !important;">
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark" style="font-size:0.95rem; letter-spacing:-0.01em;">${v.unidad}</div>
+                            <div class="badge-folio mt-1"><i class="bi bi-hash"></i>${v.viaje_folio}</div>
+                            <div class="small text-muted mt-1" style="font-size:0.7rem;">📍 ${v.almacen_nombre || 'N/A'}</div>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-chofer me-3"><i class="bi bi-person-badge"></i></div>
+                                <div>
+                                    <div class="fw-bold text-uppercase" style="font-size: 0.72rem; color:#1d1d1f; letter-spacing:0.02em;">${v.chofer}</div>
+                                    <small class="text-muted" style="font-size: 0.62rem;">Operador Logístico</small>
+                                </div>
                             </div>
-                            <div>
-                                <div class="fw-bold text-uppercase" style="font-size: 0.72rem; color:#1d1d1f; letter-spacing:0.02em;">${v.chofer}</div>
-                                <small class="text-muted" style="font-size: 0.62rem;">Operador Logístico</small>
+                        </td>
+                        <td>${listaAyudantes}</td>
+                        <td><div class="carga-scroll" style="font-size:0.75rem; color:#424245;">${v.detalles_carga}</div></td>
+                        <td class="text-end pe-4">
+                        <button class="btn btn-sm btn-light border-0" onclick="abrirModalEdicionViaje('${v.viaje_folio}', ${v.vehiculo_id}, ${v.chofer_id})" style="border-radius: 10px; color: #007aff; background: #f2f2f7;"><i class="bi bi-pencil-square"></i></button>
+                            <div class="d-flex justify-content-end mt-1" style="gap: 8px;">
+                                <button class="btn btn-sm d-flex align-items-center justify-content-center" onclick="confirmarCancelacionViaje(${v.vehiculo_id}, '${v.viaje_folio}')" style="background: #fff; color: #ff3b30; border: 1px solid #ff3b30; border-radius: 10px; padding: 6px 12px; font-weight: 600; font-size: 0.68rem; transition: all 0.3s ease;"><i class="bi bi-x-circle me-1"></i> CANCELAR</button>
+                                <button class="btn btn-finish btn-sm d-flex align-items-center justify-content-center" onclick="finalizarViaje(${v.vehiculo_id}, '${v.viaje_folio}')" style="background: #14c41d; color: #fff; border: none; border-radius: 10px; padding: 6px 14px; font-weight: 600; font-size: 0.68rem;"><i class="bi bi-check2-all me-1"></i> FINALIZAR</button>
                             </div>
-                        </div>
-                    </td>
-                    <td>${listaAyudantes}</td>
-                    <td><div class="carga-scroll" style="font-size:0.75rem; color:#424245;">${v.detalles_carga}</div></td>
-                    <td class="text-end pe-4">
-                    <button class="btn btn-sm btn-light border-0" 
-                onclick="abrirModalEdicionViaje('${v.viaje_folio}', ${v.vehiculo_id}, ${v.chofer_id})"
-                style="border-radius: 10px; color: #007aff; background: #f2f2f7;">
-            <i class="bi bi-pencil-square"></i>
-        </button>
-                        <div class="d-flex justify-content-end" style="gap: 8px;">
-                            <button class="btn btn-sm d-flex align-items-center justify-content-center" 
-                                    onclick="confirmarCancelacionViaje(${v.vehiculo_id}, '${v.viaje_folio}')"
-                                    style="background: #fff; color: #ff3b30; border: 1px solid #ff3b30; border-radius: 10px; padding: 6px 12px; font-weight: 600; font-size: 0.68rem; transition: all 0.3s ease;">
-                                <i class="bi bi-x-circle me-1"></i> CANCELAR
-                            </button>
+                        </td>
+                    </tr>
+                `);
+            });
+        } catch (e) { body.html('<tr><td colspan="5" class="text-center py-4 text-danger">Error de conexión</td></tr>'); }
+    };
 
-                            <button class="btn btn-finish btn-sm d-flex align-items-center justify-content-center" 
-                                    onclick="finalizarViaje(${v.vehiculo_id}, '${v.viaje_folio}')"
-                                    style="background: #14c41d; color: #fff; border: none; border-radius: 10px; padding: 6px 14px; font-weight: 600; font-size: 0.68rem;">
-                                <i class="bi bi-check2-all me-1"></i> FINALIZAR
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-            `);
+    window.confirmarCancelacionViaje = function(vehiculoId, folioViaje) {
+        Swal.fire({
+            title: '¿Anular este viaje?',
+            text: `Se cancelarán todas las entregas asociadas al folio ${folioViaje} y los materiales volverán a estar disponibles.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ff3b30',
+            cancelButtonColor: '#8e8e93',
+            confirmButtonText: 'Sí, cancelar ruta',
+            cancelButtonText: 'Mantener activo',
+            customClass: { popup: 'rounded-4 shadow', confirmButton: 'rounded-3 px-4', cancelButton: 'rounded-3 px-4' }
+        }).then((result) => {
+            if (result.isConfirmed) cancelarTodoElViaje(vehiculoId, folioViaje);
         });
-    } catch (e) { 
-        body.html('<tr><td colspan="5" class="text-center py-4 text-danger">Error de conexión</td></tr>');
+    };
+
+    async function cancelarTodoElViaje(vehiculoId, folioViaje) {
+        try {
+            $('#loader').removeClass('d-none');
+            const resp = await fetch(`/cfsistem/app/controllers/repartosController.php?action=cancelar_viaje_completo&folio=${folioViaje}&vehiculo_id=${vehiculoId}`);
+            const res = await resp.json();
+            if (res.success) {
+                Swal.fire({ title: 'Ruta Anulada', text: res.message, icon: 'success', confirmButtonColor: '#1c1c1e', customClass: { popup: 'rounded-4' } }).then(() => location.reload());
+            } else {
+                Swal.fire('Error', res.message || 'No se pudo anular', 'error');
+            }
+        } catch (e) {
+            Swal.fire('Error de sistema', 'Ocurrió un error al conectar con el satélite.', 'error');
+        } finally {
+            $('#loader').addClass('d-none');
+        }
     }
-};
 
-// --- 1. FUNCIÓN DE CONFIRMACIÓN (TUYA, AJUSTADA) ---
-window.confirmarCancelacionViaje = function(vehiculoId, folioViaje) {
-    Swal.fire({
-        title: '¿Anular este viaje?',
-        text: `Se cancelarán todas las entregas asociadas al folio ${folioViaje} y los materiales volverán a estar disponibles.`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#ff3b30',
-        cancelButtonColor: '#8e8e93',
-        confirmButtonText: 'Sí, cancelar ruta',
-        cancelButtonText: 'Mantener activo',
-        customClass: {
-            popup: 'rounded-4 shadow',
-            confirmButton: 'rounded-3 px-4',
-            cancelButton: 'rounded-3 px-4'
-        }
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Llamamos a la función que realmente ejecuta el borrado
-            cancelarTodoElViaje(vehiculoId, folioViaje);
-        }
-    });
-};
-
-// --- 2. FUNCIÓN DE EJECUCIÓN (LA QUE SE COMUNICA CON EL CONTROLLER) ---
-async function cancelarTodoElViaje(vehiculoId, folioViaje) {
-    try {
-        // Mostramos un loader sutil para que el usuario sepa que se está procesando
-        $('#loader').removeClass('d-none');
-
-        const resp = await fetch(`/cfsistem/app/controllers/repartosController.php?action=cancelar_viaje_completo&folio=${folioViaje}&vehiculo_id=${vehiculoId}`);
-        const res = await resp.json();
-
-        if (res.success) {
-            Swal.fire({
-                title: 'Ruta Anulada',
-                text: res.message,
-                icon: 'success',
-                confirmButtonColor: '#1c1c1e',
-                customClass: { popup: 'rounded-4' }
-            }) .then(() => location.reload());
-            // Recargamos el monitor de viajes para que la unidad desaparezca
-           
-        } else {
-            Swal.fire('Error', res.message || 'No se pudo anular', 'error');
-        }
-    } catch (e) {
-        console.error(e);
-        Swal.fire('Error de sistema', 'Ocurrió un error al conectar con el satélite.', 'error');
-    } finally {
-        $('#loader').addClass('d-none');
-    }
-}
     window.CONTROLLER = '/cfsistem/app/controllers/repartosController.php';
     let allData = [];
     let filteredData = [];
@@ -261,9 +224,15 @@ async function cancelarTodoElViaje(vehiculoId, folioViaje) {
     window.cargarPendientes = async function() {
         const body = $('#bodyPendientes');
         const idAlmacen = $('#filtroAlmacen').val();
+        
+        // CORRECCIÓN: Los valores de fecha ya se toman correctamente de los inputs
+        const fechaInicio = document.getElementById('inicio').value;
+        const fechaFin = document.getElementById('fin').value;
+
         try {
             body.html('<tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary spinner-border-sm"></div></td></tr>');
-            const resp = await fetch(`${window.CONTROLLER}?action=listar_pendientes_ruta&almacen_id=${idAlmacen}`);
+            // Las fechas se envían correctamente en la URL aquí:
+            const resp = await fetch(`${window.CONTROLLER}?action=listar_pendientes_ruta&almacen_id=${idAlmacen}&fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`);
             const res = await resp.json();
             
             allData = res.success ? res.data : [];
@@ -272,85 +241,98 @@ async function cancelarTodoElViaje(vehiculoId, folioViaje) {
             currentPage = 1;
             renderTable();
         } catch (e) { console.error(e); }
+
+
+    offsetActual = 0;
+    const idAlmacen2 = $('#filtroAlmacen').val();
+    $('#tbodyMonitor').html('<tr><td colspan="8" class="text-center py-5"><div class="spinner-border spinner-border-sm text-primary"></div></td></tr>');
+
+    $.ajax({
+        url: '/cfsistem/app/controllers/repartosController.php',
+        type: 'GET',
+        data: { action: 'get_monitor_entregas', almacen_id: idAlmacen2, inicio: offsetActual, limite: limiteCarga ,fecha_inicio:fechaInicio,fecha_fin:fechaFin},
+        dataType: 'json',
+        success: function(response) {
+            if(response.success && response.data.length > 0) { 
+                renderizarFilas(response.data, false); 
+            }
+            else { 
+                $('#tbodyMonitor').html('<tr><td colspan="8" class="text-center text-muted py-5"><i class="bi bi-patch-check d-block fs-2 mb-2"></i>No hay movimientos pendientes.</td></tr>'); 
+                $('#btnCargarMas').hide();
+            }
+        }
+    });
+
     };
     </script>
     <script>
-function renderTable() {
-    const body = $('#bodyPendientes');
-    body.empty();
-    const start = (currentPage - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-    const items = filteredData.slice(start, end);
+    function renderTable() {
+        const body = $('#bodyPendientes');
+        body.empty();
+        const start = (currentPage - 1) * rowsPerPage;
+        const end = start + rowsPerPage;
+        const items = filteredData.slice(start, end);
 
-    if (items.length === 0) {
-        body.html('<tr><td colspan="5" class="text-center py-5 text-muted">Bandeja de entrada vacía</td></tr>');
-        return;
+        if (items.length === 0) {
+            body.html('<tr><td colspan="6" class="text-center py-5 text-muted">Bandeja de entrada vacía o sin resultados para el filtro seleccionado</td></tr>');
+            return;
+        }
+
+        items.forEach(item => {
+            let cantidad = parseFloat(item.cantidad) || 0;
+            let factor = parseFloat(item.factor_conversion) || 1;
+            let uReporte = item.unidad_reporte || 'Unid.';
+            let uMedida = item.unidad_medida || 'Pz';
+            let displayEntrega = "";
+
+            if (factor > 1) {
+                let enteros = Math.floor(cantidad / factor);
+                let sobrantes = cantidad % factor;
+                let partes = [];
+                if (enteros > 0) partes.push(`<strong>${enteros}</strong> ${uReporte}`);
+                if (sobrantes > 0) partes.push(`<strong>${sobrantes}</strong> ${uMedida}`);
+                displayEntrega = partes.length > 0 ? partes.join(' + ') : `0 ${uMedida}`;
+            } else {
+                displayEntrega = `<strong>${cantidad}</strong> ${uMedida}`;
+            }
+
+            let badge = '';
+            let btnAccion = '';
+            const estado = (item.estado_reparto || '').toLowerCase().trim();
+
+            if (estado === 'completado') {
+                badge = '<span class="badge-premium st-completado"><i class="bi bi-check-circle-fill"></i> Entregado</span>';
+                btnAccion = `<button class="btn btn-outline-success btn-sm rounded-pill px-3" onclick="verEntrega(${item.movimiento_id})"><i class="bi bi-eye"></i></button>`;
+            } else if (estado === 'en_transito') {
+                badge = '<span class="badge-premium st-ruta"><i class="bi bi-truck animate-pulse-soft"></i> En Tránsito</span>';
+                btnAccion = `<button class="btn btn-light btn-sm rounded-pill border shadow-sm px-3" onclick="verEntrega(${item.movimiento_id})"><i class="bi-truck"></i></button>`;
+            } else {
+                badge = '<span class="badge-premium st-disponible"><i class="bi bi-house"></i> En Patio</span>';
+                btnAccion = `<button class="btn btn-gradient btn-sm px-3" onclick="prepararModalReparto(${item.movimiento_id}, ${item.almacen_origen_id})">ASIGNAR RUTA</button>`;
+            }
+
+            body.append(`
+                <tr class="animate__animated animate__fadeIn">
+                    <td class="ps-4">
+                        <div class="fw-bold text-dark" style="font-size: 0.9rem;">#${item.folio_venta || 'S/F'}</div>
+                        <div class="text-muted" style="font-size: 0.75rem;">${item.fecha_format || ''}</div>
+                    </td>
+                    <td>
+                        <div class="fw-bold text-dark" style="font-size: 0.9rem;">${item.cliente || 'S/F'}</div>
+                    </td>
+                    <td>
+                        <div class="fw-bold text-dark" style="font-size: 0.85rem;">${item.producto}</div>
+                        <div class="text-muted small">${displayEntrega}</div>
+                    </td>
+                    <td><span class="small text-muted fw-bold">📍 ${item.almacen_origen}</span></td>
+                    <td class="text-center">${badge}</td>
+                    <td class="text-end pe-4">${btnAccion}</td>
+                </tr>
+            `);
+        });
+        renderPagination();
     }
 
-    items.forEach(item => {
-        // --- LÓGICA DE CÁLCULO DE UNIDADES (SIN CEROS) ---
-        let cantidad = parseFloat(item.cantidad) || 0;
-        let factor = parseFloat(item.factor_conversion) || 1;
-        let uReporte = item.unidad_reporte || 'Unid.';
-        let uMedida = item.unidad_medida || 'Pz';
-        let displayEntrega = "";
-
-        if (factor > 1) {
-            let enteros = Math.floor(cantidad / factor);
-            let sobrantes = cantidad % factor;
-
-            let partes = [];
-            if (enteros > 0) partes.push(`<strong>${enteros}</strong> ${uReporte}`);
-            if (sobrantes > 0) partes.push(`<strong>${sobrantes}</strong> ${uMedida}`);
-
-            // Unimos con " + " solo si existen ambas partes
-            displayEntrega = partes.length > 0 ? partes.join(' + ') : `0 ${uMedida}`;
-        } else {
-            displayEntrega = `<strong>${cantidad}</strong> ${uMedida}`;
-        }
-
-        // --- LÓGICA DE BADGES Y BOTONES ---
-        let badge = '';
-        let btnAccion = '';
-        const estado = (item.estado_reparto || '').toLowerCase().trim();
-
-        if (estado === 'completado') {
-            badge = '<span class="badge-premium st-completado"><i class="bi bi-check-circle-fill"></i> Entregado</span>';
-            btnAccion = `<button class="btn btn-outline-success btn-sm rounded-pill px-3" onclick="verEntrega(${item.movimiento_id})"><i class="bi bi-eye"></i></button>`;
-        } 
-        else if (estado === 'en_transito') {
-            badge = '<span class="badge-premium st-ruta"><i class="bi bi-truck animate-pulse-soft"></i> En Tránsito</span>';
-            btnAccion = `<button class="btn btn-light btn-sm rounded-pill border shadow-sm px-3" onclick="verEntrega(${item.movimiento_id})"><i class="bi-truck"></i></button>`;
-        } 
-        else {
-            badge = '<span class="badge-premium st-disponible"><i class="bi bi-house"></i> En Patio</span>';
-            btnAccion = `<button class="btn btn-gradient btn-sm px-3" onclick="prepararModalReparto(${item.movimiento_id}, ${item.almacen_origen_id})">ASIGNAR RUTA</button>`;
-        }
-
-        // --- RENDERIZADO DE LA FILA ---
-        body.append(`
-            <tr class="animate__animated animate__fadeIn">
-                <td class="ps-4">
-                    <div class="fw-bold text-dark" style="font-size: 0.9rem;">#${item.folio_venta || 'S/F'}</div>
-                    <div class="text-muted" style="font-size: 0.75rem;">${item.fecha_format || ''}</div>
-                </td>
-                <td >
-                    <div class="fw-bold text-dark" style="font-size: 0.9rem;">${item.cliente || 'S/F'}</div>
-                   
-                    
-                </td>
-                <td>
-                    <div class="fw-bold text-dark" style="font-size: 0.85rem;">${item.producto}</div>
-                    <div class="text-muted small">${displayEntrega}</div>
-                </td>
-                <td><span class="small text-muted fw-bold">📍 ${item.almacen_origen}</span></td>
-                <td class="text-center">${badge}</td>
-                <td class="text-end pe-4">${btnAccion}</td>
-            </tr>
-        `);
-    });
-    renderPagination();
-}
     function renderPagination() {
         const totalPages = Math.ceil(filteredData.length / rowsPerPage);
         const container = $('#paginationBootstrap');
@@ -387,11 +369,19 @@ function renderTable() {
     $(document).ready(function() {
         cargarPendientes();
         cargarMonitorViajes();
+
         $("#buscarSalida").on("keyup", function() {
             const val = $(this).val().toLowerCase();
-            filteredData = allData.filter(i => `${i.folio_venta} ${i.producto} ${i.almacen_origen}`.toLowerCase().includes(val));
+            filteredData = allData.filter(i => `${i.folio_venta}${i.cliente} ${i.producto} ${i.almacen_origen}`.toLowerCase().includes(val));
             currentPage = 1;
             renderTable();
+        });
+
+        // CORRECCIÓN: Escuchar el evento 'change' en AMBOS inputs de fecha
+        // Ya no necesitas una función "recargar", porque cargarPendientes() hace la misma llamada HTTP con las fechas.
+        $("#inicio, #fin").on("change", function() {
+            cargarPendientes();
+            
         });
     });
     </script>

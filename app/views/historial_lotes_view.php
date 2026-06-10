@@ -8,6 +8,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial de Lotes</title>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
@@ -77,18 +78,17 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
                 </div>
                 <?php endif; ?>
 
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold">Producto</label>
-                    <select id="filtroProducto" class="form-select">
-                        <option value="">Selecciona producto</option>
-                        <?php foreach ($productos as $p): ?>
-                        <option value="<?= $p['id'] ?>">
-                            <?= htmlspecialchars($p['nombre']) ?>
-                        </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
+<div class="col-md-3">
+    <label class="form-label small fw-bold">Producto</label>
+    <select id="filtroProducto" class="form-select select2">
+        <option value="">Selecciona producto</option>
+        <?php foreach ($productos as $p): ?>
+        <option value="<?= $p['id'] ?>">
+            <?= htmlspecialchars($p['nombre']) ?>
+        </option>
+        <?php endforeach; ?>
+    </select>
+</div>
                 <div class="col-md-2">
                     <label class="form-label small fw-bold">Desde</label>
                     <input type="date" id="fecha_inicio" class="form-control" value="<?= date('Y-m-01') ?>">
@@ -231,6 +231,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
     function cargarHistorial() {
         const producto = $('#filtroProducto').val();
@@ -422,6 +423,13 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
             }
         });
     });
+    $(document).ready(function () {
+    $('#filtroProducto').select2({
+        placeholder: 'Buscar producto...',
+        allowClear: true,
+        width: '100%'
+    });
+});
     </script>
 </body>
 

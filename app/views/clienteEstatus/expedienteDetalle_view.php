@@ -664,7 +664,7 @@ async function imprimirEstadoCuenta() {
         const filas = expediente.map(v => `
             <tr>
                 <td>
-                  <small style="font-size:11px;color:#6c757d;">
+                  <small style="font-size:7px;color:#6c757d;">
         ${new Date(v.fecha).toLocaleDateString('es-MX', {
             day: '2-digit',
             month: '2-digit',
@@ -672,7 +672,7 @@ async function imprimirEstadoCuenta() {
         })}
     </small>
                     <br>
-                   <small style="font-size:11px;color:#6c757d;">${diasTranscurridos(v.fecha)} días</small>
+                   <small style="font-size:7px;color:#6c757d;">${diasTranscurridos(v.fecha)} días</small>
                 </td>
 
                 <td>${v.folio}</td>
@@ -701,7 +701,7 @@ async function imprimirEstadoCuenta() {
             <style>
                 body{
                     font-family:Arial,sans-serif;
-                    font-size:12px;
+                    font-size:10px;
                     padding:20px;
                 }
 
@@ -713,6 +713,7 @@ async function imprimirEstadoCuenta() {
                 th,td{
                     border:1px solid #ccc;
                     padding:8px;
+                    font-size:8px;
                 }
 
                 th{
@@ -810,7 +811,7 @@ async function imprimirEstadoCuenta() {
                 background:#fff;
             ">
 
-                <table cellpadding="6" cellspacing="0" style="width:50%; margin:0 auto;">
+                <table cellpadding="6" cellspacing="0" style="width:60%; margin:0 auto;">
                     <thead>
                         <tr>
                             <th style="text-align:left;">Fecha</th>

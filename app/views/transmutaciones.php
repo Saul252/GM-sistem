@@ -21,9 +21,7 @@
                 <h1><i class="fas fa-random text-primary me-2"></i>Transmutación de Productos</h1>
                 <small class="text-muted">Procesa la transformación de materiales e insumos</small>
             </div>
-            <button type="button" class="btn btn-dark btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#modalEquivalencia">
-                <i class="fas fa-cog me-1"></i> Configurar Equivalencias
-            </button>
+            
         </div>
 
        <div class="row align-items-stretch">
@@ -31,10 +29,13 @@
         <div class="card card-custom mb-4 h-100">
             <div class="card-header-custom">
                 <h6 class="m-0 font-weight-bold text-dark">
-                    <i class="fas fa-book me-2"></i>Guía de Equivalencias Activas
+                    <i class="fas fa-book me-2"></i>Guía de Equivalencias Activas<button type="button" class="btn btn-dark btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#modalEquivalencia">
+                <i class="fas fa-cog me-1"></i> Nueva Regla
+            </button>
                 </h6>
             </div>
             <div class="card-body p-3">
+                
                 <?php require_once __DIR__ . '/transmutaciones/reglasConversion.php' ?>
             </div>
         </div>
@@ -278,7 +279,9 @@
                                 <select name="p_origen" class="form-select border-danger-subtle" required>
                                     <option value="">Buscar producto...</option>
                                     <?php foreach($todosLosProductos as $p): ?>
-                                        <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['sku'] . " - " . $p['nombre']) ?></option>
+                                        <option value="<?= $p['id'] ?>"
+                                         data-unidad="<?= htmlspecialchars($p['unidad_medida']) ?>"
+                data-sku="<?= htmlspecialchars($p['sku']) ?>"><?= htmlspecialchars($p['sku'] . " - " . $p['nombre']) ?>(<?= htmlspecialchars($p['unidad_medida']) ?>)</option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -288,8 +291,12 @@
                                 <select name="p_destino" class="form-select border-success-subtle" required>
                                     <option value="">Buscar producto...</option>
                                     <?php foreach($todosLosProductos as $p): ?>
-                                        <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['sku'] . " - " . $p['nombre']) ?></option>
-                                    <?php endforeach; ?>
+                                        <option value="<?= $p['id'] ?>"
+                                         data-unidad="<?= htmlspecialchars($p['unidad_medida']) ?>"
+                data-sku="<?= htmlspecialchars($p['sku']) ?>"
+                ><?= htmlspecialchars($p['sku'] . " - " . $p['nombre']) ?>(<?= htmlspecialchars($p['unidad_medida']) ?>)</option>
+                                    
+                                        <?php endforeach; ?>
                                 </select>
                             </div>
 
@@ -297,9 +304,18 @@
                                 <div class="p-3 bg-light rounded-3 border">
                                     <label class="form-label d-block text-center mb-3">Factor de Rendimiento</label>
                                     <div class="input-group input-group-lg">
-                                        <span class="input-group-text bg-white">1 unidad origen =</span>
+                                         <div class="badge bg-danger-subtle text-danger">
+            <i class="bi bi-box-arrow-up-right me-1"></i>
+            <span >Origen</span>
+                                        <input type="text" id="unidadOrigen" readonly>
+                                        </div>
                                         <input type="number" step="0.0001" name="factor" class="form-control text-center fw-bold text-primary" placeholder="0.00" required>
-                                        <span class="input-group-text bg-white">unidades destino</span>
+                                         <div class="badge bg-success-subtle text-success ">
+            <i class="bi bi-box-arrow-up-right me-1"></i>
+            <span >Destino</span>
+        
+                                        <input type="text" id="unidadDestino" readonly>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -319,6 +335,36 @@
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script>
+        let org='';
+        let dest='';
+        document.querySelector('select[name="p_origen"]')
+    .addEventListener('change', function () {
+
+        const option = this.options[this.selectedIndex];
+
+        console.log(this.value);
+        org=option.dataset.unidad;
+        document.getElementById("unidadOrigen").value = org;
+        console.log(option.dataset.unidad);
+    });
+    document.querySelector('select[name="p_destino"]')
+    .addEventListener('change', function () {
+
+        const option = this.options[this.selectedIndex];
+
+        const productoId = this.value;
+        const unidad = option.dataset.unidad;
+        const sku = option.dataset.sku;
+        
+        dest=option.dataset.unidad;
+        document.getElementById("unidadDestino").value = dest;
+
+        console.log('Destino ID:', productoId);
+        console.log('Unidad:', unidad);
+        console.log('SKU:', sku);
+
+        // tu lógica aquí
+    });
     document.addEventListener('DOMContentLoaded', function() {
         const baseUrl = '/cfsistem/app/controllers/transmutacionesController.php';
         
@@ -343,14 +389,25 @@
             try {
                 const response = await fetch(`${baseUrl.replace('transmutaciones','mermas')}?action=obtenerProductosAlmacen&almacen_id=${id}`);
                 const productos = await response.json();
+
                 
                 transProdOrigen.innerHTML = '<option value="">Seleccione Origen...</option>';
-                productos.forEach(p => {
-                    transProdOrigen.add(new Option(`${p.sku} - ${p.nombre}`, p.id));
-                });
+
+productos.forEach(p => {
+
+    const option = new Option(
+        `${p.sku} - ${p.nombre} (${p.unidad_medida})`,
+        p.id
+    );
+
+    option.dataset.unidad = p.unidad_medida;
+
+    transProdOrigen.add(option);
+});
                 transProdOrigen.disabled = false;
             } catch (e) { console.error("Error cargando productos", e); }
         });
+        
 
         // 2. Al cambiar Producto Origen -> Lotes y Destinos
         transProdOrigen.addEventListener('change', async function() {
@@ -374,8 +431,9 @@
             const destinos = await resDest.json();
             transProdDestino.innerHTML = '<option value="">Seleccione Destino...</option>';
             destinos.forEach(d => {
-                const opt = new Option(`${d.sku} - ${d.nombre}`, d.id);
+                const opt = new Option(`${d.sku} - ${d.nombre} (${d.unidad_medida})`, d.id);
                 opt.dataset.factor = d.rendimiento_teorico;
+                opt.dataset.unidad = d.unidad_medida;
                 transProdDestino.add(opt);
             });
             transProdDestino.disabled = false;
