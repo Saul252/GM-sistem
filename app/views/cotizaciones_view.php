@@ -1273,7 +1273,7 @@ if (datos.status === 'success') {
     }
     </script>
     <!-- <script>
-    const URL_CONTROLADOR_SOLICITUD = '../controllers/solicitudesCompraController.php';
+    const URL_CONTROLADOR_SOLICITUD = '/cfsistem/app/controllers/solicitudesCompraController.php';
 
     $(document).ready(function() {
         const table = $('#tablaSolicitudes').DataTable({

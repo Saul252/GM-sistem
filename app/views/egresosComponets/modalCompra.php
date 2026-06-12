@@ -399,6 +399,12 @@ function agregarFilaCompra() {
                     value="0" min="0" disabled
                     oninput="recalcularTotales(${idUnico})">
                 <input type="hidden" id="faltante_${idUnico}"  name="items[${idUnico}][cantidad_faltante]" class="hidden-faltante" value="0">
+        
+                <input type="number"
+                    class="form-control form-control-sm border-danger shadow-sm input-faltante"
+                    value="0" min="0" disabled
+                    oninput="recalcularTotales(${idUnico})">
+                <input type="hidden" id="faltante_${idUnico}"  name="items[${idUnico}][cantidad_faltante]" class="hidden-faltante" value="0">
             </div>
 
             <div class="col-md-2">

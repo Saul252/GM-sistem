@@ -82,6 +82,19 @@ $detalles = $stmtD->get_result();
     </style>
 </head>
 <body onload="window.print();">
+     <img
+    src="/cfsistem/public/assets/logo.ico"
+    style="
+        position: fixed;
+        top: 19.5%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 180px;
+        opacity: 0.08;
+        z-index: -1;
+    "
+>
+      
 
     <div class="no-print" style="text-align:center; padding:10px; background:#eee; margin-bottom:10px;">
         <button onclick="window.print()" style="padding: 10px 20px; cursor: pointer; font-weight: bold;">🖨️ IMPRIMIR REMISIÓN</button>

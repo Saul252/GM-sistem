@@ -162,7 +162,7 @@
 </div>
 
 <script>
-const URL_CONTROLADOR = '../controllers/solicitudesCompraController.php';
+const URL_CONTROLADOR = '/cfsistem/app/controllers/solicitudesCompraController.php';
 
 // =====================================================
 // SELECT2

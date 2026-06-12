@@ -154,7 +154,7 @@
 </div>
 
 <script>
-const URL_CONTROLADOR = '../controllers/cotizacionesController.php';
+const URL_CONTROLADOR = '/cfsistem/app/controllers/cotizacionesController.php';
 
 // =====================================================
 // SELECT2

@@ -448,7 +448,7 @@
     const modalObj = new bootstrap.Modal('#modalDetalle');
     let ventaActual = null;
     // La ruta al controlador (ajusta si el nombre del archivo varía)
-    const URL_CONTROLLER = '../controllers/ventasHistorialController.php';
+    const URL_CONTROLLER = '/cfsistem/app/controllers/ventasHistorialController.php';
 
     async function getVentas() {
         $('#loader').removeClass('d-none');
@@ -524,10 +524,10 @@
         try {
             // 🔥 OBTENER IDS PENDIENTES
             const respIds = await fetch(
-                `../controllers/entregasController.php?ajax=get_ids_pendientes_venta&venta_id=${id}`
+                `/cfsistem/app/controllers/entregasController.php?ajax=get_ids_pendientes_venta&venta_id=${id}`
             );
             const resNAlmacen = await fetch(
-                `../controllers/entregasController.php?ajax=obtener_id_almacen&id=${id}`
+                `/cfsistem/app/controllers/entregasController.php?ajax=obtener_id_almacen&id=${id}`
             );
 
             const dataAlmacen = await resNAlmacen.json();

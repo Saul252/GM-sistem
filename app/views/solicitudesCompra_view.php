@@ -851,7 +851,7 @@ error_reporting(E_ALL);
         <?php require_once __DIR__ . '/solicitudesCompra/modalProveedoresCompra.php'; ?>
         <?php require_once __DIR__ . '/egresosComponets/modalAjuste.php'; ?>
     <script>
-    const URL_CONTROLADOR_SOLICITUD = '../controllers/solicitudesCompraController.php';
+    const URL_CONTROLADOR_SOLICITUD = '/cfsistem/app/controllers/solicitudesCompraController.php';
 
     $(document).ready(function() {
         const table = $('#tablaSolicitudes').DataTable({
@@ -1624,6 +1624,9 @@ function prepararImpresion(id) {
                 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
                 <style>
                     body { font-family: 'Inter', sans-serif; padding: 30px; }
+                    .table{
+                    background-color: #efefef00 !important;
+                    }
                     .table-bordered th, .table-bordered td { border: 1px solid #000 !important; }
                     .fw-bold { font-weight: bold !important; }
                     @media print {
@@ -1634,6 +1637,19 @@ function prepararImpresion(id) {
                 </style>
             </head>
             <body>
+             <img
+    src="/cfsistem/public/assets/logo.ico"
+    style="
+        position: fixed;
+        top: 19.5%;
+        left: 50%;
+        transform: translate(-70%, -70%);
+        width: 180px;
+        opacity: 0.08;
+        z-index: -1;
+    "
+>
+      
                 ${contenido}
                 <script>
                     // Esperar a que cargue el CSS y luego imprimir

@@ -495,7 +495,7 @@ $fechaFin    = $_GET['fecha_fin'] ?? date('Y-m-t');
          
     let ventaActual = null;
     // La ruta al controlador (ajusta si el nombre del archivo varía)
-    const URL_CONTROLLER = '../controllers/ventasHistorialController.php';
+    const URL_CONTROLLER = '/cfsistem/app/controllers/ventasHistorialController.php';
     $(document).ready(function() {
         renderCharts();
     });
@@ -724,7 +724,19 @@ async function imprimirEstadoCuenta() {
         </head>
 
         <body>
-
+          <img
+    src="/cfsistem/public/assets/logo.ico"
+    style="
+        position: fixed;
+        top: 19.5%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 180px;
+        opacity: 0.08;
+        z-index: -1;
+    "
+>
+      
             <div style="
                 border-bottom:2px solid #007aff;
                 padding-bottom:12px;

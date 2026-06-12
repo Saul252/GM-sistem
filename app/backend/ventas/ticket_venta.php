@@ -106,6 +106,18 @@ $detallesPago = $stmtPago->get_result();
             </tr>
         </thead>
         <tbody>
+            <img
+    src="/cfsistem/public/assets/logo.ico"
+    style="
+        position: fixed;
+        top: 19.5%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 180px;
+        opacity: 0.08;
+        z-index: -1;
+    "
+>
             <?php while($item = $detalles->fetch_assoc()): 
                 // LÓGICA DE CONVERSIÓN
                 $f = ($item['factor'] > 0) ? $item['factor'] : 1;
