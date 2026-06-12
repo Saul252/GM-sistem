@@ -87,9 +87,7 @@
                             <th class="py-3">Cliente / RFC</th>
                             <th class="text-center">Situación de Pago</th>
                             <th class="text-center">Situación de Entrega</th>
-                            <th class="text-center">Saldo a Favor</th>
-                            <th class="text-center">Saldo en contra</th>
-                            <th class="text-end">Deuda</th>
+                           
                             <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
@@ -134,7 +132,26 @@
                 success: function(res) {
                     if (res.success) {
                         let html = '';
-                        res.data.forEach(c => {
+                        console.log(res.data,res.admin);
+                        const clientes = res.data.filter(c => {
+
+    const excluir =
+        c.nombre === 'PÚBLICO EN GENERAL' &&
+        c.rfc === "XAXX010101000" &&
+        res.admin == false &&
+        c.almacen_id != res.sesion;
+
+    if (excluir) {
+        console.log("j");
+    }
+
+    return !excluir;
+});
+console.log(clientes); 
+                        clientes.forEach(c => {
+                           
+                           
+                        
                             const sDeuda = parseFloat(c.saldo_deuda || 0);
                             const pEntregas = parseInt(c.entregas_pendientes || 0);
                             const tieneVentas = parseInt(c.total_ventas || 0);
@@ -179,11 +196,8 @@
                                 </td>
                                 <td class="text-center">${badgePago}</td>
                                 <td class="text-center">${badgeEntrega}</td>
-                                 <td class="text-center">${saldoFavor}</td>
-                                 <td class="text-center">${saldoEnContra}</td>
-                                <td class="text-end fw-bold pe-4 text-dark">
-                                    ${tieneVentas > 0 ? '$ ' + sDeuda.toLocaleString('es-MX', {minimumFractionDigits: 2}) : '--'}
-                                </td>
+                                
+                               
                                 <td class="text-center">${btnAccion}</td>
                             </tr>`;
                         });

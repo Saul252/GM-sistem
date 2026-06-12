@@ -663,6 +663,8 @@ async function imprimirEstadoCuenta() {
         // SOLO FILAS
         const filas = expediente.map(v => `
             <tr>
+            <td>   <small style="font-size:7px;color:#6c757d;">vencio hace: ${diasTranscurridos(v.fecha)} días</small>
+              </td>
                 <td>
                   <small style="font-size:7px;color:#6c757d;">
         ${new Date(v.fecha).toLocaleDateString('es-MX', {
@@ -671,9 +673,8 @@ async function imprimirEstadoCuenta() {
             year: 'numeric'
         })}
     </small>
-                    <br>
-                   <small style="font-size:7px;color:#6c757d;">${diasTranscurridos(v.fecha)} días</small>
-                </td>
+                   
+                  </td>
 
                 <td>${v.folio}</td>
 
@@ -814,6 +815,7 @@ async function imprimirEstadoCuenta() {
                 <table cellpadding="6" cellspacing="0" style="width:60%; margin:0 auto;">
                     <thead>
                         <tr>
+                        <th style="text-align:left;">Dias vencidos</th>
                             <th style="text-align:left;">Fecha</th>
                             <th style="text-align:left;">Folio de venta</th>
                             <th style="text-align:right;">Total Compra</th>
@@ -987,7 +989,7 @@ async function imprimirEstadoCuenta() {
                     ${infoEquivalenciaSub}
                 </td>
                 <td class="text-center">
-                    ${cant} ${cant/factor>=1?p.unidad_reporte:p.unidad_medida} 
+                    ${cant} ${p.unidad_medida} 
                     (${ p.equivalencia>=1?cant/(1/p.equivalencia).toFixed(2):(cant*(p.equivalencia)).toFixed(2)} ${p.nombre})
                 </td>
                 <td class="text-center">${entregada>1?entregada+ p.unidad_reporte:p.cantidad_entregada +p.unidad_medida}</td>

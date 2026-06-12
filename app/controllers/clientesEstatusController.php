@@ -36,12 +36,14 @@ if (isset($_GET['action'])) {
     // Si no es admin o no envió filtro, usamos su almacen_sesion.
     $almacen_a_consultar = ($almacen_sesion == 0 && isset($_GET['almacen_id'])) 
                            ? intval($_GET['almacen_id']) 
-                           : $almacen_sesion;
-
+                           : 0;
+//    $almacen_a_consultar = ($almacen_sesion == 0 && isset($_GET['almacen_id'])) 
+//                            ? intval($_GET['almacen_id']) 
+//                            : $almacen_sesion;
     // 3. Pasamos el ID a la función (que ya ajustamos con el WHERE ? = 0 OR c.almacen_id = ?)
     $data = $clientesEstatusModel->listarResumenClientes($almacen_a_consultar);
     
-    echo json_encode(['success' => true, 'data' => $data]);
+    echo json_encode(['success' => true, 'data' => $data,'sesion'=>$_SESSION['almacen_id'],'admin'=>$_SESSION['almacen_id']==0 ?true:false]);
     break;
            case 'obtenerDetalle':
     // Información completa para el expediente individual
