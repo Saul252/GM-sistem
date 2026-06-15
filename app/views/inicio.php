@@ -12,6 +12,8 @@ $modulos = [
     // VENTAS Y CLIENTES
     // =========================
     ['id' => 'ventas', 'url' => '/cfsistem/app/controllers/ventasController.php', 'icon' => 'bi-cart-check', 'class' => 'icon-ventas', 'label' => 'Ventas', 'desc' => 'Salidas'],
+    ['id' => 'requisiciones', 'url' => '/cfsistem/app/controllers/requisicionesController.php', 'icon' => 'bi-cart-check', 'class' => 'icon-ventas', 'label' => 'Requisiciones', 'desc' => 'Requisiciones'],
+   
     ['id' => 'cajaRapida', 'url' => '/cfsistem/app/controllers/cajaRapidaController.php', 'icon' => 'bi-lightning-charge', 'class' => 'icon-ventas', 'label' => 'Caja Rapida', 'desc' => 'Salidas en existencia'],
     ['id' => 'cotizaciones', 'url' => '/cfsistem/app/controllers/cotizacionesController.php', 'icon' => 'bi-file-earmark-text', 'class' => 'icon-clientes', 'label' => 'Cotizaciones', 'desc' => 'Cotizaciones'],
     ['id' => 'clientes', 'url' => '/cfsistem/app/controllers/clientesController.php', 'icon' => 'bi-person-lines-fill', 'class' => 'icon-clientes', 'label' => 'Clientes', 'desc' => 'Cartera'],

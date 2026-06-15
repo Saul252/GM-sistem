@@ -14,6 +14,8 @@ date_default_timezone_set('America/Mexico_City');
    // VENTAS Y CLIENTES
    // =========================
    ['id' => 'ventas', 'url' => '/cfsistem/app/controllers/ventasController.php', 'icon' => 'bi-cart-check', 'label' => 'Ventas', 'active' => ($archivoActual == 'ventasController.php')],
+  ['id' => 'requisiciones', 'url' => '/cfsistem/app/controllers/requisicionesController.php', 'icon' => 'bi-cart-check', 'label' => 'requisiciones', 'active' => ($archivoActual == 'requisicionesontroller.php')],
+  
    ['id' => 'cajaRapida', 'url' => '/cfsistem/app/controllers/cajaRapidaController.php', 'icon' => 'bi-lightning-charge', 'label' => 'Caja Rapida', 'active' => ($archivoActual == 'cajaRapidaController.php')],
    ['id' => 'cotizaciones', 'url' => '/cfsistem/app/controllers/cotizacionesController.php', 'icon' => 'bi-person-badge-fill', 'label' => 'Cotizaciones', 'desc' => 'Preventa', 'active' => ($archivoActual == 'cotizacionesController.php')],
    ['id' => 'clientes', 'url' => '/cfsistem/app/controllers/clientesController.php', 'icon' => 'bi-person-lines-fill', 'label' => 'Clientes', 'active' => ($archivoActual == 'clientesController.php')],

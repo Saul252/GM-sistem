@@ -98,6 +98,107 @@ public function crear($data, $items) {
         return $e->getMessage();
     }
 }
+public function actualizar($data, $items) {
+    try {
+        // Iniciamos la transacción para asegurar la integridad de los datos
+        $this->db->begin_transaction();
+
+        // =====================================================
+        // 1. ACTUALIZAR CABECERA
+        // =====================================================
+        $sqlCab = "UPDATE cotizaciones 
+                   SET cliente_id = ?, 
+                       almacen_id = ?, 
+                       descuento = ?, 
+                       total = ?, 
+                       observaciones = ?
+                   WHERE id = ?";
+
+        $stmt = $this->db->prepare($sqlCab);
+
+        $cotizacion_id = intval($data['cotizacion_id']); // El ID enviado desde el input oculto del modal editar
+        $descuento = $data['descuento'] ?? 0;
+        $totalCotizacion = $data['totalCotizacion'] ?? 0;
+        $observaciones = $data['observaciones'] ?? '';
+
+        $stmt->bind_param(
+            "iiddsi",
+            $data['cliente_id'],
+            $data['almacen_id'],
+            $descuento,
+            $totalCotizacion,
+            $observaciones,
+            $cotizacion_id
+        );
+
+        if (!$stmt->execute()) {
+            throw new Exception("Error al actualizar la cabecera: " . $stmt->error);
+        }
+
+        // =====================================================
+        // 2. LIMPIAR DETALLE ANTERIOR
+        // =====================================================
+        // Eliminamos el detalle viejo para escribir el nuevo sin duplicar llaves o arrastrar productos eliminados
+        $sqlDel = "DELETE FROM detalle_cotizacion WHERE cotizacion_id = ?";
+        $stmtDel = $this->db->prepare($sqlDel);
+        $stmtDel->bind_param("i", $cotizacion_id);
+        
+        if (!$stmtDel->execute()) {
+            throw new Exception("Error al limpiar el detalle anterior: " . $stmtDel->error);
+        }
+
+        // =====================================================
+        // 3. INSERTAR NUEVO DETALLE REFACTORIZADO
+        // =====================================================
+        $sqlDet = "INSERT INTO detalle_cotizacion
+        (
+            cotizacion_id,
+            producto_id,
+            cantidad,
+            unidadMedida,
+            precio_unitario,
+            tipo_precio,
+            subtotal
+        ) 
+        VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+        $stmtDet = $this->db->prepare($sqlDet);
+
+        foreach ($items as $item) {
+            // Nota: Mapeamos las llaves exactamente como las envía el payload JSON de tu formulario de edición de JS
+            $id_prod = intval($item['producto_id']);
+            $cant = floatval($item['cantidad']);
+            $unidadMedida = intval($item['unidad']); // Convertido a intval ya que suele ser un ID de la tabla unidades/medidas
+            $precio_unitario = floatval($item['precioUnitario']);
+            $tipo_precio = $item['tipoPrecio'] ?? 'minorista';
+            $subtotal = floatval($item['precio']); // En tu JSON del submit, 'precio' es el subtotal acumulado de la fila
+
+            $stmtDet->bind_param(
+                "iidddsd",
+                $cotizacion_id,
+                $id_prod,
+                $cant,
+                $unidadMedida,
+                $precio_unitario,
+                $tipo_precio,
+                $subtotal
+            );
+
+            if (!$stmtDet->execute()) {
+                throw new Exception("Error al insertar el nuevo detalle en la edición: " . $stmtDet->error);
+            }
+        }
+
+        // Si todo salió bien, guardamos cambios de forma persistente
+        $this->db->commit();
+        return true;
+
+    } catch (Throwable $e) {
+        // Si algo falla, deshacemos absolutamente todo lo ejecutado en este bloque
+        $this->db->rollback();
+        return $e->getMessage();
+    }
+}
     public function listar($es_admin, $almacen_id) {
         $sql = "SELECT co.*, c.nombre_comercial as cliente_nombre, a.nombre as almacen_nombre, u.nombre as admin_nombre
                 FROM cotizaciones co

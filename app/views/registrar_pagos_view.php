@@ -385,7 +385,7 @@ body {
     const modalObj = new bootstrap.Modal('#modalDetalle');
     let ventaActual = null;
     // La ruta al controlador (ajusta si el nombre del archivo varía)
-    const URL_CONTROLLER = '/cfsistem/app/controllers/app/controllers/ventasHistorialController.php';
+    const URL_CONTROLLER = '../controllers/ventasHistorialController.php';
 
     async function getVentas() {
         $('#loader').removeClass('d-none');
