@@ -93,6 +93,8 @@
                                     <th>Stock</th>
                                     <th width="120">Unidad</th>
                                     <th>Precio</th>
+                                    
+
                                     <th width="90">Cant</th>
                                     <th width="60"></th>
                                 </tr>
@@ -110,46 +112,53 @@
                                     <td><?= htmlspecialchars($p['nombre']) ?></td>
                                     <td>
                                        <?php
-                                        $cantidad = $p['stock'] / $p['factor_conversion'];
+$cantidad = $p['stock'] / $p['factor_conversion'];
 
-                                        if ($cantidad <= 0) {
-                                            $color = 'bg-danger';            // Sin stock
-                                        } elseif ($cantidad <= 5) {
-                                            $color = 'bg-warning text-dark'; // Stock bajo
-                                        } elseif ($cantidad <= 20) {
-                                            $color = 'bg-info text-dark';    // Stock medio
-                                        } else {
-                                            $color = 'bg-primary';          // Stock alto (Cambiado de bg-success a bg-primary)
-                                        }
-                                        ?>
+if ($cantidad <= 0) {
+    $color = 'bg-danger';       // Sin stock
+} elseif ($cantidad <= 5) {
+    $color = 'bg-warning text-dark'; // Stock bajo
+} elseif ($cantidad <= 20) {
+    $color = 'bg-info text-dark';    // Stock medio
+} else {
+    $color = 'bg-success';      // Stock alto
+}
+?>
 
-                                        <span class="badge <?= $color ?>">
-                                            <?= $cantidad >= 1
-                                                ? number_format($cantidad, 2) . ' ' . $p['unidad_reporte']
-                                                : number_format($p['stock'], 2) . ' ' . $p['unidad_medida']
-                                            ?>
-                                        </span> 
+<span class="badge <?= $color ?>">
+    <?= $cantidad >= 1
+        ? number_format($cantidad, 2) . ' ' . $p['unidad_reporte']
+        : number_format($p['stock'], 2) . ' ' . $p['unidad_medida']
+    ?>
+</span> 
                                     </td>
 
                                     <td style="width:1px; padding:0; border:none;">
                                         <?php if($tieneReporte): ?>
                                         <select class="form-select form-select-sm select-modo-venta" style="
-                                            opacity:0;
-                                            position:absolute;
-                                            pointer-events:none;
-                                            height:0;
-                                            width:0;
-                                            padding:0;
-                                            border:0;
-                                        ">
+            opacity:0;
+            position:absolute;
+            pointer-events:none;
+            height:0;
+            width:0;
+            padding:0;
+            border:0;
+        ">
+
                                             <option value="individual"
                                                 data-nombre="<?= htmlspecialchars($p['unidad_medida'] ?? 'PZA') ?>">
+
                                                 <?= htmlspecialchars($p['unidad_medida'] ?? 'PZA') ?>
+
                                             </option>
+
                                             <option value="referencia"
                                                 data-nombre="<?= htmlspecialchars($p['unidad_reporte']) ?>">
+
                                                 <?= htmlspecialchars($p['unidad_reporte']) ?>
+
                                             </option>
+
                                         </select>
                                         <?php else: ?>
                                         <span class="d-none">Individual</span>
@@ -165,9 +174,11 @@
                                             </option>
                                             <?php endforeach; ?>
                                         </select>
+
                                     </td>
                                     <td>
                                         <div class="d-flex gap-1">
+
                                             <select class="form-select form-select-sm select-precio">
                                                 <option value="<?= $p['precio_minorista'] ?>">Publico -
                                                     $<?= number_format($p['precio_minorista'],2) ?></option>
@@ -183,14 +194,22 @@
                                                 class="form-control form-control-sm input-precio"
                                                 value="<?= $p['precio_minorista']??0 ?>">
                                         </div>
+
                                     </td>
+
+
+
                                     <td>
+                                        <!-- usuario -->
                                         <input type="number" class="form-control form-control-sm cantidad_usuario"
                                             min="1" value="1">
+                                        <!-- REAL -->
                                         <input type="hidden" class="cantidad" value="0">
+                                        <!-- visible -->
                                     </td>
+
                                     <td class="text-center">
-                                        <button type="button" class="btn btn-primary btn-sm"
+                                        <button type="button" class="btn btn-success btn-sm"
                                             data-producto-id="<?= $p['id'] ?>" data-almacen-id="<?= $p['almacen_id'] ?>"
                                             data-almacen="<?= htmlspecialchars($p['almacen_nombre']) ?>"
                                             onclick="validarYAgregar(this)">
@@ -207,7 +226,7 @@
 
             <div class="col-lg-4">
                 <div class="card p-3 carrito">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-bag-fill text-primary"></i> Carrito</h5>
+                    <h5 class="fw-bold mb-3"><i class="bi bi-bag-fill text-success"></i> Carrito</h5>
                     <div class="table-responsive">
                         <table class="table table-sm" id="tablaCarrito">
                             <thead>
@@ -232,6 +251,8 @@
             </div>
         </div>
     </div>
+
+
 
     <div class="modal fade modalc" id="modalNuevoCliente" tabindex="-1" aria-labelledby="modalNuevoClienteLabel"
         aria-hidden="true">
@@ -261,7 +282,7 @@
                                     placeholder="Nombre legal completo">
                             </div>
 
-                            <div class="col-md-12">
+ <div class="col-md-12">
                                 <label class="form-label fw-bold">Contacto *</label>
                                 <input type="text" name="contacto" class="form-control"
                                     placeholder="Contacto" >
@@ -303,27 +324,26 @@
                                 <input type="tel" name="telefono" class="form-control" placeholder="55 0000 0000">
                             </div>
 
-                            <div class="col-md-12">
+                           <div class="col-md-12">
                                 <label class="form-label fw-bold">Calle</label>
                                 <textarea name="calle" class="form-control" rows="2"
                                     placeholder="Calle y número"></textarea>
                             </div>
-                            <div class="col-md-12">
+                             <div class="col-md-12">
                                 <label class="form-label fw-bold">Colonia</label>
                                 <textarea name="colonia" class="form-control" rows="2"
                                     placeholder="Colonia..."></textarea>
                             </div>
-                            <div class="col-md-12">
+                             <div class="col-md-12">
                                 <label class="form-label fw-bold">Pueblo</label>
                                 <textarea name="pueblo" class="form-control" rows="2"
                                     placeholder="Pueblo"></textarea>
                             </div>
-                            <div class="col-md-12">
+                             <div class="col-md-12">
                                 <label class="form-label fw-bold">Ciudad</label>
                                 <textarea name="ciudad" class="form-control" rows="2"
                                     placeholder="Ciudad"></textarea>
                             </div>
-                            
                             <div class="row g-3">
                                 <?php if ($almacen_usuario == 0): ?>
                                 <div class="col-md-12 mb-2">
@@ -335,11 +355,13 @@
                                         </option>
                                         <?php endforeach; ?>
                                     </select>
-                                    <small class="text-muted">Como administrador, debes elegir a qué sucursal pertenece este cliente.</small>
+                                    <small class="text-muted">Como administrador, debes elegir a qué sucursal pertenece
+                                        este cliente.</small>
                                 </div>
                                 <?php else: ?>
                                 <input type="hidden" name="almacen_id" value="<?= $almacen_usuario ?>">
                                 <?php endif; ?>
+
                             </div>
                         </div>
                     </div>

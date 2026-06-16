@@ -40,6 +40,8 @@ class AlmacenController {
         // 1. Cargamos el catálogo y almacenes para los selectores/tablas
         $categorias = $this->model->getCategorias();
         $almacenes = $this->model->getAlmacenes($almacen_usuario);
+
+        $inversion = $this->model->inversion($almacen_usuario);
         $todosLosAlmacenes = $this->model->getAlmacenesDestino($almacen_usuario);
         
         // 2. Cargamos el inventario detallado para el DataTable

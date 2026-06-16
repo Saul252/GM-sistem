@@ -44,6 +44,12 @@
             <div class="d-flex align-items-center" style="gap: 8px;">
 
                 <div class="ios-micro-card border-blue">
+                    <span class="ios-micro-label">Total de innversion</span>
+                   <div class="ios-micro-value">$<?= number_format($inversion, 2, '.', ',') ?></div>
+                    
+                </div>
+
+                <div class="ios-micro-card border-blue">
                     <span class="ios-micro-label"><?= ($rData['tipo'] == 'admin') ? 'Global' : 'Stock' ?></span>
                     <div class="ios-micro-value"><?= number_format($cant_prod) ?></div>
                     <div class="ios-micro-footer text-truncate" style="max-width: 80px;"

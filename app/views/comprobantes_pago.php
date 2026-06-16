@@ -32,12 +32,12 @@ error_reporting(E_ALL);
 
             <div class="row align-items-center mb-5">
                 <div class="col-md-8">
-                    <h1 class="h3 fw-bold mb-1">Cotizaciones</h1>
-                    <p class="text-muted small">Gestión de cotizaciones de materiales</p>
+                    <h1 class="h3 fw-bold mb-1">Comprobante de pago</h1>
+                    <p class="text-muted small">Gestión de Comprobate de pago</p>
                 </div>
                 <div class="col-md-4 text-md-end">
-                    <button class="btn btn-add" onclick="nuevaCotizacion()">
-                        <i class="bi bi-plus-lg me-2"></i> Crear Cotizacion
+                    <button class="btn btn-dark" onclick="nuevaCotizacion()">
+                        <i class="bi bi-plus-lg me-2"></i> Crear Comprobante de pago
                     </button>
                 </div>
             </div>
@@ -67,9 +67,9 @@ error_reporting(E_ALL);
                     <label class="form-label small fw-bold text-muted text-uppercase">Estado</label>
                     <select id="filtroEstado" class="form-select border-light shadow-sm">
                         <option value="">Todos los estados</option>
-                        <option value="PENDIENTE">Pendiente</option>
-                        <option value="COMPLETADO">Completado</option>
-                        <option value="CANCELADO">Cancelada</option>
+                        <option value="activo">Activo</option>
+                     
+                        <option value="cancelado">Cancelado</option>
                     </select>
                 </div>
                 <div class="col-md-3">
@@ -91,8 +91,9 @@ error_reporting(E_ALL);
                         <tr>
                             <th>Folio</th>
                             <th>Fecha</th>
-                            <th>Proveedor</th>
+                            <th>Cliente</th>
                             <th>Almacén</th>
+                            <th>Monto</th>
                             <th>Estado</th>
                             <th class="text-end">Acciones</th>
                         </tr>
@@ -103,47 +104,23 @@ error_reporting(E_ALL);
                             <td><span class="text-dark fw-bold">#<?= str_pad($s['id'], 5, "0", STR_PAD_LEFT) ?></span>
                             </td>
                             <td class="text-muted small"><?= date('d/m/Y H:i', strtotime($s['fecha']))?></td>
-                            <td class="fw-medium"><?= htmlspecialchars($s['cliente_nombre'] ?? 'Sin asignar') ?></td>
+                            <td class="fw-medium"><?= htmlspecialchars($s['nombre_comercial'] ?? 'Sin asignar') ?></td>
                             <td><span
-                                    class="badge bg-light text-dark border"><?= htmlspecialchars($s['almacen_nombre']) ?></span>
+                                    class="badge bg-light text-dark border"><?= htmlspecialchars($s['almacen']) ?></span>
+                            </td>
+
+                            <td><?= htmlspecialchars($s['monto']) ?></td>
+                             <td><span
+                                    class="badge bg-light text-dark border"><?= htmlspecialchars($s['estado']) ?></span>
                             </td>
                             <td>
-                                <?php 
-                                    $status = strtoupper($s['estado'] ?? 'PENDIENTE');
-                                    $clase = match($status) {
-                                        'PENDIENTE' => 'bg-warning text-dark',
-                                        'COMPLETADO' => 'bg-primary text-white',
-                                        'CANCELADO'  => 'bg-danger text-white',
-                                        default     => 'bg-secondary text-white'
-                                    };
-                                ?>
-                                <span class="badge badge-status <?= $clase ?> rounded-pill"><?= $status ?></span>
-                            </td>
-                            <td class="text-end">
-
-                                <?php if($status === 'PENDIENTE'): ?>
-                                <button class="btn btn-sm btn-white border shadow-sm"
-                                    onclick="gestionarSolicitud(<?= $s['id'] ?>)">
-                                    <i class="bi bi-eye text-primary"></i> Gestionar
-                                </button>
-                                <button class="btn btn-sm btn-white border shadow-sm"
-                                    onclick="eliminarSolicitud(<?= $s['id'] ?>)">
-                                    <i class="bi bi-trash text-danger"></i>
-                                </button>
-                                <?php endif; ?>
-                                <?php if($status === 'COMPLETADO'): ?>
-                                <button class="btn btn-sm btn-white border shadow-sm"
-                                    onclick="gestionarSolicitud(<?= $s['id'] ?>)">
-                                    <i class="bi bi-eye text-primary"></i> REUTILIZAR
-                                </button>
-                                <?php endif;?>
-
-                                <button class="btn btn-sm btn-white border shadow-sm rounded-pill px-3"
-                                    onclick="prepararImpresion(<?= $s['id'] ?>)" title="Imprimir solicitud">
-                                    <i class="bi bi-printer text-primary me-1"></i>
-                                    <span class="text-dark fw-medium">Imprimir</span>
-                                </button>
-                            </td>
+                                <button type="button" class="btn btn-primary" onclick="imprmirComprobante(<?= $s['id'] ?>)">
+    Imprimir
+</button> <?php if ($s['estado'] !== 'cancelado'): ?> 
+    <button class="btn btn-danger" onclick="eliminarSolicitud(<?= $s['id'] ?>)">Cancelar</button>
+<?php endif; ?>                 </td>
+                            
+                          
                         </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -446,182 +423,105 @@ error_reporting(E_ALL);
             </div>
         </div>
     </div>
-    <div class="modal fade" id="modalImprimirSolicitud" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+   <div class="modal fade" id="modalImprimirSolicitud" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
 
-                <!-- HEADER -->
-                <div class="modal-header text-white border-0"
-                    style="background: linear-gradient(135deg, #1f2a37 0%, #334155 100%);">
-                    <h5 class="fw-bold mb-0">
-                        Vista de Cotizacion
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <div class="modal-header text-white border-0 py-3"
+                style="background: linear-gradient(135deg, #1f2a37 0%, #334155 100%);">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-receipt fs-4"></i> <h5 class="fw-bold mb-0">Detalle del Comprobante</h5>
                 </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
 
-                <div class="modal-body p-0">
-
-                    <div id="areaImpresion" class="p-5 bg-white" style="min-height: 650px; font-size: 0.95rem;">
-
-                        <!-- ENCABEZADO -->
-                        <div class="d-flex justify-content-between align-items-start mb-4">
-                            <div>
-                                <h2 class="fw-bold text-uppercase mb-1" style="color:#1f2a37;">
-                                    COTIZACION
-                                </h2>
-                                <div class="text-muted" id="print-folio">FOLIO: #00000</div>
-                            </div>
-
-                            <div class="text-end">
-                                <div class="fw-bold" style="color:#334155;">cfsistem</div>
-                                <div class="text-muted small" id="print-fecha">Fecha: --/--/----</div>
-                            </div>
-                        </div>
-
-                        <div class="mb-4"
-                            style="height:2px; background:linear-gradient(90deg,#1f2a37,#334155); opacity:0.8;">
-                        </div>
-
-                        <!-- INFO -->
-                        <div class="row g-3 mb-4">
-
-                            <div class="col-md-6">
-                                <div class="p-3 rounded bg-light border h-100">
-                                    <div class="text-uppercase text-muted small mb-1">Almacén Origen</div>
-                                    <div class="fw-bold" id="print-almacen">---</div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="p-3 rounded bg-light border h-100">
-
-                                    <div class="text-uppercase text-muted small mb-1">Cliente</div>
-                                    <div class="fw-bold mb-2" id="print-proveedor">---</div>
-
-
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <!-- TABLA -->
-                        <div class="table-responsive mb-3">
-                            <table class="table align-middle">
-
-                                <thead style="background:#1f2a37; color:#fff;">
-                                    <tr>
-                                        <th>Producto</th>
-                                        <th class="text-center">Cantidad</th>
-                                        <th class="text-center">Costo Unitario</th>
-                                        <th class="text-center">Costo Total</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody id="print-tabla-cuerpo"></tbody>
-
-                            </table>
-                        </div>
-
-                        <!-- TOTAL -->
-                        <div class="text-end mb-4">
-                            <div class="fw-bold fs-5">
-                                Total: <span id="costo_total"></span>
-                            </div>
-                        </div>
-
-                        <!-- FIRMAS -->
-                        <div class="mt-5 pt-3">
-                            <div class="row text-center">
-
-                                <div class="col-6">
-                                    <div class="border-top pt-2">
-                                        <small class="text-muted text-uppercase">Solicita</small>
-                                    </div>
-                                </div>
-
-                                <div class="col-6">
-                                    <div class="border-top pt-2">
-                                        <small class="text-muted text-uppercase">Autoriza</small>
-                                    </div>
-                                </div>
-                                <div class="modal-footer bg-light border-0" id="footer"></div>
-
-
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <!-- FOOTER -->
-
-
+            <div class="modal-body p-0 bg-secondary bg-opacity-10">
+    <div id="areaImpresion" class="bg-white my-3 mx-auto p-4 shadow-sm text-dark" 
+         style="width: 320px; font-family: 'Courier New', Courier, monospace; font-size: 0.85rem; border-radius: 4px;">
+        
+        <div class="text-center mb-2">
+            <h4 class="fw-bold text-uppercase mb-0" style="letter-spacing: 1px; font-family: sans-serif; font-weight: 800; color: #1f2a37;">
+                CF SYSTEM
+            </h4>
+            <p class="text-muted small mb-1" style="font-family: sans-serif; font-size: 0.7rem;">COMPROBANTE DE PAGO</p>
+            
+            <div class="small fw-bold border-top border-bottom py-1 my-2" style="border-style: dashed !important; border-color: #000 !important;" id="print-folio">
+                FOLIO: #00000
             </div>
         </div>
+         
+        <div class="py-1" style="font-family: sans-serif;">
+            <span class="text-uppercase text-muted fw-bold d-block" style="font-size: 0.65rem; letter-spacing: 0.5px;">Cliente:</span>
+            <div class="fw-bold text-dark fs-6" id="print-cliente" style="line-height: 1.2;">---</div>
+        </div>
+
+        <div class="mb-2">
+           <table class="w-100 style-ticket-table" style="font-size: 0.8rem; line-height: 1.4;">
+    <tr>
+        <td class="text-muted py-1" style="width: 40%;">NÚMERO VENTA:</td>
+        <td class="fw-bold text-end py-1 text-dark" id="print-numero_venta">---</td>
+    </tr>
+    <tr>
+        <td class="text-muted py-1">FECHA:</td>
+        <td class="fw-semibold text-end py-1 text-dark" id="print-fecha_dep">---</td>
+    </tr>
+    <tr>
+        <td class="text-muted py-1">REFERENCIA:</td>
+        <td class="text-end py-1">
+            <input type="text" class="form fw-semibold text-end text-dark border-0 bg-transparent p-0 w-100" id="print-referencia" value="---">
+        
+        </td>
+    </tr>
+</table>
+        </div>
+
+       
+
+        
+      <div >
+    <table class="w-100" style="font-family: sans-serif; table-layout: fixed; font-size: 11px; line-height: 1.2;">
+        <tr>
+            <td style="width: 45%; color: #6b7280; font-weight: bold; text-transform: uppercase; padding-bottom: 4px;">
+                MÉTODO PAGO:
+            </td>
+            <td class="text-end fw-bold text-dark text-uppercase" id="metodo_pago_dep" style="width: 55%; font-size: 12px; padding-bottom: 4px;">
+                ---
+            </td>
+        </tr>
+        
+        <tr>
+            <td style="width: 45%; color: #6b7280; font-weight: bold; text-transform: uppercase;">
+                TOTAL RECIBIDO:
+            </td>
+            <td class="text-end fw-bold text-dark" id="costo_total" style="width: 55%; font-size: 14px;">
+                $0.00
+            </td>
+        </tr>
+    </table>
+</div>
+
+        <div class="text-center mt-4 pt-2 border-top" style="border-style: dashed !important; border-color: #000 !important; font-family: sans-serif; font-size: 0.7rem;">
+            <p class="text-muted mb-0">*** Gracias por su confianza ***</p>
+        </div>
+
+        <div style="display:none;">
+            <div id="print-almacen">---</div>
+            <div id="print-usuario">---</div>
+        </div>
+
     </div>
-    <div class="modal fade" id="modalPago" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
+</div>
 
-            <div class="modal-header text-white" style="background: linear-gradient(135deg, #1f2a37, #334155);">
-                <h6 class="modal-title fw-semibold">
-                    <i class="bi bi-wallet2 me-2"></i> Registrar pago
-                </h6>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            <div class="modal-footer bg-light border-top-0 justify-content-end gap-2 py-3 px-4" id="footer">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">
+                    Cerrar
+                </button>
             </div>
-            
-            <input type="hidden" id="idC" name="idC">
-            
-            <div class="modal-body p-4">
-                <div class="table-responsive mb-3">
-                    <table class="table align-middle">
-                        <thead style="background:#1f2a37; color:#fff;">
-                            <tr>
-                                <th>Producto</th>
-                                <th class="text-center">Cantidad</th>
-                                <th class="text-center">Entregar hoy</th>
-                            </tr>
-                        </thead>
-                        <tbody id="print-productos"></tbody>
-                    </table>
-                </div>
-
-                <div class="text-center mb-4">
-                    <small class="text-muted d-block">Total a pagar</small>
-                    <h3 id="pagoTotal" class="fw-bold text-dark m-0">$0.00</h3>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label small text-muted">Monto recibido</label>
-                    <input type="number" id="montoPago"
-                        class="form-control form-control-lg border-0 bg-light rounded-3" placeholder="0.00">
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label small text-muted">Método de pago</label>
-                    <select id="metodoPago" class="form-select form-select-lg border-0 bg-light rounded-3">
-                        <option value="">Seleccione</option>
-                        <option value="efectivo">Efectivo</option>
-                        <option value="transferencia">Transferencia</option>
-                        <option value="tarjeta">Tarjeta</option>
-                        <option value="deposito">Depósito</option>
-                    </select>
-                </div>
-
-                <div class="mb-3 d-none" id="refBox">
-                    <label class="form-label small text-muted">Referencia</label>
-                    <input type="text" id="referenciaPago"
-                        class="form-control form-control-lg border-0 bg-light rounded-3"
-                        placeholder="Número de referencia">
-                </div>
-            </div>
-
-            <div class="modal-footer border-0 px-4 pb-4 pt-0" id="boton">
-                </div>
 
         </div>
     </div>
-</div> 
+</div>
+   
     <style>
     /* =========================
    MODAL BASE
@@ -809,354 +709,133 @@ error_reporting(E_ALL);
 
 
 
- <?php require_once __DIR__ . '/cotizacionesModales/editarCotizacion.php'; ?>
-    <?php require_once __DIR__ . '/cotizacionesModales/ModalCotizacion.php'; ?>
+
+    <?php require_once __DIR__ . '/comprobantes_pago/modalComprobante.php'; ?>
     <?php require_once __DIR__ . '/cotizacionesModales/nuevoClienteModal.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/agregarPoductoModal.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/modalProveedoresCompra.php'; ?>
     <script>
     let totalGlobalPago = 0;
     let datost=0;
-
-   async function procederPago(total, id) {
-    let nuevo=[];
-
-    totalGlobalPago = total;
-
-    const resp = await fetch(`${URL_CONTROLADOR}?action=obtenerDetalle&id=${id}`);
-    const datos = await resp.json();
-
-    let data = datos.data;
-
-    let html = '';
-
-    data.forEach((i, index) => {
-
-        const cantidad = parseFloat(i.cantidad) || 0;
-         canti=cantidad/i.equivalencia;
-         data[index].cantidadR = parseFloat(canti);
-         data[index].entrega_hoy =0;
-         document.getElementById('montoPago').value= data[index].total;
-         datost=data;
-        
-         
-
-        html += `
-        <tr>
-            <td class="fw-bold">${i.producto_nombre} (${i.sku})</td>
-
-            <td class="text-center">
-                ${cantidad} ${i.nombre || ''}
-            </td>
-
-            <td class="text-center">
-                <input 
-                    type="number"
-                    step="0.01"
-                    value="0"
-                    max="${i.entregar_hoy}"
-                    class="form-control entrega-hoy"
-                    data-index="${index}"
-                >
-            </td>
-        </tr>`;
-    });
-
-    $('#print-productos').html(html);
-
-    // actualizar entrega_hoy
-document.querySelectorAll('.entrega-hoy').forEach(input => {
-
-    input.addEventListener('input', function () {
-
-        const index = this.dataset.index;
-        
-
-
-        data[index].entrega_hoy = parseFloat((this.value*(1/data[index].equivalencia))) || 0;
-        data[index].monto_pagado = parseFloat(
-            document.getElementById('montoPago').value
-        ) || 0;
-        
-        datost=data;
-console.log("datos",datost);
-        console.log(data);
-    });
-
-});
-
-// actualizar monto pagado en TODO el arreglo
-document.getElementById('montoPago').addEventListener('input', function () {
-
-    const monto = parseFloat(this.value) || 0;
-
-    data.forEach(item => {
-        item.monto_pagado = monto;
-    });
-    datos=data;
-
-    console.log(datost);
-});
-       
-        
-
-           
-      
-
-    
-
-const htmlboton=`<button class="btn btn-light w-50 rounded-3" data-bs-dismiss="modal">
-                        Cancelar
-                    </button>
-
-                    <button class="btn w-50 text-white rounded-3" style="background: #334155;"
-                      onclick='convertirToCompra(${JSON.stringify(datost)}, ${id})'">
-                        Confirmar
-                    </button>;`
-    document.getElementById('pagoTotal').textContent =
-        total.toLocaleString('es-MX', {
-            style: 'currency',
-            currency: 'MXN'
-        });
-
-    document.getElementById('montoPago').value = total;
-    document.getElementById('idC').value = id;
-
-    // opcional: guardarlo para usarlo al enviar pago
-    window.detallePago = data;
-
-    const modal = new bootstrap.Modal(
-        document.getElementById('modalPago')
-    );
-$('#boton').html(htmlboton);
-    modal.show();
-}
-    
-    document.getElementById('metodoPago').addEventListener('change', function() {
-
-        const requiere = ['transferencia', 'tarjeta', 'deposito'].includes(this.value);
-
-        document.getElementById('refBox').classList.toggle('d-none', !requiere);
-    });
-  async function gestionarSolicitud(id) {
+async function imprmirComprobante(id) {
     try {
-        // 1. Limpiar la tabla de edición por si tenía datos anteriores
-        $('#tablaDetalleEditar tbody').empty();
-        $('#formEditarSolicitud')[0].reset();
+        console.log("Solicitando ID:", id);
 
-        console.log('Cargando cotización ID:', id);
+        const resp = await fetch(`/cfsistem/app/controllers/comprobantesPagoController.php?action=obtenerDetalle&id=${id}`);
+        
+        // CORRECCIÓN 1: Cambiado .data() por .json()
+        const datos = await resp.json(); 
+        
+        console.log('RESPUESTA DEL SERVIDOR:', datos);
 
-        // 2. Consultar el detalle al controlador
-        const resp = await fetch(`${URL_CONTROLADOR}?action=obtenerDetalle&id=${id}`);
-        const datos = await resp.json();
-        const data = datos.data;
-
-        console.log('DATOS RECUPERADOS:', data);
-
-        if (!Array.isArray(data) || data.length === 0) {
-            Swal.fire('Error', 'No se encontraron productos en esta cotización', 'warning');
+        if (datos.status !== 'success') {
+            Swal.fire('Error', datos.message || 'No se encontraron datos', 'error');
             return;
         }
 
-        // 3. Setear datos de cabecera usando el primer elemento del array
-        const infoBase = data[0];
+        const data = datos.data; 
+
+        // 1. FORMATEAR EL MONTO A MONEDA (MXN)
+        const montoFormateado = parseFloat(data.monto).toLocaleString('es-MX', { 
+            style: 'currency', 
+            currency: 'MXN' 
+        });
+
+        // 2. INYECTAR LOS DATOS DIRECTAMENTE EN EL MODAL
+        $('#print-folio').text(`#${String(data.id).padStart(5, '0')}`);
+        $('#print-cliente').text(data.nombre_comercial);
         
-        $('#editar_cotizacion_id').val(infoBase.cotizacion_id);
-        $('#almacen_id_editar').val(infoBase.almacen_origen_id);
-        $('#cliente_id_editar').val(infoBase.cliente_id).trigger('change.select2');
+        // CORRECCIÓN 2: Se usa 'nombre_almacen' que es el alias que viene del SQL
+        $('#print-almacen').text(data.nombre_almacen); 
+        
+        $('#print-usuario').text(data.usuario);
+        $('#print-referencia').val(data.referencia || 'Sin referencia');
+        $('#print-fecha_dep').text(data.fecha);
+        
+        $('#costo_total').text(montoFormateado);
+        $('#metodo_pago_dep').text(data.metodo_pago);
+        $('#print-numero_venta').text(data.numero_ventas);
 
-        // Ocultar el estado vacío porque vamos a meter filas
-        $('#emptyStateEditar').addClass('d-none');
+        // 3. GENERAR EL BOTÓN EN EL FOOTER
+        const footer = `
+        
+            
+            <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">
+    Cerrar
+</button>
 
-        // 4. Recorrer los productos e inyectarlos como filas interactivas
-        data.forEach(i => {
-            const prodId = i.producto_id;
+<button type="button" class="btn btn-dark rounded-pill px-4" onclick="prepararImpresion(${data.id})">
+    Imprimir
+</button>
 
-            // Reconstruimos las opciones de unidad/medida basándonos en la actual de la BD
-            // Nota: Si manejas más medidas adicionales dinámicas, aquí puedes añadir la lógica de tu data-medidas.
-            let opcionesUnidadHtml = `
-                <option 
-                    value="${i.unidadMedida}" 
-                    data-equivalencia="${i.equivalencia}" 
-                    data-medida-id="${i.unidadMedida}" 
-                    selected>
-                    ${i.nombre}
-                </option>
-            `;
+<button type="button" class="btn btn-outline-success rounded-pill px-4" onclick="actualizar(${data.id})">
+    Actualizar
+</button>
+        `;
+        $('#footer').html(footer);
 
-            // Estructura HTML idéntica a la generada por el Select2 de búsqueda
-            const nuevaFilaHtml = `
-            <tr id="filaEditar-${prodId}">
-                <td class="ps-4">
-                    <b>${i.producto_nombre}</b><br>
-                    <small class="text-muted">${i.sku}</small>
-                </td>
-
-                <td>
-                    <input 
-                        type="number"
-                        name="itemsEditar[${prodId}][cant]"
-                        class="form-control cantidad-editar"
-                        step="0.01"
-                        value="${parseFloat(i.cantidad)}"
-                        min="0.01"
-                        required
-                        oninput="calcularTotalSolEditar(this)">
-                </td>
-
-                <td>
-                    <select 
-                        name="itemsEditar[${prodId}][unidad]" 
-                        class="form-select unidad-select-editar"
-                        onchange="calcularPrecioSugeridoEditar(this)">
-                        ${opcionesUnidadHtml}
-                    </select>
-                </td>
-                
-                <td>
-                    <select 
-                        name="itemsEditar[${prodId}][tipoPrecio]" 
-                        class="form-select tipoPrecio-select-editar"
-                        id="tipoPrecio_editar_${prodId}"
-                        onchange="calcularPrecioSugeridoEditar(this)">
-                        <option value="seleccionar" data-precio="0">seleccione</option>
-                        
-                        <option value="minorista" data-precio="${i.precio_unitario}">
-                            Min ${parseFloat(i.precio_unitario) * parseFloat(i.factor_conversion || 1)} x ${i.unidad_reporte}
-                        </option>
-                    </select>
-                </td>
-
-                <td>
-                    <input 
-                        type="number"
-                        lang="en-US"
-                        name="itemsEditar[${prodId}][precioUnitario]"
-                        class="form-control precio-unitario-editar"
-                        step="0.01"
-                        min="0"
-                        value="${parseFloat(i.precio_unitario).toFixed(2)}"
-                        required
-                        oninput="calcularTotalSolEditar(this)"
-                    >
-                </td>
-
-                <td style="min-width:160px;">
-                    <input 
-                        type="number"
-                        lang="en-US"
-                        name="itemsEditar[${prodId}][precio]"
-                        class="form-control precio-total-editar fw-bold text-success bg-light"
-                        step="0.01"
-                        min="0"
-                        value="${parseFloat(i.subtotal).toFixed(2)}"
-                        readonly
-                        style="font-size:1.1rem; height:45px; min-width:140px;"
-                    >
-                </td>
-
-                <td>
-                    <button type="button" class="btn btn-link text-danger" onclick="quitarFilaEditar(${prodId})">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </td>
-            </tr>
-            `;
-
-            // Insertar la fila en el tbody de edición
-            $('#tablaDetalleEditar tbody').append(nuevaFilaHtml);
-
-            // Pre-seleccionar el tipo de precio guardado en la Base de Datos ('minorista', 'mayorista', etc.)
-            $(`#tipoPrecio_editar_${prodId}`).val(i.tipo_precio);
-        });
-
-        // 5. Forzar el recálculo general del costo total de compra basándonos en las nuevas filas
-        let totalCompraEditar = 0;
-        document.querySelectorAll('#tablaDetalleEditar .precio-total-editar').forEach(el => {
-            totalCompraEditar += parseFloat(el.value) || 0;
-        });
-
-        document.getElementById('costoTotalCompraEditar').textContent = totalCompraEditar.toLocaleString('es-MX', {
-            style: 'currency',
-            currency: 'MXN'
-        });
-        document.getElementById('totalCotizacionEditar').value = totalCompraEditar;
-
-        // 6. Cargar buscador interno del modal y finalmente abrir el modal de edición independiente
-        await recargarProductosEditar();
-
-        new bootstrap.Modal(
-            document.getElementById('modalEditarCotizacion')
-        ).show();
+        // 4. LEVANTAR EL MODAL
+        const miModal = new bootstrap.Modal(document.getElementById('modalImprimirSolicitud'));
+        miModal.show();
 
     } catch (e) {
-        console.error('Error al gestionar/mapear la solicitud:', e);
-        Swal.fire('Error', 'No se pudo estructurar el editor de la cotización', 'error');
+        console.error("Error en imprmirComprobante:", e);
+        Swal.fire('Error', 'Fallo de conexión al recuperar el detalle', 'error');
     }
-}  async function prepararImpresion(id) {
+}
+async function prepararImpresion(id) {
         try {
 
             $('#tablaConversion tbody').empty();
 
-            console.log(id);
+           console.log("Solicitando ID:", id);
 
-            const resp = await fetch(`${URL_CONTROLADOR}?action=obtenerDetalle&id=${id}`);
+        const resp = await fetch(`/cfsistem/app/controllers/comprobantesPagoController.php?action=obtenerDetalle&id=${id}`);
+        
+        // CORRECCIÓN 1: Cambiado .data() por .json()
+        const datos = await resp.json(); 
+        
+        console.log('RESPUESTA DEL SERVIDOR:', datos);
 
-            const datos = await resp.json(); // 👈 AQUÍ
-            const data = datos.data;
+        if (datos.status !== 'success') {
+            Swal.fire('Error', datos.message || 'No se encontraron datos', 'error');
+            return;
+        }
+       
 
-            console.log('DATA REAL:', data);
+        const data = datos.data; 
+        let ref=$('#print-referencia').val();
+        console.log(ref);
 
 
-            if (!Array.isArray(data) || data.length === 0) {
-                console.error('Sin datos');
-                return;
-            }
+            
 
             const infoBase = data[0];
+const montoFormateado = parseFloat(data.monto).toLocaleString('es-MX', { 
+            style: 'currency', 
+            currency: 'MXN' 
+        });
 
-            $('#print-folio').text(`FOLIO: #${id.toString().padStart(5, '0')}`);
-            $('#print-fecha').text(`Fecha: ${new Date().toLocaleDateString()}`);
-            $('#print-almacen').text(infoBase.almacen_nombre);
-            $('#print-proveedor').text(infoBase.cliente_nombre || 'No especificado');
+        // 2. INYECTAR LOS DATOS DIRECTAMENTE EN EL MODAL
+        $('#print-folio').text(`#${String(data.id).padStart(5, '0')}`);
+        $('#print-cliente').text(data.nombre_comercial);
+        
+        // CORRECCIÓN 2: Se usa 'nombre_almacen' que es el alias que viene del SQL
+        $('#print-almacen').text(data.nombre_almacen); 
+        
+        $('#print-usuario').text(data.usuario);
+        
+        $('#print-referencia').val(ref);
+        $('#print-fecha_dep').text(data.fecha);
+        
+        $('#costo_total').text(montoFormateado);
+        $('#metodo_pago_dep').text(data.metodo_pago);
+         $('#numero_venta').text(data.numero_ventas);
 
-            let totalGeneral = 0;
-            let html = '';
+        
 
-            data.forEach(i => {
 
-                const cantidad = parseFloat(i.cantidad) || 0;
-                const precioUnitario = parseFloat(i.precio_unitario) || 0;
-                const subtotal = parseFloat(i.subtotal) || 0;
-
-                totalGeneral += subtotal;
-
-                html += `
-                <tr>
-                    <td class="fw-bold">${i.producto_nombre}(${i.sku})</td>
-
-                    <td class="text-center">
-                        ${cantidad} ${i.nombre || ''}
-                    </td>
-
-                    <td class="text-center">
-                        ${precioUnitario.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
-                    </td>
-
-                    <td class="text-center">
-                        ${subtotal.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
-                    </td>
-                </tr>`;
-            });
-
-            $('#costo_total').text(
-                totalGeneral.toLocaleString('es-MX', {
-                    style: 'currency',
-                    currency: 'MXN'
-                })
-            );
-
-            $('#print-tabla-cuerpo').html(html);
+           
 
             ejecutarImpresion();
 
@@ -1165,97 +844,174 @@ $('#boton').html(htmlboton);
         }
     }
 
-    function ejecutarImpresion() {
-        // 1. Obtener el contenido del área de impresión
-        const contenido = document.getElementById('areaImpresion').innerHTML;
-        const folio = $('#print-folio').text();
+   function ejecutarImpresion() {
+    // 1. Clonar el contenedor para no alterar el modal visual del usuario
+    const contenedorOriginal = document.getElementById('areaImpresion');
+    const clon = contenedorOriginal.cloneNode(true);
 
-        // 2. Crear una ventana nueva
-        const ventana = window.open('', '_blank', 'height=600,width=800');
+    // 2. TRUCO CLAVE: Pasar el valor real de los inputs del DOM original a su clon
+    const inputOriginal = contenedorOriginal.querySelector('#print-referencia');
+    const inputClonado = clon.querySelector('#print-referencia');
+    
+    if (inputOriginal && inputClonado) {
+        // Transferimos el valor real actual como un atributo físico para que 'innerHTML' lo detecte
+        inputClonado.setAttribute('value', inputOriginal.value);
+    }
 
-        // 3. Escribir el HTML necesario para que se vea bien
-        ventana.document.write(`
-        <html>
-            <head>
-                <title>Imprimir ${folio}</title>
-                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-                <style>
-                    body { font-family: 'Inter', sans-serif; padding: 30px; }
-                    .table-bordered th, .table-bordered td { border: 1px solid #000 !important; }
-                    .fw-bold { font-weight: bold !important; }
-                    @media print {
-                        .no-print { display: none; }
-                        @page { margin: 1cm; }
+    // Ahora sí extraemos el HTML con los valores reales inyectados físicamente
+    const contenido = clon.innerHTML;
+    const folio = $('#print-folio').text();
+
+    // 3. Crear una ventana nueva
+    const ventana = window.open('', '_blank', 'height=600,width=800');
+
+    // 4. Escribir el HTML necesario
+    ventana.document.write(`
+    <html>
+        <head>
+            <title>Imprimir ${folio}</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+            <style>
+                /* =========================================================================
+                   ESTILOS BASE (Estructura de Ticket POS)
+                   ========================================================================= */
+                body { 
+                    font-family: 'Courier New', Courier, monospace;
+                    padding: 0; 
+                    margin: 0;
+                    background: #ffffff;
+                    color: #000000;
+                    font-size: 9pt;
+                    line-height: 1.3;
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                }
+                
+                h1, .h1 { font-family: sans-serif; font-size: 1.4rem !important; font-weight: 800; text-align: center; margin-bottom: 2px; }
+                h2, .h2 { font-family: sans-serif; font-size: 1.1rem !important; font-weight: 700; text-align: center; margin-bottom: 4px; }
+                h3, .h3 { font-family: sans-serif; font-size: 0.95rem !important; font-weight: 700; }
+                p { margin-bottom: 3px; }
+
+                /* CORRECCIÓN: Corrección en la sintaxis de la propiedad letter-spacing */
+                .metodo {
+                    font-size: 0.75rem !important; 
+                    letter-spacing: 0.5px !important;
+                }
+                .pago {
+                    font-size: 0.75rem !important; 
+                    letter-spacing: 0.5px !important;
+                }
+
+                /* =========================================================================
+                   COMPONENTES ADAPTADOS A TICKET
+                   ========================================================================= */
+                .table {
+                    width: 100% !important;
+                    margin-bottom: 6px !important;
+                    border: none !important;
+                }
+                .table-bordered th, .table-bordered td { 
+                    border: none !important; 
+                }
+                
+                .table thead th {
+                    background-color: transparent !important;
+                    color: #000000 !important;
+                    padding: 3px 0 !important;
+                    font-size: 8.5pt !important;
+                    text-transform: uppercase;
+                    border-bottom: 1px dashed #000000 !important;
+                    font-weight: 700;
+                }
+                .table tbody td {
+                    padding: 3px 0 !important;
+                    font-size: 8.5pt !important;
+                    border: none !important;
+                }
+                .table tbody tr:nth-child(even) {
+                    background: transparent !important;
+                }
+
+                .divider, .ticket-divider {
+                    border-top: 1px dashed #000000 !important;
+                    margin: 8px 0;
+                    width: 100%;
+                    display: block;
+                }
+
+                .card, .bg-light {
+                    background: transparent !important;
+                    border: none !important;
+                    padding: 0 !important;
+                    margin-bottom: 6px !important;
+                    border-radius: 0 !important;
+                }
+
+                .fw-bold { font-weight: 700 !important; }
+                
+                .firma-linea { 
+                    border-top: 1px dashed #000000; 
+                    margin-top: 30px; 
+                    text-align: center; 
+                    padding-top: 3px; 
+                    font-size: 8pt; 
+                    text-transform: uppercase;
+                    color: #000000;
+                    font-weight: 600;
+                }
+
+                /* =========================================================================
+                   CONFIGURACIÓN DE IMPRESIÓN TÉRMICA (Ancho Fijo)
+                   ========================================================================= */
+                @media print {
+                    @page { 
+                        size: 80mm auto; 
+                        margin: 0mm 3mm 0mm 3mm; 
                     }
-                    .firma-linea { border-top: 1px solid #000; margin-top: 50px; text-align: center; padding-top: 5px; font-size: 12px; }
-                </style>
-            </head>
-            <body>
+                    
+                    body { 
+                        padding: 0 !important; /* CORRECCIÓN: Quitados los márgenes toscos */
+                        width: 100% !important; /* CORRECCIÓN: Asegurar el 100% de los 80mm del rollo */
+                    }
+                    
+                    .no-print { display: none !important; }
+
+                    .table, tr, img, p, div {
+                        page-break-inside: avoid !important;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+        <img
+    src="/cfsistem/public/assets/logo.ico"
+    style="
+        position: fixed;
+        top: 10.5%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 180px;
+        opacity: 0.08;
+        z-index: -1;
+    "
+>
+            <div style="width: 100%; max-width: 80mm; margin: 0 auto;">
                 ${contenido}
-                <script>
-                    // Esperar a que cargue el CSS y luego imprimir
-                    window.onload = function() {
+            </div>
+            <script>
+                window.onload = function() {
+                    setTimeout(function() {
                         window.print();
-                        window.onafterprint = function() { window.close(); };
-                    };
-                <\/script>
-            </body>
-        </html>
+                        window.close();
+                    }, 250); // Delay de seguridad para procesar fuentes antes de mandar a la tiquetera
+                };
+            <\/script>
+        </body>
+    </html>
     `);
 
-        ventana.document.close();
-    }
-async function convertirToCompra(data, id) {
-    try {
-        console.log('data 1',datost);
-
-        const payload = {
-            accion: 'guardar_venta',
-            data: datost,
-            monto_pagado: parseFloat($('#montoPago').val()) || 0,
-            metodo_pago: $('#metodoPago').val() || 'Efectivo',
-            referencia: $('#referenciaPago').val() || '',
-            idCotizacion:id,
-            descuento: 0,
-            observaciones: ''
-        };
-
-        const resp = await fetch(`${URL_CONTROLADOR}?action=guardar_venta&id=${id}`, {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(payload)
-});
-
-const datos = await resp.json();
-console.log(datos);
-
-if (datos.status === 'success') {
-
-    Swal.fire({
-        icon: 'success',
-        title: 'Venta guardada',
-        text: `Folio: ${datos.folio || ''}`,
-        confirmButtonText: 'OK'
-    }).then(() => location.reload());
-
-} else {
-
-    Swal.fire({
-        icon: 'error',
-        title: 'Error al guardar',
-        text: datos.message || 'Ocurrió un error inesperado',
-        confirmButtonText: 'Cerrar'
-    });
-
-}
-
-    } catch (e) {
-        console.error(e);
-    }
-}
- $(document).ready(function() {
+    ventana.document.close();
+}$(document).ready(function() {
         const table = $('#tablaSolicitudes').DataTable({
             language: {
                 url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
@@ -1273,7 +1029,7 @@ if (datos.status === 'success') {
             table.column(3).search(this.value).draw();
         });
         $('#filtroEstado').on('change', function() {
-            table.column(4).search(this.value).draw();
+            table.column(5).search(this.value).draw();
         });
 
         $('#filtroFecha').on('change', function() {
@@ -1304,6 +1060,7 @@ if (datos.status === 'success') {
 
      });
       async function eliminarSolicitud(id) {
+        console.log(id);
         const r = await Swal.fire({
             title: '¿Eliminar?',
             text: 'No podrás revertir esto',
@@ -1314,15 +1071,101 @@ if (datos.status === 'success') {
         if (r.isConfirmed) {
             const fd = new FormData();
             fd.append('id', id);
-            const resp = await fetch(`${URL_CONTROLADOR}?action=eliminar`, {
+            const resp = await fetch(`/cfsistem/app/controllers/comprobantesPagoController.php?action=eliminar`, {
                 method: 'POST',
                 body: fd
             });
             const res = await resp.json();
-            if (res.status === 'success') location.reload();
-            else Swal.fire('Error', res.message, 'error');
+
+if (res.status === 'success') {
+    Swal.fire({
+        title: '¡Éxito!',
+        text: res.message || 'Operación realizada correctamente.',
+        icon: 'success',
+        confirmButtonText: 'Aceptar',
+        confirmButtonColor: '#1f2a37', // Combinando con el tono oscuro de tu CF System
+        timer: 2000, // Se cierra automáticamente en 2 segundos si no dan clic
+        timerProgressBar: true
+    }).then(() => {
+        // Al dar clic en "Aceptar" o cumplirse el tiempo, se recarga la página
+        location.reload();
+    });
+} else {
+    // Por si el servidor responde con un error controlado
+    Swal.fire({
+        title: 'Error',
+        text: res.message || 'Ocurrió un problema en el servidor.',
+        icon: 'error',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#334155'
+    });
+}
         }
     }
+
+      async function actualizar(id) {
+    console.log("Actualizando ID:", id);
+    
+    // Obtenemos el valor de la referencia desde tu input del ticket
+    let referencia = $('#print-referencia').val();
+
+    const r = await Swal.fire({
+        title: '¿Actualizar referencia?',
+        text: 'Se guardará la nueva referencia en este comprobante.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, guardar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#1f2a37',
+        cancelButtonColor: '#6b7280'
+    });
+
+    if (r.isConfirmed) {
+        // CORRECCIÓN 1: Estructurar correctamente el FormData (una línea por variable)
+        const fd = new FormData();
+        fd.append('id', id);
+        fd.append('referencia', referencia);
+
+        try {
+            // CORRECCIÓN 2: Cambiado de '?action=eliminar' a '?action=actualizar'
+            const resp = await fetch(`/cfsistem/app/controllers/comprobantesPagoController.php?action=actualizar`, {
+                method: 'POST',
+                body: fd
+            });
+            
+            const res = await resp.json();
+
+            if (res.status === 'success') {
+                Swal.fire({
+                    title: '¡Éxito!',
+                    text: res.message || 'Operación realizada correctamente.',
+                    icon: 'success',
+                    confirmButtonText: 'Aceptar',
+                    confirmButtonColor: '#1f2a37',
+                    timer: 2000,
+                    timerProgressBar: true
+                }).then(() => {
+                    location.reload();
+                });
+            } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: res.message || 'Ocurrió un problema en el servidor.',
+                    icon: 'error',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#334155'
+                });
+            }
+        } catch (error) {
+            Swal.fire({
+                title: 'Error de Red',
+                text: 'No se pudo conectar con el servidor.',
+                icon: 'error',
+                confirmButtonText: 'Entendido'
+            });
+        }
+    }
+}
     </script>
 
 </body>

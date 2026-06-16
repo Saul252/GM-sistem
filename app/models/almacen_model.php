@@ -19,6 +19,39 @@ class AlmacenModel {
         $sql .= " ORDER BY nombre ASC";
         return $this->db->query($sql)->fetch_all(MYSQLI_ASSOC);
     }
+   public function inversion($almacen_id) {
+    try {
+        // Consulta base limpia
+        $sql = "SELECT 
+                    SUM(`cantidad_actual` * `precio_compra_unitario`) AS `valor_total_inventario`
+                FROM 
+                    `lotes_stock`
+                WHERE 
+                    `estado_lote` = 'activo' 
+                    AND `cantidad_actual` > 0";
+        
+        // CORRECCIÓN 1: Filtrar por la columna correcta 'almacen_id'
+        if ($almacen_id > 0) {
+            $sql .= " AND `almacen_id` = " . intval($almacen_id);
+        }
+        
+        // CORRECCIÓN 2: Eliminado el ORDER BY que rompía la consulta
+        $result = $this->db->query($sql);
+        
+        if (!$result) {
+            return 0;
+        }
+
+        // CORRECCIÓN 3: fetch_assoc porque es una sola fila de totales
+        $fila = $result->fetch_assoc();
+        
+        // Retornamos el número directo (convertido a float) o 0 si es null
+        return isset($fila['valor_total_inventario']) ? floatval($fila['valor_total_inventario']) : 0.00;
+
+    } catch (Exception $e) {
+        return 0;
+    }
+}
      public function getAlmacenesDestino($almacen_id = 0) {
     // Iniciamos la consulta básica
     $sql = "SELECT id, nombre FROM almacenes WHERE activo = 1";

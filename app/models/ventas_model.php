@@ -32,30 +32,6 @@
         
         return $conexion->query($sql);
     }
-   public static function agregarDeposito($conexion, $id_cliente, $monto, $usuario)
-{
-    // Quitamos la columna 'fecha' del INSERT para que MySQL use su valor por defecto automático
-    $sqlV = "INSERT INTO comprobantes_de_pago (id_cliente, monto, usuario_recibe) 
-             VALUES (?, ?, ?)";
-    
-    $stmtV = $conexion->prepare($sqlV);
-    
-    if (!$stmtV) {
-        return false; 
-    }
-
-    // "i" para el ID (entero), "d" para el monto (decimal con centavos), "s" o "i" para el usuario según tu tipo de dato
-    // Si tu columna 'usuario_recibe' es un ID entero, cambia la "s" por una "i"
-    $stmtV->bind_param("ids", $id_cliente, $monto, $usuario);
-    
-    if ($stmtV->execute()) {
-        $id_comprobante = $conexion->insert_id;
-        $stmtV->close();
-        return $id_comprobante;
-    } else {
-        return false;
-    }
-}
 public static function procesarVenta($conexion, $data, $id_usuario) {
     $conexion->begin_transaction();
 

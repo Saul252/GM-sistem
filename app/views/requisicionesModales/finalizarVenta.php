@@ -186,21 +186,6 @@
     color: #1d7a45;
     margin-bottom: 10px;
 }
-.deposito-block {
-    background: #f0faf4;
-    border: 1px solid rgba(20, 3, 58, 0.2);
-    border-radius: 14px;
-    padding: 14px;
-    margin-bottom: 12px;
-}
-.deposito-block .pago-title {
-    font-size: 0.65rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: #071f6a;
-    margin-bottom: 10px;
-}
 </style>
 
 <div class="modal fade" id="modalFinalizarVenta" tabindex="-1">
@@ -278,136 +263,121 @@
                             </button>
                         </div>
 
-                        <div class="dropdown mt-2">
-                            <style>
-                            /* Botón estilo iOS con efecto Glassmorphism sutil */
-                            #btnDropdownEstado {
-                                font-size: 13px;
-                                font-weight: 600;
-                                color: #1c1c1e;
-                                border-radius: 12px;
-                                padding: 11px 16px;
-                                background: rgba(242, 242, 247, 0.8);
-                                backdrop-filter: blur(10px);
-                                -webkit-backdrop-filter: blur(10px);
-                                border: 1px solid rgba(0, 0, 0, 0.05);
-                                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-                            }
+                       <div class="dropdown mt-2">
+    <style>
+        /* Botón estilo iOS con efecto Glassmorphism sutil */
+        #btnDropdownEstado {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1c1c1e;
+            border-radius: 12px;
+            padding: 11px 16px;
+            background: rgba(242, 242, 247, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
 
-                            #btnDropdownEstado:hover,
-                            #btnDropdownEstado:focus {
-                                background: rgba(230, 230, 235, 0.9);
-                                border-color: rgba(0, 0, 0, 0.1);
-                                transform: scale(0.99);
-                            }
+        #btnDropdownEstado:hover, #btnDropdownEstado:focus {
+            background: rgba(230, 230, 235, 0.9);
+            border-color: rgba(0,requisicionesModales/finalizarVenta.php 0, 0, 0.1);
+            transform: scale(0.99);
+        }
 
-                            /* Menú desplegable flotante estilo tarjeta premium iOS */
-                            .dropdown-menu {
-                                border: 1px solid rgba(0, 0, 0, 0.08) !important;
-                                border-radius: 16px !important;
-                                background: rgba(255, 255, 255, 0.95) !important;
-                                backdrop-filter: blur(20px);
-                                -webkit-backdrop-filter: blur(20px);
-                                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08), 0 5px 15px rgba(0, 0, 0, 0.04) !important;
-                                padding: 16px !important;
-                                animation: iosFadeIn 0.2s cubic-bezier(0.1, 0.76, 0.55, 0.94);
-                            }
+        /* Menú desplegable flotante estilo tarjeta premium iOS */
+        .dropdown-menu {
+            border: 1px solid rgba(0, 0, 0, 0.08) !important;
+            border-radius: 16px !important;
+            background: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08), 0 5px 15px rgba(0, 0, 0, 0.04) !important;
+            padding: 16px !important;
+            animation: iosFadeIn 0.2s cubic-bezier(0.1, 0.76, 0.55, 0.94);
+        }
 
-                            /* Animación suave de aparición */
-                            @keyframes iosFadeIn {
-                                from {
-                                    opacity: 0;
-                                    transform: translateY(-6px) scale(0.98);
-                                }
+        /* Animación suave de aparición */
+        @keyframes iosFadeIn {
+            from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
 
-                                to {
-                                    opacity: 1;
-                                    transform: translateY(0) scale(1);
-                                }
-                            }
+        /* Contenedor interno de movimientos con scroll nativo fluido */
+        #listaMovimientos {
+            max-height: 260px;
+            overflow-y: auto;
+            padding-right: 2px;
+        }
 
-                            /* Contenedor interno de movimientos con scroll nativo fluido */
-                            #listaMovimientos {
-                                max-height: 260px;
-                                overflow-y: auto;
-                                padding-right: 2px;
-                            }
+        /* Scrollbar estético ultra fino tipo iOS */
+        #listaMovimientos::-webkit-scrollbar {
+            width: 4px;
+        }
+        #listaMovimientos::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        #listaMovimientos::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 10px;
+        }
+        #listaMovimientos::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 0, 0, 0.3);
+        }
+    </style>
 
-                            /* Scrollbar estético ultra fino tipo iOS */
-                            #listaMovimientos::-webkit-scrollbar {
-                                width: 4px;
-                            }
+    <button class="btn w-100 text-start dropdown-toggle d-flex justify-content-between align-items-center" type="button" id="btnDropdownEstado" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+        <span><i class="bi bi-wallet2 me-2 text-primary"></i>Gestión de Cuenta</span>
+    </button>
 
-                            #listaMovimientos::-webkit-scrollbar-track {
-                                background: transparent;
-                            }
-
-                            #listaMovimientos::-webkit-scrollbar-thumb {
-                                background: rgba(0, 0, 0, 0.15);
-                                border-radius: 10px;
-                            }
-
-                            #listaMovimientos::-webkit-scrollbar-thumb:hover {
-                                background: rgba(0, 0, 0, 0.3);
-                            }
-                            </style>
-
-                            <button
-                                class="btn w-100 text-start dropdown-toggle d-flex justify-content-between align-items-center"
-                                type="button" id="btnDropdownEstado" data-bs-toggle="dropdown"
-                                data-bs-auto-close="outside" aria-expanded="false">
-                                <span><i class="bi bi-wallet2 me-2 text-primary"></i>Gestión de Cuenta</span>
-                            </button>
-
-                            <div class="dropdown-menu dropdown-menu-end shadow-lg" aria-labelledby="btnDropdownEstado"
-                                style="min-width: 340px; max-width: 420px;">
-
-                                <div id="widgetEstadoCuenta" style="display:none;">
-                                    <div id="widgetHeader" class="widget-header-neutral">
-                                        <div class="d-flex justify-content-between align-items-start">
-                                            <div>
-                                                <div class="widget-saldo-label">
-                                                    <i class="bi bi-wallet2 me-1"></i>Estado de Cuenta
-                                                </div>
-                                                <div class="widget-saldo-monto" id="lblSaldoTotal">$0.00</div>
-                                            </div>
-                                            <span id="txtUltimaCarga" class="widget-update-time"></span>
-                                        </div>
-                                        <div id="widgetBadge" class="mt-2"></div>
-                                    </div>
-
-                                    <div class="widget-body" id="listaMovimientos">
-                                        <div class="text-center py-4 text-muted small">
-                                            <div class="spinner-border spinner-border-sm"></div>
-                                        </div>
-                                    </div>
-
-                                </div>
-
-                                <div id="contenedorSaldoFavor" class="p-3 mb-2 mt-2"
-                                    style="display:none; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px;">
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="checkUsarSaldo"
-                                            onchange="toggleSaldoInput()">
-                                        <label class="form-check-label fw-bold text-success" for="checkUsarSaldo">
-                                            ¿Usar saldo a favor en esta compra?
-                                        </label>
-                                    </div>
-
-                                    <div id="inputSaldoContainer" class="mt-2" style="display:none;">
-                                        <label class="small text-muted">Cantidad a descontar:</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text bg-success text-white border-success">$</span>
-                                            <input type="number" id="monto_usar_favor"
-                                                class="form-control border-success fw-bold" value="0" step="0.01"
-                                                min="0" oninput="validarMontoMaximo(this)">
-                                        </div>
-                                        <div id="msgMaximo" class="text-muted" style="font-size: 0.7rem;"></div>
-                                    </div>
-                                </div>
-
-                            </div>
+    <div class="dropdown-menu dropdown-menu-end shadow-lg" aria-labelledby="btnDropdownEstado" style="min-width: 340px; max-width: 420px;">
+        
+        <div id="widgetEstadoCuenta" style="display:none;">
+            <div id="widgetHeader" class="widget-header-neutral">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <div class="widget-saldo-label">
+                            <i class="bi bi-wallet2 me-1"></i>Estado de Cuenta
                         </div>
+                        <div class="widget-saldo-monto" id="lblSaldoTotal">$0.00</div>
+                    </div>
+                    <span id="txtUltimaCarga" class="widget-update-time"></span>
+                </div>
+                <div id="widgetBadge" class="mt-2"></div>
+            </div>
+
+            <div class="widget-body" id="listaMovimientos">
+                <div class="text-center py-4 text-muted small">
+                    <div class="spinner-border spinner-border-sm"></div>
+                </div>
+            </div>
+
+            </div>
+
+        <div id="contenedorSaldoFavor" class="p-3 mb-2 mt-2"
+            style="display:none; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px;">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="checkUsarSaldo"
+                    onchange="toggleSaldoInput()">
+                <label class="form-check-label fw-bold text-success" for="checkUsarSaldo">
+                    ¿Usar saldo a favor en esta compra?
+                </label>
+            </div>
+
+            <div id="inputSaldoContainer" class="mt-2" style="display:none;">
+                <label class="small text-muted">Cantidad a descontar:</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-success text-white border-success">$</span>
+                    <input type="number" id="monto_usar_favor"
+                        class="form-control border-success fw-bold" value="0" step="0.01" min="0"
+                        oninput="validarMontoMaximo(this)">
+                </div>
+                <div id="msgMaximo" class="text-muted" style="font-size: 0.7rem;"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
                         <!-- Ficha fiscal del cliente -->
                         <div class="ficha-cliente mt-3">
                             <div class="row g-2">
@@ -425,40 +395,41 @@
                                 </div>
                             </div>
                         </div>
-                        <!-- Bloque de pago -->
-                     
 
                         <!-- Bloque de pago -->
-                        <div class="pago-block" style="display:none">
+                        <div class="pago-block " style="display:none;">
                             <div class="pago-title"><i class="bi bi-cash-coin me-1"></i>Registro de Pago</div>
                             <div class="row g-2">
                                 <div class="col-7">
-
+                                    
                                     <div class="input-group">
                                         <span
-                                            class="input-group-text bg-primary text-white border-primary fw-bold">$</span>
+                                            class="input-group-text bg-success text-white border-success fw-bold">$</span>
                                         <input type="number" id="monto_pagar"
-                                            class="form-control border-primary fw-bold text-primary" value="0"
+                                            class="form-control border-success fw-bold text-success" value="0"
                                             step="0.01" min="0" style="border-radius:0 8px 8px 0;">
                                     </div>
                                 </div>
                                 <div class="col-5">
-                                    <select id="metodo_pago" class="form-select fw-bold"
-                                        onchange="verificarMetodoPago(this.value)">
-                                        <option value="Efectivo">Efectivo</option>
-                                        <option value="Transferencia">Transferencia</option>
-                                        <option value="Tarjeta">Tarjeta</option>
+                                     <select id="metodo_pago" class="form-select fw-bold" onchange="verificarMetodoPago(this.value)">
+        <option value="Efectivo">Efectivo</option>
+        <option value="Transferencia">Transferencia</option>
+        <option value="Tarjeta">Tarjeta</option>
+        
+    </select>
+</div>
 
-                                    </select>
-                                </div>
-
-                                <div class="mb-3" id="contenedorReferencia" style="display:none;">
-                                    <label class="form-label small fw-bold text-secondary text-uppercase">
-                                        Referencia
-                                    </label>
-                                    <input type="text" id="inputReferencia" class="form-control"
-                                        placeholder="Ingrese referencia">
-                                </div>
+<div class="mb-3" id="contenedorReferencia" style="display:none;">
+    <label class="form-label small fw-bold text-secondary text-uppercase">
+        Referencia
+    </label>
+    <input 
+        type="text" 
+        id="inputReferencia" 
+        class="form-control"
+        placeholder="Ingrese referencia"
+    >
+</div>
                             </div>
                             <div id="pago_aviso" class="small mt-2 text-center fw-bold"></div>
                         </div>
@@ -482,8 +453,8 @@
 </div>
 
 <script>
-function verificarMetodoPago(metodo) {
-
+      function verificarMetodoPago(metodo) {
+    
 
     const contenedor = document.getElementById('contenedorReferencia');
     const input = document.getElementById('inputReferencia');
@@ -499,7 +470,6 @@ function verificarMetodoPago(metodo) {
         input.value = '';
     }
 }
-
 // Cache de elementos DOM para evitar búsquedas repetidas
 const elements = {
     selectCliente: document.getElementById('selectCliente'),
@@ -542,10 +512,7 @@ elements.selectCliente.addEventListener('change', function() {
         debounceTimer = setTimeout(() => consultarEstatusFinanciero(idCliente), 300);
     }
 });
-function crearComprobante(){
-         fetch(`/cfsistem/app/controllers/ventasController.php?action=agregarDeposito&id=${id}`, {})
-    
-}
+
 // Función para realizar la petición al servidor
 function consultarEstatusFinanciero(id) {
     const $widget = elements.widgetEstadoCuenta;
@@ -823,11 +790,11 @@ window.agregarProducto = function(btn) {
     select.selectedIndex = 0;
 
     let cantidadBase = (modoVenta === 'referencia') ? factor : (parseFloat(cantidadInput.value) || 0);
-    cantidadBase = Math.round(cantidadBase * 1000000) / 1000000;
+cantidadBase=Math.round(cantidadBase * 1000000) / 1000000;
     const selectPrecio = fila.querySelector(".select-precio");
     const selectPrecioInput = fila.querySelector(".input-precio");
     const precioUnitario = parseFloat(selectPrecioInput.value) || 0;
-    console.log('precio Unitario', precioUnitario);
+    console.log('precio Unitario',precioUnitario);
     const textoPrecio = selectPrecio.options[selectPrecio.selectedIndex].text.toLowerCase();
     const tipo_p = textoPrecio.includes("dist") ? "distribuidor" : (textoPrecio.includes("may") ? "mayorista" :
         "minorista");
@@ -878,18 +845,17 @@ window.renderCarrito = function() {
     // Generamos el HTML en un array para un solo "paint" al final
     const htmlCarrito = window.carrito.map((item, index) => {
         if (item.cantidad > 1) {
-            item.cantidad = Math.round(item.cantidad * 10000) / 10000;
-        }
+            item.cantidad = Math.round(item.cantidad * 10000) / 10000;       }
         const cantFactor = Math.floor(item.cantidad / item.factor);
         const cantPza = (item.cantidad % item.factor);
-
-
+       
+      
         //console.log((equivalencia), item.factor);
-
-
-
-        item.subtotal = item.cantidad * (item.precio_unitario);
-
+        
+      
+      
+            item.subtotal = item.cantidad * (item.precio_unitario);
+       
 
 
         return `
@@ -980,7 +946,7 @@ function actualizarTotalesUI() {
 
     // 4. Ponemos por defecto el monto a pagar y disparamos el aviso de la leyenda
     if (elPago) {
-        elPago.value = 0;
+        elPago.value =0;
         elPago.dispatchEvent(new Event('input'));
     }
 } // Eliminar item
@@ -1038,8 +1004,8 @@ window.procesarVenta = function() {
     // La suma que cubre la nota (Efectivo + Crédito)
     const pagoTotalEnviado = efectivoRecibido + creditoAplicado;
 
-    let metodoPago = document.getElementById('metodo_pago').value;
-    let referencia = document.getElementById('inputReferencia').value; // Cambia const por let
+    let metodoPago = document.getElementById('metodo_pago').value; 
+     let referencia = document.getElementById('inputReferencia').value;// Cambia const por let
     const observaciones = document.getElementById('obsVenta').value;
     console.log(observaciones);
 
@@ -1131,7 +1097,7 @@ window.procesarVenta = function() {
                 monto_usado_favor: creditoAplicado, // Lo que se resta de la bolsa
                 total_venta: totalOriginalVenta, // El costo real (Para calcular deuda)
                 metodo_pago: metodoPago,
-                referencia: referencia ?? '',
+                referencia:referencia??'',
                 observaciones: observaciones,
                 carrito: carritoFinal,
                 usar_saldo_favor: creditoAplicado > 0 ? 1 : 0

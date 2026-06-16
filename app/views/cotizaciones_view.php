@@ -621,7 +621,7 @@ error_reporting(E_ALL);
 
         </div>
     </div>
-</div> 
+</div> y
     <style>
     /* =========================
    MODAL BASE

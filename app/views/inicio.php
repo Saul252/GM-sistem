@@ -20,7 +20,9 @@ $modulos = [
     ['id' => 'clientesEstatus', 'url' => '/cfsistem/app/controllers/clientesEstatusController.php', 'icon' => 'bi-person-check', 'class' => 'text-success', 'label' => 'Estatus', 'desc' => 'Créditos'],
     ['id' => 'pedidosVendedor', 'url' => '/cfsistem/app/controllers/pedidosVendedorController.php', 'icon' => 'bi-person-badge-fill', 'class' => 'text-warning', 'label' => 'Pedidos Vendedor', 'desc' => 'Preventa'],
     ['id' => 'ventashistorial', 'url' => '/cfsistem/app/controllers/ventasHistorialController.php', 'icon' => 'bi-receipt', 'class' => 'icon-historial', 'label' => 'Historial de Ventas', 'desc' => 'Historial de Ventas'],
-['id' => 'registrarPagos', 'url' => '/cfsistem/app/controllers/registrarPagosController.php', 'icon' => 'bi-journal-text', 'class' => 'icon-historial', 'label' => 'Registrar Pagos a Ventas', 'desc' => 'Registrar Pagos a ventas'],
+['id' => 'comprobantes', 'url' => '/cfsistem/app/controllers/comprobantesPagoController.php', 'icon' => 'bi-journal-text', 'class' => 'icon-historial', 'label' => 'Crear comprobante de pagos', 'desc' => 'Crear comprobantes de pago'],
+
+    ['id' => 'registrarPagos', 'url' => '/cfsistem/app/controllers/registrarPagosController.php', 'icon' => 'bi-journal-text', 'class' => 'icon-historial', 'label' => 'Registrar Pagos a Ventas', 'desc' => 'Registrar Pagos a ventas'],
 
     // =========================
     // COMPRAS Y PROVEEDORES
