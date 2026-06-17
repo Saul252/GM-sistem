@@ -32,9 +32,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'listar') {
             'rango'    => $_GET['f_rango'] ?? 'todos',
             'inicio'   => $_GET['f_inicio'] ?? '',
             'fin'      => $_GET['f_fin'] ?? '',
-            'almacen'  => $_GET['f_almacen'] ?? 0,
-            'vendedor'  => $_GET['f_vendedor'] ?? 0
-
+            'almacen'  => $_GET['f_almacen'] ?? 0
         ];
 
         $rol_id = $_SESSION['rol_id'] ?? 2;
@@ -86,10 +84,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardarAbono') {
         $v_id = intval($_POST['venta_id'] ?? 0);
         $amt  = floatval($_POST['monto'] ?? 0);
         $met  = $_POST['metodo_pago'] ?? 'Efectivo'; 
+        $ref =$_POST['referencia'] ?? '';
         $u_id = $_SESSION['usuario_id'] ?? 1;
         $fec  = !empty($_POST['fecha_pago']) ? $_POST['fecha_pago'] : date('Y-m-d H:i:s');
         $c_id = intval($_POST['cliente_id'] ?? 0);
-        $referencia=$_POST['referencia'] ?? '';
 
         // --- 1. VALIDACIÓN ---
         if ($amt <= 0) throw new Exception("El monto debe ser mayor a 0.");
@@ -116,7 +114,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardarAbono') {
         }
 
         // --- 3. REGISTRO EN HISTORIAL ---
-        if (!$ventasModel->registrarAbono($v_id, $amt, $u_id, $met, $fec,$referencia)) {
+        if (!$ventasModel->registrarAbono($v_id, $amt, $u_id, $met, $fec,$ref)) {
             throw new Exception("Error al registrar el movimiento en el historial.");
         }
 
@@ -168,6 +166,61 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerDetalle') {
     } catch (Throwable $e) {
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }
+    exit;
+}
+if (isset($_GET['action']) && $_GET['action'] === 'obtenerPagoFaltante') {
+
+    // limpiar cualquier salida previa
+    if (ob_get_level()) {
+        ob_end_clean();
+    }
+
+    header('Content-Type: application/json; charset=utf-8');
+
+    try {
+
+        $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+
+        if ($id <= 0) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'ID inválido'
+            ]);
+            exit;
+        }
+
+        // consulta al modelo
+        $porPagar = $ventasModel->faltantePago($id);
+
+        // seguridad: si viene null o false
+        if (!$porPagar) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'No se encontraron datos'
+            ]);
+            exit;
+        }
+
+        // validar JSON
+        $json = json_encode($porPagar);
+
+        if ($json === false) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => json_last_error_msg()
+            ]);
+            exit;
+        }
+
+        echo $json;
+
+    } catch (Throwable $e) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+
     exit;
 }
 // --- ACCIÓN: CANCELAR VENTA (POST) ---
@@ -302,5 +355,5 @@ if ($pendiente_pago > 0) {
 // --- CARGA DE VISTA ---
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     $tituloPagina = "Control de Entregas";
-    require_once __DIR__ . '/../views/ventasHistorial_view.php';
+    require_once __DIR__ . '/../views/registrar_pagos_view.php';
 }

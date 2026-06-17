@@ -142,6 +142,12 @@ body {
                                 <option value="entregado">Entregado</option>
                             </select>
                         </div>
+                         <div class="col-md-2">
+    <label for="select-usuarios" class="form-label fw-bold small text-muted text-uppercase">Vendedor</label>
+    <select class="form-select rounded-pill" id="select-usuarios" name="usuario_id" onchange="getVentas()">
+       <option value="" > Seleccione vendedor</option>
+    </select>
+</div>
                         <div class="col-md-2">
                             <label class="form-label small fw-bold">Estatus Pago</label>
                             <select id="f_pago" class="form-select form-select-sm" onchange="getVentas()">
@@ -196,6 +202,7 @@ body {
                                 <th class="ps-3">Fecha</th>
                                 <th>Folio</th>
                                 <th>Almacén</th>
+                                <th>Vendedor</th>
                                 <th>Cliente</th>
                                 <th>Total</th>
                                 <th>Saldo Cobro</th>
@@ -382,6 +389,51 @@ body {
      <?php require_once __DIR__ . '/ventasHistorialModales/registarNuevoAbono.php'; ?>
     
     <script>
+
+
+     cargarUsuariosSelect();
+    async function cargarUsuariosSelect() {
+    const select = document.getElementById('select-usuarios');
+    if (!select) return; // Seguridad por si el select no está en la vista actual
+
+    try {
+        // 1. Realizar la petición a tu controlador de Cf System
+        const url = '/cfsistem/app/controllers/usuariosController.php?action=obtenerUsuarios';
+        const respuesta = await fetch(url);
+        
+        if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
+        
+        const resultado = await respuesta.json();
+
+        // 2. Verificar que la respuesta sea exitosa y contenga los datos
+        if (resultado.success && Array.isArray(resultado.data)) {
+            
+            // Limpiamos el select y dejamos una opción inicial neutra
+           // select.innerHTML = '<option value="" selected disabled> Seleccione vendedor</option>';
+
+            // 3. Recorrer los usuarios y crear las opciones
+            resultado.data.forEach(usuario => {
+                const opcion = document.createElement('option');
+                opcion.value = usuario.id; // El ID que se enviará en el formulario
+                
+                // Formateamos el texto: "Nombre (Almacén - Rol)" para que sea súper descriptivo
+                const almacen = usuario.almacen_nombre || 'Sin Almacén';
+                opcion.textContent = `${usuario.nombre}`;
+                
+                // Agregamos la opción al select
+                select.appendChild(opcion);
+            });
+
+        } else {
+            select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
+            console.error('El backend no devolvió success:true o la estructura cambió');
+        }
+
+    } catch (error) {
+        select.innerHTML = '<option value="">Error al cargar la lista</option>';
+        console.error('Error al ejecutar cargarUsuariosSelect:', error);
+    }
+}
     const modalObj = new bootstrap.Modal('#modalDetalle');
     let ventaActual = null;
     // La ruta al controlador (ajusta si el nombre del archivo varía)
@@ -399,7 +451,8 @@ body {
             f_fin: $('#f_fin').val(),
             f_almacen: $('#f_almacen').val(),
             f_status: $('#f_status').val(),
-            f_pago: $('#f_pago').val()
+            f_pago: $('#f_pago').val(),
+               f_vendedor:$('#select-usuarios').val() ?? ''
         });
 
         try {
@@ -414,12 +467,18 @@ body {
                 let badgeCobro = (saldo <= 0) ?
                     '<span class="text-success small fw-bold"><i class="bi bi-check-circle"></i> Pagado</span>' :
                     `<span class="text-danger small fw-bold">Debe: $${saldo.toFixed(2)}</span>`;
+let agregarPago = (saldo <= 0) ?
+                    '' :
+                    `<button class="btn btn-sm btn-success shadow-sm" onclick="abrirNuevoAbono(${v.id})">
+                            </i> Nuevo abono
+                        </button>`;
 
                 return `<tr>
               
                 <td class="ps-3 small">${v.fecha}</td>
                 <td class="fw-bold">${v.folio}</td>
                 <td><span class="badge bg-light text-dark border fw-normal">${v.almacen_nombre}</span></td>
+                 <td><div class="small fw-bold">${v.vendedor}</div></td>
                 <td><div class="small fw-bold">${v.cliente}</div></td>
                 <td class="fw-bold text-dark">$${total.toFixed(2)} </td>
                 <td>${badgeCobro}</td>
@@ -432,9 +491,9 @@ body {
                         <button class="btn btn-sm btn-dark shadow-sm" onclick="verDetalle(${v.id})">
                             <i class="bi bi-eye-fill"></i> ver
                         </button>
-                        <button class="btn btn-sm btn-success shadow-sm" onclick="abrirNuevoAbono(${v.id})">
-                            </i> Nuevo abono
-                        </button>
+                        ${agregarPago}
+
+                        
                        
                         
                     </div>

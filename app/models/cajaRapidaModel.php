@@ -43,6 +43,7 @@ class cajaRapidaModel {
         $conexion->begin_transaction();
 
         try {
+             $vendedor_id   = intval($data['id_vendedor']);
             $id_usuario   = $_SESSION['usuario_id'] ?? 1;
             $id_cliente   = intval($data['id_cliente']);
             $descuento    = floatval($data['descuento']);
@@ -95,10 +96,10 @@ class cajaRapidaModel {
             $estado_pago = ($monto_pagado >= $total) ? 'pagado' : (($monto_pagado > 0) ? 'parcial' : 'pendiente');
 
             // 3. INSERTAR CABECERA DE VENTA
-            $sqlV = "INSERT INTO ventas (folio, id_cliente, almacen_id, usuario_id, subtotal, descuento, total, estado_pago, estado_entrega, estado_general, observaciones) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activa', ?)";
+            $sqlV = "INSERT INTO ventas (folio, id_cliente, almacen_id, usuario_id, subtotal, descuento, total, estado_pago, estado_entrega, estado_general, observaciones,vendedor_id) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activa', ?,?)";
             $stmtV = $conexion->prepare($sqlV);
-            $stmtV->bind_param("siiidddsss", $folio, $id_cliente, $id_almacen_vta, $id_usuario, $monto_pagado, $descuento, $monto_pagado, $estado_pago, $estado_entrega_vta, $obs);
+            $stmtV->bind_param("siiidddssss", $folio, $id_cliente, $id_almacen_vta, $id_usuario, $monto_pagado, $descuento, $monto_pagado, $estado_pago, $estado_entrega_vta, $obs,$vendedor_id);
             $stmtV->execute();
             $id_venta = $conexion->insert_id;
 

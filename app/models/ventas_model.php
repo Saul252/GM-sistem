@@ -37,10 +37,12 @@ public static function procesarVenta($conexion, $data, $id_usuario) {
 
     try {
        $id_cliente   = intval($data['id_cliente']);
+       $vendedor_id   = intval($data['id_vendedor']);
 $descuento    = floatval($data['descuento']);
 $obs          = $data['observaciones'] ?? '';
 $carrito      = $data['carrito'];
 $monto_pagado = floatval($data['monto_pagado']);
+
 
 // 1. Corregida la asignación (usa minúsculas para evitar confusiones)
 $monto_favor  = floatval($data['monto_usado_favor'] ?? 0);
@@ -86,17 +88,26 @@ if ($monto_favor > 0 && $monto_favor == $monto_pagado) {
         $resFolio = $conexion->query("SELECT MAX(id) as ultimo_id FROM ventas");
         $filaFolio = $resFolio->fetch_assoc();
         $proximo_id = ($filaFolio['ultimo_id'] ?? 0) + 1;
-        $folio = "V-" . str_pad($proximo_id, 2, "0", STR_PAD_LEFT);
+        $folio='';
+        if($monto_pagado==0){
+            $folio = "VR-" . str_pad($proximo_id, 2, "0", STR_PAD_LEFT);
+
+        }
+        else{
+             $folio = "V-" . str_pad($proximo_id, 2, "0", STR_PAD_LEFT);
+
+        }
+        
         
         $id_almacen_vta = intval($carrito[0]['almacen_id']);
         $estado_entrega_vta = ($total_entregado_global >= $total_vendido_global) ? 'entregado' : (($total_entregado_global > 0) ? 'parcial' : 'pendiente');
         $estado_pago = ($monto_pagado >=number_format($total, 2, '.', '') ) ? 'pagado' : (($monto_pagado > 0) ? 'parcial' : 'pendiente');
 
         // 3. INSERTAR CABECERA DE VENTA
-        $sqlV = "INSERT INTO ventas (folio, id_cliente, almacen_id, usuario_id, subtotal, descuento, total, estado_pago, estado_entrega, estado_general, observaciones) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activa', ?)";
+        $sqlV = "INSERT INTO ventas (folio, id_cliente, almacen_id, usuario_id, subtotal, descuento, total, estado_pago, estado_entrega, estado_general, observaciones,vendedor_id) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activa', ?,?)";
         $stmtV = $conexion->prepare($sqlV);
-        $stmtV->bind_param("siiidddsss", $folio, $id_cliente, $id_almacen_vta, $id_usuario, $subtotal, $descuento, $total, $estado_pago, $estado_entrega_vta, $obs);
+        $stmtV->bind_param("siiidddssss", $folio, $id_cliente, $id_almacen_vta, $id_usuario, $subtotal, $descuento, $total, $estado_pago, $estado_entrega_vta, $obs,$vendedor_id);
         $stmtV->execute();
         $id_venta = $conexion->insert_id;
 

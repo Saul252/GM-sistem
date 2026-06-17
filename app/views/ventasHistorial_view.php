@@ -121,6 +121,12 @@
                                 <option value="entregado">Entregado</option>
                             </select>
                         </div>
+                          <div class="col-md-2">
+    <label for="select-usuarios" class="form-label fw-bold small text-muted text-uppercase">Vendedor</label>
+    <select class="form-select rounded-pill" id="select-usuarios" name="usuario_id" onchange="getVentas()">
+       <option value="" > Seleccione vendedor</option>
+    </select>
+</div>
                         <div class="col-md-2">
                             <label class="form-label small fw-bold">Estatus Pago</label>
                             <select id="f_pago" class="form-select form-select-sm" onchange="getVentas()">
@@ -175,6 +181,7 @@
                                 <th class="ps-3">Fecha</th>
                                 <th>Folio</th>
                                 <th>Almacén</th>
+                                <th>Vendedor</th>
                                 <th>Cliente</th>
                                 <th>Total</th>
                                 <th>Saldo Cobro</th>
@@ -203,6 +210,8 @@
                             <p id="detCliente" class="fw-bold small mb-1"></p>
                             <p class="fw-bold small mb-1">Almacen:</p>
                             <p id="detAlmacen" class="fw-bold small mb-3"></p>
+                            <p class="fw-bold small mb-1">Vendedor:</p>
+                            <p id="detVendedor" class="fw-bold small mb-3"></p>
 
                             <div class="mb-4 p-2 bg-white border rounded shadow-sm text-center">
                                 <div class="mb-2 pb-2 border-bottom">
@@ -445,6 +454,51 @@
     <?php require_once __DIR__ . '/entregasComponets/modalEntregaVentas.php'; ?>
 
     <script>
+
+     cargarUsuariosSelect();
+    async function cargarUsuariosSelect() {
+    const select = document.getElementById('select-usuarios');
+    if (!select) return; // Seguridad por si el select no está en la vista actual
+
+    try {
+        // 1. Realizar la petición a tu controlador de Cf System
+        const url = '/cfsistem/app/controllers/usuariosController.php?action=obtenerUsuarios';
+        const respuesta = await fetch(url);
+        
+        if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
+        
+        const resultado = await respuesta.json();
+
+        // 2. Verificar que la respuesta sea exitosa y contenga los datos
+        if (resultado.success && Array.isArray(resultado.data)) {
+            
+            // Limpiamos el select y dejamos una opción inicial neutra
+           // select.innerHTML = '<option value="" selected disabled> Seleccione vendedor</option>';
+
+            // 3. Recorrer los usuarios y crear las opciones
+            resultado.data.forEach(usuario => {
+                const opcion = document.createElement('option');
+                opcion.value = usuario.id; // El ID que se enviará en el formulario
+                
+                // Formateamos el texto: "Nombre (Almacén - Rol)" para que sea súper descriptivo
+                const almacen = usuario.almacen_nombre || 'Sin Almacén';
+                opcion.textContent = `${usuario.nombre}`;
+                
+                // Agregamos la opción al select
+                select.appendChild(opcion);
+            });
+
+        } else {
+            select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
+            console.error('El backend no devolvió success:true o la estructura cambió');
+        }
+
+    } catch (error) {
+        select.innerHTML = '<option value="">Error al cargar la lista</option>';
+        console.error('Error al ejecutar cargarUsuariosSelect:', error);
+    }
+}
+
     const modalObj = new bootstrap.Modal('#modalDetalle');
     let ventaActual = null;
     // La ruta al controlador (ajusta si el nombre del archivo varía)
@@ -452,6 +506,7 @@
 
     async function getVentas() {
         $('#loader').removeClass('d-none');
+
 
         const params = new URLSearchParams({
             action: 'listar',
@@ -462,7 +517,8 @@
             f_fin: $('#f_fin').val(),
             f_almacen: $('#f_almacen').val(),
             f_status: $('#f_status').val(),
-            f_pago: $('#f_pago').val()
+            f_pago: $('#f_pago').val(),
+            f_vendedor:$('#select-usuarios').val() ?? ''
         });
 
         try {
@@ -483,7 +539,9 @@
                 <td class="ps-3 small">${v.fecha}</td>
                 <td class="fw-bold">${v.folio}</td>
                 <td><span class="badge bg-light text-dark border fw-normal">${v.almacen_nombre}</span></td>
+                  <td><div class="small fw-bold">${v.vendedor}</div></td>
                 <td><div class="small fw-bold">${v.cliente}</div></td>
+               
                 <td class="fw-bold text-dark">$${total.toFixed(2)}</td>
                 <td>${badgeCobro}</td>
                 <td class="text-center">
@@ -574,6 +632,7 @@
             $('#spanFolio').text(data.info.folio);
             $('#detCliente').text(data.info.nombre_comercial);
             $('#detAlmacen').text(data.info.almacen);
+             $('#detVendedor').text(data.info.vendedor);
 
             const total = parseFloat(data.info.total) || 0;
             const pagado = parseFloat(data.info.total_pagado) || 0;

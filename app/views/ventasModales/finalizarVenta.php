@@ -395,6 +395,12 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="mb-3">
+    <label for="select-usuarios" class="form-label fw-bold small text-muted text-uppercase">Atendió / Usuario</label>
+    <select class="form-select rounded-pill" id="select-usuarios" name="usuario_id">
+        <option value="" selected disabled>Cargando usuarios...</option>
+    </select>
+</div>
 
                         <!-- Bloque de pago -->
                         <div class="pago-block">
@@ -453,6 +459,54 @@
 </div>
 
 <script>
+    cargarUsuariosSelect();
+    async function cargarUsuariosSelect() {
+    const select = document.getElementById('select-usuarios');
+    if (!select) return; // Seguridad por si el select no está en la vista actual
+
+    try {
+        // 1. Realizar la petición a tu controlador de Cf System
+        const url = '/cfsistem/app/controllers/usuariosController.php?action=obtenerUsuarios';
+        const respuesta = await fetch(url);
+        
+        if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
+        
+        const resultado = await respuesta.json();
+
+        // 2. Verificar que la respuesta sea exitosa y contenga los datos
+        if (resultado.success && Array.isArray(resultado.data)) {
+            
+            // Limpiamos el select y dejamos una opción inicial neutra
+            select.innerHTML = '<option value="" selected disabled>-- Seleccione un usuario --</option>';
+
+            // 3. Recorrer los usuarios y crear las opciones
+            resultado.data.forEach(usuario => {
+                const opcion = document.createElement('option');
+                opcion.value = usuario.id; // El ID que se enviará en el formulario
+                
+                // Formateamos el texto: "Nombre (Almacén - Rol)" para que sea súper descriptivo
+                const almacen = usuario.almacen_nombre || 'Sin Almacén';
+                opcion.textContent = `${usuario.nombre} (${almacen})`;
+                
+                // Agregamos la opción al select
+                select.appendChild(opcion);
+            });
+
+        } else {
+            select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
+            console.error('El backend no devolvió success:true o la estructura cambió');
+        }
+
+    } catch (error) {
+        select.innerHTML = '<option value="">Error al cargar la lista</option>';
+        console.error('Error al ejecutar cargarUsuariosSelect:', error);
+    }
+}
+
+// 4. Ejecutar la función automáticamente cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', () => {
+    cargarUsuariosSelect();
+});
       function verificarMetodoPago(metodo) {
     
 
@@ -1065,12 +1119,14 @@ window.procesarVenta = function() {
                     popup: 'rounded-4'
                 }
             });
+              let vendedor_id= document.getElementById("select-usuarios").value??0;
+               
 
             // 4. Mapeo del carrito (Lógica de despacho)
             const carritoFinal = window.carrito.map((item, index) => {
                 const inputEntrega = document.querySelector(
                     `.input-entrega-modal[data-index="${index}"]`);
-                let entregado = inputEntrega ? parseFloat(inputEntrega.value) : item.cantidad;
+                  let entregado = inputEntrega ? parseFloat(inputEntrega.value) : item.cantidad;
                 console.log(item.unidadMedidaNombre);
                 return {
                     producto_id: parseInt(item.producto_id),
@@ -1093,6 +1149,7 @@ window.procesarVenta = function() {
             const datos = {
                 accion: 'guardar_venta',
                 id_cliente: parseInt(idCliente),
+                id_vendedor:parseInt(vendedor_id),
                 monto_pagado: efectivoRecibido, // Dinero real
                 monto_usado_favor: creditoAplicado, // Lo que se resta de la bolsa
                 total_venta: totalOriginalVenta, // El costo real (Para calcular deuda)

@@ -6,7 +6,24 @@ require_once __DIR__ . '/../models/usuariosModel.php';
 
 protegerPagina('usuarios'); 
 $modelo = new UsuarioModel($conexion);
-
+if (isset($_GET['action']) && $_GET['action'] === 'obtenerUsuarios') {
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+    
+    try {
+        $id = intval($_GET['id'] ?? 0);
+        $usuarios = $modelo->listarUsuarios();
+        
+        if ($usuarios) {
+            echo json_encode(['success' => true, 'data' => $usuarios]);
+        } else {
+            throw new Exception('Usuarios no encontrado.');
+        }
+    } catch (Throwable $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit;
+}
 // Variables para la vista
 $paginaActual = 'Usuarios';
 $usuarios = $modelo->listarUsuarios();

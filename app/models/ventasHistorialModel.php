@@ -32,6 +32,11 @@ class VentaHistorialModel {
             $st = $this->db->real_escape_string($filtros['status']);
             $where .= " AND v.estado_entrega = '$st' ";
         }
+          // Estatus Entrega
+        if (!empty($filtros['vendedor'])) {
+            $st = $this->db->real_escape_string($filtros['vendedor']);
+            $where .= " AND v.vendedor_id = '$st' ";
+        }
 
         // Rango de Fechas
         if (!empty($filtros['rango']) && $filtros['rango'] !== 'todos') {
@@ -46,9 +51,10 @@ class VentaHistorialModel {
                 : " HAVING (v.total - pagado) <= 0.01 ";
         }
 
-        $sql = "SELECT v.*, c.nombre_comercial as cliente, a.nombre as almacen_nombre,
+        $sql = "SELECT v.*, c.nombre_comercial as cliente, a.nombre as almacen_nombre,u.nombre as vendedor,
                 (SELECT IFNULL(SUM(monto), 0) FROM historial_pagos WHERE venta_id = v.id) as pagado
-                FROM ventas v 
+                FROM ventas v
+                join usuarios u on u.id=v.vendedor_id 
                 JOIN clientes c ON v.id_cliente = c.id 
                 JOIN almacenes a ON v.almacen_id = a.id 
                 $where $having ORDER BY v.fecha DESC";
@@ -110,9 +116,10 @@ public function faltantePago($venta_id)
     $id = intval($id);
     
     // 1. Info de la venta (Cabecera)
-    $sqlI = "SELECT v.*, c.nombre_comercial, a.nombre as almacen, 
+    $sqlI = "SELECT v.*, c.nombre_comercial, a.nombre as almacen ,u.nombre as vendedor,
                 (SELECT IFNULL(SUM(monto), 0) FROM historial_pagos WHERE venta_id = v.id) as total_pagado 
              FROM ventas v 
+             join usuarios u on u.id=v.vendedor_id
              JOIN clientes c ON v.id_cliente = c.id 
              JOIN almacenes a ON v.almacen_id = a.id 
              WHERE v.id = $id";
