@@ -12,8 +12,9 @@ require_once __DIR__ . '/../models/ventasHistorialModel.php';
 require_once __DIR__ . '/../models/ventas_model.php';
 require_once __DIR__ . '/../models/clientesModel.php';
 require_once __DIR__ . '/../models/RepartosModel.php';
-
+require_once __DIR__ . '/../models/usuariosModel.php';
 protegerPagina('ventashistorial');
+$modelo = new UsuarioModel($conexion);
 $ventasModel = new VentaHistorialModel($conexion);
 $clientesModel = new ClientesModel($conexion);
 $repartosModel = new RepartoModel($conexion);
@@ -33,7 +34,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'listar') {
             'inicio'   => $_GET['f_inicio'] ?? '',
             'fin'      => $_GET['f_fin'] ?? '',
             'almacen'  => $_GET['f_almacen'] ?? 0,
-            'vendedor'  => $_GET['f_vendedor'] ?? 0
+            'vendedor'  => $_GET['f_vendedor'] ?? 0,
+            'factura'  => $_GET['f_factura'] ?? 0
 
         ];
 
@@ -70,6 +72,79 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardarEntrega') {
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     } catch (Throwable $t) {
         echo json_encode(['status' => 'error', 'message' => 'Error crítico en el servidor']);
+    }
+    exit;
+}
+if (isset($_GET['action']) && $_GET['action'] === 'guardarEntregaMasiva') {
+    // Limpiamos cualquier salida previa para que solo salga el JSON
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+
+    try {
+        if (empty($_POST['venta_id'])) throw new Exception("ID de venta no recibido.");
+        
+        $venta_id = intval($_POST['venta_id']);
+        $productos = $_POST['productos'] ?? [];
+        $usuario_id = $_SESSION['usuario_id'] ?? 1;
+ 
+        $resultado = $ventasModel->procesarEntregaMasiva($venta_id, $productos, $usuario_id);
+        
+        echo json_encode(['status' => 'success', 'ids' => $resultado]);
+
+    } catch (Exception $e) {
+        // Importante: Mandar el mensaje real de la excepción (ej. "Stock insuficiente...")
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    } catch (Throwable $t) {
+        echo json_encode(['status' => 'error', 'message' => 'Error crítico en el servidor']);
+    }
+    exit;
+}
+
+if (isset($_GET['action']) && $_GET['action'] === 'guardarFactura') {
+    // 1. Forzamos a PHP a mostrar errores en pantalla (temporalmente)
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+
+    try {
+        if (empty($_POST['venta_id'])) throw new Exception("ID de venta no recibido.");
+        $venta_id = intval($_POST['venta_id']);
+        $factura = isset($_POST['factura']) ? trim($_POST['factura']) : '';
+        
+        if ($factura === '') throw new Exception("El folio es requerido.");
+        
+        // 2. Aquí es donde se interrumpe si $ventasModel o $this->db fallan
+        $resultado = $ventasModel->actualizarFactura($venta_id, $factura);
+        
+        echo json_encode(['status' => 'success', 'message' => 'Guardado correctamente']);
+
+    } catch (Throwable $t) {
+        // Al usar Throwable capturamos el error exacto (independientemente de qué lo cause)
+        echo json_encode([
+            'status' => 'error', 
+            'message' => 'Error en PHP: ' . $t->getMessage() . ' en la línea ' . $t->getLine()
+        ]);
+    }
+    exit;
+}
+if (isset($_GET['action']) && $_GET['action'] === 'obtenerUsuarios') {
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+    
+    try {
+        $id = intval($_GET['id'] ?? 0);
+        $usuarios = $modelo->listarUsuarios();
+        
+        if ($usuarios) {
+            echo json_encode(['success' => true, 'data' => $usuarios]);
+        } else {
+            throw new Exception('Usuarios no encontrado.');
+        }
+    } catch (Throwable $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
     exit;
 }
@@ -288,6 +363,31 @@ if ($pendiente_pago > 0) {
             $resultado['monto_devuelto'] = $total_pagado;
         }
 
+        echo json_encode($resultado);
+
+    } catch (Throwable $e) {
+        error_log("Error en cancelación de venta: " . $e->getMessage());
+        echo json_encode([
+            'status'  => 'error', 
+            'message' => 'Error al cancelar: ' . $e->getMessage()
+        ]);
+    }
+    exit;
+}
+
+// --- ACCIÓN: CANCELAR VENTA (POST) ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['action'] === 'confirmarCancelacion') {
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+
+    try {
+        $input = json_decode(file_get_contents("php://input"), true);
+        $venta_id   = intval($input['id_venta'] ?? 0);
+        $motivo     = trim($input['motivo'] ?? 'Cancelación de venta');
+       
+        $resultado = VentasModel::confirmarCancelacion($conexion, $venta_id, $motivo);
+
+        
         echo json_encode($resultado);
 
     } catch (Throwable $e) {

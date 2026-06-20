@@ -12,12 +12,77 @@ class VentaHistorialModel {
     }
 
     public function obtenerVentasFiltradas($filtros, $rol_id, $almacen_sesion) {
-        $where = " WHERE v.estado_general = 'activa' ";
+        $where = " WHERE v.id>1";
         
         // Seguridad por Almacén
         if ($rol_id != 1) { 
             $where .= " AND v.almacen_id = $almacen_sesion "; 
         } elseif (!empty($filtros['almacen'])) { 
+            $where .= " AND v.almacen_id = " . intval($filtros['almacen']); 
+        }
+
+        // Buscador (Folio o Cliente)
+        if (!empty($filtros['search'])) {
+            $s = $this->db->real_escape_string($filtros['search']);
+            $where .= " AND (c.nombre_comercial LIKE '%$s%' OR v.folio LIKE '%$s%'OR v.id LIKE '%$s%' OR v.factura LIKE '%$s%') ";
+        }
+
+        // Estatus Entrega
+        if (!empty($filtros['status'])) {
+            $st = $this->db->real_escape_string($filtros['status']);
+            $where .= " AND v.estado_entrega = '$st' ";
+        }
+         if (!empty($filtros['factura'])) {
+            $st = $this->db->real_escape_string($filtros['factura']);
+            if($st>0)
+                {
+                    $where .= " AND v.factura != 0 ";
+                }
+                else{
+                      $where .= " AND v.factura <1";
+
+                }
+          
+        }
+          // Estatus Entrega
+        if (!empty($filtros['vendedor'])) {
+            $st = $this->db->real_escape_string($filtros['vendedor']);
+            $where .= " AND v.vendedor_id = '$st' ";
+        }
+
+        // Rango de Fechas
+        if (!empty($filtros['rango']) && $filtros['rango'] !== 'todos') {
+            $where .= $this->construirFiltroFecha($filtros);
+        }
+
+        // Filtro por Estado de Pago (Saldo)
+        $having = "";
+        if (!empty($filtros['pago'])) {
+            $having = ($filtros['pago'] == 'deuda') 
+                ? " HAVING (v.total - pagado) > 0.01 " 
+                : " HAVING (v.total - pagado) <= 0.01 ";
+        }
+
+        $sql = "SELECT v.*, c.nombre_comercial as cliente, a.nombre as almacen_nombre,u.nombre as vendedor,
+                (SELECT IFNULL(SUM(monto), 0) FROM historial_pagos WHERE venta_id = v.id) as pagado
+                FROM ventas v
+                join usuarios u on u.id=v.vendedor_id 
+                JOIN clientes c ON v.id_cliente = c.id 
+                JOIN almacenes a ON v.almacen_id = a.id 
+                $where $having ORDER BY v.fecha DESC";
+
+        $res = $this->db->query($sql);
+        return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
+    public function obtenerVentasFiltradasVendedor($filtros, $rol_id, $usuario) {
+        $where = " WHERE v.estado_general = 'activa' ";
+        
+        // Seguridad por Almacén
+        if ($rol_id >3) { 
+            $where .= " AND v.vendedor_id = $usuario "; 
+        } 
+        if (!empty($filtros['almacen'])) { 
             $where .= " AND v.almacen_id = " . intval($filtros['almacen']); 
         }
 
@@ -122,8 +187,10 @@ public function faltantePago($venta_id)
              join usuarios u on u.id=v.vendedor_id
              JOIN clientes c ON v.id_cliente = c.id 
              JOIN almacenes a ON v.almacen_id = a.id 
+             
              WHERE v.id = $id";
     $info = $this->db->query($sqlI)->fetch_assoc();
+    
     
     // 2. Productos con FACTOR DE CONVERSIÓN (Esta estaba bien)
     $prods = [];
@@ -240,8 +307,8 @@ WHERE dv.venta_id = $id";
                              WHERE producto_id = {$res_v['producto_id']} AND almacen_id = $almacen_id");
             
             $mov_obs = "Salida por entrega parcial. Folio Venta: " . $vta_info['folio'];
-            $this->db->query("INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_origen_id, usuario_registra_id, referencia_id, observaciones) 
-                             VALUES ({$res_v['producto_id']}, 'salida', $cant, $almacen_id, $usuario_id, $venta_id, '$mov_obs')");
+            $this->db->query("INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_origen_id, usuario_registra_id, referencia_id, observaciones,entrega_id) 
+                             VALUES ({$res_v['producto_id']}, 'salida', $cant, $almacen_id, $usuario_id, $venta_id, '$mov_obs',$entrega_id)");
         }
 
         // 4. Actualizar estado_entrega general de la venta
@@ -254,6 +321,120 @@ WHERE dv.venta_id = $id";
     } catch (Exception $e) {
         $this->db->rollback();
         throw $e; // El controlador capturará el mensaje de "Stock insuficiente"
+    }
+}
+
+
+   public function procesarEntregaMasiva($venta_id, $productos, $usuario_id) {
+    $this->db->begin_transaction();
+    try {
+        // Obtener almacén y folio de la venta
+        $vta_info = $this->db->query("SELECT almacen_id, folio FROM ventas WHERE id = $venta_id")->fetch_assoc();
+        if (!$vta_info) throw new Exception("Venta no encontrada.");
+        
+        $almacen_id = $vta_info['almacen_id'];
+
+        // 1. Crear cabecera de entrega
+        $stmt = $this->db->prepare("INSERT INTO entregas_venta (venta_id, usuario_id, fecha) VALUES (?, ?, NOW())");
+        $stmt->bind_param("ii", $venta_id, $usuario_id);
+        $stmt->execute();
+        $entrega_id = $this->db->insert_id;
+
+        // 🔥 Inicializamos el arreglo donde guardaremos los datos de retorno
+        $resultados_movimientos = [];
+
+        foreach ($productos as $dv_id => $cant) {
+            $dv_id = intval($dv_id);
+            $cant = floatval($cant);
+            if ($cant <= 0) continue;
+
+            // --- VALIDACIÓN A: Pendiente por entregar en la venta ---
+            $res_v = $this->db->query("SELECT (cantidad - cantidad_entregada) as pendiente, producto_id, (SELECT nombre FROM productos WHERE id = producto_id) as nombre_prod 
+                                       FROM detalle_venta WHERE id = $dv_id")->fetch_assoc();
+            
+            if ($cant > $res_v['pendiente']) {
+                throw new Exception("La cantidad ({$cant}) excede lo pendiente para: {$res_v['nombre_prod']}");
+            }
+
+            // --- VALIDACIÓN B: Stock real en el almacén de la venta ---
+            $stock_res = $this->db->query("SELECT stock FROM inventario 
+                                           WHERE producto_id = {$res_v['producto_id']} 
+                                           AND almacen_id = $almacen_id")->fetch_assoc();
+            
+            $stock_actual = ($stock_res) ? floatval($stock_res['stock']) : 0;
+
+            if ($stock_actual < $cant) {
+                throw new Exception("Stock insuficiente en almacén para {$res_v['nombre_prod']}. Disponible: {$stock_actual}, Requerido: {$cant}");
+            }
+
+            // 2. Registrar detalle de entrega y actualizar detalle_venta
+            $this->db->query("INSERT INTO detalle_entrega (entrega_id, detalle_venta_id, cantidad) VALUES ($entrega_id, $dv_id, $cant)");
+            $this->db->query("UPDATE detalle_venta SET cantidad_entregada = cantidad_entregada + $cant WHERE id = $dv_id");
+
+            // 3. Descontar Stock e Insertar Movimiento
+            $this->db->query("UPDATE inventario SET stock = stock - $cant 
+                             WHERE producto_id = {$res_v['producto_id']} AND almacen_id = $almacen_id");
+            
+            $mov_obs = "Salida por entrega parcial. Folio Venta: " . $vta_info['folio'];
+            $this->db->query("INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_origen_id, usuario_registra_id, referencia_id, observaciones, entrega_id) 
+                             VALUES ({$res_v['producto_id']}, 'salida', $cant, $almacen_id, $usuario_id, $venta_id, '$mov_obs', $entrega_id)");
+            
+            // 🔥 Capturamos el ID del movimiento que se acaba de insertar en la línea anterior
+            $movimiento_id = $this->db->insert_id;
+
+            // 🔥 Guardamos los IDs requeridos en nuestro arreglo
+            $resultados_movimientos[] = [
+                'venta_id'      => $venta_id,
+                'producto_id'   => $res_v['producto_id'],
+                'movimiento_id' => $movimiento_id
+            ];
+        }
+
+        // 4. Actualizar estado_entrega general de la venta
+        $check = $this->db->query("SELECT SUM(cantidad - cantidad_entregada) as deuda FROM detalle_venta WHERE venta_id = $venta_id")->fetch_assoc();
+        $st = ($check['deuda'] <= 0) ? 'entregado' : 'parcial';
+        $this->db->query("UPDATE ventas SET estado_entrega = '$st' WHERE id = $venta_id");
+
+        $this->db->commit();
+        
+        // 🔥 Retornamos el arreglo con toda la información en lugar de true
+        return $resultados_movimientos;
+        
+    } catch (Exception $e) {
+        $this->db->rollback();
+        throw $e; 
+    }
+}
+public function actualizarFactura($venta_id, $factura) {
+    $this->db->begin_transaction();
+    try {
+        // 1. Preparar la consulta. 
+        // ¡MUY IMPORTANTE!: Asegúrate de que la columna se llame 'factura' en tu tabla. 
+        // Si la columna en tu base de datos se llama diferente (ej: 'folio_factura' o 'num_factura'), cámbiala aquí abajo:
+        $stmt = $this->db->prepare("UPDATE ventas SET factura = ? WHERE id = ?");
+        
+        if (!$stmt) {
+            // Nota la barra invertida '\' antes de Exception para que PHP use la global del sistema
+            throw new \Exception("Error al preparar la consulta: " . $this->db->error);
+        }
+
+        // 2. Vincular los parámetros (s = string, i = integer)
+        $stmt->bind_param("si", $factura, $venta_id);
+
+        // 3. Ejecutar
+        if (!$stmt->execute()) {
+            throw new \Exception("Error al ejecutar la actualización: " . $stmt->error);
+        }
+
+        // 4. Cerrar la sentencia preparada
+        $stmt->close();
+
+        $this->db->commit();
+        return true;
+
+    } catch (\Exception $e) { // 🔥 AQUÍ ESTABA EL ERROR: Agregamos '\' antes de Exception
+        $this->db->rollback();
+        throw $e; // Ahora el controlador sí capturará el mensaje limpiamente
     }
 }
 

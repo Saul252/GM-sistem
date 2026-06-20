@@ -7,13 +7,14 @@ $mostrar_precios = isset($_GET['precios']) ? intval($_GET['precios']) : 1;
 if ($id_venta <= 0) die("Error: ID de venta no válido.");
 
 // 1. Datos de la Venta (Cabecera)
-$sqlVenta = "SELECT v.*, c.nombre_comercial, c.rfc, c.direccion, u.nombre as nombre_vendedor,
+$sqlVenta = "SELECT v.*, c.nombre_comercial, c.rfc, c.direccion, u.nombre as nombre_vendedor, u2.nombre as vendedor,
                     a.nombre as nombre_almacen, a.ubicacion as direccion_almacen
              FROM ventas v
              JOIN clientes c ON v.id_cliente = c.id
+             join usuarios u2 on u2.id=v.vendedor_id
              JOIN usuarios u ON v.usuario_id = u.id
              JOIN almacenes a ON v.almacen_id = a.id
-             WHERE v.id = ?";
+             WHERE v.id =?";
 $stmt = $conexion->prepare($sqlVenta);
 $stmt->bind_param("i", $id_venta);
 $stmt->execute();
@@ -291,7 +292,7 @@ $cantidadReal=$item['cantidad']*$equiv2;
     </div>
 
     <div class="text-center" style="margin-top: 15px;">
-        <p>Vendedor: <?php echo $venta['nombre_vendedor']; ?></p>
+        <p>Vendedor: <?php echo $venta['vendedor']; ?></p>
         <p class="bold">¡GRACIAS POR SU COMPRA!</p>
     </div>
 

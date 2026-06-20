@@ -9,10 +9,11 @@ $mostrar_precios = 0;
 if ($id_venta <= 0) die("Error: ID de venta no válido.");
 
 // 1. Consulta de Venta con Relaciones
-$sqlVenta = "SELECT v.*, c.nombre_comercial, c.rfc, c.direccion, u.nombre as nombre_vendedor,
+$sqlVenta = "SELECT v.*, c.nombre_comercial, c.rfc, c.direccion, u.nombre as nombre_vendedor, u2.nombre as vendedor,
                     a.nombre as nombre_almacen, a.ubicacion as direccion_almacen
              FROM ventas v
              JOIN clientes c ON v.id_cliente = c.id
+             join usuarios u2 on u2.id=v.vendedor_id
              JOIN usuarios u ON v.usuario_id = u.id
              JOIN almacenes a ON v.almacen_id = a.id
              WHERE v.id = ?";
@@ -113,7 +114,7 @@ $detalles = $stmtD->get_result();
         <div><b>FOLIO:</b> <?php echo $venta['folio']; ?></div>
         <div><b>FECHA:</b> <?php echo date("d/m/Y H:i", strtotime($venta['fecha'])); ?></div>
         <div><b>CLIENTE:</b> <?php echo strtoupper($venta['nombre_comercial']); ?></div>
-        <div><b>VENDEDOR:</b> <?php echo $venta['nombre_vendedor']; ?></div>
+        <div><b>VENDEDOR:</b> <?php echo $venta['vendedor']; ?></div>
           <tr><td>Notas: <?php echo substr($venta['observaciones'], 0, 30); ?></td></tr>
     </div>
 

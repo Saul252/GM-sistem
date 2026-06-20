@@ -52,17 +52,29 @@ public function iniciarReparto($datos) {
         $stmtM->bind_param("iii", $vehiculo_id, $chofer_id, $movimiento_id);
         $stmtM->execute();
         $reparto_id = $this->db->insert_id;
+$sqlmov = "SELECT entrega_id
+           FROM movimientos m
+           WHERE m.id = ?
+           LIMIT 1";
 
+$stmtmov = $this->db->prepare($sqlmov);
+$stmtmov->bind_param("i", $movimiento_id);
+$stmtmov->execute();
+
+$result = $stmtmov->get_result();
+$row = $result->fetch_assoc();
+
+$entrega_id = $row['entrega_id'] ?? null;
         // 1.1 NUEVO: Registro en la tabla de consolidación para agrupar
         // Esta tabla vincula este reparto específico con el folio de viaje actual
         $sqlC = "INSERT INTO transporte_consolidacion (
                     viaje_folio, 
                     vehiculo_id, 
                     reparto_id, 
-                    estatus_consolidado
-                ) VALUES (?, ?, ?, 'abierto')";
+                    estatus_consolidado,entrega_id
+                ) VALUES (?, ?, ?, 'abierto',?)";
         $stmtC = $this->db->prepare($sqlC);
-        $stmtC->bind_param("sii", $folio_viaje, $vehiculo_id, $reparto_id);
+        $stmtC->bind_param("siii", $folio_viaje, $vehiculo_id, $reparto_id,$entrega_id);
         $stmtC->execute();
 
         // 2. Insertar el Punto de Ruta
@@ -1364,112 +1376,159 @@ public function obtenerEntregasPorVenta($idVenta){
 
     return $data;
 }
+
+public function obtenerEntregas($idVenta){
+    // Añadimos GROUP BY en.id para que no se dupliquen por los productos
+    $sql = "SELECT 
+    ROW_NUMBER() OVER (ORDER BY en.id ASC) AS num_registro,
+    en.id AS entrega_id,
+    en.venta_id,
+    en.usuario_id,
+    en.fecha,tc.id as folio,
+    -- Traemos el folio del viaje real de ese reparto
+    IFNULL(tc.viaje_folio, 'Sin Viaje Asignado') AS viaje_folio
+FROM entregas_venta en
+-- 1. Vamos directo a los repartos que se hicieron para esta venta
+INNER JOIN transporte_repartos_maestro trm 
+    ON trm.id = (
+        -- Subconsulta quirúrgica: Busca el reparto exacto donde se involucró 
+        -- el movimiento de ESTA entrega en específico
+        SELECT trm_sub.id 
+        FROM transporte_repartos_maestro trm_sub
+        INNER JOIN movimientos m_sub ON trm_sub.entrega_venta_id = m_sub.id
+        INNER JOIN detalle_entrega de_sub ON de_sub.entrega_id = en.id
+        INNER JOIN detalle_venta dv_sub ON dv_sub.id = de_sub.detalle_venta_id
+        WHERE m_sub.referencia_id = en.venta_id 
+        AND m_sub.producto_id = dv_sub.producto_id
+        LIMIT 1
+    )
+-- 2. Obtenemos el folio del viaje consolidado de ese camión
+INNER JOIN transporte_consolidacion tc 
+    ON tc.reparto_id = trm.id
+WHERE en.venta_id = ?
+GROUP BY en.id";
+
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param("i", $idVenta);
+    $stmt->execute();
+    $resultado = $stmt->get_result();
+
+    $data = [];
+    while($row = $resultado->fetch_assoc()){
+        $data[] = $row;
+    }
+
+    return $data;
+}
+
 public function obtenerRutaDeEntregaDeVenta($idVenta, $idRuta){
 
     $sql = "SELECT 
-                t.folio_viaje,
-                t.fecha_viaje,
-                t.fecha_llegada,
-                t.estatus_logistico,
-                t.unidad_nombre,
-                t.unidad_placas,
-                t.nombre_chofer,
-                t.ayudantes,
-                t.orden_visita,
-                t.direccion_entrega,
-                t.estatus_parada,
-                t.latitud,
-                t.longitud,
-                t.numeroVenta,
-                t.folio_venta,
-                t.cliente,
-                t.tel_cliente,
+    t.folio_viaje,
+    t.fecha_viaje,
+    t.fecha_llegada,
+    t.estatus_logistico,
+    t.unidad_nombre,
+    t.unidad_placas,
+    t.nombre_chofer,
+    t.ayudantes,
+    t.orden_visita,
+    t.direccion_entrega,
+    t.estatus_parada,
+    t.latitud,
+    t.longitud,
+    t.numeroVenta,
+    t.folio_venta,
+    t.cliente,
+    t.tel_cliente,
 
-                t.nombreProducto,
-                t.totalCantidad,
-                t.unidadMedida,
-                t.factor,
-                t.unidadReporte
+    t.nombreProducto,
+    t.totalCantidad,
+    t.unidadMedida,
+    t.factor,
+    t.unidadReporte
 
-            FROM (
+FROM (
 
-                SELECT 
-                    tc.viaje_folio AS folio_viaje,
-                    tc.fecha_creacion AS fecha_viaje,
-                    trm.hora_llegada_real AS fecha_llegada,
-                    trm.estado_reparto AS estatus_logistico,
-                    tv.nombre AS unidad_nombre,
-                    tv.placas AS unidad_placas,
-                    u_chofer.nombre AS nombre_chofer,
+    SELECT 
+        tc.viaje_folio AS folio_viaje,
+        tc.fecha_creacion AS fecha_viaje,
+        trm.hora_llegada_real AS fecha_llegada,
+        trm.estado_reparto AS estatus_logistico,
+        tv.nombre AS unidad_nombre,
+        tv.placas AS unidad_placas,
+        u_chofer.nombre AS nombre_chofer,
 
-                    (
-                        SELECT GROUP_CONCAT(u_ayu.nombre SEPARATOR ' / ') 
-                        FROM transporte_tripulantes_detalle ttd
-                        INNER JOIN trabajadores u_ayu 
-                            ON ttd.usuario_id = u_ayu.id
-                        WHERE ttd.reparto_id = tc.reparto_id
-                    ) AS ayudantes,
+        (
+            SELECT GROUP_CONCAT(u_ayu.nombre SEPARATOR ' / ') 
+            FROM transporte_tripulantes_detalle ttd
+            INNER JOIN trabajadores u_ayu 
+                ON ttd.usuario_id = u_ayu.id
+            WHERE ttd.reparto_id = tc.reparto_id
+        ) AS ayudantes,
 
-                    trp.orden_visita,
-                    trp.descripcion_punto AS direccion_entrega,
-                    trp.estado_punto AS estatus_parada,
-                    trp.latitud, 
-                    trp.longitud,
+        trp.orden_visita,
+        trp.descripcion_punto AS direccion_entrega,
+        trp.estado_punto AS estatus_parada,
+        trp.latitud, 
+        trp.longitud,
 
-                    v.id AS numeroVenta,
-                    v.folio AS folio_venta,
+        v.id AS numeroVenta,
+        v.folio AS folio_venta,
 
-                    c.nombre_comercial AS cliente,
-                    c.telefono AS tel_cliente,
+        c.nombre_comercial AS cliente,
+        c.telefono AS tel_cliente,
 
-                    p.nombre AS nombreProducto,
-                    p.factor_conversion AS factor,
-                    p.unidad_reporte AS unidadReporte,
+        p.nombre AS nombreProducto,
+        p.factor_conversion AS factor,
+        p.unidad_reporte AS unidadReporte,
 
-                    SUM(m.cantidad) AS totalCantidad,
+        SUM(m.cantidad) AS totalCantidad,
 
-                    p.unidad_medida AS unidadMedida
+        p.unidad_medida AS unidadMedida
 
-                FROM transporte_consolidacion tc
+    FROM transporte_consolidacion tc
 
-                INNER JOIN transporte_repartos_maestro trm 
-                    ON tc.reparto_id = trm.id
+    INNER JOIN transporte_repartos_maestro trm 
+        ON tc.reparto_id = trm.id
 
-                INNER JOIN transporte_vehiculos tv 
-                    ON tc.vehiculo_id = tv.id
+        
 
-                INNER JOIN transporte_rutas_puntos trp 
-                    ON trm.id = trp.reparto_id 
+    INNER JOIN transporte_vehiculos tv 
+        ON tc.vehiculo_id = tv.id
 
-                INNER JOIN movimientos m 
-                    ON trm.entrega_venta_id = m.id
+    INNER JOIN transporte_rutas_puntos trp 
+        ON trm.id = trp.reparto_id 
 
-                INNER JOIN productos p 
-                    ON m.producto_id = p.id
+    INNER JOIN movimientos m 
+        ON trm.entrega_venta_id = m.id
 
-                LEFT JOIN ventas v 
-                    ON m.referencia_id = v.id
+    INNER JOIN productos p 
+        ON m.producto_id = p.id
 
-                LEFT JOIN clientes c 
-                    ON v.id_cliente = c.id
+    LEFT JOIN ventas v 
+        ON m.referencia_id = v.id
 
-                LEFT JOIN trabajadores u_chofer 
-                    ON trm.usuario_encargado_id = u_chofer.id
+    LEFT JOIN clientes c 
+        ON v.id_cliente = c.id
 
-                WHERE v.id = ? 
-                AND tc.viaje_folio = ?
+    LEFT JOIN trabajadores u_chofer 
+        ON trm.usuario_encargado_id = u_chofer.id
+   
+        JOIN entregas_venta en on en.venta_id =v.id
 
-                GROUP BY 
-                    tc.viaje_folio,
-                    p.id
+    WHERE en.id = ?
+    
+    AND tc.viaje_folio = ?
 
-            ) t
+    GROUP BY 
+        tc.viaje_folio,
+        trp.descripcion_punto,
+        p.id
 
-            GROUP BY 
-                t.folio_viaje,
-                t.nombreProducto
+) t
 
-            ORDER BY t.fecha_viaje DESC";
+ORDER BY t.fecha_viaje DESC";
 
     $stmt = $this->db->prepare($sql);
 
@@ -1478,6 +1537,135 @@ public function obtenerRutaDeEntregaDeVenta($idVenta, $idRuta){
     }
 
     $stmt->bind_param("is", $idVenta, $idRuta);
+
+    $stmt->execute();
+
+    $resultado = $stmt->get_result();
+
+    $data = [];
+
+    while($row = $resultado->fetch_assoc()){
+        $data[] = $row;
+    }
+
+    return $data;
+}
+public function obtenerRutaDeEntregaPorEntrega($entrega_id, $idRuta){
+
+    $sql = "SELECT 
+    t.folio_viaje,
+    t.fecha_viaje,
+    t.fecha_llegada,
+    t.estatus_logistico,
+    t.unidad_nombre,
+    t.unidad_placas,
+    t.nombre_chofer,
+    t.ayudantes,
+    t.orden_visita,
+    t.direccion_entrega,
+    t.estatus_parada,
+    t.latitud,
+    t.longitud,
+    t.numeroVenta,
+    t.folio_venta,
+    t.cliente,
+    t.tel_cliente,
+
+    t.nombreProducto,
+    t.totalCantidad,
+    t.unidadMedida,
+    t.factor,
+    t.unidadReporte
+
+FROM (
+
+    SELECT 
+        tc.viaje_folio AS folio_viaje,
+        tc.fecha_creacion AS fecha_viaje,
+        trm.hora_llegada_real AS fecha_llegada,
+        trm.estado_reparto AS estatus_logistico,
+        tv.nombre AS unidad_nombre,
+        tv.placas AS unidad_placas,
+        u_chofer.nombre AS nombre_chofer,
+
+        (
+            SELECT GROUP_CONCAT(u_ayu.nombre SEPARATOR ' / ') 
+            FROM transporte_tripulantes_detalle ttd
+            INNER JOIN trabajadores u_ayu 
+                ON ttd.usuario_id = u_ayu.id
+            WHERE ttd.reparto_id = tc.reparto_id
+        ) AS ayudantes,
+
+        trp.orden_visita,
+        trp.descripcion_punto AS direccion_entrega,
+        trp.estado_punto AS estatus_parada,
+        trp.latitud, 
+        trp.longitud,
+
+        v.id AS numeroVenta,
+        v.folio AS folio_venta,
+
+        c.nombre_comercial AS cliente,
+        c.telefono AS tel_cliente,
+
+        p.nombre AS nombreProducto,
+        p.factor_conversion AS factor,
+        p.unidad_reporte AS unidadReporte,
+
+        SUM(m.cantidad) AS totalCantidad,
+
+        p.unidad_medida AS unidadMedida
+
+    FROM transporte_consolidacion tc
+
+    INNER JOIN transporte_repartos_maestro trm 
+        ON tc.reparto_id = trm.id
+
+        
+
+    INNER JOIN transporte_vehiculos tv 
+        ON tc.vehiculo_id = tv.id
+
+    INNER JOIN transporte_rutas_puntos trp 
+        ON trm.id = trp.reparto_id 
+
+    INNER JOIN movimientos m 
+        ON trm.entrega_venta_id = m.id
+
+    INNER JOIN productos p 
+        ON m.producto_id = p.id
+
+    LEFT JOIN ventas v 
+        ON m.referencia_id = v.id
+
+    LEFT JOIN clientes c 
+        ON v.id_cliente = c.id
+
+    LEFT JOIN trabajadores u_chofer 
+        ON trm.usuario_encargado_id = u_chofer.id
+   
+        JOIN entregas_venta en on en.venta_id =v.id
+
+    WHERE en.id = ?
+    
+    AND tc.entrega_id = ?
+
+    GROUP BY 
+        tc.viaje_folio,
+        trp.descripcion_punto,
+        p.id
+
+) t
+
+ORDER BY t.fecha_viaje DESC";
+
+    $stmt = $this->db->prepare($sql);
+
+    if(!$stmt){
+        die($this->db->error);
+    }
+
+    $stmt->bind_param("ii", $entrega_id, $entrega_id);
 
     $stmt->execute();
 
@@ -1862,6 +2050,71 @@ public function listarIdsPendientesPorVenta($venta_id) {
     
     // Retorna algo como: [193, 194, 198]
     return $ids;
+}public function listarProductos($venta_id) {
+    $venta_id = intval($venta_id);
+ $sqlLotes = "
+            SELECT id, codigo_lote, cantidad_actual, fecha_ingreso
+            FROM lotes_stock
+            WHERE producto_id = $prodId
+              AND almacen_id = $almId
+              AND cantidad_actual > 0
+              AND estado_lote = 'activo'
+            ORDER BY fecha_ingreso ASC
+        ";
+    $sqlP = "
+    SELECT 
+        dv.*,
+        dv.id AS dvid,
+        odma.*,
+        p.id as producto_id,
+        p.nombre AS producto,
+        p.sku,
+        COALESCE(i.stock,0) AS disponible,
+
+        p.unidad_medida,
+        p.unidad_reporte,
+        p.factor_conversion,
+
+        COALESCE(ent.total_entregado,0) AS entregado,
+
+        (dv.cantidad - COALESCE(ent.total_entregado,0)) AS pendiente
+
+    FROM detalle_venta dv
+
+    INNER JOIN ventas v
+        ON v.id = dv.venta_id
+
+    JOIN opciones_de_medida_adicional odma
+        ON odma.id = dv.unidadMedida
+
+    INNER JOIN productos p
+        ON p.id = dv.producto_id
+
+    LEFT JOIN inventario i
+        ON i.producto_id = dv.producto_id
+        AND i.almacen_id = v.almacen_id
+
+    LEFT JOIN (
+        SELECT
+            detalle_venta_id,
+            SUM(cantidad) AS total_entregado
+        FROM detalle_entrega
+        GROUP BY detalle_venta_id
+    ) ent
+        ON ent.detalle_venta_id = dv.id
+
+    WHERE dv.venta_id = $venta_id
+    ";
+
+    $res = $this->db->query($sqlP);
+
+    $productos = [];
+
+    while ($row = $res->fetch_assoc()) {
+        $productos[] = $row;
+    }
+
+    return $productos;
 }
 /**
  * Cuenta cuántos movimientos de salida de una venta ya están 
@@ -1966,6 +2219,42 @@ public function simularDespachoLotesMasivo($idsMovimientos) {
 
     } catch (Exception $e) {
         return ['success' => false, 'message' => $e->getMessage()];
+    }
+}
+public function DespachoLotesMasivo($prodId, $almId) {
+    try {
+
+        $prodId = intval($prodId);
+        $almId  = intval($almId);
+
+        $sqlLotes = "
+            SELECT id, codigo_lote, cantidad_actual, fecha_ingreso,producto_id
+            FROM lotes_stock 
+            WHERE producto_id = $prodId
+              AND almacen_id = $almId
+              AND cantidad_actual > 0
+              AND estado_lote = 'activo'
+            ORDER BY fecha_ingreso ASC
+        ";
+
+        $resLotes = $this->db->query($sqlLotes);
+
+        $lotes = [];
+
+        while ($row = $resLotes->fetch_assoc()) {
+            $lotes[] = $row;
+        }
+
+        return [
+            'success' => true,
+            'data'    => $lotes
+        ];
+
+    } catch (Exception $e) {
+        return [
+            'success' => false,
+            'message' => $e->getMessage()
+        ];
     }
 }
 public function listarDespachosPendientesPorVenta($venta_id) {

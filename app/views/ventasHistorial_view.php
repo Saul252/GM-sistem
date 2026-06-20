@@ -168,6 +168,15 @@
                                 ?>
                             </select>
                         </div>
+                         <div class="col-md-2">
+                            <label class="form-label small fw-bold">Estatus Factura</label>
+                            <select id="estado_factura" class="form-select form-select-sm" onchange="getVentas()">
+                                <option value="">Todos</option>
+                                <option value="1">Facturada</option>
+                                <option value="0">No factuarada</option>
+                               
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -177,7 +186,7 @@
                     <table class="table table-hover align-middle mb-0" id="tablaVentas">
                         <thead>
                             <tr>
-                                <th>Id</th>
+                                
                                 <th class="ps-3">Fecha</th>
                                 <th>Folio</th>
                                 <th>Almacén</th>
@@ -185,6 +194,7 @@
                                 <th>Cliente</th>
                                 <th>Total</th>
                                 <th>Saldo Cobro</th>
+                                <th>Facturada</th>
                                 <th class="text-center">Estado Entrega</th>
                                 <th class="text-end pe-3">Acciones</th>
                             </tr>
@@ -201,6 +211,8 @@
             <div class="modal-content border-0">
                 <div class="modal-header">
                     <h6 class="modal-title fw-bold">Gestión de Venta: <span id="spanFolio"></span></h6>
+                     <span id="IdFolio"></span>
+                      <span id="Almacen_id"></span>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-0">
@@ -212,6 +224,10 @@
                             <p id="detAlmacen" class="fw-bold small mb-3"></p>
                             <p class="fw-bold small mb-1">Vendedor:</p>
                             <p id="detVendedor" class="fw-bold small mb-3"></p>
+                            <p class="fw-bold small mb-1">Folio Factura:</p>
+                            <p id="folioFactura" class="fw-bold small mb-3"></p>
+
+                          
 
                             <div class="mb-4 p-2 bg-white border rounded shadow-sm text-center">
                                 <div class="mb-2 pb-2 border-bottom">
@@ -226,9 +242,14 @@
                             </div>
 
                             <div id="contenedorBoton">
-                                <button id="btnHabilitar" class="btn btn-action w-100 mb-2 py-2 fw-bold"
-                                    onclick="alternarModo(true)">Nueva Entrega</button>
-
+                               <button id="btnHabilitar"
+        class="btn btn-action w-100 mb-2 py-2 fw-bold"
+        onclick="abrirModalDespachoVentaTotal(
+            $('#Almacen_id').text(),
+            $('#IdFolio').text()
+        )">
+    Nueva Entrega
+</button>
                                 <button id="btnAbonar" class="btn btn-primary w-100 mb-2 py-2 fw-bold"
                                     onclick="abrirFlujoAbono()">
                                     <i class="bi bi-cash"></i> Registrar Abono
@@ -247,13 +268,7 @@
                                 <button class="btn btn-link text-secondary w-100 btn-sm"
                                     onclick="alternarModo(false)">Cancelar</button>
                             </div>
-                            <button id="btnGestionVenta"
-                                class="btn btn-sm rounded-pill px-4 shadow-lg border-0 d-none btn-animado-entrega"
-                                disabled>
-                                <i class="bi bi-box-seam me-1"></i>
-                                Entregar en caja/asignar a ruta
-                            </button>
-
+                            
                             <style>
                             .btn-animado-entrega {
                                 position: relative;
@@ -411,6 +426,8 @@
                                     </div>
                                 </div>
                             </div>
+                              <h4 id="cancelado" class="fw-bold text-danger padding-top-3 mb-3"></h4>
+                            
                         </div>
                     </div>
                 </div>
@@ -443,6 +460,87 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="modalAgregarFactura" tabindex="-1" aria-labelledby="modalAgregarFacturaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm"> <div class="modal-content rounded-3 border-0 shadow">
+            
+            <div class="modal-header border-bottom-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark fs-5" id="modalAgregarFacturaLabel">
+                    <i class="bi bi-file-earmark-plus text-primary me-2"></i>Nueva Factura
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body py-3">
+                <form id="formFactura" onsubmit="event.preventDefault(); ">
+                    <div class="mb-2">
+                        <input type="hidden" 
+                               class="form-control rounded-pill border-secondary border-opacity-25" 
+                               id="id_venta_factura" 
+                               >
+                    
+                        <label for="folio-factura" class="form-label fw-bold small text-muted text-uppercase ls-wide">
+                            Folio o Número de Factura
+                        </label>
+                        <input type="text" 
+                               class="form-control rounded-pill border-secondary border-opacity-25" 
+                               id="folio-factura" 
+                               placeholder="Ej. FACT-12345" 
+                               required 
+                               autocomplete="off">
+                    </div>
+                </form>
+            </div>
+            
+            <div class="modal-footer border-top-0 pt-0 d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-light rounded-pill flex-grow-1 fw-bold text-muted" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-sm btn-primary rounded-pill flex-grow-1 fw-bold" onclick="agregarFactura ($('#id_venta_factura').val(),$('#folio-factura').val())">
+                    Guardar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modalCancelarVenta" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Cancelar Venta</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="cancelar_id_venta">
+
+                <div class="mb-3">
+                    <label class="form-label">Motivo de la cancelación</label>
+                    <textarea
+                        id="cancelar_motivo"
+                        class="form-control"
+                        rows="4"
+                        placeholder="Escriba el motivo..."
+                    ></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-success" onclick="procesarCancelacion(true)">
+                    Con Saldo a Favor
+                </button>
+
+                <button class="btn btn-danger" onclick="procesarCancelacion(false)">
+                    Sin Saldo
+                </button>
+
+                <button class="btn btn-secondary" data-bs-dismiss="modal">
+                    Regresar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
@@ -454,6 +552,177 @@
     <?php require_once __DIR__ . '/entregasComponets/modalEntregaVentas.php'; ?>
 
     <script>
+        let modalCancelarVenta;
+
+document.addEventListener('DOMContentLoaded', () => {
+    modalCancelarVenta = new bootstrap.Modal(
+        document.getElementById('modalCancelarVenta')
+    );
+});
+
+function abrirModalCancelacion(idVenta, folio) {
+
+    document.getElementById('cancelar_id_venta').value = idVenta;
+    document.getElementById('cancelar_motivo').value = '';
+
+    document.querySelector('#modalCancelarVenta .modal-title').innerHTML =
+        `Cancelar Venta ${folio}`;
+
+    modalCancelarVenta.show();
+}
+async function procesarCancelacion(conSaldo) {
+
+    const idVenta = document.getElementById('cancelar_id_venta').value;
+    const motivo = document.getElementById('cancelar_motivo').value.trim();
+
+    if (!motivo) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Motivo requerido',
+            text: 'Debe capturar el motivo de la cancelación'
+        });
+        return;
+    }
+
+    modalCancelarVenta.hide();
+
+    const accion = conSaldo
+        ? 'cancelarVenta'
+        : 'cancelarVentaSinSaldo';
+
+    Swal.fire({
+        title: 'Procesando...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    try {
+
+        const response = await fetch(`${URL_CONTROLLER}?action=${accion}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                id_venta: idVenta,
+                motivo: motivo
+            })
+        });
+
+        const res = await response.json();
+
+        if (res.status === 'success') {
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Venta cancelada',
+                text: res.message
+            });
+
+            getVentas();
+
+        } else {
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: res.message
+            });
+
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudo conectar con el servidor'
+        });
+    }
+}
+      // PASO 1: Esta función se dispara al dar click al botón de la tabla (abre el modal)
+function modalFactura(id,factura) {
+    const modalElement = document.getElementById('modalAgregarFactura');
+    const folioInput = document.getElementById("folio-factura");
+    
+    // Limpiamos el input y errores previos por si acaso
+    folioInput.value =factura;
+    folioInput.classList.remove("is-invalid");
+
+    // Guardamos el ID de la venta/viaje en el modal para no perderlo
+    modalElement.setAttribute('data-id-actual', id);
+   document.getElementById('id_venta_factura').value=id;
+
+    // Abrimos el modal programáticamente con Bootstrap
+    const modalInstance = new bootstrap.Modal(modalElement);
+    modalInstance.show();
+}
+
+// PASO 2: Esta función se dispara al dar click en "Guardar" dentro del modal
+
+
+// Tu// Función final encargada del backend
+async function agregarFactura( id,folio) {
+    console.log(`Guardando en BD -> ID: ${id}, Folio Factura: ${folio}`);
+    
+    // 1. Creamos el objeto FormData y le inyectamos los datos que necesita el controlador PHP
+    const data = new FormData();
+    data.append('venta_id', id);
+    data.append('factura', folio);
+
+    try {
+        // Asumiendo que URL_CONTROLLER es tu constante global (ej: '../controllers/ventasController.php')
+        const res = await fetch(`/cfsistem/app/controllers/ventasHistorialController.php?action=guardarFactura`, {
+            method: 'POST',
+            body: data // Enviamos el FormData con los valores
+        });
+
+        // Verificamos si la respuesta del servidor es un JSON válido
+        const result = await res.json();
+
+        if (result.status === 'success') {
+            
+            // Ojo: Si usaste la instancia limpia que te pasé en el paso anterior, 
+            // puedes cerrar el modal de Bootstrap 5 así si no tienes 'modalObj' global:
+            const modalElement = document.getElementById('modalAgregarFactura');
+            const modalInstance = bootstrap.Modal.getInstance(modalElement);
+            if (modalInstance) modalInstance.hide();
+
+            // Recargamos la tabla principal de ventas
+            if (typeof getVentas === 'function') getVentas();
+
+            // Alerta de éxito con SweetAlert2
+            Swal.fire({
+                title: '¡Listo!',
+                text: 'Factura guardada correctamente',
+                icon: 'success',
+                timer: 1000, // Subí a 1000ms (1 segundo) para que el usuario alcance a notar la palomita de éxito
+                showConfirmButton: false
+            });
+
+            // 🔥 Volver a abrir automáticamente el detalle si es necesario
+            setTimeout(() => {
+                // Usamos el 'id' que entró originalmente por parámetro a esta función
+                if (typeof verDetalle === 'function') {
+                    verDetalle(id); 
+                }
+            }, 1005);
+
+        } else {
+            // Aquí manejamos errores devueltos por el backend (Excepciones del try/catch de tu PHP)
+            Swal.fire('No se pudo guardar', result.message || 'Error desconocido', 'error');
+        }
+
+    } catch (e) {
+        console.error("Error al procesar la factura:", e);
+        Swal.fire('Error Técnico', 'Hubo un problema de conexión con el servidor', 'error');
+    }
+}
+
+// Esta es la función que necesitas que se ejecute:
+
 
      cargarUsuariosSelect();
     async function cargarUsuariosSelect() {
@@ -462,7 +731,7 @@
 
     try {
         // 1. Realizar la petición a tu controlador de Cf System
-        const url = '/cfsistem/app/controllers/usuariosController.php?action=obtenerUsuarios';
+        const url = '/cfsistem/app/controllers/ventasHistorialController.php?action=obtenerUsuarios';
         const respuesta = await fetch(url);
         
         if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
@@ -518,12 +787,16 @@
             f_almacen: $('#f_almacen').val(),
             f_status: $('#f_status').val(),
             f_pago: $('#f_pago').val(),
-            f_vendedor:$('#select-usuarios').val() ?? ''
+            f_vendedor:$('#select-usuarios').val() ?? '',
+            f_factura:$('#estado_factura').val() ?? ''
+            
+
         });
 
         try {
             const res = await fetch(`${URL_CONTROLLER}?${params.toString()}`);
             const data = await res.json();
+            //<td class="ps-3 small">${v.id}</td>
 
 
             $('#tablaVentas tbody').html(data.map(v => {
@@ -533,9 +806,59 @@
                 let badgeCobro = (saldo <= 0) ?
                     '<span class="text-success small fw-bold"><i class="bi bi-check-circle"></i> Pagado</span>' :
                     `<span class="text-danger small fw-bold">Debe: $${saldo.toFixed(2)}</span>`;
+let entrega = (v.estado_general == 'activa') ?
+                   `<span class="badge ${v.estado_entrega=='entregado'?'bg-success':(v.estado_entrega=='parcial'?'bg-warning text-dark':'bg-danger')}">
+                        ${v.estado_entrega.toUpperCase()}
+                    </span>`  :
+                    '<span class="text-danger small fw-bold"><i class="bi bi-check-circle"></i> Cancelado</span>';
+                    let factura = (v.estado_general == 'activa') ?
+                   `${v.factura}
+                <button type="button" class="btn btn-link text-primary p-1 border-0" onclick="modalFactura(${v.id},${v.factura})" title="Agregar Factura">
+    <i class="bi bi-pencil-square me-2"></i>
+</button>`  :
+                    '';
+ let cancelada = (v.estado_general == 'activa') ?`
+    <button type="button" class="btn btn-link text-danger btn-sm px-3 border-0" 
+            onclick="abrirModalCancelacion('${v.id}','${v.folio}')" 
+            data-bs-toggle="tooltip" 
+            data-bs-placement="top" 
+            title="Cancelar Venta">
+        <i class="bi bi-trash3 fs-5"></i>
+    </button>
+
+    <div class="btn-group" role="group">
+        <button type="button" class="btn btn-link text-secondary btn-sm px-3 border-0 dropdown-toggle remove-caret" 
+                data-bs-toggle="dropdown" 
+                aria-expanded="false"
+                data-bs-toggle="tooltip" 
+                data-bs-placement="top" 
+                title="Más opciones">
+            <i class="bi bi-three-dots fs-5"></i>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 mt-2">
+            <li>
+                <a class="dropdown-item py-2 text-warning" href="../controllers/editarVentaController.php?id=${v.id}">
+                    <i class="bi bi-pencil-square me-2"></i> Editar Venta
+                </a>
+            </li>
+            <li><hr class="dropdown-divider opacity-50"></li>
+            <li>
+                <a class="dropdown-item py-2 text-primary" href="/cfsistem/app/backend/ventas/ticket_venta.php?id=${v.id}" target="_blank">
+                    <i class="bi bi-receipt me-2"></i> Imprimir Ticket
+                </a>
+            </li>
+            <li>
+                <a class="dropdown-item py-2 text-info" href="/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=${v.id}" target="_blank">
+                    <i class="bi bi-file-earmark-text me-2"></i> Imprimir Remisión
+                </a>
+            </li>
+        </ul>
+    </div>
+</div>` :
+                    ``;
 
                 return `<tr>
-                <td class="ps-3 small">${v.id}</td>
+                
                 <td class="ps-3 small">${v.fecha}</td>
                 <td class="fw-bold">${v.folio}</td>
                 <td><span class="badge bg-light text-dark border fw-normal">${v.almacen_nombre}</span></td>
@@ -543,32 +866,23 @@
                 <td><div class="small fw-bold">${v.cliente}</div></td>
                
                 <td class="fw-bold text-dark">$${total.toFixed(2)}</td>
-                <td>${badgeCobro}</td>
+                <td>${v.estado_general=='activa'? badgeCobro:'<span class="text-danger small fw-bold"><i class="bi bi-check-circle"></i> Cancelado</span>'}</td>
+                <td><div class="small fw-bold">${factura}
+                </div></td>
                 <td class="text-center">
-                    <span class="badge ${v.estado_entrega=='entregado'?'bg-success':(v.estado_entrega=='parcial'?'bg-warning text-dark':'bg-danger')}">
-                        ${v.estado_entrega.toUpperCase()}
-                    </span>
+                    ${entrega}
                 </td>
                 <td class="text-end pe-3">
-                    <div class="btn-group">
-                    
-                    
-                        <a href="../controllers/editarVentaController.php?id=${v.id}" class="btn btn-warning btn-sm shadow-sm">
-                            <i class="fas fa-edit"></i> Editar Venta
-                        </a>
-                        <button class="btn btn-sm btn-dark shadow-sm" onclick="verDetalle(${v.id})">
-                            <i class="bi bi-gear-fill"></i> Gestionar
-                        </button>
-                        <a class="btn btn-sm btn-primary shadow-sm" href="/cfsistem/app/backend/ventas/ticket_venta.php?id=${v.id}" target="_blank">
-                            <i class="bi bi-currency-dollar"></i> Ticket
-                        </a>
-                        <a class="btn btn-sm btn-info text-white shadow-sm" href="/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=${v.id}" target="_blank" title="Imprimir Remisión sin Precios">
-                            <i class="bi bi-file-earmark-text"></i> Remisión
-                        </a>
-                        <button class="btn btn-sm btn-danger shadow-sm" onclick="confirmarCancelacion('${v.id}', '${v.folio}','${v.total}','${v.cobro},')" title="Cancelar Venta">
-                <i class="bi bi-x-circle-fill"></i> Cancelar
-            </button>
-                    </div>
+                    <div class="btn-group bg-white rounded-3 shadow-sm border p-1" role="group" aria-label="Acciones de venta">
+    <button type="button" class="btn btn-link text-dark btn-sm px-3 border-0" 
+            onclick="verDetalle(${v.id})" 
+            data-bs-toggle="tooltip" 
+            data-bs-placement="top" 
+            title="Gestionar Venta">
+        <i class="bi bi-sliders2 fs-5"></i>
+    </button>
+    ${cancelada}
+
                 </td>
             </tr>`;
             }).join(''));
@@ -578,7 +892,7 @@
             $('#loader').addClass('d-none');
         }
     }
-    async function verDetalle(id) {
+   async function verDetalle(id) {
         try {
             // 🔥 OBTENER IDS PENDIENTES
             const respIds = await fetch(
@@ -605,14 +919,7 @@
                 dataIds.ids.length > 0
 
             ) {
-                console.log('hola');
-                $('#btnGestionVenta')
-                    .removeClass('d-none')
-                    .prop('disabled', false)
-                    .attr(
-                        'onclick',
-                        `abrirModalDespachoVentaTotal(${id}, ${almacen_id_conseguido})`
-                    );
+               
 
             } else {
 
@@ -625,11 +932,20 @@
             const res = await fetch(`${URL_CONTROLLER}?action=obtenerDetalle&id=${id}`);
            cargarRepartos(id);
             const data = await res.json();
+            console.log(data);
            
             
             ventaActual = data;
-
+             $('#folioFactura').text(data.info.factura);
+if (data.info.estado_general === 'cancelada') {
+    $('#cancelado').text(`Cancelada por: ${data.info.observaciones}`);
+} else {
+    $('#cancelado').text('');
+}
             $('#spanFolio').text(data.info.folio);
+            $('#IdFolio').text(data.info.id);
+             $('#Almacen_id').text(data.info.almacen_id);
+
             $('#detCliente').text(data.info.nombre_comercial);
             $('#detAlmacen').text(data.info.almacen);
              $('#detVendedor').text(data.info.vendedor);
@@ -715,7 +1031,7 @@
          <td class="text-center col-input d-none">
             ${pen.toFixed(4) > 0 ? 
                 `<input type="number"
-    class="form-control form-control-sm input-entrega1 mx-auto"
+    class="form-control form-control-sm input-entrega2 mx-auto"
     max="${pen<=p.disponible ? (pendi>=1 ? pendi : pen) : (disponible>1 ? disponible : p.disponible)}"
     min="0"
     step="0.01"
@@ -724,7 +1040,7 @@
     data-id="${p.producto_id}"
     data-factor="${(pendi>=1 && disponible>=1) ? factor : 1}"
     style="width:70px">
-                   <input type="hidden" class="form-control form-control-sm input-entrega mx-auto" 
+                   <input type="hidden" class="form-control form-control-sm input-entrega0 mx-auto" 
                     value="0"data-dvid=${p.dvid} data-id="${p.producto_id}" style="width:70px"step="0.01" min="0">
                      <span class="badge bg-success">${
                     (pendi>=1&& disponible>=1)?p.unidad_reporte:p.unidad_medida}</span>` 
@@ -850,10 +1166,13 @@
     async function cargarRepartos(idVenta) {
 
     const resp = await fetch(
-        `/cfsistem/app/controllers/repartosController.php?action=get_repartos_venta&id=${idVenta}`
+        `/cfsistem/app/controllers/repartosController.php?action=get_repartos_entrega&id=${idVenta}`
     );
+   
 
     const repartoViaje = await resp.json();
+    let repartos=repartoViaje.data;
+     console.log(repartoViaje);
 
     const tbody = document.getElementById('tbodyRepartos');
     tbody.innerHTML = '';
@@ -863,29 +1182,11 @@
     // ================================
     // AGRUPAR POR FOLIO VIAJE
     // ================================
-    const grupos = {};
    
-    repartoViaje.data.forEach(item => {
-
-        if (!grupos[item.folio_viaje]) {
-
-            grupos[item.folio_viaje] = {
-                folio_viaje: item.folio_viaje,
-                fecha_viaje: item.fecha_viaje,
-                estatus_logistico: item.estatus_logistico,
-                productos: [],
-                clientes: new Set()
-            };
-        }
-
-        grupos[item.folio_viaje].productos.push(item.productos);
-        grupos[item.folio_viaje].clientes.add(item.cliente);
-    });
-
     // ================================
     // RENDER TABLA
     // ================================
-    Object.values(grupos).forEach(g => {
+    repartos.forEach(g => {
 
         const estadoClass =
             g.estatus_logistico === 'completado'
@@ -896,11 +1197,11 @@
             <tr>
 
                 <td class="fw-bold">
-                    ${g.folio_viaje}
+                    ${g.num_registro}
                 </td>
 
                 <td>
-                    ${g.fecha_viaje}
+                    ${g.fecha}
                 </td>
 
                 <td>
@@ -912,7 +1213,7 @@
                 <td class="text-center">
 
                     <button class="btn btn-sm btn-outline-primary"
-                      onclick="imprimirRuta('${idVenta}','${g.folio_viaje}')">
+                      onclick="imprimirRuta('${g.entrega_id}','${g.folio}')">
 
                       
                         Ver Reparto 
@@ -1045,7 +1346,7 @@
         // 2. Si se presionó cualquiera de los dos botones de ejecución (Confirmar o Denegar)
         if (result.isConfirmed || result.isDenied) {
             // IMPORTANTE: Capturamos el motivo desde result.value
-            const motivo = result.value;
+            const motivo = 'cancelacion';
 
             // Elegimos la ruta del controlador según el botón
             const accion = result.isConfirmed ? 'cancelarVenta' : 'cancelarVentaSinSaldo';
@@ -1093,12 +1394,12 @@
             }
         }
     }
-   async function imprimirRuta(idVenta, folioViaje) {
+   async function imprimirRuta(entrega_ida, folioViaje) {
 
     document.getElementById('folioRutaPrint').textContent = folioViaje;
 
     const respuesta = await fetch(
-        `/cfsistem/app/controllers/repartosController.php?action=get_ruta_entrega_venta&idVenta=${idVenta}&id=${encodeURIComponent(folioViaje)}`
+        `/cfsistem/app/controllers/repartosController.php?action=get_ruta_entrega_por_despacho&entrega_id=${entrega_ida}&id=${encodeURIComponent(folioViaje)}`
     );
 
     const data = await respuesta.json();
@@ -1113,7 +1414,8 @@
     // =========================================
     // DATOS GENERALES
     // =========================================
-    const info = datos[0];
+    
+    
 
     // =========================================
     // AGRUPAR PRODUCTOS
@@ -1139,15 +1441,15 @@
     // =========================================
     let filas = '';
 
-    Object.values(productosAgrupados).forEach((prod, i) => {
+    datos.forEach((prod, i) => {
         const total = prod.totalCantidad / prod.factor;
         const totalCantidad = total >= 1 ? total : prod.totalCantidad;
         const unidad = total >= 1 ? prod.unidadReporte : prod.unidadMedida;
 
         // Formatear dinámicamente el color del badge del estado en la tabla
         let badgeColor = 'bg-warning text-dark';
-        if (info.estatus_logistico === 'completado') badgeColor = 'bg-success text-white';
-        if (info.estatus_logistico === 'en_transito') badgeColor = 'bg-primary text-white';
+        if (prod.estatus_logistico === 'completado') badgeColor = 'bg-success text-white';
+        if (prod.estatus_logistico === 'en_transito') badgeColor = 'bg-primary text-white';
 
         filas += `
             <tr>
@@ -1156,9 +1458,9 @@
                 <td style="max-width:250px;" class="fw-bold text-primary">
                     ${parseFloat(totalCantidad).toFixed(2)} <span class="text-muted fw-normal small">${unidad}</span>
                 </td>
-                <td style="max-width:250px;" class="text-muted small">${info.direccion_entrega ?? '-'}</td>
+                <td style="max-width:250px;" class="text-muted small">${prod.direccion_entrega ?? '-'}</td>
                 <td class="text-center">
-                    <span class="badge ${badgeColor} text-capitalize font-monospace">${info.estatus_logistico}</span>
+                    <span class="badge ${badgeColor} text-capitalize font-monospace">${prod.estatus_logistico}</span>
                 </td>
             </tr>
         `;
@@ -1166,8 +1468,8 @@
 
     // Formatear color de estatus general
     let generalBadgeColor = 'bg-warning text-dark';
-    if (info.estatus_logistico === 'completado') generalBadgeColor = 'bg-success text-white';
-    if (info.estatus_logistico === 'en_transito') generalBadgeColor = 'bg-primary text-white';
+    if (data.data[0].estatus_logistico === 'completado') generalBadgeColor = 'bg-success text-white';
+    if (data.data[0].estatus_logistico === 'en_transito') generalBadgeColor = 'bg-primary text-white';
 
     // =========================================
     // HTML GENERADO
@@ -1179,13 +1481,13 @@
             <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
                 <div>
                     <h4 class="fw-bold text-dark m-0 d-flex align-items-center gap-2">
-                        <span>🚚</span> Venta ${idVenta}: Hoja de Ruta
+                        <span>🚚</span> Venta ${entrega_ida}: Hoja de Ruta
                     </h4>
 
                     <div class="text-muted small mt-1">
-                        Folio de viaje: <span class="fw-bold text-dark font-monospace">${info.folio_viaje}</span>
+                        Folio de viaje: <span class="fw-bold text-dark font-monospace">${data.data[0].folio_viaje}</span>
                     </div><div class="text-muted small mt-1">
-                        Registro de viaje: <span class="fw-bold text-dark font-monospace">${info.fecha_viaje ?? '-'}</span>
+                        Registro de viaje: <span class="fw-bold text-dark font-monospace">${data.data[0].fecha_viaje ?? '-'}</span>
                     </div>
                 </div>
 
@@ -1240,28 +1542,29 @@
     color:#666;
 }
 </style>
+
             <!-- BLOQUES DE INFORMACIÓN PRINCIPAL -->
           <div class="info-grid">
 
     <div class="info-box">
         <div class="info-title">Unidad de Transporte</div>
-        <div class="info-value">${info.unidad_nombre ?? '-'}</div>
+        <div class="info-value">${data.data[0].unidad_nombre ?? '-'}</div>
         <div class="info-sub mt-1">
-            Placas: <span class="fw-semibold">${info.unidad_placas ?? '-'}</span>
+            Placas: <span class="fw-semibold">${data.data[0].unidad_placas ?? '-'}</span>
         </div>
     </div>
 
     <div class="info-box">
         <div class="info-title">Operador / Chofer</div>
-        <div class="info-value">${info.nombre_chofer ?? '-'}</div>
+        <div class="info-value">${data.data[0].nombre_chofer ?? '-'}</div>
         <div class="info-sub mt-1 text-muted">Asignado de ruta</div>
     </div>
 
     <div class="info-box">
         <div class="info-title">Cliente Destino</div>
-        <div class="info-value">${info.cliente ?? '-'}</div>
+        <div class="info-value">${data.data[0].cliente ?? '-'}</div>
         <div class="info-sub mt-1">
-            Tel: <span class="fw-semibold">${info.tel_cliente ?? 'Sin teléfono'}</span>
+            Tel: <span class="fw-semibold">${data.data[0].tel_cliente ?? 'Sin teléfono'}</span>
         </div>
     </div>
 
@@ -1438,7 +1741,7 @@ function imprimirModalRuta() {
                 @media print {
                    
                     body {
-                        background: #f8f9fa !important;
+                        background: #f8f9fa03 !important;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
                         padding: 0 !important;
@@ -1446,7 +1749,7 @@ function imprimirModalRuta() {
                     .ticket {
                         width: 100% !important; /* Toma el ancho horizontal disponible sin estirarse verticalmente */
                         max-width: 100% !important;
-                        background: #fff !important;
+                        background: #ffffff00 !important;
                         border: 1px solid #e0e0e0 !important;
                         border-radius: 12px !important;
                         box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
@@ -1461,7 +1764,7 @@ function imprimirModalRuta() {
                         page-break-inside: avoid !important; 
                     }
                     .info-box {
-                        background: #f8fafc !important;
+                        background: #f8fafc14 !important;
                         border: 1px solid #e2e8f0 !important;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
@@ -1502,7 +1805,18 @@ table br {
             </style>
         </head>
         <body>
-
+<img
+    src="/cfsistem/public/assets/logo.ico"
+    style="
+        position: fixed;
+        top: 22.5%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 300px;
+        opacity: 0.08;
+        z-index: -1;
+    "
+>
             <div class="text-end mb-3 no-print" style="max-width: 850px; margin: auto;">
                 <button class="btn btn-dark px-4 shadow-sm fw-semibold" onclick="window.print()">
                     🖨 Enviar a Impresora

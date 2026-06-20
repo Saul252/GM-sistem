@@ -122,21 +122,25 @@ error_reporting(E_ALL);
                             <td class="text-end">
 
                                 <?php if($status === 'PENDIENTE'): ?>
+                                    <?php if( $_SESSION['rol_id']<3): ?>
                                 <button class="btn btn-sm btn-white border shadow-sm"
                                     onclick="gestionarSolicitud(<?= $s['id'] ?>)">
-                                    <i class="bi bi-eye text-primary"></i> Gestionar
+                                    <i class="bi bi-eye text-primary"></i> <?php echo $_SESSION['rol_id']?>
                                 </button>
                                 <button class="btn btn-sm btn-white border shadow-sm"
                                     onclick="eliminarSolicitud(<?= $s['id'] ?>)">
                                     <i class="bi bi-trash text-danger"></i>
                                 </button>
+                                 <?php endif; ?>
                                 <?php endif; ?>
-                                <?php if($status === 'COMPLETADO'): ?>
+                                <?php if($status === 'COMPLETADO'): ?> 
+                                      <?php if( $_SESSION['rol_id'] <3): ?>
                                 <button class="btn btn-sm btn-white border shadow-sm"
                                     onclick="gestionarSolicitud(<?= $s['id'] ?>)">
                                     <i class="bi bi-eye text-primary"></i> REUTILIZAR
                                 </button>
                                 <?php endif;?>
+                                 <?php endif;?>
 
                                 <button class="btn btn-sm btn-white border shadow-sm rounded-pill px-3"
                                     onclick="prepararImpresion(<?= $s['id'] ?>)" title="Imprimir solicitud">

@@ -14,18 +14,17 @@ date_default_timezone_set('America/Mexico_City');
    // VENTAS Y CLIENTES
    // =========================
    ['id' => 'ventas', 'url' => '/cfsistem/app/controllers/ventasController.php', 'icon' => 'bi-cart-check', 'label' => 'Ventas', 'active' => ($archivoActual == 'ventasController.php')],
-  ['id' => 'requisiciones', 'url' => '/cfsistem/app/controllers/requisicionesController.php', 'icon' => 'bi-cart-check', 'label' => 'requisiciones', 'active' => ($archivoActual == 'requisicionesontroller.php')],
-  
+  ['id' => 'remisiones', 'url' => '/cfsistem/app/controllers/requisicionesController.php', 'icon' => 'bi-receipt-cutoff', 'label' => 'Remisiones', 'active' => ($archivoActual == 'requisicionesController.php')],
    ['id' => 'cajaRapida', 'url' => '/cfsistem/app/controllers/cajaRapidaController.php', 'icon' => 'bi-lightning-charge', 'label' => 'Caja Rapida', 'active' => ($archivoActual == 'cajaRapidaController.php')],
    ['id' => 'cotizaciones', 'url' => '/cfsistem/app/controllers/cotizacionesController.php', 'icon' => 'bi-person-badge-fill', 'label' => 'Cotizaciones', 'desc' => 'Preventa', 'active' => ($archivoActual == 'cotizacionesController.php')],
    ['id' => 'clientes', 'url' => '/cfsistem/app/controllers/clientesController.php', 'icon' => 'bi-person-lines-fill', 'label' => 'Clientes', 'active' => ($archivoActual == 'clientesController.php')],
    ['id' => 'clientesEstatus', 'url' => '/cfsistem/app/controllers/clientesEstatusController.php', 'icon' => 'bi-person-badge', 'label' => 'Estatus Clientes', 'active' => ($archivoActual == 'clientesEstatus.php')],
-   ['id' => 'pedidosVendedor', 'url' => '/cfsistem/app/controllers/pedidosVendedorController.php', 'icon' => 'bi-person-badge-fill', 'label' => 'Pedidos Vendedor', 'desc' => 'Preventa', 'active' => ($archivoActual == 'pedidosVendedorController.php')],
+   ['id' => 'ventasVendedor', 'url' => '/cfsistem/app/controllers/historialPedidosVendedorController.php', 'icon' => 'bi-person-badge-fill', 'label' => 'Ventas Vendedor', 'desc' => 'Ventas Vendedor', 'active' => ($archivoActual == 'historialPedidosVendedorController.php')],
    
    ['id' => 'ventashistorial', 'url' => '/cfsistem/app/controllers/ventasHistorialController.php', 'icon' => 'bi-receipt', 'label' => 'Historial de Ventas', 'active' => ($archivoActual == 'ventasHistorialController.php')],
-['id' => 'comprobantes', 'url' => '/cfsistem/app/controllers/comprobantesPagoController.php', 'icon' => 'bi-journal-text', 'label' => 'Crear comprobantes', 'active' => ($archivoActual == 'comprobantesPagoController.php')],
+['id' => 'comprobantes', 'url' => '/cfsistem/app/controllers/comprobantesPagoController.php', 'icon' => 'bi-file-earmark-check', 'label' => 'Crear comprobantes', 'active' => ($archivoActual == 'comprobantesPagoController.php')],
 
-   ['id' => 'registrarPagos', 'url' => '/cfsistem/app/controllers/registrarPagosController.php', 'icon' => 'bi-journal-text', 'label' => 'Registrar Pagos', 'active' => ($archivoActual == 'registrarPagosController.php')],
+   ['id' => 'registrarPagos', 'url' => '/cfsistem/app/controllers/registrarPagosController.php', 'icon' => 'bi-credit-card', 'label' => 'Registrar Pagos', 'active' => ($archivoActual == 'registrarPagosController.php')],
 
    // =========================
    // COMPRAS Y PROVEEDORES

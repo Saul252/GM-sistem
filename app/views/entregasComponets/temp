@@ -13,22 +13,8 @@
             </div>
             
             <div class="modal-body px-4 py-3">
-    <div class="table-responsive">
-        <table class="table table-hover table-bordered align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>Producto</th>
-                    <th>Disponible</th>
-                    <th>Comprada</th>
-                    <th>Restante</th>
-                    <th>Entregar</th>
-                    <th>Lote</th>
-                </tr>
-            </thead>
-            <tbody id="listaItemsDespacho"></tbody>
-        </table>
-    </div>
-      
+                <div id="listaItemsDespacho" class="pe-2 mb-2" style="max-height: 200px; overflow-y: auto;"></div>
+
                 <div id="seccionLogisticaMasiva" class="d-none animate__animated animate__fadeIn">
                     <hr class="my-4 opacity-10">
                     
@@ -127,20 +113,11 @@ function toggleFormRuta(esRuta) {
  */
 let sim;
 window.carrito=0;
-async function lotes(producto_id,almacenId) {
-    const resp = await fetch(`/cfsistem/app/controllers/entregasController.php?ajax=despachar&prodId=${producto_id}&almacen=${almacenId}`
-        );
 
-        return await resp.json();
-
-    
-}
-let modal = null;
-
-async function abrirModalDespachoVentaTotal( almacenId,ventaId) {
+async function abrirModalDespachoVentaTotal(ventaId, almacenId) {
     const URL_ENTREGAS = 'entregasController.php'; 
     const modalElement = document.getElementById('modalDespachoVentaTotal');
-    modal = new bootstrap.Modal(modalElement);
+    const modal = new bootstrap.Modal(modalElement);
     const contenedor = document.getElementById('listaItemsDespacho');
     const txtFolio = document.getElementById('txtFolioVenta');
     const btnConfirmar = document.getElementById('btnEjecutarDespachoMasivo');
@@ -157,109 +134,51 @@ async function abrirModalDespachoVentaTotal( almacenId,ventaId) {
 
     try {
         // 1. Obtener items pendientes
-        const respIds = await fetch(`${URL_ENTREGAS}?ajax=get_productos_para_despacho&venta_id=${ventaId}`);
+        const respIds = await fetch(`${URL_ENTREGAS}?ajax=get_ids_pendientes_venta&venta_id=${ventaId}`);
         const dataIds = await respIds.json();
-        
+        if (!dataIds.success || !dataIds.ids?.length) throw new Error("No hay productos pendientes para despacho.");
+
         const idsParaProcesar = dataIds.ids;
-        console.log("ids",idsParaProcesar);
-        const primerId = almacenId;
-        
+        const primerId = idsParaProcesar[0];
+        const paramsLotes = idsParaProcesar.map(id => `ids[]=${id}`).join('&');
         
         // 2. Simular Stock para el listado
+        const respSim = await fetch(`${URL_ENTREGAS}?ajax=simular_masivo&${paramsLotes}`);
+         sim = await respSim.json();
+         window.carrito = sim.data || [];
+         
+        if (!sim.success) throw new Error(sim.message);
+
+        txtFolio.innerHTML = `<i class="bi bi-hash opacity-50"></i>${ventaId}`;
+        console.log(sim);
         
-         window.carrito =  [];const todos_los_lotes = await Promise.all(
-    idsParaProcesar.map(item => lotes(item.producto_id, almacenId))
-);
+      contenedor.innerHTML = ''; // limpiar
 
-contenedor.innerHTML = ''; // limpiar
+sim.data.forEach((item, index) => {
+    console.log('item',item);
 
-idsParaProcesar.forEach((item, index) => {
-  
-     const cantidadRealFaltante=(item.cantidad)-(item.cantidad_entregada);
-    const cantidad_maxima=item.disponible<cantidadRealFaltante?cantidadRealFaltante:item.disponible;
-    let unidad=item.nombre;
-    let multiplicador=1;
-    let factor =item.factor_conversion;
-      const cantidad=(item.cantidad/factor)>=1?item.cantidad/factor:item.cantidad;
-    if((cantidadRealFaltante/factor)>=1)
+    const div = document.createElement("div");
+    div.className = "mb-2 p-2 bg-white rounded-3 border shadow-sm small d-flex justify-content-between align-items-center";
 
-    {
-        unidad=item.unidad_reporte
-        multiplicador=factor;
-    }
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-    <td>
-        <span class="fw-bold text-dark">
-            <i class="bi bi-box-seam me-1 text-success"></i>
+    div.innerHTML = `
+        <div class="fw-bold text-dark">
+            <i class="bi bi-caret-right-fill text-success me-1"></i>
             ${item.producto}
+        </div>
+
+        <span class="badge bg-success-subtle text-success border border-success-subtle">
+            ${parseFloat(item.total_solicitado)} PZA
         </span>
-    </td>
 
-    <td>
-        <span class="badge bg-info-subtle text-dark">
-            ${item.disponible/factor} ${item.unidad_reporte}
-        </span>
-    </td>
-
-    <td>
-        <span class="badge bg-primary-subtle text-dark">
-            ${parseFloat(cantidad)} ${item.nombre}
-        </span>
-    </td>
-
-    <td>
-        <span class="badge bg-warning-subtle text-dark">
-            ${parseFloat(cantidadRealFaltante)} ${unidad}
-        </span>
-    </td>
-
-    <td style="width:140px;">
-        <input type="number"
-               step="0.01"
-               id="cantidad_despacho_${index}1"
-               max="${cantidad_maxima}"
-               class="form-control form-control-sm input-entrega1"
-               data-factor="${(cantidadRealFaltante/factor>=1 && (item.disponible/factor >=1)) ? factor : 1}"
-               data-dvid="${item.dvid}"
-               data-id="${item.producto_id}">
-
-        <input type="hidden"
-               id="cantidad_despacho_${index}"
-               class="input-entrega"
-               data-dvid="${item.dvid}"
-               data-id="${item.producto_id}">
-    </td>
-
-    <td style="min-width:220px;">
-        <select id="merma_lote_${index}"
-                name="merma_lote_${index}"
-                class="form-select form-select-sm">
+        <select name="merma_lote_${index}" class="form-select">
             <option value="">Seleccione lote</option>
         </select>
-    </td>
-`;
+    `;
 
-    // 1. Seleccionamos el <select> directamente desde el div creado, es más seguro y no requiere que ya esté en el DOM principal
-    const select = tr.querySelector('select');
+    contenedor.appendChild(div);
 
-    // 2. Extraemos la data con encadenamiento opcional para evitar errores si viene vacío o undefined
-    const lotesData = todos_los_lotes[index]?.data || [];
-
-    // 3. Agregamos las opciones al select
-    lotesData.forEach(lote => {
-        const option = document.createElement('option');
-        option.value = lote.id;
-        option.textContent = `${lote.codigo_lote} (${lote.cantidad_actual})`;
-        select.appendChild(option);
-    });
-
-    // 4. Por último, agregamos todo el div (ya con los options cargados) al contenedor
-    contenedor.appendChild(tr);
-
-    // ⚠️ REVISA ESTA FUNCIÓN: 
-    // Si esta función vuelve a modificar el `select`, te va a borrar lo que acabamos de pintar arriba.
-    // lotesporPropducto(item.producto_id, item.almacen_id, index); 
+    // IMPORTANTE: ya existe en el DOM
+    lotesporPropducto(item.producto_id, item.almacen_id, index);
 });
 
         // 3. Cargar Recursos (Choferes, Vehículos)
@@ -414,110 +333,12 @@ idsParaProcesar.forEach((item, index) => {
     // =========================================
     logSection.classList.remove('d-none');
     btnConfirmar.disabled = false;
-  btnConfirmar.onclick = async () => {
-    // Esperamos a que termine procesarEntregaFinal y guardamos su resultado (true o false)
-    const entregaExitosa = await procesarEntregaFinal();
-
-    // Si regresó true (success), entonces ejecutamos el segundo
-//     if (entregaExitosa) {
-//         ejecutarSalidaMasivaFinal(idsParaProcesar, btnConfirmar);
-//     }
-// 
+    btnConfirmar.onclick = () => ejecutarSalidaMasivaFinal(idsParaProcesar, btnConfirmar);
 }
-   }
 }catch (err) {
         contenedor.innerHTML = `<div class="alert alert-danger mx-2 small">${err.message}</div>`;
     }
-}async function procesarEntregaFinal() {
-    const fd = new FormData();
-    let ok = false;
-
-    $('.input-entrega').each(function() {
-        const cant = parseFloat($(this).val());
-        console.log($(this).data('dvid'), cant);
- const tipo = $('input[name="tipo_entrega_masiva"]:checked').val();
-      
-        if (cant > 0) {
-            // 1. Extraemos el index dinámico desde el ID de este input (ej: "cantidad_despacho_0" -> "0")
-            const index = $(this).attr('id').split('_').pop();
-            
-            // 2. Buscamos el select usando ese mismo index y obtenemos su valor
-            const loteSeleccionado = $(`#merma_lote_${index}`).val();
-
-            // Tu append original (intacto)
-            fd.append(`productos[${$(this).data('dvid')}]`, cant);
-            
-            // 3. Agregamos el lote relacionado al mismo dvid
-            fd.append(`lotes[${$(this).data('dvid')}]`, loteSeleccionado);
-            fd.append('tipo_logistica', tipo);
-fd.append('vehiculo_id', tipo === 'ruta' ? $('#mv_vehiculo_id').val() : 0);
-fd.append('chofer_id', $('#mv_chofer_id').val());
-fd.append('direccion', $('#mv_direccion').val() || '');
-            
-            ok = true;
-        }
-    });
-
-    if (!ok) {
-        Swal.fire('Atención', 'Indique al menos una cantidad válida para entregar', 'warning');
-        return false; // 🛑 Detenemos y retornamos false
-    }
- if( $('#mv_vehiculo_id').val() == "" || $('#mv_chofer_id').val() == "" || $('#mv_direccion').val() == "" ) {
-    
-    // Muestra la alerta de error
-    Swal.fire({
-        icon: 'error',
-        title: 'Campos incompletos',
-        text: 'Por favor, selecciona un vehículo, un chofer y escribe una dirección.',
-        confirmButtonColor: '#d33' // Opcional: color rojo para el botón de confirmar
-    });
-
-    return false; // Detiene la ejecución del código
 }
-
-    fd.append('venta_id', ventaActual.info.id);
-    console.log('fate', Object.fromEntries(fd));
-    let datos=0;
-    try {
-        const res = await fetch(`${URL_CONTROLLER}?action=guardarEntregaMasiva`, {
-    method: 'POST',
-    body: fd
-});
-
-const result = await res.json();
-
-datos = result;
-
-console.log(result); // 👈 debug real
-
-if (result.status === 'success') {
-
-    modalObj.hide();
-    getVentas();
-
-    Swal.fire({
-        title: '¡Listo!',
-        text: 'Entrega guardada correctamente',
-        icon: 'success',
-        showConfirmButton: true
-    });
-
-    // 👇 aquí están tus datos reales
-    console.log('ids',result.ids);
-    ejecutarSalidaMasivaFinal( result.ids)
-
-        } else {
-            Swal.fire('No se pudo entregar', result.message || 'Error desconocido', 'error');
-            return false; // 🛑 Error del servidor: Retornamos false
-        }
-
-    } catch (e) {
-        console.error("Error al procesar entrega:", e);
-        Swal.fire('Error Técnico', 'Hubo un problema de conexión con el servidor', 'error');
-        return false; // 🛑 Error técnico: Retornamos false
-    }
-    console.log(datos.data);
-}  
 document.addEventListener('change', function (e) {
 
     if (e.target.matches('select[name^="merma_lote_"]')) {
@@ -527,7 +348,7 @@ document.addEventListener('change', function (e) {
 
         const loteId = e.target.value;
 
-      
+        if (!loteId) return;
 
         const optionSeleccionada = e.target.options[e.target.selectedIndex];
         const stockLote = parseFloat(optionSeleccionada.dataset.stock || 0);
@@ -541,25 +362,41 @@ document.addEventListener('change', function (e) {
         
 
         
-       const inputEntrega = document.querySelector(
+       
+
+        // Validar entrega vs stock del lote
+        if (item.entrega_hoy > stockLote) {
+            Swal.fire(
+                'Stock insuficiente',
+                `El lote solo tiene ${stockLote}`,
+                'warning'
+            );
+
+            item.entrega_hoy = stockLote;
+
+            const inputEntrega = document.querySelector(
                 `.input-entrega-modal[data-index="${index}"]`
             );
 
-        // Validar entrega vs stock del lote
-      
+            if (inputEntrega) {
+                inputEntrega.value = stockLote;
+            }
+        }
     }
 });
 /**
  * Envío final de los datos al servidor
  */
-async function ejecutarSalidaMasivaFinal( result_ids,loteSeleccionado) {
+async function ejecutarSalidaMasivaFinal(ids, boton) {
     const tipo = $('input[name="tipo_entrega_masiva"]:checked').val();
     
     // Validaciones
     if (!$('#mv_chofer_id').val()) return Swal.fire('Atención', 'Seleccione un responsable.', 'warning');
     if (tipo === 'ruta' && !$('#mv_vehiculo_id').val()) return Swal.fire('Atención', 'Seleccione una unidad.', 'warning');
 
-   
+    boton.disabled = true;
+    boton.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Procesando...`;
+    console.log(window.carrito);
 
     try {
       const formData = new FormData();
@@ -574,66 +411,24 @@ const tripulantes = $('#mv_tripulantes').val() || [];
 tripulantes.forEach(tId => formData.append('tripulantes[]', tId));
 
 // enviar movimiento + lote asociado
-result_ids.forEach((id, index) => {
-    formData.append('ids_movimientos[]', id.movimiento_id);
-    formData.append('lotes[]',$(`#merma_lote_${index}`).val() );
+ids.forEach((id, index) => {
+    formData.append('ids_movimientos[]', id);
+    formData.append('lotes[]', window.carrito[index]?.lote || '');
 });
- console.log('fate', Object.fromEntries(formData));
 
         const resp = await fetch('entregasController.php', { method: 'POST', body: formData });
         const res = await resp.json();
-if (res.success) {
-     modalObj.hide();
-     modal.hide();
-    getVentas();
-    
 
-  
-   
-
-    Swal.fire({
-        icon: 'success',
-        title: '¡Éxito!',
-        text:res.ids,
-        timer: 150000,
-        showConfirmButton:true
-    });
-setTimeout(() => {
-
-                    
-                    cargarRepartos2(ventaActual.info.id);
-
-                }, 501);
-    
-}else {
+        if (res.success) {
+            Swal.fire({ icon: 'success', title: '¡Éxito!', text: res.message, timer: 1500, showConfirmButton: false })
+            .then(() => location.reload());
+        } else {
             throw new Error(res.message);
         }
     } catch (e) {
         Swal.fire('Error de Despacho', e.message, 'error');
-     
-    }
-}
-async function cargarRepartos2(idVenta) {
-    try {
-        const resp = await fetch(
-            `/cfsistem/app/controllers/repartosController.php?action=get_repartos_entrega&id=${idVenta}`
-        );
-
-        const repartoViaje = await resp.json();
-
-        let repartos = repartoViaje.data || [];
-        console.log(idVenta);
-
-        if (repartos.length > 0) {
-            const ultimoReparto = repartos[repartos.length - 1];
-            console.log('Último reparto:', ultimoReparto.entrega_id);
-            imprimirRuta(ultimoReparto.entrega_id,ultimoReparto.folio)
-        } else {
-            console.log('No hay repartos');
-        }
-
-    } catch (error) {
-        console.error('Error al cargar repartos:', error);
+        boton.disabled = false;
+        boton.innerHTML = '<i class="bi bi-check-circle me-2"></i>Confirmar Despacho';
     }
 }
 

@@ -240,12 +240,11 @@ class cajaRapidaModel {
                 }
             }
 
-            $stmtUpd = $conexion->prepare("UPDATE ventas SET estado_general = 'cancelada' WHERE id = ?");
-            $stmtUpd->bind_param("i", $id_venta);
-            $stmtUpd->execute();
-
+           $stmtUpd = $conexion->prepare("UPDATE ventas SET estado_general = 'cancelada',  observaciones = ? WHERE id = ?");
+        $stmtUpd->bind_param("si",$motivo, $id_venta);
+        $stmtUpd->execute();
             $conexion->commit();
-            return ['status' => 'success', 'message' => "Venta $folio cancelada correctamente."];
+            return ['status' => 'success', 'message' => "Venta $folio cancelada correctamente 2."];
 
         } catch (Exception $e) {
             $conexion->rollback();

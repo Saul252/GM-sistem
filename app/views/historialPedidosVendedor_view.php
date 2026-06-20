@@ -121,7 +121,7 @@ body {
     <div class="main-content">
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="fw-bold text-dark m-0">Registrar Pagos</h3>
+                <h3 class="fw-bold text-dark m-0">Historial Ventas Vendedor</h3>
                 <div id="loader" class="spinner-border spinner-border-sm text-secondary d-none"></div>
             </div>
 
@@ -142,12 +142,14 @@ body {
                                 <option value="entregado">Entregado</option>
                             </select>
                         </div>
-                         <div class="col-md-2">
+                       <?php if ($puede == true): ?>
+<div class="col-md-2">
     <label for="select-usuarios" class="form-label fw-bold small text-muted text-uppercase">Vendedor</label>
     <select class="form-select rounded-pill" id="select-usuarios" name="usuario_id" onchange="getVentas()">
-       <option value="" > Seleccione vendedor</option>
+       <option value="">Seleccione vendedor</option>
     </select>
 </div>
+<?php endif; ?>
                         <div class="col-md-2">
                             <label class="form-label small fw-bold">Estatus Pago</label>
                             <select id="f_pago" class="form-select form-select-sm" onchange="getVentas()">
@@ -177,27 +179,33 @@ body {
                         </div>
                         <div class="col-md-2">
                             <label class="form-label small fw-bold">Ubicación</label>
-                            <select id="f_almacen" class="form-select form-select-sm" onchange="getVentas()"
-                                <?= ($_SESSION['rol_id'] != 1 ? 'disabled':'') ?>>
-                                <option value="">Todas</option>
-                                <?php 
-                                $alms = $conexion->query("SELECT id, nombre FROM almacenes");
-                                while($a = $alms->fetch_assoc()){
-                                    $sel = ($_SESSION['rol_id'] != 1 && $_SESSION['almacen_id'] == $a['id']) ? 'selected':'';
-                                    echo "<option value='{$a['id']}' $sel>{$a['nombre']}</option>";
-                                }
-                                ?>
+                            <select id="f_almacen" class="form-select form-select-sm" onchange="getVentas()">
+                               <?php foreach($almacenes as $a): ?>
+                                    <option value="<?= $a['id'] ?>"
+                                        <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
+                                        <?= $a['nombre'] ?>
+                                    </option>
+                                    <?php endforeach; ?>
                             </select>
-                        </div>
-                         <div class="col-md-2">
-                            <label class="form-label small fw-bold">Estatus Factura</label>
-                            <select id="estado_factura" class="form-select form-select-sm" onchange="getVentas()">
-                                <option value="">Todos</option>
-                                <option value="1">Facturada</option>
-                                <option value="0">No factuarada</option>
-                               
-                            </select>
-                        </div>
+                        </div><div class="col-md-12"> <!-- Ampliado a col-md-3 para que respire mejor el dinero -->
+    <div class="d-flex flex-column gap-3">
+        <!-- Bloque Total Venta -->
+        <div class="bg-light p-2 px-3 rounded-3 border-start border-primary border-4 shadow-sm">
+            <small class="text-uppercase text-muted fw-bold d-block ls-wide style-label">Total Venta</small>
+            <span id="venta" class="fs-4 fw-black text-primary d-block mt-1">
+                $0.00
+            </span>
+        </div>
+        
+        <!-- Bloque Restante por Cobrar -->
+        <div class="bg-light p-2 px-3 rounded-3 border-start border-danger border-4 shadow-sm">
+            <small class="text-uppercase text-muted fw-bold d-block ls-wide style-label">Por Cobrar</small>
+            <span id="deuda" class="fs-4 fw-black text-danger d-block mt-1">
+                $0.00
+            </span>
+        </div>
+    </div>
+</div>
                     </div>
                 </div>
             </div>
@@ -214,7 +222,6 @@ body {
                                 <th>Vendedor</th>
                                 <th>Cliente</th>
                                 <th>Total</th>
-                                <th>Factura</th>
                                 <th>Saldo Cobro</th>
                                
                                 <th class="text-end pe-3">Acciones</th>
@@ -253,10 +260,6 @@ body {
                         <div class="mb-4">
                             <small class="text-uppercase text-muted fw-bold">Almacén</small>
                             <div id="detAlmacen" class="fw-semibold"></div>
-                            <p class="fw-bold small mb-1">Vendedor:</p>
-                            <p id="detVendedor" class="fw-bold small mb-3"></p>
-                            <p class="fw-bold small mb-1">Folio Factura:</p>
-                            <p id="folioFactura" class="fw-bold small mb-3"></p>
                         </div>
 
                         <!-- RESUMEN -->
@@ -412,7 +415,7 @@ body {
 
     try {
         // 1. Realizar la petición a tu controlador de Cf System
-        const url = '/cfsistem/app/controllers/usuariosController.php?action=obtenerUsuarios';
+        const url = '/cfsistem/app/controllers/ventasHistorialController.php?action=obtenerUsuarios';
         const respuesta = await fetch(url);
         
         if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
@@ -451,7 +454,7 @@ body {
     const modalObj = new bootstrap.Modal('#modalDetalle');
     let ventaActual = null;
     // La ruta al controlador (ajusta si el nombre del archivo varía)
-    const URL_CONTROLLER = '../controllers/ventasHistorialController.php';
+    const URL_CONTROLLER = '../controllers/historialPedidosVendedorController.php';
 
     async function getVentas() {
         $('#loader').removeClass('d-none');
@@ -466,20 +469,22 @@ body {
             f_almacen: $('#f_almacen').val(),
             f_status: $('#f_status').val(),
             f_pago: $('#f_pago').val(),
-               f_vendedor:$('#select-usuarios').val() ?? '',
-            f_factura:$('#estado_factura').val() ?? ''
-
+               f_vendedor:$('#select-usuarios').val() ?? ''
         });
 
         try {
             const res = await fetch(`${URL_CONTROLLER}?${params.toString()}`);
             const data = await res.json();
+            let deuda=0;
+            let totalVendido=0;
 
 
             $('#tablaVentas tbody').html(data.map(v => {
                 let total = parseFloat(v.total) || 0;
                 let pagado = parseFloat(v.pagado) || 0;
                 let saldo = total - pagado;
+                deuda+=saldo;
+                totalVendido+=total;
                 let badgeCobro = (saldo <= 0) ?
                     '<span class="text-success small fw-bold"><i class="bi bi-check-circle"></i> Pagado</span>' :
                     `<span class="text-danger small fw-bold">Debe: $${saldo.toFixed(2)}</span>`;
@@ -496,7 +501,6 @@ let agregarPago = (saldo <= 0) ?
                 <td><span class="badge bg-light text-dark border fw-normal">${v.almacen_nombre}</span></td>
                  <td><div class="small fw-bold">${v.vendedor}</div></td>
                 <td><div class="small fw-bold">${v.cliente}</div></td>
-                <td><div class="small fw-bold">${v.factura!=0?'F':'NO'}</div></td>
                 <td class="fw-bold text-dark">$${total.toFixed(2)} </td>
                 <td>${badgeCobro}</td>
                 
@@ -505,10 +509,10 @@ let agregarPago = (saldo <= 0) ?
                     
                     
                        
-                        <button class="btn btn-sm btn-dark shadow-sm" onclick="verDetalle(${v.id})">
+                        <button class="btn btn-sm btn-success " onclick="verDetalle(${v.id})">
                             <i class="bi bi-eye-fill"></i> ver
                         </button>
-                        ${agregarPago}
+                      
 
                         
                        
@@ -517,6 +521,9 @@ let agregarPago = (saldo <= 0) ?
                 </td>
             </tr>`;
             }).join(''));
+            $('#deuda').text(deuda)
+            $('#venta').text(totalVendido)
+            console.log(deuda);
         } catch (e) {
             console.error("Error al cargar ventas:", e);
         } finally {
@@ -574,11 +581,10 @@ let agregarPago = (saldo <= 0) ?
             
             ventaActual = data;
             
- $('#folioFactura').text(data.info.factura);
+
             $('#spanFolio').text(data.info.folio);
             $('#detCliente').text(data.info.nombre_comercial);
             $('#detAlmacen').text(data.info.almacen);
-            $('#detVendedor').text(data.info.vendedor);
 
             const total = parseFloat(data.info.total) || 0;
             const pagado = parseFloat(data.info.total_pagado) || 0;
@@ -593,13 +599,7 @@ let agregarPago = (saldo <= 0) ?
                     'text-danger');
                 $('#btnAbonar').removeClass('d-none');
             }
-            const htmlboton=` <button id="btnAbonar"
-                            class="btn btn-primary w-100 fw-bold shadow-sm"
-                            onclick="abrirNuevoAbono(${id})">
-                            <i class="bi bi-cash-coin me-1"></i> Registrar Abono
-                        </button>
-`
-$('#boton').html(htmlboton);
+            
             // --- RENDERIZADO DE PRODUCTOS CON CONVERSIÓN ---
             // --- RENDERIZADO DE PRODUCTOS CON CONVERSIÓN ---
             $('#tbodyDetalle').html(data.productos.map(p => {

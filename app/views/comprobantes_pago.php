@@ -114,9 +114,10 @@ error_reporting(E_ALL);
                                     class="badge bg-light text-dark border"><?= htmlspecialchars($s['estado']) ?></span>
                             </td>
                             <td>
-                                <button type="button" class="btn btn-primary" onclick="imprmirComprobante(<?= $s['id'] ?>)">
+                               <?php if ($s['estado'] !== 'cancelado'): ?> 
+                                 <button type="button" class="btn btn-primary" onclick="imprmirComprobante(<?= $s['id'] ?>)">
     Imprimir
-</button> <?php if ($s['estado'] !== 'cancelado'): ?> 
+</button> 
     <button class="btn btn-danger" onclick="eliminarSolicitud(<?= $s['id'] ?>)">Cancelar</button>
 <?php endif; ?>                 </td>
                             
@@ -468,7 +469,7 @@ error_reporting(E_ALL);
     <tr>
         <td class="text-muted py-1">REFERENCIA:</td>
         <td class="text-end py-1">
-            <input type="text" class="form fw-semibold text-end text-dark border-0 bg-transparent p-0 w-100" id="print-referencia" value="---">
+            <input type="text" class="form fw-semibold text-end text-dark border-0 bg-transparent p-0 w-100" id="print-referencia" value="---" readonly>
         
         </td>
     </tr>
@@ -768,9 +769,6 @@ async function imprmirComprobante(id) {
     Imprimir
 </button>
 
-<button type="button" class="btn btn-outline-success rounded-pill px-4" onclick="actualizar(${data.id})">
-    Actualizar
-</button>
         `;
         $('#footer').html(footer);
 

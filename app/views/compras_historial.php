@@ -893,6 +893,14 @@ html += `
                                 ' (' + prod.uMedida+')';
                                 console.log(prod);
         // 4. Abrimos la ventana y renderizamos todo el reporte
+        let cantidadFaltante = prod.faltante / prod.factor;
+                            let totalFaltante = cantidadFaltante >= 1 ? prod.nombre + ' cantidad: ' + cantidadFaltante +
+                                ' ' + prod.uReporte +' ('+ ' ' + prod.faltante +
+                                ' ' + prod.uMedida+')'
+                                : prod.nombre + ' ' + prod.faltante +
+                                ' (' + prod.uMedida+')';
+                                console.log(prod);
+        // 4. Abrimos la ventana y renderizamos todo el reporte
         const ventana = window.open('', '_blank', 'width=1700,height=950');
 
         ventana.document.write(`
@@ -1024,27 +1032,62 @@ html += `
 </head>
 <body>
 
-    <div class="container">
+   <div class="container">
 
-      <div class="header" style="text-align:center; margin-bottom:20px;">
-    <h1 style="margin-bottom:5px;">
-        📦 Compra ${compra_folio}
-    </h1>
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
 
-    
+            <div class="text-center mb-4">
+                <h2 class="fw-bold text-primary mb-1">
+                    <i class="bi bi-box-seam"></i>
+                    Compra ${compra_folio}
+                </h2>
 
-    <p style="margin:5px 0;">
-        <strong>Proveedor:</strong> ${proveedor}
-    </p>
-    
+                
+            </div>
 
-    <p style="margin:5px 0;">
-        <strong>Producto:</strong> ${totalC}
-    </p>
+            <div class="row g-3">
 
-   <h1>
-        Reporte de Trazabilidad de Movimientos por Almacén
-   </h1>
+                <div class="col-md-6">
+                    <div class="border rounded p-3 bg-light h-100">
+                        <div class="small text-muted text-uppercase fw-bold">
+                          <h3 class="fw-bold text-success mb-1">   Proveedor:<//h3>
+                        </div>
+                        <div class="fs-5 fw-semibold">
+                          <h4 class="fw-bold text-success mb-1">   ${proveedor}</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="border rounded p-3 bg-light text-center h-100">
+                        <div class="small text-muted text-uppercase fw-bold">
+                            <h3 class="fw-bold text-primary mb-1"> Producto:</h3>
+                        </div>
+                        <div class="fs-4 fw-bold text-success">
+                          <h4 class="fw-bold text-success mb-1" style="color: #007a48;">  ${totalC}</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="border rounded p-3 bg-light text-center h-100">
+                        <div class="small text-muted text-uppercase fw-bold">
+                         <h3 class="fw-bold text-primary mb-1">    Faltante:</h3>
+                        </div>
+                        <div class="fs-4 fw-bold text-danger">
+                        <h4 class="fw-bold text-danger mb-1" style="color: #f00c0c;">
+                            ${cantidadFaltante}
+                            </h4>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
 </div>
         
             <div class="card">

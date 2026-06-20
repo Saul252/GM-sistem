@@ -44,7 +44,7 @@
     <div class="main-content">
 
         <h2 class="mb-4 fw-bold">
-            <i class="bi bi-cart-fill text-primary"></i> Requisiciones
+            <i class="bi bi-cart-fill text-primary"></i> Remisiones
         </h2>
 
         <div class="row">

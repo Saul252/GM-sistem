@@ -197,6 +197,59 @@ if ($action === 'get_detalle_trazabilidad') {
 
     exit;
 }
+if ($action === 'get_ruta_entrega_por_despacho') {
+
+    if (ob_get_level()) ob_clean();
+
+    header('Content-Type: application/json');
+
+    $entrega_id = (int)($_REQUEST['entrega_id'] ?? 0);
+
+    // folio ruta
+    $id = trim($_REQUEST['id'] ?? '');
+
+    if ($entrega_id <= 0 || empty($id)) {
+
+        echo json_encode([
+            "success" => false,
+            "message" => "Datos de ruta inválidos."
+        ]);
+
+        exit;
+    }
+
+    try {
+
+        $data = $repartoM->obtenerRutaDeEntregaPorEntrega (
+            $entrega_id,
+            $id
+        );
+
+        if (!empty($data)) {
+
+            echo json_encode([
+                "success" => true,
+                "data" => $data
+            ]);
+
+        } else {
+
+            echo json_encode([
+                "success" => false,
+                "message" => "No se encontraron entregas para el folio: " . $id
+            ]);
+        }
+
+    } catch (Exception $e) {
+
+        echo json_encode([
+            "success" => false,
+            "message" => "Error en el servidor: " . $e->getMessage()
+        ]);
+    }
+
+    exit;
+}
             if ($action === 'get_repartos_venta') {
     if (ob_get_level()) ob_clean();
     header('Content-Type: application/json');
@@ -212,6 +265,41 @@ if ($action === 'get_detalle_trazabilidad') {
     try {
         // El modelo busca por el string del folio
         $data = $repartoM->obtenerEntregasPorVenta($id);
+
+        if (!empty($data)) {
+            echo json_encode([
+                "success" => true,
+                "data"    => $data
+            ]);
+        } else {
+            echo json_encode([
+                "success" => false,
+                "message" => "No se encontraron entregas para el folio: " . $id
+            ]);
+        }
+    } catch (Exception $e) {
+        echo json_encode([
+            "success" => false,
+            "message" => "Error en el servidor: " . $e->getMessage()
+        ]);
+    }
+    exit;
+}
+   if ($action === 'get_repartos_entrega') {
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+
+    // Cambiamos a string porque el folio de viaje (RUT-XXXX) no es un entero
+    $id= trim($_REQUEST['id'] ?? '');
+
+    if (empty($id)) {
+        echo json_encode(["success" => false, "message" => "Folio de viaje no válido."]);
+        exit;
+    }
+
+    try {
+        // El modelo busca por el string del folio
+        $data = $repartoM->obtenerEntregas($id);
 
         if (!empty($data)) {
             echo json_encode([

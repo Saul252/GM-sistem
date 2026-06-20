@@ -116,6 +116,12 @@ case 'get_resumen_despacho':
         $ids = $repartoM->listarIdsPendientesPorVenta($venta_id);
         echo json_encode(['success' => true, 'ids' => $ids]);
         break;
+        case 'get_productos_para_despacho':
+        // Obtiene solo los IDs [193, 194...] de una venta para procesarlos
+        $venta_id = intval($_GET['venta_id'] ?? 0);
+        $ids = $repartoM->listarProductos($venta_id);
+        echo json_encode(['success' => true, 'ids' => $ids]);
+        break;
         // ... dentro del switch ($_GET['ajax']) ...
 case 'entregas_pendientes':
     try {
@@ -158,6 +164,16 @@ case 'entregas_pendientes':
         $ids = $_GET['ids'] ?? [];
         if (empty($ids)) throw new Exception("No hay IDs para simular.");
         echo json_encode($repartoM->simularDespachoLotesMasivo($ids));
+        break;
+         case 'despachar':
+             
+              $prodId = $_GET['prodId'] ?? [];
+                $almacen = $_GET['almacen'] ?? [];
+        // Muestra qué lotes se verán afectados antes de hacer el movimiento real
+        // Recibe: entregasController.php?ajax=simular_masivo&ids[]=193&ids[]=194
+        
+        
+        echo json_encode($repartoM->DespachoLotesMasivo($prodId,$almacen));
         break;
 case 'obtenerAuditoriaVenta':
     try {

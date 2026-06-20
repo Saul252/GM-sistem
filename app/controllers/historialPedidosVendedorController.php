@@ -12,8 +12,10 @@ require_once __DIR__ . '/../models/ventasHistorialModel.php';
 require_once __DIR__ . '/../models/ventas_model.php';
 require_once __DIR__ . '/../models/clientesModel.php';
 require_once __DIR__ . '/../models/RepartosModel.php';
+require_once __DIR__ . '/../models/almacen_model.php'; 
 
 protegerPagina('ventashistorial');
+$almacenModel   = new AlmacenModel($conexion);
 $ventasModel = new VentaHistorialModel($conexion);
 $clientesModel = new ClientesModel($conexion);
 $repartosModel = new RepartoModel($conexion);
@@ -32,13 +34,15 @@ if (isset($_GET['action']) && $_GET['action'] === 'listar') {
             'rango'    => $_GET['f_rango'] ?? 'todos',
             'inicio'   => $_GET['f_inicio'] ?? '',
             'fin'      => $_GET['f_fin'] ?? '',
-            'almacen'  => $_GET['f_almacen'] ?? 0
+            'almacen'  => $_GET['f_almacen'] ?? 0,
+            'vendedor'  => $_GET['f_vendedor'] ?? 0
+
         ];
 
         $rol_id = $_SESSION['rol_id'] ?? 2;
-        $id_almacen_usuario = $_SESSION['almacen_id'] ?? 0;
+        $usuario = $_SESSION['usuario_id'] ?? 0;
 
-        $data = $ventasModel->obtenerVentasFiltradas($filtros, $rol_id, $id_almacen_usuario);
+        $data = $ventasModel->obtenerVentasFiltradasVendedor($filtros, $rol_id, $usuario);
         echo json_encode($data);
 
     } catch (Throwable $e) {
@@ -355,5 +359,13 @@ if ($pendiente_pago > 0) {
 // --- CARGA DE VISTA ---
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     $tituloPagina = "Control de Entregas";
-    require_once __DIR__ . '/../views/registrar_pagos_view.php';
+     $rol_id = $_SESSION['rol_id'] ?? 2;
+       $almacenes   = $almacenModel->getAlmacenes(0); 
+     $puede=false;
+    if( $rol_id<3)
+            {
+                $puede=true;
+            }
+
+    require_once __DIR__ . '/../views/historialPedidosVendedor_view.php';
 }
