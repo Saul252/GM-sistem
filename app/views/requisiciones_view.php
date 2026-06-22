@@ -386,138 +386,142 @@ if ($cantidad <= 0) {
 
 
 
-    <script>
-        
-    /**
-     * Soporte para agregar productos al presionar ENTER
-     */
-    document.addEventListener('keydown', function(e) {
-        // 1. Verificamos que la tecla sea Enter y que el foco esté en un input de cantidad
-        if (e.key === 'Enter' && e.target.classList.contains('cantidad_usuario')) {
+<script>
+/**
+ * Soporte para agregar productos al presionar ENTER
+ */
+document.addEventListener('keydown', function(e) {
 
-            // Evitamos que el Enter haga un submit accidental del formulario principal
-            e.preventDefault();
+    if (e.key === 'Enter' && e.target.classList.contains('cantidad_usuario')) {
 
-            // 2. Localizamos la fila (tr) donde se presionó Enter
-            const fila = e.target.closest('tr');
+        e.preventDefault();
 
-            // 3. Buscamos el botón de "Agregar" (+) en esa misma fila
-            const btnAgregar = fila.querySelector('button.btn-success');
+        const fila = e.target.closest('tr');
+        const btnAgregar = fila.querySelector('button.btn-success');
 
-            if (btnAgregar) {
-                // 4. Ejecutamos la función de agregar que ya tienes definida
-                validarYAgregar(btnAgregar);
+        if (btnAgregar) {
+            validarYAgregar(btnAgregar);
 
-                // Opcional: Feedback visual rápido para el usuario
-                btnAgregar.style.transform = "scale(0.9)";
-                setTimeout(() => btnAgregar.style.transform = "scale(1)", 100);
-            }
+            btnAgregar.style.transform = "scale(0.9)";
+            setTimeout(() => btnAgregar.style.transform = "scale(1)", 100);
         }
-    });
-    </script>
-    <script>
-    document.addEventListener('change', function(e) {
+    }
+});
 
-        if (
-            e.target.classList.contains('select-precio')
-        ) {
+/**
+ * Eventos CHANGE
+ */
+document.addEventListener('change', function(e) {
 
-            const fila =
-                e.target.closest('tr');
-
-            const inputPrecio =
-                fila.querySelector('.input-precio');
-
-            inputPrecio.value =
-                parseFloat(e.target.value).toFixed(2);
-
-            const inputPrecioMayor =
-                fila.querySelector('.input-precioMayor');
-
-            inputPrecioMayor.value =
-                parseFloat(e.target.value).toFixed(2);
-        }
-    });
-    document.addEventListener('input', actualizarCantidadReal);
-    document.addEventListener('change', actualizarCantidadReal);
-
-    function actualizarCantidadReal(e) {
+    // Cambió el tipo de precio
+    if (e.target.classList.contains('select-precio')) {
 
         const fila = e.target.closest('tr');
 
-        if (!fila) return;
+        const inputPrecio = fila.querySelector('.input-precio');
+        const inputPrecioMayor = fila.querySelector('.input-precioMayor');
 
-        const inputPrecio =
-            fila.querySelector('.input-precio');
+        inputPrecio.value = parseFloat(e.target.value).toFixed(2);
+        inputPrecioMayor.value = parseFloat(e.target.value).toFixed(2);
 
-        const inputPrecioMayor =
-            fila.querySelector('.input-precioMayor');
-
-        const inputUsuario =
-            fila.querySelector('.cantidad_usuario');
-
-        const inputReal =
-            fila.querySelector('.cantidad');
-
-        const selectMedida =
-            fila.querySelector('.medidas_adicionales');
-
-        if (!inputUsuario || !inputReal) return;
-
-        // VALORES
-        const precio =
-            parseFloat(inputPrecioMayor.value) || 0;
-
-        const cantidadUsuario =
-            parseFloat(inputUsuario.value) || 0;
-
-        const equivalencia =
-            parseFloat(selectMedida?.value) || 1;
-
-        const factor =
-            fila.querySelector('.factorC');
-
-        const factorC =
-            parseFloat(Math.round((factor.value)) * 100) / 100 || 1;
-
-        // RELACIÓN
-        const equi =
-            Math.round((1 / equivalencia) * 100) / 100;
-
-        console.log('factor', factorC, equi);
-
-        // CONDICIÓN
-        if ((equi == factorC)) {
-
-            console.log('factor');
-
-            const nuevoPrecio =
-                precio / factorC;
-            console.log('nuevo', nuevoPrecio, 'precio');
-            inputPrecio.value =
-                nuevoPrecio;
-        } else {
-            const nuevoPrecio =
-                Math.round(precio * 100) / 100;
-            console.log(nuevoPrecio);
-            inputPrecio.value = nuevoPrecio;
-
-
-        }
-
-        // REAL
-        const totalReal =
-            cantidadUsuario / equivalencia;
-
-        inputReal.value = totalReal;
-
-        console.log({
-            usuario: cantidadUsuario,
-            equivalencia,
-            real: totalReal
-        });
+        calcularPrecio(fila);
     }
-    </script>
+
+    // Cambió la unidad
+    if (e.target.classList.contains('medidas_adicionales')) {
+        calcularPrecio(e.target.closest('tr'));
+    }
+
+});
+
+/**
+ * Eventos INPUT
+ */
+document.addEventListener('input', function(e) {
+
+    // Cambió la cantidad
+    if (e.target.classList.contains('cantidad_usuario')) {
+        calcularPrecio(e.target.closest('tr'));
+    }
+
+    // Usuario escribe el precio manualmente
+    if (e.target.classList.contains('input-precioMayor')) {
+        actualizarDesdePrecioMayor(e.target.closest('tr'));
+    }
+
+});
+
+/**
+ * Calcula precio según unidad y tipo de precio
+ */
+function calcularPrecio(fila) {
+
+    if (!fila) return;
+
+    const inputPrecio = fila.querySelector('.input-precio');
+    const inputPrecioMayor = fila.querySelector('.input-precioMayor');
+    const inputUsuario = fila.querySelector('.cantidad_usuario');
+    const inputReal = fila.querySelector('.cantidad');
+    const selectMedida = fila.querySelector('.medidas_adicionales');
+    const precio = parseFloat(fila.querySelector('.select-precio')?.value) || 0;
+
+    if (!inputUsuario || !inputReal) return;
+
+    const cantidadUsuario = parseFloat(inputUsuario.value) || 0;
+    const equivalencia = parseFloat(selectMedida?.value) || 1;
+
+    const factor = fila.querySelector('.factorC');
+    const factorC = parseFloat(factor.value) || 1;
+
+    const equi = Math.round((1 / equivalencia) * 100) / 100;
+
+    let nuevoPrecio = 0;
+
+    if (equi == factorC) {
+        nuevoPrecio = precio * factorC;
+    } else {
+        nuevoPrecio = Math.round((precio * equi) * 100) / 100;
+    }
+
+    // Aquí sí actualizamos ambos porque NO viene del input-precioMayor
+    inputPrecio.value = nuevoPrecio;
+    inputPrecioMayor.value = nuevoPrecio;
+
+    const totalReal = cantidadUsuario / equivalencia;
+    inputReal.value = totalReal;
+
+    console.log({
+        usuario: cantidadUsuario,
+        equivalencia,
+        real: totalReal
+    });
+}
+
+/**
+ * Se ejecuta cuando el usuario escribe en input-precioMayor.
+ * NO modifica input-precioMayor para no bloquear la escritura.
+ */
+function actualizarDesdePrecioMayor(fila) {
+
+    if (!fila) return;
+
+    const inputPrecio = fila.querySelector('.input-precio');
+    const inputPrecioMayor = fila.querySelector('.input-precioMayor');
+
+    const precioManual = parseFloat(inputPrecioMayor.value);
+
+    if (isNaN(precioManual)) {
+        return;
+    }
+
+    // Si quieres que ambos tengan el mismo valor:
+    inputPrecio.value = precioManual;
+
+    // NO hacer:
+    // inputPrecioMayor.value = precioManual;
+    // porque eso provoca que se dispare continuamente mientras escribe.
+}
+</script>
 </body>
 
 </html>

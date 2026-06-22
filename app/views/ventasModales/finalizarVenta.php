@@ -397,8 +397,8 @@
                         </div>
                         <div class="mb-3">
     <label for="select-usuarios" class="form-label fw-bold small text-muted text-uppercase">Atendió / Usuario</label>
-    <select class="form-select rounded-pill" id="select-usuarios" name="usuario_id" required>
-     
+    <select class="form-select rounded-pill" id="select-usuarios" name="usuario_id">
+        <option value="" selected disabled>Cargando usuarios...</option>
     </select>
 </div>
 
@@ -477,7 +477,8 @@
         if (resultado.success && Array.isArray(resultado.data)) {
             
             // Limpiamos el select y dejamos una opción inicial neutra
-          
+            select.innerHTML = '<option value="" selected disabled>-- Seleccione un usuario --</option>';
+
             // 3. Recorrer los usuarios y crear las opciones
             resultado.data.forEach(usuario => {
                 const opcion = document.createElement('option');
@@ -813,6 +814,9 @@ window.agregarProducto = function(btn) {
 
     const nombre = fila.cells[1].innerText;
     const cantidadInput = fila.querySelector(".cantidad");
+     const inputUsuario =
+            fila.querySelector('.cantidad_usuario')?.value;
+           
     const modoVenta = fila.querySelector(".select-modo-venta")?.value || 'individual';
     const modoVent =
         fila.querySelector(".select-modo-venta");
@@ -830,7 +834,7 @@ window.agregarProducto = function(btn) {
         select.options[select.selectedIndex].dataset.id;
     const medidaNombre =
         select.options[select.selectedIndex].dataset.nombre;
-
+        
     if (equivalencia <= 0) {
         Swal.fire('Atención', 'Ingresa una cantidad válida', 'warning');
         return;
@@ -851,7 +855,7 @@ cantidadBase=Math.round(cantidadBase * 1000000) / 1000000;
     const textoPrecio = selectPrecio.options[selectPrecio.selectedIndex].text.toLowerCase();
     const tipo_p = textoPrecio.includes("dist") ? "distribuidor" : (textoPrecio.includes("may") ? "mayorista" :
         "minorista");
-
+ console.log("total",inputUsuario*precioUnitario);
     if (cantidadBase <= 0) {
         Swal.fire('Atención', 'Ingresa una cantidad válida', 'warning');
         return;
@@ -872,6 +876,8 @@ cantidadBase=Math.round(cantidadBase * 1000000) / 1000000;
             almacen_nombre: almacen,
             nombre,
             cantidad: cantidadBase,
+            cantidadUsuario:inputUsuario,
+            subtotal:inputUsuario*precioUnitario,
             entrega_hoy: cantidadBase,
             precio_unitario: precioUnitario,
             tipo_precio: tipo_p,
@@ -907,7 +913,10 @@ window.renderCarrito = function() {
         
       
       
-            item.subtotal = item.cantidad * (item.precio_unitario);
+         
+              
+       
+
        
 
 
@@ -974,7 +983,7 @@ document.addEventListener('change', (e) => {
  * FUNCIÓN PARA ACTUALIZAR TOTALES GLOBALES
  */
 function actualizarTotalesUI() {
-    const totalVentaReal = window.carrito.reduce((acc, item) => acc + (item.cantidad * item.precio_unitario), 0);
+    const totalVentaReal = window.carrito.reduce((acc, item) => acc + item.subtotal, 0);
 
     const elTotal = document.getElementById("total");
     const elTotalModal = document.getElementById("totalFinalModal");

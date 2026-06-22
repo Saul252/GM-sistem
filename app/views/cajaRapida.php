@@ -571,7 +571,9 @@
         const factor = parseFloat(fila.dataset.factor) || 1;
         const unidadReporte = fila.dataset.reporteNom || 'Fact.';
         const nombre = fila.cells[1].innerText;
-
+const inputUsuario =
+            fila.querySelector('.cantidad_usuario')?.value;
+           
         const cantidadInput = fila.querySelector(".cantidad");
         let cantidadAAgregar = parseFloat(cantidadInput.value) || 0;
 
@@ -631,6 +633,7 @@
                 'error');
             return;
         }
+        console.log((inputUsuario*precioUnitario));
 
         if (itemExistente) {
             itemExistente.cantidad = cantidadTotalFutura;
@@ -644,6 +647,7 @@
                 stock_max: stockMaximo, // Guardamos el límite físico
                 entrega_hoy: cantidadAAgregar,
                 precio_unitario: precioUnitario,
+                subtotal:inputUsuario*precioUnitario,
                 tipo_precio: tipo_p,
                 factor: factor,
                 unidad_reporte: unidadReporte,
@@ -681,7 +685,7 @@
          const cantPza = Math.round((item.cantidad % item.factor) * 10000) / 10000;
 
 
-            item.subtotal = item.cantidad * item.precio_unitario;
+            
 
             const tr = document.createElement("tr");
             tr.dataset.index = index;
@@ -770,7 +774,7 @@
      * 5. ACTUALIZAR INTERFAZ
      */
     function actualizarTotalesUI() {
-        let totalAcumulado = window.carrito.reduce((acc, item) => acc + (item.cantidad * item.precio_unitario), 0);
+        let totalAcumulado = window.carrito.reduce((acc, item) => acc + (item.subtotal), 0);
         const totalStr = totalAcumulado.toFixed(2);
 
         const elTotal = document.getElementById("total");
@@ -822,107 +826,109 @@
         }
     });
     </script>
-    <script>
-    document.addEventListener('input', function(e) {
+   
+<script>
+/**
+ * Soporte para agregar productos al presionar ENTER
+ */
+document.addEventListener('keydown', function(e) {
 
-        if (
-            !e.target.classList.contains('cantidad_usuario') &&
-            !e.target.classList.contains('medidas_adicionales')
-        ) {
-            return;
+    if (e.key === 'Enter' && e.target.classList.contains('cantidad_usuario')) {
+
+        e.preventDefault();
+
+        const fila = e.target.closest('tr');
+        const btnAgregar = fila.querySelector('button.btn-success');
+
+        if (btnAgregar) {
+            validarYAgregar(btnAgregar);
+
+            btnAgregar.style.transform = "scale(0.9)";
+            setTimeout(() => btnAgregar.style.transform = "scale(1)", 100);
         }
+    }
+});
 
-        actualizarCantidadReal(e);
+/**
+ * Eventos CHANGE
+ */
+document.addEventListener('change', function(e) {
 
-    });
+    // Cambió el tipo de precio
+    if (e.target.classList.contains('select-precio')) {
 
-    document.addEventListener('change', function(e) {
+        const fila = e.target.closest('tr');
 
-        if (
-            !e.target.classList.contains('cantidad_usuario') &&
-            !e.target.classList.contains('medidas_adicionales')
-        ) {
-            return;
-        }
+        const inputPrecio = fila.querySelector('.input-precio');
+        const inputPrecioMayor = fila.querySelector('.input-precioMayor');
 
-        actualizarCantidadReal(e);
+        inputPrecio.value = parseFloat(e.target.value).toFixed(2);
+        inputPrecioMayor.value = parseFloat(e.target.value).toFixed(2);
 
-    });
+        calcularPrecio(fila);
+    }
 
-    function actualizarCantidadReal(e) {
+    // Cambió la unidad
+    if (e.target.classList.contains('medidas_adicionales')) {
+        calcularPrecio(e.target.closest('tr'));
+    }
 
-    const fila = e.target.closest('tr');
+});
+
+/**
+ * Eventos INPUT
+ */
+document.addEventListener('input', function(e) {
+
+    // Cambió la cantidad
+    if (e.target.classList.contains('cantidad_usuario')) {
+        calcularPrecio(e.target.closest('tr'));
+    }
+
+    // Usuario escribe el precio manualmente
+    if (e.target.classList.contains('input-precioMayor')) {
+        actualizarDesdePrecioMayor(e.target.closest('tr'));
+    }
+
+});
+
+/**
+ * Calcula precio según unidad y tipo de precio
+ */
+function calcularPrecio(fila) {
 
     if (!fila) return;
 
-    const inputPrecio =
-        fila.querySelector('.input-precio');
-
-    const inputPrecioMayor =
-        fila.querySelector('.input-precioMayor');
-
-    const inputUsuario =
-        fila.querySelector('.cantidad_usuario');
-
-    const inputReal =
-        fila.querySelector('.cantidad');
-
-    const selectMedida =
-        fila.querySelector('.medidas_adicionales');
+    const inputPrecio = fila.querySelector('.input-precio');
+    const inputPrecioMayor = fila.querySelector('.input-precioMayor');
+    const inputUsuario = fila.querySelector('.cantidad_usuario');
+    const inputReal = fila.querySelector('.cantidad');
+    const selectMedida = fila.querySelector('.medidas_adicionales');
+    const precio = parseFloat(fila.querySelector('.select-precio')?.value) || 0;
 
     if (!inputUsuario || !inputReal) return;
 
-    // VALORES
-    const precio =
-        parseFloat(inputPrecioMayor.value) || 0;
+    const cantidadUsuario = parseFloat(inputUsuario.value) || 0;
+    const equivalencia = parseFloat(selectMedida?.value) || 1;
 
-    const cantidadUsuario =
-        parseFloat(inputUsuario.value) || 0;
+    const factor = fila.querySelector('.factorC');
+    const factorC = parseFloat(factor.value) || 1;
 
-    const equivalencia =
-        parseFloat(selectMedida?.value) || 1;
+    const equi = Math.round((1 / equivalencia) * 100) / 100;
 
-    const factor =
-        fila.querySelector('.factorC');
+    let nuevoPrecio = 0;
 
-    const valor = parseFloat(factor.value);
-
-const factorC = isNaN(valor)
-    ? 1
-    : Math.round(valor * 1000) / 1000;
-    // RELACIÓN
-   
-
-const equi = 1 / Math.round(equivalencia);
-
-console.log(equi); // 0.16666666666666666
-
-    console.log('factor', factorC, equi);
-
-    // CONDICIÓN
-    if ((equi == factorC)) {
-
-        console.log('factor');
-
-        const nuevoPrecio =
-            precio / factorC;
-console.log('nuevo',nuevoPrecio,'precio');
-        inputPrecio.value =
-            nuevoPrecio ;
-    }
-    else{
-        const nuevoPrecio =
-             precio;
-console.log(nuevoPrecio);
-        inputPrecio.value =nuevoPrecio;
-          
-
+    if (equi == factorC) {
+        nuevoPrecio = precio * factorC;
+    } else {
+        nuevoPrecio = Math.round((precio * equi) * 100) / 100;
     }
 
-    // REAL
-    const totalReal =
-        Math.round((cantidadUsuario / equivalencia)* 10000000) / 10000000;
+    // Aquí sí actualizamos ambos porque NO viene del input-precioMayor
+    inputPrecio.value = nuevoPrecio;
+    inputPrecioMayor.value = nuevoPrecio;
 
+    const totalReal = Math.round((cantidadUsuario / equivalencia* 100) / 100);
     inputReal.value = totalReal;
 
     console.log({
@@ -931,29 +937,32 @@ console.log(nuevoPrecio);
         real: totalReal
     });
 }
-document.addEventListener('change', function(e) {
 
-        if (
-            e.target.classList.contains('select-precio')
-        ) {
+/**
+ * Se ejecuta cuando el usuario escribe en input-precioMayor.
+ * NO modifica input-precioMayor para no bloquear la escritura.
+ */
+function actualizarDesdePrecioMayor(fila) {
 
-             const fila =
-                e.target.closest('tr');
+    if (!fila) return;
 
-            const inputPrecio =
-                fila.querySelector('.input-precio');
+    const inputPrecio = fila.querySelector('.input-precio');
+    const inputPrecioMayor = fila.querySelector('.input-precioMayor');
 
-            inputPrecio.value =
-                parseFloat(e.target.value).toFixed(2);
-                
-                const inputPrecioMayor =
-                fila.querySelector('.input-precioMayor');
+    const precioManual = parseFloat(inputPrecioMayor.value);
 
-            inputPrecioMayor.value =
-                parseFloat(e.target.value).toFixed(2);
-        }
-    });
-    </script>
+    if (isNaN(precioManual)) {
+        return;
+    }
+
+    // Si quieres que ambos tengan el mismo valor:
+    inputPrecio.value = precioManual;
+
+    // NO hacer:
+    // inputPrecioMayor.value = precioManual;
+    // porque eso provoca que se dispare continuamente mientras escribe.
+}
+</script>
 
 </body>
 
