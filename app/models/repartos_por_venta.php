@@ -94,16 +94,23 @@ public function registrarEntregaMovimiento($datos) {
         if ($foto_not !== null) {
             $updateFields[] = "fotografia_nota = VALUES(fotografia_nota)";
         }
+       $result_entrega = $this->db->query("SELECT entrega_id FROM movimientos m WHERE m.id = $id_mov");
+$row_entrega = $result_entrega->fetch_assoc();
+// Si encuentra el registro toma el ID, si no, asigna 0 o null según permita tu base de datos
+$entrega_id = $row_entrega ? intval($row_entrega['entrega_id']) : 0;   
+           
 
-        $sqlEv = "INSERT INTO confirmacion_reparto_viaje (
-                    id_movimiento, id_venta, trabajador_id, vehiculo_id, 
-                    fecha, hora, fotografia_entrega, fotografia_nota, estatus, comentario
-                ) VALUES (?, ?, ?, ?, CURDATE(), CURTIME(), ?, ?, ?, ?)
-                ON DUPLICATE KEY UPDATE " . implode(", ", $updateFields);
-        
-        $stmtEv = $this->db->prepare($sqlEv);
-        $stmtEv->bind_param("iiiissss", 
-            $id_mov, $id_ven, $id_tra, $id_veh, $foto_ent, $foto_not, $estatus, $coment
+$sqlEv = "INSERT INTO confirmacion_reparto_viaje (
+            id_movimiento, id_venta, trabajador_id, vehiculo_id, 
+            fecha, hora, fotografia_entrega, fotografia_nota, estatus, comentario, entrega_id
+        ) VALUES (?, ?, ?, ?, CURDATE(), CURTIME(), ?, ?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE " . implode(", ", $updateFields);
+
+$stmtEv = $this->db->prepare($sqlEv);
+
+// Ahora $entrega_id sí es un número entero válido para la "i" final
+$stmtEv->bind_param("iiiissssi", 
+    $id_mov, $id_ven, $id_tra, $id_veh, $foto_ent, $foto_not, $estatus, $coment, $entrega_id
         );
         
         if (!$stmtEv->execute()) throw new Exception("Error al guardar evidencia: " . $stmtEv->error);

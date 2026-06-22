@@ -410,7 +410,7 @@
                                                 <tr class="small text-uppercase">
                                                     <th># Reparto</th>
                                                     <th>Fecha Entrega</th>
-                                                    <th>Estado</th>
+                                                    <th>Direccion</th>
                                                     <th class="text-center">Ruta</th>
                                                 </tr>
                                             </thead>
@@ -1197,7 +1197,7 @@ if (data.info.estado_general === 'cancelada') {
             <tr>
 
                 <td class="fw-bold">
-                    ${g.num_registro}
+                    ${g.entrega_id}
                 </td>
 
                 <td>
@@ -1205,8 +1205,8 @@ if (data.info.estado_general === 'cancelada') {
                 </td>
 
                 <td>
-                    <span class="badge ${estadoClass}">
-                        ${g.estatus_logistico}
+                    <span >
+                        ${g.direccion_entrega}
                     </span>
                 </td>
 

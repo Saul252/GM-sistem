@@ -135,8 +135,8 @@
                                          </div>
                                            <div class="mb-3">
     <label for="select-usuarios" class="form-label fw-bold small text-muted text-uppercase">Atendió / Usuario</label>
-    <select class="form-select rounded-pill" id="select-usuarios" name="usuario_id">
-        <option value="" selected disabled>Cargando usuarios...</option>
+    <select class="form-select rounded-pill" id="select-usuarios" name="usuario_id" required>
+      
     </select>
 </div>
                                          <div class="col-4">
@@ -284,7 +284,7 @@
         if (resultado.success && Array.isArray(resultado.data)) {
             
             // Limpiamos el select y dejamos una opción inicial neutra
-            select.innerHTML = '<option value="" selected disabled>-- Seleccione un usuario --</option>';
+            
 
             // 3. Recorrer los usuarios y crear las opciones
             resultado.data.forEach(usuario => {

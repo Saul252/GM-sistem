@@ -261,15 +261,13 @@ function cargarEntregas() {
                                 <span class="badge rounded-pill ${esVisitado ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary'}">
                                     ${esVisitado ? 'ENTREGADO' : estado.toUpperCase()}
                                 </span>
-                                <span class="small text-muted">Venta: ${item.folio_venta || 'S/F'}</span>
+                                <span class="small text-muted">Venta: ${item.folio_venta || 'S/F'} (Entrega ${item.entrega_id })</span>
                             </div>
                             <h6 class="fw-bold mb-1">${item.cliente || 'Cliente'}</h6>
                             <p class="small text-muted mb-3"><i class="bi bi-geo-alt me-1"></i>${item.direccion_entrega || 'Sin dirección'}</p>
                             
                             <div class="p-3 rounded-4 mb-3 bg-light" style="font-size: 0.85rem; border: 1px solid #f2f2f7;">
-                                <div class="info-label">Material a entregar:</div>
-                                <div class="fw-bold text-dark">${item.productos}</div>
-                                </div>
+                                
 
                             ${!esVisitado ? 
                                 `<button class="btn btn-primary-ios w-100" onclick="abrirModalPorIndex(${index})">
@@ -291,6 +289,7 @@ function cargarEntregas() {
 
 function abrirModalPorIndex(index) {
     const data = datosTemporales[index];
+    console.log(data);
     if (!data) return;
 
     const modalEl      = document.getElementById('modalEvidencia');
@@ -310,11 +309,10 @@ function abrirModalPorIndex(index) {
     txtMat.classList.add('d-none');
     txtNota.classList.add('d-none');
 
-    const idMovimiento = data.id_venta || 0;
+    const idMovimiento = data.entrega_id || 0;
     document.getElementById('m_mov_id').value = idMovimiento;
     document.getElementById('m_id_visible').innerText = idMovimiento;
-    document.getElementById('m_venta_id').value = data.id_venta || 0;
-    document.getElementById('m_vehiculo_id').value = data.vehiculo_id || 0; 
+  document.getElementById('m_venta_id').value = (data.venta_id );    document.getElementById('m_vehiculo_id').value = data.vehiculo_id || 0; 
     document.getElementById('m_cliente_full').innerText = `${data.cliente || 'S/N'} (${data.folio_venta || 'S/F'})`;
     document.getElementById('m_direccion_full').innerText = data.direccion_entrega || 'Sin dirección';
 

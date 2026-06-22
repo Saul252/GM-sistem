@@ -63,32 +63,38 @@ $stmtmov->execute();
 
 $result = $stmtmov->get_result();
 $row = $result->fetch_assoc();
-
+// Si el ID puede no venir, asegúrate de que tu BD acepte NULL en esa columna
 $entrega_id = $row['entrega_id'] ?? null;
-        // 1.1 NUEVO: Registro en la tabla de consolidación para agrupar
-        // Esta tabla vincula este reparto específico con el folio de viaje actual
-        $sqlC = "INSERT INTO transporte_consolidacion (
-                    viaje_folio, 
-                    vehiculo_id, 
-                    reparto_id, 
-                    estatus_consolidado,entrega_id
-                ) VALUES (?, ?, ?, 'abierto',?)";
-        $stmtC = $this->db->prepare($sqlC);
-        $stmtC->bind_param("siii", $folio_viaje, $vehiculo_id, $reparto_id,$entrega_id);
-        $stmtC->execute();
 
-        // 2. Insertar el Punto de Ruta
-        $sqlP = "INSERT INTO transporte_rutas_puntos (
-                    reparto_id, 
-                    orden_visita, 
-                    descripcion_punto, 
-                    estado_punto
-                ) VALUES (?, 1, ?, 'pendiente')";
-        
-        $stmtP = $this->db->prepare($sqlP);
-        $stmtP->bind_param("is", $reparto_id, $direccion);
-        $stmtP->execute();
+// 1.1 Registro en la tabla de consolidación
+$sqlC = "INSERT INTO transporte_consolidacion (
+            viaje_folio, 
+            vehiculo_id, 
+            reparto_id, 
+            estatus_consolidado,
+            entrega_id
+        ) VALUES (?, ?, ?, 'abierto', ?)";
 
+$stmtC = $this->db->prepare($sqlC);
+// "siii" es correcto: string, int, int, int
+$stmtC->bind_param("siii", $folio_viaje, $vehiculo_id, $reparto_id, $entrega_id);
+$stmtC->execute();
+
+
+// 2. Insertar el Punto de Ruta
+$sqlP = "INSERT INTO transporte_rutas_puntos (
+            reparto_id, 
+            orden_visita, 
+            descripcion_punto, 
+            estado_punto,
+            entrega_id
+        ) VALUES (?, 1, ?, 'pendiente', ?)";
+
+$stmtP = $this->db->prepare($sqlP);
+
+// 🛠️ CORRECCIÓN: Cambiado "iss" por "isi" porque entrega_id es un entero (Integer)
+$stmtP->bind_param("isi", $reparto_id, $direccion, $entrega_id);
+$stmtP->execute();
         // 3. Registrar Tripulación
         if (!empty($tripulantes)) {
             $sqlT = "INSERT INTO transporte_tripulantes_detalle (reparto_id, usuario_id) VALUES (?, ?)";
@@ -1385,6 +1391,7 @@ public function obtenerEntregas($idVenta){
     en.venta_id,
     en.usuario_id,
     en.fecha,tc.id as folio,
+     MAX(trp.descripcion_punto) AS direccion_entrega,
     -- Traemos el folio del viaje real de ese reparto
     IFNULL(tc.viaje_folio, 'Sin Viaje Asignado') AS viaje_folio
 FROM entregas_venta en
@@ -1405,6 +1412,7 @@ INNER JOIN transporte_repartos_maestro trm
 -- 2. Obtenemos el folio del viaje consolidado de ese camión
 INNER JOIN transporte_consolidacion tc 
     ON tc.reparto_id = trm.id
+     INNER JOIN transporte_rutas_puntos trp on trp.entrega_id=en.id
 WHERE en.venta_id = ?
 GROUP BY en.id";
 
@@ -2452,6 +2460,12 @@ public function registrarEntregaMovimiento($datos)
             }
 
         } else {
+               $result_entrega = $this->db->query("SELECT entrega_id FROM movimientos m WHERE m.id = $id_mov");
+$row_entrega = $result_entrega->fetch_assoc();
+// Si encuentra el registro toma el ID, si no, asigna 0 o null según permita tu base de datos
+$entrega_id = $row_entrega ? intval($row_entrega['entrega_id']) : 0;   
+           
+
 
             // ==========================================
             // INSERT
@@ -2469,13 +2483,14 @@ public function registrarEntregaMovimiento($datos)
                     fotografia_entrega,
                     fotografia_nota,
                     estatus,
-                    comentario
+                    comentario,
+                    entrega_id
                 )
                 VALUES (
                     ?, ?, ?, ?, ?,
                     CURDATE(),
                     CURTIME(),
-                    ?, ?, ?, ?
+                    ?, ?, ?, ?,?
                 )
             ";
 
@@ -2486,7 +2501,7 @@ public function registrarEntregaMovimiento($datos)
             }
 
             $stmtEv->bind_param(
-                "iisiissss",
+                "iisiissssi",
                 $id_mov,
                 $id_ven,
                 $folio,
@@ -2495,7 +2510,8 @@ public function registrarEntregaMovimiento($datos)
                 $foto_ent,
                 $foto_not,
                 $estatus,
-                $coment
+                $coment,
+                $entrega_id
             );
 
             if (!$stmtEv->execute()) {
@@ -2682,64 +2698,91 @@ public function obtenerViajesLogisticaParaEntrega($folio_viaje = null) {
         // Ruta base para tus imágenes
         $base_path = "/cfsistem/"; 
 
-        // 1. Definimos la base del SELECT con agrupaciones estrictas
-        $sql = "SELECT 
-                    v.id AS id_venta,
-                    MAX(v.folio) AS folio_venta,
-                    MAX(c.nombre_comercial) AS cliente,
-                    MAX(trm.vehiculo_id) AS vehiculo_id,
-                    MAX(tc.viaje_folio) AS folio_viaje,
-                    MAX(trp.descripcion_punto) AS direccion_entrega,
-                    MAX(trp.estado_punto) AS estatus_parada,
-                    MAX(crv.id) AS id_evidencia,
-                    MAX(crv.estatus) AS estatus_evidencia,
-                    MAX(crv.comentario) AS comentario_evidencia,
-                    MAX(IF(crv.id IS NOT NULL AND crv.reparto_folio=? , 1, 0)) AS ya_entregado,
-                    
-                    -- Trae el último ID de movimiento de esta venta (evita desgloses)
-                    MAX(trp.id) AS ids_movimientos_grupo,
-                    
-                    -- Evidencias fotográficas concatenando la variable PHP correctamente
-                    MAX(IF(crv.fotografia_entrega IS NOT NULL AND crv.reparto_folio=? AND crv.fotografia_entrega != '', CONCAT('" . $base_path . "', crv.fotografia_entrega), NULL)) AS foto_registrada,
-                    MAX(IF(crv.fotografia_nota IS NOT NULL  AND crv.reparto_folio=? AND crv.fotografia_nota != '', CONCAT('" . $base_path . "', crv.fotografia_nota), NULL)) AS nota_registrada,
-                    
-                    -- 🔥 Agrupamos los productos de la misma venta en una sola celda
-                    GROUP_CONCAT(p.nombre SEPARATOR ', ') AS productos,
-                    GROUP_CONCAT(CONCAT(m.cantidad, ' ', p.unidad_medida) SEPARATOR ', ') AS cantidades_detalladas,
-                    
-                    -- Sumamos las cantidades de los productos que integran esta venta
-                    SUM(m.cantidad) AS total_piezas_venta
-                FROM transporte_consolidacion tc
-                INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
-                INNER JOIN transporte_rutas_puntos trp ON trm.id = trp.reparto_id 
-                INNER JOIN movimientos m ON trm.entrega_venta_id = m.id
-                INNER JOIN productos p ON m.producto_id = p.id
-                LEFT JOIN ventas v ON m.referencia_id = v.id
-                LEFT JOIN clientes c ON v.id_cliente = c.id
-               LEFT JOIN confirmacion_reparto_viaje crv
-    ON v.id = crv.id_venta
-    AND crv.reparto_folio = tc.viaje_folio";
+       // 1. Definimos la base del SELECT (SIN el GROUP BY al final)
+$sql = "SELECT 
+    ROW_NUMBER() OVER (ORDER BY en.id ASC) AS num_registro,
+    MAX(v.folio) AS folio_venta,
+    en.id AS entrega_id,
+    en.venta_id AS venta_id,
+    en.usuario_id,
+    en.fecha,
+    tc.id AS folio,
+    -- Traemos el folio del viaje real de ese reparto
+    IFNULL(tc.viaje_folio, 'Sin Viaje Asignado') AS viaje_folio,
+    MAX(crv.id) AS id_evidencia,
+    MAX(crv.estatus) AS estatus_evidencia,
+    MAX(crv.comentario) AS comentario_evidencia,
+    MAX(IF(crv.id IS NOT NULL AND crv.reparto_folio = ?, 1, 0)) AS ya_entregado,
+    MAX(trp.descripcion_punto) AS direccion_entrega,
+    MAX(c.nombre_comercial) AS cliente,
+    MAX(trm.vehiculo_id) AS vehiculo_id,
+    GROUP_CONCAT(p.nombre SEPARATOR ', ') AS productos,
+    GROUP_CONCAT(CONCAT(m.cantidad, ' ', p.unidad_medida) SEPARATOR ', ') AS cantidades_detalladas,
 
-        // 2. El WHERE siempre debe ir ANTES del GROUP BY en SQL
-        if (!empty($folio_viaje)) {
-            $sql .= " WHERE tc.viaje_folio = ?";
-        }
+    -- Validación y concatenación de ruta para Foto de Entrega
+    MAX(IF(crv.fotografia_entrega IS NOT NULL AND crv.reparto_folio = ? AND crv.fotografia_entrega != '', 
+        CONCAT('" . $base_path . "', crv.fotografia_entrega), NULL)) AS foto_registrada,
 
-        // 3. Añadimos el agrupamiento por venta al final con espacio preventivo
-        $sql .= " GROUP BY v.id";
+    -- Validación y concatenación de ruta para Foto de Nota
+    MAX(IF(crv.fotografia_nota IS NOT NULL AND crv.reparto_folio = ? AND crv.fotografia_nota != '', 
+        CONCAT('" . $base_path . "', crv.fotografia_nota), NULL)) AS nota_registrada,
+                    
+    -- Sumamos las cantidades de los productos que integran esta venta
+    SUM(m.cantidad) AS total_piezas_venta
+FROM entregas_venta en
+INNER JOIN transporte_repartos_maestro trm 
+    ON trm.id = (
+        SELECT trm_sub.id 
+        FROM transporte_repartos_maestro trm_sub
+        INNER JOIN movimientos m_sub ON trm_sub.entrega_venta_id = m_sub.id
+        INNER JOIN detalle_entrega de_sub ON de_sub.entrega_id = en.id
+        INNER JOIN detalle_venta dv_sub ON dv_sub.id = de_sub.detalle_venta_id
+        WHERE m_sub.referencia_id = en.venta_id 
+        AND m_sub.producto_id = dv_sub.producto_id
+        LIMIT 1
+    )
+INNER JOIN transporte_consolidacion tc 
+    ON tc.reparto_id = trm.id
+INNER JOIN movimientos m 
+    ON trm.entrega_venta_id = m.id
+INNER JOIN productos p 
+    ON m.producto_id = p.id
+LEFT JOIN confirmacion_reparto_viaje crv
+    ON en.id = crv.entrega_id
+    AND crv.reparto_folio = tc.viaje_folio
+INNER JOIN transporte_rutas_puntos trp 
+    ON trm.id = trp.reparto_id
+LEFT JOIN ventas v 
+    ON v.id = en.venta_id
+LEFT JOIN clientes c 
+    ON v.id_cliente = c.id";
+// Inicializamos los parámetros para los 3 '?' del SELECT
+$types = "sss"; 
+$params = [$folio_viaje, $folio_viaje, $folio_viaje]; 
 
-        $stmt = $this->db->prepare($sql);
-        
-        if (!empty($folio_viaje)) {
-            $stmt->bind_param("ssss", $folio_viaje,$folio_viaje,$folio_viaje,$folio_viaje);
-        }
+// Si el filtro de búsqueda no está vacío, agregamos el WHERE antes del GROUP BY
+if (!empty($folio_viaje)) {
+    $sql .= " WHERE tc.viaje_folio = ?";
+    $types .= "s";             // Agrega un tipo 'string' más
+    $params[] = $folio_viaje;  // Agrega el valor para el WHERE
+}
 
-        $stmt->execute();
-        $res = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-        
-        if (ob_get_level()) ob_clean();
-        return $res;
-        
+// Cerramos con el agrupamiento obligatorio
+$sql .= " GROUP BY en.id";
+
+$stmt = $this->db->prepare($sql);
+
+if (!$stmt) {
+    throw new Exception("Error en la preparación: " . $this->db->error);
+}
+
+// Desempaquetamos los parámetros dinámicamente con ...
+$stmt->bind_param($types, ...$params);
+
+$stmt->execute();
+$res = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+return $res;
     } catch (Exception $e) {
         error_log("Error CF System: " . $e->getMessage());
         return [];

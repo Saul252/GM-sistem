@@ -397,8 +397,8 @@
                         </div>
    <div class="mb-3">
     <label for="select-usuarios" class="form-label fw-bold small text-muted text-uppercase">Atendió / Usuario</label>
-    <select class="form-select rounded-pill" id="select-usuarios" name="usuario_id">
-        <option value="" selected disabled>Cargando usuarios...</option>
+    <select class="form-select rounded-pill" id="select-usuarios" name="usuario_id" required>
+        
     </select>
 </div>
                         <!-- Bloque de pago -->
