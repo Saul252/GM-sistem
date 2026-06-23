@@ -76,7 +76,7 @@ class VentaHistorialModel {
     }
 
     public function obtenerVentasFiltradasVendedor($filtros, $rol_id, $usuario) {
-        $where = " WHERE v.estado_general = 'activa' ";
+        $where = " WHERE v.id > '0' ";
         
         // Seguridad por Almacén
         if ($rol_id >3) { 

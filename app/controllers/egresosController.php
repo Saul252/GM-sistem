@@ -307,7 +307,7 @@ if ($action === 'guardarGasto') {
 
         $cabecera = [
             'folio'        => $_POST['folio'] ?? 'S/F',
-            'fecha'        => date('Y-m-d'),
+            'fecha'        => $_POST['fecha']??date('Y-m-d'),
             'almacen_id'   => $almacen_final,
             'categoria_id' => $_POST['categoria_id'] ?? null, // <--- Nuevo campo integrado
             'usuario_id'   => $_SESSION['usuario_id'] ?? 1,
@@ -316,6 +316,7 @@ if ($action === 'guardarGasto') {
             'total'        => $_POST['total_final'] ?? 0,
             'documento_url'=> $urlDocumento,
             'observaciones'=> $_POST['observaciones'] ?? ''
+           
         ];
 
         $res = $egresoModel->registrarGasto($cabecera, $_POST['desc'] ?? [], $_POST['cant'] ?? [], $_POST['precio'] ?? []);

@@ -514,10 +514,10 @@
                             </div>
                             <div class="row g-3">
                                 <?php if ($almacen_usuario == 0): ?>
-                                <div class="col-md-12 mb-2">
+                                <div class="col-md-12 mb-2"  style="visibility: hidden;">
                                     <label class="form-label fw-bold text-primary">Asignar a Almacén *</label>
                                     <select name="almacen_id" class="form-select border-primary" required>
-                                        <option value="">-- Selecciona un almacén --</option>
+                                        <option value="1">-- Selecciona un almacén --</option>
                                         <?php foreach ($almacenes as $alm): ?>
                                         <option value="<?= $alm['id'] ?>"><?= htmlspecialchars($alm['nombre']) ?>
                                         </option>

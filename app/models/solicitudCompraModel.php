@@ -71,7 +71,89 @@ class SolicitudCompra {
         $result = $this->db->query($sql);
         return ($result) ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
+public function listarPorFechas(
+    $es_admin = 0,
+    $almacen_id = null,
+    $fecha_inicio = null,
+    $fecha_fin = null,
+    $estado = null,
+    $buscador = null
+) {
+    // 1. Agregamos "WHERE 1=1" al final de la consulta base
+    $sql = "SELECT s.*, c.tiene_faltantes as faltantes, p.nombre_comercial as proveedor_nombre, 
+                   a.nombre as almacen_nombre, u.nombre as admin_nombre
+            FROM solicitudes_compra s
+            LEFT JOIN proveedores p ON s.proveedor_id = p.id
+            LEFT JOIN compras c ON s.compra_id_final = c.id
+            LEFT JOIN almacenes a ON s.almacen_id = a.id
+            LEFT JOIN usuarios u ON s.administrador_id = u.id
+            WHERE 1=1"; // <-- Clave para que los "AND" funcionen directamente
 
+    $params = [];
+    $types = "";
+
+    // Lógica de seguridad (opcional, por si quieres usar el $es_admin):
+    // Si no es administrador, forzar a que solo vea el almacén asignado
+    /*
+    if ($es_admin == 0) {
+        $almacen_id = $_SESSION['almacen_id']; // O como manejes el ID del almacén del usuario
+    }
+    */
+
+    // 2. Cambiamos !empty por validaciones más precisas para IDs numéricos
+    if (isset($almacen_id) && $almacen_id !== '' && $almacen_id !== 0) {
+        $sql .= " AND s.almacen_id = ?";
+        $types .= "i";
+        $params[] = $almacen_id;
+    }
+
+    if (!empty($fecha_inicio)) {
+        $sql .= " AND DATE(s.fecha_creacion) >= ?";
+        $types .= "s";
+        $params[] = $fecha_inicio;
+    }
+
+    if (!empty($fecha_fin)) {
+        $sql .= " AND DATE(s.fecha_creacion) <= ?";
+        $types .= "s";
+        $params[] = $fecha_fin;
+    }
+
+    if (!empty($estado)) {
+        $sql .= " AND s.estado = ?";
+        $types .= "s";
+        $params[] = $estado;
+    }
+
+    if (!empty($buscador)) {
+        $sql .= " AND (
+                    p.nombre_comercial LIKE ?
+                    OR s.id LIKE ?
+                  )";
+        $types .= "ss";
+
+        $like = "%{$buscador}%";
+        $params[] = $like;
+        $params[] = $like;
+    }
+
+    $sql .= " ORDER BY s.fecha_creacion DESC";
+
+    $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) {
+        return [];
+    }
+
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
+    }
+
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+}
 public function obtenerDetalle($id) {
     $sql = "SELECT d.*, p.nombre as producto_nombre, p.sku, p.unidad_medida, 
                    p.unidad_reporte, p.factor_conversion, s.almacen_id as almacen_origen_id,

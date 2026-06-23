@@ -42,28 +42,60 @@ error_reporting(E_ALL);
                 </div>
             </div>
 
-            <div class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold text-muted text-uppercase">Rango de Fecha</label>
-                    <select id="filtroFecha" class="form-select border-light shadow-sm">
-                        <option value="todos">Todas las fechas</option>
-                        <option value="hoy">Hoy</option>
-                        <option value="ayer">Ayer</option>
-                        <option value="semana">Esta Semana</option>
-                        <option value="mes">Este Mes</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold text-muted text-uppercase">Almacén</label>
-                    <select id="filtroAlmacen" class="form-select border-light shadow-sm">
-                        <option value="">Todos los almacenes</option>
-                        <?php foreach ($almacenes as $alm): ?>
-                        <option value="<?= htmlspecialchars($alm['nombre']) ?>"><?= htmlspecialchars($alm['nombre']) ?>
-                        </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col-md-3">
+           <div class="row g-3 align-items-end">
+
+        <!-- Fecha Inicio -->
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small fw-bold text-muted text-uppercase">
+                Inicio
+            </label>
+
+            <input
+                type="date"
+                id="fechaInicio"
+                value="<?= date('Y-m-01') ?>"
+                class="form-control border-0 bg-light shadow-sm"
+                style="border-radius:12px;">
+        </div>
+
+        <!-- Fecha Fin -->
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small fw-bold text-muted text-uppercase">
+                Fin
+            </label>
+
+            <input
+                type="date"
+                id="fechaFin"
+                value="<?= date('Y-m-d') ?>"
+                class="form-control border-0 bg-light shadow-sm"
+                style="border-radius:12px;">
+        </div>
+
+        <!-- Almacén -->
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label small fw-bold text-muted text-uppercase">
+                Almacén
+            </label>
+
+            <select id="filtroAlmacen" class="form-select border-0 bg-light shadow-sm"
+                style="border-radius:12px;">
+
+                <option value="">Todos los almacenes</option>
+
+                <?php foreach ($almacenes as $alm): ?>
+
+                <option value="<?= htmlspecialchars($alm['id']) ?>">
+                    <?= htmlspecialchars($alm['nombre']) ?>
+                </option>
+
+                <?php endforeach; ?>
+
+            </select>
+        </div>
+
+        <!-- Estado -->
+       <div class="col-lg-2 col-md-12">
                     <label class="form-label small fw-bold text-muted text-uppercase">Estado</label>
                     <select id="filtroEstado" class="form-select border-light shadow-sm">
                         <option value="">Todos los estados</option>
@@ -72,62 +104,52 @@ error_reporting(E_ALL);
                         <option value="cancelado">Cancelado</option>
                     </select>
                 </div>
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold text-muted text-uppercase">Buscador</label>
-                    <div class="input-group shadow-sm">
-                        <span class="input-group-text bg-white border-end-0"><i
-                                class="bi bi-search text-muted"></i></span>
-                        <input type="text" id="buscadorGeneral" class="form-control border-start-0 ps-0"
-                            placeholder="Folio o Cliente">
-                    </div>
-                </div>
+
+        <!-- Buscador -->
+        <div class="col-lg-3 col-md-12">
+            <label class="form-label small fw-bold text-muted text-uppercase">
+                Buscar
+            </label> 
+
+            <div class="input-group shadow-sm">
+
+                <span class="input-group-text bg-light border-0">
+                    <i class="bi bi-search text-secondary"></i>
+                </span>
+
+                <input
+                    type="text"
+                    id="buscadorGeneral"
+                    class="form-control border-0 bg-light"
+                    placeholder="Folio o Proveedor">
+
             </div>
         </div>
 
-        <div class="glass-card p-4">
-            <div class="table-responsive">
-                <table id="tablaSolicitudes" class="table align-middle w-100">
-                    <thead>
-                        <tr>
-                            <th>Folio</th>
-                            <th>Fecha</th>
-                            <th>Cliente</th>
-                            <th>Almacén</th>
-                            <th>Monto</th>
-                            <th>Estado</th>
-                            <th class="text-end">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($cotizaciones as $s): ?>
-                        <tr>
-                            <td><span class="text-dark fw-bold">#<?= str_pad($s['id'], 5, "0", STR_PAD_LEFT) ?></span>
-                            </td>
-                            <td class="text-muted small"><?= date('d/m/Y H:i', strtotime($s['fecha']))?></td>
-                            <td class="fw-medium"><?= htmlspecialchars($s['nombre_comercial'] ?? 'Sin asignar') ?></td>
-                            <td><span
-                                    class="badge bg-light text-dark border"><?= htmlspecialchars($s['almacen']) ?></span>
-                            </td>
+    </div>
 
-                            <td><?= htmlspecialchars($s['monto']) ?></td>
-                             <td><span
-                                    class="badge bg-light text-dark border"><?= htmlspecialchars($s['estado']) ?></span>
-                            </td>
-                            <td>
-                               <?php if ($s['estado'] !== 'cancelado'): ?> 
-                                 <button type="button" class="btn btn-primary" onclick="imprmirComprobante(<?= $s['id'] ?>)">
-    Imprimir
-</button> 
-    <button class="btn btn-danger" onclick="eliminarSolicitud(<?= $s['id'] ?>)">Cancelar</button>
-<?php endif; ?>                 </td>
-                            
-                          
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
+</div>
         </div>
+
+      <div class="glass-card p-4">
+    <div class="table-responsive">
+        <table class="table align-middle w-100">
+            <thead>
+                <tr>
+                    <th>Folio</th>
+                    <th>Fecha</th>
+                    <th>Cliente</th>
+                    <th>Almacén</th>
+                    <th>Monto</th>
+                    <th>Estado</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tablaComprobantes">
+                </tbody>
+        </table>
+    </div>
+</div>
     </main>
 
 
@@ -718,6 +740,145 @@ error_reporting(E_ALL);
     <script>
     let totalGlobalPago = 0;
     let datost=0;
+    // Se ejecuta automáticamente en cuanto el navegador termina de estructurar el árbol HTML de la página
+$(document).ready(function () {
+    cargarComprobantes(); // Ejecuta de inmediato la consulta y renderizado inicial
+});
+ $(document).ready(function() {
+       
+       
+$('#buscadorGeneral').on('keyup', cargarComprobantes);
+$('#filtroAlmacen').on('change', cargarComprobantes);
+$('#filtroEstado').on('change', cargarComprobantes);
+$('#fechaInicio').on('change', cargarComprobantes);
+$('#fechaFin').on('change', cargarComprobantes);
+        
+
+     });
+/**
+ * Función asíncrona que consulta los comprobantes de pago al controlador PHP
+ * mediante Fetch API, procesa las reglas de negocio y dibuja las filas del tbody.
+ */
+async function cargarComprobantes() {
+    try {
+        // Agrupación y formateo seguro de todos los parámetros de filtrado que viajarán en la URL hacia PHP
+        const params = new URLSearchParams({
+            action: 'listarComprobantes',                     // Acción que mapea al método del controlador PHP
+            almacen: $('#filtroAlmacen').val() || '',        // ID del almacén seleccionado en tus selectores
+            fechaInicio: $('#fechaInicio').val() || '',      // Rango de fecha inicial de búsqueda
+            fechaFin: $('#fechaFin').val() || '',            // Rango de fecha final de búsqueda
+            estado: $('#filtroEstado').val() || '',          // Estado actual del comprobante
+            buscador: $('#buscadorGeneral').val() || ''      // Texto de búsqueda libre (Buscador general)
+        });
+
+        // Variable tipo String encargada de ir acumulando secuencialmente el HTML de cada fila (tr)
+        let tablaHTML = '';
+        
+        // Petición AJAX (Fetch) enviando la ruta de tu controlador acompañada de los parámetros de búsqueda estructurados
+        const res = await fetch(
+            `/cfsistem/app/controllers/comprobantesPagoController.php?${params.toString()}`
+        );
+
+        // Transforma la respuesta cruda del servidor en un objeto JSON nativo de JavaScript
+        let data = await res.json();
+        console.log("Comprobantes recibidos del servidor:", data.data);
+
+        // Validación de seguridad: Comprueba si la respuesta no trae datos o el arreglo viene totalmente vacío
+        if (!data.data || data.data.length === 0) {
+            // Inserta una fila única con un mensaje centralizado indicando que no hay registros y frena el script
+            $('#tablaComprobantes').html('<tr><td colspan="7" class="text-center text-muted py-3">No se encontraron registros de pago</td></tr>');
+            return;
+        }
+
+        // Bucle que recorre uno a uno cada objeto "c" (Comprobante/Cotización) dentro del arreglo de datos
+        data.data.forEach(c => {
+
+            // 1. FORMATEO DEL FOLIO NUMÉRICO
+            // Transforma el ID a texto y rellena con ceros a la izquierda hasta asegurar un tamaño fijo de 5 dígitos
+            // Emula exactamente al método de PHP: str_pad($s['id'], 5, "0", STR_PAD_LEFT)
+            const folio = String(c.id).padStart(5, '0');
+
+            // 2. PROCESAMIENTO DE FECHA UNIVERSAL
+            let fechaFormateada = c.fecha || '';
+            if (c.fecha) {
+                // Reemplaza los espacios por una "T" para forzar la compatibilidad con el estándar ISO.
+                // Esto previene fallos silenciosos de "Invalid Date" en entornos estrictos como Safari de Apple o dispositivos iOS.
+                const date = new Date(c.fecha.replace(/\s/, 'T'));
+                
+                // Si la fecha se pudo interpretar y parsear de manera completamente correcta
+                if (!isNaN(date.getTime())) {
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const month = String(date.getMonth() + 1).padStart(2, '0'); // Se suma 1 porque en JS Enero es el mes 0
+                    const year = date.getFullYear();
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    
+                    // Une los fragmentos en el formato final legible para el usuario: dd/mm/aaaa hh:mm
+                    fechaFormateada = `${day}/${month}/${year} ${hours}:${minutes}`;
+                }
+            }
+
+            // 3. CAPTURA Y NORMALIZACIÓN DEL ESTADO
+            // Convierte a minúsculas el estado para evaluar la condición de manera exacta y segura
+            const estado = (c.estado || 'pendiente').toLowerCase();
+
+            // 4. GENERACIÓN DE ACCIONES EXCLUSIVAS (BOTONES CONDICIONALES)
+            // Variable temporal para guardar botones que solo deben aparecer si el comprobante NO está cancelado
+            let botonesAccion = '';
+            if (estado !== 'cancelado') {
+                // Si el estado es distinto de 'cancelado', se concatenan los botones de Imprimir y Cancelar con sus ID reales
+                botonesAccion = `
+                    <button type="button" class="btn btn-primary btn-sm" onclick="imprmirComprobante(${c.id})">
+                        VER
+                    </button> 
+                    <button type="button" class="btn btn-danger btn-sm" onclick="eliminarSolicitud(${c.id})">
+                        Cancelar
+                    </button>
+                `;
+            }
+
+            // 5. ARMADO E INYECCIÓN DE LA FILA (HTML Template Literal)
+            // Se va acumulando dinámicamente la estructura completa de la fila actual dentro de 'tablaHTML'
+            tablaHTML += `
+                <tr>
+                    <td><span class="text-dark fw-bold">#${folio}</span></td>
+                    <td class="text-muted small">${fechaFormateada}</td>
+                    <td class="fw-medium">${escapeHtml(c.nombre_comercial || 'Sin asignar')}</td>
+                    <td><span class="badge bg-light text-dark border">${escapeHtml(c.almacen || '')}</span></td>
+                    <td class="fw-bold">$${parseFloat(c.monto || 0).toFixed(2)}</td>
+                    <td>
+                        <span class="badge bg-light text-dark border">${escapeHtml(c.estado || '')}</span>
+                    </td>
+                    <td class="text-end">
+                        ${botonesAccion}
+                    </td>
+                </tr>
+            `;
+        });
+
+        // 6. ACTUALIZACIÓN DIRECTA DEL DOM DE LA TABLA
+        // Inyecta el bloque HTML acumulado directamente en el contenedor del tbody seleccionado por su ID
+        $('#tablaComprobantes').html(tablaHTML);
+
+    } catch (error) {
+        // Atrapa cualquier error de red, fallos del servidor o inconsistencias de código y lo imprime de forma limpia en la consola
+        console.error("Error crítico capturado en cargarComprobantes:", error);
+    }
+}
+
+/**
+ * Función auxiliar de Sanitización (Escape de Entidades HTML)
+ * Recibe una cadena de texto y reemplaza caracteres especiales peligrosos (<, >, &, ", ') por texto plano seguro.
+ * Protege la aplicación contra ataques Cross-Site Scripting (XSS) en caso de que los datos de la base traigan código malicioso.
+ */
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/"/g, "&quot;")
+              .replace(/'/g, "&#039;");
+}
 async function imprmirComprobante(id) {
     try {
         console.log("Solicitando ID:", id);
@@ -1060,11 +1221,11 @@ const montoFormateado = parseFloat(data.monto).toLocaleString('es-MX', {
       async function eliminarSolicitud(id) {
         console.log(id);
         const r = await Swal.fire({
-            title: '¿Eliminar?',
+            title: '¿Quieres cancelar el comprobante?',
             text: 'No podrás revertir esto',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Sí, borrar'
+            confirmButtonText: 'Sí, continuar'
         });
         if (r.isConfirmed) {
             const fd = new FormData();

@@ -259,11 +259,11 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
                             </div>
 
                             <?php if ($almacen_usuario == 0): ?>
-                            <div class="col-md-12">
+                            <div class="col-md-12" style="visibility: hidden;">
                                 <div class="bg-light p-3 rounded-4 mt-2 border border-dashed">
                                     <label class="form-label small fw-bold text-primary">ASIGNAR A SUCURSAL *</label>
                                     <select name="almacen_id" id="almacen_id_modal" class="form-select border-primary shadow-none" required>
-                                        <option value="">-- Seleccionar Almacén --</option>
+                                        <option value="1">-- Seleccionar Almacén --</option>
                                         <?php foreach ($almacenes as $alm): ?>
                                             <option value="<?= $alm['id'] ?>"><?= htmlspecialchars($alm['nombre']) ?></option>
                                         <?php endforeach; ?>

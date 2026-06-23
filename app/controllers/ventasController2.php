@@ -259,4 +259,4 @@ $categorias = ($categorias_res) ? $categorias_res->fetch_all(MYSQLI_ASSOC) : [];
 $clientes_res = $clientesModel->listarTodosCF($almacen_usuario); 
 $clientes = ($clientes_res) ? $clientes_res->fetch_all(MYSQLI_ASSOC) : [];
 
-include __DIR__ . '/../views/ventas_view.php';
+include __DIR__ . '/../views/ventas_view2.php';

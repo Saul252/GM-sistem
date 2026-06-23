@@ -334,7 +334,10 @@ idsParaProcesar.forEach((item, index) => {
 
                             if ($(`#mv_chofer_id option[value="${idChofer}"]`).length) {
                                 $('#mv_chofer_id').val(idChofer).trigger('change');
+                              $('#mv_chofer_id').prop('disabled', true);
+
                             }
+                            
                         }
 
                         // 👥 TRIPULANTES
@@ -359,6 +362,9 @@ idsParaProcesar.forEach((item, index) => {
 
                         console.log('⚠ Sin datos en vehículo → usando trabajadores disponibles');
 
+                                  $('#mv_chofer_id').prop('disabled', false);
+
+                            
                         // 🔥 REEMPLAZAR OPTIONS CON DISPONIBLES
                         const selectC = $('#mv_chofer_id')
                             .empty()

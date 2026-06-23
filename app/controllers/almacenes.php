@@ -136,7 +136,7 @@ class AlmacenController {
         while (ob_get_level()) ob_end_clean(); 
         header('Content-Type: application/json; charset=utf-8');
         try {
-            $unidadesMedida = $this->model->getCategorias();
+            $unidadesMedida = $this->model->getUnidadesMedida();
             echo json_encode($unidadesMedida ?: []);
         } catch (Exception $e) {
             echo json_encode(['error' => $e->getMessage()]);
@@ -445,6 +445,9 @@ if (isset($conexion)) {
             break;
         case 'getCategoriasJSON':
             $controller->getCategoriasJSON();
+            break;
+            case 'getUnidadesMedidaJSON':
+            $controller->getUnidadesMedidaJSON();
             break;
         case 'getListaProductosJson': // <--- SECCIÓN PARA ACTUALIZAR SELECTS
             $controller->getListaProductosJson();

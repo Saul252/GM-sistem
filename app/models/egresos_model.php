@@ -218,12 +218,12 @@ public function registrarGasto($cabecera, $descripciones, $cantidades, $precios)
         $stmt = $this->db->prepare($sql);
         if (!$stmt) throw new Exception("Error en Prepare Cabecera: " . $this->db->error);
         date_default_timezone_set('America/Mexico_City');
-        $fechaCDMX=date('Y-m-d H:i:s');
+       
 
         // ✅ CORRECCIÓN AQUÍ (tipos correctos)
         $stmt->bind_param("ssiiissdss", 
             $cabecera['folio'], 
-             $fechaCDMX, 
+             $cabecera['fecha'], 
             $cabecera['almacen_id'],
             $cabecera['categoria_id'],
             $cabecera['usuario_id'], 

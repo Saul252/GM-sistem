@@ -201,21 +201,19 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerEstatusCliente') {
     }
     exit;
 }
-// --- CARGA DE VISTA ---
-protegerPagina('ventas'); 
-$paginaActual = 'ventas';
-$almacen_usuario = $_SESSION['almacen_id'] ?? 0;
+if (isset($_GET['action']) && $_GET['action'] === 'listarProductos') {
 
-// Almacenes
-$almacenModel = new AlmacenModel($conexion);
-$almacenes = $almacenModel->getAlmacenes($almacen_usuario);
+    header('Content-Type: application/json; charset=utf-8');
 
-// Categorías
-$categorias_res = CategoriasModel::listar($conexion);
-$categorias = ($categorias_res) ? $categorias_res->fetch_all(MYSQLI_ASSOC) : [];
+    try {
+$almacen = !empty($_GET['almacen']) ? (int)$_GET['almacen'] : 0;
 
-// Productos
-$productos_res = VentasModel::obtenerProductos($conexion, $almacen_usuario);
+
+$categoria = !empty($_GET['categoria'])
+    ? trim($_GET['categoria'])
+    : null;
+
+$productos_res = VentasModel::obtenerProductosFiltrados($conexion,$almacen, $categoria);
 $productos = ($productos_res) ? $productos_res->fetch_all(MYSQLI_ASSOC) : [];
 
 
@@ -254,6 +252,41 @@ foreach ($productos as &$producto) {
 }
 
 unset($producto);
+
+    
+
+
+        echo json_encode([
+            'status' => 'success',
+            'data' => $productos
+        ]);
+
+    } catch (Throwable $e) {
+
+        http_response_code(500);
+
+        echo json_encode([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+
+    exit;
+}
+// --- CARGA DE VISTA ---
+protegerPagina('ventas'); 
+$paginaActual = 'ventas';
+$almacen_usuario = $_SESSION['almacen_id'] ?? 0;
+
+// Almacenes
+$almacenModel = new AlmacenModel($conexion);
+$almacenes = $almacenModel->getAlmacenes($almacen_usuario);
+
+// Categorías
+$categorias_res = CategoriasModel::listar($conexion);
+$categorias = ($categorias_res) ? $categorias_res->fetch_all(MYSQLI_ASSOC) : [];
+
+// Productos
 
 // Clientes (Asegúrate de que listarTodos traiga rfc, razon_social, regimen_fiscal)
 $clientes_res = $clientesModel->listarTodosCF($almacen_usuario); 

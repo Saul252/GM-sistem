@@ -100,10 +100,34 @@
     <div class="main-content">
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="fw-bold text-dark m-0">Control de Entregas</h3>
+                <h3 class="fw-bold text-dark m-0">Historial de Ventas</h3> 
                 <div id="loader" class="spinner-border spinner-border-sm text-secondary d-none"></div>
             </div>
+  <div class="dropdown">
+        <button 
+            class="btn btn-add dropdown-toggle"
+            type="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            style="border-radius: 10px; background: #123e77; color: #ffffff;">
+            
+            <i class="bi bi-gear me-2"></i> Mis repartos
+        </button>
 
+        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+
+            
+
+            <li>
+                <a class="dropdown-item d-flex align-items-center gap-2"
+                   href="/cfsistem/app/controllers/misRepartosController.php">
+                    <i class="bi bi-list-ul text-primary"></i>
+                    Gestionar mis repartos
+                </a>
+            </li>
+
+        </ul>
+    </div>
             <div class="card filter-card mb-4">
                 <div class="card-body">
                     <div class="row g-3 align-items-end">
@@ -203,7 +227,7 @@
                     </table>
                 </div>
             </div>
-        </div>
+           
     </div>
 
     <div class="modal fade" id="modalDetalle" tabindex="-1">
@@ -211,8 +235,8 @@
             <div class="modal-content border-0">
                 <div class="modal-header">
                     <h6 class="modal-title fw-bold">Gestión de Venta: <span id="spanFolio"></span></h6>
-                     <span id="IdFolio"></span>
-                      <span id="Almacen_id"></span>
+                     <span id="IdFolio"style="visibility: hidden;"></span>
+                      <span id="Almacen_id" style="visibility: hidden;"></span>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-0">
@@ -541,6 +565,7 @@
         </div>
     </div>
 </div>
+
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
@@ -797,95 +822,116 @@ async function agregarFactura( id,folio) {
             const res = await fetch(`${URL_CONTROLLER}?${params.toString()}`);
             const data = await res.json();
             //<td class="ps-3 small">${v.id}</td>
+            let totalVendido=0;
+            let deuda=0;
 
+$('#tablaVentas tbody').html(data.map(v => {
+    let total = parseFloat(v.total) || 0;
+    let pagado = parseFloat(v.pagado) || 0;
+    let saldo = total - pagado;
+    
+    if (v.estado_general == 'activa') {
+        totalVendido += total;
+        deuda += (total - pagado);
+    }
 
-            $('#tablaVentas tbody').html(data.map(v => {
-                let total = parseFloat(v.total) || 0;
-                let pagado = parseFloat(v.pagado) || 0;
-                let saldo = total - pagado;
-                let badgeCobro = (saldo <= 0) ?
-                    '<span class="text-success small fw-bold"><i class="bi bi-check-circle"></i> Pagado</span>' :
-                    `<span class="text-danger small fw-bold">Debe: $${saldo.toFixed(2)}</span>`;
-let entrega = (v.estado_general == 'activa') ?
-                   `<span class="badge ${v.estado_entrega=='entregado'?'bg-success':(v.estado_entrega=='parcial'?'bg-warning text-dark':'bg-danger')}">
-                        ${v.estado_entrega.toUpperCase()}
-                    </span>`  :
-                    '<span class="text-danger small fw-bold"><i class="bi bi-check-circle"></i> Cancelado</span>';
-                    let factura = (v.estado_general == 'activa') ?
-                   `${v.factura}
-                <button type="button" class="btn btn-link text-primary p-1 border-0" onclick="modalFactura(${v.id},${v.factura})" title="Agregar Factura">
-    <i class="bi bi-pencil-square me-2"></i>
-</button>`  :
-                    '';
- let cancelada = (v.estado_general == 'activa') ?`
-    <button type="button" class="btn btn-link text-danger btn-sm px-3 border-0" 
-            onclick="abrirModalCancelacion('${v.id}','${v.folio}')" 
-            data-bs-toggle="tooltip" 
-            data-bs-placement="top" 
-            title="Cancelar Venta">
-        <i class="bi bi-trash3 fs-5"></i>
-    </button>
+    let badgeCobro = (saldo <= 0) ?
+        '<span class="text-success small fw-bold"><i class="bi bi-check-circle"></i> Pagado</span>' :
+        `<span class="text-danger small fw-bold">Debe: $${saldo.toFixed(2)}</span>`;
 
-    <div class="btn-group" role="group">
-        <button type="button" class="btn btn-link text-secondary btn-sm px-3 border-0 dropdown-toggle remove-caret" 
-                data-bs-toggle="dropdown" 
-                aria-expanded="false"
+    let entrega = (v.estado_general == 'activa') ?
+        `<span class="badge ${v.estado_entrega=='entregado'?'bg-success':(v.estado_entrega=='parcial'?'bg-warning text-dark':'bg-danger')}">
+            ${v.estado_entrega.toUpperCase()}
+        </span>` :
+        '<span class="text-danger small fw-bold"><i class="bi bi-check-circle"></i> Cancelado</span>';
+
+    let factura = (v.estado_general == 'activa') ?
+        `${v.factura}
+        <button type="button" class="btn btn-link text-primary p-1 border-0" onclick="modalFactura(${v.id},${v.factura})" title="Agregar Factura">
+            <i class="bi bi-pencil-square me-2"></i>
+        </button>` : '';
+
+    let cancelada = (v.estado_general == 'activa') ? `
+        <button type="button" class="btn btn-link text-danger btn-sm px-3 border-0" 
+                onclick="abrirModalCancelacion('${v.id}','${v.folio}')" 
                 data-bs-toggle="tooltip" 
                 data-bs-placement="top" 
-                title="Más opciones">
-            <i class="bi bi-three-dots fs-5"></i>
+                title="Cancelar Venta">
+            <i class="bi bi-trash3 fs-5"></i>
         </button>
-        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 mt-2">
-            <li>
-                <a class="dropdown-item py-2 text-warning" href="../controllers/editarVentaController.php?id=${v.id}">
-                    <i class="bi bi-pencil-square me-2"></i> Editar Venta
-                </a>
-            </li>
-            <li><hr class="dropdown-divider opacity-50"></li>
-            <li>
-                <a class="dropdown-item py-2 text-primary" href="/cfsistem/app/backend/ventas/ticket_venta.php?id=${v.id}" target="_blank">
-                    <i class="bi bi-receipt me-2"></i> Imprimir Ticket
-                </a>
-            </li>
-            <li>
-                <a class="dropdown-item py-2 text-info" href="/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=${v.id}" target="_blank">
-                    <i class="bi bi-file-earmark-text me-2"></i> Imprimir Remisión
-                </a>
-            </li>
-        </ul>
-    </div>
-</div>` :
-                    ``;
 
-                return `<tr>
-                
-                <td class="ps-3 small">${v.fecha}</td>
-                <td class="fw-bold">${v.folio}</td>
-                <td><span class="badge bg-light text-dark border fw-normal">${v.almacen_nombre}</span></td>
-                  <td><div class="small fw-bold">${v.vendedor}</div></td>
-                <td><div class="small fw-bold">${v.cliente}</div></td>
-               
-                <td class="fw-bold text-dark">$${total.toFixed(2)}</td>
-                <td>${v.estado_general=='activa'? badgeCobro:'<span class="text-danger small fw-bold"><i class="bi bi-check-circle"></i> Cancelado</span>'}</td>
-                <td><div class="small fw-bold">${factura}
-                </div></td>
-                <td class="text-center">
-                    ${entrega}
-                </td>
-                <td class="text-end pe-3">
-                    <div class="btn-group bg-white rounded-3 shadow-sm border p-1" role="group" aria-label="Acciones de venta">
-    <button type="button" class="btn btn-link text-dark btn-sm px-3 border-0" 
-            onclick="verDetalle(${v.id})" 
-            data-bs-toggle="tooltip" 
-            data-bs-placement="top" 
-            title="Gestionar Venta">
-        <i class="bi bi-sliders2 fs-5"></i>
-    </button>
-    ${cancelada}
+        <div class="btn-group" role="group">
+            <button type="button" class="btn btn-link text-secondary btn-sm px-3 border-0 dropdown-toggle remove-caret" 
+                    data-bs-toggle="dropdown" 
+                    aria-expanded="false"
+                    data-bs-toggle="tooltip" 
+                    data-bs-placement="top" 
+                    title="Más opciones">
+                <i class="bi bi-three-dots fs-5"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 mt-2">
+                <li>
+                    <a class="dropdown-item py-2 text-warning" href="../controllers/editarVentaController.php?id=${v.id}">
+                        <i class="bi bi-pencil-square me-2"></i> Editar Venta
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider opacity-50"></li>
+                <li>
+                    <a class="dropdown-item py-2 text-primary" href="/cfsistem/app/backend/ventas/ticket_venta.php?id=${v.id}" target="_blank">
+                        <i class="bi bi-receipt me-2"></i> Imprimir Ticket
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item py-2 text-info" href="/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=${v.id}" target="_blank">
+                        <i class="bi bi-file-earmark-text me-2"></i> Imprimir Remisión
+                    </a>
+                </li>
+            </ul>
+        </div>` : ``;
 
-                </td>
-            </tr>`;
-            }).join(''));
+    return `<tr>
+        <td class="ps-3 small">${v.fecha}</td>
+        <td class="fw-bold">${v.folio}</td>
+        <td><span class="badge bg-light text-dark border fw-normal">${v.almacen_nombre}</span></td>
+        <td><div class="small fw-bold">${v.vendedor}</div></td>
+        <td><div class="small fw-bold">${v.cliente}</div></td>
+        <td class="fw-bold text-dark">$${total.toFixed(2)}</td>
+        <td>${v.estado_general=='activa'? badgeCobro : '<span class="text-danger small fw-bold"><i class="bi bi-check-circle"></i> Cancelado</span>'}</td>
+        <td><div class="small fw-bold">${factura}</div></td>
+        <td class="text-center">${entrega}</td>
+        <td class="text-end pe-3">
+            <div class="btn-group bg-white rounded-3 shadow-sm border p-1" role="group" aria-label="Acciones de venta">
+                <button type="button" class="btn btn-link text-dark btn-sm px-3 border-0" 
+                        onclick="verDetalle(${v.id})" 
+                        data-bs-toggle="tooltip" 
+                        data-bs-placement="top" 
+                        title="Gestionar Venta">
+                    <i class="bi bi-sliders2 fs-5"></i>
+                </button>
+                ${cancelada}
+            </div>
+        </td>
+    </tr>`;
+}).join(''));
+
+// Fila de totales corregida (Sin 'v.almacen_nombre' para evitar errores)
+let totales = `<tr class="table-light fw-bold border-top border-dark">
+    <td class="ps-3 small"></td>
+    <td class="fw-bold">TOTALES</td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td class="text-dark">Total: $${totalVendido.toFixed(2)}</td>
+    <td class="text-success">Cobrado: $${(totalVendido - deuda).toFixed(2)}</td>
+    <td class="text-danger">Por Cobrar: $${deuda.toFixed(2)}</td>
+    <td></td>
+    <td></td>
+</tr>`;
+
+
+
+// CORRECCIÓN AQUÍ: Agregamos la fila al final del tbody usando .append() sin .join()
+$('#tablaVentas tbody').append(totales);
         } catch (e) {
             console.error("Error al cargar ventas:", e);
         } finally {
@@ -938,6 +984,17 @@ let entrega = (v.estado_general == 'activa') ?
             ventaActual = data;
              $('#folioFactura').text(data.info.factura);
 if (data.info.estado_general === 'cancelada') {
+    $('#btnGestionVenta')
+                    .addClass('d-none')
+                    .prop('disabled', true)
+                    .removeAttr('onclick');
+                    $('#btnAbonar')
+                    .addClass('d-none')
+                    .prop('disabled', true)
+                    .removeAttr('onclick'); $('#btnHabilitar')
+                    .addClass('d-none')
+                    .prop('disabled', true)
+                    .removeAttr('onclick');
     $('#cancelado').text(`Cancelada por: ${data.info.observaciones}`);
 } else {
     $('#cancelado').text('');

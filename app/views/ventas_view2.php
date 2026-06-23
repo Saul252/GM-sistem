@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Requisiciones | Sistema</title>
+    <title>Ventas | Sistema</title>
     <?php require_once __DIR__ . '/layout/icono.php' ?>
     <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
     <link href="/cfsistem/css/ventas.css" rel="stylesheet">
@@ -44,13 +44,8 @@
     <div class="main-content">
 
         <h2 class="mb-4 fw-bold">
-            <i class="bi bi-cart-fill text-primary"></i> Remisiones
+            <i class="bi bi-cart-fill text-primary"></i> Módulo de Ventas
         </h2>
-<button type="button" class="btn btn-primary d-flex align-items-center"
-                                    onclick="abrirModalProducto()" title="Agregar nuevo producto">
-                                    <i class="bi bi-plus-lg me-1"></i>
-                                    <span class="d-none d-xl-inline">Agregar Producto</span>
-                                </button>
 
         <div class="row">
             <div class="col-lg-8">
@@ -88,24 +83,144 @@
                         </div>
                     </div>
 
-                     <div class="table-responsive tabla-scroll">
-    <table class="table table-bordered table-hover tabla-productos">
-        <thead class="table-dark">
-            <tr>
-                <th>Almacén</th>
-                <th>SKU</th>
-                <th>Producto</th>
-                <th>Stock</th>
-                <th width="120">Unidad</th>
-                <th>Precio</th>
-                <th width="90">Cant</th>
-                <th width="60"></th>
-            </tr>
-        </thead>
-        <tbody id="productos">
-            </tbody>
-    </table>
-</div>
+                    <div class="table-responsive tabla-scroll">
+                        <table class="table table-bordered table-hover tabla-productos">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Almacén</th>
+                                    <th>SKU</th>
+                                    <th>Producto</th>
+                                    <th>Stock</th>
+                                    <th width="120">Unidad</th>
+                                    <th>Precio</th>
+                                    
+
+                                    <th width="90">Cant</th>
+                                    <th width="60"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach($productos as $p): 
+                                    $tieneReporte = (!empty($p['unidad_reporte']) && $p['factor_conversion'] > 1);
+                                ?>
+                                <tr data-categoria="<?= $p['categoria_id'] ?>" data-almacen="<?= $p['almacen_id'] ?>"
+                                    data-factor="<?= $p['factor_conversion'] ?>"
+                                    data-reporte-nom="<?= htmlspecialchars($p['unidad_reporte']) ?>">
+                                    <input type="hidden" class="factorC" value="<?= $p['factor_conversion'] ?>">
+                                    <td><?= htmlspecialchars($p['almacen_nombre']) ?></td>
+                                    <td><?= $p['sku'] ?></td>
+                                    <td><?= htmlspecialchars($p['nombre']) ?></td>
+                                    <td>
+                                       <?php
+$cantidad = $p['stock'] / $p['factor_conversion'];
+
+if ($cantidad <= 0) {
+    $color = 'bg-danger';       // Sin stock
+} elseif ($cantidad <= 5) {
+    $color = 'bg-warning text-dark'; // Stock bajo
+} elseif ($cantidad <= 20) {
+    $color = 'bg-info text-dark';    // Stock medio
+} else {
+    $color = 'bg-success';      // Stock alto
+}
+?>
+
+<span class="badge <?= $color ?>">
+    <?= $cantidad >= 1
+        ? number_format($cantidad, 2) . ' ' . $p['unidad_reporte']
+        : number_format($p['stock'], 2) . ' ' . $p['unidad_medida']
+    ?>
+</span> 
+                                    </td>
+
+                                    <td style="width:1px; padding:0; border:none;">
+                                        <?php if($tieneReporte): ?>
+                                        <select class="form-select form-select-sm select-modo-venta" style="
+            opacity:0;
+            position:absolute;
+            pointer-events:none;
+            height:0;
+            width:0;
+            padding:0;
+            border:0;
+        ">
+
+                                            <option value="individual"
+                                                data-nombre="<?= htmlspecialchars($p['unidad_medida'] ?? 'PZA') ?>">
+
+                                                <?= htmlspecialchars($p['unidad_medida'] ?? 'PZA') ?>
+
+                                            </option>
+
+                                            <option value="referencia"
+                                                data-nombre="<?= htmlspecialchars($p['unidad_reporte']) ?>">
+
+                                                <?= htmlspecialchars($p['unidad_reporte']) ?>
+
+                                            </option>
+
+                                        </select>
+                                        <?php else: ?>
+                                        <span class="d-none">Individual</span>
+                                        <?php endif; ?>
+
+                                        <select class="form-select border-primary medidas_adicionales"
+                                            <?= empty($p['medidas_adicionales']) ? 'disabled' : '' ?>>
+                                            <option value='0'>Seleccione</option>
+                                            <?php foreach($p['medidas_adicionales'] as $ma): ?>
+                                            <option value="<?= $ma['equivalencia'] ?>" data-id="<?= $ma['id'] ?> "
+                                                data-nombre="<?= $ma['nombre'] ?>">
+                                                <?= htmlspecialchars($ma['nombre']) ?>
+                                            </option>
+                                            <?php endforeach; ?>
+                                        </select>
+
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-1">
+
+                                            <select class="form-select form-select-sm select-precio">
+                                                <option value="<?= $p['precio_minorista'] ?>">Publico -
+                                                    $<?= number_format($p['precio_minorista'],2) ?></option>
+                                                <option value="<?= $p['precio_mayorista'] ?>">Constructora -
+                                                    $<?= number_format($p['precio_mayorista'],2) ?></option>
+                                                <option value="<?= $p['precio_distribuidor'] ?>">Distribuidor -
+                                                    $<?= number_format($p['precio_distribuidor'],2) ?></option>
+                                            </select>
+                                            <input type="number" step="0.01"
+                                                class="form-control form-control-sm input-precioMayor"
+                                                value="<?= $p['precio_minorista'] ??0?>">
+                                            <input type="hidden" step="0.01"
+                                                class="form-control form-control-sm input-precio"
+                                                value="<?= $p['precio_minorista']??0 ?>">
+                                        </div>
+
+                                    </td>
+
+
+
+                                    <td>
+                                        <!-- usuario -->
+                                        <input type="number" class="form-control form-control-sm cantidad_usuario"
+                                            min="1" value="1">
+                                        <!-- REAL -->
+                                        <input type="hidden" class="cantidad" value="0">
+                                        <!-- visible -->
+                                    </td>
+
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-success btn-sm"
+                                            data-producto-id="<?= $p['id'] ?>" data-almacen-id="<?= $p['almacen_id'] ?>"
+                                            data-almacen="<?= htmlspecialchars($p['almacen_nombre']) ?>"
+                                            onclick="validarYAgregar(this)">
+                                            <i class="bi bi-plus"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -260,139 +375,17 @@
             </div>
         </div>
     </div>
-    <?php require_once __DIR__ . '/requisicionesModales/finalizarVenta.php'; ?>
+    <?php require_once __DIR__ . '/ventasModales/finalizarVenta.php'; ?>
 
     <?php cargarScripts(); ?>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
- <?php require_once __DIR__ . '/egresosComponets/agregarPoductoModal.php'; ?>
-  
+
     <script src="/cfsistem/app/backend/js_ventas/filtros.js"></script>
     <script src="/cfsistem/app/backend/js_ventas/nuevo_cliente.js"></script>
     <script src="/cfsistem/app/backend/js_ventas/modal_finalizar.js"></script>
 
 
-
 <script>
-        document.addEventListener("DOMContentLoaded", function() {
-    recargarProductos();
-});
-
-async function recargarProductos() {
-    // Cambia 'get_productos.php' por la ruta real de tu controlador/endpoint
-     const params = new URLSearchParams({
-    action: 'listarProductos',
-    almacen: $('#filtroAlmacen').val(),
-    categoria:$('#filtroCategoria').val()
-   
-});
-
-    let rol = <?= isset($_SESSION['rol_id']) ? (int)$_SESSION['rol_id'] : 0 ?>;
-let tablahtml = '';
-const res = await fetch(
-    `/cfsistem/app/controllers/requisicionesController.php?${params.toString()}`
-);
-
-
-let data = await res.json();
-console.log(data);
-
-// 1. Declaramos la variable como un string vacío
-let tabla = '';
-
-// Accedemos a data.data según tu respuesta del servidor
-data.data.forEach(p => {
-    // Lógica de reporte y factores
-    const factorConversion = parseFloat(p.factor_conversion) || 1;
-    const tieneReporte = (p.unidad_reporte && p.unidad_reporte.trim() !== '' && factorConversion > 1);
-    const cantidad = parseFloat(p.stock) / factorConversion;
-    
-    // Lógica de colores de stock
-    let colorStock = 'bg-success';
-    if (cantidad <= 0) colorStock = 'bg-danger';
-    else if (cantidad <= 5) colorStock = 'bg-warning text-dark';
-    else if (cantidad <= 20) colorStock = 'bg-info text-dark';
-
-    // Formato del texto del Badge de Stock
-    const textoStock = cantidad >= 1 
-        ? `${cantidad.toFixed(2)} ${p.unidad_reporte}`
-        : `${parseFloat(p.stock).toFixed(2)} ${p.unidad_medida || 'PZA'}`;
-
-    // Construcción del select de medidas adicionales
-    let opcionesMedidas = `<option value="0">Seleccione</option>`;
-    if (p.medidas_adicionales && p.medidas_adicionales.length > 0) {
-        p.medidas_adicionales.forEach(ma => {
-            opcionesMedidas += `<option value="${ma.equivalencia}" data-id="${ma.id}" data-nombre="${escapeHtml(ma.nombre)}">${escapeHtml(ma.nombre)}</option>`;
-        });
-    }
-    const disabledMedidas = (!p.medidas_adicionales || p.medidas_adicionales.length === 0) ? 'disabled' : '';
-
-    // 2. Concatenamos directamente la fila como un string HTML (Quitamos document.createElement)
-    tabla += `
-        <tr data-categoria="${p.categoria_id}" 
-            data-almacen="${p.almacen_id}" 
-            data-factor="${factorConversion}" 
-            data-reporte-nom="${escapeHtml(p.unidad_reporte || '')}">
-            
-            <input type="hidden" class="factorC" value="${factorConversion}">
-            <td>${escapeHtml(p.almacen_nombre)}</td>
-            <td>${p.sku}</td>
-            <td>${escapeHtml(p.nombre)}</td>
-            <td>
-                <span class="badge ${colorStock}">${textoStock}</span>
-            </td>
-            <td style="width:1px; padding:0; border:none;">
-                ${tieneReporte ? `
-                    <select class="form-select form-select-sm select-modo-venta" style="opacity:0; position:absolute; pointer-events:none; height:0; width:0; padding:0; border:0;">
-                        <option value="individual" data-nombre="${escapeHtml(p.unidad_medida || 'PZA')}">${escapeHtml(p.unidad_medida || 'PZA')}</option>
-                        <option value="referencia" data-nombre="${escapeHtml(p.unidad_reporte)}">${escapeHtml(p.unidad_reporte)}</option>
-                    </select>
-                ` : `<span class="d-none">Individual</span>`}
-                
-                <select class="form-select border-primary medidas_adicionales" ${disabledMedidas}>
-                    ${opcionesMedidas}
-                </select>
-            </td>
-            <td>
-                <div class="d-flex gap-1">
-                    <select class="form-select form-select-sm select-precio">
-                        <option value="${p.precio_minorista}">Publico - $${formatNumber(p.precio_minorista)}</option>
-                        <option value="${p.precio_mayorista}">Constructora - $${formatNumber(p.precio_mayorista)}</option>
-                        <option value="${p.precio_distribuidor}">Distribuidor - $${formatNumber(p.precio_distribuidor)}</option>
-                    </select>
-                    <input type="number" step="0.01" class="form-control form-control-sm input-precioMayor" value="${p.precio_minorista || 0}">
-                    <input type="hidden" step="0.01" class="form-control form-control-sm input-precio" value="${p.precio_minorista || 0}">
-                </div>
-            </td>
-            <td>
-                <input type="number" class="form-control form-control-sm cantidad_usuario" min="1" value="1">
-                <input type="hidden" class="cantidad" value="0">
-            </td>
-            <td class="text-center">
-                <button type="button" class="btn btn-success btn-sm"
-                    data-producto-id="${p.id}" 
-                    data-almacen-id="${p.almacen_id}"
-                    data-almacen="${escapeHtml(p.almacen_nombre)}"
-                    onclick="validarYAgregar(this)">
-                    <i class="bi bi-plus"></i>
-                </button>
-            </td>
-        </tr>
-    `;
-});
-
-// 3. Insertamos el string acumulado directamente en el contenedor mediante jQuery
-$('#productos').html(tabla);
-                                }
-
-// Funciones auxiliares para emular los formatos de PHP de forma segura
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-}
-
-function formatNumber(num) {
-    return parseFloat(num || 0).toFixed(2);
-}
 /**
  * Soporte para agregar productos al presionar ENTER
  */

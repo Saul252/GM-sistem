@@ -89,6 +89,7 @@
                         <div class="col-md-7">
                             <label class="form-label small fw-bold">Observaciones</label>
                             <textarea name="observaciones" class="form-control border-0 bg-light" style="border-radius: 12px;" rows="2" placeholder="Notas internas..."></textarea>
+                       <input type="date" id="fecha"name="fecha" class="form-control border-0 bg-light" style="border-radius: 12px;">
                         </div>
                         <div class="col-md-5 text-end">
                             <h4 class="text-muted small fw-bold mb-0">TOTAL</h4>

@@ -213,8 +213,9 @@ body {
                                 <th>Almacén</th>
                                 <th>Vendedor</th>
                                 <th>Cliente</th>
-                                <th>Total</th>
+                               
                                 <th>Factura</th>
+                                 <th>Total</th>
                                 <th>Saldo Cobro</th>
                                
                                 <th class="text-end pe-3">Acciones</th>
@@ -381,7 +382,8 @@ body {
                                     </div>
                                 </div>
                             </div>
-
+ <h4 id="cancelado" class="fw-bold text-danger padding-top-3 mb-3"></h4>
+                            
                         </div>
 
                     </div>
@@ -474,20 +476,41 @@ body {
         try {
             const res = await fetch(`${URL_CONTROLLER}?${params.toString()}`);
             const data = await res.json();
+            console.log(data);
 
 
             $('#tablaVentas tbody').html(data.map(v => {
                 let total = parseFloat(v.total) || 0;
                 let pagado = parseFloat(v.pagado) || 0;
                 let saldo = total - pagado;
+                if(v.estado_general=='cancelada')
+                {
+                    console.log("cancelada");
+                }
+                let entrega = (v.estado_general === 'activa') ?
+                   `<span class="badge ${v.estado_entrega=='entregado'?'bg-success':(v.estado_entrega=='parcial'?'bg-warning text-dark':'bg-danger')}">
+                        ${v.estado_entrega.toUpperCase()}
+                    </span>`  :'';
                 let badgeCobro = (saldo <= 0) ?
                     '<span class="text-success small fw-bold"><i class="bi bi-check-circle"></i> Pagado</span>' :
                     `<span class="text-danger small fw-bold">Debe: $${saldo.toFixed(2)}</span>`;
-let agregarPago = (saldo <= 0) ?
+                    let agregarPago = (saldo <= 0) ?
                     '' :
+                    
                     `<button class="btn btn-sm btn-success shadow-sm" onclick="abrirNuevoAbono(${v.id})">
                             </i> Nuevo abono
                         </button>`;
+                   let factura = (v.estado_general == 'activa') ?
+                   `${v.factura}
+                <button type="button" class="btn btn-link text-primary p-1 border-0" onclick="modalFactura(${v.id},${v.factura})" title="Agregar Factura">
+    <i class="bi bi-pencil-square me-2"></i>
+</button>`  :
+                    '<span class="text-danger small fw-bold">----</span>';
+ let cancelada = (v.estado_general == 'activa') ?`
+      ${agregarPago}
+
+   ` :
+                    ``;
 
                 return `<tr>
               
@@ -496,9 +519,10 @@ let agregarPago = (saldo <= 0) ?
                 <td><span class="badge bg-light text-dark border fw-normal">${v.almacen_nombre}</span></td>
                  <td><div class="small fw-bold">${v.vendedor}</div></td>
                 <td><div class="small fw-bold">${v.cliente}</div></td>
-                <td><div class="small fw-bold">${v.factura!=0?'F':'NO'}</div></td>
+                <td><div class="small fw-bold">${factura}</div></td>
                 <td class="fw-bold text-dark">$${total.toFixed(2)} </td>
-                <td>${badgeCobro}</td>
+               <td>${v.estado_general=='activa'? badgeCobro:'<span class="text-danger small fw-bold"><i class="bi bi-check-circle"></i> Cancelado</span>'}</td>
+                
                 
                 <td class="text-end pe-3">
                     <div class="btn-group">
@@ -508,7 +532,8 @@ let agregarPago = (saldo <= 0) ?
                         <button class="btn btn-sm btn-dark shadow-sm" onclick="verDetalle(${v.id})">
                             <i class="bi bi-eye-fill"></i> ver
                         </button>
-                        ${agregarPago}
+                        ${cancelada}
+                     
 
                         
                        
@@ -547,7 +572,7 @@ let agregarPago = (saldo <= 0) ?
 
             if (
                 Array.isArray(dataIds.ids) &&
-                dataIds.ids.length > 0
+                dataIds.ids.length > 0 
 
             ) {
                 console.log('hola');
@@ -567,13 +592,14 @@ let agregarPago = (saldo <= 0) ?
                     .removeAttr('onclick');
 
             }
+            
             const res = await fetch(`${URL_CONTROLLER}?action=obtenerDetalle&id=${id}`);
            cargarRepartos(id);
             const data = await res.json();
            
             
             ventaActual = data;
-            
+             
  $('#folioFactura').text(data.info.factura);
             $('#spanFolio').text(data.info.folio);
             $('#detCliente').text(data.info.nombre_comercial);
@@ -585,7 +611,7 @@ let agregarPago = (saldo <= 0) ?
             const deuda = total - pagado;
             $('#detTotalLabel').text('$' + total.toFixed(2));
 
-            if (deuda <= 0) {
+            if (deuda <= 0 ) {
                 $('#detSaldoLabel').text('LIQUIDADO').removeClass('text-danger').addClass('text-success');
                 $('#btnAbonar').addClass('d-none');
             } else {
@@ -593,12 +619,24 @@ let agregarPago = (saldo <= 0) ?
                     'text-danger');
                 $('#btnAbonar').removeClass('d-none');
             }
-            const htmlboton=` <button id="btnAbonar"
+            let htmlboton='';
+$('#folioFactura').text(data.info.factura);
+if (data.info.estado_general === 'cancelada') {
+    
+                    $('#btnAbonar')
+                    .addClass('d-none')
+                    .prop('disabled', true)
+                    .removeAttr('onclick'); 
+    $('#cancelado').text(`Cancelada por: ${data.info.observaciones}`);
+} else {
+    $('#cancelado').text('');
+    htmlboton=` <button id="btnAbonar"
                             class="btn btn-primary w-100 fw-bold shadow-sm"
                             onclick="abrirNuevoAbono(${id})">
                             <i class="bi bi-cash-coin me-1"></i> Registrar Abono
                         </button>
-`
+`;
+}
 $('#boton').html(htmlboton);
             // --- RENDERIZADO DE PRODUCTOS CON CONVERSIÓN ---
             // --- RENDERIZADO DE PRODUCTOS CON CONVERSIÓN ---

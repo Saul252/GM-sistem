@@ -152,12 +152,28 @@
                             <td><span
                                     class="badge bg-light text-dark border"><?= htmlspecialchars($p['categoria_nombre'] ?? 'Sin Categoría') ?></span>
                             </td>
-                            <td>
-                                <?php 
-                                $badgeClass = ($p['stock'] > 20) ? 'bg-success' : (($p['stock'] > 5) ? 'bg-warning text-dark' : 'bg-danger');
-                                ?>
-                                <span class="badge <?= $badgeClass ?> badge-stock"><?= $p['stock'] ?></span>
-                            </td>
+                             <td>
+                                       <?php
+$cantidad = $p['stock'] / $p['factor_conversion'];
+
+if ($cantidad <= 0) {
+    $color = 'bg-danger';       // Sin stock
+} elseif ($cantidad <= 5) {
+    $color = 'bg-warning text-dark'; // Stock bajo
+} elseif ($cantidad <= 20) {
+    $color = 'bg-info text-dark';    // Stock medio
+} else {
+    $color = 'bg-success';      // Stock alto
+}
+?>
+
+<span class="badge <?= $color ?>">
+    <?= $cantidad >= 1
+        ? number_format($cantidad, 2) . ' ' . $p['unidad_reporte']
+        : number_format($p['stock'], 2) . ' ' . $p['unidad_medida']
+    ?>
+</span> 
+                                    </td>
                             <td><?= htmlspecialchars($p['almacen_nombre'] ?? 'N/A') ?></td>
                             <td class="text-center">
                                 <button class="btn btn-outline-warning btn-sm"

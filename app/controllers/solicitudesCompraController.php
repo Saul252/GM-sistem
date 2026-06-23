@@ -139,7 +139,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'getSiguienteFolio') {
 // --- CARGA DE VISTA ---
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     try {
-        $solicitudes = $solicitudModel->listar($es_admin, $almacen_usuario);
         // Nota: Verifica que sea listarTodo() o listarTodos() según tu ProductosModel
         $productos   = $productosModel->listarTodo(); 
         $proveedores = $proveedorModel->listarTodos();
@@ -186,6 +185,57 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerDetalle') {
         ]);
 
     } catch (Throwable $e) {
+
+        echo json_encode([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+
+    exit;
+}
+
+if (isset($_GET['action']) && $_GET['action'] === 'listarSolicitudes') {
+
+    header('Content-Type: application/json; charset=utf-8');
+
+    try {
+$almacen = !empty($_GET['almacen']) ? (int)$_GET['almacen'] : 0;
+
+$fechaInicio = !empty($_GET['fechaInicio'])
+    ? $_GET['fechaInicio']
+    : null;
+
+$fechaFin = !empty($_GET['fechaFin'])
+    ? $_GET['fechaFin']
+    : null;
+
+$estado = !empty($_GET['estado'])
+    ? $_GET['estado']
+    : null;
+
+$buscador = !empty($_GET['buscador'])
+    ? trim($_GET['buscador'])
+    : null;
+
+ $solicitudes = $solicitudModel->listarPorFechas($es_admin,
+       
+    
+    $almacen,
+    $fechaInicio,
+    $fechaFin,
+    $estado,
+    $buscador
+);
+
+        echo json_encode([
+            'status' => 'success',
+            'data' => $solicitudes
+        ]);
+
+    } catch (Throwable $e) {
+
+        http_response_code(500);
 
         echo json_encode([
             'status' => 'error',

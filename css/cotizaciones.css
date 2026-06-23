@@ -366,3 +366,18 @@ h2 {
     color: #1d7a45;
     margin-bottom: 10px;
 }
+body, 
+table, 
+
+select, 
+ 
+button, 
+.badge, 
+.dropdown-item {
+    text-transform: uppercase;
+}
+
+/* Nota: Los inputs de tipo password NO deben ir en mayúsculas por seguridad */
+input[type="password"] {
+    text-transform: none;
+}

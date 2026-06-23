@@ -23,6 +23,7 @@ public function listarDepositos($almacen_id) {
     } 
     
     
+    
     // VENDEDOR: Filtro ESTRICTO.
     // Solo trae los clientes cuyo almacen_id coincida EXACTAMENTE con el del usuario.
     $sql = "SELECT cp.*, c.nombre_comercial,u.nombre as usuario,a.nombre as almacen
@@ -38,7 +39,99 @@ public function listarDepositos($almacen_id) {
     $stmt->execute();
     return $stmt->get_result();
 }
+public function listarPorFechas(
+    $es_admin = 0,
+    $almacen_id = null,
+    $fecha_inicio = null,
+    $fecha_fin = null,
+    $estado = null,
+    $buscador = null
+) {
+    // 1. Consulta base adaptada a comprobantes_de_pago y sus relaciones correspondientes
+    $sql = "SELECT 
+                cp.*, 
+                c.nombre_comercial, 
+                u.nombre AS usuario, 
+                a.nombre AS almacen
+            FROM comprobantes_de_pago cp
+            JOIN clientes c ON cp.id_cliente = c.id
+            JOIN usuarios u ON u.id = cp.usuario_recibe
+            JOIN almacenes a ON a.id = cp.almacen_id
+            WHERE 1=1"; // Permite concatenar filtros dinámicamente con "AND"
 
+    $params = [];
+    $types = "";
+
+    // 2. Control de seguridad por Rol: Si no es admin, ignoramos lo que venga en el filtro 
+    // y lo obligamos a ver únicamente el almacén que tiene asignado.
+    if ($es_admin == 0) {
+        $sql .= " AND cp.almacen_id = ?";
+        $types .= "i";
+        $params[] = $almacen_id;
+    } else {
+        // Si es admin, puede elegir filtrar por un almacén específico o ver todos (si viene vacío)
+        if (isset($almacen_id) && $almacen_id !== '' && $almacen_id !== 0) {
+            $sql .= " AND cp.almacen_id = ?";
+            $types .= "i";
+            $params[] = $almacen_id;
+        }
+    }
+
+    // 3. Filtro de Fecha Inicial (Usa el campo cp.fecha)
+    if (!empty($fecha_inicio)) {
+        $sql .= " AND DATE(cp.fecha) >= ?";
+        $types .= "s";
+        $params[] = $fecha_inicio;
+    }
+
+    // 4. Filtro de Fecha Final
+    if (!empty($fecha_fin)) {
+        $sql .= " AND DATE(cp.fecha) <= ?";
+        $types .= "s";
+        $params[] = $fecha_fin;
+    }
+
+    // 5. Filtro por Estado (cp.estado)
+    if (!empty($estado)) {
+        $sql .= " AND cp.estado = ?";
+        $types .= "s";
+        $params[] = $estado;
+    }
+
+    // 6. Buscador General inteligente por Nombre Comercial del Cliente o Folio (cp.id)
+    if (!empty($buscador)) {
+        $sql .= " AND (
+                    c.nombre_comercial LIKE ?
+                    OR cp.id LIKE ?
+                  )";
+        $types .= "ss";
+
+        $like = "%{$buscador}%";
+        $params[] = $like;
+        $params[] = $like;
+    }
+
+    // 7. Ordenamiento final descendente por fecha de emisión del pago
+    $sql .= " ORDER BY cp.fecha DESC";
+
+    // Preparación segura de la sentencia contra inyecciones SQL
+    $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) {
+        return [];
+    }
+
+    // Enlace dinámico de variables si existen parámetros activos
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
+    }
+
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    // Retorna el array asociativo mapeado de MySQLi listo para procesarse en el JSON de tu AJAX
+    return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+}
 public function cancelarOrden($id) {
     try {
         // Verificar estado actual

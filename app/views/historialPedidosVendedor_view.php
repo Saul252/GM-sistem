@@ -221,6 +221,7 @@ body {
                                 <th>Almacén</th>
                                 <th>Vendedor</th>
                                 <th>Cliente</th>
+                                 <th>Factura</th>
                                 <th>Total</th>
                                 <th>Saldo Cobro</th>
                                
@@ -384,7 +385,8 @@ body {
                                     </div>
                                 </div>
                             </div>
-
+ <h4 id="cancelado" class="fw-bold text-danger padding-top-3 mb-3"></h4>
+                            
                         </div>
 
                     </div>
@@ -475,6 +477,7 @@ body {
         try {
             const res = await fetch(`${URL_CONTROLLER}?${params.toString()}`);
             const data = await res.json();
+            console.log(data);
             let deuda=0;
             let totalVendido=0;
 
@@ -485,6 +488,10 @@ body {
                 let saldo = total - pagado;
                 deuda+=saldo;
                 totalVendido+=total;
+                let factura = (v.estado_general == 'activa') ?
+                   `${v.factura!=0?v.factura:'Sin Factura'}
+                `  :
+                    '<span class="text-danger small fw-bold">----</span>';
                 let badgeCobro = (saldo <= 0) ?
                     '<span class="text-success small fw-bold"><i class="bi bi-check-circle"></i> Pagado</span>' :
                     `<span class="text-danger small fw-bold">Debe: $${saldo.toFixed(2)}</span>`;
@@ -501,8 +508,11 @@ let agregarPago = (saldo <= 0) ?
                 <td><span class="badge bg-light text-dark border fw-normal">${v.almacen_nombre}</span></td>
                  <td><div class="small fw-bold">${v.vendedor}</div></td>
                 <td><div class="small fw-bold">${v.cliente}</div></td>
+                <td class="fw-bold text-dark">${factura} </td>
                 <td class="fw-bold text-dark">$${total.toFixed(2)} </td>
-                <td>${badgeCobro}</td>
+                
+                 <td>${v.estado_general=='activa'? badgeCobro:'<span class="text-danger small fw-bold"><i class="bi bi-check-circle"></i> Cancelado</span>'}</td>
+              
                 
                 <td class="text-end pe-3">
                     <div class="btn-group">
@@ -599,7 +609,18 @@ let agregarPago = (saldo <= 0) ?
                     'text-danger');
                 $('#btnAbonar').removeClass('d-none');
             }
-            
+            $('#folioFactura').text(data.info.factura);
+if (data.info.estado_general === 'cancelada') {
+    
+                    $('#btnAbonar')
+                    .addClass('d-none')
+                    .prop('disabled', true)
+                    .removeAttr('onclick'); 
+    $('#cancelado').text(`Cancelada por: ${data.info.observaciones}`);
+} else {
+    $('#cancelado').text('');
+   
+}
             // --- RENDERIZADO DE PRODUCTOS CON CONVERSIÓN ---
             // --- RENDERIZADO DE PRODUCTOS CON CONVERSIÓN ---
             $('#tbodyDetalle').html(data.productos.map(p => {

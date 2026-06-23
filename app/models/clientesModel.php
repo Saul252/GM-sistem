@@ -76,8 +76,8 @@ public function listarTodosViewClientes($almacen_id) {
     return $stmt->get_result();
 }
 
- public function guardar($datos) {
-
+ public function guardar($datos)
+{
     // 1. Lógica de asignación de almacén
     $almacen_id_sesion = $_SESSION['almacen_id'] ?? 0;
 
@@ -111,7 +111,10 @@ public function listarTodosViewClientes($almacen_id) {
     $stmtCheck->execute();
 
     if ($stmtCheck->get_result()->num_rows > 0) {
-        throw new Exception("El RFC ya está registrado en la sucursal seleccionada.");
+        return [
+            'success' => false,
+            'message' => 'El RFC ya está registrado en la sucursal seleccionada.'
+        ];
     }
 
     // 3. Generar token
@@ -119,18 +122,86 @@ public function listarTodosViewClientes($almacen_id) {
     $activo = 1;
 
     // 4. Limpieza de datos
-    $nombre_comercial = $datos['nombre_comercial'] ?? '';
-    $contacto         = !empty($datos['contacto']) ? $datos['contacto'] : null;
-    $razon_social     = !empty($datos['razon_social']) ? $datos['razon_social'] : null;
-    $rfc              = $datos['rfc'] ?? '';
+    $nombre_comercial = trim($datos['nombre_comercial'] ?? '');
+    $contacto         = trim($datos['contacto'] ?? '');
+    $razon_social     = trim($datos['razon_social'] ?? '');
+    $rfc              = trim($datos['rfc'] ?? '');
     $regimen_fiscal   = !empty($datos['regimen_fiscal']) ? $datos['regimen_fiscal'] : null;
-    $codigo_postal    = $datos['codigo_postal'] ?? null;
+    $codigo_postal    = !empty($datos['codigo_postal']) ? $datos['codigo_postal'] : null;
     $correo           = !empty($datos['correo']) ? $datos['correo'] : null;
-    $telefono         = !empty($datos['telefono']) ? $datos['telefono'] : null;
+    $telefono         = trim($datos['telefono'] ?? '');
     $direccion        = !empty($datos['direccion']) ? $datos['direccion'] : null;
     $uso_cfdi         = !empty($datos['uso_cfdi']) ? $datos['uso_cfdi'] : 'G03';
 
-    // 5. Insertar
+    // Evitar LIKE '%%'
+    $likeNombre = $nombre_comercial != '' ? "%{$nombre_comercial}%" : "__SIN_COINCIDENCIA__";
+    $likeContacto = $contacto != '' ? "%{$contacto}%" : "__SIN_COINCIDENCIA__";
+
+    // 5. Buscar posibles duplicados
+    $sqlCoincidencias = "
+    SELECT
+        c.nombre_comercial,
+        CASE
+            WHEN c.telefono = ?
+                 AND c.nombre_comercial LIKE ?
+                THEN 'Coincide teléfono y nombre comercial'
+
+            WHEN c.telefono = ?
+                THEN 'Coincide teléfono'
+
+            WHEN c.nombre_comercial LIKE ?
+                THEN 'Coincide nombre comercial'
+
+            WHEN c.contacto LIKE ?
+                THEN 'Coincide contacto'
+
+            ELSE 'Sin coincidencias'
+        END AS motivo
+    FROM clientes c
+    WHERE
+        c.activo = 1
+        AND (
+            c.telefono = ?
+            OR c.nombre_comercial LIKE ?
+            OR c.contacto LIKE ?
+        )
+    LIMIT 1";
+
+    $coincidencias = $this->db->prepare($sqlCoincidencias);
+
+    if (!$coincidencias) {
+        throw new Exception("Error al preparar validación de coincidencias: " . $this->db->error);
+    }
+
+    $coincidencias->bind_param(
+        "ssssssss",
+        $telefono,
+        $likeNombre,
+        $telefono,
+        $likeNombre,
+        $likeContacto,
+        $telefono,
+        $likeNombre,
+        $likeContacto
+    );
+
+    $coincidencias->execute();
+
+    $resultadoCoincidencias = $coincidencias->get_result();
+
+    if ($resultadoCoincidencias->num_rows > 0) {
+
+        $fila = $resultadoCoincidencias->fetch_assoc();
+
+        return [
+            'success' => false,
+            'message' => 'Datos existentes: ' .
+                         $fila['nombre_comercial'] .
+                         ' (' . $fila['motivo'] . ').'
+        ];
+    }
+
+    // 6. Insertar cliente
     $sql = "INSERT INTO clientes (
                 nombre_comercial,
                 contacto,

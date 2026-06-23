@@ -42,107 +42,134 @@ error_reporting(E_ALL);
                 </div>
             </div>
 
-            <div class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold text-muted text-uppercase">Rango de Fecha</label>
-                    <select id="filtroFecha" class="form-select border-light shadow-sm">
-                        <option value="todos">Todas las fechas</option>
-                        <option value="hoy">Hoy</option>
-                        <option value="ayer">Ayer</option>
-                        <option value="semana">Esta Semana</option>
-                        <option value="mes">Este Mes</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold text-muted text-uppercase">Almacén</label>
-                    <select id="filtroAlmacen" class="form-select border-light shadow-sm">
-                        <option value="">Todos los almacenes</option>
-                        <?php foreach ($almacenes as $alm): ?>
-                        <option value="<?= htmlspecialchars($alm['nombre']) ?>"><?= htmlspecialchars($alm['nombre']) ?>
-                        </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold text-muted text-uppercase">Estado</label>
-                    <select id="filtroEstado" class="form-select border-light shadow-sm">
+               <div class="glass-card p-4 mb-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h5 class="fw-bold mb-1">
+                <i class="bi bi-funnel-fill text-primary me-2"></i>
+                Filtros de búsqueda
+            </h5>
+            <small class="text-muted">
+                Filtra las cotizaciones por fecha, almacén, estado o cliente.
+            </small>
+        </div>
+    </div>
+
+    <div class="row g-3 align-items-end">
+
+        <!-- Fecha Inicio -->
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small fw-bold text-muted text-uppercase">
+                Inicio
+            </label>
+
+            <input
+                type="date"
+                id="fechaInicio"
+                value="<?= date('Y-m-01') ?>"
+                class="form-control border-0 bg-light shadow-sm"
+                style="border-radius:12px;">
+        </div>
+
+        <!-- Fecha Fin -->
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small fw-bold text-muted text-uppercase">
+                Fin
+            </label>
+
+            <input
+                type="date"
+                id="fechaFin"
+                value="<?= date('Y-m-d') ?>"
+                class="form-control border-0 bg-light shadow-sm"
+                style="border-radius:12px;">
+        </div>
+
+        <!-- Almacén -->
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label small fw-bold text-muted text-uppercase">
+                Almacén
+            </label>
+
+            <select id="filtroAlmacen" class="form-select border-0 bg-light shadow-sm"
+                style="border-radius:12px;">
+
+                <option value="">Todos los almacenes</option>
+
+                <?php foreach ($almacenes as $alm): ?>
+
+                <option value="<?= htmlspecialchars($alm['id']) ?>">
+                    <?= htmlspecialchars($alm['nombre']) ?>
+                </option>
+
+                <?php endforeach; ?>
+
+            </select>
+        </div>
+
+        <!-- Estado -->
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small fw-bold text-muted text-uppercase">
+                Estado
+            </label>
+
+          
+
+                <select id="filtroEstado" class="form-select border-light shadow-sm">
                         <option value="">Todos los estados</option>
                         <option value="PENDIENTE">Pendiente</option>
-                        <option value="PROCESADA">Procesada</option>
-                        <option value="RECIBIDA">Recibida</option>
+                       
+                        <option value="RECIBIDO">Recibida</option>
+                        <option value="CANCELADO">CANCELADA</option>
                     </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold text-muted text-uppercase">Buscador</label>
-                    <div class="input-group shadow-sm">
-                        <span class="input-group-text bg-white border-end-0"><i
-                                class="bi bi-search text-muted"></i></span>
-                        <input type="text" id="buscadorGeneral" class="form-control border-start-0 ps-0"
-                            placeholder="Folio o Proveedor">
-                    </div>
-                </div>
+           
+        </div>
+
+        <!-- Buscador -->
+        <div class="col-lg-3 col-md-12">
+            <label class="form-label small fw-bold text-muted text-uppercase">
+                Buscar
+            </label> 
+
+            <div class="input-group shadow-sm">
+
+                <span class="input-group-text bg-light border-0">
+                    <i class="bi bi-search text-secondary"></i>
+                </span>
+
+                <input
+                    type="text"
+                    id="buscadorGeneral"
+                    class="form-control border-0 bg-light"
+                    placeholder="Folio o Proveedor">
+
             </div>
         </div>
 
-        <div class="glass-card p-4">
-            <div class="table-responsive">
-                <table id="tablaSolicitudes" class="table align-middle w-100">
-                    <thead>
-                        <tr>
-                            <th>Folio</th>
-                            <th>Fecha</th>
-                            <th>Proveedor</th>
-                            <th>Almacén</th>
-                            <th>Estado</th>
-                            <th class="text-end">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($solicitudes as $s): ?>
-                        <tr>
-                            <td><span class="text-dark fw-bold">#<?= str_pad($s['id'], 5, "0", STR_PAD_LEFT) ?></span>
-                            </td>
-                            <td class="text-muted small"><?= date('d/m/Y H:i', strtotime($s['fecha_creacion'])) ?></td>
-                            <td class="fw-medium"><?= htmlspecialchars($s['proveedor_nombre'] ?? 'Sin asignar') ?></td>
-                            <td><span
-                                    class="badge bg-light text-dark border"><?= htmlspecialchars($s['almacen_nombre']) ?></span>
-                            </td>
-                            <td>
-                                <?php 
-                                    $status = strtoupper($s['estado'] ?? 'PENDIENTE');
-                                    $clase = match($status) {
-                                        'PENDIENTE' => 'bg-warning text-dark',
-                                        'PROCESADA' => 'bg-primary text-white',
-                                        'RECIBIDA'  => 'bg-success text-white',
-                                        default     => 'bg-secondary text-white'
-                                    };
-                                ?>
-                                <span class="badge badge-status <?= $clase ?> rounded-pill"><?= $status ?></span>
-                            </td>
-                              <td class="text-end">
-                     
-                                <?php if($status === 'PENDIENTE'): ?>
-                                <button class="btn btn-sm btn-white border shadow-sm"
-                                    onclick="gestionarSolicitud(<?= $s['id'] ?>)">
-                                    <i class="bi bi-eye text-primary"></i> Gestionar
-                                </button>
-                                <button class="btn btn-sm btn-white border shadow-sm"
-                                    onclick="eliminarSolicitud(<?= $s['id'] ?>)">
-                                    <i class="bi bi-trash text-danger"></i>
-                                </button>
-                                <?php endif; ?>
-                                <button class="btn btn-sm btn-white border shadow-sm rounded-pill px-3"
-                                    onclick="prepararImpresion(<?= $s['id'] ?>)" title="Imprimir solicitud">
-                                    <i class="bi bi-printer text-primary me-1"></i>
-                                    <span class="text-dark fw-medium">Imprimir</span>
-                                </button>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    </div>
+
+</div>
+
+<div class="glass-card p-4">
+    <div class="table-responsive">
+        <table  class="table align-middle w-100">
+            <thead>
+                <tr>
+                    <th>Folio</th>
+                    <th>Fecha</th>
+                    <th>Proveedor</th>
+                    <th>Almacén</th>
+                    <th>Estado</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="tablaSolicitudes">
+                </tbody>
+        </table>
+    </div>
+</div>
+        
     </main>
 
  
@@ -852,53 +879,174 @@ error_reporting(E_ALL);
         <?php require_once __DIR__ . '/egresosComponets/modalAjuste.php'; ?>
     <script>
     const URL_CONTROLADOR_SOLICITUD = '/cfsistem/app/controllers/solicitudesCompraController.php';
+   $(document).ready(function () {
+    cargarSolicitudes();
+});
+// Se ejecuta automáticamente en cuanto el navegador termina de estructurar el HTML de la página
 
-    $(document).ready(function() {
-        const table = $('#tablaSolicitudes').DataTable({
-            language: {
-                url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
-            },
-            order: [
-                [0, 'desc']
-            ],
-            dom: 'rt<"d-flex justify-content-between align-items-center mt-3"ip>'
+/**
+ * Función asíncrona que consulta las cotizaciones/solicitudes al controlador PHP
+ * mediante Fetch API, procesa las condiciones de negocio y dibuja las filas.
+ */
+async function cargarSolicitudes() {
+    try {
+        // Almacenamos los valores actuales de los filtros de la pantalla para enviarlos al servidor
+        let almacen = $('#filtroAlmacen').val();
+        let fechaInicio = $('#fechaInicio').val();
+        let fechaFin = $('#fechaFin').val();
+        
+        // Mensaje de control informativo en la consola para confirmar qué almacén se está procesando
+        console.log("Almacén filtrado:", almacen);
+
+        // Agrupación y formateo seguro de todos los parámetros de filtrado que viajarán en la URL
+        const params = new URLSearchParams({
+            action: 'listarSolicitudes',                     // Acción que mapea al método del controlador PHP
+            almacen: $('#filtroAlmacen').val() || '',        // ID del almacén seleccionado
+            fechaInicio: $('#fechaInicio').val() || '',      // Rango de fecha inicial
+            fechaFin: $('#fechaFin').val() || '',            // Rango de fecha final
+            estado: $('#filtroEstado').val() || '',          // Estado actual (Pendiente, Procesada, Recibida)
+            buscador: $('#buscadorGeneral').val() || ''      // Texto de búsqueda libre escrito por el usuario
         });
 
-        $('#buscadorGeneral').on('keyup', function() {
-            table.search(this.value).draw();
-        });
-        $('#filtroAlmacen').on('change', function() {
-            table.column(3).search(this.value).draw();
-        });
-        $('#filtroEstado').on('change', function() {
-            table.column(4).search(this.value).draw();
-        });
+        // Captura del ID de rol de usuario desde las sesiones nativas de PHP
+        let rol = <?= isset($_SESSION['rol_id']) ? (int)$_SESSION['rol_id'] : 0 ?>;
+        
+        // Variable tipo String que irá acumulando el código HTML de cada fila generada
+        let tablaHTML = '';
+        
+        // Petición AJAX (Fetch) enviando la ruta del controlador acompañada de los parámetros de búsqueda
+        const res = await fetch(
+            `/cfsistem/app/controllers/solicitudesCompraController.php?${params.toString()}`
+        );
 
-        $('#filtroFecha').on('change', function() {
-            const rango = $(this).val();
-            $.fn.dataTable.ext.search = [];
-            if (rango !== 'todos') {
-                $.fn.dataTable.ext.search.push(function(settings, data) {
-                    const [d, m, a] = data[1].split(' ')[0].split('/');
-                    const fechaFila = new Date(a, m - 1, d);
-                    const hoy = new Date();
-                    hoy.setHours(0, 0, 0, 0);
-                    if (rango === 'hoy') return fechaFila.getTime() === hoy.getTime();
-                    if (rango === 'ayer') {
-                        const ayer = new Date(hoy);
-                        ayer.setDate(hoy.getDate() - 1);
-                        return fechaFila.getTime() === ayer.getTime();
-                    }
-                    if (rango === 'semana') {
-                        const sem = new Date(hoy);
-                        sem.setDate(hoy.getDate() - 7);
-                        return fechaFila >= sem;
-                    }
-                    return true;
-                });
+        // Transforma la respuesta cruda del servidor en un formato de Objeto JSON legible por JavaScript
+        let data = await res.json();
+        console.log("Datos recibidos del servidor:", data.data);
+
+        // Validación de seguridad: Comprueba si la respuesta no trae datos o el arreglo viene totalmente vacío
+        if (!data.data || data.data.length === 0) {
+            // Inserta una fila única con un mensaje centralizado indicando que no hay registros y frena el script
+            $('#tablaSolicitudes').html('<tr><td colspan="6" class="text-center text-muted py-3">No se encontraron registros</td></tr>');
+            return;
+        }
+
+        // Bucle que recorre uno a uno cada objeto "s" (Solicitud) dentro del arreglo de datos
+        data.data.forEach(s => {
+
+            // 1. FORMATEO DEL FOLIO NUMÉRICO
+            // Transforma el ID a texto y rellena con ceros a la izquierda hasta asegurar un tamaño fijo de 5 dígitos
+            // Hace exactamente lo mismo que el método de PHP: str_pad($s['id'], 5, "0", STR_PAD_LEFT)
+            const folio = String(s.id).padStart(5, '0');
+
+            // 2. PROCESAMIENTO DE FECHA UNIVERSAL
+            let fechaFormateada = s.fecha_creacion || '';
+            if (s.fecha_creacion) {
+                // Reemplaza los espacios por una "T" para forzar la compatibilidad con el estándar ISO.
+                // Esto previene fallos silenciosos de "Invalid Date" en entornos estrictos como Safari de Apple o iOS.
+                const date = new Date(s.fecha_creacion.replace(/\s/, 'T'));
+                
+                // Si la fecha se pudo interpretar de manera completamente correcta
+                if (!isNaN(date.getTime())) {
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const month = String(date.getMonth() + 1).padStart(2, '0'); // Se suma 1 porque en JS Enero es 0
+                    const year = date.getFullYear();
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    
+                    // Une los fragmentos en el formato final legible para el usuario: dd/mm/aaaa hh:mm
+                    fechaFormateada = `${day}/${month}/${year} ${hours}:${minutes}`;
+                }
             }
-            table.draw();
+
+            // 3. CONTROL DE ESTADOS Y COLORES (Insignias / Badges)
+            // Convierte a mayúsculas el estado del registro. Si es nulo, asigna 'PENDIENTE' de manera preventiva
+            const status = (s.estado || 'PENDIENTE').toUpperCase();
+            let claseEstado = 'bg-secondary text-white'; // Estilo gris predeterminado por si ocurre un estado desconocido
+
+            // Estructura de control Switch que emula el bloque 'match' original de tu código PHP
+            switch (status) {
+                case 'PENDIENTE':
+                    claseEstado = 'bg-warning text-dark';   // Insignia Amarilla
+                    break;
+                case 'PROCESADA':
+                    claseEstado = 'bg-primary text-white';  // Insignia Azul
+                    break;
+                case 'RECIBIDA':
+                    claseEstado = 'bg-success text-white';  // Insignia Verde
+                    break;
+            }
+
+            // 4. GENERACIÓN DE ACCIONES EXCLUSIVAS
+            // Variable temporal para guardar botones que solo deben aparecer bajo condiciones estrictas
+            let botonesAccion = '';
+            if (status === 'PENDIENTE') {
+                // Si la solicitud está PENDIENTE, concatena los botones de Gestionar y Eliminar inyectando sus ID reales
+                botonesAccion = `
+                    <button class="btn btn-sm btn-white border shadow-sm" onclick="gestionarSolicitud(${s.id})">
+                        <i class="bi bi-eye text-primary"></i> Gestionar
+                    </button>
+                    <button class="btn btn-sm btn-white border shadow-sm" onclick="eliminarSolicitud(${s.id})">
+                        <i class="bi bi-trash text-danger"></i>
+                    </button>
+                `;
+            }
+
+            // 5. ARMADO E INYECCIÓN DE LA FILA (HTML Template Literal)
+            // Se va acumulando dinámicamente la estructura completa de la fila actual dentro de 'tablaHTML'
+            tablaHTML += `
+                <tr>
+                    <td><span class="text-dark fw-bold">#${folio}</span></td>
+                    <td class="text-muted small">${fechaFormateada}</td>
+                    <td class="fw-medium">${escapeHtml(s.proveedor_nombre || 'Sin asignar')}</td>
+                    <td><span class="badge bg-light text-dark border">${escapeHtml(s.almacen_nombre || '')}</span></td>
+                    <td>
+                        <span class="badge badge-status ${claseEstado} rounded-pill">${status}</span>
+                    </td>
+                    <td class="text-end">
+                        ${botonesAccion}
+                        <button class="btn btn-sm btn-white border shadow-sm rounded-pill px-3"
+                            onclick="prepararImpresion(${s.id})" title="Imprimir solicitud">
+                            <i class="bi bi-printer text-primary me-1"></i>
+                            <span class="text-dark fw-medium">Imprimir</span>
+                        </button>
+                    </td>
+                </tr>
+            `;
         });
+
+        // 6. ACTUALIZACIÓN DIRECTA DEL DOM DE LA TABLA
+        // CORRECCIÓN: Al tener el id="tablaSolicitudes" en el <tbody>, inyectamos directamente con $('#tablaSolicitudes')
+        $('#tablaSolicitudes').html(tablaHTML);
+
+    } catch (error) {
+        // Atrapa cualquier error de red, fallos del servidor o inconsistencias de código y lo imprime de forma limpia
+        console.error("Error crítico capturado en cargarSolicitudes:", error);
+    }
+}
+
+/**
+ * Función auxiliar de Sanitización (Escape de Entidades HTML)
+ * Recibe una cadena de texto y reemplaza caracteres especiales peligrosos (<, >, &, ", ') por texto plano seguro.
+ * Protege la aplicación contra ataques Cross-Site Scripting (XSS) en caso de que los nombres contengan código malicioso.
+ */
+// FUNCIÓN AUXILIAR REQUERIDA (Evita que el script se rompa)
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;")
+              .replace(/"/g, "&quot;")
+              .replace(/'/g, "&#039;");
+}
+     $(document).ready(function() {
+       
+       
+$('#buscadorGeneral').on('keyup', cargarSolicitudes);
+$('#filtroAlmacen').on('change', cargarSolicitudes);
+$('#filtroEstado').on('change', cargarSolicitudes);
+$('#fechaInicio').on('change', cargarSolicitudes);
+$('#fechaFin').on('change', cargarSolicitudes);
+        
 
      });
    $('.select2-modal').select2({

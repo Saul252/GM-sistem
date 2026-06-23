@@ -215,7 +215,92 @@ public function actualizar($data, $items) {
         $result = $this->db->query($sql);
         return ($result) ? $result->fetch_all(MYSQLI_ASSOC) : [];
     }
+    
+    
+    
+    
+    
+    public function listarPorFechas(
+    $es_admin=0,
+    $almacen_id=null,
+    $fecha_inicio = null,
+    $fecha_fin = null,
+    $estado = null,
+    $buscador = null
+)
+ {
 
+    $sql = "SELECT
+                co.*,
+                c.nombre_comercial AS cliente_nombre,
+                a.nombre AS almacen_nombre,
+                u.nombre AS admin_nombre
+            FROM cotizaciones co
+            LEFT JOIN clientes c ON co.cliente_id = c.id
+            LEFT JOIN almacenes a ON co.almacen_id = a.id
+            LEFT JOIN usuarios u ON co.usuario_id = u.id
+            WHERE 1=1";
+
+    $params = [];
+    $types = "";
+
+    if (!empty($almacen_id)) {
+        $sql .= " AND co.almacen_id = ?";
+        $types .= "i";
+        $params[] = $almacen_id;
+    }
+
+    if (!empty($fecha_inicio)) {
+        $sql .= " AND DATE(co.fecha) >= ?";
+        $types .= "s";
+        $params[] = $fecha_inicio;
+    }
+
+    if (!empty($fecha_fin)) {
+        $sql .= " AND DATE(co.fecha) <= ?";
+        $types .= "s";
+        $params[] = $fecha_fin;
+    }
+
+    if (!empty($estado)) {
+        $sql .= " AND co.estado = ?";
+        $types .= "s";
+        $params[] = $estado;
+    }
+
+    if (!empty($buscador)) {
+
+        $sql .= " AND (
+                    c.nombre_comercial LIKE ?
+                    OR co.id LIKE ?
+                  )";
+
+        $types .= "ss";
+
+        $like = "%{$buscador}%";
+
+        $params[] = $like;
+        $params[] = $like;
+    }
+
+    $sql .= " ORDER BY co.fecha DESC";
+
+    $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) {
+        return [];
+    }
+
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
+    }
+
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+
+    return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+}
 public function obtenerDetalle($id) {
     $sql = "SELECT d.*,co.total,co.observaciones, p.nombre as producto_nombre, p.sku, p.unidad_medida, o.nombre,o.equivalencia,
                    p.unidad_reporte, p.factor_conversion, co.almacen_id as almacen_origen_id,

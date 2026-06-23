@@ -70,11 +70,7 @@
                                     <select required id="u_mayoreo" name="unidad_reporte"
                                         class="form-select border-0 shadow-sm fw-bold">
                                         <option value="">Seleccione...</option>
-                                        <?php foreach($unidadesMedida as $j): ?>
-                                        <option value="<?= trim($j['clave']) ?>">
-                                            <?= htmlspecialchars($j['nombre']) ?> (<?= htmlspecialchars($j['clave']) ?>)
-                                        </option>
-                                        <?php endforeach; ?>
+                                        
                                     </select>
                                 </div>
 
@@ -84,11 +80,7 @@
                                     <select required name="unidad_medida" id="u_base"
                                         class="form-select border-0 shadow-sm fw-bold">
                                         <option value="">Seleccione...</option>
-                                        <?php foreach($unidadesMedida as $j): ?>
-                                        <option value="<?= trim($j['clave']) ?>">
-                                            <?= htmlspecialchars($j['nombre']) ?> (<?= htmlspecialchars($j['clave']) ?>)
-                                        </option>
-                                        <?php endforeach; ?>
+                                      
                                     </select>
 
                                 </div>
@@ -365,6 +357,7 @@ function iniciarModuloProducto() {
             this.bindEvents();
             this.cargarCategorias();
             this.actualizarTexto();
+            this.cargarUnidades();
         },
 
         bindEvents: function() {
@@ -378,6 +371,7 @@ function iniciarModuloProducto() {
             const modalEl = document.getElementById('modalAgregarProducto');
             modalEl.addEventListener('show.bs.modal', () => {
                 this.cargarCategorias();
+                 this.cargarUnidades();
             });
 
             // 🔥 Submit
@@ -396,7 +390,7 @@ function iniciarModuloProducto() {
             select.html('<option value="">Cargando...</option>');
 
             $.ajax({
-                url: this.urlControlador + '?action=getCategoriasJSON',
+                url: 'http://localhost/cfsistem/app/controllers/almacenes.php?action=getCategoriasJSON',
                 type: 'GET',
                 dataType: 'json',
 
@@ -417,7 +411,49 @@ function iniciarModuloProducto() {
                 }
             });
         },
+cargarUnidades: function() {
 
+            const select = $('#u_mayoreo');
+            select.html('<option value="">Cargando...</option>')
+            const select_unidad = $('#u_base');
+            select_unidad.html('<option value="">Cargando...</option>');
+
+            $.ajax({
+                url: 'http://localhost/cfsistem/app/controllers/almacenes.php?action=getUnidadesMedidaJSON',
+                type: 'GET',
+                dataType: 'json',
+
+                success: (data) => {
+
+                    select.empty().append('<option value="">Seleccionar...</option>');
+select_unidad.empty().append('<option value="">Seleccionar...</option>');
+
+                    if (Array.isArray(data)) {
+                        data.forEach(uni => {
+                            select.append(
+                             
+                                        
+                                        
+                                `<option value="${uni.clave}">
+                                            ${uni.nombre} - ${uni.clave}
+                                        </option>`);
+                                        select_unidad.append(
+                             
+                                        
+                                        
+                                `<option value="${uni.clave}">
+                                            ${uni.nombre} - ${uni.clave}
+                                        </option>`);
+                        });
+                       
+                    }
+                },
+
+                error: () => {
+                    select.html('<option value="">Error al cargar</option>');
+                }
+            });
+        },
         // 🔥 Texto conversión
         actualizarTexto: function() {
 

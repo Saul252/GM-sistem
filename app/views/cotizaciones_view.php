@@ -42,47 +42,113 @@ error_reporting(E_ALL);
                 </div>
             </div>
 
-            <div class="row g-3 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold text-muted text-uppercase">Rango de Fecha</label>
-                    <select id="filtroFecha" class="form-select border-light shadow-sm">
-                        <option value="todos">Todas las fechas</option>
-                        <option value="hoy">Hoy</option>
-                        <option value="ayer">Ayer</option>
-                        <option value="semana">Esta Semana</option>
-                        <option value="mes">Este Mes</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold text-muted text-uppercase">Almacén</label>
-                    <select id="filtroAlmacen" class="form-select border-light shadow-sm">
-                        <option value="">Todos los almacenes</option>
-                        <?php foreach ($almacenes as $alm): ?>
-                        <option value="<?= htmlspecialchars($alm['nombre']) ?>"><?= htmlspecialchars($alm['nombre']) ?>
-                        </option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold text-muted text-uppercase">Estado</label>
-                    <select id="filtroEstado" class="form-select border-light shadow-sm">
-                        <option value="">Todos los estados</option>
-                        <option value="PENDIENTE">Pendiente</option>
-                        <option value="COMPLETADO">Completado</option>
-                        <option value="CANCELADO">Cancelada</option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <label class="form-label small fw-bold text-muted text-uppercase">Buscador</label>
-                    <div class="input-group shadow-sm">
-                        <span class="input-group-text bg-white border-end-0"><i
-                                class="bi bi-search text-muted"></i></span>
-                        <input type="text" id="buscadorGeneral" class="form-control border-start-0 ps-0"
-                            placeholder="Folio o Cliente">
-                    </div>
-                </div>
+          <div class="glass-card p-4 mb-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h5 class="fw-bold mb-1">
+                <i class="bi bi-funnel-fill text-primary me-2"></i>
+                Filtros de búsqueda
+            </h5>
+            <small class="text-muted">
+                Filtra las cotizaciones por fecha, almacén, estado o cliente.
+            </small>
+        </div>
+    </div>
+
+    <div class="row g-3 align-items-end">
+
+        <!-- Fecha Inicio -->
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small fw-bold text-muted text-uppercase">
+                Inicio
+            </label>
+
+            <input
+                type="date"
+                id="fechaInicio"
+                value="<?= date('Y-m-01') ?>"
+                class="form-control border-0 bg-light shadow-sm"
+                style="border-radius:12px;">
+        </div>
+
+        <!-- Fecha Fin -->
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small fw-bold text-muted text-uppercase">
+                Fin
+            </label>
+
+            <input
+                type="date"
+                id="fechaFin"
+                value="<?= date('Y-m-d') ?>"
+                class="form-control border-0 bg-light shadow-sm"
+                style="border-radius:12px;">
+        </div>
+
+        <!-- Almacén -->
+        <div class="col-lg-3 col-md-6">
+            <label class="form-label small fw-bold text-muted text-uppercase">
+                Almacén
+            </label>
+
+            <select id="filtroAlmacen" class="form-select border-0 bg-light shadow-sm"
+                style="border-radius:12px;">
+
+                <option value="">Todos los almacenes</option>
+
+                <?php foreach ($almacenes as $alm): ?>
+
+                <option value="<?= htmlspecialchars($alm['id']) ?>">
+                    <?= htmlspecialchars($alm['nombre']) ?>
+                </option>
+
+                <?php endforeach; ?>
+
+            </select>
+        </div>
+
+        <!-- Estado -->
+        <div class="col-lg-2 col-md-6">
+            <label class="form-label small fw-bold text-muted text-uppercase">
+                Estado
+            </label>
+
+            <select id="filtroEstado" class="form-select border-0 bg-light shadow-sm"
+                style="border-radius:12px;">
+
+                <option value="">Todos</option>
+                <option value="PENDIENTE">Pendiente</option>
+                <option value="COMPLETADO">Completado</option>
+                <option value="CANCELADO">Cancelado</option>
+
+            </select>
+        </div>
+
+        <!-- Buscador -->
+        <div class="col-lg-3 col-md-12">
+            <label class="form-label small fw-bold text-muted text-uppercase">
+                Buscar
+            </label> 
+
+            <div class="input-group shadow-sm">
+
+                <span class="input-group-text bg-light border-0">
+                    <i class="bi bi-search text-secondary"></i>
+                </span>
+
+                <input
+                    type="text"
+                    id="buscadorGeneral"
+                    class="form-control border-0 bg-light"
+                    placeholder="Folio o Cliente">
+
             </div>
         </div>
+
+    </div>
+
+</div>
 
         <div class="glass-card p-4">
             <div class="table-responsive">
@@ -97,59 +163,8 @@ error_reporting(E_ALL);
                             <th class="text-end">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <?php foreach ($cotizaciones as $s): ?>
-                        <tr>
-                            <td><span class="text-dark fw-bold">#<?= str_pad($s['id'], 5, "0", STR_PAD_LEFT) ?></span>
-                            </td>
-                            <td class="text-muted small"><?= date('d/m/Y H:i', strtotime($s['fecha']))?></td>
-                            <td class="fw-medium"><?= htmlspecialchars($s['cliente_nombre'] ?? 'Sin asignar') ?></td>
-                            <td><span
-                                    class="badge bg-light text-dark border"><?= htmlspecialchars($s['almacen_nombre']) ?></span>
-                            </td>
-                            <td>
-                                <?php 
-                                    $status = strtoupper($s['estado'] ?? 'PENDIENTE');
-                                    $clase = match($status) {
-                                        'PENDIENTE' => 'bg-warning text-dark',
-                                        'COMPLETADO' => 'bg-primary text-white',
-                                        'CANCELADO'  => 'bg-danger text-white',
-                                        default     => 'bg-secondary text-white'
-                                    };
-                                ?>
-                                <span class="badge badge-status <?= $clase ?> rounded-pill"><?= $status ?></span>
-                            </td>
-                            <td class="text-end">
-
-                                <?php if($status === 'PENDIENTE'): ?>
-                                    <?php if( $_SESSION['rol_id']<3): ?>
-                                <button class="btn btn-sm btn-white border shadow-sm"
-                                    onclick="gestionarSolicitud(<?= $s['id'] ?>)">
-                                    <i class="bi bi-eye text-primary"></i> <?php echo $_SESSION['rol_id']?>
-                                </button>
-                                <button class="btn btn-sm btn-white border shadow-sm"
-                                    onclick="eliminarSolicitud(<?= $s['id'] ?>)">
-                                    <i class="bi bi-trash text-danger"></i>
-                                </button>
-                                 <?php endif; ?>
-                                <?php endif; ?>
-                                <?php if($status === 'COMPLETADO'): ?> 
-                                      <?php if( $_SESSION['rol_id'] <3): ?>
-                                <button class="btn btn-sm btn-white border shadow-sm"
-                                    onclick="gestionarSolicitud(<?= $s['id'] ?>)">
-                                    <i class="bi bi-eye text-primary"></i> REUTILIZAR
-                                </button>
-                                <?php endif;?>
-                                 <?php endif;?>
-
-                                <button class="btn btn-sm btn-white border shadow-sm rounded-pill px-3"
-                                    onclick="prepararImpresion(<?= $s['id'] ?>)" title="Imprimir solicitud">
-                                    <i class="bi bi-printer text-primary me-1"></i>
-                                    <span class="text-dark fw-medium">Imprimir</span>
-                                </button>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
+                    <tbody id="tablaCotizacionesListar">
+                        
                     </tbody>
                 </table>
             </div>
@@ -821,7 +836,143 @@ error_reporting(E_ALL);
     <script>
     let totalGlobalPago = 0;
     let datost=0;
+            
+$(document).ready(function () {
+    cargarCotizaciones();
+});
+async function cargarCotizaciones() {
+   let almacen= $('#filtroAlmacen').val();
+   let fechaInicio= $('#fechaInicio').val();
+    let fechaFin=$('#fechaFin').val();
+console.log(almacen);
 
+   const params = new URLSearchParams({
+    action: 'listarCotizaciones',
+    almacen: $('#filtroAlmacen').val(),
+    fechaInicio: $('#fechaInicio').val(),
+    fechaFin:$('#fechaFin').val(),
+    estado:$('#filtroEstado').val(),
+    buscador:$('#buscadorGeneral').val()
+});
+
+    let rol = <?= isset($_SESSION['rol_id']) ? (int)$_SESSION['rol_id'] : 0 ?>;
+let tablahtml = '';
+const res = await fetch(
+    `/cfsistem/app/controllers/cotizacionesController.php?${params.toString()}`
+);
+
+let data=await res.json();
+    
+
+
+    data.data.forEach(s => {
+
+        const id = String(s.id).padStart(5, '0');
+
+        const fecha = new Date(s.fecha);
+        const fechaFormateada =
+            fecha.toLocaleDateString('es-MX') + ' ' +
+            fecha.toLocaleTimeString('es-MX', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+        const status = (s.estado || 'PENDIENTE').toUpperCase();
+
+        let clase = 'bg-secondary text-white';
+
+        switch (status) {
+            case 'PENDIENTE':
+                clase = 'bg-warning text-dark';
+                break;
+            case 'COMPLETADO':
+                clase = 'bg-primary text-white';
+                break;
+            case 'CANCELADO':
+                clase = 'bg-danger text-white';
+                break;
+        }
+
+        tablahtml += `
+            <tr>
+
+                <td>
+                    <span class="text-dark fw-bold">#${id}</span>
+                </td>
+
+                <td class="text-muted small">
+                    ${fechaFormateada}
+                </td>
+
+                <td class="fw-medium">
+                    ${s.cliente_nombre ?? 'Sin asignar'}
+                </td>
+
+                <td>
+                    <span class="badge bg-light text-dark border">
+                        ${s.almacen_nombre}
+                    </span>
+                </td>
+
+                <td>
+                    <span class="badge badge-status ${clase} rounded-pill">
+                        ${status}
+                    </span>
+                </td>
+
+                <td class="text-end">
+        `;
+
+        // Pendiente
+        if (status === 'PENDIENTE' && rol < 3) {
+
+            tablahtml += `
+                <button class="btn btn-sm btn-white border shadow-sm"
+                    onclick="gestionarSolicitud(${s.id})">
+                    <i class="bi bi-eye text-primary"></i> ${rol}
+                </button>
+
+                <button class="btn btn-sm btn-white border shadow-sm"
+                    onclick="eliminarSolicitud(${s.id})">
+                    <i class="bi bi-trash text-danger"></i>
+                </button>
+            `;
+        }
+
+        // Completado
+        if (status === 'COMPLETADO' && rol < 3) {
+
+            tablahtml += `
+                <button class="btn btn-sm btn-white border shadow-sm"
+                    onclick="gestionarSolicitud(${s.id})">
+                    <i class="bi bi-eye text-primary"></i> REUTILIZAR
+                </button>
+            `;
+        }
+
+        // Imprimir
+        tablahtml += `
+                    <button class="btn btn-sm btn-white border shadow-sm rounded-pill px-3"
+                        onclick="prepararImpresion(${s.id})"
+                        title="Imprimir solicitud">
+
+                        <i class="bi bi-printer text-primary me-1"></i>
+                        <span class="text-dark fw-medium">Imprimir</span>
+
+                    </button>
+
+                </td>
+
+            </tr>
+        `;
+
+    });
+
+   $('#tablaCotizacionesListar').html(tablahtml);
+}         
+      
+
+    
    async function procederPago(total, id) {
     let nuevo=[];
 
@@ -902,12 +1053,8 @@ document.getElementById('montoPago').addEventListener('input', function () {
     console.log(datost);
 });
        
-        
 
-           
-      
-
-    
+  
 
 const htmlboton=`<button class="btn btn-light w-50 rounded-3" data-bs-dismiss="modal">
                         Cancelar
@@ -1260,51 +1407,14 @@ if (datos.status === 'success') {
     }
 }
  $(document).ready(function() {
-        const table = $('#tablaSolicitudes').DataTable({
-            language: {
-                url: "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
-            },
-            order: [
-                [0, 'desc']
-            ],
-            dom: 'rt<"d-flex justify-content-between align-items-center mt-3"ip>'
-        });
-
-        $('#buscadorGeneral').on('keyup', function() {
-            table.search(this.value).draw();
-        });
-        $('#filtroAlmacen').on('change', function() {
-            table.column(3).search(this.value).draw();
-        });
-        $('#filtroEstado').on('change', function() {
-            table.column(4).search(this.value).draw();
-        });
-
-        $('#filtroFecha').on('change', function() {
-            const rango = $(this).val();
-            $.fn.dataTable.ext.search = [];
-            if (rango !== 'todos') {
-                $.fn.dataTable.ext.search.push(function(settings, data) {
-                    const [d, m, a] = data[1].split(' ')[0].split('/');
-                    const fechaFila = new Date(a, m - 1, d);
-                    const hoy = new Date();
-                    hoy.setHours(0, 0, 0, 0);
-                    if (rango === 'hoy') return fechaFila.getTime() === hoy.getTime();
-                    if (rango === 'ayer') {
-                        const ayer = new Date(hoy);
-                        ayer.setDate(hoy.getDate() - 1);
-                        return fechaFila.getTime() === ayer.getTime();
-                    }
-                    if (rango === 'semana') {
-                        const sem = new Date(hoy);
-                        sem.setDate(hoy.getDate() - 7);
-                        return fechaFila >= sem;
-                    }
-                    return true;
-                });
-            }
-            table.draw();
-        });
+       
+       
+$('#buscadorGeneral').on('keyup', cargarCotizaciones);
+$('#filtroAlmacen').on('change', cargarCotizaciones);
+$('#filtroEstado').on('change', cargarCotizaciones);
+$('#fechaInicio').on('change', cargarCotizaciones);
+$('#fechaFin').on('change', cargarCotizaciones);
+        
 
      });
       async function eliminarSolicitud(id) {

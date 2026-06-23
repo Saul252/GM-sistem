@@ -57,7 +57,54 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerProductos') {
     ]);
     exit;
 }
+if (isset($_GET['action']) && $_GET['action'] === 'listarComprobantes') {
 
+    header('Content-Type: application/json; charset=utf-8');
+
+    try {
+$almacen = !empty($_GET['almacen']) ? (int)$_GET['almacen'] : 0;
+
+$fechaInicio = !empty($_GET['fechaInicio'])
+    ? $_GET['fechaInicio']
+    : null;
+
+$fechaFin = !empty($_GET['fechaFin'])
+    ? $_GET['fechaFin']
+    : null;
+
+$estado = !empty($_GET['estado'])
+    ? $_GET['estado']
+    : null;
+
+$buscador = !empty($_GET['buscador'])
+    ? trim($_GET['buscador'])
+    : null;
+ $comprobantes = $comprobantesPagoModel->listarPorFechas(
+       $es_admin,
+    $almacen,
+    $fechaInicio,
+    $fechaFin,
+    $estado,
+    $buscador
+);
+
+        echo json_encode([
+            'status' => 'success',
+            'data' => $comprobantes
+        ]);
+
+    } catch (Throwable $e) {
+
+        http_response_code(500);
+
+        echo json_encode([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+
+    exit;
+}
 // =========================================================================
 // 2. ACCIÓN: GUARDAR DEPÓSITO
 // =========================================================================
@@ -266,8 +313,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     $almacen_id = intval($_SESSION['almacen_id'] ?? 1); 
     try {
-        $cotizaciones = $comprobantesPagoModel->listarDepositos($almacen_id);
-        $almacenes = $almacenesModel->getAlmacenes($almacen_usuario);
+         $almacenes = $almacenesModel->getAlmacenes($almacen_usuario);
         $clientes = $clientesModel->listarTodos($almacen_usuario);
 
         $tituloPagina = "Solicitudes de Compra";
