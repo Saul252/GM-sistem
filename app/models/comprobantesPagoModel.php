@@ -161,12 +161,12 @@ public function cancelarOrden($id) {
     } catch (Exception $e) {
         return false;
     }
-}
-public function actualizar($id, $referencia) {
+}// 1. Quitamos $recibido de los parámetros de la función
+public function actualizar($id) {
     try {
         // 1. Verificar existencia o estado actual
         $stmtCheck = $this->db->prepare("
-            SELECT referencia 
+            SELECT recibido 
             FROM comprobantes_de_pago
             WHERE id = ?
         ");
@@ -180,15 +180,16 @@ public function actualizar($id, $referencia) {
             return false; // No existe el registro
         }
 
-        // 2. CORRECCIÓN: Actualizar la columna 'referencia' con los tipos correctos ("si")
+        // 2. CORRECCIÓN: La consulta SQL ahora invierte el valor internamente
+        // Si 'recibido' es '1', lo cambia a '0'. Si es cualquier otra cosa, lo cambia a '1'.
         $stmt = $this->db->prepare("
             UPDATE comprobantes_de_pago 
-            SET referencia = ? 
+            SET recibido = IF(recibido = '1', '0', '1') 
             WHERE id = ?
         ");
 
-        // "s" para la referencia (string), "i" para el id (entero)
-        $stmt->bind_param("si", $referencia, $id);
+        // Ahora solo pasas el $id ya que la base de datos se encarga de 'recibido'
+        $stmt->bind_param("i", $id);
         $ejecutado = $stmt->execute();
         $stmt->close();
 
@@ -198,7 +199,6 @@ public function actualizar($id, $referencia) {
         return false;
     }
 }
-
 public function obtenerDetalle($id) {
     $sql = "SELECT cp.*, c.nombre_comercial, u.nombre as usuario, a.nombre as nombre_almacen
             FROM comprobantes_de_pago cp

@@ -291,16 +291,16 @@ $fechaFin    = $_GET['fecha_fin'] ?? date('Y-m-t');
                         <?php elseif ($folioAFavorIndividual): ?>
                             <span class="badge bg-info px-3 py-2">A FAVOR</span>
                         <?php else: ?>
-                            <button
+                            <!-- <button
                                 class="btn btn-primary btn-sm px-3"
                                 onclick="abrirFlujoAbono(
-                                    <?= intval($idActual) ?>,
-                                    <?= intval($v['cliente_id']) ?>,
-                                    '<?= $v['folio'] ?>',
-                                    <?= floatval($saldoFolio) ?>
+                                < ?= intval($idActual) ?>,
+                                    < ?= intval($v['cliente_id']) ?>,
+                                    '< ?= $v['folio'] ?>',
+                                    < ?= floatval($saldoFolio) ?>
                                 )">
                                 <i class="bi bi-plus-circle"></i> Abonar
-                            </button>
+                            </button> -->
                         <?php endif; ?>
                     </td>
 

@@ -43,12 +43,36 @@ let factorTraspasoActual = 1;
 let stockMaximoTraspaso = 0;
 let unidadNombre = 0;
         let unidadMedida = 0;
+async function lotes(producto_id,almacenId) {
+    const resp = await fetch(`/cfsistem/app/controllers/entregasController.php?ajax=despachar&prodId=${producto_id}&almacen=${almacenId}`
+        );
+// 1. Seleccionamos el <select> directamente desde el div creado, es más seguro y no requiere que ya esté en el DOM principal
+    const select = document.getElementById("lote_id");
 
+    // // 2. Extraemos la data con encadenamiento opcional para evitar errores si viene vacío o undefined
+    
+
+    // // 3. Agregamos las opciones al select
+    let lotes=await resp.json();
+    lotes.data.forEach(lote => {
+        const option = document.createElement('option');
+        option.value = lote.id;
+        option.textContent = `${lote.codigo_lote} (${lote.cantidad_actual})`;
+        select.appendChild(option);
+    });
+    console.log( producto_id,almacenId);
+    console.log( await resp.json());
+
+        //return await resp.json();
+
+    
+}
 function actualizarMaximo() {
     const selectProd = document.getElementById('traspaso_producto');
     const infoStock = document.getElementById('info_stock');
     const labelUnidad = document.getElementById('label_unidad_reporte');
       const labelmenor = document.getElementById('label_unidad_medida');
+    const almacen = document.getElementById('origen_id');
     
     const selectedOption = selectProd.options[selectProd.selectedIndex];
     
@@ -58,6 +82,7 @@ function actualizarMaximo() {
          unidadNombre = selectedOption.dataset.unidad;
          unidadMedida = selectedOption.dataset.medida;
         let cantidadReal=stockMaximoTraspaso/factorTraspasoActual;
+        lotes(selectedOption.value,almacen.value);
       
 
 const bloque = document.getElementById('bloque_traspaso');

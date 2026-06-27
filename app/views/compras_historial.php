@@ -553,13 +553,16 @@ html += `
                                     filasTraspaso += `
                                 <tr>
                                 <td>Traspaso </td>
+                                <td>${tj.documento}</td>
+                                 <td>${tj.fecha_movimiento}</td>
+                                  <td>${tj.codigo_lote}</td>
                                 <td> ${t.cliente_proveedor}(material traspasado)</td>
                                     <td>${tj.tipo_movimiento}</td>
                                     <td>${tj.producto}</td>
-                                    <td>${tj.documento}</td>
+                                    
                                     <td>${tj.cliente_proveedor}</td>
-                                    <td>${tj.codigo_lote}</td>
-                                    <td>${tj.fecha_movimiento}</td>
+                                   
+                                   
                                     <td class="num">${cantidad}</td>
                                     <td class="num">${salidaReal}</td>
                                     <td class="num">${saldoReal}</td>
@@ -792,17 +795,20 @@ html += `
                     // 4. Inyección en la tabla libre de lógica compleja
                     filasAlmacen += `
         <tr>
+           <td>${mov.documento}</td>
+             <td>${mov.fecha_movimiento}</td>
+        <td>${mov.codigo_lote}</td>
+          
         <td>Compra ${compra_folio}</td>
         <td>   ${rep.almacen} </td>
             <td>${mov.tipo_movimiento}</td>
             <td>${mov.producto}</td>
-            <td>${mov.documento}</td>
+         
             <td>${mov.tipo_movimiento === 'TRASPASO'
                 ? 'Traspaso a sucursal de ' + mov.cliente_proveedor
                 : mov.cliente_proveedor}
             </td>
-            <td>${mov.codigo_lote}</td>
-            <td>${mov.fecha_movimiento}</td>
+            
             <td class="num">${txtInicial}</td>
             <td class="num">${txtSalida}</td>
             <td class="num">${txtSaldo}</td>
@@ -1163,14 +1169,17 @@ html += `
                         background:linear-gradient(90deg,#00a86b,#12c17b);
                         color:white;
                     ">
+                    <th>Documento</th>
+                    <th>Fecha</th>
+                     <th>Lote</th>
                         <th>Origen</th>
                         <th>Sucursal</th>
                         <th>Tipo</th>
                         <th>Producto</th>
-                        <th>Documento</th>
+                        
                         <th>Cliente</th>
-                        <th>Lote</th>
-                        <th>Fecha</th>
+                       
+                        
                         <th>Inicial</th>
                         <th>Salida</th>
                         <th>Saldo</th>

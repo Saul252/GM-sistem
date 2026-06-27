@@ -26,6 +26,14 @@
                             </select>
                             <div id="info_stock" class="form-text text-primary fw-bold"></div>
                         </div>
+ <div class="mb-3">
+                            <label class="form-label fw-bold">Seleccione lote</label>
+                            <select name="lote_id" id="lote_id" class="form-select" 
+                              >
+                                <option value="">seleccione lote (opcional)...</option>
+                            </select>
+                            <div id="info_stock" class="form-text text-primary fw-bold"></div>
+                        </div>
 
                         <div class="row">
                             <div class="col-md-12 mb-3">

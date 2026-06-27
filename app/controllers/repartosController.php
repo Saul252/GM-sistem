@@ -426,29 +426,33 @@ if ($action === 'get_monitor_entregas') {
          * BLOQUE 2: GESTIÓN DE VISTA Y FILTROS
          * -----------------------------------------------------------
          */
-        if ($action === 'cancelar_viaje_completo') {
-            // Recibimos los datos del monitor (GET o POST)
-            $folio_viaje = $_REQUEST['folio'] ?? '';
-            $vehiculo_id = intval($_REQUEST['vehiculo_id'] ?? 0);
+       if ($action === 'cancelar_viaje_completo') {
+    $folio_viaje = $_REQUEST['folio'] ?? '';
+    $vehiculo_id = intval($_REQUEST['vehiculo_id'] ?? 0);
 
-            if (empty($folio_viaje) || $vehiculo_id === 0) {
-                throw new Exception("Datos de viaje insuficientes para cancelar.");
-            }
+    if (empty($folio_viaje) || $vehiculo_id === 0) {
+        throw new Exception("Datos de viaje insuficientes para cancelar.");
+    }
 
-            // 1. Ejecutamos la limpieza masiva en el modelo
-            $repartoM->cancelarViajeCompleto($folio_viaje, $vehiculo_id);
+    $repartoM->cancelarViajeCompleto($folio_viaje, $vehiculo_id, $_SESSION['usuario_id']);
 
-            // 2. IMPORTANTE: Regresamos el vehículo a estado disponible
-            if (method_exists($vehiculoM, 'actualizarEstado')) {
-                $vehiculoM->actualizarEstado($vehiculo_id, 'disponible');
-            }
+    if (method_exists($vehiculoM, 'actualizarEstado')) {
+        $vehiculoM->actualizarEstado($vehiculo_id, 'disponible');
+    }
 
-            echo json_encode([
-                'success' => true, 
-                'message' => 'Ruta anulada y unidades liberadas correctamente.'
-            ]);
-            exit;
-        }
+    // 🛠️ SOLUCIÓN DE DEPURACIÓN:
+    // Limpia cualquier 'echo', espacio en blanco o basura que se haya colado antes
+    if (ob_get_length()) ob_clean(); 
+    
+    // Forzamos al navegador a entender que es un JSON estricto
+    header('Content-Type: application/json; charset=utf-8');
+
+    echo json_encode([
+        'success' => true, 
+        'message' => 'Ruta anulada y unidades liberadas correctamente.'
+    ]);
+    exit;
+}
 if ($action === 'get_detalles_viaje') {
     $folio = $_GET['folio'] ?? '';
     $detalles = $repartoM->getDetallesViaje($folio);
@@ -495,6 +499,7 @@ if ($action === 'guardar_cambios_viaje') {
 
         $datos = [
             'viaje_folio' => $folio,
+            'usuario'     =>$_SESSION['usuario_id'],
             'chofer_id'   => $chofer_id,
             'vehiculo_id' => $vehiculo_id,
             'tripulantes' => $tripulantes,

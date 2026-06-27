@@ -232,7 +232,8 @@ public function obtenerMovimientosPorRol($usuario_id, $rol_id, $almacen_id = nul
                 p.unidad_reporte, 
                 m.cantidad, 
                 ao.nombre AS origen, 
-                u.nombre AS enviado_por
+                u.nombre AS enviado_por,
+                m.referencia_id
 
             FROM movimientos m
 
@@ -429,7 +430,7 @@ public function recibirTraspaso($movimiento_id, $usuario_id, $rol_id)
 
         // 🔹 1. Obtener movimiento
         $stmt = $this->db->prepare("
-            SELECT producto_id, cantidad, almacen_origen_id, almacen_destino_id, usuario_recibe_id 
+            SELECT producto_id, cantidad, almacen_origen_id, almacen_destino_id, usuario_recibe_id, referencia_id
             FROM movimientos 
             WHERE id = ? 
             FOR UPDATE
@@ -450,25 +451,36 @@ public function recibirTraspaso($movimiento_id, $usuario_id, $rol_id)
         $p_id     = (int)$mov['producto_id'];
         $dest_id  = (int)$mov['almacen_destino_id'];
         $orig_id  = (int)$mov['almacen_origen_id'];
-        $cantidad = (float)$mov['cantidad'];
+        $cantidad = (float)$mov['cantidad']; 
+        $loteSeleccionado = (float)$mov['referencia_id'];
 
         // =========================================
         // 🔻 PEPS: DESCONTAR DE LOTES ORIGEN
         // =========================================
-        $sqlLotes = "
-            SELECT id, cantidad_actual, precio_compra_unitario 
-            FROM lotes_stock
-            WHERE producto_id = ? 
-            AND almacen_id = ? 
-            AND estado_lote = 'activo'
-            ORDER BY fecha_ingreso ASC
-            FOR UPDATE
-        ";
+       if ($loteSeleccionado > 0) {
+            $sqlLotes = "SELECT id, cantidad_actual, precio_compra_unitario
+                         FROM lotes_stock
+                         WHERE id = ?
+                           AND producto_id = ?
+                           AND almacen_id = ?
+                           AND cantidad_actual > 0";
+            
+            $stmtL = $this->db->prepare($sqlLotes);
+            $stmtL->bind_param("iii", $loteSeleccionado, $p_id, $orig_id);
+        } else {
+            $sqlLotes = "SELECT id, cantidad_actual, precio_compra_unitario
+                         FROM lotes_stock
+                         WHERE producto_id = ?
+                           AND almacen_id = ?
+                           AND cantidad_actual > 0
+                           AND estado_lote = 'activo'
+                         ORDER BY fecha_ingreso ASC, id ASC";
+            
+            $stmtL = $this->db->prepare($sqlLotes);
+            $stmtL->bind_param("ii", $p_id, $orig_id);
+        }
 
-        $stmtL = $this->db->prepare($sqlLotes);
-        $stmtL->bind_param("ii", $p_id, $orig_id);
         $stmtL->execute();
-
         $resLotes = $stmtL->get_result();
 
         $porRestar = $cantidad;

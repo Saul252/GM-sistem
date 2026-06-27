@@ -44,6 +44,7 @@ if (isset($_REQUEST['action'])) {
         // ACCIÓN: GUARDAR EVIDENCIA
   if ($action === 'subir_evidencia_reparto') {
     try {
+        
         $movimiento_id = intval($_POST['id_movimiento'] ?? 0);
         $relPath = "uploads/evidencias/" . date('Y/m/d') . "/";
         $targetDir = dirname(__DIR__, 2) . "/" . $relPath;

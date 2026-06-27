@@ -14,7 +14,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $destino_id  = $_POST['almacen_destino_id'] ?? null;
     $cantidad    = $_POST['cantidad'] ?? 0;
     $obs         = $_POST['observaciones'] ?? '';
-    $usuario_id  = $_SESSION['usuario_id'] ?? 1;
+    $usuario_id  = $_SESSION['usuario_id'] ?? 1; 
+    $lote  = $_POST['lote_id'] ?? '';
 
     if (!$producto_id || !$origen_id || !$destino_id || $cantidad <= 0) {
         echo json_encode(['status' => 'error', 'message' => 'Datos incompletos para el traspaso.']);
@@ -43,11 +44,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Nota: usuario_envia_id se llena ahora. usuario_recibe_id queda NULL.
         $tipo = 'traspaso';
         $stmtMov = $conexion->prepare("INSERT INTO movimientos 
-            (producto_id, tipo, cantidad, almacen_origen_id, almacen_destino_id, usuario_registra_id, usuario_envia_id, observaciones) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            (producto_id, tipo, cantidad, almacen_origen_id, almacen_destino_id, usuario_registra_id, usuario_envia_id, observaciones,referencia_id) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?,?)");
         
-        $stmtMov->bind_param("isdiiiis", 
-            $producto_id, $tipo, $cantidad, $origen_id, $destino_id, $usuario_id, $usuario_id, $obs
+        $stmtMov->bind_param("isdiiiisi", 
+            $producto_id, $tipo, $cantidad, $origen_id, $destino_id, $usuario_id, $usuario_id, $obs,$lote
         );
         $stmtMov->execute();
 

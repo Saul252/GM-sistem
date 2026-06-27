@@ -23,8 +23,8 @@ $ventasModel= new VentasModel();
 
 
 
-protegerPagina('solicitudesCompra'); 
-$paginaActual = 'solicitudesCompra'; 
+protegerPagina('cotizaciones'); 
+$paginaActual = 'cotizaciones'; 
 $almacen_usuario = $_SESSION['almacen_id'] ?? 0;
 $es_admin = ($_SESSION['rol_id'] == 1 || $almacen_usuario == 0);
 

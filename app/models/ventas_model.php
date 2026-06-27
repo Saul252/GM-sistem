@@ -672,7 +672,7 @@ public static function actualizarEntregasCompletas($conexion, $id_venta)
 
 
                 // B. Registro en Movimientos (Kardex) - El ENUM 'entrada' sí existe en tu tabla movimientos
-                $mov_obs = "REINGRESO POR CANCELACIÓN - Folio: $folio. Motivo: $motivo";
+                $mov_obs = "REINGRESO POR CANCELACIÓN - Folio: $id_venta. Motivo: $motivo";
                 $stmtMov = $conexion->prepare("INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_origen_id, usuario_registra_id, referencia_id, observaciones) 
                                                VALUES (?, 'entrada', ?, ?, ?, ?, ?)");
                 $stmtMov->bind_param("idiiss", $p_id, $cant_entregada, $id_almacen, $id_usuario, $id_venta, $mov_obs);

@@ -106,7 +106,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardar') {
                     'id' => $resultado['id'] // ESTO ES LO QUE NECESITA TU JS
                 ]);
             } else {
-                throw new Exception("No se pudo obtener el ID del cliente registrado.");
+                throw new Exception("Cliente ya existente");
             }
         }
 

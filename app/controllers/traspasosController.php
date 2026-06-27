@@ -124,7 +124,7 @@ case 'recibirTraspaso':
     }
 
     $movimiento_id = $_POST['id'] ?? 0;
-
+   
     if (!$movimiento_id) {
         echo json_encode([
             'status' => 'error',
@@ -137,7 +137,8 @@ case 'recibirTraspaso':
     $resultado = $modelo->recibirTraspaso(
         intval($movimiento_id),
         intval($usuario_id),
-        intval($rol_id)
+        intval($rol_id),
+        
     );
 
     // 🔹 Respuesta JSON estándar

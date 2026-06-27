@@ -227,10 +227,13 @@ WHERE dv.venta_id = $id";
     // 3. Historial de entregas (AQUÍ AGREGAMOS LAS COLUMNAS QUE FALTABAN)
     $historialEntregas = [];
     $sqlH = "SELECT ev.fecha, p.nombre as producto, de.cantidad, u.nombre as usuario_nombre,
-                    p.unidad_medida, p.unidad_reporte, p.factor_conversion 
+                    p.unidad_medida, p.unidad_reporte, p.factor_conversion,odma.* 
              FROM entregas_venta ev 
              JOIN detalle_entrega de ON ev.id = de.entrega_id 
              JOIN detalle_venta dv ON de.detalle_venta_id = dv.id 
+
+join opciones_de_medida_adicional odma on odma.id= dv.unidadMedida
+
              JOIN productos p ON dv.producto_id = p.id 
              JOIN usuarios u ON ev.usuario_id = u.id 
              WHERE ev.venta_id = $id ORDER BY ev.fecha DESC";

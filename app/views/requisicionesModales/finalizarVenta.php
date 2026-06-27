@@ -208,7 +208,7 @@
                             style="font-size:0.68rem;letter-spacing:0.08em;">
                             Detalle de Salida de Material
                         </h6>
-                        <div class="table-responsive border rounded-3 bg-white mb-3" style="max-height: 320px;">
+                        <div class="table-responsive border rounded-3 bg-white mb-3" style="max-height: 80%;">
                             <table class="table table-hover align-middle mb-0">
                                 <thead class="table-light sticky-top">
                                     <tr class="small text-uppercase text-muted">
@@ -466,7 +466,7 @@
 
     try {
         // 1. Realizar la petición a tu controlador de Cf System
-        const url = '/cfsistem/app/controllers/usuariosController.php?action=obtenerUsuarios';
+        const url = '/cfsistem/app/controllers/ventasController.php?action=obtenerUsuarios';
         const respuesta = await fetch(url);
         
         if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
@@ -477,8 +477,7 @@
         if (resultado.success && Array.isArray(resultado.data)) {
             
             // Limpiamos el select y dejamos una opción inicial neutra
-            select.innerHTML = '<option value="" selected disabled>-- Seleccione un usuario --</option>';
-
+           
             // 3. Recorrer los usuarios y crear las opciones
             resultado.data.forEach(usuario => {
                 const opcion = document.createElement('option');
@@ -486,7 +485,7 @@
                 
                 // Formateamos el texto: "Nombre (Almacén - Rol)" para que sea súper descriptivo
                 const almacen = usuario.almacen_nombre || 'Sin Almacén';
-                opcion.textContent = `${usuario.nombre} (${almacen})`;
+                opcion.textContent = `${usuario.nombre} `;
                 
                 // Agregamos la opción al select
                 select.appendChild(opcion);

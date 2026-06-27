@@ -28,7 +28,7 @@
                                      <i class="bi bi-list-ul me-2 text-primary"></i>Resumen de Salida
                                  </h6>
 
-                                 <div class="table-responsive" style="max-height: 380px;">
+                                 <div class="table-responsive" style="max-height: 80%;">
                                      <table class="table table-borderless align-middle">
                                          <thead>
                                              <tr class="text-muted small border-bottom border-light">
@@ -273,7 +273,7 @@
 
     try {
         // 1. Realizar la petición a tu controlador de Cf System
-        const url = '/cfsistem/app/controllers/usuariosController.php?action=obtenerUsuarios';
+        const url = '/cfsistem/app/controllers/ventasController.php?action=obtenerUsuarios';
         const respuesta = await fetch(url);
         
         if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
@@ -293,7 +293,7 @@
                 
                 // Formateamos el texto: "Nombre (Almacén - Rol)" para que sea súper descriptivo
                 const almacen = usuario.almacen_nombre || 'Sin Almacén';
-                opcion.textContent = `${usuario.nombre} (${almacen})`;
+                opcion.textContent = `${usuario.nombre}`;
                 
                 // Agregamos la opción al select
                 select.appendChild(opcion);

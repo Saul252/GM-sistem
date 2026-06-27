@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Entregas | Sistema</title>
+    <title>Ventas Vendedor | Sistema</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <?php require_once __DIR__ . '/layout/icono.php' ?>
@@ -15,13 +15,13 @@
         :root {
     --primary: #1f2937;
     --secondary: #374151;
-    --bg: #f3f4f6;
-    --card: #ffffff;
+    --bg: #4f4f50;
+    --card: #686868;
     --accent: #3b82f6;
 }
 
 body {
-    background: var(--bg);
+    background:  #4f4f50!important;
 }
 
 /* Contenedor tipo card moderno */

@@ -174,13 +174,17 @@ async function abrirModalDespachoVentaTotal( almacenId,ventaId) {
 contenedor.innerHTML = ''; // limpiar
 
 idsParaProcesar.forEach((item, index) => {
+    console.log(item);
+   
   
      const cantidadRealFaltante=(item.cantidad)-(item.cantidad_entregada);
-    const cantidad_maxima=item.disponible<cantidadRealFaltante?cantidadRealFaltante:item.disponible;
+     let cantidad=0;
+    if(cantidadRealFaltante>0){
+     const cantidad_maxima=item.disponible<cantidadRealFaltante?cantidadRealFaltante:item.disponible;
     let unidad=item.nombre;
     let multiplicador=1;
     let factor =item.factor_conversion;
-      const cantidad=(item.cantidad/factor)>=1?item.cantidad/factor:item.cantidad;
+       cantidad=(item.cantidad/factor)>=1?item.cantidad/factor:item.cantidad;
     if((cantidadRealFaltante/factor)>=1)
 
     {
@@ -204,14 +208,17 @@ idsParaProcesar.forEach((item, index) => {
 
     <td>
         <span class="badge bg-primary-subtle text-dark">
-            ${parseFloat(cantidad)} ${item.nombre}
+            ${(cantidad/((1/item.equivalencia))>=1 ) ? (cantidad/((1/item.equivalencia)).toFixed(3) ) :(cantidad)}
+         ${item.nombre}
         </span>
     </td>
 
     <td>
         <span class="badge bg-warning-subtle text-dark">
-            ${parseFloat(cantidadRealFaltante)} ${unidad}
-        </span>
+           
+            ${(cantidad/((1/item.equivalencia))>=1 ) ? (cantidad/((1/item.equivalencia)).toFixed(3) ) :(cantidad)}
+        ${unidad}
+            </span>
     </td>
 
     <td style="width:140px;">
@@ -220,7 +227,7 @@ idsParaProcesar.forEach((item, index) => {
                id="cantidad_despacho_${index}1"
                max="${cantidad_maxima}"
                class="form-control form-control-sm input-entrega1"
-               data-factor="${(cantidadRealFaltante/factor>=1 && (item.disponible/factor >=1)) ? factor : 1}"
+               data-factor="${(cantidadRealFaltante/factor>=1 && (item.disponible/factor >=1)) ? factor :(item.cantidad/((1/item.equivalencia)))>=1?(1/item.equivalencia): 1}"
                data-dvid="${item.dvid}"
                data-id="${item.producto_id}">
 
@@ -260,7 +267,7 @@ idsParaProcesar.forEach((item, index) => {
     // ⚠️ REVISA ESTA FUNCIÓN: 
     // Si esta función vuelve a modificar el `select`, te va a borrar lo que acabamos de pintar arriba.
     // lotesporPropducto(item.producto_id, item.almacen_id, index); 
-});
+    }});
 
         // 3. Cargar Recursos (Choferes, Vehículos)
         const [respDetalle, respRecursos] = await Promise.all([

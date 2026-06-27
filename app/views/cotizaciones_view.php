@@ -9,7 +9,7 @@ error_reporting(E_ALL);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solicitudes de Compra | cfsistem</title>
+    <title>Cotizaciones| cfsistem</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
@@ -95,8 +95,10 @@ error_reporting(E_ALL);
             <select id="filtroAlmacen" class="form-select border-0 bg-light shadow-sm"
                 style="border-radius:12px;">
 
-                <option value="">Todos los almacenes</option>
+                <?php if (isset($es_admin) && $es_admin): ?>
 
+                <option value="">Todos los almacenes</option>
+<?php endif ;?>
                 <?php foreach ($almacenes as $alm): ?>
 
                 <option value="<?= htmlspecialchars($alm['id']) ?>">
@@ -591,14 +593,14 @@ error_reporting(E_ALL);
             
             <input type="hidden" id="idC" name="idC">
             
-            <div class="modal-body p-4">
+            <div class="modal-body p-4" >
                 <div class="table-responsive mb-3">
                     <table class="table align-middle">
                         <thead style="background:#1f2a37; color:#fff;">
                             <tr>
-                                <th>Producto</th>
-                                <th class="text-center">Cantidad</th>
-                                <th class="text-center">Entregar hoy</th>
+                                
+                             
+                                
                             </tr>
                         </thead>
                         <tbody id="print-productos"></tbody>
@@ -624,6 +626,7 @@ error_reporting(E_ALL);
                         <option value="transferencia">Transferencia</option>
                         <option value="tarjeta">Tarjeta</option>
                         <option value="deposito">Depósito</option>
+                        <option data-metodo="credito" value="">Compra a credito</option>
                     </select>
                 </div>
 
@@ -998,15 +1001,13 @@ let data=await res.json();
 
         html += `
         <tr>
-            <td class="fw-bold">${i.producto_nombre} (${i.sku})</td>
+          
 
-            <td class="text-center">
-                ${cantidad} ${i.nombre || ''}
-            </td>
+           
 
             <td class="text-center">
                 <input 
-                    type="number"
+                    type="hidden"
                     step="0.01"
                     value="0"
                     max="${i.entregar_hoy}"
@@ -1083,12 +1084,23 @@ $('#boton').html(htmlboton);
     modal.show();
 }
     
-    document.getElementById('metodoPago').addEventListener('change', function() {
+   document.getElementById('metodoPago').addEventListener('change', function() {
+    // 1. Validamos si el método seleccionado requiere caja de referencia
+    const requiere = ['transferencia', 'tarjeta', 'deposito'].includes(this.value);
+    
+    // 2. Corregido: Condicional IF correcto usando el valor de 'this.value'
+    if ($(this).find(':selected').data('metodo')=== 'credito') {
+        $('#montoPago').val(0);
+        $('#montoPago').prop('disabled', true);
+    } else {
+        // Buena práctica: Si cambian de opinión y eligen otro método, 
+        // volvemos a habilitar el campo de monto.
+        $('#montoPago').prop('disabled', false);
+    }
 
-        const requiere = ['transferencia', 'tarjeta', 'deposito'].includes(this.value);
-
-        document.getElementById('refBox').classList.toggle('d-none', !requiere);
-    });
+    // 3. Mostrar u ocultar la caja de referencia (utiliza vanilla JS como tu listener)
+    document.getElementById('refBox').classList.toggle('d-none', !requiere);
+});
   async function gestionarSolicitud(id) {
     try {
         // 1. Limpiar la tabla de edición por si tenía datos anteriores

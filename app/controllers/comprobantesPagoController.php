@@ -22,8 +22,8 @@ $cotizacionesModel = new cotizacionesModel($conexion);
 $comprobantesPagoModel = new comprobantesPagoModel($conexion);
 $ventasModel = new VentasModel();
 
-protegerPagina('solicitudesCompra'); 
-$paginaActual = 'solicitudesCompra'; 
+protegerPagina('comprobantes'); 
+$paginaActual = 'comprobantes'; 
 $almacen_usuario = $_SESSION['almacen_id'] ?? 0;
 $es_admin = ($_SESSION['rol_id'] == 1 || $almacen_usuario == 0);
 
@@ -110,8 +110,9 @@ $buscador = !empty($_GET['buscador'])
 // =========================================================================
 if (isset($_GET['action']) && $_GET['action'] === 'guardar') {
     if (ob_get_level()) ob_clean();
-    header('Content-Type: application/json; charset=utf-8');
 
+    header('Content-Type: application/json; charset=utf-8');
+date_default_timezone_set('America/Mexico_City');
     try {
         $input = json_decode(file_get_contents('php://input'), true);
         if (!$input) {
@@ -127,7 +128,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardar') {
         $cliente_id = intval($input['cliente_id'] ?? 0);
         $monto = floatval($input['monto_depositado'] ?? 0);
         $referencia = $input['referencia'] ?? '';
-        $fecha_deposito = $input['fecha'] ?? '';
+        $fecha_deposito = $input['fecha'] ?? date('Y-m-d');
         $metodo=$input['metodo'] ?? 'efectivo';
         $numero_ventas=$input['numeroventa'] ?? '';
 
@@ -162,14 +163,12 @@ if (isset($_GET['action']) && $_GET['action'] === 'actualizar') {
         $id = intval($_POST['id'] ?? 0);
         
         // CORRECCIÓN 1: Manejar como String limpiando espacios extra, no como Entero
-        $referencia = trim($_POST['referencia'] ?? '');
+        
         
         if ($id <= 0) throw new Exception("ID no válido.");
         
-        // Opcional: Validar que la referencia no vaya vacía si es obligatoria
-        if ($referencia === '') throw new Exception("La referencia no puede estar vacía.");
-
-        if ($comprobantesPagoModel->actualizar($id, $referencia)) {
+        // Opcional: Validar que la recibido no vaya vacía si es obligatoria
+         if ($comprobantesPagoModel->actualizar($id)) {
             // CORRECCIÓN 2: Mensaje correcto para la acción de actualizar
             echo json_encode(['status' => 'success', 'message' => 'Comprobante actualizado correctamente.']);
         } else {
@@ -315,8 +314,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     try {
          $almacenes = $almacenesModel->getAlmacenes($almacen_usuario);
         $clientes = $clientesModel->listarTodos($almacen_usuario);
+        $rolAct= $_SESSION['rol_id'];
 
-        $tituloPagina = "Solicitudes de Compra";
+        $tituloPagina = "Comprobantes de pago";
         
         // El HTML se incluye ÚNICAMENTE aquí, cuando no se pide ninguna acción AJAX.
         require_once __DIR__ . '/../views/comprobantes_pago.php';

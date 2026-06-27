@@ -180,16 +180,14 @@
                         </div>
                         <div class="col-md-2">
                             <label class="form-label small fw-bold">Ubicación</label>
-                            <select id="f_almacen" class="form-select form-select-sm" onchange="getVentas()"
-                                <?= ($_SESSION['rol_id'] != 1 ? 'disabled':'') ?>>
-                                <option value="">Todas</option>
-                                <?php 
-                                $alms = $conexion->query("SELECT id, nombre FROM almacenes");
-                                while($a = $alms->fetch_assoc()){
-                                    $sel = ($_SESSION['rol_id'] != 1 && $_SESSION['almacen_id'] == $a['id']) ? 'selected':'';
-                                    echo "<option value='{$a['id']}' $sel>{$a['nombre']}</option>";
-                                }
-                                ?>
+                            <select id="f_almacen" class="form-select form-select-sm" onchange="getVentas()">
+                             <option value="">Todas</option>
+                            <?php foreach($almacenes as $a): ?>
+                                    <option value="<?= $a['id'] ?>"
+                                        <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
+                                        <?= $a['nombre'] ?>
+                                    </option>
+                                    <?php endforeach; ?>
                             </select>
                         </div>
                          <div class="col-md-2">
@@ -264,8 +262,9 @@
                                     <span id="detSaldoLabel" class="h5 fw-bold text-danger">$0.00</span>
                                 </div>
                             </div>
-
-                            <div id="contenedorBoton">
+                           
+<?php if($rol==1): ?>
+                             <div id="contenedorBoton">
                                <button id="btnHabilitar"
         class="btn btn-action w-100 mb-2 py-2 fw-bold"
         onclick="abrirModalDespachoVentaTotal(
@@ -274,11 +273,13 @@
         )">
     Nueva Entrega
 </button>
-                                <button id="btnAbonar" class="btn btn-primary w-100 mb-2 py-2 fw-bold"
+  </div>
+<?php endif; ?>
+                                <!-- <button id="btnAbonar" class="btn btn-primary w-100 mb-2 py-2 fw-bold"
                                     onclick="abrirFlujoAbono()">
                                     <i class="bi bi-cash"></i> Registrar Abono
-                                </button>
-                            </div>
+                                </button> -->
+                          
 
                             <div class="text-end pe-3">
 
@@ -850,16 +851,17 @@ $('#tablaVentas tbody').html(data.map(v => {
         <button type="button" class="btn btn-link text-primary p-1 border-0" onclick="modalFactura(${v.id},${v.factura})" title="Agregar Factura">
             <i class="bi bi-pencil-square me-2"></i>
         </button>` : '';
-
-    let cancelada = (v.estado_general == 'activa') ? `
-        <button type="button" class="btn btn-link text-danger btn-sm px-3 border-0" 
+let rolAct=<?=  $rol ?>;
+let botonCancelar=rolAct==1?`<button type="button" class="btn btn-link text-danger btn-sm px-3 border-0" 
                 onclick="abrirModalCancelacion('${v.id}','${v.folio}')" 
                 data-bs-toggle="tooltip" 
                 data-bs-placement="top" 
                 title="Cancelar Venta">
             <i class="bi bi-trash3 fs-5"></i>
-        </button>
-
+        </button>`:'';
+    let cancelada = (v.estado_general == 'activa') ? `
+        
+${botonCancelar}
         <div class="btn-group" role="group">
             <button type="button" class="btn btn-link text-secondary btn-sm px-3 border-0 dropdown-toggle remove-caret" 
                     data-bs-toggle="dropdown" 
@@ -884,6 +886,10 @@ $('#tablaVentas tbody').html(data.map(v => {
                 <li>
                     <a class="dropdown-item py-2 text-info" href="/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=${v.id}" target="_blank">
                         <i class="bi bi-file-earmark-text me-2"></i> Imprimir Remisión
+                    </a>
+                </li><li>
+                    <a class="dropdown-item py-2 text-info" href="/cfsistem/app/backend/ventas/ticketFormal.php?id=${v.id}" target="_blank">
+                        <i class="bi bi-file-earmark-text me-2"></i> Imprimir Ticket Formal
                     </a>
                 </li>
             </ul>
@@ -1024,13 +1030,14 @@ if (data.info.estado_general === 'cancelada') {
             // --- RENDERIZADO DE PRODUCTOS CON CONVERSIÓN ---
             // --- RENDERIZADO DE PRODUCTOS CON CONVERSIÓN ---
             $('#tbodyDetalle').html(data.productos.map(p => {
+                console.log(p);
                 let cant = parseFloat(p.cantidad) || 0;
                 let pendiente = (cant - (parseFloat(p.cantidad_entregada) || 0)).toFixed(3);
 
                 let factor = parseFloat(p.factor_conversion) || 1;
                 let cantPendiente = pendiente / factor;
 
-                let pen = Number(pendiente);
+                let pen = Number(pendiente/(1/p.equivalencia));
                 let pendi = Number(cantPendiente);
                 let disponible = (p.disponible / factor);
                 console.log(disponible);
@@ -1081,10 +1088,15 @@ if (data.info.estado_general === 'cancelada') {
         (${cant} ${p.unidad_medida})
             
         </td>
-        <td class="text-center">${entregada>1?entregada+' '+ p.unidad_reporte:p.cantidad_entregada +' '+p.unidad_medida}</td>
+        <td class="text-center">
+        
+      
+        ${entregada>1?entregada+' '+ p.unidad_reporte:
+        (p.cantidad_entregada/(1/p.equivalencia))>=1?(p.cantidad_entregada/(1/p.equivalencia)).toFixed(3) +' '+ p.nombre:
+        p.cantidad_entregada +' '+p.unidad_medida}</td>
         <td class="text-center text-success fw-bold">${disponible>=1?disponible.toFixed(3):p.disponible} ${disponible>=1?p.unidad_reporte:p.unidad_medida}</td>
         
-        <td class="text-center text-danger fw-bold">${(cantPendiente>=1?cantPendiente.toFixed(3):pen)} ${cantPendiente>=1?p.unidad_reporte:p.unidad_medida}</td>
+        <td class="text-center text-danger fw-bold">${(cantPendiente>=1?cantPendiente.toFixed(3):pen.toFixed(3))} ${cantPendiente>=1? p.unidad_reporte:p.cantidad/(1/p.equivalencia)>1?p.nombre:p.unidad_medida}</td>
          <td class="text-center col-input d-none">
             ${pen.toFixed(4) > 0 ? 
                 `<input type="number"
@@ -1116,23 +1128,12 @@ if (data.info.estado_general === 'cancelada') {
                     let uMedidaH = h.unidad_medida || '';
 
                     let visualizacionHistorial = "";
-
+                    console.log((h.cantidad/(1/h.equivalencia))>=1?(h.cantidad/(1/h.equivalencia)).toFixed(3):cantH);
                     // 2. Aplicamos la misma lógica que usas arriba
-                    if (factorH > 1 && cantH >= factorH) {
-                        let unidadesMayoresH = (cantH / factorH);
-                        let totalUnidadesStrH = Number.isInteger(unidadesMayoresH) ?
-                            unidadesMayoresH :
-                            unidadesMayoresH.toFixed(2);
-
-                        visualizacionHistorial = `
-            <span class="fw-bold text-primary">${totalUnidadesStrH} ${uReporteH}</span> 
-            <br> <small class="text-muted">(${cantH} ${uMedidaH})</small>
-        `;
-                    } else {
+                    
                         // Aquí verás si unidad_medida viene vacío desde la base de datos
-                        visualizacionHistorial = `<span>${cantH} ${uMedidaH}</span>`;
-                    }
-
+                        visualizacionHistorial = `<span>${(h.cantidad/(1/h.equivalencia))>=1?(h.cantidad/(1/h.equivalencia)).toFixed(3):cantH} ${(h.cantidad/(1/h.equivalencia))>=1?(h.nombre):uMedidaH}</span>`;
+                   
                     return `
     <tr>
         <td class="small">${h.fecha}</td>
@@ -1453,7 +1454,7 @@ if (data.info.estado_general === 'cancelada') {
     }
    async function imprimirRuta(entrega_ida, folioViaje) {
 
-    document.getElementById('folioRutaPrint').textContent = folioViaje;
+    document.getElementById('folioRutaPrint').textContent = entrega_ida;
 
     const respuesta = await fetch(
         `/cfsistem/app/controllers/repartosController.php?action=get_ruta_entrega_por_despacho&entrega_id=${entrega_ida}&id=${encodeURIComponent(folioViaje)}`
@@ -1499,9 +1500,10 @@ if (data.info.estado_general === 'cancelada') {
     let filas = '';
 
     datos.forEach((prod, i) => {
+        
         const total = prod.totalCantidad / prod.factor;
         const totalCantidad = total >= 1 ? total : prod.totalCantidad;
-        const unidad = total >= 1 ? prod.unidadReporte : prod.unidadMedida;
+        const unidad = total >= 1 ? prod.unidadReporte : (totalCantidad/(1/prod.equi))>=1?prod.nombreEqui:prod.unidadMedida;
 
         // Formatear dinámicamente el color del badge del estado en la tabla
         let badgeColor = 'bg-warning text-dark';
@@ -1513,7 +1515,7 @@ if (data.info.estado_general === 'cancelada') {
                 <td class="text-muted fw-semibold">${i + 1}</td>
                 <td style="max-width:350px;" class="fw-medium text-dark">${prod.nombreProducto}</td>
                 <td style="max-width:250px;" class="fw-bold text-primary">
-                    ${parseFloat(totalCantidad).toFixed(2)} <span class="text-muted fw-normal small">${unidad}</span>
+                    ${parseFloat(totalCantidad/(1/prod.equi)).toFixed(2)} <span class="text-muted fw-normal small">${unidad}</span>
                 </td>
                 <td style="max-width:250px;" class="text-muted small">${prod.direccion_entrega ?? '-'}</td>
                 <td class="text-center">
@@ -1531,6 +1533,7 @@ if (data.info.estado_general === 'cancelada') {
     // =========================================
     // HTML GENERADO
     // =========================================
+    console.log(data.data);
     let html = `
         <div class="hoja-ruta-container p-4">
 
@@ -1538,7 +1541,7 @@ if (data.info.estado_general === 'cancelada') {
             <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
                 <div>
                     <h4 class="fw-bold text-dark m-0 d-flex align-items-center gap-2">
-                        <span>🚚</span> Venta ${entrega_ida}: Hoja de Ruta
+                        <span>🚚</span> Venta ${data.data[0].folio_venta}: Hoja de Ruta
                     </h4>
 
                     <div class="text-muted small mt-1">

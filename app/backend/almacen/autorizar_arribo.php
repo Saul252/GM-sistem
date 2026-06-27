@@ -35,7 +35,7 @@ try {
 
     // 1. Obtener movimiento
     $stmt = $conexion->prepare("
-        SELECT producto_id, cantidad, almacen_origen_id, almacen_destino_id, usuario_recibe_id
+        SELECT producto_id, cantidad, almacen_origen_id, almacen_destino_id, usuario_recibe_id,referencia_id
         FROM movimientos
         WHERE id = ?
         FOR UPDATE
@@ -60,30 +60,30 @@ try {
     $dest_id  = $mov['almacen_destino_id']??980;
     $orig_id  = $mov['almacen_origen_id']??981;
     $cantidad = $mov['cantidad']??0;
+$loteSeleccionado = $mov['referencia_id']??0;
 
-    // 2. Descontar lotes origen (PEPS)
-    $sqlLotesOrig = "
-        SELECT id, cantidad_actual, precio_compra_unitario
-        FROM lotes_stock
-        WHERE producto_id = ?
-        AND almacen_id = ?
-        AND estado_lote = 'activo'
-        ORDER BY fecha_ingreso ASC
-        FOR UPDATE
-    ";
-
-    $stmtLO = $conexion->prepare($sqlLotesOrig);
-    if (!$stmtLO) throw new Exception($conexion->error);
-
-    $stmtLO->bind_param("ii", $p_id, $orig_id);
-    $stmtLO->execute();
-
-    $resLotes = $stmtLO->get_result();
-
+    
     $porRestar = $cantidad;
     $precio_historico = 0;
     $lotesAfectados = [];
-
+     if ($loteSeleccionado > 0) {
+                $sqlLotes = "SELECT id, cantidad_actual, precio_compra_unitario
+                             FROM lotes_stock
+                             WHERE id = $loteSeleccionado
+                               AND producto_id = $p_id
+                               AND almacen_id = $orig_id
+                               AND cantidad_actual > 0";
+                
+            } else {
+                $sqlLotes = "SELECT id, cantidad_actual, precio_compra_unitario
+                             FROM lotes_stock
+                             WHERE producto_id = $p_id
+                               AND almacen_id = $orig_id
+                               AND cantidad_actual > 0
+                               AND estado_lote = 'activo'
+                             ORDER BY fecha_ingreso ASC, id ASC";
+            }
+$resLotes = $this->db->query($sqlLotes);
     while ($lote = $resLotes->fetch_assoc()) {
 
         if ($porRestar <= 0) break;

@@ -68,14 +68,14 @@
                                 name="numero_venta" class="form-control">
                         </div>
 
-
+<?php if ($rolAct==1): ?>
                         <div class="col-md-4">
                             <label class="form-label small fw-bold text-secondary mb-2">
                                 <i class="bi bi-calendar3 me-1"></i> Fecha de Depósito
                             </label>
                             <input type="date" id="fecha_deposito" name="fecha_deposito" class="form-control" required>
                         </div>
-
+<?php endif; ?>
                         <div class="col-md-4 mt-3">
                             <label class="form-label small fw-bold text-secondary mb-2">
                                 <i class="bi bi-currency-dollar me-1"></i> Monto

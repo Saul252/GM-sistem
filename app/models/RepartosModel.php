@@ -686,8 +686,32 @@ public function finalizarViajeLogistica($vehiculo_id, $viaje_folio) {
         throw $e;
     }
 }
-public function cancelarViajeCompleto($folio_viaje, $vehiculo_id) {
+public function cancelarViajeCompleto($folio_viaje, $vehiculo_id,$usuario) {
     try {
+        // 1. Mapear qué entregas existen en este folio de viaje
+        $sqlActuales = "SELECT trm.entrega_venta_id, trm.id as reparto_id 
+                        FROM transporte_consolidacion tc
+                        JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
+                        WHERE tc.viaje_folio = ?";
+        $stmtA = $this->db->prepare($sqlActuales);
+        $stmtA->bind_param("s", $folio_viaje);
+        $stmtA->execute();
+        $resA = $stmtA->get_result();
+
+        $mapeo_bd = []; 
+        while($row = $resA->fetch_assoc()){
+            $mapeo_bd[$row['entrega_venta_id']] = $row['reparto_id'];
+        }
+
+        // 2. Sincronización: Quitar los que ya no vienen en el JSON
+        foreach ($mapeo_bd as $mov_id_bd => $reparto_id) {
+           
+                $this->quitarEntregaDeRuta($mov_id_bd,$mov_id_bd,$usuario);
+               
+
+          
+        }
+
         $vehiculo_id = intval($vehiculo_id);
         
         // 1. Buscamos todos los repartos asociados a este folio y vehículo
@@ -698,45 +722,8 @@ public function cancelarViajeCompleto($folio_viaje, $vehiculo_id) {
         $stmtB->bind_param("si", $folio_viaje, $vehiculo_id);
         $stmtB->execute();
         $resB = $stmtB->get_result();
-
-        if ($resB->num_rows === 0) {
-            throw new Exception("No se encontraron entregas activas para este folio de viaje.");
-        }
-
-        $repartos_ids = [];
-        while ($row = $resB->fetch_assoc()) {
-            $repartos_ids[] = $row['reparto_id'];
-        }
-
-        $this->db->begin_transaction();
-
-        // Convertimos el array de IDs para la cláusula WHERE IN (?,?,?)
-        $placeholders = implode(',', array_fill(0, count($repartos_ids), '?'));
-        $types = str_repeat('i', count($repartos_ids));
-
-        // 2. Limpiamos Tripulación de todos los repartos del viaje
-        $stmtT = $this->db->prepare("DELETE FROM transporte_tripulantes_detalle WHERE reparto_id IN ($placeholders)");
-        $stmtT->bind_param($types, ...$repartos_ids);
-        $stmtT->execute();
-
-        // 3. Limpiamos Puntos de Ruta
-        $stmtP = $this->db->prepare("DELETE FROM transporte_rutas_puntos WHERE reparto_id IN ($placeholders)");
-        $stmtP->bind_param($types, ...$repartos_ids);
-        $stmtP->execute();
-
-        // 4. Limpiamos la Consolidación (Libera el folio de viaje)
-        $stmtC = $this->db->prepare("DELETE FROM transporte_consolidacion WHERE reparto_id IN ($placeholders)");
-        $stmtC->bind_param($types, ...$repartos_ids);
-        $stmtC->execute();
-
-        // 5. Eliminamos los registros Maestros
-        // Al eliminarlos, los movimientos originales en el listado vuelven a mostrar "ASIGNAR RUTA"
-        $stmtM = $this->db->prepare("DELETE FROM transporte_repartos_maestro WHERE id IN ($placeholders)");
-        $stmtM->bind_param($types, ...$repartos_ids);
-        $stmtM->execute();
-
-        $this->db->commit();
         return true;
+
 
     } catch (Exception $e) {
         if (isset($this->db) && $this->db->in_transaction) $this->db->rollback();
@@ -1583,7 +1570,9 @@ public function obtenerRutaDeEntregaPorEntrega($entrega_id, $idRuta){
     t.totalCantidad,
     t.unidadMedida,
     t.factor,
-    t.unidadReporte
+    t.unidadReporte,
+    t.equi,
+    t.nombreEqui
 
 FROM (
 
@@ -1619,6 +1608,8 @@ FROM (
         p.nombre AS nombreProducto,
         p.factor_conversion AS factor,
         p.unidad_reporte AS unidadReporte,
+        odma.equivalencia as equi,
+        odma.nombre as nombreEqui,
 
         SUM(m.cantidad) AS totalCantidad,
 
@@ -1642,9 +1633,12 @@ FROM (
 
     INNER JOIN productos p 
         ON m.producto_id = p.id
-
+       
     LEFT JOIN ventas v 
         ON m.referencia_id = v.id
+ INNER JOIN detalle_venta dv 
+        ON v.id = dv.venta_id
+        join opciones_de_medida_adicional odma on odma.id=dv.unidadMedida
 
     LEFT JOIN clientes c 
         ON v.id_cliente = c.id
@@ -1687,33 +1681,138 @@ ORDER BY t.fecha_viaje DESC";
 
     return $data;
 }
-public function quitarEntregaDeRuta($entrega_venta_id) {
+public function quitarEntregaDeRuta($entrega_venta_id,$movimiento_id = 0, $id_usuario) {
     try {
+        // Iniciamos la transacción para asegurar que si algo falla, no se borre nada a medias
         $this->db->begin_transaction();
 
-        // 1. Buscamos el reparto_id en el maestro de transporte usando la relación
-        $sql = "SELECT id FROM transporte_repartos_maestro WHERE entrega_venta_id = ? LIMIT 1";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("i", $entrega_venta_id);
-        $stmt->execute();
-        $res = $stmt->get_result()->fetch_assoc();
+        // ==========================================
+        // PARTE 1. LOGÍSTICA DE TRANSPORTE Y REPARTOS
+        // ==========================================
+        $motivo = "CANCELACIÓN DE RUTA";
+        // 1. Buscamos el reparto_id en el maestro de transporte
+        $sqlTrans = "SELECT id FROM transporte_repartos_maestro WHERE entrega_venta_id = ? LIMIT 1";
+        $stmtTrans = $this->db->prepare($sqlTrans);
+        $stmtTrans->bind_param("i", $entrega_venta_id);
+        $stmtTrans->execute();
+        $resTrans = $stmtTrans->get_result()->fetch_assoc();
+        $stmtTrans->close();
+         $this->cancelarDespachoFisico($movimiento_id);
 
-        if ($res) {
-            $rid = $res['id'];
+        if ($resTrans) {
+            $rid = $resTrans['id'];
 
-            // 2. Limpieza de tablas de logística (Módulo Independiente)
+            // Limpieza física de las tablas de logística asociadas al reparto
             $this->db->query("DELETE FROM transporte_rutas_puntos WHERE reparto_id = $rid");
             $this->db->query("DELETE FROM transporte_tripulantes_detalle WHERE reparto_id = $rid");
             $this->db->query("DELETE FROM transporte_consolidacion WHERE reparto_id = $rid");
             
-            // 3. Borramos el maestro del reparto
-            // NOTA: No tocamos 'ventas' ni 'entregas_venta' para evitar el error de columna
+            // Borramos el maestro de reparto de transporte
             $this->db->query("DELETE FROM transporte_repartos_maestro WHERE id = $rid");
         }
 
+
+        // ==========================================
+        // PARTE 2. CONTROL DE ENTREGAS, KARDEX E INVENTARIO
+        // ==========================================
+
+        // 2. Extraemos los datos del movimiento origen (Cambié m.id a dinámico si lo requieres, o lo dejas en 1200)
+        $sqlMov = "SELECT 
+                        m.producto_id AS p_id, 
+                        m.cantidad AS cantidad_entregada, 
+                        m.referencia_id AS id_venta, 
+                        m.almacen_origen_id AS id_almacen,
+                        m.entrega_id AS entrega_id
+                   FROM movimientos m 
+                   WHERE m.id = ?";
+                   
+        $stmtMovData = $this->db->prepare($sqlMov);
+        $stmtMovData->bind_param("i", $movimiento_id);
+        $stmtMovData->execute();
+        $movimientoData = $stmtMovData->get_result()->fetch_assoc();
+        $stmtMovData->close();
+
+        if ($movimientoData) {
+            $p_id           = $movimientoData['p_id'];
+            $cant_entregada = $movimientoData['cantidad_entregada'];
+            $id_venta       = $movimientoData['id_venta'];
+            $id_almacen     = $movimientoData['id_almacen'];
+            $id_entrega     = $movimientoData['entrega_id'];
+            
+            // Evaluamos el detalle de la entrega vinculada para saber si eliminamos cabecera o sólo el ítem
+            $sqlCant = "SELECT ie.id, ie.detalle_venta_id FROM detalle_entrega ie WHERE ie.entrega_id = ?";
+            $stmtCant = $this->db->prepare($sqlCant);
+            $stmtCant->bind_param("i", $id_entrega);
+            $stmtCant->execute();
+            $resentrega = $stmtCant->get_result();
+            $detalleData = $resentrega->fetch_assoc();
+
+            if ($detalleData) {
+                $detalle_venta_id = $detalleData['detalle_venta_id'];
+
+                // ACTUALIZACIÓN EN DETALLE_VENTA: Restamos la cantidad del movimiento cancelado
+                // (Ajusta el nombre de la columna 'cantidad_entregada' si en tu tabla se llama distinto)
+                $sqlUpdVenta = "UPDATE detalle_venta 
+                                SET cantidad_entregada = cantidad_entregada - ? 
+                                WHERE id = ?";
+                $stmtUpdVenta = $this->db->prepare($sqlUpdVenta);
+                $stmtUpdVenta->bind_param("di", $cant_entregada, $detalle_venta_id);
+                $stmtUpdVenta->execute();
+                $stmtUpdVenta->close();
+                 $sqlUpdRealVenta = "UPDATE ventas 
+                                SET estado_entrega = 'parcial' 
+                                WHERE id = ?";
+                $stmtUpdRealVenta = $this->db->prepare($sqlUpdRealVenta);
+                $stmtUpdRealVenta->bind_param("i", $id_venta);
+                $stmtUpdRealVenta->execute();
+                $stmtUpdRealVenta->close();
+            }
+            if ($resentrega->num_rows <= 1) {
+                // Si sólo queda este registro o ninguno, eliminamos tanto cabecera como el detalle
+                if ($id_entrega) {
+                    $stmtDelCab = $this->db->prepare("DELETE FROM entregas_venta WHERE id = ?");
+                    $stmtDelCab->bind_param("i", $id_entrega);
+                    $stmtDelCab->execute();
+                    $stmtDelCab->close();
+                }
+                if ($detalleData) {
+                    $stmtDelDet = $this->db->prepare("DELETE FROM detalle_entrega WHERE id = ?");
+                    $stmtDelDet->bind_param("i", $detalleData['id']);
+                    $stmtDelDet->execute();
+                    $stmtDelDet->close();
+                }
+            } else {
+                // Si la entrega contiene más artículos, únicamente removemos el renglón correspondiente
+                if ($detalleData) {
+                    $stmtDelDet = $this->db->prepare("DELETE FROM detalle_entrega WHERE id = ?");
+                    $stmtDelDet->bind_param("i", $detalleData['id']);
+                    $stmtDelDet->execute();
+                    $stmtDelDet->close();
+                }
+            }
+            $stmtCant->close();
+
+            // 3. Reingreso físico de las existencias recuperadas al Inventario por Almacén
+            $stmtInv = $this->db->prepare("UPDATE inventario SET stock = stock + ? WHERE producto_id = ? AND almacen_id = ?");
+            $stmtInv->bind_param("dii", $cant_entregada, $p_id, $id_almacen);
+            $stmtInv->execute();
+            $stmtInv->close();
+
+            // 4. Registro de reversión en el Kardex de Movimientos
+            $mov_obs = "REINGRESO POR CANCELACIÓN - FOLIO: $id_venta. MOTIVO: $motivo";
+            $stmtKardex = $this->db->prepare("INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_origen_id, usuario_registra_id, referencia_id, observaciones) 
+                                           VALUES (?, 'ENTRADA', ?, ?, ?, ?, ?)");
+            $stmtKardex->bind_param("idiiss", $p_id, $cant_entregada, $id_almacen, $id_usuario, $id_venta, $mov_obs);
+            $stmtKardex->execute();
+            $stmtKardex->close();
+        }
+
+        // Si todos los bloques de código SQL corrieron con éxito, guardamos definitivamente
         $this->db->commit();
         return true;
+
     } catch (Exception $e) {
+        // En caso de fallas de red, FK o bloqueos, hacemos Rollback inmediato para proteger los almacenes
         if ($this->db->connect_errno == 0 && $this->db->ping()) {
             $this->db->rollback();
         }
@@ -1726,6 +1825,7 @@ public function guardarCambiosViaje($datos) {
 
         $folio       = $datos['viaje_folio'];
         $chofer_id   = intval($datos['chofer_id']);
+         $usuario   = intval($datos['usuario']);
         $vehiculo_id = intval($datos['vehiculo_id']);
         $tripulantes = isset($datos['tripulantes']) ? $datos['tripulantes'] : [];
         $destinos    = isset($datos['destinos']) ? $datos['destinos'] : [];
@@ -1748,7 +1848,7 @@ public function guardarCambiosViaje($datos) {
         // 2. Sincronización: Quitar los que ya no vienen en el JSON
         foreach ($mapeo_bd as $mov_id_bd => $reparto_id) {
             if (!isset($destinos[$mov_id_bd])) {
-                $this->quitarEntregaDeRuta($mov_id_bd);
+                $this->quitarEntregaDeRuta($mov_id_bd,$mov_id_bd,$usuario);
             }
         }
 
@@ -1804,6 +1904,47 @@ public function guardarCambiosViaje($datos) {
     } catch (Exception $e) {
         $this->db->rollback();
         throw $e;
+    }
+}
+
+public function cancelarDespachoFisico($idMovimiento) {
+    $this->db->begin_transaction();
+    $idMov = intval($idMovimiento);
+
+    try {
+        // Buscamos los lotes que salieron asociados a este movimiento específico
+        // a través de la tabla registro_salida_lotes
+        $sqlLotes = "SELECT lms.id, lms.lote_id, lms.cantidad_salida 
+                     FROM lotes_movimientos_salida lms
+                     INNER JOIN registro_salida_lotes rsl ON lms.entrega_venta_id = (
+                         SELECT ev.id FROM entregas_venta ev 
+                         INNER JOIN movimientos m ON ev.venta_id = m.referencia_id 
+                         WHERE m.id = $idMov LIMIT 1
+                     )
+                     WHERE rsl.movimiento_id = $idMov";
+        
+        $res = $this->db->query($sqlLotes);
+
+        while ($row = $res->fetch_assoc()) {
+            // 1. Devolver cantidad al stock real
+            $this->db->query("UPDATE lotes_stock 
+                             SET cantidad_actual = cantidad_actual + {$row['cantidad_salida']}, 
+                                 estado_lote = 'activo' 
+                             WHERE id = {$row['lote_id']}");
+
+            // 2. Eliminar el desglose de salida de ese lote
+            $this->db->query("DELETE FROM lotes_movimientos_salida WHERE id = {$row['id']}");
+        }
+
+        // 3. Eliminar el registro que confirma que el despacho se hizo
+        $this->db->query("DELETE FROM registro_salida_lotes WHERE movimiento_id = $idMov");
+
+        $this->db->commit();
+        return ['success' => true, 'message' => 'Inventario restaurado con éxito.'];
+
+    } catch (Exception $e) {
+        $this->db->rollback();
+        return ['success' => false, 'message' => $e->getMessage()];
     }
 }
 public function procesarDespachoFisicoMasivo($idsMovimientos) {
@@ -2463,7 +2604,7 @@ public function registrarEntregaMovimiento($datos)
                $result_entrega = $this->db->query("SELECT entrega_id FROM movimientos m WHERE m.id = $id_mov");
 $row_entrega = $result_entrega->fetch_assoc();
 // Si encuentra el registro toma el ID, si no, asigna 0 o null según permita tu base de datos
-$entrega_id = $row_entrega ? intval($row_entrega['entrega_id']) : 0;   
+$entrega_id = $id_mov;   
            
 
 

@@ -13,10 +13,11 @@ window.abrirModalFinalizar = function () {
     tabla.innerHTML = "";
 
     window.carrito.forEach((item, index) => {
-
+ item.entrega_hoy = Math.round((item.cantidad) * 100) / 100;
         if (item.entrega_hoy === undefined || item.entrega_hoy === null) {
-            item.entrega_hoy = item.cantidad;
+            item.entrega_hoy = Math.floor((item.cantidad) * 100) / 100;
         }
+        console.log(item);
 
         const cantFactorVenta = Math.floor(item.cantidad / item.factor);
         const piezasRestantesVenta = Math.round((item.cantidad % item.factor) * 100) / 100;
@@ -25,6 +26,17 @@ window.abrirModalFinalizar = function () {
         let cantidadT = item.cantidad;
 
         if (item.cantidad < 1) {
+            cantidadT = item.unidadEquivalencia > 0
+                ? (item.cantidad / (1 / item.unidadEquivalencia))
+                : item.cantidad;
+
+            leyenda =
+                '1 ' + item.unidadMedidaNombre +
+                ' = ' +
+                (1 / item.unidadEquivalencia) +
+                ' de ' +
+                item.unidad_medida;
+        }else {
             cantidadT = item.unidadEquivalencia > 0
                 ? (item.cantidad / (1 / item.unidadEquivalencia))
                 : item.cantidad;
@@ -67,7 +79,7 @@ window.abrirModalFinalizar = function () {
             <td class="text-center">
                 <div class="fw-bold" style="font-size: 0.9rem;">
                     ${cantFactorVenta >= 1 ? cantFactorVenta : cantidadT.toFixed(3)}
-                    ${cantFactorVenta >0 ? item.unidad_reporte : nombreuni}
+                    ${cantFactorVenta >0 ? item.unidad_reporte : item.unidadMedidaNombre}
                 </div>
             </td>
 

@@ -629,13 +629,17 @@ if (data.info.estado_general === 'cancelada') {
                     .removeAttr('onclick'); 
     $('#cancelado').text(`Cancelada por: ${data.info.observaciones}`);
 } else {
-    $('#cancelado').text('');
-    htmlboton=` <button id="btnAbonar"
+    if(deuda>0)
+    {
+htmlboton=` <button id="btnAbonar"
                             class="btn btn-primary w-100 fw-bold shadow-sm"
                             onclick="abrirNuevoAbono(${id})">
                             <i class="bi bi-cash-coin me-1"></i> Registrar Abono
                         </button>
 `;
+    }
+    $('#cancelado').text('');
+    
 }
 $('#boton').html(htmlboton);
             // --- RENDERIZADO DE PRODUCTOS CON CONVERSIÓN ---

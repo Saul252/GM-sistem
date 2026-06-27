@@ -9,7 +9,7 @@ error_reporting(E_ALL);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solicitudes de Compra | cfsistem</title>
+    <title>Comprobantes de pago | cfsistem</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
@@ -81,7 +81,10 @@ error_reporting(E_ALL);
             <select id="filtroAlmacen" class="form-select border-0 bg-light shadow-sm"
                 style="border-radius:12px;">
 
+              <?php if (isset($es_admin) && $es_admin): ?>
+
                 <option value="">Todos los almacenes</option>
+<?php endif ;?>
 
                 <?php foreach ($almacenes as $alm): ?>
 
@@ -121,7 +124,7 @@ error_reporting(E_ALL);
                     type="text"
                     id="buscadorGeneral"
                     class="form-control border-0 bg-light"
-                    placeholder="Folio o Proveedor">
+                    placeholder="Folio o Cliente">
 
             </div>
         </div>
@@ -141,6 +144,7 @@ error_reporting(E_ALL);
                     <th>Cliente</th>
                     <th>Almacén</th>
                     <th>Monto</th>
+                    <th>Recibido</th>
                     <th>Estado</th>
                     <th class="text-end">Acciones</th>
                 </tr>
@@ -825,16 +829,35 @@ async function cargarComprobantes() {
             // 4. GENERACIÓN DE ACCIONES EXCLUSIVAS (BOTONES CONDICIONALES)
             // Variable temporal para guardar botones que solo deben aparecer si el comprobante NO está cancelado
             let botonesAccion = '';
+            let activar='';
+            let rolact=<?= $rolAct ?>;
+            let editar='';
+            let admin='';
             if (estado !== 'cancelado') {
+                admin =rolact==1?`<button type="button" class="btn btn-danger btn-sm" onclick="eliminarSolicitud(${c.id})">
+                        Cancelar
+                    </button>
+                                   
+     `:``;
                 // Si el estado es distinto de 'cancelado', se concatenan los botones de Imprimir y Cancelar con sus ID reales
                 botonesAccion = `
                     <button type="button" class="btn btn-primary btn-sm" onclick="imprmirComprobante(${c.id})">
                         VER
                     </button> 
-                    <button type="button" class="btn btn-danger btn-sm" onclick="eliminarSolicitud(${c.id})">
-                        Cancelar
-                    </button>
+                    ${admin}
                 `;
+                 activar =c.recibido==1?`
+                  <span class="text-success small fw-bold"><i class="bi bi-check-circle"></i></span>
+                        
+     `:`  <span class="text-danger small fw-bold"><i class="bi bi-check-circle"></i></span>
+                        
+   
+  
+`;         editar =rolact==1?`
+                   <button type="button" class="btn btn-link text-primary p-1 border-0" onclick="actualizar(${c.id})" title="Agregar Factura">
+            <i class="bi bi-pencil-square me-2"></i>
+        </button>                    
+     `:``; 
             }
 
             // 5. ARMADO E INYECCIÓN DE LA FILA (HTML Template Literal)
@@ -848,6 +871,10 @@ async function cargarComprobantes() {
                     <td class="fw-bold">$${parseFloat(c.monto || 0).toFixed(2)}</td>
                     <td>
                         <span class="badge bg-light text-dark border">${escapeHtml(c.estado || '')}</span>
+                    </td>
+                    <td class="text-end">
+                   ${editar}
+                   ${activar}
                     </td>
                     <td class="text-end">
                         ${botonesAccion}
@@ -1266,11 +1293,11 @@ if (res.status === 'success') {
     console.log("Actualizando ID:", id);
     
     // Obtenemos el valor de la referencia desde tu input del ticket
-    let referencia = $('#print-referencia').val();
+    
 
     const r = await Swal.fire({
-        title: '¿Actualizar referencia?',
-        text: 'Se guardará la nueva referencia en este comprobante.',
+        title: '¿Actualizar recibo?',
+        text: 'Se guardará el cambio este comprobante.',
         icon: 'question',
         showCancelButton: true,
         confirmButtonText: 'Sí, guardar',
@@ -1283,7 +1310,8 @@ if (res.status === 'success') {
         // CORRECCIÓN 1: Estructurar correctamente el FormData (una línea por variable)
         const fd = new FormData();
         fd.append('id', id);
-        fd.append('referencia', referencia);
+       
+        
 
         try {
             // CORRECCIÓN 2: Cambiado de '?action=eliminar' a '?action=actualizar'
@@ -1301,10 +1329,9 @@ if (res.status === 'success') {
                     icon: 'success',
                     confirmButtonText: 'Aceptar',
                     confirmButtonColor: '#1f2a37',
-                    timer: 2000,
-                    timerProgressBar: true
+                   
                 }).then(() => {
-                    location.reload();
+                   cargarComprobantes();
                 });
             } else {
                 Swal.fire({

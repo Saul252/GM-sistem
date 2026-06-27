@@ -158,7 +158,7 @@ $folio_viaje = $_GET['folio'] ?? '';
             </div>
             
             <form id="formEvidencia">
-                <input type="hidden" name="id_movimiento" id="m_mov_id">
+                <input type="number" name="id_movimiento" id="m_mov_id">
                 <input type="hidden" name="id_venta" id="m_venta_id">
                 <input type="hidden" name="vehiculo_id" id="m_vehiculo_id">
                 <input type="hidden" name="action" value="subir_evidencia_reparto">
@@ -310,8 +310,8 @@ function abrirModalPorIndex(index) {
     txtNota.classList.add('d-none');
 
     const idMovimiento = data.entrega_id || 0;
-    document.getElementById('m_mov_id').value = idMovimiento;
-    document.getElementById('m_id_visible').innerText = idMovimiento;
+    document.getElementById('m_mov_id').value = data.entrega_id;
+    document.getElementById('m_id_visible').innerText = data.entrega_id;
   document.getElementById('m_venta_id').value = (data.venta_id );    document.getElementById('m_vehiculo_id').value = data.vehiculo_id || 0; 
     document.getElementById('m_cliente_full').innerText = `${data.cliente || 'S/N'} (${data.folio_venta || 'S/F'})`;
     document.getElementById('m_direccion_full').innerText = data.direccion_entrega || 'Sin dirección';

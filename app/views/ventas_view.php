@@ -93,9 +93,9 @@
         <thead class="table-dark">
             <tr>
                 <th>Almacén</th>
-                <th>SKU</th>
+                <th >SKU</th>
                 <th>Producto</th>
-                <th>Stock</th>
+                <th width="10">Stock</th>
                 <th width="120">Unidad</th>
                 <th>Precio</th>
                 <th width="90">Cant</th>
@@ -337,7 +337,7 @@ data.data.forEach(p => {
             <td>${p.sku}</td>
             <td>${escapeHtml(p.nombre)}</td>
             <td>
-                <span class="badge ${colorStock}">${textoStock}</span>
+                <span  class="badge ${colorStock}">${textoStock}</span>
             </td>
             <td style="width:1px; padding:0; border:none;">
                 ${tieneReporte ? `

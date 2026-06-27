@@ -94,9 +94,10 @@ error_reporting(E_ALL);
 
             <select id="filtroAlmacen" class="form-select border-0 bg-light shadow-sm"
                 style="border-radius:12px;">
+                 <?php if (isset($es_admin) && $es_admin): ?>
 
                 <option value="">Todos los almacenes</option>
-
+<?php endif ;?>
                 <?php foreach ($almacenes as $alm): ?>
 
                 <option value="<?= htmlspecialchars($alm['id']) ?>">
@@ -910,7 +911,6 @@ async function cargarSolicitudes() {
 
         // Captura del ID de rol de usuario desde las sesiones nativas de PHP
         let rol = <?= isset($_SESSION['rol_id']) ? (int)$_SESSION['rol_id'] : 0 ?>;
-        
         // Variable tipo String que irá acumulando el código HTML de cada fila generada
         let tablaHTML = '';
         

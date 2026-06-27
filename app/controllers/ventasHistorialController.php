@@ -13,6 +13,9 @@ require_once __DIR__ . '/../models/ventas_model.php';
 require_once __DIR__ . '/../models/clientesModel.php';
 require_once __DIR__ . '/../models/RepartosModel.php';
 require_once __DIR__ . '/../models/usuariosModel.php';
+require_once __DIR__ . '/../models/almacen_model.php'; 
+
+$almacenModel   = new AlmacenModel($conexion);
 protegerPagina('ventashistorial');
 $modelo = new UsuarioModel($conexion);
 $ventasModel = new VentaHistorialModel($conexion);
@@ -38,10 +41,16 @@ if (isset($_GET['action']) && $_GET['action'] === 'listar') {
             'factura'  => $_GET['f_factura'] ?? 0
 
         ];
+        
 
         $rol_id = $_SESSION['rol_id'] ?? 2;
+$rol = $_SESSION['rol_id'] ?? 2;
         $id_almacen_usuario = $_SESSION['almacen_id'] ?? 0;
-
+ if($_SESSION['rol_id']==1||$_SESSION['rol_id']==3)
+    {
+        $id_almacen_usuario=0;
+        $rol_id=1;
+    }
         $data = $ventasModel->obtenerVentasFiltradas($filtros, $rol_id, $id_almacen_usuario);
         echo json_encode($data);
 
@@ -135,8 +144,17 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerUsuarios') {
     header('Content-Type: application/json');
     
     try {
-        $id = intval($_GET['id'] ?? 0);
-        $usuarios = $modelo->listarUsuarios();
+        $rol = $_SESSION['rol_id'];
+        $id = intval( $_SESSION['usuario_id']?? 0);
+        if( $rol<4){
+                                          
+ $usuarios = $modelo->listarUsuarios(0);
+        }
+        else{
+            $usuarios = $modelo->listarUsuarios($id);
+        }
+
+        
         
         if ($usuarios) {
             echo json_encode(['success' => true, 'data' => $usuarios]);
@@ -402,5 +420,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['ac
 // --- CARGA DE VISTA ---
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     $tituloPagina = "Control de Entregas";
+ $rol = intval( $_SESSION['rol_id']?? 0);
+ $almacen_usuario = $_SESSION['almacen_id'] ?? 0;
+ if($rol==1||$rol==3)
+    {
+        $almacen_usuario=0;
+    }
+   $almacenes   = $almacenModel->getAlmacenes($almacen_usuario); 
     require_once __DIR__ . '/../views/ventasHistorial_view.php';
 }
