@@ -19,69 +19,76 @@
                 </div>
 
                 <div class="modal-body px-4">
-                    <div class="row g-3 mb-4 p-3 rounded-4 bg-light shadow-sm align-items-end">
+                   <div class="row g-3 mb-4 p-4 rounded-4 bg-white border border-light-subtle shadow-sm align-items-end">
 
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold">
-                                <i class="bi bi-box-seam"></i> Almacén de Cargo
-                            </label>
-                            <div class="input-group shadow-sm">
-                                <select 
-                                    name="almacen_id_editar" 
-                                    id="almacen_id_editar"
-                                    class="form-select"
-                                    required
-                                >
-                                    <option value="">Seleccionar ubicación...</option>
-                                    <?php foreach($almacenes as $a): ?>
-                                        <option value="<?= $a['id'] ?>">
-                                            <?= $a['nombre'] ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                        </div>
+    <!-- 1. Almacén de Cargo -->
+    <div class="col-md-4 col-lg-3">
+        <label class="form-label small fw-semibold text-secondary text-uppercase tracking-wider mb-2">
+            <i class="bi bi-box-seam me-1 text-primary"></i> Almacén de Cargo
+        </label>
+        <select name="almacen_id_editar" id="almacen_id_editar" class="form-select border-light-subtle" required>
+            <option value="">Seleccionar ubicación...</option>
+            <?php foreach($almacenes as $a): ?>
+                <option value="<?= $a['id'] ?>"><?= $a['nombre'] ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
 
-                        <div class="col-md-3">
-                            <div class="input-group">
-                                <label class="form-label small fw-bold text-muted text-uppercase">Cliente</label>
-                                <select name="cliente_id_editar" id="cliente_id_editar" class="form-select select2-modal-editar" required>
-                                    <option value="">Seleccionar cliente...</option>
-                                    <?php foreach($clientes as $p): ?>
-                                    <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <button class="btn btn-outline-primary flex-shrink-0" type="button"
-                                    onclick="abrirModalNuevoCliente()" style="border-radius:10px;">
-                                    <i class="bi bi-person-plus"></i>
-                                </button>
-                            </div>
-                        </div>
+    <!-- 2. Cliente -->
+    <div class="col-md-4 col-lg-3">
+        <label class="form-label small fw-semibold text-secondary text-uppercase tracking-wider mb-2">
+            <i class="bi bi-person me-1 text-primary"></i> Cliente
+        </label>
+        <div class="input-group">
+            <select name="cliente_id_editar" id="cliente_id_editar" class="form-select select2-modal-editar border-light-subtle" required>
+                <option value="">Seleccionar cliente...</option>
+                <?php foreach($clientes as $p): ?>
+                    <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?></option>
+                <?php endforeach; ?>
+            </select>
+            <button class="btn btn-outline-primary px-3" type="button" onclick="abrirModalNuevoCliente()" title="Nuevo Cliente">
+                <i class="bi bi-person-plus-fill"></i>
+            </button>
+        </div>
+    </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold text-muted text-uppercase">Añadir Producto (SKU o Nombre)</label>
-                            <div class="input-group">
-                                <select id="buscadorProductosEditar" class="form-select select2-modal-editar border-start-0">
-                                    <option value="">Escribe para buscar...</option>
-                                    <?php foreach($listaProductos as $pr): ?>
-                                    <option value="<?= $pr['producto_id'] ?>"
-                                        data-nombre="<?= htmlspecialchars($pr['nombre']) ?>"
-                                        data-sku="<?= htmlspecialchars($pr['sku']) ?>"
-                                        data-um="<?= htmlspecialchars($pr['unidad_medida']) ?>"
-                                        data-ur="<?= htmlspecialchars($pr['unidad_reporte']) ?>"
-                                        data-factor="<?= $pr['factor_conversion'] ?? 1 ?>">
-                                        [<?= $pr['sku'] ?>] <?= $pr['nombre'] ?>
-                                    </option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <button type="button" class="btn btn-primary d-flex align-items-center"
-                                    onclick="abrirModalProducto()" title="Agregar nuevo producto">
-                                    <i class="bi bi-plus-lg me-1"></i>
-                                    <span class="d-none d-xl-inline">Nuevo</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+    <!-- 3. Vendedor -->
+    <div class="col-md-4 col-lg-3">
+        <label class="form-label small fw-semibold text-secondary text-uppercase tracking-wider mb-2">
+            <i class="bi bi-person-badge me-1 text-primary"></i> Vendedor
+        </label>
+        <select name="select-vendedor1" id="select-vendedor1" class="form-select select2-modal-editar border-light-subtle" required>
+            <option value="">Seleccionar vendedor...</option>
+        </select>
+    </div>
+       
+    <!-- 4. Añadir Producto -->
+    <div class="col-12 col-lg-3">
+        <label class="form-label small fw-semibold text-secondary text-uppercase tracking-wider mb-2">
+            <i class="bi bi-search me-1 text-primary"></i> Añadir Producto (SKU o Nombre)
+        </label>
+        <div class="input-group">
+            <select id="buscadorProductosEditar" class="form-select select2-modal-editar border-light-subtle">
+                <option value="">Escribe para buscar...</option>
+                <?php foreach($listaProductos as $pr): ?>
+                <option value="<?= $pr['producto_id'] ?>"
+                    data-nombre="<?= htmlspecialchars($pr['nombre']) ?>"
+                    data-sku="<?= htmlspecialchars($pr['sku']) ?>"
+                    data-um="<?= htmlspecialchars($pr['unidad_medida']) ?>"
+                    data-ur="<?= htmlspecialchars($pr['unidad_reporte']) ?>"
+                    data-factor="<?= $pr['factor_conversion'] ?? 1 ?>">
+                    [<?= $pr['sku'] ?>] <?= $pr['nombre'] ?>
+                </option>
+                <?php endforeach; ?>
+            </select>
+            <button type="button" class="btn btn-primary d-flex align-items-center px-3" onclick="abrirModalProducto()" title="Agregar nuevo producto">
+                <i class="bi bi-plus-lg me-1"></i>
+                <span>Nuevo</span>
+            </button>
+        </div>
+    </div>
+
+</div>
 
                     <div class="table-responsive border rounded-4 bg-white">
                         <table class="table align-middle mb-0" id="tablaDetalleEditar">
@@ -155,6 +162,49 @@ $('.select2-modal-editar').select2({
 // =====================================================
 let recalculandoFilaEditar = false;
 
+    async function cargarVendedores3(vendedor_id) {
+    const select = document.getElementById('select-vendedor1');
+    if (!select) return; // Seguridad por si el select no está en la vista actual
+
+    try {
+        // 1. Realizar la petición a tu controlador de Cf System
+        const url = '/cfsistem/app/controllers/ventasHistorialController.php?action=obtenerUsuarios';
+        const respuesta = await fetch(url);
+        
+        if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
+        
+        const resultado = await respuesta.json();
+
+        // 2. Verificar que la respuesta sea exitosa y contenga los datos
+        if (resultado.success && Array.isArray(resultado.data)) {
+            
+            // Limpiamos el select y dejamos una opción inicial neutra
+           // select.innerHTML = '<option value="" selected disabled> Seleccione vendedor</option>';
+
+            // 3. Recorrer los usuarios y crear las opciones
+            resultado.data.forEach(usuario => {
+                const opcion = document.createElement('option');
+                opcion.value = usuario.id; // El ID que se enviará en el formulario
+                
+                // Formateamos el texto: "Nombre (Almacén - Rol)" para que sea súper descriptivo
+                const almacen = usuario.almacen_nombre || 'Sin Almacén';
+                opcion.textContent = `${usuario.nombre}`;
+                
+                // Agregamos la opción al select
+                select.appendChild(opcion);
+            });
+            $('#select-vendedor1').val(vendedor_id).trigger('change.select2');
+
+        } else {
+            select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
+            console.error('El backend no devolvió success:true o la estructura cambió');
+        }
+
+    } catch (error) {
+        select.innerHTML = '<option value="">Error al cargar la lista</option>';
+        console.error('Error al ejecutar cargarUsuariosSelect:', error);
+    }
+}
 function calcularTotalSolEditar(input) {
     if (recalculandoFilaEditar) return;
     recalculandoFilaEditar = true;
@@ -374,6 +424,7 @@ $('#formEditarSolicitud').on('submit', async function(e) {
         cotizacion_id: $('#editar_cotizacion_id').val(), // ID de la fila a actualizar
         almacen_id: $('#almacen_id_editar').val(),
         cliente_id: $('#cliente_id_editar').val(),
+        vendedor: $('#select-vendedor1').val(),
         totalCotizacion: $('#totalCotizacionEditar').val(),
         items: []
     };
@@ -460,15 +511,18 @@ function quitarFilaEditar(id) {
 // =====================================================
 // INICIALIZAR MODAL EDITAR CON DATOS DE LA DB
 // =====================================================
+
 function editarCotizacion(datosCotizacion, itemsCotizacion) {
+    
     // 1. Resetear formulario
     $('#formEditarSolicitud')[0].reset();
     $('#tablaDetalleEditar tbody').empty();
-    
-    // 2. Setear Cabecera
     $('#editar_cotizacion_id').val(datosCotizacion.id);
     $('#almacen_id_editar').val(datosCotizacion.almacen_id);
     $('#cliente_id_editar').val(datosCotizacion.cliente_id).trigger('change.select2');
+    
+    // 2. Setear Cabecera
+ 
 
     // 3. Evaluar Estado de Vacío
     if(itemsCotizacion.length > 0) {
@@ -482,5 +536,10 @@ function editarCotizacion(datosCotizacion, itemsCotizacion) {
 
     $('#modalEditarCotizacion').modal('show');
     recargarProductosEditar();
+    
+       
+
+console.log(datosCotizacion);
 }
+
 </script>

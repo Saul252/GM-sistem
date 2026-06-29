@@ -18,76 +18,76 @@
                 </div>
 
                 <div class="modal-body px-4">
-                    <div class="row g-3 mb-4 p-3 rounded-4 bg-light shadow-sm align-items-end">
-
-               
-<div class="col-md-3">
-    <label class="form-label small fw-bold">
-        <i class="bi bi-box-seam"></i> Almacén de Cargo
-    </label>
-
-    <div class="input-group shadow-sm">
-        <select 
-            name="almacen_id" 
-            id="almacen_id"
-            class="form-select"
-            required
-        >
+                    <div class="row g-3 mb-4 p-4 rounded-4 bg-white shadow-sm align-items-end border">
+    
+    <!-- Almacén de Cargo -->
+    <div class="col-md-3">
+        <label for="almacen_id" class="form-label small fw-semibold text-secondary text-uppercase mb-2">
+            <i class="bi bi-box-seam me-1"></i> Almacén de Cargo
+        </label>
+        <select name="almacen_id" id="almacen_id" class="form-select border-light-subtle shadow-sm" required>
             <option value="">Seleccionar ubicación...</option>
-
             <?php foreach($almacenes as $a): ?>
-                <option value="<?= $a['id'] ?>">
-                    <?= $a['nombre'] ?>
-                </option>
+                <option value="<?= $a['id'] ?>"><?= $a['nombre'] ?></option>
             <?php endforeach; ?>
         </select>
     </div>
+
+    <!-- Cliente -->
+    <div class="col-md-3">
+        <label for="cliente_id" class="form-label small fw-semibold text-secondary text-uppercase mb-2">
+            <i class="bi bi-person me-1"></i> Cliente
+        </label>
+        <div class="input-group shadow-sm">
+            <select name="cliente_id" id="cliente_id" class="form-select select2-modal border-light-subtle" required>
+                <option value="">Seleccionar cliente...</option>
+                <?php foreach($clientes as $p): ?>
+                    <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?></option>
+                <?php endforeach; ?>
+            </select>
+            <button class="btn btn-outline-primary" type="button" onclick="abrirModalNuevoCliente()" title="Nuevo Cliente">
+                <i class="bi bi-person-plus-fill"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Vendedor -->
+    <div class="col-md-2">
+        <label for="vendedor-select" class="form-label small fw-semibold text-secondary text-uppercase mb-2">
+            <i class="bi bi-person-badge me-1"></i> Vendedor
+        </label>
+        <select class="form-select border-light-subtle shadow-sm" id="vendedor-select" name="usuario_id3">
+            <option value="">Seleccione vendedor</option>
+        </select>
+    </div>
+
+    <!-- Añadir Producto -->
+    <div class="col-md-4">
+        <label for="buscadorProductos" class="form-label small fw-semibold text-secondary text-uppercase mb-2">
+            <i class="bi bi-search me-1"></i> Añadir Producto (SKU o Nombre)
+        </label>
+        <div class="input-group shadow-sm">
+            <select id="buscadorProductos" class="form-select select2-modal border-light-subtle">
+                <option value="">Escribe para buscar...</option>
+                <?php foreach($listaProductos as $pr): ?>
+                    <option value="<?= $pr['producto_id'] ?>"
+                        data-nombre="<?= htmlspecialchars($pr['nombre']) ?>"
+                        data-sku="<?= htmlspecialchars($pr['sku']) ?>"
+                        data-um="<?= htmlspecialchars($pr['unidad_medida']) ?>"
+                        data-ur="<?= htmlspecialchars($pr['unidad_reporte']) ?>"
+                        data-factor="<?= $pr['factor_conversion'] ?? 1 ?>">
+                        [<?= $pr['sku'] ?>] <?= $pr['nombre'] ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <button type="button" class="btn btn-primary d-flex align-items-center" onclick="abrirModalProducto()" title="Agregar nuevo producto">
+                <i class="bi bi-plus-lg me-1"></i>
+                <span>Nuevo</span>
+            </button>
+        </div>
+    </div>
+
 </div>
-                        <div class="col-md-3">
-                             <div class="input-group">
-                            <label class="form-label small fw-bold text-muted text-uppercase">Cliente</label>
-                            <select name="cliente_id" id="cliente_id"class="form-select select2-modal" required>
-                                <option value="">Seleccionar cliente...</option>
-                                <?php foreach($clientes as $p): ?>
-                                <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?>
-                                </option>
-                                <?php endforeach; ?>
-                            </select>
-                           <button class="btn btn-outline-primary flex-shrink-0" type="button"
-                                onclick="abrirModalNuevoCliente()" style="border-radius:10px;">
-                                <i class="bi bi-person-plus"></i>
-                            </button>
-                        </div>
-                        </div>
-
-                        <div class="col-md-6">
-
-                            <label class="form-label small fw-bold text-muted text-uppercase">Añadir Producto (SKU o
-                                Nombre)</label>
-                            <div class="input-group">
-
-
-                                <select id="buscadorProductos" class="form-select select2-modal border-start-0">
-                                    <option value="">Escribe para buscar...</option>
-                                    <?php foreach($listaProductos as $pr): ?>
-                                    <option value="<?= $pr['producto_id'] ?>"
-                                        data-nombre="<?= htmlspecialchars($pr['nombre']) ?>"
-                                        data-sku="<?= htmlspecialchars($pr['sku']) ?>"
-                                        data-um="<?= htmlspecialchars($pr['unidad_medida']) ?>"
-                                        data-ur="<?= htmlspecialchars($pr['unidad_reporte']) ?>"
-                                        data-factor="<?= $pr['factor_conversion'] ?? 1 ?>">
-                                        [<?= $pr['sku'] ?>] <?= $pr['nombre'] ?>
-                                    </option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <button type="button" class="btn btn-primary d-flex align-items-center"
-                                    onclick="abrirModalProducto()" title="Agregar nuevo producto">
-                                    <i class="bi bi-plus-lg me-1"></i>
-                                    <span class="d-none d-xl-inline">Nuevo</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
 
                     <div class="table-responsive border rounded-4 bg-white">
                         <table class="table align-middle mb-0" id="tablaDetalle">
@@ -168,6 +168,49 @@ $('.select2-modal').select2({
 // =====================================================
 // CALCULAR TOTAL
 // =====================================================
+
+    async function cargarVendedores() {
+    const select = document.getElementById('vendedor-select');
+    if (!select) return; // Seguridad por si el select no está en la vista actual
+
+    try {
+        // 1. Realizar la petición a tu controlador de Cf System
+        const url = '/cfsistem/app/controllers/ventasHistorialController.php?action=obtenerUsuarios';
+        const respuesta = await fetch(url);
+        
+        if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
+        
+        const resultado = await respuesta.json();
+
+        // 2. Verificar que la respuesta sea exitosa y contenga los datos
+        if (resultado.success && Array.isArray(resultado.data)) {
+            
+            // Limpiamos el select y dejamos una opción inicial neutra
+           // select.innerHTML = '<option value="" selected disabled> Seleccione vendedor</option>';
+
+            // 3. Recorrer los usuarios y crear las opciones
+            resultado.data.forEach(usuario => {
+                const opcion = document.createElement('option');
+                opcion.value = usuario.id; // El ID que se enviará en el formulario
+                
+                // Formateamos el texto: "Nombre (Almacén - Rol)" para que sea súper descriptivo
+                const almacen = usuario.almacen_nombre || 'Sin Almacén';
+                opcion.textContent = `${usuario.nombre}`;
+                
+                // Agregamos la opción al select
+                select.appendChild(opcion);
+            });
+
+        } else {
+            select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
+            console.error('El backend no devolvió success:true o la estructura cambió');
+        }
+
+    } catch (error) {
+        select.innerHTML = '<option value="">Error al cargar la lista</option>';
+        console.error('Error al ejecutar cargarUsuariosSelect:', error);
+    }
+}
 
 // 🔥 EVITAR LOOPS
 let recalculandoFila = false;
@@ -502,6 +545,7 @@ $('#formSolicitud').on('submit', async function(e) {
     almacen_id: $('#almacen_id').val(),
     cliente_id: $('#cliente_id').val(),
     totalCotizacion: $('#totalCotizacion').val(),
+    vendedor: $('#vendedor-select').val(),
     items: []
 };
     $('#tablaDetalle tbody tr').each(function() {
@@ -650,5 +694,6 @@ function nuevaCotizacion() {
 
     $('#modalCotizacion').modal('show');
     recargarProductos();
+    cargarVendedores();
 }
 </script>

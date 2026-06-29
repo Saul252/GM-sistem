@@ -241,7 +241,7 @@ idsParaProcesar.forEach((item, index) => {
     <td style="min-width:220px;">
         <select id="merma_lote_${index}"
                 name="merma_lote_${index}"
-                class="form-select form-select-sm">
+                class="form-select form-select-sm" required>
             <option value="">Seleccione lote</option>
         </select>
     </td>
@@ -451,6 +451,14 @@ idsParaProcesar.forEach((item, index) => {
  const tipo = $('input[name="tipo_entrega_masiva"]:checked').val();
       
         if (cant > 0) {
+             if( $('#mv_vehiculo_id').val() == ""  ) {
+    $('#mv_vehiculo_id').val(999);
+    ok=true;
+    // Muestra la alerta de error
+   
+
+    return false; // Detiene la ejecución del código
+} 
             // 1. Extraemos el index dinámico desde el ID de este input (ej: "cantidad_despacho_0" -> "0")
             const index = $(this).attr('id').split('_').pop();
             
@@ -475,13 +483,35 @@ fd.append('direccion', $('#mv_direccion').val() || '');
         Swal.fire('Atención', 'Indique al menos una cantidad válida para entregar', 'warning');
         return false; // 🛑 Detenemos y retornamos false
     }
- if( $('#mv_vehiculo_id').val() == "" || $('#mv_chofer_id').val() == "" || $('#mv_direccion').val() == "" ) {
+ if( $('#mv_vehiculo_id').val() == ""  ) {
+   
+    // Muestra la alerta de error
+    Swal.fire({
+        icon: 'error',
+        title: 'Campos incompletos',
+        text: 'Por favor, selecciona un vehículo.',
+        confirmButtonColor: '#d33' // Opcional: color rojo para el botón de confirmar
+    });
+
+    return false; // Detiene la ejecución del código
+} if( $('#mv_vehiculo_id').val() == "" || $('#mv_chofer_id').val() == "" || $('#mv_direccion').val() == "" ) {
     
     // Muestra la alerta de error
     Swal.fire({
         icon: 'error',
         title: 'Campos incompletos',
-        text: 'Por favor, selecciona un vehículo, un chofer y escribe una dirección.',
+        text: 'Por favor, selecciona un chofer.',
+        confirmButtonColor: '#d33' // Opcional: color rojo para el botón de confirmar
+    });
+
+    return false; // Detiene la ejecución del código
+} if(  $('#mv_direccion').val() == "" ) {
+    
+    // Muestra la alerta de error
+    Swal.fire({
+        icon: 'error',
+        title: 'Campos incompletos',
+        text: 'Por favor,  escribe una dirección.',
         confirmButtonColor: '#d33' // Opcional: color rojo para el botón de confirmar
     });
 

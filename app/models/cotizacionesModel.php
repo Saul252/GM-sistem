@@ -22,9 +22,11 @@ public function crear($data, $items) {
             descuento,
             total,
             observaciones,
-            estado
+            estado,
+            vendedor_id
+            
         ) 
-        VALUES (?, ?, ?, NOW(), ?, ?, ?, 'pendiente')";
+        VALUES (?, ?, ?, NOW(), ?, ?, ?, 'pendiente',?)";
 
         $stmt = $this->db->prepare($sqlCab);
 
@@ -33,13 +35,14 @@ public function crear($data, $items) {
         $observaciones = $data['observaciones'] ?? '';
 
         $stmt->bind_param(
-            "iiidds",
+            "iiiddsi",
             $data['cliente_id'],
             $data['almacen_id'],
             $data['usuario_id'],
             $descuento,
             $totalCotizacion,
-            $observaciones
+            $observaciones,
+             $data['vendedor']
         );
 
         if (!$stmt->execute()) {
@@ -111,24 +114,29 @@ public function actualizar($data, $items) {
                        almacen_id = ?, 
                        descuento = ?, 
                        total = ?, 
-                       observaciones = ?
+                       observaciones = ?,
+                       vendedor_id =?
                    WHERE id = ?";
 
         $stmt = $this->db->prepare($sqlCab);
 
+        $vendedor = intval($data['vendedor_id']??0);
         $cotizacion_id = intval($data['cotizacion_id']); // El ID enviado desde el input oculto del modal editar
         $descuento = $data['descuento'] ?? 0;
         $totalCotizacion = $data['totalCotizacion'] ?? 0;
         $observaciones = $data['observaciones'] ?? '';
 
         $stmt->bind_param(
-            "iiddsi",
+            "iiddsii",
             $data['cliente_id'],
             $data['almacen_id'],
             $descuento,
             $totalCotizacion,
             $observaciones,
+            $vendedor,
             $cotizacion_id
+            
+
         );
 
         if (!$stmt->execute()) {
@@ -226,7 +234,8 @@ public function actualizar($data, $items) {
     $fecha_inicio = null,
     $fecha_fin = null,
     $estado = null,
-    $buscador = null
+    $buscador = null,
+    $vendedor=null
 )
  {
 
@@ -234,11 +243,13 @@ public function actualizar($data, $items) {
                 co.*,
                 c.nombre_comercial AS cliente_nombre,
                 a.nombre AS almacen_nombre,
-                u.nombre AS admin_nombre
+                u.nombre AS admin_nombre,
+                u2.nombre as vendedor
             FROM cotizaciones co
             LEFT JOIN clientes c ON co.cliente_id = c.id
             LEFT JOIN almacenes a ON co.almacen_id = a.id
             LEFT JOIN usuarios u ON co.usuario_id = u.id
+            left join usuarios u2 on u2.id=co.vendedor_id
             WHERE 1=1";
 
     $params = [];
@@ -248,6 +259,11 @@ public function actualizar($data, $items) {
         $sql .= " AND co.almacen_id = ?";
         $types .= "i";
         $params[] = $almacen_id;
+    }
+     if (!empty($vendedor)) {
+        $sql .= " AND co.vendedor_id = ?";
+        $types .= "i";
+        $params[] = $vendedor;
     }
 
     if (!empty($fecha_inicio)) {
@@ -302,7 +318,7 @@ public function actualizar($data, $items) {
     return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 }
 public function obtenerDetalle($id) {
-    $sql = "SELECT d.*,co.total,co.observaciones, p.nombre as producto_nombre, p.sku, p.unidad_medida, o.nombre,o.equivalencia,
+    $sql = "SELECT d.*,co.vendedor_id as vendedor_id,co.total,co.observaciones, p.nombre as producto_nombre, p.sku, p.unidad_medida, o.nombre,o.equivalencia,
                    p.unidad_reporte, p.factor_conversion, co.almacen_id as almacen_origen_id,
                    a.nombre as almacen_nombre,c.id as cliente_id, c.nombre_comercial as cliente_nombre
                    

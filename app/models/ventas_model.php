@@ -284,6 +284,7 @@ public static function procesarVentaDesdeCotizacion($conexion, $data, $id_usuari
         $monto_pagado  = floatval($data['monto_pagado'] ?? 0);
         $monto_favor   = floatval($data['monto_usado_favor'] ?? 0);
         $efectivoPagado = floatval($data['efectivoPagado'] ?? 0);
+        $vendedor = floatval($data['vendedor'] ?? 0);
 
         // ahora el carrito ES el mismo array
         $carrito = array_filter($data, 'is_array');
@@ -307,6 +308,7 @@ public static function procesarVentaDesdeCotizacion($conexion, $data, $id_usuari
 
         $cliente_id = 0;
         $usuario_id = $id_usuario;
+       
 
         // =========================
         // VALIDAR STOCK
@@ -317,7 +319,8 @@ public static function procesarVentaDesdeCotizacion($conexion, $data, $id_usuari
             $alm_id = intval($item['almacen_origen_id'] ?? 0);
             $entrega_solicitada = floatval($item['entrega_hoy'] ?? 0);
 
-            $cliente_id = intval($item['cliente_id'] ?? 0);
+            $cliente_id = intval($item['cliente_id'] ?? 0); 
+          
 
             $stmtS = $conexion->prepare("
                 SELECT stock 
@@ -380,15 +383,16 @@ public static function procesarVentaDesdeCotizacion($conexion, $data, $id_usuari
                 estado_pago,
                 estado_entrega,
                 estado_general,
-                observaciones
+                observaciones,
+                vendedor_id
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activa', ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activa', ?,?)
         ";
 
         $stmtV = $conexion->prepare($sqlV);
 
         $stmtV->bind_param(
-            "siiidddsss",
+            "siiidddsssi",
             $folio,
             $cliente_id,
             $id_almacen_vta,
@@ -398,7 +402,8 @@ public static function procesarVentaDesdeCotizacion($conexion, $data, $id_usuari
             $total,
             $estado_pago,
             $estado_entrega_vta,
-            $obs
+            $obs,
+            $vendedor
         );
 
         $stmtV->execute();

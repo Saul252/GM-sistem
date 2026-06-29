@@ -332,7 +332,7 @@ async function ejecutarSalidaMasivaFinal(ids, boton) {
         const formData = new FormData();
         formData.append('ajax', 'despachar_venta_completa'); 
         formData.append('tipo_logistica', tipo);
-        formData.append('vehiculo_id', tipo === 'ruta' ? $('#mv_vehiculo_id').val() : 0);
+        formData.append('vehiculo_id', tipo === 'ruta' ? $('#mv_vehiculo_id').val() : 999);
         formData.append('chofer_id', $('#mv_chofer_id').val());
         formData.append('direccion', $('#mv_direccion').val() || '');
         

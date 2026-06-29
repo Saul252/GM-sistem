@@ -102,12 +102,13 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardar') {
 
         $almacen_id = intval($input['almacen_id'] ?? 0);
 
-        if ($almacen_id <= 0) {
-            throw new Exception("ID de almacén no válido.");
+        if ($input['vendedor']<= 0) {
+            throw new Exception("ID de vendedor no válido.");
         }
-
+     
         $data = [
             'usuario_id' => intval($_SESSION['usuario_id']),
+            'vendedor'=> intval($input['vendedor'] ?? $_SESSION['usuario_id']),
             'almacen_id' => $almacen_id,
             'cliente_id' => intval($input['cliente_id'] ?? 0),
              'totalCotizacion' => intval($input['totalCotizacion'] ?? 0)
@@ -187,7 +188,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'actualizar') {
             throw new Exception("ID de almacén no válido.");
         }
 
-        $cliente_id = intval($input['cliente_id'] ?? 0);
+        $cliente_id = intval($input['cliente_id'] ?? 0); 
+        $vendedor_id = intval($input['vendedor'] ?? 0);
         if ($cliente_id <= 0) {
             throw new Exception("Debe seleccionar un cliente.");
         }
@@ -198,6 +200,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'actualizar') {
             'usuario_id'      => intval($_SESSION['usuario_id']),
             'almacen_id'      => $almacen_id,
             'cliente_id'      => $cliente_id,
+            'vendedor_id'      => $vendedor_id,
             'totalCotizacion' => floatval($input['totalCotizacion'] ?? 0) // Cambiado a floatval por si lleva decimales
         ];
 
@@ -306,6 +309,9 @@ $estado = !empty($_GET['estado'])
 $buscador = !empty($_GET['buscador'])
     ? trim($_GET['buscador'])
     : null;
+    $vendedor = !empty($_GET['vendedor'])
+    ? trim($_GET['vendedor'])
+    : null;
 
 $cotizaciones = $cotizacionesModel->listarPorFechas(
     $es_admin,
@@ -313,7 +319,8 @@ $cotizaciones = $cotizacionesModel->listarPorFechas(
     $fechaInicio,
     $fechaFin,
     $estado,
-    $buscador
+    $buscador,
+    $vendedor
 );
 
         echo json_encode([
@@ -363,7 +370,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $id_usuario = $_SESSION['usuario_id'] ?? 1;
-
+  
         // ============================
         // ITEMS DEL CARRITO
         // ============================
@@ -394,6 +401,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 'cliente_id'         => intval($item['cliente_id'] ?? 0),
                 'usuario_id'         => $id_usuario,
+                 
+
 
                 'unidadMedida'       => intval($item['unidadMedida'] ?? 0),
 
@@ -424,6 +433,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $ventaData['efectivoPagado']    = floatval($input['efectivoPagado'] ?? 0);
         $ventaData['monto_usado_favor'] = floatval($input['monto_usado_favor'] ?? 0);
         $ventaData['usar_saldo_favor']  = intval($input['usar_saldo_favor'] ?? 0);
+ $ventaData['vendedor']  = intval($input['vendedor'] ?? 0);
 
         // ============================
         // PROCESAR
@@ -431,7 +441,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $resultado = $ventasModel->procesarVentaDesdeCotizacion(
             $conexion,
             $ventaData,
-            $id_usuario
+            $id_usuario,
+            
         );
 
         echo json_encode($resultado);

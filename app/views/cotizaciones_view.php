@@ -126,6 +126,12 @@ error_reporting(E_ALL);
 
             </select>
         </div>
+             <div class="col-md-2">
+    <label for="select-usuarios" class="form-label fw-bold small text-muted text-uppercase">Vendedor</label>
+    <select class="form-select rounded-pill" id="select-usuarios" name="usuario_id" ">
+       <option value="" > Seleccione vendedor</option>
+    </select>
+</div>
 
         <!-- Buscador -->
         <div class="col-lg-3 col-md-12">
@@ -161,6 +167,7 @@ error_reporting(E_ALL);
                             <th>Fecha</th>
                             <th>Proveedor</th>
                             <th>Almacén</th>
+                            <th>Vendedor</th>
                             <th>Estado</th>
                             <th class="text-end">Acciones</th>
                         </tr>
@@ -636,6 +643,7 @@ error_reporting(E_ALL);
                         class="form-control form-control-lg border-0 bg-light rounded-3"
                         placeholder="Número de referencia">
                 </div>
+                 
             </div>
 
             <div class="modal-footer border-0 px-4 pb-4 pt-0" id="boton">
@@ -842,7 +850,96 @@ error_reporting(E_ALL);
             
 $(document).ready(function () {
     cargarCotizaciones();
+    cargarCotizaciones();
 });
+
+ cargarUsuariosSelect();
+    async function cargarUsuariosSelect() {
+    const select = document.getElementById('select-usuarios');
+    if (!select) return; // Seguridad por si el select no está en la vista actual
+
+    try {
+        // 1. Realizar la petición a tu controlador de Cf System
+        const url = '/cfsistem/app/controllers/ventasHistorialController.php?action=obtenerUsuarios';
+        const respuesta = await fetch(url);
+        
+        if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
+        
+        const resultado = await respuesta.json();
+
+        // 2. Verificar que la respuesta sea exitosa y contenga los datos
+        if (resultado.success && Array.isArray(resultado.data)) {
+            
+            // Limpiamos el select y dejamos una opción inicial neutra
+           // select.innerHTML = '<option value="" selected disabled> Seleccione vendedor</option>';
+
+            // 3. Recorrer los usuarios y crear las opciones
+            resultado.data.forEach(usuario => {
+                const opcion = document.createElement('option');
+                opcion.value = usuario.id; // El ID que se enviará en el formulario
+                
+                // Formateamos el texto: "Nombre (Almacén - Rol)" para que sea súper descriptivo
+                const almacen = usuario.almacen_nombre || 'Sin Almacén';
+                opcion.textContent = `${usuario.nombre}`;
+                
+                // Agregamos la opción al select
+                select.appendChild(opcion);
+            });
+
+        } else {
+            select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
+            console.error('El backend no devolvió success:true o la estructura cambió');
+        }
+
+    } catch (error) {
+        select.innerHTML = '<option value="">Error al cargar la lista</option>';
+        console.error('Error al ejecutar cargarUsuariosSelect:', error);
+    }
+}
+
+ 
+    async function cargarUsuariosSelectPago() {
+    const select = document.getElementById('select-usuarios2');
+    if (!select) return; // Seguridad por si el select no está en la vista actual
+
+    try {
+        // 1. Realizar la petición a tu controlador de Cf System
+        const url = '/cfsistem/app/controllers/ventasHistorialController.php?action=obtenerUsuarios';
+        const respuesta = await fetch(url);
+        
+        if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
+        
+        const resultado = await respuesta.json();
+
+        // 2. Verificar que la respuesta sea exitosa y contenga los datos
+        if (resultado.success && Array.isArray(resultado.data)) {
+            
+            // Limpiamos el select y dejamos una opción inicial neutra
+           // select.innerHTML = '<option value="" selected disabled> Seleccione vendedor</option>';
+
+            // 3. Recorrer los usuarios y crear las opciones
+            resultado.data.forEach(usuario => {
+                const opcion = document.createElement('option');
+                opcion.value = usuario.id; // El ID que se enviará en el formulario
+                
+                // Formateamos el texto: "Nombre (Almacén - Rol)" para que sea súper descriptivo
+                const almacen = usuario.almacen_nombre || 'Sin Almacén';
+                opcion.textContent = `${usuario.nombre}`;
+                
+                // Agregamos la opción al select
+                select.appendChild(opcion);
+            });
+
+        } else {
+            select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
+            console.error('El backend no devolvió success:true o la estructura cambió');
+        }
+
+    } catch (error) {
+        select.innerHTML = '<option value="">Error al cargar la lista</option>';
+        console.error('Error al ejecutar cargarUsuariosSelect:', error);
+    }
+}
 async function cargarCotizaciones() {
    let almacen= $('#filtroAlmacen').val();
    let fechaInicio= $('#fechaInicio').val();
@@ -855,7 +952,8 @@ console.log(almacen);
     fechaInicio: $('#fechaInicio').val(),
     fechaFin:$('#fechaFin').val(),
     estado:$('#filtroEstado').val(),
-    buscador:$('#buscadorGeneral').val()
+    buscador:$('#buscadorGeneral').val(),
+    vendedor:$('#select-usuarios').val()
 });
 
     let rol = <?= isset($_SESSION['rol_id']) ? (int)$_SESSION['rol_id'] : 0 ?>;
@@ -916,6 +1014,11 @@ let data=await res.json();
                         ${s.almacen_nombre}
                     </span>
                 </td>
+ <td>
+                    <span class="badge bg-light text-dark border">
+                        ${s.vendedor}
+                    </span>
+                </td>
 
                 <td>
                     <span class="badge badge-status ${clase} rounded-pill">
@@ -932,7 +1035,7 @@ let data=await res.json();
             tablahtml += `
                 <button class="btn btn-sm btn-white border shadow-sm"
                     onclick="gestionarSolicitud(${s.id})">
-                    <i class="bi bi-eye text-primary"></i> ${rol}
+                    <i class="bi bi-eye text-primary"></i> Gestionar
                 </button>
 
                 <button class="btn btn-sm btn-white border shadow-sm"
@@ -977,6 +1080,7 @@ let data=await res.json();
 
     
    async function procederPago(total, id) {
+    cargarUsuariosSelectPago();
     let nuevo=[];
 
     totalGlobalPago = total;
@@ -1127,6 +1231,7 @@ $('#boton').html(htmlboton);
         $('#editar_cotizacion_id').val(infoBase.cotizacion_id);
         $('#almacen_id_editar').val(infoBase.almacen_origen_id);
         $('#cliente_id_editar').val(infoBase.cliente_id).trigger('change.select2');
+        cargarVendedores3(infoBase.vendedor_id);
 
         // Ocultar el estado vacío porque vamos a meter filas
         $('#emptyStateEditar').addClass('d-none');
@@ -1378,6 +1483,7 @@ async function convertirToCompra(data, id) {
             monto_pagado: parseFloat($('#montoPago').val()) || 0,
             metodo_pago: $('#metodoPago').val() || 'Efectivo',
             referencia: $('#referenciaPago').val() || '',
+            vendedor:$('#select-vendedor1').val() || 1,
             idCotizacion:id,
             descuento: 0,
             observaciones: ''
@@ -1426,6 +1532,7 @@ $('#filtroAlmacen').on('change', cargarCotizaciones);
 $('#filtroEstado').on('change', cargarCotizaciones);
 $('#fechaInicio').on('change', cargarCotizaciones);
 $('#fechaFin').on('change', cargarCotizaciones);
+$('#select-usuarios').on('change', cargarCotizaciones);
         
 
      });

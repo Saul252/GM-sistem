@@ -574,9 +574,7 @@
 const inputUsuario =
             fila.querySelector('.cantidad_usuario')?.value;
            
-        const cantidadInput = fila.querySelector(".cantidad");
-        let cantidadAAgregar = parseFloat(cantidadInput.value) || 0;
-
+        
         const modoVenta = fila.querySelector(".select-modo-venta")?.value || 'individual';
         const modoVent =
             fila.querySelector(".select-modo-venta");
@@ -591,6 +589,8 @@ const inputUsuario =
 
         const equivalencia =
             parseFloat(select.value);
+const cantidadInput = fila.querySelector(".cantidad");
+        let cantidadAAgregar = parseFloat(( inputUsuario*(1/equivalencia)).toFixed(5))|| 0;
 
         const medidaId =
             select.options[select.selectedIndex].dataset.id;
@@ -681,6 +681,7 @@ const inputUsuario =
         tablaBody.innerHTML = "";
 
         window.carrito.forEach((item, index) => {
+            console.log(item);
             const cantFactor = Math.floor(item.cantidad / item.factor);
          const cantPza = Math.round((item.cantidad % item.factor) * 10000) / 10000;
 
@@ -700,7 +701,7 @@ const inputUsuario =
             </td>
             <td>
                 <input type="number" class="form-control form-control-sm text-center input-pza-cambio" 
-                    data-index="${index}" value="${cantPza}" min="0" step="any">
+                    data-index="${index}" value="${cantPza}" min="0" step=".0001">
             </td>
             <td class="text-end fw-bold subtotal-celda">$${item.subtotal.toFixed(2)}</td>
             <td>
@@ -914,7 +915,7 @@ function calcularPrecio(fila) {
     const factor = fila.querySelector('.factorC');
     const factorC = parseFloat(factor.value) || 1;
 
-    const equi = Math.round((1 / equivalencia) * 100) / 100;
+    const equi = Math.round((1 / equivalencia) * 10000) / 1000;
 
     let nuevoPrecio = 0;
 
@@ -928,7 +929,7 @@ function calcularPrecio(fila) {
     inputPrecio.value = nuevoPrecio;
     inputPrecioMayor.value = nuevoPrecio;
 
-    const totalReal = Math.round((cantidadUsuario / equivalencia* 100) / 100);
+    const totalReal = Math.round((cantidadUsuario / equivalencia* 10000) / 10000);
     inputReal.value = totalReal;
 
     console.log({
