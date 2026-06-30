@@ -1,77 +1,93 @@
 <?php
 date_default_timezone_set('America/Mexico_City');
-/**
- * CONFIGURACIÓN DE MÓDULOS
- * Optimizamos la renderización mediante un bucle para evitar repetir HTML.
- */$modulos = [
-
-   // =========================
-   // GENERAL
-   // =========================
-   ['id' => 'inicio', 'url' => '/cfsistem/app/views/inicio.php', 'icon' => 'bi-house-door', 'label' => 'Inicio', 'active' => ($archivoActual == 'inicio.php')],
-
-   // =========================
-   // VENTAS Y CLIENTES
-   // =========================
-   ['id' => 'ventas', 'url' => '/cfsistem/app/controllers/ventasController.php', 'icon' => 'bi-cart-check', 'label' => 'Ventas', 'active' => ($archivoActual == 'ventasController.php')],
-  ['id' => 'remisiones', 'url' => '/cfsistem/app/controllers/requisicionesController.php', 'icon' => 'bi-receipt-cutoff', 'label' => 'Remisiones', 'active' => ($archivoActual == 'requisicionesController.php')],
-   ['id' => 'cajaRapida', 'url' => '/cfsistem/app/controllers/cajaRapidaController.php', 'icon' => 'bi-lightning-charge', 'label' => 'Caja Rapida', 'active' => ($archivoActual == 'cajaRapidaController.php')],
-   ['id' => 'cotizaciones', 'url' => '/cfsistem/app/controllers/cotizacionesController.php', 'icon' => 'bi-person-badge-fill', 'label' => 'Cotizaciones', 'desc' => 'Preventa', 'active' => ($archivoActual == 'cotizacionesController.php')],
-   ['id' => 'clientes', 'url' => '/cfsistem/app/controllers/clientesController.php', 'icon' => 'bi-person-lines-fill', 'label' => 'Clientes', 'active' => ($archivoActual == 'clientesController.php')],
-   ['id' => 'clientesEstatus', 'url' => '/cfsistem/app/controllers/clientesEstatusController.php', 'icon' => 'bi-person-badge', 'label' => 'Estatus Clientes', 'active' => ($archivoActual == 'clientesEstatus.php')],
-   ['id' => 'ventasVendedor', 'url' => '/cfsistem/app/controllers/historialPedidosVendedorController.php', 'icon' => 'bi-person-badge-fill', 'label' => 'Ventas Vendedor', 'desc' => 'Ventas Vendedor', 'active' => ($archivoActual == 'historialPedidosVendedorController.php')],
-   
-   ['id' => 'ventashistorial', 'url' => '/cfsistem/app/controllers/ventasHistorialController.php', 'icon' => 'bi-receipt', 'label' => 'Historial de Ventas', 'active' => ($archivoActual == 'ventasHistorialController.php')],
-['id' => 'comprobantes', 'url' => '/cfsistem/app/controllers/comprobantesPagoController.php', 'icon' => 'bi-file-earmark-check', 'label' => 'Crear comprobantes', 'active' => ($archivoActual == 'comprobantesPagoController.php')],
-
-   ['id' => 'registrarPagos', 'url' => '/cfsistem/app/controllers/registrarPagosController.php', 'icon' => 'bi-credit-card', 'label' => 'Registrar Pagos', 'active' => ($archivoActual == 'registrarPagosController.php')],
-
-   // =========================
-   // COMPRAS Y PROVEEDORES
-   // =========================
-   ['id' => 'compras', 'url' => '/cfsistem/app/controllers/egresosController.php', 'icon' => 'bi-bag-check', 'label' => 'Compras y gastos', 'active' => ($archivoActual == 'egresosController.php' || $archivoActual == 'gastos.php')],
-   ['id' => 'proveedores', 'url' => '/cfsistem/app/controllers/proveedoresController.php', 'icon' => 'bi-person-badge', 'label' => 'Proveedores', 'active' => ($archivoActual == 'proveedoresController.php')],
-   ['id' => 'solicitudesCompra', 'url' => '/cfsistem/app/controllers/solicitudesCompraController.php', 'icon' => 'bi-cart-check-fill', 'label' => 'Solicitudes Compra', 'active' => ($archivoActual == 'solicitudesCompraController.php')],
-
-   // =========================
-   // INVENTARIO Y ALMACÉN
-   // =========================
-   ['id' => 'almacenes', 'url' => '/cfsistem/app/controllers/almacenes.php', 'icon' => 'bi-box-seam', 'label' => 'Almacén', 'active' => ($archivoActual == 'almacenes.php' || $archivoActual == 'almacen.php')],
-   ['id' => 'movimientos', 'url' => '/cfsistem/app/controllers/movimientosController.php', 'icon' => 'bi-arrow-left-right', 'label' => 'Movimientos', 'active' => ($archivoActual == 'movimientosController.php')],
-   ['id' => 'Mermas', 'url' => '/cfsistem/app/controllers/mermasController.php', 'icon' => 'bi-exclamation-triangle', 'label' => 'Mermas', 'active' => ($archivoActual == 'mermasController.php')],
-   ['id' => 'transmutaciones', 'url' => '/cfsistem/app/controllers/transmutacionesController.php', 'icon' => 'bi-arrow-repeat', 'label' => 'Conversiones', 'active' => ($archivoActual == 'transmutacionesController.php')],
-   ['id' => 'historialLotes', 'url' => '/cfsistem/app/controllers/lotesHistorialController.php', 'icon' => 'bi-clock-history', 'label' => 'Historial de Lotes', 'active' => ($archivoActual == 'lotesHistorialController.php')],
-['id' => 'comprasHistorial', 'url' => '/cfsistem/app/controllers/comprasHistorialController.php', 'icon' => 'bi-collection', 'label' => 'Historial de Compras', 'active' => ($archivoActual == 'comprasHistorialController.php')],
-
-
-   // =========================
-   // FINANZAS Y TESORERÍA
-   // =========================
-   ['id' => 'finanzas', 'url' => '/cfsistem/app/controllers/finanzasController.php', 'icon' => 'bi-graph-up-arrow', 'label' => 'Finanzas', 'active' => ($archivoActual == 'finanzasController.php')],
-   ['id' => 'finanzas_admin', 'url' => '/cfsistem/app/controllers/finanzasAdmController.php', 'icon' => 'bi-bar-chart-line', 'label' => 'Finanzas Admin', 'active' => ($archivoActual == 'finanzasAdmController.php')],
-   ['id' => 'corteCaja', 'url' => '/cfsistem/app/controllers/corteCajaController.php', 'icon' => 'bi-calculator', 'label' => 'Corte de Caja', 'active' => ($archivoActual == 'corteCajaController.php')],
-   ['id' => 'tesoreria', 'url' => '/cfsistem/app/controllers/tesoreriaController.php', 'icon' => 'bi-safe', 'label' => 'Tesorería', 'active' => ($archivoActual == 'tesoreriaController.php')],
-
-   // =========================
-   // LOGÍSTICA Y DISTRIBUCIÓN
-   // =========================
-   ['id' => 'entregas', 'url' => '/cfsistem/app/controllers/entregasController.php', 'icon' => 'bi-truck', 'label' => 'Despachos', 'active' => ($archivoActual == 'entregasController.php')],
-   ['id' => 'vehiculos', 'url' => '/cfsistem/app/controllers/vehiculosController.php', 'icon' => 'bi-truck-front-fill', 'label' => 'Vehículos', 'active' => ($archivoActual == 'vehiculosController.php')],
-   ['id' => 'repartos', 'url' => '/cfsistem/app/controllers/repartosController.php', 'icon' => 'bi-truck-flatbed', 'label' => 'Repartos', 'active' => ($archivoActual == 'repartosController.php')],
-['id' => 'misRepartos', 'url' => '/cfsistem/app/controllers/misRepartosController.php', 'icon' => 'bi-map-fill', 'label' => 'Mis repartos', 'active' => ($archivoActual == 'misRepartosController.php')],
-['id' => 'viajesTrabajadores', 'url' => '/cfsistem/app/controllers/viajesTrabajadoresController.php', 'icon' => 'bi-person-workspace', 'label' => 'Viajes Trabajadores', 'active' => ($archivoActual == 'viajesTrabajadoresController.php')],
- 
-   // =========================
-   // RECURSOS HUMANOS
-   // =========================
-   ['id' => 'trabajadores', 'url' => '/cfsistem/app/controllers/trabajadoresController.php', 'icon' => 'bi-people-fill', 'label' => 'Trabajadores', 'active' => ($archivoActual == 'trabajadoresController.php')],
-
-   // =========================
-   // ADMINISTRACIÓN
-   // =========================
-   ['id' => 'usuarios', 'url' => '/cfsistem/app/controllers/usuariosController.php', 'icon' => 'bi-people', 'label' => 'Usuarios', 'active' => ($archivoActual == 'usuariosController.php')],
-//['id' => 'Configuracion', 'url' => '/cfsistem/app/controllers/configuracionController.php', 'icon' => 'bi-gear-fill', 'label' => 'Configuración', 'active' => ($archivoActual == 'configuracionController.php')],
-
+$modulos = [
+    [
+        'id_grupo' => 'general',
+        'titulo' => 'General',
+        'icono' => 'bi-grid',
+        'submodulos' => [
+            ['id' => 'inicio', 'url' => '/cfsistem/app/views/inicio.php', 'icon' => 'bi-house-door', 'label' => 'Inicio', 'active' => ($archivoActual == 'inicio.php')],
+        ]
+    ],
+    [
+        'id_grupo' => 'ventas_clientes',
+        'titulo' => 'Ventas y Clientes',
+        'icono' => 'bi-cart-check',
+        'submodulos' => [
+            ['id' => 'ventas', 'url' => '/cfsistem/app/controllers/ventasController.php', 'icon' => 'bi-cart-check', 'label' => 'Ventas', 'active' => ($archivoActual == 'ventasController.php')],
+            ['id' => 'remisiones', 'url' => '/cfsistem/app/controllers/requisicionesController.php', 'icon' => 'bi-receipt-cutoff', 'label' => 'Remisiones', 'active' => ($archivoActual == 'requisicionesController.php')],
+            ['id' => 'cajaRapida', 'url' => '/cfsistem/app/controllers/cajaRapidaController.php', 'icon' => 'bi-lightning-charge', 'label' => 'Caja Rápida', 'active' => ($archivoActual == 'cajaRapidaController.php')],
+            ['id' => 'cotizaciones', 'url' => '/cfsistem/app/controllers/cotizacionesController.php', 'icon' => 'bi-person-badge-fill', 'label' => 'Cotizaciones', 'active' => ($archivoActual == 'cotizacionesController.php')],
+            ['id' => 'clientes', 'url' => '/cfsistem/app/controllers/clientesController.php', 'icon' => 'bi-person-lines-fill', 'label' => 'Clientes', 'active' => ($archivoActual == 'clientesController.php')],
+            ['id' => 'clientesEstatus', 'url' => '/cfsistem/app/controllers/clientesEstatusController.php', 'icon' => 'bi-person-badge', 'label' => 'Estatus Clientes', 'active' => ($archivoActual == 'clientesEstatus.php')],
+            ['id' => 'ventasVendedor', 'url' => '/cfsistem/app/controllers/historialPedidosVendedorController.php', 'icon' => 'bi-person-badge-fill', 'label' => 'Ventas Vendedor', 'active' => ($archivoActual == 'historialPedidosVendedorController.php')],
+            ['id' => 'ventashistorial', 'url' => '/cfsistem/app/controllers/ventasHistorialController.php', 'icon' => 'bi-receipt', 'label' => 'Historial de Ventas', 'active' => ($archivoActual == 'ventasHistorialController.php')],
+            ['id' => 'comprobantes', 'url' => '/cfsistem/app/controllers/comprobantesPagoController.php', 'icon' => 'bi-file-earmark-check', 'label' => 'Crear Comprobantes', 'active' => ($archivoActual == 'comprobantesPagoController.php')],
+            ['id' => 'registrarPagos', 'url' => '/cfsistem/app/controllers/registrarPagosController.php', 'icon' => 'bi-credit-card', 'label' => 'Registrar Pagos', 'active' => ($archivoActual == 'registrarPagosController.php')],
+        ]
+    ],
+    [
+        'id_grupo' => 'compras_proveedores',
+        'titulo' => 'Compras y Proveedores',
+        'icono' => 'bi-bag-check',
+        'submodulos' => [
+            ['id' => 'compras', 'url' => '/cfsistem/app/controllers/egresosController.php', 'icon' => 'bi-bag-check', 'label' => 'Compras y Gastos', 'active' => ($archivoActual == 'egresosController.php' || $archivoActual == 'gastos.php')],
+            ['id' => 'proveedores', 'url' => '/cfsistem/app/controllers/proveedoresController.php', 'icon' => 'bi-person-badge', 'label' => 'Proveedores', 'active' => ($archivoActual == 'proveedoresController.php')],
+            ['id' => 'solicitudesCompra', 'url' => '/cfsistem/app/controllers/solicitudesCompraController.php', 'icon' => 'bi-cart-check-fill', 'label' => 'Solicitudes Compra', 'active' => ($archivoActual == 'solicitudesCompraController.php')],
+        ]
+    ],
+    [
+        'id_grupo' => 'inventario_almacen',
+        'titulo' => 'Inventario y Almacén',
+        'icono' => 'bi-box-seam',
+        'submodulos' => [
+            ['id' => 'almacenes', 'url' => '/cfsistem/app/controllers/almacenes.php', 'icon' => 'bi-box-seam', 'label' => 'Almacén', 'active' => ($archivoActual == 'almacenes.php' || $archivoActual == 'almacen.php')],
+            ['id' => 'movimientos', 'url' => '/cfsistem/app/controllers/movimientosController.php', 'icon' => 'bi-arrow-left-right', 'label' => 'Movimientos', 'active' => ($archivoActual == 'movimientosController.php')],
+            ['id' => 'Mermas', 'url' => '/cfsistem/app/controllers/mermasController.php', 'icon' => 'bi-exclamation-triangle', 'label' => 'Mermas', 'active' => ($archivoActual == 'mermasController.php')],
+            ['id' => 'transmutaciones', 'url' => '/cfsistem/app/controllers/transmutacionesController.php', 'icon' => 'bi-arrow-repeat', 'label' => 'Conversiones', 'active' => ($archivoActual == 'transmutacionesController.php')],
+            ['id' => 'historialLotes', 'url' => '/cfsistem/app/controllers/lotesHistorialController.php', 'icon' => 'bi-clock-history', 'label' => 'Historial de Lotes', 'active' => ($archivoActual == 'lotesHistorialController.php')],
+            ['id' => 'comprasHistorial', 'url' => '/cfsistem/app/controllers/comprasHistorialController.php', 'icon' => 'bi-collection', 'label' => 'Historial de Compras', 'active' => ($archivoActual == 'comprasHistorialController.php')],
+        ]
+    ],
+    [
+        'id_grupo' => 'finanzas_tesoreria',
+        'titulo' => 'Finanzas y Tesorería',
+        'icono' => 'bi-graph-up-arrow',
+        'submodulos' => [
+            ['id' => 'finanzas', 'url' => '/cfsistem/app/controllers/finanzasController.php', 'icon' => 'bi-graph-up-arrow', 'label' => 'Finanzas', 'active' => ($archivoActual == 'finanzasController.php')],
+            ['id' => 'finanzas_admin', 'url' => '/cfsistem/app/controllers/finanzasAdmController.php', 'icon' => 'bi-bar-chart-line', 'label' => 'Finanzas Admin', 'active' => ($archivoActual == 'finanzasAdmController.php')],
+            ['id' => 'corteCaja', 'url' => '/cfsistem/app/controllers/corteCajaController.php', 'icon' => 'bi-calculator', 'label' => 'Corte de Caja', 'active' => ($archivoActual == 'corteCajaController.php')],
+            ['id' => 'tesoreria', 'url' => '/cfsistem/app/controllers/tesoreriaController.php', 'icon' => 'bi-safe', 'label' => 'Tesorería', 'active' => ($archivoActual == 'tesoreriaController.php')],
+        ]
+    ],
+    [
+        'id_grupo' => 'logistica_distribucion',
+        'titulo' => 'Logística y Distribución',
+        'icono' => 'bi-truck',
+        'submodulos' => [
+            ['id' => 'entregas', 'url' => '/cfsistem/app/controllers/entregasController.php', 'icon' => 'bi-truck', 'label' => 'Despachos', 'active' => ($archivoActual == 'entregasController.php')],
+            ['id' => 'vehiculos', 'url' => '/cfsistem/app/controllers/vehiculosController.php', 'icon' => 'bi-truck-front-fill', 'label' => 'Vehículos', 'active' => ($archivoActual == 'vehiculosController.php')],
+            ['id' => 'repartos', 'url' => '/cfsistem/app/controllers/repartosController.php', 'icon' => 'bi-truck-flatbed', 'label' => 'Repartos', 'active' => ($archivoActual == 'repartosController.php')],
+            ['id' => 'misRepartos', 'url' => '/cfsistem/app/controllers/misRepartosController.php', 'icon' => 'bi-map-fill', 'label' => 'Mis Repartos', 'active' => ($archivoActual == 'misRepartosController.php')],
+            ['id' => 'viajesTrabajadores', 'url' => '/cfsistem/app/controllers/viajesTrabajadoresController.php', 'icon' => 'bi-person-workspace', 'label' => 'Viajes Trabajadores', 'active' => ($archivoActual == 'viajesTrabajadoresController.php')],
+        ]
+    ],
+    [
+        'id_grupo' => 'recursos_humanos',
+        'titulo' => 'Recursos Humanos',
+        'icono' => 'bi-people-fill',
+        'submodulos' => [
+            ['id' => 'trabajadores', 'url' => '/cfsistem/app/controllers/trabajadoresController.php', 'icon' => 'bi-people-fill', 'label' => 'Trabajadores', 'active' => ($archivoActual == 'trabajadoresController.php')],
+        ]
+    ],
+    [
+        'id_grupo' => 'administracion',
+        'titulo' => 'Administración',
+        'icono' => 'bi-gear',
+        'submodulos' => [
+            ['id' => 'usuarios', 'url' => '/cfsistem/app/controllers/usuariosController.php', 'icon' => 'bi-people', 'label' => 'Usuarios', 'active' => ($archivoActual == 'usuariosController.php')],
+        ]
+    ]
 ];
 ?>
 
@@ -129,19 +145,56 @@ date_default_timezone_set('America/Mexico_City');
             <?php endif; ?>
         </div>
 
-        <ul class="nav nav-pills flex-column gap-1">
-            <?php foreach ($modulos as $m): ?>
-            <?php if (puedeVerModulo($m['id'])): ?>
-            <li class="nav-item">
-                <a href="<?= $m['url'] ?>"
-                    class="nav-link d-flex align-items-center gap-3 <?= $m['active'] ? 'active shadow-sm' : 'text-dark' ?>">
-                    <i class="<?= $m['icon'] ?> fs-5"></i>
-                    <span><?= $m['label'] ?></span>
-                </a>
-            </li>
-            <?php endif; ?>
-            <?php endforeach; ?>
-        </ul>
+      <ul class="nav nav-pills flex-column gap-1">
+    <?php foreach ($modulos as $grupo): ?>
+        <?php 
+        // 1. Filtrar los submódulos que el usuario realmente puede ver
+        $submodulosPermitidos = array_filter($grupo['submodulos'], function($sub) {
+            return puedeVerModulo($sub['id']);
+        });
+
+        // 2. Si el usuario no tiene permiso para ver NINGÚN submódulo de este grupo, saltamos al siguiente grupo
+        if (empty($submodulosPermitidos)) continue;
+
+        // 3. Verificar si alguno de los submódulos permitidos está activo
+        $grupoActivo = false;
+        foreach ($submodulosPermitidos as $sub) {
+            if ($sub['active']) {
+                $grupoActivo = true;
+                break;
+            }
+        }
+        ?>
+
+        <li class="nav-item">
+            <a href="#drop-<?= $grupo['id_grupo'] ?>" 
+               class="nav-link d-flex align-items-center justify-content-between gap-3 <?= $grupoActivo ? 'bg-light text-dark fw-bold' : 'text-dark' ?>" 
+               data-bs-toggle="collapse" 
+               aria-expanded="<?= $grupoActivo ? 'true' : 'false' ?>">
+                
+                <div class="d-flex align-items-center gap-3">
+                    <i class="<?= $grupo['icono'] ?> fs-5"></i>
+                    <span><?= $grupo['titulo'] ?></span>
+                </div>
+                <i class="bi bi-chevron-down small transition-icon"></i>
+            </a>
+
+            <div class="collapse <?= $grupoActivo ? 'show' : '' ?>" id="drop-<?= $grupo['id_grupo'] ?>">
+                <ul class="nav nav-pills flex-column gap-1 ps-4 pt-1 pb-1">
+                    <?php foreach ($submodulosPermitidos as $m): ?>
+                        <li class="nav-item">
+                            <a href="<?= $m['url'] ?>"
+                               class="nav-link d-flex align-items-center gap-3 <?= $m['active'] ? 'active shadow-sm' : 'text-secondary' ?>" style="font-size: 0.95rem;">
+                                <i class="<?= $m['icon'] ?> fs-6"></i>
+                                <span><?= $m['label'] ?></span>
+                            </a>
+                        </li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+        </li>
+    <?php endforeach; ?>
+</ul>
     </div>
 </aside>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>';

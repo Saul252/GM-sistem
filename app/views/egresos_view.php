@@ -839,10 +839,7 @@ function subirDocumentoCompra(compra_id, folio, documento_actual = '',tipo) {
                 <label class="fw-bold small mb-2">Subir / Reemplazar documento</label>
                 <input type="file" id="swal_file_doc" class="form-control mb-2" accept=".pdf,image/*">
                 
-                ${documento_actual 
-                    ? `<a href="/cfsistem/${documento_actual}" target="_blank" class="small text-primary">Ver documento actual</a>` 
-                    : `<div class="small text-muted">Sin documento</div>`
-                }
+               
             </div>
         `,
         icon: 'info',

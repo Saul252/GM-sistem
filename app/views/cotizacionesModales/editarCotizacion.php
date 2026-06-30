@@ -168,7 +168,7 @@ let recalculandoFilaEditar = false;
 
     try {
         // 1. Realizar la petición a tu controlador de Cf System
-        const url = '/cfsistem/app/controllers/ventasHistorialController.php?action=obtenerUsuarios';
+        const url = '/cfsistem/app/controllers/accesoController.php?action=obtenerUsuarios';
         const respuesta = await fetch(url);
         
         if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');

@@ -269,12 +269,13 @@
                                       
                                    
                                     <th width="150">Unidad</th>
+                                      <th width="90">Cant</th>
                                     <th width="150">Tipo Cliente</th>
                                   
-                                    <th width="110">Precio</th>
+                                    <th width="110">Precio Unitario</th>
 
 
-                                    <th width="90">Cant</th>
+                                  
                                     
                                     
                                     
@@ -343,6 +344,18 @@
 
 
                     </td>
+                      <td>
+                                        <input type="number" step="0.01"
+                                                class="form-control form-control-sm input-precioMayor"
+                                                value="<?= $p['precio_minorista']??0 ?>">
+                                                <input type="hidden" step="0.01"
+                                                class="form-control form-control-sm input-precio"
+                                                value="<?= $p['precio_minorista'] ?>">
+                                        
+                   
+
+
+                    </td>
                                     <td>
 
                                         <select class="form-select form-select-sm select-precio">
@@ -356,18 +369,7 @@
                                     </td>
                                     
 
-                                    <td>
-                                        <input type="number" step="0.01"
-                                                class="form-control form-control-sm input-precioMayor"
-                                                value="<?= $p['precio_minorista']??0 ?>">
-                                                <input type="hidden" step="0.01"
-                                                class="form-control form-control-sm input-precio"
-                                                value="<?= $p['precio_minorista'] ?>">
-                                        
-                   
-
-
-                    </td>
+                                  
 
 
                  

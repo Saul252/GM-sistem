@@ -263,7 +263,7 @@
                                 </div>
                             </div>
                            
-<?php if($rol==1): ?>
+<?php if($_SESSION['rol_id']==1): ?>
                              <div id="contenedorBoton">
                                <button id="btnHabilitar"
         class="btn btn-action w-100 mb-2 py-2 fw-bold"
@@ -885,7 +885,7 @@ ${botonCancelar}
                 </li>
                 <li>
                     <a class="dropdown-item py-2 text-info" href="/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=${v.id}" target="_blank">
-                        <i class="bi bi-file-earmark-text me-2"></i> Imprimir Remisión
+                        <i class="bi bi-file-earmark-text me-2"></i> Imprimir Ticket sin precio
                     </a>
                 </li><li>
                     <a class="dropdown-item py-2 text-info" href="/cfsistem/app/backend/ventas/ticketFormal.php?id=${v.id}" target="_blank">

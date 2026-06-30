@@ -97,8 +97,9 @@
                 <th>Producto</th>
                 <th>Stock</th>
                 <th width="120">Unidad</th>
+                 <th width="90">Cant</th>
                 <th>Precio</th>
-                <th width="90">Cant</th>
+               
                 <th width="60"></th>
             </tr>
         </thead>
@@ -352,6 +353,10 @@ data.data.forEach(p => {
                     ${opcionesMedidas}
                 </select>
             </td>
+              <td>
+                <input type="number" class="form-control form-control-sm cantidad_usuario" min="1" value="1">
+                <input type="hidden" class="cantidad" value="0">
+            </td>
             <td>
                 <div class="d-flex gap-1">
                     <select class="form-select form-select-sm select-precio">
@@ -363,10 +368,7 @@ data.data.forEach(p => {
                     <input type="hidden" step="0.01" class="form-control form-control-sm input-precio" value="${p.precio_minorista || 0}">
                 </div>
             </td>
-            <td>
-                <input type="number" class="form-control form-control-sm cantidad_usuario" min="1" value="1">
-                <input type="hidden" class="cantidad" value="0">
-            </td>
+          
             <td class="text-center">
                 <button type="button" class="btn btn-success btn-sm"
                     data-producto-id="${p.id}" 

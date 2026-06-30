@@ -286,42 +286,78 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'elimin
     }
 
     exit;
-}
-if ($action === 'guardarGasto') {
+}if ($action === 'guardarGasto') {
     header('Content-Type: application/json');
     try {
         $rol_id = $_SESSION['rol_id'] ?? 0;
         $almacen_final = ($rol_id == 1) ? intval($_POST['almacen_id'] ?? 0) : intval($_SESSION['almacen_id'] ?? 0);
         if ($almacen_final <= 0) throw new Exception("Almacén no válido.");
 
-        $urlDocumento = null;
-        if (isset($_FILES['documento']) && $_FILES['documento']['error'] === UPLOAD_ERR_OK) {
-            $rutaCarpeta = $_SERVER['DOCUMENT_ROOT'] . "/cfsistem/uploads/evidencias/";
-            if (!is_dir($rutaCarpeta)) mkdir($rutaCarpeta, 0777, true);
-            $ext = pathinfo($_FILES['documento']['name'], PATHINFO_EXTENSION);
-            $nuevoNombre = "GASTO_" . time() . "_" . uniqid() . "." . $ext;
-            if (move_uploaded_file($_FILES['documento']['tmp_name'], $rutaCarpeta . $nuevoNombre)) {
-                $urlDocumento = $nuevoNombre;
-            }
-        }
-
+        $urlDocumento = '';
+    
         $cabecera = [
             'folio'        => $_POST['folio'] ?? 'S/F',
-            'fecha'        => $_POST['fecha']??date('Y-m-d'),
+            'fecha'        => $_POST['fecha'] ?? date('Y-m-d'),
             'almacen_id'   => $almacen_final,
-            'categoria_id' => $_POST['categoria_id'] ?? null, // <--- Nuevo campo integrado
+            'categoria_id' => $_POST['categoria_id'] ?? null, 
             'usuario_id'   => $_SESSION['usuario_id'] ?? 1,
             'beneficiario' => $_POST['beneficiario'] ?? '',
             'metodo_pago'  => $_POST['metodo_pago'] ?? 'Efectivo',
             'total'        => $_POST['total_final'] ?? 0,
             'documento_url'=> $urlDocumento,
             'observaciones'=> $_POST['observaciones'] ?? ''
-           
         ];
 
+        // 1. Registrar el gasto en la BD
         $res = $egresoModel->registrarGasto($cabecera, $_POST['desc'] ?? [], $_POST['cant'] ?? [], $_POST['precio'] ?? []);
+        
+        // Validar que se haya obtenido un ID correcto
+        $id = $res['id'] ?? 0;
+        if ($id <= 0) {
+            throw new Exception("No se pudo registrar el gasto en la base de datos.");
+        }
+            
+        $folio = $_POST['folio'] ?? 'SF';
+        $tipo = $_POST['gasto'] ?? 'gasto'; // Asegúrate de recibir este valor o por defecto 'gasto'
+        $documento = $_FILES['documento'] ?? null;
+
+        // 2. Procesar el archivo SOLO si el usuario realmente subió uno
+        if ($documento && $documento['error'] === UPLOAD_ERR_OK) {
+            
+            $ruta_carpeta = $_SERVER['DOCUMENT_ROOT'] . "/cfsistem/uploads/compras/";
+            if (!is_dir($ruta_carpeta)) {
+                mkdir($ruta_carpeta, 0777, true);
+            }
+
+            $ext = pathinfo($documento['name'], PATHINFO_EXTENSION);
+            // Limpiamos el folio para evitar caracteres raros en el nombre de archivo
+            $folio_limpio = preg_replace('/[^a-zA-Z0-9]/', '_', $folio);
+            $nombre = $tipo . "_" . $folio_limpio . "_" . time() . "." . $ext;
+            $destino = $ruta_carpeta . $nombre;
+
+            // Mover archivo temporal al destino real
+            if (!move_uploaded_file($documento['tmp_name'], $destino)) {
+                throw new Exception("Gasto registrado, pero no se pudo guardar el archivo físico.");
+            }
+
+            $documento_url = "uploads/compras/" . $nombre;
+
+            // 3. Guardar la relación del documento en la BD
+            $ok = $comprasModel->subirDocumentoCompra($tipo, $id, $nombre, $documento_url);
+            if (!$ok) {
+                throw new Exception("Gasto registrado, pero falló al vincular el documento en la base de datos.");
+            }
+        } 
+        // Descomenta las siguientes líneas si para ti subir el archivo es OBLIGATORIO:
+        // else {
+        //     throw new Exception("El documento digital es obligatorio.");
+        // }
+
+        // 4. RESPUESTA ÚNICA DE ÉXITO (Al final del flujo)
         echo json_encode(['success' => true, 'message' => 'Gasto guardado correctamente']);
+        
     } catch (Exception $e) {
+        // Si algo falla, el catch se encarga de mandar la respuesta limpia de error
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
     exit;

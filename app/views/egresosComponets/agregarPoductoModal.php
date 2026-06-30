@@ -292,7 +292,7 @@ function guardarCategoriaRapida() {
 
                 if (selectPrincipal) {
 
-                    fetch('/cfsistem/app/controllers/egresosController?action=getCategoriasJSON')
+                    fetch('/cfsistem/app/controllers/almacenes?action=getCategoriasJSON')
                         .then(res => res.json())
                         .then(categorias => {
 
@@ -393,7 +393,7 @@ function iniciarModuloProducto() {
             select.html('<option value="">Cargando...</option>');
 
             $.ajax({
-                url: 'http://localhost/cfsistem/app/controllers/almacenes.php?action=getCategoriasJSON',
+                url: '/cfsistem/app/controllers/almacenes.php?action=getCategoriasJSON',
                 type: 'GET',
                 dataType: 'json',
 
@@ -422,7 +422,7 @@ cargarUnidades: function() {
             select_unidad.html('<option value="">Cargando...</option>');
 
             $.ajax({
-                url: 'http://localhost/cfsistem/app/controllers/almacenes.php?action=getUnidadesMedidaJSON',
+                url: '/cfsistem/app/controllers/almacenes.php?action=getUnidadesMedidaJSON',
                 type: 'GET',
                 dataType: 'json',
 

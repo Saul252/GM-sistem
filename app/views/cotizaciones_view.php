@@ -126,12 +126,14 @@ error_reporting(E_ALL);
 
             </select>
         </div>
-             <div class="col-md-2">
+               <?php if ($puede == true): ?>
+<div class="col-md-2">
     <label for="select-usuarios" class="form-label fw-bold small text-muted text-uppercase">Vendedor</label>
-    <select class="form-select rounded-pill" id="select-usuarios" name="usuario_id" ">
-       <option value="" > Seleccione vendedor</option>
+    <select class="form-select rounded-pill" id="select-usuarios" name="usuario_id" onchange="getVentas()">
+     <option value="" > Seleccione vendedor</option>
     </select>
 </div>
+<?php endif; ?>
 
         <!-- Buscador -->
         <div class="col-lg-3 col-md-12">
@@ -511,26 +513,25 @@ error_reporting(E_ALL);
                         </div>
 
                         <!-- INFO -->
-                        <div class="row g-3 mb-4">
-
-                            <div class="col-md-6">
-                                <div class="p-3 rounded bg-light border h-100">
-                                    <div class="text-uppercase text-muted small mb-1">Almacén Origen</div>
-                                    <div class="fw-bold" id="print-almacen">---</div>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="p-3 rounded bg-light border h-100">
-
-                                    <div class="text-uppercase text-muted small mb-1">Cliente</div>
-                                    <div class="fw-bold mb-2" id="print-proveedor">---</div>
-
-
-                                </div>
-                            </div>
-
-                        </div>
+           <div class="row g-2">
+    <div class="col-6">
+        <div class="  ">
+            <small class="text-uppercase text-muted fw-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">
+                Vendedor:
+            </small>
+            <div class="fw-bold text-black" id="vendedor" style="font-size: 0.9rem;">---</div>
+        </div>
+    </div>
+    
+    <div class="col-6">
+        <div class=" ">
+            <small class="text-uppercase text-muted fw-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">
+                Cliente:
+            </small>
+            <div class="fw-bold text-black" id="clienteData" style="font-size: 0.9rem;">---</div>
+        </div>
+    </div>
+</div>
 
                         <!-- TABLA -->
                         <div class="table-responsive mb-3">
@@ -860,7 +861,7 @@ $(document).ready(function () {
 
     try {
         // 1. Realizar la petición a tu controlador de Cf System
-        const url = '/cfsistem/app/controllers/ventasHistorialController.php?action=obtenerUsuarios';
+        const url = '/cfsistem/app/controllers/accesoController.php?action=obtenerUsuarios';
         const respuesta = await fetch(url);
         
         if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
@@ -904,7 +905,7 @@ $(document).ready(function () {
 
     try {
         // 1. Realizar la petición a tu controlador de Cf System
-        const url = '/cfsistem/app/controllers/ventasHistorialController.php?action=obtenerUsuarios';
+        const url = '/cfsistem/app/controllers/accesoController.php?action=obtenerUsuarios';
         const respuesta = await fetch(url);
         
         if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
@@ -1363,7 +1364,7 @@ $('#boton').html(htmlboton);
     }
 }  async function prepararImpresion(id) {
         try {
-
+            
             $('#tablaConversion tbody').empty();
 
             console.log(id);
@@ -1387,6 +1388,49 @@ $('#boton').html(htmlboton);
             $('#print-fecha').text(`Fecha: ${new Date().toLocaleDateString()}`);
             $('#print-almacen').text(infoBase.almacen_nombre);
             $('#print-proveedor').text(infoBase.cliente_nombre || 'No especificado');
+let cliente=`<div class="card border-0 bg-light rounded-3 p-3 mb-3">
+    <div class="d-flex flex-column gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-person-fill text-secondary fs-5"></i>
+            <div>
+                <small class="text-muted d-block" style="font-size: 0.75rem;">Cliente</small>
+                <span id="print-cliente-nombre" class="fw-bold text-dark">${infoBase.cliente_nombre}</span>
+            </div>
+        </div>
+        
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-geo-alt-fill text-secondary fs-5"></i>
+            <div>
+                <small class="text-muted d-block" style="font-size: 0.75rem;">Dirección</small>
+                <span id="print-cliente-direccion" class="text-secondary small">${infoBase.direccion}</span>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-telephone-fill text-secondary fs-5"></i>
+            <div>
+                <small class="text-muted d-block" style="font-size: 0.75rem;">Teléfono</small>
+                <span id="print-cliente-telefono" class="text-secondary small">${infoBase.telefono}</span>
+            </div>
+        </div>
+    </div>
+</div>`;
+$('#clienteData').html(cliente);
+
+let vendedor=`<div class="card border-0 bg-light rounded-3 p-3 mb-3">
+    <div class="d-flex flex-column gap-2">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-person-fill text-secondary fs-5"></i>
+            <div>
+                <small class="text-muted d-block" style="font-size: 0.75rem;">Vendedor</small>
+                <span id="print-cliente-nombre" class="fw-bold text-dark">${infoBase.nombre}</span>
+            </div>
+        </div>
+        
+        
+    </div>
+</div>`;
+$('#vendedor').html(vendedor);
 
             let totalGeneral = 0;
             let html = '';

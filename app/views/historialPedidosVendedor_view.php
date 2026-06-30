@@ -180,6 +180,7 @@ body {
                         <div class="col-md-2">
                             <label class="form-label small fw-bold">Ubicación</label>
                             <select id="f_almacen" class="form-select form-select-sm" onchange="getVentas()">
+                                  <?php if($rol_id==1||$rol_id>=3):?> <option value="">Seleccione ubicacion</option><?php endif;?>
                                <?php foreach($almacenes as $a): ?>
                                     <option value="<?= $a['id'] ?>"
                                         <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
@@ -211,7 +212,7 @@ body {
             </div>
 
             <div class="scroll-table shadow-sm">
-                <div class="table-responsive" style="max-height: 60vh;">
+                <div class="table-responsive" style="max-height: 60vh; min-height:30vh;">
                     <table class="table table-hover align-middle mb-0" id="tablaVentas">
                         <thead>
                             <tr>
@@ -417,7 +418,7 @@ body {
 
     try {
         // 1. Realizar la petición a tu controlador de Cf System
-        const url = '/cfsistem/app/controllers/ventasHistorialController.php?action=obtenerUsuarios';
+        const url = '/cfsistem/app/controllers/accesoController.php?action=obtenerUsuarios';
         const respuesta = await fetch(url);
         
         if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
@@ -456,7 +457,7 @@ body {
     const modalObj = new bootstrap.Modal('#modalDetalle');
     let ventaActual = null;
     // La ruta al controlador (ajusta si el nombre del archivo varía)
-    const URL_CONTROLLER = '../controllers/historialPedidosVendedorController.php';
+    const URL_CONTROLLER = '/cfsistem/app/controllers/historialPedidosVendedorController.php';
 
     async function getVentas() {
         $('#loader').removeClass('d-none');
@@ -502,37 +503,56 @@ let agregarPago = (saldo <= 0) ?
                         </button>`;
 
                 return `<tr>
-              
-                <td class="ps-3 small">${v.fecha}</td>
-                <td class="fw-bold">${v.folio}</td>
-                <td><span class="badge bg-light text-dark border fw-normal">${v.almacen_nombre}</span></td>
-                 <td><div class="small fw-bold">${v.vendedor}</div></td>
-                <td><div class="small fw-bold">${v.cliente}</div></td>
-                <td class="fw-bold text-dark">${factura} </td>
-                <td class="fw-bold text-dark">$${total.toFixed(2)} </td>
-                
-                 <td>${v.estado_general=='activa'? badgeCobro:'<span class="text-danger small fw-bold"><i class="bi bi-check-circle"></i> Cancelado</span>'}</td>
-              
-                
-                <td class="text-end pe-3">
-                    <div class="btn-group">
-                    
-                    
-                       
-                        <button class="btn btn-sm btn-success " onclick="verDetalle(${v.id})">
-                            <i class="bi bi-eye-fill"></i> ver
-                        </button>
-                      
-
-                        
-                       
-                        
-                    </div>
-                </td>
-            </tr>`;
+    <td class="ps-3 small align-middle">${v.fecha}</td>
+    <td class="fw-bold align-middle">${v.folio}</td>
+    <td class="align-middle"><span class="badge bg-light text-dark border fw-normal">${v.almacen_nombre}</span></td>
+    <td class="align-middle"><div class="small fw-bold">${v.vendedor}</div></td>
+    <td class="align-middle"><div class="small fw-bold">${v.cliente}</div></td>
+    <td class="fw-bold text-dark align-middle">${factura}</td>
+    <td class="fw-bold text-dark align-middle">$${total.toFixed(2)}</td>
+    <td class="align-middle">
+        ${v.estado_general == 'activa' ? badgeCobro : '<span class="text-danger small fw-bold"><i class="bi bi-x-circle-fill me-1"></i>Cancelado</span>'}
+    </td>
+    <td class="text-end pe-3 align-middle">
+        <div class="d-inline-flex align-items-center gap-1">
+            <button class="btn btn-sm btn-success d-inline-flex align-items-center gap-1 shadow-sm" onclick="verDetalle(${v.id})">
+                <i class="bi bi-eye-fill"></i> Ver
+            </button>
+            
+            <div class="dropdown">
+                <button type="button" 
+                        class="btn btn-link text-secondary btn-sm px-2 border-0 remove-caret js-tooltip" 
+                        data-bs-toggle="dropdown" 
+                        data-bs-boundary="viewport" 
+                        aria-expanded="false"
+                        data-bs-placement="top" 
+                        title="Más opciones">
+                    <i class="bi bi-three-dots fs-5"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 mt-1" style="position: fixed !important; z-index: 1060 !important;">
+                    <li>
+                        <a class="dropdown-item py-2 text-primary d-flex align-items-center" href="/cfsistem/app/backend/ventas/ticket_venta.php?id=${v.id}" target="_blank">
+                            <i class="bi bi-receipt me-2 fs-5"></i> Imprimir Ticket
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item py-2 text-info d-flex align-items-center" href="/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=${v.id}" target="_blank">
+                            <i class="bi bi-file-earmark-text me-2 fs-5"></i> Imprimir Ticket sin precio
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item py-2 text-info d-flex align-items-center" href="/cfsistem/app/backend/ventas/ticketFormal.php?id=${v.id}" target="_blank">
+                            <i class="bi bi-file-earmark-post me-2 fs-5"></i> Imprimir Ticket Formal
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </td>
+</tr>`;
             }).join(''));
-            $('#deuda').text(deuda)
-            $('#venta').text(totalVendido)
+            $('#deuda').text(deuda.toFixed(2))
+            $('#venta').text(totalVendido.toFixed(2))
             console.log(deuda);
         } catch (e) {
             console.error("Error al cargar ventas:", e);
@@ -544,10 +564,10 @@ let agregarPago = (saldo <= 0) ?
         try {
             // 🔥 OBTENER IDS PENDIENTES
             const respIds = await fetch(
-                `../controllers/entregasController.php?ajax=get_ids_pendientes_venta&venta_id=${id}`
+                `/cfsistem/app/controllers/accesoController.php?action=get_ids_pendientes_venta&venta_id=${id}`
             );
             const resNAlmacen = await fetch(
-                `../controllers/entregasController.php?ajax=obtener_id_almacen&id=${id}`
+                `/cfsistem/app/controllers/accesoController.php?action=obtener_id_almacen&id=${id}`
             );
 
             const dataAlmacen = await resNAlmacen.json();

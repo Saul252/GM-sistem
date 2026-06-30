@@ -120,6 +120,11 @@
         padding: 10px;
         margin-bottom: 8px;
     }
+    @media (min-width: 992px) {
+    .w-lg-60 {
+        width: 60% !important;
+    }
+}
     </style>
 </head>
 
@@ -131,10 +136,7 @@
                 <h4 class="fw-bold mb-0 text-dark"><?= htmlspecialchars($cliente['nombre_comercial']) ?></h4>
                 <span class="badge bg-primary-subtle text-primary">RFC: <?= htmlspecialchars($cliente['rfc']) ?></span>
             </div>
-            <a href="/cfsistem/app/controllers/clientesEstatusController.php"
-                class="btn btn-sm btn-outline-secondary rounded-pill">
-                <i class="bi bi-arrow-left"></i> Volver al Listado
-            </a>
+           
             <div style="display:flex; gap:10px; align-items:end; margin-bottom:15px; flex-wrap:wrap;">
 
              
@@ -168,11 +170,11 @@ $fechaFin    = $_GET['fecha_fin'] ?? date('Y-m-t');
                 </button>
 
 
-
-            </div>
-            <button class="btn btn-dark btn-sm" onclick="imprimirEstadoCuenta()">
+ <button class="btn btn-dark btn-sm" onclick="imprimirEstadoCuenta()">
                 <i class="bi bi-printer"></i> Imprimir
             </button>
+            </div>
+           
         </div>
     </header>
 
@@ -233,10 +235,8 @@ $fechaFin    = $_GET['fecha_fin'] ?? date('Y-m-t');
 
 
 
-
-<div class="d-flex justify-content-center">
-    <div class="card border-0 shadow-sm mb-3" style="width: 60%; max-width: 1200px;">
-
+<div class="d-flex justify-content-center px-2">
+    <div class="card border-0 shadow-sm mb-3 w-100 w-lg-60" style="max-width: 1200px;">
 <h5 class="fw-bold mb-3 text-dark">Folios Detallados</h5>
 
         <div class="table-responsive">

@@ -320,7 +320,7 @@ public function actualizar($data, $items) {
 public function obtenerDetalle($id) {
     $sql = "SELECT d.*,co.vendedor_id as vendedor_id,co.total,co.observaciones, p.nombre as producto_nombre, p.sku, p.unidad_medida, o.nombre,o.equivalencia,
                    p.unidad_reporte, p.factor_conversion, co.almacen_id as almacen_origen_id,
-                   a.nombre as almacen_nombre,c.id as cliente_id, c.nombre_comercial as cliente_nombre
+                   a.nombre as almacen_nombre,c.id as cliente_id, c.nombre_comercial as cliente_nombre,c.direccion, c.telefono,c.rfc,user.id, user.nombre
                    
                
 
@@ -333,6 +333,7 @@ public function obtenerDetalle($id) {
             INNER JOIN almacenes a ON co.almacen_id = a.id
             INNER JOIN opciones_de_medida_adicional o on d.unidadMedida =o.id
             LEFT JOIN clientes c ON co.cliente_id = c.id
+            left join usuarios user on co.vendedor_id = user.id
             WHERE d.cotizacion_id = ?";
             
     $stmt = $this->db->prepare($sql);

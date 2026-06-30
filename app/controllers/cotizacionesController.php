@@ -27,8 +27,13 @@ protegerPagina('cotizaciones');
 $paginaActual = 'cotizaciones'; 
 $almacen_usuario = $_SESSION['almacen_id'] ?? 0;
 $es_admin = ($_SESSION['rol_id'] == 1 || $almacen_usuario == 0);
+   $rol = $_SESSION['rol_id'];
+   $puede=false;
 
-
+ if( $rol<3)
+            {
+                $puede=true;
+            }
 
 
 if (isset($_GET['action']) && $_GET['action'] === 'obtenerProductos') {
@@ -309,10 +314,16 @@ $estado = !empty($_GET['estado'])
 $buscador = !empty($_GET['buscador'])
     ? trim($_GET['buscador'])
     : null;
-    $vendedor = !empty($_GET['vendedor'])
+    
+if($puede==true)
+    {
+$vendedor = !empty($_GET['vendedor'])
     ? trim($_GET['vendedor'])
     : null;
-
+    }
+    else{
+        $vendedor=$_SESSION['usuario_id'];
+    }
 $cotizaciones = $cotizacionesModel->listarPorFechas(
     $es_admin,
     $almacen,

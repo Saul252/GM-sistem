@@ -70,16 +70,16 @@ $modulos = [
     ['id' => 'usuarios', 'url' => '/cfsistem/app/controllers/usuariosController.php', 'icon' => 'bi-people', 'class' => 'icon-usuarios', 'label' => 'Usuarios', 'desc' => 'Accesos'],
 
 ];
-?>
-<!DOCTYPE html>
+?><!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Inicio - Sistema de Almacenes</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link href="/cfsistem/css/inicio.css" rel="stylesheet">
-     <?php require_once __DIR__ . '/layout/icono.php' ?>
+    <?php require_once __DIR__ . '/layout/icono.php' ?>
     <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
 
 <style>
@@ -107,99 +107,123 @@ $modulos = [
     .card-modulo {
         background: #ffffff;
         border: none;
-        border-radius: 24px; /* Curva más estética */
-        padding: 1.5rem 1rem;
+        border-radius: 20px; /* Curva nativa iOS */
+        padding: 1.25rem 0.75rem;
         height: 100%;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.04);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.03);
     }
 
     .icono-modulo {
-        font-size: 2.8rem; /* Un poco más grande para que no se vea vacío */
-        margin-bottom: 10px;
-        display: block;
+        font-size: 2.4rem; 
+        margin-bottom: 8px;
+        display: inline-block;
     }
 
     .modulo-titulo { 
-        font-weight: 700; 
-        font-size: 0.95rem; 
+        font-weight: 600; 
+        font-size: 0.9rem; 
         color: #1c1c1e; 
-        margin-bottom: 3px;
-        letter-spacing: -0.3px;
+        margin-bottom: 2px;
+        letter-spacing: -0.2px;
+        line-height: 1.2;
+        /* Permitir quiebre de palabra corto si es muy largo en móviles */
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
     }
 
     .modulo-desc { 
-        font-size: 0.75rem; 
+        font-size: 0.72rem; 
         color: #8e8e93; 
         font-weight: 400;
         line-height: 1.2;
+        padding: 0 4px;
     }
 
-    /* --- AJUSTES PARA MÓVIL (ELIMINA EL EFECTO DE LEJANÍA) --- */
-    @media (max-width: 768px) { 
+    /* --- AJUSTES PARA MÓVIL REFINADO --- */
+    @media (max-width: 576px) { 
         .main-content { 
             margin-left: 0 !important; 
-            padding: 15px 12px; /* Reducimos padding lateral para ganar espacio */
-            padding-top: calc(var(--navbar-height) + 15px); 
+            padding: 12px 10px; 
+            padding-top: calc(var(--navbar-height) + 12px); 
         }
 
-        /* Forzamos 2 columnas que ocupen bien el ancho */
-        .row-cols-2 > * {
-            padding-left: 6px !important;
-            padding-right: 6px !important;
+        /* Espaciado perfecto de rejilla de 2 columnas sin romper paddings padres */
+        .grid-responsiva {
+            --bs-gutter-x: 0.6rem !important;
+            --bs-gutter-y: 0.6rem !important;
+        }
+
+        .card-modulo {
+            padding: 1rem 0.5rem;
+            border-radius: 16px; /* Bordes ligeramente más reducidos en móvil */
         }
 
         .icono-modulo {
-            font-size: 2.4rem;
+            font-size: 2.1rem;
+            margin-bottom: 6px;
         }
 
-        h2 { font-size: 1.6rem !important; }
+        .modulo-titulo {
+            font-size: 0.82rem;
+        }
 
-        /* Efecto de presión al tocar (Feedback táctil) */
+        .modulo-desc {
+            font-size: 0.68rem;
+        }
+
+        h2 { font-size: 1.4rem !important; }
+
+        /* Efecto de presión táctil nativo de iOS */
         .card-modulo:active {
-            transform: scale(0.94);
-            background-color: #f9f9fb;
+            transform: scale(0.95);
+            background-color: #f2f2f7;
+            opacity: 0.9;
         }
     }
 
-    /* Hover solo para Desktop */
+    /* Hover exclusivo de escritorio */
     @media (min-width: 992px) {
         .card-modulo:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 25px rgba(0,0,0,0.08);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.06);
         }
     }
 </style>
-
+</head>
 <body>
+
     <?php if (function_exists('renderizarLayout')) { renderizarLayout($paginaActual); } ?>
 
     <main class="main-content">
         <div class="container-fluid p-0">
-            <div class="d-flex align-items-center mb-4 header-section px-2">
+            
+            <div class="d-flex align-items-center mb-3 mb-md-4 header-section px-1">
                 <div class="p-3 bg-white rounded-4 shadow-sm me-3 d-none d-sm-block">
                     <i class="bi bi-grid-1x2-fill text-primary fs-4"></i>
                 </div>
                 <div>
-                    <h2 class="fw-bold m-0" style="letter-spacing: -0.8px;">Panel Principal</h2>
-                    <p class="text-muted mb-0" style="font-size: 0.9rem;">Gestión de recursos cfsistem</p>
+                    <h2 class="fw-bold m-0" style="letter-spacing: -0.6px;">Panel Principal</h2>
+                    <p class="text-muted mb-0" style="font-size: 0.85rem;">Gestión de recursos cfsistem</p>
                 </div>
             </div>
 
-            <div class="row g-2 g-md-4 row-cols-2 row-cols-sm-3 row-cols-md-3 row-cols-lg-4 row-cols-xl-6">
+            <div class="row grid-responsiva row-cols-2 row-cols-sm-3 row-cols-md-3 row-cols-lg-4 row-cols-xl-6 g-3">
                 
                 <?php foreach ($modulos as $m): ?>
                     <?php if (puedeVerModulo($m['id'])): ?>
                     <div class="col">
                         <a href="<?= $m['url'] ?>" class="text-decoration-none h-100 d-block">
                             <div class="card card-modulo text-center">
-                                <i class="bi <?= $m['icon'] ?> icono-modulo <?= $m['class'] ?>"></i>
+                                <i class="bi <?= $m['icon'] ?> icono-modulo <?= $m['class'] ?? 'text-primary' ?>"></i>
                                 <span class="modulo-titulo"><?= $m['label'] ?></span>
-                                <span class="modulo-desc text-truncate w-100"><?= $m['desc'] ?></span>
+                                <span class="modulo-desc text-truncate w-100"><?= $m['desc'] ?? '' ?></span>
                             </div>
                         </a>
                     </div>
@@ -209,7 +233,13 @@ $modulos = [
             </div>
         </div>
     </main>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 </body>
+
    <!--< ?php > if (puedeVerModulo('corteCaja')): ?> -->
                <!-- 
                 <div class="col">
