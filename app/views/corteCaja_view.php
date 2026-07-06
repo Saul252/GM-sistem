@@ -226,15 +226,7 @@
 
    
 </div>
-
-<button type="button" 
-        class="btn btn-dark shadow-sm px-4 py-2 d-flex align-items-center" 
-        style="border-radius: 10px;"
-        data-bs-toggle="modal" 
-        data-bs-target="#modalCorteCaja">
-    <i class="fas fa-cash-register me-2"></i>
-    <span class="fw-bold">FINALIZAR CORTE DE CAJA</span>
-</button>
+<div id="corte"></div>
 
             <div class="glass-card position-relative overflow-hidden mt-4">
                 <div id="tabla-loader" class="loading-overlay">
@@ -274,8 +266,8 @@
  */
 function periodoRequiereSaldo(periodo) {
     return periodo === 'hoy' || periodo === 'ayer';
+    
 }
-
 const AppCaja = {
     config: { 
         url: '/cfsistem/app/controllers/corteCajaController.php' 
@@ -284,14 +276,42 @@ const AppCaja = {
     init: function() {
         this.bindEvents();
         this.update(); 
+        if ($("#periodo").val() === "hoy" || $("#periodo").val() === "ayer") {
+    $("#corte").html(`
+        <button type="button" 
+                class="btn btn-dark shadow-sm px-4 py-2 d-flex align-items-center" 
+                style="border-radius: 10px;"
+                data-bs-toggle="modal" 
+                data-bs-target="#modalCorteCaja">
+            <i class="fas fa-cash-register me-2"></i>
+            <span class="fw-bold">FINALIZAR CORTE DE CAJA</span>
+        </button>
+    `);
+} else {
+    $("#corte").html("");
+}
     },
+    
 
     bindEvents: function() {
         const self = this;
 
         $('#periodo').on('change', function() {
             const periodo = $(this).val();
-
+if ($("#periodo").val() === "hoy" || $("#periodo").val() === "ayer") {
+    $("#corte").html(`
+        <button type="button" 
+                class="btn btn-dark shadow-sm px-4 py-2 d-flex align-items-center" 
+                style="border-radius: 10px;"
+                data-bs-toggle="modal" 
+                data-bs-target="#modalCorteCaja">
+            <i class="fas fa-cash-register me-2"></i>
+            <span class="fw-bold">FINALIZAR CORTE DE CAJA</span>
+        </button>
+    `);
+} else {
+    $("#corte").html("");
+}
             if (!periodoRequiereSaldo(periodo)) {
                 $('#contenedor-saldo-inicial').empty().hide();
             }

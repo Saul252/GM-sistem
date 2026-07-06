@@ -99,7 +99,7 @@
                                     <th style="width: 25%;">Presentación / Unidad</th>
                                     <th style="width: 25%;">Tipo de precio</th>
                                     <th class="ps-4">Precio Unitario</th>
-                                    <th style="width: 50%;">Precio</th>
+                                    <th style="width: 50%;">TOTAL</th>
                                     <th style="width: 10%;" class="text-end pe-4">Acción</th>
                                 </tr>
                             </thead>
@@ -392,7 +392,7 @@ function calcularPrecioSugeridoEditar(select) {
     const inputPrecio = fila.querySelector('.precio-unitario-editar');
     const unidadSelect = fila.querySelector('.unidad-select-editar');
     const tipoSelect = fila.querySelector('.tipoPrecio-select-editar');
-
+const inputtotal = fila.querySelector('.precio-total-editar');
     const unidadOption = unidadSelect.options[unidadSelect.selectedIndex];
     const tipoOption = tipoSelect.options[tipoSelect.selectedIndex];
 
@@ -400,7 +400,19 @@ function calcularPrecioSugeridoEditar(select) {
     const precioBase = Number(tipoOption?.dataset.precio || 0);
 
     const sugerido = precioBase / equivalencia;
-    inputPrecio.placeholder = sugerido.toFixed(4);
+   inputPrecio.value = sugerido.toFixed(2);
+    inputtotal.value = sugerido.toFixed(2);
+     let totalCompraEditar = 0;
+        document.querySelectorAll('#tablaDetalleEditar .precio-total-editar').forEach(el => {
+            totalCompraEditar += parseFloat(el.value) || 0;
+        });
+          
+        document.getElementById('costoTotalCompraEditar').textContent = totalCompraEditar.toLocaleString('es-MX', {
+            style: 'currency',
+            currency: 'MXN'
+        });
+        document.getElementById('totalCotizacionEditar').value = totalCompraEditar;
+
 }
 
 document.addEventListener('input', function(e) {

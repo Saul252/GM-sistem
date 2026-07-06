@@ -65,27 +65,27 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Teléfono</label>
-                                <input type="tel" name="telefono" class="form-control" placeholder="55 0000 0000">
+                                <input type="tel" name="telefono" class="form-control text-uppercase" placeholder="55 0000 0000">
                             </div>
 
                            <div class="col-md-12">
                                 <label class="form-label fw-bold">Calle</label>
-                                <textarea name="calle" class="form-control" rows="2"
+                                <textarea name="calle" class="form-control text-uppercase" rows="2"
                                     placeholder="Calle y número"></textarea>
                             </div>
                              <div class="col-md-12">
                                 <label class="form-label fw-bold">Colonia</label>
-                                <textarea name="colonia" class="form-control" rows="2"
+                                <textarea name="colonia" class="form-control text-uppercase" rows="2"
                                     placeholder="Colonia..."></textarea>
                             </div>
                              <div class="col-md-12">
                                 <label class="form-label fw-bold">Pueblo</label>
-                                <textarea name="pueblo" class="form-control" rows="2"
+                                <textarea name="pueblo" class="form-control text-uppercase" rows="2"
                                     placeholder="Pueblo"></textarea>
                             </div>
                              <div class="col-md-12">
                                 <label class="form-label fw-bold">Ciudad</label>
-                                <textarea name="ciudad" class="form-control" rows="2"
+                                <textarea name="ciudad" class="form-control text-uppercase" rows="2"
                                     placeholder="Ciudad"></textarea>
                             </div>
                             <div class="row g-3">

@@ -202,7 +202,15 @@ if ($cantidad <= 0) {
     <?php require_once __DIR__ . '/productos/modalMedidasAdicionales.php' ?>
     <?php require_once __DIR__ . '/productos/modalListaMedidas.php' ?>
     
-    
+    <script>
+    // Selecciona todos los inputs de texto y también los textareas
+    document.querySelectorAll('input[type="text"], textarea').forEach(elemento => {
+        elemento.addEventListener('input', function() {
+            // Convierte el valor a mayúsculas en tiempo real
+            this.value = this.value.toUpperCase();
+        });
+    });
+</script>
 <script>
 document.addEventListener('DOMContentLoaded', async function () {
 

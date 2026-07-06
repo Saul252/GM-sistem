@@ -49,7 +49,7 @@ $id_venta = intval($_GET['id'] ?? 0);
 
         <div class="card-body p-4">
             <form id="formEditarVenta">
-                <div class="row mb-4">
+                <!-- <div class="row mb-4">
                     <div class="col-md-6">
                         <div class="input-group">
                             <span class="input-group-text bg-primary text-white"><i class="bi bi-search"></i></span>
@@ -57,7 +57,7 @@ $id_venta = intval($_GET['id'] ?? 0);
                             <div id="resultadosBusqueda" class="list-group position-absolute w-100" style="top: 40px; z-index: 1000; display: none;"></div>
                         </div>
                     </div>
-                </div>
+                </div> -->
                 
                 <input type="hidden" id="edit_venta_id" value="<?= $id_venta ?>">
                 <input type="hidden" id="edit_cliente_id"> 
@@ -70,7 +70,6 @@ $id_venta = intval($_GET['id'] ?? 0);
                                 <th class="text-center">Tarifa / Precio</th>
                                 <th class="text-center">Cant. Original</th>
                                 <th class="text-center text-success">Cantidad total</th>
-                                <th class="text-center" style="width: 200px;">Entregar hoy</th>
                                 <th class="text-end">Subtotal</th>
                             </tr>
                         </thead>
@@ -206,12 +205,7 @@ function crearFilaProducto(d) {
                 </div>
                 <input type="hidden" class="input-cantidad-total" value="${d.cantidad_ref}">
             </td>
-            <td style="background-color: #f0fdf4;">
-                <div class="d-flex flex-column gap-1">
-                    <input type="number" class="form-control form-control-sm border-success text-center input-entrega-hoy-total" value="0" min="0" oninput="corregirAlMinimo(this)">
-                </div>
-                <small class="text-muted d-block text-center" style="font-size:0.6rem">Stock disp: ${d.stock}</small>
-            </td>
+           
             <td class="text-end fw-bold subtotal-fila">$0.00</td>
             <td class="text-center">
                  <button type="button" class="btn btn-sm text-danger" onclick="eliminarFila(this)"><i class="bi bi-trash"></i></button>

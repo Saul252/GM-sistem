@@ -878,6 +878,15 @@ error_reporting(E_ALL);
         <?php require_once __DIR__ . '/egresosComponets/agregarPoductoModal.php'; ?>
         <?php require_once __DIR__ . '/solicitudesCompra/modalProveedoresCompra.php'; ?>
         <?php require_once __DIR__ . '/egresosComponets/modalAjuste.php'; ?>
+        <script>
+    // Selecciona todos los inputs de texto y también los textareas
+    document.querySelectorAll('input[type="text"], textarea').forEach(elemento => {
+        elemento.addEventListener('input', function() {
+            // Convierte el valor a mayúsculas en tiempo real
+            this.value = this.value.toUpperCase();
+        });
+    });
+</script>
     <script>
     const URL_CONTROLADOR_SOLICITUD = '/cfsistem/app/controllers/solicitudesCompraController.php';
    $(document).ready(function () {

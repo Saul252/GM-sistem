@@ -795,6 +795,28 @@ if ($action === 'pagarDeudaCompra') {
     echo json_encode($result);
     exit;
 }
+
+if (isset($_GET['action']) && $_GET['action'] === 'obtenerProveedores') {
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+    
+    try {
+       
+       
+            $proveedores = $proveedorModel->listarTodosProveedores(0); 
+        
+        
+        
+        if ($proveedores) {
+            echo json_encode(['success' => true, 'data' => $proveedores]);
+        } else {
+            throw new Exception('Usuarios no encontrado.');
+        }
+    } catch (Throwable $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit;
+}
 if ($action === 'obtenerProductosSelect') {
 
     header('Content-Type: application/json');
@@ -871,6 +893,7 @@ if ($action === 'guardarCategoria') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && empty($action)) {
+    date_default_timezone_set('America/Mexico_City');
 
     // 1. Lógica de Fechas Dinámica (Filtro Rápido)
     $periodo_sel = $_GET['periodo_filtro'] ?? 'mes';

@@ -447,18 +447,39 @@ $('#formSolicitud').on('submit', async function(e) {
         const res = await resp.json();
 
         if (res.status === 'success') {
+    await Swal.fire({
+        icon: 'success',
+        title: '¡Éxito!',
+        text: res.message,
+        // 1. Eliminamos 'timer' para que la alerta no se cierre sola
+        showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonText: '<i class="bi bi-receipt"></i> Sí',
+        denyButtonText: '<i class="bi bi-receipt"></i> No',
+        cancelButtonText: 'Cerrar',
+        confirmButtonColor: '#34c759',
+        denyButtonColor: '#5856d6',
+        customClass: {
+            popup: 'rounded-4 border-0 shadow-lg'
+        }
+    }).then((result) => {
+        let url = '';
+        
+        if (result.isConfirmed) {
+            url = `/cfsistem/app/controllers/solicitudesCompraController.php`;
+        } else if (result.isDenied) {
+            url = `/cfsistem/app/controllers/egresosController.php`;
+        }
 
-            await Swal.fire({
-                icon: 'success',
-                title: '¡Éxito!',
-                text: res.message,
-                timer: 1500,
-                showConfirmButton: false
-            });
-
-            location.reload();
-
-        } else {
+        // Si se seleccionó una opción válida, abre la pestaña
+        if (url !== '') {
+            window.open(url, '_blank');
+        }
+        
+        // Finalmente recarga la página actual
+        location.reload();
+    });
+} else {
 
             Swal.fire(
                 'Error',

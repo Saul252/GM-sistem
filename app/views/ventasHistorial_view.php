@@ -22,7 +22,8 @@
     body {
         background-color: var(--bg-body);
         overflow-x: hidden;
-        padding-top: 20px
+        padding-top: 20px;
+        text-transform: uppercase !important;
     }
 
     .main-content {
@@ -263,7 +264,7 @@
                                 </div>
                             </div>
                            
-<?php if($_SESSION['rol_id']==1): ?>
+<?php if($_SESSION['rol_id']==1||$_SESSION['rol_id']==2): ?>
                              <div id="contenedorBoton">
                                <button id="btnHabilitar"
         class="btn btn-action w-100 mb-2 py-2 fw-bold"
@@ -379,7 +380,7 @@
                                             <th>Producto</th>
                                             <th class="text-center">Venta</th>
                                             <th class="text-center">Surtido</th>
-                                            <th class="text-center text-success">Stock Disponible</th>
+                                            
                                             <th class="text-center text-danger">Falta</th>
                                             <th class="text-center col-input d-none">Entrega</th>
                                         </tr>
@@ -543,7 +544,7 @@
                     <label class="form-label">Motivo de la cancelación</label>
                     <textarea
                         id="cancelar_motivo"
-                        class="form-control"
+                        class="form-control text-uppercase"
                         rows="4"
                         placeholder="Escriba el motivo..."
                     ></textarea>
@@ -827,8 +828,12 @@ async function agregarFactura( id,folio) {
             let deuda=0;
 
 $('#tablaVentas tbody').html(data.map(v => {
-    let total = parseFloat(v.total) || 0;
-    let pagado = parseFloat(v.pagado) || 0;
+    let total = 0;
+                let pagado =  0;
+                if(v.estado_general!='cancelada')
+                {
+                total = parseFloat(v.total) || 0;
+                pagado = parseFloat(v.pagado) || 0;}     
     let saldo = total - pagado;
     
     if (v.estado_general == 'activa') {
@@ -1094,7 +1099,6 @@ if (data.info.estado_general === 'cancelada') {
         ${entregada>1?entregada+' '+ p.unidad_reporte:
         (p.cantidad_entregada/(1/p.equivalencia))>=1?(p.cantidad_entregada/(1/p.equivalencia)).toFixed(3) +' '+ p.nombre:
         p.cantidad_entregada +' '+p.unidad_medida}</td>
-        <td class="text-center text-success fw-bold">${disponible>=1?disponible.toFixed(3):p.disponible} ${disponible>=1?p.unidad_reporte:p.unidad_medida}</td>
         
         <td class="text-center text-danger fw-bold">${(cantPendiente>=1?cantPendiente.toFixed(3):pen.toFixed(3))} ${cantPendiente>=1? p.unidad_reporte:p.cantidad/(1/p.equivalencia)>1?p.nombre:p.unidad_medida}</td>
          <td class="text-center col-input d-none">
@@ -1519,7 +1523,7 @@ if (data.info.estado_general === 'cancelada') {
                 </td>
                 <td style="max-width:250px;" class="text-muted small">${prod.direccion_entrega ?? '-'}</td>
                 <td class="text-center">
-                    <span class="badge ${badgeColor} text-capitalize font-monospace">${prod.estatus_logistico}</span>
+                    <span class="badge ${badgeColor}  text-uppercase font-monospace">${prod.estatus_logistico}</span>
                 </td>
             </tr>
         `;
@@ -1557,7 +1561,8 @@ if (data.info.estado_general === 'cancelada') {
                 </div>
             </div>
 <style>
-
+*{
+text-transform: uppercase !important;}
 .info-grid{
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1906,6 +1911,15 @@ table br {
     ventana.focus();
 }
    </script>
+   <script>
+    // Selecciona todos los inputs de texto y también los textareas
+    document.querySelectorAll('input[type="text"], textarea').forEach(elemento => {
+        elemento.addEventListener('input', function() {
+            // Convierte el valor a mayúsculas en tiempo real
+            this.value = this.value.toUpperCase();
+        });
+    });
+</script>
 </body>
 
 </html>

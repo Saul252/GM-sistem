@@ -57,7 +57,7 @@
                                 <div class="mb-3">
                                     <label class="form-label small fw-bold text-secondary">Descripción</label>
                                     <textarea name="descripcion" id="edit_descripcion"
-                                        class="form-control border-0 shadow-sm" style="border-radius: 10px;"
+                                        class="form-control text-uppercase border-0 shadow-sm" style="border-radius: 10px;"
                                         rows="3"></textarea>
                                 </div>
 

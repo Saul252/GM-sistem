@@ -14,17 +14,19 @@ require_once __DIR__ . '/../models/clientesModel.php';
 require_once __DIR__ . '/../models/RepartosModel.php';
 require_once __DIR__ . '/../models/almacen_model.php'; 
 
-protegerPagina('ventashistorial');
+protegerPagina('ventasVendedor');
 $almacenModel   = new AlmacenModel($conexion);
 $ventasModel = new VentaHistorialModel($conexion);
 $clientesModel = new ClientesModel($conexion);
 $repartosModel = new RepartoModel($conexion);
-$paginaActual = 'ventashistorial';
+$paginaActual = 'ventasVendedor';
 
 // --- ACCIÓN: LISTADO AJAX (Con filtros) ---
+// --- ACCIÓN: LISTADO AJAX (Con filtros) ---
 if (isset($_GET['action']) && $_GET['action'] === 'listar') {
-    if (ob_get_level()) ob_clean(); 
-    header('Content-Type: application/json');
+    // Limpiamos cualquier salida previa en el buffer
+    while (ob_get_level()) ob_end_clean(); 
+    header('Content-Type: application/json; charset=utf-8');
     
     try {
         $filtros = [
@@ -34,19 +36,31 @@ if (isset($_GET['action']) && $_GET['action'] === 'listar') {
             'rango'    => $_GET['f_rango'] ?? 'todos',
             'inicio'   => $_GET['f_inicio'] ?? '',
             'fin'      => $_GET['f_fin'] ?? '',
-            'almacen'  => $_GET['f_almacen'] ?? 0,
-            'vendedor'  => $_GET['f_vendedor'] ?? 0
-
+            'almacen'  => intval($_GET['f_almacen'] ?? 0),
+            'vendedor' => intval($_GET['f_vendedor'] ?? 0)
         ];
 
-        $rol_id = $_SESSION['rol_id'] ?? 2;
+        $rol_id  = $_SESSION['rol_id'] ?? 2;
         $usuario = $_SESSION['usuario_id'] ?? 0;
 
+        // 1. Obtener la lista de clientes con sus sumatorias agrupadas
         $data = $ventasModel->obtenerVentasFiltradasVendedor($filtros, $rol_id, $usuario);
-        echo json_encode($data);
+        
+        // 2. Obtener los totales generales del reporte (opcional para mostrar en tarjetas/footers)
+        $total = $ventasModel->obtenerVentasFiltradasVendedorTotal($filtros, $rol_id, $usuario);
+
+        // 3. Agrupamos en una sola estructura limpia para el Frontend
+        echo json_encode([
+            'status' => 'success',
+            'data'   => $data,
+            'totales' => $total
+        ]);
 
     } catch (Throwable $e) {
-        echo json_encode(['error' => true, 'message' => $e->getMessage()]);
+        echo json_encode([
+            'status'  => 'error',
+            'message' => $e->getMessage()
+        ]);
     }
     exit;
 }

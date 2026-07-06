@@ -36,9 +36,24 @@
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold">Beneficiario (Quién recibe)</label>
-                            <input type="text" name="beneficiario" class="form-control border-0 bg-light" style="border-radius: 12px;" placeholder="Ej: CFE, Gasolinera..." required>
-                        </div>
+                             <label class="form-label small fw-bold">Escriba el Proveedor ó elija uno</label>
+
+                            <div class="input-group">
+                                                       <input type="text"id="beneficiario" name="beneficiario" class="form-control bg-light" style="border-radius: 12px;" placeholder="Ej: CFE, Gasolinera..." required>
+                     
+     
+   
+
+                         
+                           
+                             <select class="form-select " id="select-proveedor" name="proveedor_id" onchange="actualizar()">
+   <option value="">Seleccione...</option>
+                            </select>
+                            <button class="btn btn-outline-success" type="button"
+                                            onclick="abrirModalNuevoProveedor()">
+                                            <i class="bi bi-plus-lg"></i>
+                                        </button>
+                        </div>   </div>
 
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Método de Pago</label>
@@ -88,8 +103,8 @@
                     <div class="row align-items-center">
                         <div class="col-md-7">
                             <label class="form-label small fw-bold">Observaciones</label>
-                            <textarea name="observaciones" class="form-control border-0 bg-light" style="border-radius: 12px;" rows="2" placeholder="Notas internas..."></textarea>
-                       <input type="date" id="fecha"name="fecha" class="form-control border-0 bg-light" style="border-radius: 12px;">
+                            <textarea name="observaciones" class="form-control text-uppercase border-0 bg-light" style="border-radius: 12px;" rows="2" placeholder="Notas internas..."></textarea>
+                       <input type="date" id="fecha"name="fecha" value="<?= date("Y-m-d") ?>" class="form-control border-0 bg-light" style="border-radius: 12px;">
                         </div>
                         <div class="col-md-5 text-end">
                             <h4 class="text-muted small fw-bold mb-0">TOTAL</h4>
@@ -128,10 +143,61 @@
     </div>
 </div>
 <script>
+
+     cargarProveedoresSelect();
+    async function cargarProveedoresSelect() {
+    const select = document.getElementById('select-proveedor');
+    if (!select) return; // Seguridad por si el select no está en la vista actual
+
+    try {
+        // 1. Realizar la petición a tu controlador de Cf System
+        const url = '/cfsistem/app/controllers/egresosController.php?action=obtenerProveedores';
+        const respuesta = await fetch(url);
+      
+        
+        if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
+        
+        const resultado = await respuesta.json();
+ 
+        // 2. Verificar que la respuesta sea exitosa y contenga los datos
+        if (resultado.success && Array.isArray(resultado.data)) {
+            
+            // Limpiamos el select y dejamos una opción inicial neutra
+            
+
+            // 3. Recorrer los usuarios y crear las opciones
+            resultado.data.forEach(proveedor => {
+                console.log(proveedor);
+                const opcion = document.createElement('option');
+                opcion.value = proveedor.nombre_comercial; // El ID que se enviará en el formulario
+                
+                // Formateamos el texto: "Nombre (Almacén - Rol)" para que sea súper descriptivo
+                const almacen = proveedor.almacen_nombre || 'Sin Almacén';
+                opcion.textContent = `${proveedor.nombre_comercial}`;
+                
+                // Agregamos la opción al select
+                select.appendChild(opcion);
+            });
+
+        } else {
+            select.innerHTML = '<option value="">No se pudieron cargar los proveedores </option>';
+            console.error('El backend no devolvió success:true o la estructura cambió');
+        }
+
+    } catch (error) {
+        select.innerHTML = '<option value="">Error al cargar la lista</option>';
+        console.error('Error al ejecutar cargarproveedores Select:', error);
+    }
+}
 // VARIABLES GLOBALES (FUERA del DOMContentLoaded)
 const modalGastoEl = document.getElementById('modalGasto');
 const formGasto = document.getElementById('formNuevoGasto');
 
+function actualizar()
+{
+     console.log($('#select-proveedor').val());
+    $('#beneficiario').val($('#select-proveedor').val());
+}
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Sistema Gastos INICIADO');
     
@@ -396,14 +462,7 @@ function abrirModalNuevaCategoria() {
             if (modalInst) modalInst.hide();
 
             // 3. Actualizar el select principal de Gastos
-            const select = document.getElementById('select_categoria_gasto');
-            if (select) {
-                // Añadimos la opción: new Option(texto, valor, defaultSelected, selected)
-                const nuevaOpcion = new Option(nombre, data.id, true, true);
-                select.add(nuevaOpcion);
-                // Forzamos el cambio para que se visualice
-                select.value = data.id;
-            }
+           cargarCategorias();
 
         } else {
             throw new Error(data.message || 'Error al guardar');
@@ -423,3 +482,12 @@ function abrirModalNuevaCategoria() {
         btn.innerHTML = textoOriginal;
     });
 }</script>
+<script>
+    // Selecciona todos los inputs de texto y también los textareas
+    document.querySelectorAll('input[type="text"], textarea').forEach(elemento => {
+        elemento.addEventListener('input', function() {
+            // Convierte el valor a mayúsculas en tiempo real
+            this.value = this.value.toUpperCase();
+        });
+    });
+</script>

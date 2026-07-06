@@ -31,6 +31,16 @@
         $sql .= " ORDER BY a.nombre ASC, p.nombre ASC";
         
         return $conexion->query($sql);
+    }   
+     public static function obtenerProductosVendedor($conexion) {
+        // SQL Robusto: Une Inventario para stock y Precios_Producto para el costo actual en ESE almacén
+        $sql = "SELECT p.id, p.sku, p.nombre, p.unidad_medida, p.unidad_reporte, p.factor_conversion, p.categoria_id, pp.precio_minorista, pp.precio_mayorista, pp.precio_distribuidor FROM productos p LEFT JOIN precios_producto pp ON (p.id =pp.producto_id ) WHERE p.activo = 1 GROUP by p.id;
+";
+
+      
+        $sql .= " ORDER BY p.nombre ASC";
+        
+        return $conexion->query($sql);
     }
       public static function obtenerProductosFiltrados($conexion, $almacen_id = 0,$categoria=null) {
       

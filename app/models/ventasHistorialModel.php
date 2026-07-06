@@ -127,7 +127,73 @@ class VentaHistorialModel {
         $res = $this->db->query($sql);
         return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
     }
+public function obtenerVentasFiltradasVendedorTotal($filtros, $rol_id, $usuario) {
+        $where = " WHERE v.id > '0' ";
+        
+        // Seguridad por Almacén / Vendedor
+        if ($rol_id > 3) { 
+            $where .= " AND v.vendedor_id = " . intval($usuario); 
+        } 
+        if (!empty($filtros['almacen'])) { 
+            $where .= " AND v.almacen_id = " . intval($filtros['almacen']); 
+        }
 
+        // Buscador (Folio o Cliente)
+        if (!empty($filtros['search'])) {
+            $s = $this->db->real_escape_string($filtros['search']);
+            // Nota: Al agrupar por cliente, buscar por folio individual puede ser menos común, 
+            // pero se mantiene por si buscas clientes que tengan un folio específico.
+            $where .= " AND (c.nombre_comercial LIKE '%$s%' OR v.folio LIKE '%$s%' OR v.id LIKE '%$s%') ";
+        }
+
+        // Estatus Entrega
+        if (!empty($filtros['status'])) {
+            $st = $this->db->real_escape_string($filtros['status']);
+            $where .= " AND v.estado_entrega = '$st' ";
+        }
+
+        // Estatus Vendedor (Filtro explícito)
+        if (!empty($filtros['vendedor'])) {
+            $st = $this->db->real_escape_string($filtros['vendedor']);
+            $where .= " AND v.vendedor_id = '$st' ";
+        }
+
+        // Rango de Fechas
+        if (!empty($filtros['rango']) && $filtros['rango'] !== 'todos') {
+            $where .= $this->construirFiltroFecha($filtros);
+        }
+
+        // Filtro por Estado de Pago (Saldo del Cliente)
+        $having = "";
+        if (!empty($filtros['pago'])) {
+            $having = ($filtros['pago'] == 'deuda') 
+                ? " HAVING total_debe > 0.01 " 
+                : " HAVING total_debe <= 0.01 ";
+        }
+
+        // Nueva SQL: Agrupada por cliente con sumatorias correspondientes
+        $sql = "SELECT 
+                    v.id_cliente,
+                    c.nombre_comercial as cliente,
+                    SUM(v.total) as total_compro,
+                    (SUM(v.total) -  (SELECT IFNULL(SUM(monto), 0) FROM historial_pagos WHERE venta_id = v.id)
+                   ) as total_debe
+                   
+             
+                FROM ventas v
+                JOIN usuarios u ON u.id = v.vendedor_id 
+                JOIN clientes c ON v.id_cliente = c.id 
+                JOIN almacenes a ON v.almacen_id = a.id 
+                -- Subconsulta para traer los pagos agrupados por cliente y evitar duplicplicación de SUM()
+                
+                $where 
+                GROUP BY v.id_cliente, c.nombre_comercial
+                $having 
+                ORDER BY cliente ASC";
+
+        $res = $this->db->query($sql);
+        return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+    }
     private function construirFiltroFecha($f) {
         switch($f['rango']) {
             case 'hoy': return " AND DATE(v.fecha) = CURDATE() ";

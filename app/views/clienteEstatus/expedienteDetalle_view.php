@@ -10,7 +10,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  
     <style>
     :root {
         --bs-primary: #007aff;
@@ -378,11 +379,15 @@ $fechaFin    = $_GET['fecha_fin'] ?? date('Y-m-t');
                                         $0.00
                                     </span>
                                 </div>
+                               
 
                             </div>
                         </div>
+                         <button type="button" class="btn btn-outline-primary rounded-pill px-3" onclick="imprimirContenidoModal()">
+    <i class="bi bi-printer-fill me-1"></i> Imprimir a PDF
+</button>
 
-                        <div id="boton"></div>
+                      <!-- <div id="boton"></div> -->
                     </div>
 
                     <div class="col-md-9 p-4">
@@ -888,12 +893,12 @@ async function imprimirEstadoCuenta() {
     let venta=parseInt(id);
     try {
         // 🔥 OBTENER IDS PENDIENTES
-        const respIds = await fetch(
-            `../controllers/entregasController.php?ajax=get_ids_pendientes_venta&venta_id=${id}`
-        );
-        const resNAlmacen = await fetch(
-            `../controllers/entregasController.php?ajax=obtener_id_almacen&id=${venta}`
-        );
+       const respIds = await fetch(
+                `/cfsistem/app/controllers/accesoController.php?action=get_ids_pendientes_venta&venta_id=${id}`
+            );
+            const resNAlmacen = await fetch(
+                `/cfsistem/app/controllers/accesoController.php?action=obtener_id_almacen&id=${id}`
+            );
 
         const dataAlmacen = await resNAlmacen.json();
         const almacen_id_conseguido = dataAlmacen.almacen.almacen_id;
@@ -921,7 +926,7 @@ async function imprimirEstadoCuenta() {
                 .removeAttr('onclick');
         }
 
-        const res = await fetch(`/cfsistem/app/controllers/ventasHistorialController.php?action=obtenerDetalle&id=${id}`);
+        const res = await fetch(`/cfsistem/app/controllers/historialPedidosVendedorController.php?action=obtenerDetalle&id=${id}`);
         cargarRepartos(id);
         const data = await res.json();
        
@@ -1167,6 +1172,225 @@ async function imprimirEstadoCuenta() {
         $('#div_p').toggleClass('d-none', $('#f_rango').val() !== 'personalizado');
         getVentas();
     }
+    function imprimirContenidoModal() {
+    // 1. Obtener los elementos clave del modal actual
+    const folio = $('#spanFolio').text();
+    const cliente = $('#detCliente').text();
+    const almacen = $('#detAlmacen').text();
+    
+    // 2. Clonar las tablas de datos para no alterar el modal visual
+    const tablaProductos = $('#tbodyDetalle').html();
+    const tablaEntregas = $('#tbodyHistorial').html();
+    const tablaPagos = $('#tbodyPagos').html();
+    
+    const total = $('#detTotalLabel').text();
+    const saldo = $('#detSaldoLabel').text();
+
+    // 3. Crear una nueva ventana temporal en el navegador
+    const ventanaImpresion = window.open('', '_blank');
+
+    // 4. Inyectar el HTML estructurado con estilos limpios y profesionales
+    ventanaImpresion.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Venta - Folio ${folio}</title>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+            <style>
+                body {font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 30px; color: #333; }
+                .ticket-header { border-bottom: 2px solid #007aff; padding-bottom: 15px; margin-bottom: 20px; }
+                .meta-box { background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 15px; }
+                .section-title { font-size: 0.85rem; font-weight: bold; text-transform: uppercase; color: #666; margin-top: 25px; margin-bottom: 10px; letter-spacing: 0.5px; }
+                .table-responsive { max-height: none !important; overflow: visible !important; }
+                .d-none { display: none !important; } /* Oculta columnas de inputs si están activas */
+                @media print {
+                    body { padding: 20px;  }
+                    .btn-imprimir { display: none; }
+                }
+                     @page { 
+                        margin: 0; /* Esto elimina el título de arriba y la fecha/hora de abajo */
+                    }
+            </style>
+        </head>
+        <body>
+         <div id="areaImpresion" class="text-uppercase  bg-white" style="min-height: 650px; font-size: 0.95rem;">
+ <img
+    src="/cfsistem/public/assets/logo.ico"
+    style="
+        position: fixed;
+        top: 30%;                  /* Centro vertical */
+        left: 50%;                 /* Centro horizontal */
+        transform: translate(-50%, -50%); /* Compensa el propio tamaño de la imagen */
+        width: 240px;
+        opacity: 0.08;
+        z-index: 1;               /* Cambiado a -1 para que quede detrás del texto y no tape los clics */
+        pointer-events: none;      /* Evita que interfiera si alguien intenta hacer clic sobre ella */
+    "
+>
+                        <!-- ENCABEZADO -->
+                        
+<div class=" ">
+
+    <!-- Logo + Título -->
+    <div class="">
+
+        <img src="/cfsistem/public/assets/logo.ico"
+             alt="Logo"
+             width="55"
+             height="55"
+             class="me-3">
+
+         <div class="ticket-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="fw-bold m-0">CF SYSTEM</h4>
+                    <small class="text-muted">Reporte de Operación de Venta</small>
+                </div>
+                <div class="text-end">
+                    <h5 class="text-primary fw-bold m-0">Folio: ${folio}</h5>
+                </div>
+            </div>
+
+            
+    </div>
+
+  
+
+
+                        </div>
+                        <div class="row g-3">
+                <div class="col-6">
+                    <div class="meta-box">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:0.7rem;">Cliente</small>
+                        <span class="fw-bold">${cliente}</span>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="meta-box">
+                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:0.7rem;">Almacén Origen</small>
+                        <span class="fw-bold">${almacen}</span>
+                    </div>
+                </div>
+            </div>
+<div class="section-title">📦 Productos</div>
+            <div class="table-responsive" style="max-height: 180px;">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr class="small text-uppercase">
+                                            <th>Producto</th>
+                                            <th class="text-center">Venta</th>
+                                            <th class="text-center">Surtido</th>
+                                            <th class="text-center text-danger">Falta</th>
+                                            <th class="text-center d-none">Entrega</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody >${tablaProductos}</tbody>
+                                </table>
+                            </div>
+                        <div class="row g-3 py-5">
+
+                            <div class="col-12">
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-header bg-white fw-bold small text-uppercase text-muted">
+                                        Historial de Pagos
+                                    </div>
+                                    <div class="table-responsive" style="max-height: 180px;">
+                                        <table class="table table-sm align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr class="small text-uppercase">
+                                                    <th>Fecha</th>
+                                                    <th>Monto</th>
+                                                    <th>Método</th>
+                                                    <th>REFERENCIA</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>${tablaPagos}</tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12  d-none">
+                           
+                                <div class="card border-0 shadow-sm">
+                                    <div class="card-header bg-white fw-bold small text-uppercase text-muted">
+                                        Historial de Entregas
+                                    </div>
+                                    <div class="table-responsive" style="max-height: 180px;">
+                                        <table class="table table-sm align-middle mb-0">
+                                            <thead class="table-light">
+                                                <tr class="small text-uppercase">
+                                                    <th>Fecha</th>
+                                                    <th>Responsable</th>
+                                                    <th>Producto</th>
+                                                    <th class="text-center">Cant</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody ">${tablaEntregas}</tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+            
+            
+
+            <div class="row justify-content-end mt-4">
+                <div class="col-5">
+                    <table class="table table-sm table-borderless border-top pt-2">
+                        <tr>
+                            <td class="text-end text-muted">Total Venta:</td>
+                            <td class="text-end fw-bold">${total}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-end text-muted">Saldo Pendiente:</td>
+                            <td class="text-end fw-bold text-danger">${saldo}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+
+</div>
+                       
+
+                        
+
+                    </div>
+             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script> 
+                <script>
+   window.addEventListener('DOMContentLoaded', () => {
+        // 1. Detectar si el usuario está en un dispositivo móvil
+        const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        // 2. Esperar 1 segundo a que carguen estilos, fuentes e imágenes
+        setTimeout(() => {
+            if (esMovil) {
+                // --- COMPORTAMIENTO EN CELULARES: DESCARGA DE PDF AUTOMÁTICA ---
+                const elementoParaConvertir = document.getElementById('areaImpresion');
+
+                const opciones = {
+                    margin:       1,
+                    filename:     'expediente_${folio}.pdf',
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true }, // Mayor calidad visual
+                    jsPDF:        { unit: 'cm', format: 'letter', orientation: 'portrait' }
+                };
+
+                // Generar y descargar el PDF directamente
+                html2pdf().set(opciones).from(elementoParaConvertir).save();
+                
+            } else {
+                // --- COMPORTAMIENTO EN COMPUTADORAS: DIÁLOGO NATIVO DE IMPRESIÓN ---
+                window.print();
+            }
+        }, 1000); // 1000 milisegundos = 1 segundo de espera
+    });
+ <\/script>
+        </body>
+        </html>
+    `);
+
+    ventanaImpresion.document.close();
+}
 
     </script>
 

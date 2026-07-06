@@ -45,7 +45,8 @@ public function listarPorFechas(
     $fecha_inicio = null,
     $fecha_fin = null,
     $estado = null,
-    $buscador = null
+    $buscador = null,
+    $vendedor = null,
 ) {
     // 1. Consulta base adaptada a comprobantes_de_pago y sus relaciones correspondientes
     $sql = "SELECT 
@@ -82,7 +83,12 @@ public function listarPorFechas(
         $sql .= " AND DATE(cp.fecha) >= ?";
         $types .= "s";
         $params[] = $fecha_inicio;
-    }
+    } 
+    // if (!empty($vendedor)) {
+    //     $sql .= " AND (vendedor.id) = ?";
+    //     $types .= "i";
+    //     $params[] = $vendedor;
+    // }
 
     // 4. Filtro de Fecha Final
     if (!empty($fecha_fin)) {
@@ -102,13 +108,14 @@ public function listarPorFechas(
     if (!empty($buscador)) {
         $sql .= " AND (
                     c.nombre_comercial LIKE ?
-                    OR cp.id LIKE ?
+                    OR cp.id LIKE ? or cp.referencia LIKE ?
                   )";
-        $types .= "ss";
+        $types .= "sss";
 
         $like = "%{$buscador}%";
         $params[] = $like;
         $params[] = $like;
+     $params[] = $like;
     }
 
     // 7. Ordenamiento final descendente por fecha de emisión del pago

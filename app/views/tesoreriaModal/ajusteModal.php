@@ -96,7 +96,7 @@
 
                         <div class="col-12">
                             <label class="text-xs fw-bold text-muted text-uppercase">Concepto / Observación</label>
-                            <textarea name="conceptos" class="form-control ios-input" rows="2" placeholder="Describa el motivo..."></textarea>
+                            <textarea name="conceptos" class="form-control text-uppercase ios-input" rows="2" placeholder="Describa el motivo..."></textarea>
                         </div>
                     </div>
 

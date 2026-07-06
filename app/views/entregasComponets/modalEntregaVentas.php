@@ -57,7 +57,7 @@
                                             <span class="input-group-text bg-white border-0">
                                                 <i id="iconDinamico" class="bi bi-geo-alt-fill text-danger"></i>
                                             </span>
-                                            <textarea id="mv_direccion" class="form-control border-0 p-2" rows="2" style="font-size: 0.9rem; resize: none;" placeholder="Dirección exacta..."></textarea>
+                                            <textarea id="mv_direccion" class="form-control  border-0 p-2 text-uppercase" rows="2" style="font-size: 0.9rem; resize: none;" placeholder="Dirección exacta..."></textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -92,7 +92,15 @@
         </div>
     </div>
 </div>
-
+<script>
+    // Selecciona todos los inputs de texto y también los textareas
+    document.querySelectorAll('input[type="text"], textarea').forEach(elemento => {
+        elemento.addEventListener('input', function() {
+            // Convierte el valor a mayúsculas en tiempo real
+            this.value = this.value.toUpperCase();
+        });
+    });
+</script>
 <script>
 /**
  * Alterna la "Personalidad" del formulario entre Modo Patio y Modo Ruta

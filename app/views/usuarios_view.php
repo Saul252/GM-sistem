@@ -131,7 +131,7 @@
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label small fw-bold">Nombre Completo</label>
-                            <input type="text" name="nombre" id="userName" class="form-control bg-light" placeholder="Ej. Juan Pérez" required>
+                            <input type="text" name="nombre" id="userName" class="form-control text-uppercase bg-light" placeholder="Ej. Juan Pérez" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Nombre de Usuario</label>

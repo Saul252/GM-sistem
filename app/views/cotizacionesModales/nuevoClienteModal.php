@@ -207,3 +207,12 @@ document.getElementById('formNuevoCliente').addEventListener('submit', function(
     });
 });
     </script>
+    <script>
+    // Selecciona todos los inputs de texto y también los textareas
+    document.querySelectorAll('input[type="text"], textarea').forEach(elemento => {
+        elemento.addEventListener('input', function() {
+            // Convierte el valor a mayúsculas en tiempo real
+            this.value = this.value.toUpperCase();
+        });
+    });
+</script>

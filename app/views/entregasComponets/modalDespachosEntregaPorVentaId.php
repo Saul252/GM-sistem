@@ -61,7 +61,7 @@
                                         <label id="gfin_lbl_direccion" class="small fw-bold text-primary">DIRECCIÓN / DESTINO</label>
                                         <div class="input-group">
                                             <span class="input-group-text bg-white border-0 shadow-sm"><i id="gfin_icon_dir" class="bi bi-geo-alt text-danger"></i></span>
-                                            <textarea id="gfin_direccion" class="form-control border-0 shadow-sm" rows="2" placeholder="..."></textarea>
+                                            <textarea id="gfin_direccion" class="form-control text-uppercase border-0 shadow-sm" rows="2" placeholder="..."></textarea>
                                         </div>
                                     </div>
 

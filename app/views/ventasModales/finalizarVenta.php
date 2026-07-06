@@ -396,8 +396,8 @@
                             </div>
                         </div>
                         <div class="mb-3">
-    <label for="select-usuarios" class="form-label fw-bold small text-muted text-uppercase">Atendió / Usuario</label>
-    <select class="form-select rounded-pill" id="select-usuarios" name="usuario_id">
+    <label for="select-usuarios" class="form-label fw-bold small text-muted text-uppercase">Atendió / Vendedor</label>
+    <select class="form-select rounded-pill" id="select-usuarios" name="usuario_id" required>
         <option value="" selected disabled>Cargando vendedores...</option>
     </select>
 </div>
@@ -812,7 +812,7 @@ window.agregarProducto = function(btn) {
     const almacen_id = parseInt(almacenId);
     const factor = parseFloat(fStr) || 1;
 
-    const nombre = fila.cells[1].innerText;
+    const nombre = fila.cells[2].innerText;
     const cantidadInput = fila.querySelector(".cantidad");
      const inputUsuario =
             fila.querySelector('.cantidad_usuario')?.value;
@@ -869,6 +869,7 @@ cantidadBase=Math.round(cantidadBase * 1000000) / 1000000;
 
     if (itemExistente) {
         itemExistente.cantidad += cantidadBase;
+         itemExistente.subtotal += cantidadBase*precioUnitario;
     } else {
         window.carrito.push({
             producto_id,
@@ -925,14 +926,15 @@ window.renderCarrito = function() {
                 <td><small>${item.almacen_nombre}</small></td>
                 <td><div class="fw-bold" style="font-size: 0.8rem;">${item.nombre}</div></td>
                 <td>
-                    <input type="number" class="form-control form-control-sm text-center input-factor-cambio" 
+                    <input type="hidden" class="form-control form-control-sm text-center input-factor-cambio" 
                         data-index="${index}" value="${(cantFactor<1 &&cantFactor>0)?cantFactor:cantFactor}" min="0" step="1">
-                </td>
+                 <small class="form-control form-control-sm text-center ">${item.cantidad*item.unidadEquivalencia}</small>
+                       </td>
                 <td>
                 
-                    <input type="number" class="form-control form-control-sm text-center input-pza-cambio" 
+                    <input type="hidden" class="form-control form-control-sm text-center input-pza-cambio" 
                         data-index="${index}" value="${(cantPza<1&& cantPza>0)?cantPza:cantPza}" min="0" step="any">
-              
+              <small class="form-control form-control-sm text-center ">${item.unidadMedidaNombre}</small>
                 </td>
                 <td class="text-end fw-bold subtotal-celda">$${Math.round((item.subtotal) * 10000) / 10000}</td>
                 <td>

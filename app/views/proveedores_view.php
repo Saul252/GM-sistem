@@ -388,7 +388,7 @@
                         <div class="col-12">
                             <label class="form-label">Dirección</label>
 
-                            <textarea class="form-control"
+                            <textarea class="form-control text-uppercase"
                                 id="direccion"
                                 name="direccion"></textarea>
                         </div>

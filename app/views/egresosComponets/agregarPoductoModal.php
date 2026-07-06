@@ -195,7 +195,15 @@
         </div>
     </div>
 </div>
-
+<script>
+    // Selecciona todos los inputs de texto y también los textareas
+    document.querySelectorAll('input[type="text"], textarea').forEach(elemento => {
+        elemento.addEventListener('input', function() {
+            // Convierte el valor a mayúsculas en tiempo real
+            this.value = this.value.toUpperCase();
+        });
+    });
+</script>
 <script>
     
 
@@ -292,7 +300,7 @@ function guardarCategoriaRapida() {
 
                 if (selectPrincipal) {
 
-                    fetch('/cfsistem/app/controllers/almacenes?action=getCategoriasJSON')
+                    fetch('/cfsistem/app/controllers/almacenes.php?action=getCategoriasJSON')
                         .then(res => res.json())
                         .then(categorias => {
 
@@ -354,7 +362,7 @@ function iniciarModuloProducto() {
 
     const ProdModulo = {
 
-        urlControlador: 'almacenes.php',
+        urlControlador: 'productosController.php',
 
         init: function() {
             this.bindEvents();
@@ -393,7 +401,7 @@ function iniciarModuloProducto() {
             select.html('<option value="">Cargando...</option>');
 
             $.ajax({
-                url: '/cfsistem/app/controllers/almacenes.php?action=getCategoriasJSON',
+                url: '/cfsistem/app/controllers/productosController.php?action=getCategoriasJSON',
                 type: 'GET',
                 dataType: 'json',
 
@@ -415,47 +423,47 @@ function iniciarModuloProducto() {
             });
         },
 cargarUnidades: function() {
+const select = $('#u_mayoreo');
+const select_unidad = $('#u_base');
 
-            const select = $('#u_mayoreo');
-            select.html('<option value="">Cargando...</option>')
-            const select_unidad = $('#u_base');
-            select_unidad.html('<option value="">Cargando...</option>');
+// 1. Colocar ambos en estado de carga
+select.html('<option value="">Cargando...</option>');
+select_unidad.html('<option value="">Cargando...</option>');
 
-            $.ajax({
-                url: '/cfsistem/app/controllers/almacenes.php?action=getUnidadesMedidaJSON',
-                type: 'GET',
-                dataType: 'json',
+$.ajax({
+    url: '/cfsistem/app/controllers/productosController.php?action=getUnidadesMedidaJSON',
+    type: 'GET',
+    dataType: 'json',
+    success: (data) => {
+        // Imprime en consola para verificar qué estructura llega de PHP
+        console.log("Datos recibidos:", data);
 
-                success: (data) => {
+        // 2. Limpiar y colocar la opción por defecto
+        select.empty().append('<option value="">Seleccionar...</option>');
+        select_unidad.empty().append('<option value="">Seleccionar...</option>');
 
-                    select.empty().append('<option value="">Seleccionar...</option>');
-select_unidad.empty().append('<option value="">Seleccionar...</option>');
-
-                    if (Array.isArray(data)) {
-                        data.forEach(uni => {
-                            select.append(
-                             
-                                        
-                                        
-                                `<option value="${uni.clave}">
-                                            ${uni.nombre} - ${uni.clave}
-                                        </option>`);
-                                        select_unidad.append(
-                             
-                                        
-                                        
-                                `<option value="${uni.clave}">
-                                            ${uni.nombre} - ${uni.clave}
-                                        </option>`);
-                        });
-                       
-                    }
-                },
-
-                error: () => {
-                    select.html('<option value="">Error al cargar</option>');
-                }
+        if (Array.isArray(data)) {
+            data.forEach(uni => {
+                // NOTA: Asegúrate de que 'clave' y 'nombre' existan tal cual en tu JSON
+                let opcionHtml = `<option value="${uni.clave}">${uni.nombre} - ${uni.clave}</option>`;
+                
+                select.append(opcionHtml);
+                select_unidad.append(opcionHtml);
             });
+        } else {
+            console.warn("Los datos recibidos no son un Array válido.");
+        }
+    },
+    error: (xhr, status, error) => {
+        // Imprime el error exacto en la consola para saber qué falló
+        console.error("Error en la petición AJAX:", error);
+        console.log("Respuesta del servidor:", xhr.responseText);
+
+        // 3. Actualizar ambos selects en caso de error
+        select.html('<option value="">Error al cargar</option>');
+        select_unidad.html('<option value="">Error al cargar</option>');
+    }
+}); // Quitamos la llave y coma sobrantes si vas a usarlo de forma independiente
         },
         // 🔥 Texto conversión
         actualizarTexto: function() {
@@ -475,7 +483,7 @@ select_unidad.empty().append('<option value="">Seleccionar...</option>');
             btn.prop('disabled', true).html('Guardando...');
 
             $.ajax({
-                url: this.urlControlador + '?action=guardar',
+                url: this.urlControlador + '?action=guardarProducto',
                 type: 'POST',
                 data: $('#formAgregarProducto').serialize(),
                 dataType: 'json',
@@ -562,7 +570,7 @@ select_unidad.empty().append('<option value="">Seleccionar...</option>');
 
         if (!nombre) return;
 
-        $.post('almacenes.php?action=guardarCategoria', {
+        $.post('productosController.php?action=guardarCategoria', {
             nombre
         }, function(res) {
 

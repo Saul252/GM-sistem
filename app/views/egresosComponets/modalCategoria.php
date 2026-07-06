@@ -1,4 +1,4 @@
-<div class="modal fade" id="modalAgregarCategoria" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" style="z-index: 1065;">
+<div class="modal fade" id="modalAgregarCategoria" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" >
     <div class="modal-dialog modal-sm modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 15px;">
             <div class="modal-header bg-primary text-white py-2" style="border-radius: 15px 15px 0 0;">

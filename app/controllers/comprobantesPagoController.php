@@ -63,6 +63,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'listarComprobantes') {
 
     try {
 $almacen = !empty($_GET['almacen']) ? (int)$_GET['almacen'] : 0;
+$vendedor= !empty($_GET['vendedor']) ? (int)$_GET['vendedor'] : null;
 
 $fechaInicio = !empty($_GET['fechaInicio'])
     ? $_GET['fechaInicio']
@@ -85,7 +86,7 @@ $buscador = !empty($_GET['buscador'])
     $fechaInicio,
     $fechaFin,
     $estado,
-    $buscador
+    $buscador,$vendedor
 );
 
         echo json_encode([

@@ -119,8 +119,8 @@
                                 <tr>
                                     <th>Almacén</th>
                                     <th>Producto</th>
-                                    <th>Cant. Fact</th>
-                                    <th>Cant. Pza</th>
+                                    <th>Cant</th>
+                                    <th>Unidad</th>
                                     <th>Sub</th>
                                     <th></th>
                                 </tr>
@@ -212,22 +212,22 @@
 
                            <div class="col-md-12">
                                 <label class="form-label fw-bold">Calle</label>
-                                <textarea name="calle" class="form-control" rows="2"
+                                <textarea name="calle" class="form-control text-uppercase" rows="2"
                                     placeholder="Calle y número"></textarea>
                             </div>
                              <div class="col-md-12">
                                 <label class="form-label fw-bold">Colonia</label>
-                                <textarea name="colonia" class="form-control" rows="2"
+                                <textarea name="colonia" class="form-control text-uppercase" rows="2"
                                     placeholder="Colonia..."></textarea>
                             </div>
                              <div class="col-md-12">
                                 <label class="form-label fw-bold">Pueblo</label>
-                                <textarea name="pueblo" class="form-control" rows="2"
+                                <textarea name="pueblo" class="form-control text-uppercase" rows="2"
                                     placeholder="Pueblo"></textarea>
                             </div>
                              <div class="col-md-12">
                                 <label class="form-label fw-bold">Ciudad</label>
-                                <textarea name="ciudad" class="form-control" rows="2"
+                                <textarea name="ciudad" class="form-control text-uppercase" rows="2"
                                     placeholder="Ciudad"></textarea>
                             </div>
                             <div class="row g-3">
@@ -270,7 +270,15 @@
     <script src="/cfsistem/app/backend/js_ventas/filtros.js"></script>
     <script src="/cfsistem/app/backend/js_ventas/nuevo_cliente.js"></script>
     <script src="/cfsistem/app/backend/js_ventas/modal_finalizar.js"></script>
-
+<script>
+    // Selecciona todos los inputs de texto y también los textareas
+    document.querySelectorAll('input[type="text"], textarea').forEach(elemento => {
+        elemento.addEventListener('input', function() {
+            // Convierte el valor a mayúsculas en tiempo real
+            this.value = this.value.toUpperCase();
+        });
+    });
+</script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {

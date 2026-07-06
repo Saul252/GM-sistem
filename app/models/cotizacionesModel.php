@@ -320,7 +320,7 @@ public function actualizar($data, $items) {
 public function obtenerDetalle($id) {
     $sql = "SELECT d.*,co.vendedor_id as vendedor_id,co.total,co.observaciones, p.nombre as producto_nombre, p.sku, p.unidad_medida, o.nombre,o.equivalencia,
                    p.unidad_reporte, p.factor_conversion, co.almacen_id as almacen_origen_id,
-                   a.nombre as almacen_nombre,c.id as cliente_id, c.nombre_comercial as cliente_nombre,c.direccion, c.telefono,c.rfc,user.id, user.nombre
+                   a.nombre as almacen_nombre,c.id as cliente_id, c.nombre_comercial as cliente_nombre,c.direccion, c.telefono,c.rfc,user.id, user.nombre as nombreVendedor
                    
                
 

@@ -46,15 +46,20 @@ $detallesPago = $stmtPago->get_result();
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Remisión Elegante #<?php echo $venta['folio']; ?></title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
     <style>
         /* Configuración de Impresión Media Hoja (A5 Horizontal) */
         @page {
-          
+           
             margin: 6mm 8mm;
         }
         
         body { 
+            text-transform: uppercase!important;
             font-family: 'Segoe UI', Inter, Helvetica, Arial, sans-serif; 
             color: #1e293b; 
             font-size: 9pt;
@@ -64,10 +69,10 @@ $detallesPago = $stmtPago->get_result();
             background-color: #fff;
         }
 
-        /* Barra de control superior */
+        /* Barra de control superior estilizada */
         .no-print {
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            padding: 12px;
+            padding: 14px;
             text-align: center;
             border-bottom: 2px solid #3b82f6;
             margin-bottom: 12px;
@@ -78,17 +83,12 @@ $detallesPago = $stmtPago->get_result();
             background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             color: white;
             border: none;
-            padding: 8px 24px;
-            font-size: 13px;
+            padding: 10px 28px;
+            font-size: 14px;
             font-weight: 600;
             border-radius: 6px;
             cursor: pointer;
             box-shadow: 0 2px 4px rgba(37, 99, 235, 0.3);
-            transition: all 0.2s ease;
-        }
-        .btn-print:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.4);
         }
 
         .invoice-box {
@@ -117,9 +117,7 @@ $detallesPago = $stmtPago->get_result();
             font-size: 16pt;
             font-weight: 800;
             line-height: 1.1;
-            background: linear-gradient(135deg, #1e3a8a 0%, #0284c7 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #1e3a8a;
             letter-spacing: -0.5px;
         }
         .company-address {
@@ -172,7 +170,7 @@ $detallesPago = $stmtPago->get_result();
             width: 30%;
         }
 
-        /* Tarjetas de Información Estilizadas */
+        /* Tarjetas de Información */
         .card-info {
             border: 1px solid #e2e8f0;
             background: #ffffff;
@@ -180,7 +178,6 @@ $detallesPago = $stmtPago->get_result();
             padding: 8px;
             min-height: 72px;
             font-size: 8.5pt;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
         }
         .card-title {
             font-weight: 700;
@@ -202,7 +199,7 @@ $detallesPago = $stmtPago->get_result();
             border: 1px solid #e2e8f0;
         }
         .items-table th {
-            background: linear-gradient(135deg, #1e3a8a 0%, #172554 100%);
+            background-color: #1e3a8a;
             color: #ffffff;
             font-weight: 600;
             text-align: left;
@@ -219,7 +216,7 @@ $detallesPago = $stmtPago->get_result();
             background-color: #f8fafc;
         }
 
-        /* Hilera de Totales Inteligente */
+        /* Hilera de Totales */
         .total-row td {
             font-size: 11pt;
             font-weight: 700;
@@ -251,142 +248,177 @@ $detallesPago = $stmtPago->get_result();
         .bold { font-weight: bold; }
         
         @media print { 
-            .no-print { display: none; } 
-            .card-info { border: 1px solid #cbd5e1; box-shadow: none; }
+            .no-print { display: none !important; } 
+            .card-info { border: 1px solid #cbd5e1; }
             .items-table { border: 1px solid #cbd5e1; }
-            .brand-title { -webkit-text-fill-color: #1e3a8a !important; }
         }
     </style>
 </head>
-<body onload="window.print();">
+<body>
 
-    <div class="no-print">
-        <button class="btn-print" onclick="window.print()">IMPRIMIR REMISIÓN PREMIUM</button>
-    </div>
-
-    <div class="invoice-box">
+    <div id="contenedor-remision">
         
-        <table class="table-layout">
-            <tr>
-                <td style="width: 32%;">
-                    <div class="logo-container">
-                        <img src="/cfsistem/public/assets/logo.ico" style="width: 38px; height: auto;" alt="Logo">
-                        <div class="brand-title">FORTALEZA<br><span style="font-size:12pt; font-weight:600; color:#0284c7;">CENTRO</span></div>
-                    </div>
-                </td>
-                
-                <td style="width: 38%;" class="company-address">
-                    <span style="font-weight: 600; color: #1e293b;"><?php echo htmlspecialchars($venta['nombre_almacen']); ?></span><br>
-                    <?php echo $venta['direccion_almacen']; ?><br>
-                    <span style="font-size: 7.5pt; color: #94a3b8;">Control de Distribución Interna</span>
-                </td>
-                
-                <td style="width: 30%;">
-                    <div class="remision-badge">
-                        N° REMISIÓN
-                        <span><?php echo $venta['folio']; ?></span>
-                    </div>
-                    <div style="clear: both;"></div>
-                    <table class="date-tile">
-                        <tr>
-                            <td class="title-td">Fecha</td>
-                            <td class="bold" style="color: #334155;"><?php echo($venta['fecha']); ?></td>
-                        </tr>
-                    </table>
-                </td>
-            </tr>
-        </table>
-
-        <table class="table-layout" style="margin-top: 4px;">
-            <tr>
-                <td style="width: 70%; padding-right: 6px;">
-                    <div class="card-info">
-                        <div class="card-title">VENDIDO A</div>
-                        <table style="width:100%; border-collapse:collapse; font-size: 8.5pt;">
-                           
-                            <tr>
-                                <td style="color:#64748b;"><strong>Nombre:</strong></td>
-                                <td class="bold" style="color:#1e3a8a; font-size:9.5pt;"><?php echo htmlspecialchars($venta['nombre_comercial']); ?></td>
-                            </tr>
-                            <tr>
-                                <td style="color:#64748b;"><strong>Dirección:</strong></td>
-                                <td style="color:#475569; font-size:8pt;"><?php echo htmlspecialchars($venta['direccion']); ?></td>
-                            </tr>
-                             <tr>
-                                <td style="width: 18%; color:#64748b;"><strong>Telefono:</strong></td>
-                                <td>#<?php echo $venta['telefono']; ?></td>
-                            </tr>
-                        </table>
-                    </div>
-                </td>
-                
-                <td style="width: 30%;">
-                    <div class="card-info" style="background-color: #f8fafc;">
-                        <div class="card-title" style="color:#0284c7;">Informacion reparto</div>
-                        <div style="line-height: 1.5; color:#64748b;">
-                            <strong>Estado:</strong><?php echo $venta['estado_entrega'] ?><br>
-                            
-                           </div>
-                    </div>
-                </td>
-            </tr>
-        </table>
-
-        <table class="items-table">
-            <thead>
-                <tr>
-                    <th style="width: 12%;">CÓDIGO</th>
-                    <th style="width: 15%;">UNIDAD</th>
-                    <th style="width: 43%;">DESCRIPCIÓN DEL PRODUCTO</th>
-                    <th class="text-right" style="width: 10%;">CANTIDAD</th>
-                    <?php if($mostrar_precios): ?>
-                        <th class="text-right" style="width: 10%;">PRECIO U.</th>
-                        <th class="text-right" style="width: 10%;">IMPORTE</th>
-                    <?php endif; ?>
-                </tr>
-            </thead>
-            <tbody>
-                <?php 
-                while($item = $detalles->fetch_assoc()): 
-                    $equiv = floatval($item['odmaEquivalencia'] ?? 1);
-                    $equiv2 = $equiv >= 1 ? 1 : $equiv;
-                    $cantidadReal = $item['cantidad'] * $equiv2;
-                ?>
-                <tr>
-                    <td style="font-family: monospace; color: #64748b; font-size: 9pt;"><?php echo !empty($item['sku']) ? htmlspecialchars($item['sku']) : '06020' . $item['producto_id']; ?></td>
-                    <td class="bold" style="color: #475569;"><?php echo strtoupper(htmlspecialchars($item['odmaNombre'])); ?></td>
-                    <td class="bold" style="color: #0f172a;"><?php echo htmlspecialchars($item['producto_nombre']); ?></td>
-                    <td class="text-right bold" style="color: #0f172a;"><?php echo number_format($cantidadReal, 4); ?></td>
-                    <?php if($mostrar_precios): ?>
-                        <td class="text-right" style="color: #475569;">$<?php echo number_format(($item['subtotal']) / $cantidadReal, 2); ?></td>
-                        <td class="text-right bold" style="color: #1e3a8a;">$<?php echo number_format($item['subtotal'], 2); ?></td>
-                    <?php endif; ?>
-                </tr>
-                <?php endwhile; ?>
-                
-                <?php if($mostrar_precios): ?>
-                <tr class="total-row">
-                    <td colspan="4"></td>
-                    <td class="text-right" style="color: #475569; font-size: 10pt;">TOTAL MXN</td>
-                    <td class="text-right total-highlight">$<?php echo number_format($venta['subtotal'], 2); ?></td>
-                </tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
-
-        <div class="card-obs">
-            <div style="font-weight: 700; color: #334155; margin-bottom: 2px; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.3px;">Validación de Operación</div>
-            <strong>Cajero Emisor:</strong> <?php echo htmlspecialchars($venta['nombre_vendedor'] ?? 'Alejandro Casales R.'); ?> &nbsp;|&nbsp; 
-            <strong>Ejecutivo:</strong> <?php echo htmlspecialchars($venta['vendedor']); ?><br>
-            <strong>Observaciones:</strong>
-            <?php if(!empty($venta['observaciones'])): ?>
-                <div style="margin-top: 3px; border-top: 1px solid #e2e8f0; padding-top: 2px;">
-                     <span style="color:#1e293b;"><?php echo htmlspecialchars($venta['observaciones']); ?></span>
-                </div>
-            <?php endif; ?>
+        <div class="no-print">
+            <button class="btn-print" onclick="procesarImpresion()">IMPRIMIR REMISIÓN PREMIUM</button>
         </div>
 
+        <div class="invoice-box">
+            
+            <table class="table-layout">
+                <tr>
+                    <td style="width: 32%;">
+                        <div class="logo-container">
+                            <img src="/cfsistem/public/assets/logo.ico" style="width: 38px; height: auto;" alt="Logo">
+                            <div class="brand-title">FORTALEZA<br><span style="font-size:12pt; font-weight:600; color:#0284c7;">CENTRO</span></div>
+                        </div>
+                    </td>
+                    
+                    <td style="width: 38%;" class="company-address">
+                        <span style="font-weight: 600; color: #1e293b;"><?php echo htmlspecialchars($venta['nombre_almacen']); ?></span><br>
+                        <?php echo $venta['direccion_almacen']; ?><br>
+                        <span style="font-size: 7.5pt; color: #94a3b8;">Control de Distribución Interna</span>
+                    </td>
+                    
+                    <td style="width: 30%;">
+                        <div class="remision-badge">
+                            N° REMISIÓN
+                            <span><?php echo $venta['folio']; ?></span>
+                        </div>
+                        <div style="clear: both;"></div>
+                        <table class="date-tile">
+                            <tr>
+                                <td class="title-td">Fecha</td>
+                                <td class="bold" style="color: #334155;"><?php echo($venta['fecha']); ?></td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+
+            <table class="table-layout" style="margin-top: 4px;">
+                <tr>
+                    <td style="width: 70%; padding-right: 6px;">
+                        <div class="card-info">
+                            <div class="card-title">VENDIDO A</div>
+                            <table style="width:100%; border-collapse:collapse; font-size: 8.5pt;">
+                               <tr>
+                                    <td style="color:#64748b;"><strong>Nombre:</strong></td>
+                                    <td class="bold" style="color:#1e3a8a; font-size:9.5pt;"><?php echo htmlspecialchars($venta['nombre_comercial']); ?></td>
+                                </tr>
+                                <tr>
+                                    <td style="color:#64748b;"><strong>Dirección:</strong></td>
+                                    <td style="color:#475569; font-size:8pt;"><?php echo htmlspecialchars($venta['direccion']); ?></td>
+                                </tr>
+                                 <tr>
+                                    <td style="width: 18%; color:#64748b;"><strong>Telefono:</strong></td>
+                                    <td>#<?php echo $venta['telefono']; ?></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </td>
+                    
+                    <td style="width: 30%;">
+                        <div class="card-info" style="background-color: #f8fafc;">
+                            <div class="card-title" style="color:#0284c7;">Informacion reparto</div>
+                            <div style="line-height: 1.5; color:#64748b;">
+                                <strong>Estado:</strong><?php echo $venta['estado_entrega'] ?><br>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th style="width: 12%;">CÓDIGO</th>
+                        <th style="width: 15%;">UNIDAD</th>
+                        <th style="width: 43%;">DESCRIPCIÓN DEL PRODUCTO</th>
+                        <th class="text-right" style="width: 10%;">CANTIDAD</th>
+                        <?php if($mostrar_precios): ?>
+                            <th class="text-right" style="width: 10%;">PRECIO U.</th>
+                            <th class="text-right" style="width: 10%;">IMPORTE</th>
+                        <?php endif; ?>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php 
+                    while($item = $detalles->fetch_assoc()): 
+                        $equiv = floatval($item['odmaEquivalencia'] ?? 1);
+                        $equiv2 = $equiv >= 1 ? 1 : $equiv;
+                        $cantidadReal = $item['cantidad'] * $equiv2;
+                    ?>
+                    <tr>
+                        <td style="font-family: monospace; color: #64748b; font-size: 9pt;"><?php echo !empty($item['sku']) ? htmlspecialchars($item['sku']) : '06020' . $item['producto_id']; ?></td>
+                        <td class="bold" style="color: #475569;"><?php echo strtoupper(htmlspecialchars($item['odmaNombre'])); ?></td>
+                        <td class="bold" style="color: #0f172a;"><?php echo htmlspecialchars($item['producto_nombre']); ?></td>
+                        <td class="text-right bold" style="color: #0f172a;"><?php echo number_format($cantidadReal, 4); ?></td>
+                        <?php if($mostrar_precios): ?>
+                            <td class="text-right" style="color: #475569;">$<?php echo number_format(($item['subtotal']) / $cantidadReal, 2); ?></td>
+                            <td class="text-right bold" style="color: #1e3a8a;">$<?php echo number_format($item['subtotal'], 2); ?></td>
+                        <?php endif; ?>
+                    </tr>
+                    <?php endwhile; ?>
+                    
+                    <?php if($mostrar_precios): ?>
+                    <tr class="total-row">
+                        <td colspan="4"></td>
+                        <td class="text-right" style="color: #475569; font-size: 10pt;">TOTAL MXN</td>
+                        <td class="text-right total-highlight">$<?php echo number_format($venta['subtotal'], 2); ?></td>
+                    </tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+
+            <div class="card-obs">
+                <div style="font-weight: 700; color: #334155; margin-bottom: 2px; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.3px;">Validación de Operación</div>
+                <strong>Cajero Emisor:</strong> <?php echo htmlspecialchars($venta['nombre_vendedor'] ?? 'Alejandro Casales R.'); ?> &nbsp;|&nbsp; 
+                <strong>Ejecutivo:</strong> <?php echo htmlspecialchars($venta['vendedor']); ?><br>
+                <strong>Observaciones:</strong>
+                <?php if(!empty($venta['observaciones'])): ?>
+                    <div style="margin-top: 3px; border-top: 1px solid #e2e8f0; padding-top: 2px;">
+                         <span style="color:#1e293b;"><?php echo htmlspecialchars($venta['observaciones']); ?></span>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+        </div>
     </div>
 
+    <script>
+        function procesarImpresion() {
+            const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+            const elemento = document.getElementById('contenedor-remision');
+            const folio = "<?php echo $venta['folio']; ?>";
+
+            if (esMovil) {
+                // Configuración para Media Hoja Horizontal (A5 Landscape) en móviles
+                const opciones = {
+                    margin:       [8, 8, 8, 8],
+                    filename:     `Remision_Premium_${folio}.pdf`,
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+                    jsPDF:        { unit: 'mm', format: 'a5', orientation: 'landscape' } // Layout horizontal
+                };
+
+                // Ocultar botón de control para que no salga en el PDF
+                const controlBoton = elemento.querySelector('.no-print');
+                if(controlBoton) controlBoton.style.display = 'none';
+
+                html2pdf().set(opciones).from(elemento).save().then(() => {
+                    // Re-mostrar botón de impresión tras guardar
+                    if(controlBoton) controlBoton.style.display = 'block';
+                });
+            } else {
+                // Computadora de escritorio: Diálogo de impresión nativo del navegador
+                window.print();
+            }
+        }
+
+        // Activación automática controlada tras renderizar el DOM
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(procesarImpresion, 800);
+        });
+    </script>
 </body>
 </html>

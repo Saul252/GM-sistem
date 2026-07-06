@@ -336,7 +336,7 @@
 
                         <div class="mb-3">
                             <label class="form-label">Observaciones</label>
-                            <textarea name="observaciones" class="form-control" rows="2"></textarea>
+                            <textarea name="observaciones" class="form-control text-uppercase" rows="2"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -813,6 +813,15 @@
             </div>
         </div>
     </div>
+    <script>
+    // Selecciona todos los inputs de texto y también los textareas
+    document.querySelectorAll('input[type="text"], textarea').forEach(elemento => {
+        elemento.addEventListener('input', function() {
+            // Convierte el valor a mayúsculas en tiempo real
+            this.value = this.value.toUpperCase();
+        });
+    });
+</script>
     <script>
     function abrirSubModalCategoria() {
         // Simplemente abrimos el modal de categoría sin cerrar el anterior

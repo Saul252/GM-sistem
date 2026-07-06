@@ -98,7 +98,7 @@
                                     <th style="width: 25%;">Presentación / Unidad</th>
                                     <th style="width: 25%;">Tipo de precio</th>
                                     <th  class="ps-4">Precio Unitario</th>
-                                    <th style="width: 50%";>Precio</th>
+                                    <th style="width: 50%";>TOTAL</th>
                                     <th style="width: 10%;" class="text-end pe-4">Acción</th>
                                 </tr>
                             </thead>
@@ -504,20 +504,36 @@ function calcularPreciosugerido(select) {
     const fila = select.closest('tr');
 
     const inputPrecio = fila.querySelector('.precio-unitario');
+const inputtotal = fila.querySelector('.precio-total');
 
     const unidadSelect = fila.querySelector('.unidad-select');
     const tipoSelect = fila.querySelector('.tipoPrecio-select');
 
     const unidadOption = unidadSelect.options[unidadSelect.selectedIndex];
-    const tipoOption = tipoSelect.options[tipoSelect.selectedIndex];
+    const tipoOption = tipoSelect.options[tipoSelect.selectedIndex]??0;
 
     const equivalencia = Number(unidadOption?.dataset.equivalencia || 1);
-    const precioBase = Number(tipoOption?.dataset.precio || 0);
+    const precioBase = Number(tipoOption?.dataset.precio || 0)??0;
 
-    const sugerido = precioBase / equivalencia;
+    const sugerido = (precioBase / equivalencia)??0;
 
     // SOLO PLACEHOLDER
-    inputPrecio.placeholder = sugerido.toFixed(4);
+    inputPrecio.value = sugerido.toFixed(2);
+    inputtotal.value = sugerido.toFixed(2);
+    let totaLCompra = 0;
+
+        document.querySelectorAll('.precio-total')
+            .forEach(el => {
+                totaLCompra += parseFloat(el.value) || 0;
+            });
+
+        document.getElementById('costoTotalCompra')
+            .textContent = totaLCompra.toLocaleString('es-MX', {
+                style: 'currency',
+                currency: 'MXN'
+            });
+             document.getElementById('totalCotizacion').value=totaLCompra;
+
 }
 document.addEventListener('input', function(e) {
 
@@ -673,6 +689,20 @@ $('#formSolicitud').on('submit', async function(e) {
 function quitarFila(id) {
 
     $(`#fila-${id}`).remove();
+    let totaLCompra = 0;
+
+        document.querySelectorAll('.precio-total')
+            .forEach(el => {
+                totaLCompra += parseFloat(el.value) || 0;
+            });
+
+        document.getElementById('costoTotalCompra')
+            .textContent = totaLCompra.toLocaleString('es-MX', {
+                style: 'currency',
+                currency: 'MXN'
+            });
+             document.getElementById('totalCotizacion').value=totaLCompra;
+
 
     if (!$('#tablaDetalle tbody tr').length) {
 

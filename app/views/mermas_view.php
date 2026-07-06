@@ -154,7 +154,7 @@
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label small text-uppercase fw-bold text-muted">Observaciones</label>
-                                <textarea name="observaciones" class="form-control" rows="1" placeholder="Detalles adicionales..."></textarea>
+                                <textarea name="observaciones" class="form-control text-uppercase" rows="1" placeholder="Detalles adicionales..."></textarea>
                             </div>
                         </div>
 

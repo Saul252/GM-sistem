@@ -154,7 +154,7 @@
 
                     <div class="mb-2">
                         <label class="info-label">Observaciones</label>
-                        <textarea name="comentario" id="m_comentario" class="form-control border-0 bg-light rounded-3 shadow-none" rows="2" placeholder="Notas opcionales..."></textarea>
+                        <textarea name="comentario" id="m_comentario" class="form-control text-uppercase border-0 bg-light rounded-3 shadow-none" rows="2" placeholder="Notas opcionales..."></textarea>
                     </div>
                 </div>
 

@@ -34,7 +34,7 @@
                                              <tr class="text-muted small border-bottom border-light">
                                                  <th class="pb-3 fw-bold">Producto</th>
                                                  <th class="pb-3 text-center fw-bold">Venta</th>
-                                                 <th class="pb-3 text-center fw-bold">Hoy</th>
+                                              
                                                  <th class="pb-3 text-end fw-bold">Subtotal</th>
                                              </tr>
                                          </thead>
@@ -173,7 +173,7 @@
                                  </div>
                              </div>
 
-                             <textarea id="obsVenta" class="form-control border-0 bg-white p-3 rounded-4 shadow-sm"
+                             <textarea id="obsVenta" class="form-control text-uppercase border-0 bg-white p-3 rounded-4 shadow-sm"
                                  rows="2" placeholder="Notas adicionales de la venta..."
                                  style="font-size: 0.85rem;"></textarea>
                          </div>
@@ -824,19 +824,16 @@ ${
 
 </div>       
             </td>
-            <td>
-                <div class="input-group input-group-sm">
-                    <input type="number" 
+          
+               
+                    <input type="hidden" 
                            class="form-control text-center input-entrega-modal" 
                            data-index="${index}" 
                            value="${item.cantidad}" 
                            min="0" 
                            max="${item.cantidad}"
                            step="any" readonly>
-                    <span class="input-group-text"><i class="bi bi-box-seam"></i></span>
-                </div>
-                <small class="text-muted d-block text-center" style="font-size: 0.65rem;">Piezas a entregar hoy</small>
-            </td>
+                    
             <td class="text-end fw-bold">$${item.subtotal.toFixed(2)}</td>
         `;
         tabla.appendChild(tr);

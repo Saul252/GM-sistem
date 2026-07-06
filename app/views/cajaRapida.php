@@ -344,18 +344,14 @@
 
 
                     </td>
-                      <td>
-                                        <input type="number" step="0.01"
-                                                class="form-control form-control-sm input-precioMayor"
-                                                value="<?= $p['precio_minorista']??0 ?>">
-                                                <input type="hidden" step="0.01"
-                                                class="form-control form-control-sm input-precio"
-                                                value="<?= $p['precio_minorista'] ?>">
-                                        
-                   
+                     <td>
+                        <input type="number" class="form-control form-control-sm cantidad_usuario" min="1" value="1">
 
+                        <!-- REAL -->
+                        <input type="hidden" class="cantidad" value="0">
 
                     </td>
+                 
                                     <td>
 
                                         <select class="form-select form-select-sm select-precio">
@@ -373,11 +369,16 @@
 
 
                  
-                    <td>
-                        <input type="number" class="form-control form-control-sm cantidad_usuario" min="1" value="1">
+                        <td>
+                                        <input type="number" step="0.01"
+                                                class="form-control form-control-sm input-precioMayor"
+                                                value="<?= $p['precio_minorista']??0 ?>">
+                                                <input type="hidden" step="0.01"
+                                                class="form-control form-control-sm input-precio"
+                                                value="<?= $p['precio_minorista'] ?>">
+                                        
+                   
 
-                        <!-- REAL -->
-                        <input type="hidden" class="cantidad" value="0">
 
                     </td>
 
@@ -406,8 +407,8 @@
                             <tr>
                                 <th>Almacén</th>
                                 <th>Producto</th>
-                                <th>Cant. Fact</th>
-                                <th>Cant. Pza</th>
+                                <th>Cant</th>
+                                <th>Unidad</th>
                                 <th>Sub</th>
                                 <th></th>
                             </tr>
@@ -496,22 +497,22 @@
 
                              <div class="col-md-12">
                                 <label class="form-label fw-bold">Calle</label>
-                                <textarea name="calle" class="form-control" rows="2"
+                                <textarea name="calle" class="form-control text-uppercase" rows="2"
                                     placeholder="Calle y número"></textarea>
                             </div>
                              <div class="col-md-12">
                                 <label class="form-label fw-bold">Colonia</label>
-                                <textarea name="colonia" class="form-control" rows="2"
+                                <textarea name="colonia" class="form-control text-uppercase" rows="2"
                                     placeholder="Colonia..."></textarea>
                             </div>
                              <div class="col-md-12">
                                 <label class="form-label fw-bold">Pueblo</label>
-                                <textarea name="pueblo" class="form-control" rows="2"
+                                <textarea name="pueblo" class="form-control text-uppercase" rows="2"
                                     placeholder="Pueblo"></textarea>
                             </div>
                              <div class="col-md-12">
                                 <label class="form-label fw-bold">Ciudad</label>
-                                <textarea name="ciudad" class="form-control" rows="2"
+                                <textarea name="ciudad" class="form-control text-uppercase" rows="2"
                                     placeholder="Ciudad"></textarea>
                             </div>
                             <div class="row g-3">
@@ -547,6 +548,15 @@
     </div>
 
     <?php cargarScripts(); ?>
+    <script>
+    // Selecciona todos los inputs de texto y también los textareas
+    document.querySelectorAll('input[type="text"], textarea').forEach(elemento => {
+        elemento.addEventListener('input', function() {
+            // Convierte el valor a mayúsculas en tiempo real
+            this.value = this.value.toUpperCase();
+        });
+    });
+</script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script src="/cfsistem/app/backend/js_ventas/filtros.js"></script>
@@ -572,7 +582,7 @@
         const stockMaximo = parseFloat(fila.querySelector(".badge.bg-success").innerText) || 0;
         const factor = parseFloat(fila.dataset.factor) || 1;
         const unidadReporte = fila.dataset.reporteNom || 'Fact.';
-        const nombre = fila.cells[1].innerText;
+        const nombre = fila.cells[2].innerText;
 const inputUsuario =
             fila.querySelector('.cantidad_usuario')?.value;
            
@@ -639,6 +649,7 @@ const cantidadInput = fila.querySelector(".cantidad");
 
         if (itemExistente) {
             itemExistente.cantidad = cantidadTotalFutura;
+            itemExistente.subtotal += cantidadAAgregar*precioUnitario;
         } else {
             window.carrito.push({
                 producto_id,
@@ -648,6 +659,7 @@ const cantidadInput = fila.querySelector(".cantidad");
                 cantidad: cantidadAAgregar,
                 stock_max: stockMaximo, // Guardamos el límite físico
                 entrega_hoy: cantidadAAgregar,
+                cantidadUsuario:inputUsuario,
                 precio_unitario: precioUnitario,
                 subtotal:inputUsuario*precioUnitario,
                 tipo_precio: tipo_p,
@@ -697,14 +709,18 @@ const cantidadInput = fila.querySelector(".cantidad");
             <td><small>${item.almacen_nombre}</small></td>
             <td><div class="fw-bold" style="font-size: 0.8rem;">${item.nombre}</div></td>
             <td>
-                <input type="number" class="form-control form-control-sm text-center input-factor-cambio" 
+                <input type="hidden" class="form-control text-uppercase form-control-sm text-center input-factor-cambio" 
                     data-index="${index}" value="${cantFactor}" min="0" 
                     max="${Math.floor(item.stock_max / item.factor)}" step="1">
+                    <small class="form-control form-control-sm text-center ">${item.cantidad*item.unidadEquivalencia}</small>
+              
             </td>
             <td>
-                <input type="number" class="form-control form-control-sm text-center input-pza-cambio" 
+                <input type="hidden" class="form-control form-control-sm text-center input-pza-cambio" 
                     data-index="${index}" value="${cantPza}" min="0" step=".0001">
-            </td>
+            <small class="form-control form-control-sm text-center ">${item.unidadMedidaNombre}</small>
+                
+                    </td>
             <td class="text-end fw-bold subtotal-celda">$${item.subtotal.toFixed(2)}</td>
             <td>
                 <button type="button" class="btn btn-link text-danger p-0 btn-remove-item" data-index="${index}">
@@ -917,15 +933,11 @@ function calcularPrecio(fila) {
     const factor = fila.querySelector('.factorC');
     const factorC = parseFloat(factor.value) || 1;
 
-    const equi = Math.round((1 / equivalencia) * 10000) / 1000;
+    const equi = Math.round((1 / equivalencia) * 10000) / 10000;
 
-    let nuevoPrecio = 0;
+    let nuevoPrecio = (cantidadUsuario*equi)*precio;
 
-    if (equi == factorC) {
-        nuevoPrecio = precio * factorC;
-    } else {
-        nuevoPrecio = Math.round((precio * equi) * 100) / 100;
-    }
+   
 
     // Aquí sí actualizamos ambos porque NO viene del input-precioMayor
     inputPrecio.value = nuevoPrecio;
@@ -937,7 +949,8 @@ function calcularPrecio(fila) {
     console.log({
         usuario: cantidadUsuario,
         equivalencia,
-        real: totalReal
+        real: totalReal,
+        total:nuevoPrecio
     });
 }
 

@@ -92,7 +92,7 @@
     }
 
     /* Nivel 3: Terciarios (Categorías) */
-    #modalAgregarCategoria {
+    #modalAgregarCategoria,#modalNuevaCategoriaGasto {
         z-index: 1160 !important;
     }
 
@@ -166,7 +166,7 @@
                 <a class="dropdown-item d-flex align-items-center gap-2"
                    href="/cfsistem/app/controllers/solicitudesCompraController.php">
                     <i class="bi bi-list-ul text-primary"></i>
-                    Ver Solicitudes
+                   Gestionar Solicitudes
                 </a>
             </li>
 

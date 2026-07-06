@@ -23,8 +23,6 @@ $ventasModel   = new VentaHistorialModel($conexion);
 $clientesModel = new ClientesModel($conexion);
 $repartosModel = new RepartoModel($conexion); // <-- Nombre correcto e inicializado
 
-$paginaActual  = 'ventashistorial';
-protegerPagina('ventashistorial');
 
 // ==========================================
 // ACCIÓN: Obtener Usuarios

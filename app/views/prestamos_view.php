@@ -311,7 +311,7 @@ $paginaActual = $paginaActual ?? 'prestamos';
                                 <!-- DESCRIPCIÓN -->
                                 <div class="col-12">
                                     <label class="form-label text-muted small">Motivo / Descripción</label>
-                                    <textarea name="descripcion" class="form-control rounded-3" rows="3"
+                                    <textarea name="descripcion" class="form-control text-uppercase rounded-3" rows="3"
                                         placeholder="Ej. Adelanto de quincena, emergencia, etc."></textarea>
                                 </div>
 
@@ -415,7 +415,7 @@ $paginaActual = $paginaActual ?? 'prestamos';
 
                                 <div class="col-12">
                                     <label class="form-label">Observaciones</label>
-                                    <textarea name="observaciones" class="form-control" rows="2"></textarea>
+                                    <textarea name="observaciones" class="form-control text-uppercase" rows="2"></textarea>
                                 </div>
                             </div>
                         </div>

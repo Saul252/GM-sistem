@@ -53,7 +53,7 @@
                     <!-- Descripción -->
                     <div class="col-12">
                         <label class="form-label small fw-bold text-dark">Descripción Corta</label>
-                        <textarea name="description" class="form-control border-0 shadow-sm" rows="2" 
+                        <textarea name="description" class="form-control text-uppercase border-0 shadow-sm" rows="2" 
                                   placeholder="Detalles adicionales del producto..."></textarea>
                     </div>
                 </div>

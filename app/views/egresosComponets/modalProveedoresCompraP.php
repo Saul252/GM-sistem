@@ -70,23 +70,23 @@
 
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Dirección</label>
-                            <textarea class="form-control" id="direccion" name="direccion"></textarea>
+                            <textarea class="form-control text-uppercase" id="direccion" name="direccion"></textarea>
                         </div>
                            <div class="col-md-6">
                             <label class="form-label small fw-bold">Numero Exterior</label>
-                            <input type="tel" name="numeroext" class="form-control">
+                            <input type="tel" name="numeroext" class="form-control text-uppercase">
                         </div>
                            <div class="col-md-6">
                             <label class="form-label small fw-bold">Numero Interior</label>
-                            <input type="tel" name="numeroint" class="form-control">
+                            <input type="tel" name="numeroint" class="form-control text-uppercase">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Colonia</label>
-                            <input type="text" class="form-control" id="colonia" name="colonia">
+                            <input type="text" class="form-control text-uppercase" id="colonia" name="colonia">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Ciudad</label>
-                            <input type="text" class="form-control" id="ciudad" name="ciudad">
+                            <input type="text" class="form-control text-uppercase" id="ciudad" name="ciudad">
                         </div>
 
                     </div>
@@ -175,4 +175,13 @@ Swal.fire({
             btn.innerHTML = '<i class="bi bi-save me-2"></i>Registrar y Seleccionar';
         });
 }
+</script>
+<script>
+    // Selecciona todos los inputs de texto y también los textareas
+    document.querySelectorAll('input[type="text"], textarea').forEach(elemento => {
+        elemento.addEventListener('input', function() {
+            // Convierte el valor a mayúsculas en tiempo real
+            this.value = this.value.toUpperCase();
+        });
+    });
 </script>

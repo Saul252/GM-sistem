@@ -57,6 +57,17 @@ body {
     text-transform: uppercase;
     padding: 14px;
     border: none;
+}.table-clientes thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #000000 !important;
+    color: #fff;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 14px;
+    border: none;
 }
 
 /* Celdas */
@@ -65,6 +76,12 @@ body {
     border-bottom: 1px solid #eef0f3;
     font-size: 0.9rem;
     color: #374151;
+}
+.table-clientes tbody td {
+    padding: 14px;
+    border-bottom: 1px solid #eef0f3;
+    font-size: 0.9rem;
+    color: #000000 !important;
 }
 
 /* Hover tipo “card highlight” */
@@ -211,28 +228,49 @@ body {
                 </div>
             </div>
 
-            <div class="scroll-table shadow-sm">
-                <div class="table-responsive" style="max-height: 60vh; min-height:30vh;">
-                    <table class="table table-hover align-middle mb-0" id="tablaVentas">
-                        <thead>
-                            <tr>
-                               
-                                <th class="ps-3">Fecha</th>
-                                <th>Folio</th>
-                                <th>Almacén</th>
-                                <th>Vendedor</th>
-                                <th>Cliente</th>
-                                 <th>Factura</th>
-                                <th>Total</th>
-                                <th>Saldo Cobro</th>
-                               
-                                <th class="text-end pe-3">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
+            <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+              
+    <div class="table-responsive" style="max-height: 60vh; min-height: 30vh; overflow-y: auto;">
+        <table class="table table-hover align-middle mb-0" id="tablaVentas">
+            <thead class="table-light sticky-top top-0 text-muted fw-semibold uppercase-tracking">
+                <tr>
+                    <th class="ps-4 py-3">Fecha</th>
+                    <th class="py-3">Folio</th>
+                    <th class="py-3">Almacén</th>
+                    <th class="py-3">Vendedor</th>
+                    <th class="py-3">Cliente</th>
+                    <th class="py-3">Factura</th>
+                    <th class="text-end py-3">Total</th>
+                    <th class="text-end py-3">Saldo Cobro</th>
+                    <th class="text-end pe-4 py-3">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="text-dark font-table-body">
+                </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm rounded-4 overflow-hidden py-4">
+      <span id="" class="fs-4 fw-black text-primary d-block mt-1">
+                Total Por Cliente
+            </span>
+    <div class="table-responsive" style="max-height: 60vh;  overflow-y: auto;">
+        <table class="table table-clientes table-hover align-middle mb-0" id="tablaClientes">
+            <thead class="table table-clientes sticky-top top-0 text-muted fw-semibold uppercase-tracking">
+                <tr>
+                    <th class="ps-4 py-3">ID</th>
+                    <th class="py-3">Cliente</th>
+                    <th class="text-center py-3">Total Vcenterido</th>
+                    <th class="text-center py-3">Total Cobrado</th>
+                    <th class="text-center pe-4 py-3">Saldo Por Cobrar</th>
+                </tr>
+            </thead>
+            <tbody class="text-dark font-table-body">
+                </tbody>
+        </table>
+    </div>
+</div>
         </div>
     </div>
 
@@ -478,14 +516,18 @@ body {
         try {
             const res = await fetch(`${URL_CONTROLLER}?${params.toString()}`);
             const data = await res.json();
-            console.log(data);
+            console.log(data.data);
             let deuda=0;
             let totalVendido=0;
 
 
-            $('#tablaVentas tbody').html(data.map(v => {
-                let total = parseFloat(v.total) || 0;
-                let pagado = parseFloat(v.pagado) || 0;
+            $('#tablaVentas tbody').html(data.data.map(v => {
+                let total = 0;
+                let pagado =  0;
+                if(v.estado_general!='cancelada')
+                {
+                total = parseFloat(v.total) || 0;
+                pagado = parseFloat(v.pagado) || 0;}              
                 let saldo = total - pagado;
                 deuda+=saldo;
                 totalVendido+=total;
@@ -550,16 +592,91 @@ let agregarPago = (saldo <= 0) ?
         </div>
     </td>
 </tr>`;
-            }).join(''));
-            $('#deuda').text(deuda.toFixed(2))
+            }).join(''));$('#deuda').text(deuda.toFixed(2))
             $('#venta').text(totalVendido.toFixed(2))
             console.log(deuda);
+            
+const resultado = agruparVentasPorCliente(data.data);
+
+            $('#tablaClientes tbody').html(resultado.map(v => {
+               
+               
+
+                return `<tr>
+    
+    <td class="fw-bold align-middle">${v.id_cliente}</td>
+    <td class="align-middle"><span class="badge bg-light text-dark border fw-normal">${v.cliente}</span></td>
+    <td class="align-middle"><div class="small text-center fw-bold">${v.total_compro}</div></td>
+    <td class="align-middle"><div class="small text-center fw-bold">${v.total_cobrado}</div></td>
+    <td class="fw-bold text-dark align-middle text-center">${(v.total_debe*(-1))}</td>
+    
+  
+    
+</tr>`;
+            }).join(''));
+            
         } catch (e) {
             console.error("Error al cargar ventas:", e);
         } finally {
             $('#loader').addClass('d-none');
         }
     }
+    // Función para procesar y agrupar las ventas por cliente
+function agruparVentasPorCliente(ventas) {
+    
+    // 1. Agrupar y sumar usando reduce
+    const agrupado = ventas.reduce((acumulador, venta) => {
+       
+       
+        const idCliente = venta.id_cliente;
+        const totalVenta = parseFloat(venta.estado_general!='cancelada'?venta.total:0) || 0;
+        const totalPagado = parseFloat(venta.estado_general!='cancelada'?venta.pagado:0) || 0;
+
+        // Si el cliente no existe en el acumulador, lo inicializamos
+        if (!acumulador[idCliente]) {
+            acumulador[idCliente] = {
+                id_cliente: idCliente,
+                cliente: venta.cliente,
+                total_compro: 0,
+                total_cobrado: 0,
+                total_debe: 0
+            };
+        }
+
+        // Acumulamos los valores
+       
+
+        acumulador[idCliente].total_compro += totalVenta;
+        acumulador[idCliente].total_cobrado += totalPagado;
+        return acumulador;
+
+        
+        
+    }, {});
+
+    // 2. Convertir el objeto a un Arreglo, calcular saldos y redondear decimales
+    const resultadoFinal = Object.values(agrupado).map(cliente => {
+        // Calcular lo que debe: Compras - Cobrado
+        let debe = cliente.total_compro - cliente.total_cobrado;
+
+        return {
+            id_cliente: cliente.id_cliente,
+            cliente: cliente.cliente,
+            total_compro: parseFloat(cliente.total_compro.toFixed(2)),
+            total_cobrado: parseFloat(cliente.total_cobrado.toFixed(2)),
+            total_debe: parseFloat(debe.toFixed(2))
+        };
+    });
+
+    // 3. Ordenar alfabéticamente por nombre de cliente
+    return resultadoFinal.sort((a, b) => a.cliente.localeCompare(b.cliente));
+}
+
+// ========================================
+// EJECUCIÓN CON TUS DATOS
+// ========================================
+
+
     async function verDetalle(id) {
         try {
             // 🔥 OBTENER IDS PENDIENTES
@@ -580,7 +697,7 @@ let agregarPago = (saldo <= 0) ?
 
             // =====================================================
             // 🔥 HABILITAR / DESHABILITAR BOTÓN
-            // =====================================================
+            // =============function agruparVentasPorCliente(ventas) {========================================
 
             if (
                 Array.isArray(dataIds.ids) &&

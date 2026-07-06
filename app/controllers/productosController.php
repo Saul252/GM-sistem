@@ -22,7 +22,7 @@ $almacenModel   = new AlmacenModel($conexion);
 // ACTION
 // ========================================
 
-$action = $_GET['action'] ?? '';
+$action = $_GET['action'] ?? $_POST['action'] ??'';
 
 switch ($action) {
 
@@ -124,6 +124,78 @@ switch ($action) {
         }
 
     exit;
+
+   case 'guardarProducto' :
+        while (ob_get_level()) ob_end_clean(); // Asegurar respuesta limpia, quitar despues para un solo almacen ya que este es para cf
+        header('Content-Type: application/json');
+        $factor_conversion = floatval($_POST['factor_conversion'] ?? 1);
+if ($factor_conversion <= 0) $factor_conversion = 1;
+
+$p_minorista = floatval($_POST['precio_minorista'] ?? 0);
+$p_mayorista = floatval($_POST['precio_mayorista'] ?? 0);
+$p_distribuidor = floatval($_POST['precio_distribuidor'] ?? 0);
+
+$pmin = $p_minorista > 0 ? ($p_minorista / $factor_conversion) : 0;
+$pmay = $p_mayorista > 0 ? ($p_mayorista / $factor_conversion) : 0;
+$pdi  = $p_distribuidor > 0 ? ($p_distribuidor / $factor_conversion) : 0;
+
+
+
+        $datos = [
+            'sku'                 => trim($_POST['sku'] ?? ''),
+            'nombre'              => trim($_POST['nombre'] ?? ''),
+            'categoria_id'        => $_POST['categoria_id'] ?? null,
+            'unidad_medida'       => $_POST['unidad_medida'] ?? 'PZA',
+            'unidad_reporte'      => $_POST['unidad_reporte'] ?? '',
+            'factor_conversion'   => floatval($_POST['factor_conversion'] ?? 1),
+            'precio_adquisicion'  => 0,
+            'impuesto_iva'        => floatval($_POST['impuesto_iva'] ?? 16.00),
+            'descripcion'         => $_POST['description'] ?? '',
+            'fiscal_clave_prod'   => $_POST['fiscal_clave_prod'] ?? '',
+            'fiscal_clave_unidad'   => $_POST['fiscal_clave_unidad'] ?? '',
+            'precio_minorista'    => $pmin,
+            'precio_mayorista'    => $pmay,
+            'precio_distribuidor' => $pdi
+        ];
+
+        if (empty($datos['sku']) || empty($datos['nombre'])) {
+            echo json_encode(['status' => 'error', 'message' => 'SKU y Nombre son obligatorios']);
+            exit;
+        }
+ //$nuevoId = $this->productoModel->guardarCompleto($datos);//este es el original para un solo almacen
+        $nuevoId = $productosModel->guardarCompletoMultiALmacen($datos);
+
+        if ($nuevoId) {
+            echo json_encode(['status' => 'success', 'message' => 'Producto registrado exitosamente', 'id' => $nuevoId]);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Error al guardar el producto.']);
+        }
+        exit;
+    
+    case 'getCategoriasJSON' :
+        while (ob_get_level()) ob_end_clean(); 
+        header('Content-Type: application/json; charset=utf-8');
+        try {
+            $categorias = $almacenModel->getCategorias();
+            echo json_encode($categorias ?: []);
+        } catch (Exception $e) {
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+        exit;
+    
+     case 'getUnidadesMedidaJSON':
+        while (ob_get_level()) ob_end_clean(); 
+        header('Content-Type: application/json; charset=utf-8');
+        try {
+            $unidadesMedida = $almacenModel->getUnidadesMedida();
+            echo json_encode($unidadesMedida ?: []);
+        } catch (Exception $e) {
+            echo json_encode(['error' => $e->getMessage()]);
+        }
+        exit;
+    
+    // Añade este método antes del final de la llave de la clase }
+
 
   case 'obtnerMedidas':
 

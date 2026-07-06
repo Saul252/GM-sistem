@@ -116,7 +116,7 @@
 
                     <div class="row mt-3">
                         <div class="col-12">
-                            <textarea name="observaciones" class="form-control form-control-sm" rows="2" placeholder="Notas del proceso..."></textarea>
+                            <textarea name="observaciones" class="form-control text-uppercase form-control-sm" rows="2" placeholder="Notas del proceso..."></textarea>
                         </div>
                     </div>
 

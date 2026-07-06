@@ -51,7 +51,7 @@
                         
                         <div class="col-12">
                             <label class="form-label small fw-bold text-muted mb-1">NOTAS / QUIÉN RECIBE</label>
-                            <textarea name="observaciones" class="form-control border-0 bg-light rounded-3 shadow-sm" rows="2" placeholder="Ej. Se lo lleva en camioneta propia..."></textarea>
+                            <textarea name="observaciones" class="form-control text-uppercase border-0 bg-light rounded-3 shadow-sm" rows="2" placeholder="Ej. Se lo lleva en camioneta propia..."></textarea>
                         </div>
                     </div>
                 </div>

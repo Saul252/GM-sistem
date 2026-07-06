@@ -223,27 +223,27 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
                             </div>
                             <div class="col-md-12">
                                 <label class="form-label fw-bold">Calle</label>
-                                <textarea name="calle" id="calle"class="form-control" rows="2"
+                                <textarea name="calle" id="calle"class="form-control text-uppercase" rows="2"
                                     placeholder="Calle, número, colonia..."></textarea>
                             </div>
                              <div class="col-md-12">
                                 <label class="form-label fw-bold">Colonia</label>
-                                <textarea name="colonia" id="colonia" class="form-control" rows="2"
+                                <textarea name="colonia" id="colonia" class="form-control text-uppercase" rows="2"
                                     placeholder="Colonia"></textarea>
                             </div>
                              <div class="col-md-12">
                                 <label class="form-label fw-bold">Pueblo</label>
-                                <textarea name="pueblo" id="pueblo" class="form-control" rows="2"
+                                <textarea name="pueblo" id="pueblo" class="form-control text-uppercase" rows="2"
                                     placeholder="Pueblo"></textarea>
                             </div>
                              <div class="col-md-12">
                                 <label class="form-label fw-bold">Ciudad</label>
-                                <textarea name="ciudad" id="ciudad" class="form-control" rows="2"
+                                <textarea name="ciudad" id="ciudad" class="form-control text-uppercase" rows="2"
                                     placeholder="Calle, número, colonia..."></textarea>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold text-muted">CÓDIGO POSTAL</label>
-                                <input type="text" name="codigo_postal" id="codigo_postal" class="form-control rounded-3" maxlength="5">
+                                <input type="text" name="codigo_postal" id="codigo_postal" class="form-control text-uppercase rounded-3" maxlength="5">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold text-muted">USO CFDI</label>
@@ -399,3 +399,12 @@ $('#ciudad').val(ciudad.trim());
     </script>
 </body>
 </html>
+<script>
+    // Selecciona todos los inputs de texto y también los textareas
+    document.querySelectorAll('input[type="text"], textarea').forEach(elemento => {
+        elemento.addEventListener('input', function() {
+            // Convierte el valor a mayúsculas en tiempo real
+            this.value = this.value.toUpperCase();
+        });
+    });
+</script>
