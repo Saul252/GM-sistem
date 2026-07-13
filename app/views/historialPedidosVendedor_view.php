@@ -261,7 +261,7 @@ body {
                 <tr>
                     <th class="ps-4 py-3">ID</th>
                     <th class="py-3">Cliente</th>
-                    <th class="text-center py-3">Total Vcenterido</th>
+                    <th class="text-center py-3">Total Vendido</th>
                     <th class="text-center py-3">Total Cobrado</th>
                     <th class="text-center pe-4 py-3">Saldo Por Cobrar</th>
                 </tr>

@@ -269,11 +269,100 @@ public function registrarGasto($cabecera, $descripciones, $cantidades, $precios)
         $this->db->rollback();
         throw $e;
     }
+}public function registrarGastoInsumo($cabecera, $descripciones, $cantidades, $precios, $items) {
+    // 1. Iniciar transacción
+    $this->db->begin_transaction();
+    
+    try {
+        // Establecer zona horaria antes de cualquier operación
+        date_default_timezone_set('America/Mexico_City');
+
+        // 2. Insertar Cabecera
+        $sql = "INSERT INTO gastos 
+                (folio, fecha_gasto, almacen_id, categoria_id, usuario_registra_id, beneficiario, metodo_pago, total, documento_url, observaciones, estado) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pagado')";
+        
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) throw new Exception("Error en Prepare Cabecera: " . $this->db->error);
+       
+        $stmt->bind_param("ssiiissdss", 
+            $cabecera['folio'], 
+            $cabecera['fecha'], 
+            $cabecera['almacen_id'],
+            $cabecera['categoria_id'],
+            $cabecera['usuario_id'], 
+            $cabecera['beneficiario'], 
+            $cabecera['metodo_pago'], 
+            $cabecera['total'], 
+            $cabecera['documento_url'], 
+            $cabecera['observaciones']
+        );
+        
+        if (!$stmt->execute()) {
+            throw new Exception("Error al ejecutar Cabecera: " . $stmt->error);
+        }
+
+        $gasto_id = $this->db->insert_id;
+
+        // 3. Preparar Consultas de Detalles e Insumos
+        $sqlDet = "INSERT INTO detalle_gasto (gasto_id, descripcion, cantidad, precio_unitario, subtotal) VALUES (?, ?, ?, ?, ?)";
+        $insumo = "INSERT INTO compras_insumos (id_insumo, costo, cantidad, proveedor, fecha,existencias_lote) VALUES (?,?, ?, ?, ?, NOW())";
+        
+        // CORRECCIÓN STOCK: Si ya existe el insumo, suma la cantidad al stock actual
+        $insumo_stock = "INSERT INTO insumos_stock (id_insumo, existencias) VALUES (?, ?) 
+                         ON DUPLICATE KEY UPDATE existencias = existencias + VALUES(existencias)";
+
+        $stmtD = $this->db->prepare($sqlDet);
+        $stmtI = $this->db->prepare($insumo);
+        $stmtstock = $this->db->prepare($insumo_stock);
+
+        if (!$stmtD || !$stmtI || !$stmtstock) {
+            throw new Exception("Error en Prepare de detalles/insumos: " . $this->db->error);
+        }
+        
+        // 4. Recorrer y procesar filas
+        foreach ($descripciones as $i => $desc) {
+            if (empty($desc)) continue;
+            
+            $cant = floatval($cantidades[$i]);
+            $prec = floatval($precios[$i]);
+            $subt = $cant * $prec;
+            $id_insumo = intval($items[$i] ?? 0);
+
+            // Si está vinculado a un insumo, registrar en inventario
+            if ($id_insumo > 0) {
+                // "iddd" -> entero, double, double, string (proveedor)
+                $stmtI->bind_param("idds", $id_insumo, $prec, $cant, $cabecera['beneficiario']);
+                if (!$stmtI->execute()) {
+                    throw new Exception("Error al registrar compra de insumo en fila $i: " . $stmtI->error);
+                }
+
+                // "id" -> entero, double (por si manejas existencias con decimales, si es entero usa "ii")
+                $stmtstock->bind_param("id", $id_insumo, $cant);
+                if (!$stmtstock->execute()) {
+                    throw new Exception("Error al actualizar stock en fila $i: " . $stmtstock->error);
+                }
+            }
+
+            // Registrar el detalle general del gasto
+            $stmtD->bind_param("isdddd", $gasto_id, $desc, $cant, $prec, $subt,$cant);
+            if (!$stmtD->execute()) {
+                throw new Exception("Error al ejecutar Detalle en fila $i: " . $stmtD->error);
+            }
+        }
+
+        // 5. Confirmar Transacción
+        if ($this->db->commit()) {
+            return ['success' => true, 'id' => $gasto_id];
+        } else {
+            throw new Exception("Error al hacer Commit.");
+        }
+
+    } catch (Exception $e) {
+        $this->db->rollback();
+        throw $e;
+    }
 }
- /**
-     * 3. REGISTRA UNA COMPRA (AFECTA INVENTARIO)
-     * Según tu tabla 'compras' y 'detalle_compra'
-     */
     public function registrarCompra($cabecera, $productos) {
         $this->db->begin_transaction();
         try {

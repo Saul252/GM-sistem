@@ -70,6 +70,8 @@ $modulos = [
             ['id' => 'repartos', 'url' => '/cfsistem/app/controllers/repartosController.php', 'icon' => 'bi-truck-flatbed', 'label' => 'Repartos', 'active' => ($archivoActual == 'repartosController.php')],
             ['id' => 'misRepartos', 'url' => '/cfsistem/app/controllers/misRepartosController.php', 'icon' => 'bi-map-fill', 'label' => 'Mis Repartos', 'active' => ($archivoActual == 'misRepartosController.php')],
             ['id' => 'viajesTrabajadores', 'url' => '/cfsistem/app/controllers/viajesTrabajadoresController.php', 'icon' => 'bi-person-workspace', 'label' => 'Viajes Trabajadores', 'active' => ($archivoActual == 'viajesTrabajadoresController.php')],
+              ['id' => 'mantenimientos', 'url' => '/cfsistem/app/controllers/mantenimientosController.php', 'icon' => 'bi-wrench-adjustable-circle-fill', 'label' => 'Mantenimientos', 'active' => ($archivoActual == 'mantenimientosController.php')],
+          
         ]
     ],
     [
@@ -78,6 +80,7 @@ $modulos = [
         'icono' => 'bi-people-fill',
         'submodulos' => [
             ['id' => 'trabajadores', 'url' => '/cfsistem/app/controllers/trabajadoresController.php', 'icon' => 'bi-people-fill', 'label' => 'Trabajadores', 'active' => ($archivoActual == 'trabajadoresController.php')],
+        ['id' => 'nomina', 'url' => '/cfsistem/app/controllers/nominaController.php', 'icon' => 'bi-cash', 'label' => 'nomina', 'active' => ($archivoActual == 'nominaController.php')],
         ]
     ],
     [
@@ -203,9 +206,179 @@ $modulos = [
  * CF SYSTEM - LÓGICA GLOBAL DE INTERFAZ Y NOTIFICACIONES
  * Versión: 2.0 (Optimizado para Móvil y Escritorio - No jQuery)
  */
+/* CF SYSTEM - LÓGICA GLOBAL DE INTERFAZ Y NOTIFICACIONES
+ * Versión: 2.0 (Optimizado para Móvil y Escritorio - No jQuery)
+ */
 
 document.addEventListener('DOMContentLoaded', () => {
+let ultimoConteoMantenimientos = 0;
+let primeraCargaMantenimiento = true;
 
+function verificarMantenimientos() {
+
+    const url = "/cfsistem/app/controllers/mantenimientosController.php?action=listarProximoMantenimiento";
+
+    fetch(url)
+        .then(r => r.json())
+        .then(data => {
+            console.log(data);
+
+           
+
+            const badge = document.getElementById("badge-mantenimientos");
+            const lista = document.getElementById("lista-mantenimientos");
+
+            const cantidadActual = parseInt((data.length)) || 0;
+ console.log(cantidadActual);
+            // Badge
+            if (badge) {
+
+                if (cantidadActual > 0) {
+
+                    badge.innerText = cantidadActual;
+                    badge.classList.remove("d-none");
+
+                } else {
+
+                    badge.classList.add("d-none");
+
+                }
+
+            }
+
+            // Toast
+            if (cantidadActual > 0 &&
+                (primeraCargaMantenimiento || cantidadActual > ultimoConteoMantenimientos)) {
+
+                const item = data[0];
+
+                Toastify({
+
+                    text:
+`🚗 PRÓXIMO MANTENIMIENTO
+${item.estado}
+
+${item.vehiculo}   ${item.placas}`,
+
+                    duration: 7000,
+                    gravity: "top",
+                    position: "right",
+                    close: true,
+                    stopOnFocus: true,
+
+                    className: "toast-mantenimiento",
+
+                    style: {
+
+                        background: "#fff",
+
+                        color: "#111",
+
+                        border: "1px solid #dee2e6",
+
+                        borderLeft: "5px solid #ffc107",
+
+                        borderRadius: "15px",
+
+                        boxShadow: "0 10px 25px rgba(0,0,0,.15)",
+
+                        fontWeight: "500",
+
+                        fontSize: "14px",
+
+                        padding: "18px"
+
+                    },
+
+                    onClick: function(){
+
+                        window.location.href="/cfsistem/app/controllers/mantenimientos.php";
+
+                    }
+
+                }).showToast();
+
+                primeraCargaMantenimiento = false;
+
+            }
+
+            ultimoConteoMantenimientos = cantidadActual;
+
+            // Lista del dropdown
+
+            if(lista){
+
+                if(cantidadActual==0){
+
+                    lista.innerHTML=`
+                        <div class="p-4 text-center text-muted">
+                            No hay mantenimientos próximos.
+                        </div>`;
+
+                }else{
+
+                    lista.innerHTML=data.map(item=>{
+
+                        let color="success";
+
+                        if(item.dias_restantes<=0){
+
+                            color="danger";
+
+                        }else if(item.dias_restantes<=3){
+
+                            color="warning";
+
+                        }
+
+                        return`
+
+<div class="d-flex justify-content-between align-items-center p-3 border-bottom hover-notif">
+
+<div>
+
+<div class="small">
+
+<b>${item.estado}</b>
+
+</div>
+<div class="fw-bold text-${color}">
+Vehiculo: ${item.vehiculo}
+</div>
+
+
+<div class="small text-secondary">
+
+${item.placas}
+
+</div>
+
+
+
+</div>
+
+<button class="btn btn-outline-primary btn-sm rounded-circle"
+
+onclick="window.location='/cfsistem/app/controllers/mantenimientos.php?id=${item.id_mantenimiento}'">
+
+<i class="bi bi-arrow-right"></i>
+
+</button>
+
+</div>
+
+`;
+
+                    }).join("");
+
+                }
+
+            }
+
+        })
+        .catch(err=>console.error(err));
+
+}
     // --- 1. VARIABLES DE ELEMENTOS ---
     const toggleBtn = document.getElementById('toggleSidebar');
     const sidebar = document.getElementById('sidebar');
@@ -220,11 +393,23 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(overlay);
     }
 
-    // --- 2. LÓGICA DEL SIDEBAR (RESPONSIVO) ---
-    function toggleMenu() {
-        const isMobile = window.innerWidth <= 992;
+    // --- 2. ESTADO OCULTO POR DEFAULT ---
+    const isMobile = window.innerWidth <= 992;
+    if (isMobile) {
+        // En móvil asegura que no tenga las clases activas
+        sidebar.classList.remove('show');
+        overlay.classList.remove('active');
+    } else {
+        // En escritorio agrega las clases para que inicie oculto
+        sidebar.classList.add('hidden');
+        document.body.classList.add('sidebar-hidden');
+    }
 
-        if (isMobile) {
+    // --- 3. LÓGICA DEL SIDEBAR (RESPONSIVO) ---
+    function toggleMenu() {
+        const isMobileNow = window.innerWidth <= 992;
+
+        if (isMobileNow) {
             sidebar.classList.toggle('show');
             overlay.classList.toggle('active');
         } else {
@@ -246,8 +431,10 @@ document.addEventListener('DOMContentLoaded', () => {
         overlay.classList.remove('active');
     });
 
+    // --- 4. CIERRE DE MENÚS AL HACER CLIC FUERA ---
     document.addEventListener('click', (e) => {
-        if (menuNotif && !menuNotif.contains(e.target) && !btnNotif.contains(e.target)) {
+        // Cerrar notificaciones si está abierto y se da clic fuera
+        if (menuNotif && btnNotif && !menuNotif.contains(e.target) && !btnNotif.contains(e.target)) {
             menuNotif.style.display = 'none';
         }
     });
@@ -457,12 +644,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function mantenimientoSistema() {
+        
         verificarNotificaciones();
         // verificarCorteCaja();
     }
 
     mantenimientoSistema();
     setInterval(mantenimientoSistema, 35000);
+    verificarMantenimientos();
+setInterval(verificarMantenimientos(), 35000);
 
     window.addEventListener('resize', () => {
         if (window.innerWidth > 992) {

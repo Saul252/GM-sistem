@@ -70,7 +70,7 @@
                         <div class="col-md-4">
                             <select id="filtroAlmacen" class="form-select"
                                 <?= ($almacen_usuario > 0) ? 'disabled' : '' ?>>
-                                <?php if($almacen_usuario == 0): ?>
+                                <?php if($almacen_usuario ==0): ?>
                                 <option value="">Todos los almacenes</option>
                                 <?php endif; ?>
 
@@ -92,8 +92,8 @@
     <table class="table table-bordered table-hover tabla-productos">
         <thead class="table-dark">
             <tr>
-                <th>Almacén</th>
-                <th>SKU</th>
+                <!-- <th>Almacén</th>
+                <th>SKU</th> -->
                 <th>Producto</th>
                 <th>Stock</th>
                 <th width="120">Unidad</th>
@@ -343,8 +343,8 @@ data.data.forEach(p => {
             data-reporte-nom="${escapeHtml(p.unidad_reporte || '')}">
             
             <input type="hidden" class="factorC" value="${factorConversion}">
-            <td>${escapeHtml(p.almacen_nombre)}</td>
-            <td>${p.sku}</td>
+            <td class="d-none">${escapeHtml(p.almacen_nombre)}</td>
+            <td class="d-none">${p.sku}</td>
             <td>${escapeHtml(p.nombre)}</td>
             <td>
                 <span class="badge ${colorStock}">${textoStock}</span>
@@ -408,7 +408,7 @@ function formatNumber(num) {
  */
 document.addEventListener('keydown', function(e) {
 
-    if (e.key === 'Enter' && e.target.classList.contains('cantidad_usuario')) {
+    if (e.key === 'Enter' && e.target.classList.contains('input-precioMayor')) {
 
         e.preventDefault();
 

@@ -7,12 +7,15 @@
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../controllers/LayoutController.php';
+require_once __DIR__ . '/../models/nominaModel.php';
 require_once __DIR__ . '/../models/trabajadores_model.php';
 require_once __DIR__ . '/../models/almacen_model.php';
 // Protegemos la página
 protegerPagina('trabajadores'); 
 
+$nominaModel = new NominaModel($conexion);
 $trabajadorModel = new TrabajadorModel($conexion);
+
 $almacenesModel= new AlmacenModel($conexion);
 $paginaActual = 'trabajadores';
 
@@ -177,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
         $almacenusu = $_SESSION['almacen_id'];
         
         // Si es admin (0), listamos todos; si no, solo los de su almacén
-          $trabajadores = $trabajadorModel->listarTrabajadores($almacenusu);
+          $trabajadores = $nominaModel->listarTrabajadores($almacenusu);
        $listaAlmacenes = $almacenesModel->getAlmacenes($almacenusu); 
         $tituloPagina = "Gestión de Personal";
         require_once __DIR__ . '/../views/nomina_view.php';
@@ -208,18 +211,17 @@ if (isset($_POST['action']) && $_POST['action'] === 'eliminar') {
     exit;
 }
 
-// --- CARGA DE VISTA (GET) ---
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
+if (isset($_GET['action']) && $_GET['action'] === 'listar') {
+    if (ob_get_level()) ob_clean(); 
+    header('Content-Type: application/json');
+    
     try {
-        $almacenusu=$_SESSION['almacen_id'];
-        $trabajadores = $trabajadorModel->listarTrabajadores($almacenusu);
-       $listaAlmacenes = $almacenesModel->getAlmacenes($almacenusu); 
-        $tituloPagina = "Gestión de Personal";
         
-        // Asegúrate de que la ruta a la vista sea correcta
-        require_once __DIR__ . '/../views/trabajadores_view.php';
-        
-    } catch (Exception $e) {
-        die("Error al cargar la vista de trabajadores: " . $e->getMessage());
+       $trabajadores = $nominaModel->listarTrabajadores($almacenusu);
+        echo json_encode($trabajadores);
+
+    } catch (Throwable $e) {
+        echo json_encode(['error' => true, 'message' => $e->getMessage()]);
     }
+    exit;
 }

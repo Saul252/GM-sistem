@@ -1,5 +1,5 @@
 <?php
-class TrabajadorModel {
+class NominaModel {
     private $db;
 
     public function __construct($db) {
@@ -49,43 +49,120 @@ public function listarTrabajadores($almacen_id = 0) {
 
     if ($almacen_id == 0) {
         // 🔥 ADMIN → todos
-        $sql = "SELECT t.*, a.nombre as nombreAlmacen,
-          ( SELECT GROUP_CONCAT(
-        CONCAT(
-            IFNULL(nombre, ''),
-            '|||',
-            IFNULL(direccion, ''),
-            '|||',
-            IFNULL(id, '')
+        $sql = "SELECT
+    t.id,
+    t.nombre,
+    t.telefono,
+    t.rol,
+    t.estado,
+    t.almacen_id,
+    t.fecha_registro,
+    t.salario,
+
+    (
+        t.salario -
+        COALESCE(SUM(pre.monto_total - COALESCE(ab.total_abonado,0)),0)
+    ) AS salario_disponible,
+
+    COALESCE(SUM(pre.monto_total - COALESCE(ab.total_abonado,0)),0) AS total_prestamos_pendientes,
+
+    a.nombre AS nombreAlmacen,
+
+    (
+        SELECT GROUP_CONCAT(
+            CONCAT(
+                IFNULL(nombre,''),
+                '|||',
+                IFNULL(direccion,''),
+                '|||',
+                IFNULL(id,'')
+            )
+            SEPARATOR ';;;'
         )
-        SEPARATOR ';;;'
-    )
-    FROM documentos_trabajadores dt
-    WHERE dt.trabajador_id = t.id and dt.activo=1
-) AS documentos_url
-        FROM trabajadores t
-        Join almacenes a on t.almacen_id =a.id
-        ORDER BY nombre ASC";
+        FROM documentos_trabajadores dt
+        WHERE dt.trabajador_id = t.id
+        AND dt.activo = 1
+    ) AS documentos_url
+
+FROM trabajadores t
+
+JOIN almacenes a
+    ON a.id = t.almacen_id
+
+LEFT JOIN prestamos pre
+    ON pre.trabajador_id = t.id
+
+LEFT JOIN (
+    SELECT
+        prestamo_id,
+        SUM(monto_abono) AS total_abonado
+    FROM prestamos_abonos
+    GROUP BY prestamo_id
+) ab
+    ON ab.prestamo_id = pre.id
+
+GROUP BY t.id
+
+ORDER BY t.nombre ASC;";
         $stmt = $this->db->prepare($sql);
     } else {
         // 🔒 SUCURSAL → solo su almacén
-        $sql = "SELECT t.*, a.nombre as nombreAlmacen,
-         ( SELECT GROUP_CONCAT(
-        CONCAT(
-            IFNULL(nombre, ''),
-            '|||',
-            IFNULL(direccion, ''),
-            '|||',
-            IFNULL(id, '')
+        $sql = "SELECT
+    t.id,
+    t.nombre,
+    t.telefono,
+    t.rol,
+    t.estado,
+    t.almacen_id,
+    t.fecha_registro,
+    t.salario,
+
+    (
+        t.salario -
+        COALESCE(SUM(pre.monto_total - COALESCE(ab.total_abonado,0)),0)
+    ) AS salario_disponible,
+
+    COALESCE(SUM(pre.monto_total - COALESCE(ab.total_abonado,0)),0) AS total_prestamos_pendientes,
+
+    a.nombre AS nombreAlmacen,
+
+    (
+        SELECT GROUP_CONCAT(
+            CONCAT(
+                IFNULL(nombre,''),
+                '|||',
+                IFNULL(direccion,''),
+                '|||',
+                IFNULL(id,'')
+            )
+            SEPARATOR ';;;'
         )
-        SEPARATOR ';;;'
-    )
-    FROM documentos_trabajadores dt
-    WHERE dt.trabajador_id = t.id and dt.activo=1
-) AS documentos_url
+        FROM documentos_trabajadores dt
+        WHERE dt.trabajador_id = t.id
+        AND dt.activo = 1
+    ) AS documentos_url
+
 FROM trabajadores t
-JOIN almacenes a ON t.almacen_id = a.id
+
+JOIN almacenes a
+    ON a.id = t.almacen_id
+
+LEFT JOIN prestamos pre
+    ON pre.trabajador_id = t.id
+
+LEFT JOIN (
+    SELECT
+        prestamo_id,
+        SUM(monto_abono) AS total_abonado
+    FROM prestamos_abonos
+    GROUP BY prestamo_id
+) ab
+    ON ab.prestamo_id = pre.id
 WHERE t.almacen_id = ?
+GROUP BY t.id
+
+
+
 ORDER BY nombre ASC;";
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param("i", $almacen_id);

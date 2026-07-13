@@ -1681,7 +1681,7 @@ ORDER BY t.fecha_viaje DESC";
 
     return $data;
 }
-public function quitarEntregaDeRuta($entrega_venta_id,$movimiento_id = 0, $id_usuario) {
+public function quitarEntregaDeRuta($entrega_venta_id,$movimiento_id = 0, $id_usuario=0) {
     try {
         // Iniciamos la transacción para asegurar que si algo falla, no se borre nada a medias
         $this->db->begin_transaction();

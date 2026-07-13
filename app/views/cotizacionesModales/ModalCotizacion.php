@@ -1,7 +1,69 @@
+<style>
+    /* FORZAR DESPLEGABLE HACIA ABAJO Y ESTILIZAR */
+.select2-container--open .select2-dropdown {
+    top: 100% !important;
+    bottom: auto !important;
+    border: 1px solid #e9ecef !important;
+    border-radius: 0 0 12px 12px !important;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+    overflow: hidden;
+    margin-top: 4px;
+    animation: slideDownIn 0.15s ease-out;
+}
+
+/* Efecto visual suave de apertura */
+@keyframes slideDownIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Ajustes Premium para los resultados */
+.select2-container--bootstrap-5 .select2-results__option {
+    padding: 10px 16px !important;
+    font-size: 0.88rem !important;
+}
+
+.select2-container--bootstrap-5 .select2-results__option--highlighted[aria-selected] {
+    background-color: #0d6efd !important;
+}
+
+/* Match visual con el input-group fusionado */
+.select2-container--bootstrap-5 .select2-selection {
+    border: none !important;
+    box-shadow: none !important;
+    height: 43px !important;
+    display: flex !important;
+    align-items: center !important;
+    /* FORZAR DESPLEGABLE SIEMPRE ABAJO EN DISPOSITIVOS MÓVILES */
+@media (max-width: 768px) {
+    /* Identificamos el contenedor del dropdown cuando se abre desde #buscadorProductos */
+    .select2-container:has(+ select#buscadorProductos),
+    body .select2-container--open:has(.select2-search__field) {
+        /* Mantiene la caja del dropdown anclada abajo del input */
+        position: relative !important;
+    }
+
+    body .select2-dropdown {
+        position: absolute !important;
+        top: 100% !important; /* Fuerza el tope al 100% del input (abajo) */
+        bottom: auto !important; /* Cancela cualquier intento de ir hacia arriba */
+        left: 0 !important;
+        display: block !important;
+        width: 100% !important;
+        z-index: 1060 !important; /* Por encima del modal de Bootstrap */
+        
+        /* Estilizado móvil premium */
+        border: 1px solid #e9ecef !important;
+        border-top: none !important;
+        border-radius: 0 0 16px 16px !important;
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15) !important;
+    }
+}
+}
+</style>
 <div class="modal fade" id="modalCotizacion" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content"
-            style="border-radius: 20px; border: none; overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.2);">
+        <div class="modal-content" style="border-radius: 20px; border: none; overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.2);">
             <form id="formSolicitud">
                 <div class="modal-header bg-white border-0 pt-4 px-4">
                     <div class="d-flex align-items-center">
@@ -9,102 +71,96 @@
                             <i class="bi bi-file-earmark-plus fs-4"></i>
                         </div>
                         <div>
-                            <h4 class="fw-bold mb-0">Nueva Cotizacion</h4>
-                            <p class="text-muted small mb-0">Complete los datos para requerir materiales al almacén
-                            </p>
+                            <h4 class="fw-bold mb-0">Nueva Cotización</h4>
+                            <p class="text-muted small mb-0">Complete los datos para requerir materiales al almacén</p>
                         </div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
                 <div class="modal-body px-4">
-                    <div class="row g-3 mb-4 p-4 rounded-4 bg-white shadow-sm align-items-end border">
-    
-    <!-- Almacén de Cargo -->
-    <div class="col-md-3">
-        <label for="almacen_id" class="form-label small fw-semibold text-secondary text-uppercase mb-2">
-            <i class="bi bi-box-seam me-1"></i> Almacén de Cargo
-        </label>
-        <select name="almacen_id" id="almacen_id" class="form-select border-light-subtle shadow-sm" required>
-            <option value="">Seleccionar ubicación...</option>
-            <?php foreach($almacenes as $a): ?>
-                <option value="<?= $a['id'] ?>"><?= $a['nombre'] ?></option>
-            <?php endforeach; ?>
-        </select>
-    </div>
+                    <div class="row g-3 mb-4 p-4 rounded-4 bg-light shadow-sm align-items-end border border-light-subtle">
+                        <div class="col-md-4">
+                            <label for="almacen_id" class="form-label small fw-semibold text-secondary text-uppercase mb-2">
+                                <i class="bi bi-box-seam me-1"></i> Almacén de Cargo
+                            </label>
+                            <select name="almacen_id" id="almacen_id" class="form-select border-light-subtle shadow-sm" required>
+                                <option value="">Seleccionar ubicación...</option>
+                                <?php foreach($almacenes as $a): ?>
+                                <option value="<?= $a['id'] ?>"><?= $a['nombre'] ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
 
-    <!-- Cliente -->
-    <div class="col-md-3">
-        <label for="cliente_id" class="form-label small fw-semibold text-secondary text-uppercase mb-2">
-            <i class="bi bi-person me-1"></i> Cliente
-        </label>
-        <div class="input-group shadow-sm">
-            <select name="cliente_id" id="cliente_id" class="form-select select2-modal border-light-subtle" required>
-                <option value="">Seleccionar cliente...</option>
-                <?php foreach($clientes as $p): ?>
-                    <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?></option>
-                <?php endforeach; ?>
-            </select>
-            <button class="btn btn-outline-primary" type="button" onclick="abrirModalNuevoCliente()" title="Nuevo Cliente">
-                <i class="bi bi-person-plus-fill"></i>
-            </button>
-        </div>
-    </div>
+                        <div class="col-md-4">
+                            <label for="cliente_id" class="form-label small fw-semibold text-secondary text-uppercase mb-2">
+                                <i class="bi bi-person me-1"></i> Cliente
+                            </label>
+                            <div class="input-group shadow-sm">
+                                <select name="cliente_id" id="cliente_id" class="form-select select2-modal border-light-subtle" required>
+                                    <option value="">Seleccionar cliente...</option>
+                                    <?php foreach($clientes as $p): ?>
+                                    <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <button class="btn btn-outline-primary" type="button" onclick="abrirModalNuevoCliente()" title="Nuevo Cliente">
+                                    <i class="bi bi-person-plus-fill"></i>
+                                </button>
+                            </div>
+                        </div>
 
-    <!-- Vendedor -->
-    <div class="col-md-2">
-        <label for="vendedor-select" class="form-label small fw-semibold text-secondary text-uppercase mb-2">
-            <i class="bi bi-person-badge me-1"></i> Vendedor
-        </label>
-        <select class="form-select border-light-subtle shadow-sm" id="vendedor-select" name="usuario_id3">
-            <option value="">Seleccione vendedor</option>
-        </select>
-    </div>
+                        <div class="col-md-4">
+                            <label for="vendedor-select" class="form-label small fw-semibold text-secondary text-uppercase mb-2">
+                                <i class="bi bi-person-badge me-1"></i> Vendedor
+                            </label>
+                            <select class="form-select border-light-subtle shadow-sm" id="vendedor-select" name="usuario_id3">
+                                <option value="">Seleccione vendedor</option>
+                            </select>
+                        </div>
+                    </div>
 
-    <!-- Añadir Producto -->
-    <div class="col-md-4">
-        <label for="buscadorProductos" class="form-label small fw-semibold text-secondary text-uppercase mb-2">
-            <i class="bi bi-search me-1"></i> Añadir Producto (SKU o Nombre)
-        </label>
-        <div class="input-group shadow-sm">
-            <select id="buscadorProductos" class="form-select select2-modal border-light-subtle">
-                <option value="">Escribe para buscar...</option>
-                <?php foreach($listaProductos as $pr): ?>
-                    <option value="<?= $pr['producto_id'] ?>"
-                        data-nombre="<?= htmlspecialchars($pr['nombre']) ?>"
-                        data-sku="<?= htmlspecialchars($pr['sku']) ?>"
-                        data-um="<?= htmlspecialchars($pr['unidad_medida']) ?>"
-                        data-ur="<?= htmlspecialchars($pr['unidad_reporte']) ?>"
-                        data-factor="<?= $pr['factor_conversion'] ?? 1 ?>">
-                        [<?= $pr['sku'] ?>] <?= $pr['nombre'] ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-            <button type="button" class="btn btn-primary d-flex align-items-center" onclick="abrirModalProducto()" title="Agregar nuevo producto">
-                <i class="bi bi-plus-lg me-1"></i>
-                <span>Nuevo</span>
-            </button>
-        </div>
-    </div>
-
-</div>
+                    <div style="padding-bottom: 30px!important;" class="row px-8" >
+                        <div class="col-md-12"> 
+                            <label for="buscadorProductos" class="form-label small fw-bold text-muted text-uppercase mb-2 d-flex align-items-center" style="letter-spacing: 0.5px; font-size: 0.75rem;">
+                                <i class="bi bi-search me-2 text-primary"></i> Añadir Producto (SKU o Nombre)
+                            </label>
+                            <div class="input-group rounded-3 shadow-sm border border-light-subtle overflow- bg-white">
+                                <select id="buscadorProductos" class="form-select select2-modal border-0 px-3 py-2">
+                                    <option value="" disabled>Escribe para buscar...</option>
+                                    <?php foreach($listaProductos as $pr): ?>
+                                    <option value="<?= $pr['producto_id'] ?>"
+                                        data-nombre="<?= htmlspecialchars($pr['nombre']) ?>"
+                                        data-sku="<?= htmlspecialchars($pr['sku']) ?>"
+                                        data-um="<?= htmlspecialchars($pr['unidad_medida']) ?>"
+                                        data-ur="<?= htmlspecialchars($pr['unidad_reporte']) ?>"
+                                        data-factor="<?= $pr['factor_conversion'] ?? 1 ?>">
+                                        [<?= $pr['sku'] ?>] <?= $pr['nombre'] ?>
+                                    </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <button type="button" class="btn btn-primary border-0 px-4 d-flex align-items-center fw-semibold" onclick="abrirModalProducto()" title="Agregar nuevo producto" style="z-index: 4;">
+                                    <i class="bi bi-plus-lg me-1"></i>
+                                    <span>Nuevo</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="table-responsive border rounded-4 bg-white">
                         <table class="table align-middle mb-0" id="tablaDetalle">
                             <thead class="bg-light">
                                 <tr class="text-muted small uppercase">
-                                    <th class="ps-4" style="width: 45%;">Producto</th>
-                                    <th style="width: 20%;">Cantidad</th>
-                                    <th style="width: 25%;">Presentación / Unidad</th>
-                                    <th style="width: 25%;">Tipo de precio</th>
-                                    <th  class="ps-4">Precio Unitario</th>
-                                    <th style="width: 50%";>TOTAL</th>
-                                    <th style="width: 10%;" class="text-end pe-4">Acción</th>
+                                    <th class="ps-4" style="width: 35%;">Producto</th>
+                                    <th style="width: 12%;">Cantidad</th>
+                                    <th style="width: 18%;">Presentación / Unidad</th>
+                                    <th style="width: 15%;">Tipo de precio</th>
+                                    <th style="width: 12%;">Precio Unitario</th>
+                                    <th style="width: 13%;">TOTAL</th>
+                                    <th style="width: 5%;" class="text-end pe-4">Acción</th>
                                 </tr>
                             </thead>
                             <tbody>
                             </tbody>
-
                         </table>
 
                         <div id="emptyState" class="text-center py-5 text-muted">
@@ -115,33 +171,20 @@
                             <small>Utiliza el buscador de arriba para añadir artículos</small>
                         </div>
                     </div>
-                    <div class="text-end mt-3">
 
+                    <div class="text-end mt-3">
                         <small class="d-block text-muted fw-semibold mb-1" style="letter-spacing:.5px;">
                             COSTO TOTAL DE COMPRA
                         </small>
-
-                        <div id="costoTotalCompra" class="fw-bold text-success" style="
-            font-size:2rem;
-            line-height:1;
-        ">
+                        <div id="costoTotalCompra" class="fw-bold text-success" style="font-size:2rem; line-height:1;">
                             $0.00
                         </div>
-                         <input 
-            type="hidden"
-            id="totalCotizacion"
-            name="totalCotizacion"
-            
-           
-           >
-            
-
+                        <input type="hidden" id="totalCotizacion" name="totalCotizacion">
                     </div>
                 </div>
 
                 <div class="modal-footer border-0 p-4">
-                    <button type="button" class="btn btn-link text-decoration-none text-muted fw-bold"
-                        data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-link text-decoration-none text-muted fw-bold" data-bs-dismiss="modal">
                         Cancelar
                     </button>
                     <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow">
@@ -152,7 +195,6 @@
         </div>
     </div>
 </div>
-
 <script>
 const URL_CONTROLADOR = '/cfsistem/app/controllers/cotizacionesController.php';
 
@@ -165,11 +207,12 @@ $('.select2-modal').select2({
     dropdownParent: $('#modalCotizacion')
 });
 
+
 // =====================================================
 // CALCULAR TOTAL
 // =====================================================
 
-    async function cargarVendedores() {
+async function cargarVendedores() {
     const select = document.getElementById('vendedor-select');
     if (!select) return; // Seguridad por si el select no está en la vista actual
 
@@ -177,26 +220,26 @@ $('.select2-modal').select2({
         // 1. Realizar la petición a tu controlador de Cf System
         const url = '/cfsistem/app/controllers/accesoController.php?action=obtenerUsuarios';
         const respuesta = await fetch(url);
-        
+
         if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
-        
+
         const resultado = await respuesta.json();
 
         // 2. Verificar que la respuesta sea exitosa y contenga los datos
         if (resultado.success && Array.isArray(resultado.data)) {
-            
+
             // Limpiamos el select y dejamos una opción inicial neutra
-           // select.innerHTML = '<option value="" selected disabled> Seleccione vendedor</option>';
+            // select.innerHTML = '<option value="" selected disabled> Seleccione vendedor</option>';
 
             // 3. Recorrer los usuarios y crear las opciones
             resultado.data.forEach(usuario => {
                 const opcion = document.createElement('option');
                 opcion.value = usuario.id; // El ID que se enviará en el formulario
-                
+
                 // Formateamos el texto: "Nombre (Almacén - Rol)" para que sea súper descriptivo
                 const almacen = usuario.almacen_nombre || 'Sin Almacén';
                 opcion.textContent = `${usuario.nombre}`;
-                
+
                 // Agregamos la opción al select
                 select.appendChild(opcion);
             });
@@ -273,7 +316,7 @@ function calcularTotalSol(input) {
                 style: 'currency',
                 currency: 'MXN'
             });
-             document.getElementById('totalCotizacion').value=totaLCompra;
+        document.getElementById('totalCotizacion').value = totaLCompra;
 
     } finally {
         recalculandoFila = false;
@@ -504,35 +547,35 @@ function calcularPreciosugerido(select) {
     const fila = select.closest('tr');
 
     const inputPrecio = fila.querySelector('.precio-unitario');
-const inputtotal = fila.querySelector('.precio-total');
+    const inputtotal = fila.querySelector('.precio-total');
 
     const unidadSelect = fila.querySelector('.unidad-select');
     const tipoSelect = fila.querySelector('.tipoPrecio-select');
 
     const unidadOption = unidadSelect.options[unidadSelect.selectedIndex];
-    const tipoOption = tipoSelect.options[tipoSelect.selectedIndex]??0;
+    const tipoOption = tipoSelect.options[tipoSelect.selectedIndex] ?? 0;
 
     const equivalencia = Number(unidadOption?.dataset.equivalencia || 1);
-    const precioBase = Number(tipoOption?.dataset.precio || 0)??0;
+    const precioBase = Number(tipoOption?.dataset.precio || 0) ?? 0;
 
-    const sugerido = (precioBase / equivalencia)??0;
+    const sugerido = (precioBase / equivalencia) ?? 0;
 
     // SOLO PLACEHOLDER
     inputPrecio.value = sugerido.toFixed(2);
     inputtotal.value = sugerido.toFixed(2);
     let totaLCompra = 0;
 
-        document.querySelectorAll('.precio-total')
-            .forEach(el => {
-                totaLCompra += parseFloat(el.value) || 0;
-            });
+    document.querySelectorAll('.precio-total')
+        .forEach(el => {
+            totaLCompra += parseFloat(el.value) || 0;
+        });
 
-        document.getElementById('costoTotalCompra')
-            .textContent = totaLCompra.toLocaleString('es-MX', {
-                style: 'currency',
-                currency: 'MXN'
-            });
-             document.getElementById('totalCotizacion').value=totaLCompra;
+    document.getElementById('costoTotalCompra')
+        .textContent = totaLCompra.toLocaleString('es-MX', {
+            style: 'currency',
+            currency: 'MXN'
+        });
+    document.getElementById('totalCotizacion').value = totaLCompra;
 
 }
 document.addEventListener('input', function(e) {
@@ -557,13 +600,13 @@ $('#formSolicitud').on('submit', async function(e) {
         return;
     }
 
-   const payload = {
-    almacen_id: $('#almacen_id').val(),
-    cliente_id: $('#cliente_id').val(),
-    totalCotizacion: $('#totalCotizacion').val(),
-    vendedor: $('#vendedor-select').val(),
-    items: []
-};
+    const payload = {
+        almacen_id: $('#almacen_id').val(),
+        cliente_id: $('#cliente_id').val(),
+        totalCotizacion: $('#totalCotizacion').val(),
+        vendedor: $('#vendedor-select').val(),
+        items: []
+    };
     $('#tablaDetalle tbody tr').each(function() {
 
         const fila = $(this);
@@ -691,17 +734,17 @@ function quitarFila(id) {
     $(`#fila-${id}`).remove();
     let totaLCompra = 0;
 
-        document.querySelectorAll('.precio-total')
-            .forEach(el => {
-                totaLCompra += parseFloat(el.value) || 0;
-            });
+    document.querySelectorAll('.precio-total')
+        .forEach(el => {
+            totaLCompra += parseFloat(el.value) || 0;
+        });
 
-        document.getElementById('costoTotalCompra')
-            .textContent = totaLCompra.toLocaleString('es-MX', {
-                style: 'currency',
-                currency: 'MXN'
-            });
-             document.getElementById('totalCotizacion').value=totaLCompra;
+    document.getElementById('costoTotalCompra')
+        .textContent = totaLCompra.toLocaleString('es-MX', {
+            style: 'currency',
+            currency: 'MXN'
+        });
+    document.getElementById('totalCotizacion').value = totaLCompra;
 
 
     if (!$('#tablaDetalle tbody tr').length) {

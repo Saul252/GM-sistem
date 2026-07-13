@@ -1,15 +1,5 @@
-  window.finalizarViaje = async function(vehiculoId, folioRuta) {
-        if (!confirm(`¿Confirmar llegada de la unidad ${folioRuta}?`)) return;
-        try {
-            const formData = new FormData();
-            formData.append('vehiculo_id', vehiculoId);
-            formData.append('viaje_folio', folioRuta);
-            const resp = await fetch(`/cfsistem/app/controllers/repartosController.php?action=finalizar_viaje`, { method: 'POST', body: formData });
-            const res = await resp.json();
-            if (res.success) {
-                Swal.fire('Éxito', res.message, 'success');
-                cargarMonitorViajes();
-                cargarPendientes();
-            }
-        } catch (e) { console.error(e); }
-    };
+SELECT `id`, `insumo_id`, `cantidad`, `compra_id`, `vehiculo_id` FROM `detalle_salida_insumo` WHERE 1
+SELECT `id`, `fecha`, `usuario` FROM `salida_insumo` WHERE 1
+select (`id`, `id_insumo`, `existencias`) from `insumos_stock`
+select (`id`, `id_insumo`, `costo`, `cantidad`, `proveedor`, `fecha`,`existencias_lote`) FROM `compras_insumos`
+SELECT `id`, `id_insumo`, `existencias` FROM `insumos_stock` WHERE 1

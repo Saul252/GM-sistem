@@ -32,7 +32,7 @@
         }
 
         .main-wrapper { 
-            margin-left: var(--sidebar-width); 
+           
             padding: 30px; 
             padding-top: 90px; 
             min-height: 100vh;
@@ -98,8 +98,10 @@
 <body>
     <?php if (function_exists('renderizarLayout')) { renderizarLayout($paginaActual); } ?>
 
-    <main class="main-wrapper">
-        
+    <main class="main-content">
+        <div>
+                    <h1 class="header-title pb-3">Gestión de Mis repartos</h1>
+                    </div>
         <div class="card-ios animate__animated animate__fadeIn">
             <div class="header-premium d-flex justify-content-between align-items-center">
                 <h6 class="mb-0 fw-bold small text-uppercase">

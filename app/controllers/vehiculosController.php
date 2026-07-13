@@ -47,6 +47,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
     exit;
 }
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'listar') {
+    if (ob_get_level()) ob_clean(); 
+    header('Content-Type: application/json');
+    
+    
+        $lista = $vehiculoModel->listar();
+        
+        // Estructura consistente: success + data
+        echo json_encode([
+            "success" => true,
+            "data" => $lista ?: []
+        ]);
+   
+    
+    exit; // El exit DEBE ir afuera del try/catch para asegurar que detenga todo siempre
+}
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'subirDocumento') {
 
     if (ob_get_level()) ob_clean();

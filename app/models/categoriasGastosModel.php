@@ -20,6 +20,15 @@ class CategoriasGasto {
         }
         return false;
     }
+public function guardarInsumo($nombre, $descripcion) {
+        $sql = "INSERT INTO insumos (nombre, descripcion) VALUES (?, ?)";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("ss", $nombre, $descripcion);
+        if ($stmt->execute()) {
+            return $this->db->insert_id;
+        }
+        return false;
+    }
 
     public function actualizar($id, $nombre, $descripcion) {
         $sql = "UPDATE gastos_categorias SET nombre = ?, descripcion = ? WHERE id = ?";

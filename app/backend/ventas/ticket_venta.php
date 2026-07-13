@@ -176,9 +176,9 @@ $detallesPago = $stmtPago->get_result();
                     </td>
                     <?php if($mostrar_precios): ?>
                     <td align="right" class="bold">
-                        $<?php echo number_format($item['subtotal'], 2); ?>
+                        $<?php echo number_format($item['precio_unitario']*$item['cantidad'], 2); ?>
                         <br>
-                        <?php echo '( $' .number_format(($item['subtotal'])/$cantidadReal).' X ' .$item['odmaNombre'].' )'; ?>
+                        <?php echo '( $' .number_format(($item['precio_unitario'])).' X ' .$item['odmaNombre'].' )'; ?>
                     </td>
                     <?php endif; ?>
                 </tr>

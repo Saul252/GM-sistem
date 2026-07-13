@@ -23,8 +23,8 @@
     .main-content {
         margin-left: var(--sidebar-width);
         margin-top: var(--nav-height);
-        padding: 1.5rem 2rem;
-        width: calc(100% - var(--sidebar-width));
+        padding: 1.5rem ;
+        
         min-height: calc(100vh - var(--nav-height));
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         display: block;
@@ -185,6 +185,7 @@
                             style="border-radius: 10px; background: #0d6efd;">
                             <i class="bi bi-cart-plus me-1"></i> Nueva Compra
                         </button>
+                       
                     </div>
                    
                 </div>
@@ -628,17 +629,18 @@ if (!file_exists($ruta)) {
     echo "<script>console.error('ERROR: El archivo del modal no existe en: $ruta');</script>";
 }
 require_once $ruta;
+
 ?>
 
 
     <?php require_once __DIR__ . '/egresosComponets/modalCompra.php'; ?>
+   
     <?php require_once __DIR__ . '/egresosComponets/modalAjuste.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/modalDetalles.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/modalGasto.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/cuentasPendientes.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/historialCuentasPorPagar.php'; ?>
  <?php require_once __DIR__ . '/egresosComponets/modalDetallePago.php'; ?>
-
 
 
 

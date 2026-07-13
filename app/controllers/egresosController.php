@@ -15,6 +15,7 @@ require_once __DIR__ . '/../models/egresos/comprasModel.php';
 require_once __DIR__ . '/../models/proveedoresModel.php';
 require_once __DIR__ . '/../models/almacen/categoriasModel.php';
 require_once __DIR__ . '/../models/egresos/gastosModel.php';
+require_once __DIR__ . '/../models/egresos/insumosModel.php';
 require_once __DIR__ . '/../models/categoriasGastosModel.php';
 
 require_once __DIR__ . '/../models/almacen_model.php';
@@ -27,6 +28,7 @@ protegerPagina('compras');
 $almacenMo = new AlmacenModel($conexion);
 $egresoModel = new EgresoModel($conexion);
 $comprasModel = new CompraModel($conexion);
+$insumosModel = new InsumosModel($conexion);
 $gastosModel = new GastoModel($conexion);
 $categoriasModel = new CategoriaModel($conexion);
 $gastosCategorias = new CategoriasGasto($conexion);
@@ -77,7 +79,47 @@ if ($action === 'guardar_categoria_gasto') {
     }
     exit;
 }
+if ($action === 'guardar_nuevo_insumo') {
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+    
+    try {
+        $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+        $nombre = trim($_POST['nombre'] ?? '');
+        $descripcion = trim($_POST['descripcion'] ?? '');
 
+        // ✅ CORRECCIÓN: Mensaje coherente con la acción
+        if (empty($nombre)) {
+            throw new Exception("El nombre del insumo es obligatorio.");
+        }
+
+        // Determinar si es edición o inserción nueva
+        if ($id > 0) {
+            // ✅ Usa el modelo correcto para insumos si manejas edición aquí
+            $resultado = $gastosCategorias->actualizar($id, $nombre, $descripcion); 
+            $mensaje = "Insumo actualizado correctamente";
+            $id_final = $id;
+        } else {
+            // ✅ Cambiar $gastosCategorias por tu modelo real de insumos/egresos si aplica
+            $id_final = $gastosCategorias->guardarInsumo($nombre, $descripcion);
+            $resultado = $id_final ? true : false;
+            $mensaje = "Insumo creado correctamente";
+        }
+        
+        echo json_encode([
+            "success" => $resultado, 
+            "message" => $mensaje, 
+            "id_insertado" => $id_final
+        ]);
+
+    } catch (Exception $e) {
+        echo json_encode([
+            "success" => false, 
+            "message" => $e->getMessage()
+        ]);
+    }
+    exit;
+}
 if ($action === 'eliminar_categoria') {
     if (ob_get_level()) ob_clean();
     header('Content-Type: application/json');
@@ -310,6 +352,81 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'elimin
 
         // 1. Registrar el gasto en la BD
         $res = $egresoModel->registrarGasto($cabecera, $_POST['desc'] ?? [], $_POST['cant'] ?? [], $_POST['precio'] ?? []);
+        
+        // Validar que se haya obtenido un ID correcto
+        $id = $res['id'] ?? 0;
+        if ($id <= 0) {
+            throw new Exception("No se pudo registrar el gasto en la base de datos.");
+        }
+            
+        $folio = $_POST['folio'] ?? 'SF';
+        $tipo = $_POST['gasto'] ?? 'gasto'; // Asegúrate de recibir este valor o por defecto 'gasto'
+        $documento = $_FILES['documento'] ?? null;
+
+        // 2. Procesar el archivo SOLO si el usuario realmente subió uno
+        if ($documento && $documento['error'] === UPLOAD_ERR_OK) {
+            
+            $ruta_carpeta = $_SERVER['DOCUMENT_ROOT'] . "/cfsistem/uploads/compras/";
+            if (!is_dir($ruta_carpeta)) {
+                mkdir($ruta_carpeta, 0777, true);
+            }
+
+            $ext = pathinfo($documento['name'], PATHINFO_EXTENSION);
+            // Limpiamos el folio para evitar caracteres raros en el nombre de archivo
+            $folio_limpio = preg_replace('/[^a-zA-Z0-9]/', '_', $folio);
+            $nombre = $tipo . "_" . $folio_limpio . "_" . time() . "." . $ext;
+            $destino = $ruta_carpeta . $nombre;
+
+            // Mover archivo temporal al destino real
+            if (!move_uploaded_file($documento['tmp_name'], $destino)) {
+                throw new Exception("Gasto registrado, pero no se pudo guardar el archivo físico.");
+            }
+
+            $documento_url = "uploads/compras/" . $nombre;
+
+            // 3. Guardar la relación del documento en la BD
+            $ok = $comprasModel->subirDocumentoCompra($tipo, $id, $nombre, $documento_url);
+            if (!$ok) {
+                throw new Exception("Gasto registrado, pero falló al vincular el documento en la base de datos.");
+            }
+        } 
+        // Descomenta las siguientes líneas si para ti subir el archivo es OBLIGATORIO:
+        // else {
+        //     throw new Exception("El documento digital es obligatorio.");
+        // }
+
+        // 4. RESPUESTA ÚNICA DE ÉXITO (Al final del flujo)
+        echo json_encode(['success' => true, 'message' => 'Gasto guardado correctamente']);
+        
+    } catch (Exception $e) {
+        // Si algo falla, el catch se encarga de mandar la respuesta limpia de error
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit;
+}if ($action === 'guardarGastoInsumo') {
+    header('Content-Type: application/json');
+    try {
+        $rol_id = $_SESSION['rol_id'] ?? 0;
+        $almacen_final = ($rol_id == 1) ? intval($_POST['almacen_id'] ?? 0) : intval($_SESSION['almacen_id'] ?? 0);
+        if ($almacen_final <= 0) throw new Exception("Almacén no válido.");
+
+        $urlDocumento = '';
+      
+        $cabecera = [
+            'folio'        => $_POST['folio'] ?? 'S/F',
+            'fecha'        => $_POST['fecha'] ?? date('Y-m-d'),
+            'almacen_id'   => $almacen_final,
+            'categoria_id' => $_POST['categoria_id'] ?? null, 
+            'usuario_id'   => $_SESSION['usuario_id'] ?? 1,
+            'beneficiario' => $_POST['beneficiario'] ?? '',
+            'metodo_pago'  => $_POST['metodo_pago'] ?? 'Efectivo',
+            'total'        => $_POST['total_final'] ?? 0,
+            'documento_url'=> $urlDocumento,
+            'observaciones'=> $_POST['observaciones'] ?? ''
+        ];
+
+        // 1. Registrar el gasto en la BD
+        $res = $egresoModel->registrarGastoInsumo($cabecera, $_POST['desc'] ?? [], $_POST['cant'] ?? [], $_POST['precio'] ?? [],$_POST['items'] ?? []);
         
         // Validar que se haya obtenido un ID correcto
         $id = $res['id'] ?? 0;
@@ -646,6 +763,41 @@ if ($action === 'guardar_categoria_egreso') {
     // 2. OBLIGATORIO: Detener el script aquí
     exit; 
 }
+if ($action === 'guardar_insumo') {
+    // 1. Limpieza total de búfer para que no haya ni un espacio en blanco antes del {
+    while (ob_get_level()) ob_end_clean(); 
+    
+    header('Content-Type: application/json; charset=utf-8');
+
+    try {
+        $nombre = trim($_POST['nombre'] ?? '');$descripcion = trim($_POST['descripcion'] ?? '');
+        
+        if (empty($nombre)) {
+            throw new Exception("El nombre de la categoría es obligatorio.");
+        }
+
+        // Usamos la instancia que ya definiste al inicio de tu controller
+        // Si tu modelo devuelve el ID insertado:
+        $id_final = $gastosCategorias->guardarInsumo($nombre, $descripcion); 
+
+        if ($id_final) {
+            echo json_encode([
+                "success" => true, 
+                "id_insertado" => $id_final, 
+                "message" => "Categoría creada correctamente"
+            ]);
+        } else {
+            throw new Exception("Error al guardar en la base de datos.");
+        }
+    } catch (Exception $e) {
+        echo json_encode([
+            "success" => false, 
+            "message" => $e->getMessage()
+        ]);
+    }
+    // 2. OBLIGATORIO: Detener el script aquí
+    exit; 
+}
 // Acción para registrar la deuda nacida de un exceso en compras o gastos
 if ($action === 'registrarDeudaPorExceso') {
     // Limpiamos el buffer para evitar que espacios en blanco rompan el JSON de salida
@@ -840,6 +992,29 @@ if ($action === 'obtenerProductosSelect') {
 
     exit;
 }
+if ($action === 'obtenerInsumosSelect') {
+
+    header('Content-Type: application/json');
+
+    try {
+
+      $insumos= $insumosModel-> listarTodo();
+
+        echo json_encode([
+            'success' => true,
+            'data' => $insumos
+        ]);
+
+    } catch (Throwable $e) {
+
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+    }
+
+    exit;
+}
 if ($action === 'guardarCategoria') {
 
     // 🔥 LIMPIAR CUALQUIER SALIDA (evita romper JSON)
@@ -967,7 +1142,8 @@ $almacen_actual= $_SESSION['almacen_id'];
     $listaCategoriasGastos = $gastosCategorias->listarTodas();
     $almacenes = $egresoModel->obtenerAlmacenesActivos();
     $almacenUsuario= $almacenMo->getAlmacenes($almacen_actual);
-    $productos = $comprasModel->obtenerProductos(); 
+    $productos = $comprasModel->obtenerProductos();
+   $insumos= $insumosModel-> listarTodo();
     $listaProductos= $productosModel->listarTodo();
     $proveedores = $proveedorModel->listarTodosProveedorsYDeuda(0); 
 $unidadesMedida= $almacenMo->getUnidadesMedida();

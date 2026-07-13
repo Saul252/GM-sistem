@@ -2,7 +2,7 @@
     /* Reset y base */
     .margen {
         /* Usamos calc para restar el sidebar del ancho total y evitar el desborde */
-        margin-left: var(--sidebar-width, 0); 
+       
         padding: 20px; /* Reducido de 40px a 20px para dar más espacio al contenido */
         width: auto; 
         max-width: 100%;

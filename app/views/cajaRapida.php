@@ -241,9 +241,7 @@
                         <div class="col-md-4">
                             <select id="filtroAlmacen" class="form-select"
                                 <?= ($almacen_usuario > 0) ? 'disabled' : '' ?>>
-                                <?php if($almacen_usuario == 0): ?>
-                                <option value="">Todos los almacenes</option>
-                                <?php endif; ?>
+                                
 
                                 <?php foreach($almacenes as $alm): ?>
                                 <option value="<?= $alm['id'] ?>"
@@ -262,10 +260,10 @@
                     <div class="table-responsive tabla-scroll">
                         <table class="table table-bordered table-hover tabla-productos">
                             <thead class="table-dark">
-                                <tr> <th>Almacén</th>
-                                    <th>SKU</th>
-                                    <th>Producto</th>
-                                    <th>Stock</th>
+                                <tr> 
+                                   
+                                    <th  width="90">Producto</th>
+                                    <th  width="90">Stock</th>
                                       
                                    
                                     <th width="150">Unidad</th>
@@ -291,8 +289,8 @@
                                     data-reporte-nom="<?= htmlspecialchars($p['unidad_reporte']) ?>">
                                     <input type="hidden" class="factorC" value="<?= $p['factor_conversion'] ?>">
 
- <td><?= htmlspecialchars($p['almacen_nombre']) ?></td>
-                                    <td><?= $p['sku'] ?></td>
+ <td class="d-none"><?= htmlspecialchars($p['almacen_nombre']) ?></td>
+                                    <td class ="d-none"><?= $p['sku'] ?></td>
                                     <td><?= htmlspecialchars($p['nombre']) ?></td>
                                     <td>
                                         <span class="badge bg-success"><?= $p['stock'] ?></span>
@@ -355,12 +353,9 @@
                                     <td>
 
                                         <select class="form-select form-select-sm select-precio">
-                                            <option value="<?= $p['precio_minorista'] ?>">Publico -
-                                                $<?= number_format($p['precio_minorista'],2) ?></option>
-                                            <option value="<?= $p['precio_mayorista'] ?>">Constructora -
-                                                $<?= number_format($p['precio_mayorista'],2) ?></option>
-                                            <option value="<?= $p['precio_distribuidor'] ?>">Distribuidor -
-                                                $<?= number_format($p['precio_distribuidor'],2) ?></option>
+                                            <option value="<?= $p['precio_minorista'] ?>">Publico </option>
+                                            <option value="<?= $p['precio_mayorista'] ?>">Constructora </option>
+                                            <option value="<?= $p['precio_distribuidor'] ?>">Distribuidor </option>
                                         </select>
                                     </td>
                                     
@@ -823,7 +818,7 @@ const cantidadInput = fila.querySelector(".cantidad");
      */
     document.addEventListener('keydown', function(e) {
         // 1. Verificamos que la tecla sea Enter y que el foco esté en un input de cantidad
-        if (e.key === 'Enter' && e.target.classList.contains('cantidad_usuario')) {
+        if (e.key === 'Enter' && e.target.classList.contains('input-precioMayor')) {
 
             // Evitamos que el Enter haga un submit accidental del formulario principal
             e.preventDefault();
@@ -935,7 +930,7 @@ function calcularPrecio(fila) {
 
     const equi = Math.round((1 / equivalencia) * 10000) / 10000;
 
-    let nuevoPrecio = (cantidadUsuario*equi)*precio;
+    let nuevoPrecio = (equi)*precio;
 
    
 

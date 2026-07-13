@@ -21,7 +21,7 @@ error_reporting(E_ALL);
     <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
     <link href="/cfsistem/css/solicitudesCompra.css" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-           
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>   
 </head>
 
 <body>
@@ -40,6 +40,9 @@ error_reporting(E_ALL);
                     <button class="btn btn-add" onclick="nuevaCotizacion()">
                         <i class="bi bi-plus-lg me-2"></i> Crear Cotizacion
                     </button>
+                <button class="btn btn-outline-secondary" onclick="descargarProductos()" title="Descargar Excel de Productos">
+    <i class="bi bi-download"></i>
+</button>
                 </div>
             </div>
 
@@ -945,6 +948,133 @@ $(document).ready(function () {
         select.innerHTML = '<option value="">Error al cargar la lista</option>';
         console.error('Error al ejecutar cargarUsuariosSelect:', error);
     }
+}async function descargarProductos() {
+   
+        // 1. Realizar la petición a tu controlador de Cf System
+         const resp = await fetch(
+            `/cfsistem/app/controllers/cotizacionesController.php?action=obtenerProductos`
+        );
+
+
+        const res = await resp.json();
+        console.log(res.data);
+exportarProductosAExcel(res.data)
+   
+}
+
+
+async function exportarProductosAExcel(productos) {
+    // 1. Crear un nuevo libro de trabajo
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Inventario Productos');
+
+    // 2. Definir las columnas de la tabla y sus anchos
+    worksheet.columns = [
+        { header: 'ID Producto', key: 'producto_id', width: 12 },
+        { header: 'SKU', key: 'sku', width: 15 },
+        { header: 'Nombre del Producto', key: 'nombre', width: 30 },
+        { header: 'U. Medida', key: 'unidad_medida', width: 12 },
+        { header: 'U. Reporte', key: 'unidad_reporte', width: 12 },
+        { header: 'Factor Conv.', key: 'factor_conversion', width: 15 },
+        { header: 'ID Cat.', key: 'categoria_id', width: 10 },
+        { header: 'P. Minorista', key: 'precio_minorista', width: 15 },
+        { header: 'P. Mayorista', key: 'precio_mayorista', width: 15 },
+        { header: 'P. Distribuidor', key: 'precio_distribuidor', width: 15 },
+        { header: 'Medidas Adicionales (Nombre: Equiv.)', key: 'medidas_adicionales', width: 40 }
+    ];
+
+    // Estilo para la cabecera (Fondo azul desaturado profesional, texto blanco en negrita)
+    const headerRow = worksheet.getRow(1);
+    headerRow.font = { name: 'Segoe UI', size: 11, bold: true, color: { argb: 'FFFFFF' } };
+    headerRow.fill = {
+        type: 'pattern',
+        pattern: 'solid',
+        fgColor: { argb: '2E5B82' }
+    };
+    headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+    headerRow.height = 25;
+
+    // 3. Iterar con un forEach sobre los datos para ir agregando las filas
+    productos.forEach((prod, index) => {
+        
+        // Mapeamos el sub-array de 'medidas_adicionales' a un string entendible en una sola celda
+        const medidasTexto = prod.medidas_adicionales
+            ? prod.medidas_adicionales.map(m => `${m.nombre}: ${parseFloat(m.equivalencia).toFixed(4)}`).join(' | ')
+            : 'Ninguna';
+
+        // Añadimos la fila al worksheet mapeando los tipos numéricos correctos
+        const row = worksheet.addRow({
+            producto_id: prod.producto_id,
+            sku: prod.sku,
+            nombre: prod.nombre,
+            unidad_medida: prod.unidad_medida,
+            unidad_reporte: prod.unidad_reporte,
+            factor_conversion: parseFloat(prod.factor_conversion || 0),
+            categoria_id: prod.categoria_id,
+            precio_minorista: parseFloat(prod.precio_minorista || 0),
+            precio_mayorista: parseFloat(prod.precio_mayorista || 0),
+            precio_distribuidor: parseFloat(prod.precio_distribuidor || 0),
+            medidas_adicionales: medidasTexto
+        });
+
+        // Formatear celdas de números y precios para que Excel los reconozca nativamente
+        row.getCell('producto_id').alignment = { horizontal: 'center' };
+        row.getCell('categoria_id').alignment = { horizontal: 'center' };
+        row.getCell('sku').alignment = { horizontal: 'center' };
+        row.getCell('unidad_medida').alignment = { horizontal: 'center' };
+        row.getCell('unidad_reporte').alignment = { horizontal: 'center' };
+        
+        // Formatos numéricos monetarios y decimales
+        row.getCell('factor_conversion').numFmt = '#,##0.00';
+        row.getCell('precio_minorista').numFmt = '$#,##0.00';
+        row.getCell('precio_mayorista').numFmt = '$#,##0.00';
+        row.getCell('precio_distribuidor').numFmt = '$#,##0.00';
+
+        // Aplicar bordes delgados gris claro a las filas
+        row.eachCell((cell) => {
+            cell.font = { name: 'Segoe UI', size: 10 };
+            cell.border = {
+                top: { style: 'thin', color: { argb: 'E0E0E0' } },
+                bottom: { style: 'thin', color: { argb: 'E0E0E0' } },
+                left: { style: 'thin', color: { argb: 'E0E0E0' } },
+                right: { style: 'thin', color: { argb: 'E0E0E0' } }
+            };
+            
+            // Zebra striping alternado (efecto visual gris claro en filas impares)
+            if (index % 2 !== 0) {
+                cell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'F9FAFB' }
+                };
+            }
+        });
+        
+        row.height = 20;
+    });
+
+    const filename = 'Reporte_Productos_Inventario.xlsx';
+
+    // --- NUEVO: Procesamiento y descarga en el Navegador ---
+    
+    // Generar el buffer del archivo Excel
+    const buffer = await workbook.xlsx.writeBuffer();
+    
+    // Crear un objeto Blob con el tipo MIME correcto para archivos XLSX
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    
+    // Crear un enlace temporal en el DOM
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    
+    // Añadir al documento, hacer click de forma virtual y removerlo
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    // Liberar memoria del objeto URL creado
+    URL.revokeObjectURL(link.href);
 }
 async function cargarCotizaciones() {
    let almacen= $('#filtroAlmacen').val();

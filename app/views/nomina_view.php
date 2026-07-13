@@ -58,9 +58,8 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
     <main class="main-content">
         <div class="d-flex justify-content-between align-items-center flex-wrap mb-4" style="gap: 15px; width: 100%;">
             <div style="flex: 1; min-width: 200px;">
-                <h2 class="fw-bold m-0" style="letter-spacing: -0.02em; color: #1c1c1e;">Gestión de Personal</h2>
-                <p class="text-muted mb-0" style="font-size: 0.85rem;">Control de trabajadores, roles y disponibilidad</p>
-            </div>
+                <h2 class="fw-bold m-0 text-uppercase" style="letter-spacing: -0.02em; color: #1c1c1e;">Gestión de SALARIOS</h2>
+                 </div>
 
             <div class="d-flex align-items-center" style="gap: 12px;">
                 <div class="ios-micro-card">
@@ -72,6 +71,8 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
 
                 <button class="btn btn-primary rounded-pill px-4 shadow-sm" onclick="nuevoTrabajador()" style="height: 34px; font-weight: 600; font-size: 0.85rem;">
                     <i class="bi bi-person-plus-fill me-1"></i> Agregar
+                </button><button class="btn btn-primary rounded-pill px-4 shadow-sm" onclick="imprimirContenidoModal()" style="height: 34px; font-weight: 600; font-size: 0.85rem;">
+                    <i class="bi bi-person-plus-fill me-1"></i> Imprimir Nomina
                 </button>
             </div>
         </div>
@@ -107,7 +108,10 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                             <th>Teléfono</th>
                             <th>Rol / Puesto</th>
                             <th>Almacén</th>
-                            <th>Documentos</th>
+                            <th>Salario</th>
+                          <th>Prestamos Activos</th>
+                          <th>Total Nomina</th>
+                          
                             <th>Estado</th>
                             <th class="text-end">Acciones</th>
                         </tr>
@@ -128,118 +132,14 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                             </td>
                             <td>
                                 <span class="small text-muted"><i class="bi bi-geo-alt"></i> <?= $t['nombreAlmacen'] ?></span>
+                            </td><td>
+                                <span class="small text-muted"><i class="bi bi-geo-alt"></i> <?= $t['salario'] ?></span>
+                            </td><td>
+                                <span class="small text-muted"><i class="bi bi-geo-alt"></i> <?= $t['total_prestamos_pendientes'] ?></span>
+                            </td><td>
+                                <span class="small text-muted"><i class="bi bi-geo-alt"></i> <?= $t['salario_disponible'] ?></span>
                             </td>
-                                                         <td class="text-center">
-
-    <div class="d-flex justify-content-center align-items-center gap-1">
-
-        <?php if (!empty($t['documentos_url'])): ?>
-
-            <?php $documentos = explode(';;;', $t['documentos_url']); ?>
-
-            <div class="dropdown">
-
-                <button
-                    class="btn btn-sm btn-light border position-relative"
-                    type="button"
-                    data-bs-toggle="dropdown">
-
-                    <i class="bi bi-folder2-open text-dark"></i>
-
-                  
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success">
-                        <?= count($documentos) ?>
-                    </span>
-
-                </button>
-
-                <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="min-width:320px;">
-
-                    <li>
-                        <h6 class="dropdown-header">
-                            <i class="bi bi-files me-1"></i>
-                            Documentos adjuntos
-                               <button class="btn btn-sm btn-outline-primary rounded-pill"
-    onclick="subirDocumentoCompra(
-        <?= $t['id'] ?>
-        
-    )">
-   Cargar Nuevo <i class="bi bi-upload"></i>
-</button>
-                        </h6>
-                    </li>
-                 
-
-                    <?php foreach ($documentos as $doc): ?>
-                      
-
-                        <?php
-                        $partes = explode('|||', $doc);
-
-                        $nombre = $partes[0] ?? '';
-                        $direccion = $partes[1] ?? '';
-                        $idDoc = $partes[2] ?? 0;
-
-                        if (empty($direccion)) continue;
-                        ?>
-
-                        <li>
-                            <div class="dropdown-item d-flex justify-content-between align-items-center py-2">
-
-                                <a href="../../<?= $direccion ?>"
-                                   target="_blank"
-                                   class="text-decoration-none text-dark flex-grow-1">
-
-                                  <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
-
-                                    <span class="small">
-                                        <?= htmlspecialchars($nombre) ?>
-                                    </span>
-
-                                </a>
-
-                                <button
-                                    class="btn btn-sm btn-outline-danger border-0"
-                                    title="Eliminar documento"
-                                    onclick="eliminarDocumento(<?= $idDoc ?>)">
-
-                                    <i class="bi bi-trash"></i>
-
-                                </button>
-
-                            </div>
-                        </li>
-
-                    <?php endforeach; ?>
-
-                </ul>
-
-            </div>
-           
-
-        <?php endif; ?>
-           <?php if (empty($t['documentos_url'])): ?>
-
-       
-         <button class="btn btn-sm btn-outline-primary rounded-pill"
-    onclick="subirDocumentoCompra(
-        <?= $t['id'] ?>
-        
-    )">
- Agregar   <i class="bi bi-upload"></i>
-</button>
- <?php endif; ?>
-
-       
-
-           
-
-        
-
-    </div>
-
-</td>
-                            <td>
+                                           <td>
                                 <?php 
                                     $claseEstado = match($t['estado']) {
                                         'activo' => 'bg-success',
@@ -256,9 +156,7 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                                     <button class="btn btn-sm btn-outline-primary border-0" onclick="editarTrabajador(<?= htmlspecialchars(json_encode($t)) ?>)">
                                         <i class="bi bi-pencil-square fs-5"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-danger border-0" onclick="eliminarTrabajador(<?= $t['id'] ?>)">
-                                        <i class="bi bi-trash fs-5"></i>
-                                    </button>
+                                    
                                 </div>
                             </td>
                         </tr>
@@ -607,7 +505,200 @@ function eliminarDocumento(id) {
             cargarCompras();
         }
     });
+} 
+async function imprimirContenidoModal() {
+        
+        
+            const res = await fetch(`http://localhost/cfsistem/app/controllers/nominaController.php?action=listar`);
+            const data = await res.json();
+            //<td class="ps-3 small">${v.id}</td>
+            let totalVendido=0;
+            let deuda=0;
+
+    // 1. Obtener los elementos clave del modal actual
+    const folio = $('#spanFolio').text();
+    const cliente = $('#detCliente').text();
+    const almacen = $('#detAlmacen').text();
+    
+    // 2. Clonar las tablas de datos para no alterar el modal visual
+    const tablaProductos = $('#tbodyDetalle').html();
+    const tablaEntregas = $('#tbodyHistorial').html();
+    const tablaPagos = $('#tbodyPagos').html();
+    
+    const total = $('#detTotalLabel').text();
+    const saldo = $('#detSaldoLabel').text();
+
+    // 3. Crear una nueva ventana temporal en el navegador
+    const ventanaImpresion = window.open('', '_blank');
+    let tabla='';
+
+data.map(t => {
+    tabla+=` <tr class="fila-trabajador" >
+    
+                            <td><strong>${t.nombre}</strong></td>
+                            
+                            <td>
+                                <span class="badge bg-light text-dark border fw-normal text-uppercase" style="font-size: 0.7rem;">
+                                     ${t.rol}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="small text-muted">  ${t.nombreAlmacen}</span>
+                            </td><td>
+                                <span class="small text-muted">  ${t.salario}</span>
+                            </td><td>
+                                <span class="small text-muted">  ${t.total_prestamos_pendientes}</span>
+                            </td><td>
+                                <span class="small text-muted">  ${t.salario_disponible}</span>
+                            </td>
+                                           <td>
+                                
+                                    
+                                
+                            </td>
+                            </tr>
+                            `
+                            
+
+})
+
+    // 4. Inyectar el HTML estructurado con estilos limpios y profesionales
+    ventanaImpresion.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Nomina</title>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+            <style>
+                body {font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 30px; color: #333; }
+                .ticket-header { border-bottom: 2px solid #007aff; padding-bottom: 15px; margin-bottom: 20px; }
+                .meta-box { background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 15px; }
+                .section-title { font-size: 0.85rem; font-weight: bold; text-transform: uppercase; color: #666; margin-top: 25px; margin-bottom: 10px; letter-spacing: 0.5px; }
+                .table-responsive { max-height: none !important; overflow: visible !important; }
+                .d-none { display: none !important; } /* Oculta columnas de inputs si están activas */
+                @media print {
+                    body { padding: 40px;  }
+                    .btn-imprimir { display: none; }
+                }
+                     @page { 
+                        margin: 0; /* Esto elimina el título de arriba y la fecha/hora de abajo */
+                    }
+            </style>
+        </head>
+        <body>
+         <div id="areaImpresion" class="text-uppercase  bg-white" style="min-height: 650px; font-size: 0.95rem;">
+ <img
+    src="/cfsistem/public/assets/logo.ico"
+    style="
+        position: fixed;
+        top: 30%;                  /* Centro vertical */
+        left: 50%;                 /* Centro horizontal */
+        transform: translate(-50%, -50%); /* Compensa el propio tamaño de la imagen */
+        width: 240px;
+        opacity: 0.08;
+        z-index: 1;               /* Cambiado a -1 para que quede detrás del texto y no tape los clics */
+        pointer-events: none;      /* Evita que interfiera si alguien intenta hacer clic sobre ella */
+    "
+>
+                        <!-- ENCABEZADO -->
+                        
+<div class=" ">
+
+    <!-- Logo + Título -->
+    <div class="">
+
+        <img src="/cfsistem/public/assets/logo.ico"
+             alt="Logo"
+             width="55"
+             height="55"
+             class="me-3">
+
+         <div class="ticket-header d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="fw-bold m-0">CF SYSTEM NOMINA</h4>
+                    
+                </div>
+               
+            </div>
+
+            
+    </div>
+
+  
+
+
+                        </div>
+                        <div class="row g-3">
+                
+                
+            </div>
+            <div class="table-responsive" style="max-height: 180px;">
+                                <table class="table table-sm align-middle mb-0">
+                                    <thead class="table-light">
+                                        <tr class="small text-uppercase">
+                                             <th>Nombre</th>
+                           
+                            <th>Rol / Puesto</th>
+                            <th>Almacén</th>
+                            <th>Salario</th>
+                          <th>Prestamos Activos</th>
+                          <th>Total Nomina</th>
+                          
+                           
+                                        </tr>
+                                    </thead>
+                                    <tbody >${tabla}</tbody>
+                                </table>
+                            </div>
+                       
+
+                            
+
+                          
+
+</div>
+                       
+
+                        
+
+                    </div>
+             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script> 
+                <script>
+   window.addEventListener('DOMContentLoaded', () => {
+        // 1. Detectar si el usuario está en un dispositivo móvil
+        const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        // 2. Esperar 1 segundo a que carguen estilos, fuentes e imágenes
+        setTimeout(() => {
+            if (esMovil) {
+                // --- COMPORTAMIENTO EN CELULARES: DESCARGA DE PDF AUTOMÁTICA ---
+                const elementoParaConvertir = document.getElementById('areaImpresion');
+
+                const opciones = {
+                    margin:       1,
+                    filename:     'nomina_${folio}.pdf',
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2, useCORS: true }, // Mayor calidad visual
+                    jsPDF:        { unit: 'cm', format: 'letter', orientation: 'portrait' }
+                };
+
+                // Generar y descargar el PDF directamente
+                html2pdf().set(opciones).from(elementoParaConvertir).save();
+                
+            } else {
+                // --- COMPORTAMIENTO EN COMPUTADORAS: DIÁLOGO NATIVO DE IMPRESIÓN ---
+                window.print();
+            }
+        }, 1000); // 1000 milisegundos = 1 segundo de espera
+    });
+ <\/script>
+        </body>
+        </html>
+    `);
+
+    ventanaImpresion.document.close();
 }
+
     </script>
     
 </body>

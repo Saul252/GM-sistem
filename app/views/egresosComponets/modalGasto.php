@@ -139,11 +139,11 @@
             <div class="modal-footer border-0 pt-0">
                 <button type="button" class="btn btn-primary w-100 fw-bold" onclick="guardarNuevaCategoria()" style="border-radius: 10px;">Agregar</button>
             </div>
-        </div>
+        </div> 
     </div>
 </div>
 <script>
-
+   
      cargarProveedoresSelect();
     async function cargarProveedoresSelect() {
     const select = document.getElementById('select-proveedor');

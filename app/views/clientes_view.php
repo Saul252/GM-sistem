@@ -172,11 +172,9 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
                             <td class="text-end pe-3">
                                 <div class="btn-group shadow-sm rounded-pill bg-white px-1">
                                     <button class="btn btn-link btn-sm text-primary p-2" onclick="editarCliente(<?= $c['id'] ?>)">
-                                        <i class="bi bi-pencil-square"></i>
+                                        <i class="bi bi-pencil-square"></i> <i class="bi bi-eye"></i>
                                     </button>
-                                    <button class="btn btn-link btn-sm text-success p-2" onclick="verDetalles(<?= $c['id'] ?>)">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
+                                   
                                 </div>
                             </td>
                         </tr>
