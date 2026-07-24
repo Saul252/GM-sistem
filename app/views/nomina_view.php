@@ -114,6 +114,7 @@ $paginaActual = 'trabajadores';
                             <th>Rol / Puesto</th>
                             <th>Almacén</th>
                             <th>Salario</th>
+                             <th>Bonos</th>
                             <th>Préstamos Activos</th>
                             <th>Total Nómina</th>
                             <th>Estado</th>
@@ -202,70 +203,148 @@ $paginaActual = 'trabajadores';
             </div>
         </div>
     </div>
-<div class="modal fade" id="modalBono" tabindex="-1">
+<div class="modal fade" id="modalBono" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 22px; overflow: hidden;">
+        <div class="modal-content border-0 shadow rounded-4">
 
             <!-- HEADER -->
-            <div class="modal-header bg-dark text-white py-3">
+            <div class="modal-header bg-success bg-gradient text-white border-0 py-4">
                 <div>
-                    <h5 class="modal-title mb-0 fw-semibold">
-                        <i class="bi bi-gift-fill me-2"></i>
+                    <h4 class="modal-title fw-bold mb-1">
+                        <i class="bi bi-award-fill me-2"></i>
                         Registrar Bono
-                    </h5>
-                    <small class="text-white-50">Gestión de bonificaciones y reconocimientos</small>
+                    </h4>
+                    <small class="opacity-75">
+                        Asigna una bonificación al trabajador.
+                    </small>
                 </div>
 
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal">
+                </button>
             </div>
 
             <form id="formBono">
 
-                <!-- BODY -->
                 <div class="modal-body p-4">
 
-                    <div class="row g-3">
+                    <div class="row g-4">
 
-                        <!-- TRABAJADOR -->
+                        <!-- Trabajador -->
                         <div class="col-md-6">
-                            <label class="form-label text-muted small">Trabajador</label>
-                            <input type="hidden" name="trabajador_id_crear_bono" id="modal_bono_trabajador_id">
-                            <input type="text" name="trabajador_nombre" id="trabajador_nombre">
-                                
-                        </div>
 
-                        <!-- TIPO DE BONO -->
-                      
-                        <!-- MONTO -->
-                        <div class="col-md-6">
-                            <label class="form-label text-muted small">Monto del Bono</label>
-                            <div class="input-group input-group-lg">
-                                <span class="input-group-text">$</span>
-                                <input type="number" step="0.01" name="monto_bono"id="monto_bono" class="form-control"
-                                    placeholder="0.00" required>
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body">
+
+                                    <label class="form-label fw-semibold text-secondary">
+                                        <i class="bi bi-person-fill me-1 text-success"></i>
+                                        Trabajador
+                                    </label>
+
+                                    <input
+                                        type="hidden"
+                                        id="modal_bono_trabajador_id"
+                                        name="trabajador_id_crear_bono">
+
+                                    <input
+                                        type="text"
+                                        id="trabajador_nombre"
+                                        name="trabajador_nombre"
+                                        class="form-control form-control-lg"
+                                        readonly>
+
+                                </div>
                             </div>
+
                         </div>
 
-                        <!-- FECHA -->
+                        <!-- Monto -->
                         <div class="col-md-6">
-                            <label class="form-label text-muted small">Fecha</label>
-                            <input type="date" name="fecha" id="fecha_bono" class="form-control form-control-lg border-0 bg-light rounded-3">
+
+                            <div class="card border-0 bg-light h-100">
+                                <div class="card-body">
+
+                                    <label class="form-label fw-semibold text-secondary">
+                                        <i class="bi bi-cash-stack me-1 text-success"></i>
+                                        Monto del Bono
+                                    </label>
+
+                                    <div class="input-group input-group-lg">
+
+                                        <span class="input-group-text fw-bold">
+                                            $
+                                        </span>
+
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            min="0"
+                                            id="monto_bono"
+                                            name="monto_bono"
+                                            class="form-control"
+                                            placeholder="0.00"
+                                            required>
+
+                                    </div>
+
+                                </div>
+                            </div>
+
                         </div>
 
-                      
+                        <!-- Fecha -->
+                        <div class="col-md-6">
+
+                            <div class="card border-0 bg-light">
+                                <div class="card-body">
+
+                                    <label class="form-label fw-semibold text-secondary">
+                                        <i class="bi bi-calendar-event me-1 text-success"></i>
+                                        Fecha
+                                    </label>
+
+                                    <input
+                                        type="date"
+                                        id="fecha_bono"
+                                        name="fecha"
+                                        class="form-control form-control-lg"
+                                        value="<?= date('Y-m-d') ?>">
+
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- Vista previa -->
+                       
 
                     </div>
+
                 </div>
 
                 <!-- FOOTER -->
-                <div class="modal-footer bg-light border-0 px-4 py-3">
-                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">
+                <div class="modal-footer bg-light border-0 py-3 px-4">
+
+                    <button
+                        type="button"
+                        class="btn btn-outline-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal">
+
+                        <i class="bi bi-x-circle me-1"></i>
                         Cancelar
+
                     </button>
 
-                    <button type="submit" class="btn btn-success rounded-pill px-4">
-                        Confirmar bono
+                    <button
+                       onclick="guardarBono()"
+                        class="btn btn-success rounded-pill px-4 shadow">
+
+                        <i class="bi bi-check-circle-fill me-1"></i>
+                        Registrar Bono
+
                     </button>
+
                 </div>
 
             </form>
@@ -310,12 +389,33 @@ $paginaActual = 'trabajadores';
     });
 $('#formBono').on('submit', async function(e) {
             e.preventDefault();
-            const formData = new FormData(this);
+           
+             const trabajador_id =  $('#modal_bono_trabajador_id').val();
+        const monto = document.getElementById('monto_bono').value;
+        const fecha = document.getElementById('fecha_bono').value;
+       
+
+        if (!trabajador_id) {
+            throw new Error("Selecciona un trabajador.");
+        }
+
+        if (!monto || parseFloat(monto) <= 0) {
+            throw new Error("Ingresa un monto válido.");
+        }
+
+        if (!fecha) {
+            throw new Error("Selecciona una fecha.");
+        }
+
+        const fd = new FormData();
+        fd.append("trabajador_id", trabajador_id);
+        fd.append("monto", monto);
+        fd.append("fecha", fecha);
 
             try {
                 const resp = await fetch(`/cfsistem/app/controllers/nominaController.php?action=crearBono`, {
                     method: 'POST',
-                    body: formData
+                    body: fd
                 });
 
                 const res = await resp.json();
@@ -380,11 +480,13 @@ $('#formBono').on('submit', async function(e) {
                         <td><span class="badge bg-light text-dark border text-uppercase">${t.rol}</span></td>
                         <td><i class="bi bi-geo-alt text-danger me-1"></i>${t.nombreAlmacen || 'N/A'}</td>
                         <td class="fw-bold text-primary">$${parseFloat(t.salario || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
+                       <td class="fw-bold text-primary">$${parseFloat(t.total_bonos || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
                         <td class="text-danger fw-semibold">$${parseFloat(t.total_prestamos_pendientes || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
                         <td>
                             <div class="small">
                                 <div><span class="text-danger">Faltas:</span> $${parseFloat(t.total_faltas || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</div>
                                 <div><span class="text-success">Viajes:</span> $${parseFloat(t.total_viajes || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</div>
+                               <div><span class="text-success">Bonos:</span> $${parseFloat(t.total_bonos|| 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</div>
                                 <div><span class="text-warning">Abonos:</span> $${parseFloat(t.total_abonos || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</div>
                                 <hr class="my-1">
                                 <div class="fw-bold fs-6 text-primary">$${parseFloat(t.total_nomina || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</div>
@@ -392,7 +494,7 @@ $('#formBono').on('submit', async function(e) {
                         </td>
                         <td><span class="badge rounded-pill ${claseEstado}">${t.estado ? t.estado.toUpperCase() : ''}</span></td>
                         <td class="text-end">
-                         <button class="btn btn-primary rounded-pill px-4" onclick="nuevoPrestamo()">
+                         <button class="btn btn-primary rounded-pill px-4" onclick='nuevoBono(${tJson})'>
                 <i class="bi bi-cash-stack me-2"></i> Crear Bono
             </button>
                             <button class="btn btn-sm btn-outline-primary" onclick='editarTrabajador(${tJson})'>
@@ -469,7 +571,7 @@ $('#formBono').on('submit', async function(e) {
 function nuevoBono(t) {
     $('#formBono')[0].reset();
     const modal = new bootstrap.Modal(document.getElementById('modalBono'));
-    $('modal_bono_trabajador_id').val(t.id);
+    $('#modal_bono_trabajador_id').val(t.id);
         $('#trabajador_nombre').val(t.nombre);
         $('#fecha__bono').val(<?=date('Y-m-d')?>);
         
@@ -477,8 +579,7 @@ function nuevoBono(t) {
     if ($('#modal_bono_almacen_id').val()) {
         $('#modal_bono_almacen_id').trigger('change');
     }
-}
-    async function eliminarTrabajador(id) {
+} async function eliminarTrabajador(id) {
         const result = await Swal.fire({
             title: '¿Eliminar trabajador?',
             text: "Esta acción no se puede deshacer",
@@ -579,11 +680,13 @@ function nuevoBono(t) {
         let chequesHTML = '';
 
         data.forEach((t, index) => {
-            const salario = parseFloat(t.salario || 0);
+            
             const prestamos = parseFloat(t.total_prestamos_pendientes || 0);
             const faltas = parseFloat(t.total_faltas || 0);
             const viajes = parseFloat(t.total_viajes || 0);
             const abonos = parseFloat(t.total_abonos || 0);
+            const bonos = parseFloat(t.total_bonos || 0);
+            const salario = parseFloat(t.salario || 0)+ bonos;
             const totalNomina = parseFloat(t.total_nomina || 0);
 
             chequesHTML += `
@@ -626,6 +729,7 @@ function nuevoBono(t) {
                             <tr>
                                 <th>Salario Base</th>
                                 <th>(+) Viajes</th>
+                               
                                 <th>(-) Faltas</th>
                                 <th>(-) Abonos Préstamo</th>
                                 <th>Saldo Préstamo Act.</th>
@@ -635,8 +739,9 @@ function nuevoBono(t) {
                             <tr>
                                 <td>$${salario.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
                                 <td class="text-success">+$${viajes.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                                
                                 <td class="text-danger">-$${faltas.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
-                                <td class="text-warning text-dark">-$${abonos.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                                 <td class="text-warning text-dark">-$${abonos.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
                                 <td class="text-muted">$${prestamos.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
                             </tr>
                         </tbody>

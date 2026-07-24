@@ -209,18 +209,17 @@ if (isset($_POST['action']) && $_POST['action'] === 'eliminar') {
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }
     exit;
-}
+}if (isset($_GET['action']) && $_GET['action'] === 'crearBono') {
 
-if (isset($_GET['action']) && $_GET['action'] === 'crearBono') {
-
+    while (ob_get_level()) ob_end_clean();
     header('Content-Type: application/json');
 
     try {
 
-        $fecha          = $_POST['fecha'] ?? date('Y-m-d');
-        $trabajador_id  = intval($_POST['trabajador_id'] ?? 0);
-        $monto          = floatval($_POST['monto'] ?? 0);
-       
+        $fecha         = $_POST['fecha'] ?? date('Y-m-d');
+        $trabajador_id = intval($_POST['trabajador_id'] ?? 0);
+        $monto         = floatval($_POST['monto'] ?? 0);
+
         if ($trabajador_id <= 0) {
             throw new Exception("Seleccione un trabajador.");
         }
@@ -229,22 +228,25 @@ if (isset($_GET['action']) && $_GET['action'] === 'crearBono') {
             throw new Exception("El monto debe ser mayor a cero.");
         }
 
+        if (empty($fecha)) {
+            throw new Exception("Seleccione una fecha.");
+        }
+
         $data = [
             'trabajador_id' => $trabajador_id,
             'fecha'         => $fecha,
             'monto'         => $monto
-           
         ];
 
-        $ok = $nominaModel->crearBono ($data);
+        $resultado = $nominaModel->crearBono($data);
 
-        if (!$ok) {
-            throw new Exception("Error al registrar la falta.");
+        if (!$resultado) {
+            throw new Exception("Error al registrar el bono.");
         }
 
         echo json_encode([
             'success' => true,
-            'message' => 'Falta registrada correctamente.'
+            'message' => 'Bono registrado correctamente.'
         ]);
 
     } catch (Throwable $e) {
