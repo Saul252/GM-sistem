@@ -20,10 +20,10 @@ class CategoriasGasto {
         }
         return false;
     }
-public function guardarInsumo($nombre, $descripcion) {
-        $sql = "INSERT INTO insumos (nombre, descripcion) VALUES (?, ?)";
+public function guardarInsumo($nombre, $descripcion,$uma,$umi,$factor) {
+        $sql = "INSERT INTO insumos (nombre, descripcion,u_ma,u_mi,factor) VALUES (?, ?,?,?,?)";
         $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("ss", $nombre, $descripcion);
+        $stmt->bind_param("sssss", $nombre, $descripcion,$uma,$umi,$factor);
         if ($stmt->execute()) {
             return $this->db->insert_id;
         }

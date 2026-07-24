@@ -59,6 +59,42 @@ $rol = $_SESSION['rol_id'] ?? 2;
     }
     exit;
 }
+// --- ACCIÓN: LISTADO AJAX (Con filtros) ---
+if (isset($_GET['action']) && $_GET['action'] === 'listarClientesDeuda') {
+    if (ob_get_level()) ob_clean(); 
+    header('Content-Type: application/json');
+    
+    try {
+        $filtros = [
+            'search'   => $_GET['f_search'] ?? '',
+            'status'   => $_GET['f_status'] ?? '',
+            'pago'     => $_GET['f_pago'] ?? '',
+            'rango'    =>'todos',
+            'inicio'   => $_GET['f_inicio'] ?? '',
+            'fin'      => $_GET['f_fin'] ?? '',
+            'almacen'  => $_GET['f_almacen'] ?? 0,
+            'cliente'  => $_GET['f_cliente'] ?? 0,
+            'factura'  => $_GET['f_factura'] ?? 0
+
+        ];
+        
+
+        $rol_id = $_SESSION['rol_id'] ?? 2;
+$rol = $_SESSION['rol_id'] ?? 2;
+        $id_almacen_usuario = $_SESSION['almacen_id'] ?? 0;
+ if($_SESSION['rol_id']==1||$_SESSION['rol_id']==3)
+    {
+        $id_almacen_usuario=0;
+        $rol_id=1;
+    }
+        $data = $ventasModel->obtenerVentasDeuda($filtros, $rol_id, $id_almacen_usuario);
+        echo json_encode($data);
+
+    } catch (Throwable $e) {
+        echo json_encode(['error' => true, 'message' => $e->getMessage()]);
+    }
+    exit;
+}
 
 if (isset($_GET['action']) && $_GET['action'] === 'guardarEntrega') {
     // Limpiamos cualquier salida previa para que solo salga el JSON

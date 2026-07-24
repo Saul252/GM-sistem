@@ -211,17 +211,84 @@ if (isset($_POST['action']) && $_POST['action'] === 'eliminar') {
     exit;
 }
 
-if (isset($_GET['action']) && $_GET['action'] === 'listar') {
-    if (ob_get_level()) ob_clean(); 
+if (isset($_GET['action']) && $_GET['action'] === 'crearBono') {
+
     header('Content-Type: application/json');
-    
+
     try {
-        
-       $trabajadores = $nominaModel->listarTrabajadores($almacenusu);
-        echo json_encode($trabajadores);
+
+        $fecha          = $_POST['fecha'] ?? date('Y-m-d');
+        $trabajador_id  = intval($_POST['trabajador_id'] ?? 0);
+        $monto          = floatval($_POST['monto'] ?? 0);
+       
+        if ($trabajador_id <= 0) {
+            throw new Exception("Seleccione un trabajador.");
+        }
+
+        if ($monto <= 0) {
+            throw new Exception("El monto debe ser mayor a cero.");
+        }
+
+        $data = [
+            'trabajador_id' => $trabajador_id,
+            'fecha'         => $fecha,
+            'monto'         => $monto
+           
+        ];
+
+        $ok = $nominaModel->crearBono ($data);
+
+        if (!$ok) {
+            throw new Exception("Error al registrar la falta.");
+        }
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Falta registrada correctamente.'
+        ]);
 
     } catch (Throwable $e) {
-        echo json_encode(['error' => true, 'message' => $e->getMessage()]);
+
+        http_response_code(400);
+
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
     }
+
+    exit;
+}
+if (isset($_GET['action']) && $_GET['action'] === 'listar') {
+
+    while (ob_get_level()) ob_end_clean();
+    header('Content-Type: application/json');
+
+    try {
+
+        $fechaInicio = $_GET['fecha_inicio'] ?? date('Y-m-d', strtotime('monday this week'));
+        $fechaFin    = $_GET['fecha_fin'] ?? date('Y-m-d');
+
+        $trabajadores = $nominaModel->listarNominaSemanal(
+            $fechaInicio,
+            $fechaFin,
+            $almacenusu
+        );
+
+        echo json_encode([
+            'success' => true,
+            'data' => $trabajadores
+        ]);
+
+    } catch (Throwable $e) {
+
+        http_response_code(500);
+
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+    }
+
     exit;
 }

@@ -39,6 +39,7 @@ error_reporting(E_ALL);
                     <button class="btn btn-dark" onclick="nuevaCotizacion()">
                         <i class="bi bi-plus-lg me-2"></i> Crear Comprobante de pago
                     </button>
+                </div> 
                 </div>
             </div>
 
@@ -144,6 +145,7 @@ error_reporting(E_ALL);
                     <th>Cliente</th>
                     <th>Almacén</th>
                     <th>Monto</th>
+                    <th>Pendiente por aplicar</th>
                     <th>Recibido</th>
                     <th>Estado</th>
                     <th class="text-end">Acciones</th>
@@ -729,9 +731,11 @@ error_reporting(E_ALL);
 
 
     <?php require_once __DIR__ . '/comprobantes_pago/modalComprobante.php'; ?>
+    <?php require_once __DIR__ . '/comprobantes_pago/multipleRegistroPago.php'; ?>
     <?php require_once __DIR__ . '/cotizacionesModales/nuevoClienteModal.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/agregarPoductoModal.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/modalProveedoresCompra.php'; ?>
+   
     <script>
     let totalGlobalPago = 0;
     let datost=0;
@@ -754,6 +758,24 @@ $('#fechaFin').on('change', cargarComprobantes);
  * Función asíncrona que consulta los comprobantes de pago al controlador PHP
  * mediante Fetch API, procesa las reglas de negocio y dibuja las filas del tbody.
  */
+/**
+ * Abre el modal de dispersión de pagos e inicializa el monto
+ * @param {number} monto - El monto inicial que se va a distribuir
+ */
+function abrirModalDispersion(id,monto,idComprobante) {
+    getDeuda(id,monto,idComprobante);
+    // 1. Buscamos el elemento por su ID exacto
+    const modalElement = document.getElementById('modalDispersión');
+    
+    // 2. Creamos o recuperamos la instancia de Bootstrap 5
+    const modalInstancia = bootstrap.Modal.getOrCreateInstance(modalElement);
+    
+    // 3. Inicializamos tus variables y renderizado con el monto recibido
+    
+    
+    // 4. Mostramos el modal en pantalla
+    modalInstancia.show();
+}
 let referencia='';
 async function cargarComprobantes() {
     try {
@@ -826,33 +848,66 @@ async function cargarComprobantes() {
             let rolact=<?= $rolAct ?>;
             let editar='';
             let admin='';
-            if (estado !== 'cancelado') {
-                admin =rolact==1?`<button type="button" class="btn btn-danger btn-sm" onclick="eliminarSolicitud(${c.id})">
-                        Cancelar
-                    </button>
-                                   
-     `:``;
-                // Si el estado es distinto de 'cancelado', se concatenan los botones de Imprimir y Cancelar con sus ID reales
-                botonesAccion = `
-                    <button type="button" class="btn btn-primary btn-sm" onclick="imprmirComprobante(${c.id})">
-                        VER
-                    </button> 
-                    ${admin}
-                `;
-                 activar =c.recibido==1?`
-                  <span class="text-success small fw-bold"><i class="bi bi-check-circle"></i></span>
-                        
-     `:`  <span class="text-danger small fw-bold"><i class="bi bi-check-circle"></i></span>
-                        
-   
-  
-`;         editar =rolact==1?`
-                   <button type="button" class="btn btn-link text-primary p-1 border-0" onclick="actualizar(${c.id})" title="Agregar Factura">
-            <i class="bi bi-pencil-square me-2"></i>
-        </button>                    
-     `:``; 
-            }
+        // Parseo de valores numéricos para evitar fallos de comparación de tipos
+const aplicado = parseFloat(c.aplicado) || 0;
+const monto = parseFloat(c.monto) || 0;
 
+// 1. Botón o Indicador de Dispersión
+const dispersar = (aplicado < monto)
+    ? `<button type="button" class="btn btn-outline-dark btn-sm rounded-2 d-inline-flex align-items-center gap-1 shadow-sm" onclick="abrirModalDispersion(${c.id_cliente}, ${c.monto}, ${c.id})">
+            <i class="bi bi-diagram-3-fill"></i> Dispersar
+       </button>`
+    : `<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill fw-semibold">
+            <i class="bi bi-check-circle-fill me-1"></i> Aplicado
+       </span>`;
+
+// 2. Estado de Recibido (Badge limpio y centrado)
+activar = (c.recibido == 1)
+    ? `<span class="badge bg-success-subtle text-success p-1 rounded-circle" title="Recibido">
+            <i class="bi bi-check-lg fs-6"></i>
+       </span>`
+    : `<span class="badge bg-danger-subtle text-danger p-1 rounded-circle" title="Pendiente">
+            <i class="bi bi-x-lg fs-6"></i>
+       </span>`;
+
+// 3. Botón de Edición / Factura (Solo Admin)
+editar = (rolact == 1)
+    ? `<button type="button" class="btn btn-sm btn-light text-primary border-0 rounded-2" onclick="actualizar(${c.id})" title="Agregar Factura">
+            <i class="bi bi-pencil-square fs-6"></i>
+       </button>`
+    : '';
+
+// 4. Lógica de Acciones por Rol y Estado
+
+
+if (estado !== 'cancelado') {
+    if (rolact == 1) {
+        admin = `
+            <button type="button" class="btn btn-outline-danger btn-sm rounded-2 d-inline-flex align-items-center gap-1" onclick="eliminarSolicitud(${c.id})" title="Cancelar Solicitud">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </button>
+            ${dispersar}
+        `;
+    }
+
+    // Grupo de botones agrupados con flexbox y espaciado uniforme
+    botonesAccion = `
+        <div class="d-inline-flex align-items-center gap-1">
+          
+            <button type="button" class="btn btn-primary btn-sm rounded-2 d-inline-flex align-items-center gap-1 shadow-sm" onclick="imprmirComprobante(${c.id})">
+                <i class="bi bi-eye-fill"></i> VER
+            </button>
+            ${admin}
+        </div>
+    `;
+} else {
+    // Indicador sutil para registros cancelados
+    botonesAccion = `
+        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1 rounded-2 fw-normal">
+            <i class="bi bi-slash-circle me-1"></i> Cancelado
+        </span>
+    `;
+}
             // 5. ARMADO E INYECCIÓN DE LA FILA (HTML Template Literal)
             // Se va acumulando dinámicamente la estructura completa de la fila actual dentro de 'tablaHTML'
             tablaHTML += `
@@ -862,6 +917,7 @@ async function cargarComprobantes() {
                     <td class="fw-medium">${escapeHtml(c.nombre_comercial || 'Sin asignar')}</td>
                     <td><span class="badge bg-light text-dark border">${escapeHtml(c.almacen || '')}</span></td>
                     <td class="fw-bold">$${parseFloat(c.monto || 0).toFixed(2)}</td>
+                   <td class="fw-bold">$${parseFloat(c.monto-c.aplicado || 0).toFixed(2)}</td>
                     <td>
                         <span class="badge bg-light text-dark border">${escapeHtml(c.estado || '')}</span>
                     </td>

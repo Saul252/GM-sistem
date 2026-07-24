@@ -179,6 +179,29 @@ if (isset($_GET['action']) && $_GET['action'] === 'actualizar') {
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }
     exit;
+}if (isset($_GET['action']) && $_GET['action'] === 'actualizarAplicado') {
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+    try {
+        $id = intval($_POST['id'] ?? 0);
+        $cantidadAplicada=$_POST['cantidadAplicada'] ?? 0;
+        
+        // CORRECCIÓN 1: Manejar como String limpiando espacios extra, no como Entero
+        
+        
+        if ($id <= 0) throw new Exception("ID no válido.");
+        
+        // Opcional: Validar que la recibido no vaya vacía si es obligatoria
+         if ($comprobantesPagoModel->actualizarAplicado($id,$cantidadAplicada)) {
+            // CORRECCIÓN 2: Mensaje correcto para la acción de actualizar
+            echo json_encode(['status' => 'success', 'message' => 'Comprobante actualizado correctamente.']);
+        } else {
+            throw new Exception("Error al actualizar el comprobante en la base de datos.");
+        }
+    } catch (Throwable $e) {
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
+    exit;
 }
 // =========================================================================
 // 4. ACCIÓN: OBTENER DETALLE (CORREGIDO PARA TU JAVASCRIPT)

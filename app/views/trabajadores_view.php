@@ -327,6 +327,10 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                                 <label class="form-label fw-bold small">salario</label>
                                 <input type="money" name="salario" id="t_salario" class="form-control" maxlength="10" required>
                             </div>
+                              <div class="col-md-12 center">
+                                <label class="form-label fw-bold small">Complemento</label>
+                                <input type="money" name="complemento" id="t_complemento" class="form-control" maxlength="10" required>
+                            </div>
                         </div>
                     </div>
                     <div class="modal-footer bg-light border-0">
@@ -390,6 +394,7 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
         $('#t_rol').val(t.rol);
         $('#t_estado').val(t.estado);
          $('#t_salario').val(t.salario);
+          $('#t_complemento').val(t.complemento_pago);
         // Seteamos el almacén
         if ($('#t_almacen_id').is('select')) {
             $('#t_almacen_id').val(t.almacen_id);

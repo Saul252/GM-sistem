@@ -205,6 +205,54 @@ public function actualizar($id) {
     } catch (Exception $e) {
         return false;
     }
+}public function actualizarAplicado($id, $aplicado) {
+    try {
+        // 1. Obtener 'aplicado' y 'monto' en una sola consulta limpia
+        $stmtCheck = $this->db->prepare("
+            SELECT aplicado, monto
+            FROM comprobantes_de_pago
+            WHERE id = ?
+        ");
+        
+        $stmtCheck->bind_param("i", $id);
+        $stmtCheck->execute();
+        $resultado = $stmtCheck->get_result()->fetch_assoc(); 
+        $stmtCheck->close();
+
+        // Si no existe el comprobante en la BD
+        if (!$resultado) {
+            return false; 
+        }
+
+        $caplicadoActual = floatval($resultado['aplicado']);
+        $montoTotal      = floatval($resultado['monto']);
+
+        // Validación: Si lo acumulado/aplicado ya es igual o mayor al monto total
+        if ($caplicadoActual >= $montoTotal) {
+            return false; 
+        }
+
+        // 2. Actualizar el campo 'aplicado'
+        $stmt = $this->db->prepare("
+            UPDATE comprobantes_de_pago 
+            SET aplicado = ? 
+            WHERE id = ?
+        ");
+
+        // "d" = Double/Decimal/Float ($aplicado), "i" = Integer ($id)
+        $nuevoAplicado = floatval($aplicado);
+        $idComprobante = intval($id);
+        
+        $stmt->bind_param("di", $nuevoAplicado, $idComprobante);
+        $ejecutado = $stmt->execute();
+        $stmt->close();
+
+        return $ejecutado;
+
+    } catch (Exception $e) {
+        error_log("Error en actualizarAplicado: " . $e->getMessage());
+        return false;
+    }
 }
 public function obtenerDetalle($id) {
     $sql = "SELECT cp.*, c.nombre_comercial, u.nombre as usuario, a.nombre as nombre_almacen

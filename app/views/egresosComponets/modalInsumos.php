@@ -187,17 +187,32 @@
             </div>
             <div class="modal-body pt-0">
                 <div class="mb-3">
-                    <label class="small fw-bold text-muted">Nombre</label>
+                    <label class="small fw-bold text-muted">Nombre y Marca</label>
                     <input type="text" id="nuevo_nombre_insumo" class="form-control border-0 bg-light"
                         style="border-radius: 10px;" placeholder="Ej: Servicios">
+                </div>
+                <div class="mb-3">
+                    <label class="small fw-bold text-muted">Unidad maxima</label>
+                    <input type="text" id="nuevo_maximo_insumo" class="form-control border-0 bg-light"
+                        style="border-radius: 10px;" placeholder="Ej: cubeta, tambo">
                 </div>
 
           
                 <div class="mb-3">
-                    <label class="small fw-bold text-muted">Descripcion</label>
-                    <input type="text" id="nuevo_descripcion_insumo" class="form-control border-0 bg-light"
-                        style="border-radius: 10px;" placeholder="Ej: 1 litro ">
+                    <label class="small fw-bold text-muted">Unidad minima</label>
+                    <input type="text" id="nuevo_minimo_insumo" class="form-control border-0 bg-light"
+                        style="border-radius: 10px;" placeholder="Ej:  litro ">
+                </div> 
+                <div class="mb-3">
+                    <label class="small fw-bold text-muted">FACTOR </label>
+                    <input type="number" id="factor" class="form-control border-0 bg-light"
+                        style="border-radius: 10px;" placeholder="1">
                 </div>
+                 <div class="mb-3">
+                    <label class="small fw-bold text-muted">Descripcion y modelo</label>
+                    <input type="text" id="nuevo_descripcion_insumo" class="form-control border-0 bg-light"
+                        style="border-radius: 10px;" placeholder="Ej: BARDAL MOD 1234">
+                </div> 
 
             </div>
             <div class="modal-footer border-0 pt-0">
@@ -554,9 +569,15 @@ function abrirModalNuevoInsumo() {
     // ✅ CORRECCIÓN: Obtener los elementos correctos usando jQuery para mantener tu consistencia
     const $nombreInput = $('#nuevo_nombre_insumo');
     const $descInput = $('#nuevo_descripcion_insumo');
+    const $unidadmaxima = $('#nuevo_maximo_insumo');
+    const $unidadminima = $('#nuevo_minimo_insumo');
+    const $factor = $('#factor');
     
     const nombre = $nombreInput.val() ? $nombreInput.val().trim() : '';
     const descripcion = $descInput.val() ? $descInput.val().trim() : '';
+const uma = $unidadmaxima.val() ? $unidadmaxima.val().trim() : '';
+const umi = $unidadminima.val() ? $unidadminima.val().trim() : '';
+const factor = $factor.val() ? $factor.val() : 1;
 
     if (!nombre) {
         return Swal.fire({
@@ -574,6 +595,9 @@ function abrirModalNuevoInsumo() {
     datos.append('ajax', 'guardar_insumo'); 
     datos.append('nombre', nombre);
     datos.append('descripcion', descripcion);
+ datos.append('uma', uma);
+ datos.append('umi', umi);
+ datos.append('factor', factor);
 
     // Botón de carga seguro
     const btn = document.querySelector('#modalNuevoInsumo .btn-primary');

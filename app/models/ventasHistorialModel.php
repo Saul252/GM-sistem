@@ -75,6 +75,70 @@ class VentaHistorialModel {
         return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
     }
 
+    public function obtenerVentasDeuda($filtros, $rol_id, $almacen_sesion) {
+        $where = " WHERE v.id>1";
+        
+        // Seguridad por Almacén
+        if ($rol_id != 1) { 
+            $where .= " AND v.almacen_id = $almacen_sesion "; 
+        } elseif (!empty($filtros['almacen'])) { 
+            $where .= " AND v.almacen_id = " . intval($filtros['almacen']); 
+        }
+
+        // Buscador (Folio o Cliente)
+        if (!empty($filtros['search'])) {
+            $s = $this->db->real_escape_string($filtros['search']);
+            $where .= " AND (c.nombre_comercial LIKE '%$s%' OR v.folio LIKE '%$s%'OR v.id LIKE '%$s%' OR v.factura LIKE '%$s%') ";
+        }
+
+        // Estatus Entrega
+        if (!empty($filtros['status'])) {
+            $st = $this->db->real_escape_string($filtros['status']);
+            $where .= " AND v.estado_entrega = '$st' ";
+        }
+         if (!empty($filtros['factura'])) {
+            $st = $this->db->real_escape_string($filtros['factura']);
+            if($st>0)
+                {
+                    $where .= " AND v.factura != 0 ";
+                }
+                else{
+                      $where .= " AND v.factura <1";
+
+                }
+          
+        }
+          // Estatus Entrega
+        if (!empty($filtros['cliente'])) {
+            $st = $this->db->real_escape_string($filtros['cliente']);
+            $where .= " AND v.estado_entrega!='cancelado' AND v.id_cliente = '$st' ";
+        }
+
+        // Rango de Fechas
+        if (!empty($filtros['rango']) && $filtros['rango'] !== 'todos') {
+            $where .= $this->construirFiltroFecha($filtros);
+        }
+
+        // Filtro por Estado de Pago (Saldo)
+        $having = "";
+        if (!empty($filtros['pago'])) {
+            $having = ($filtros['pago'] == 'deuda') 
+                ? " HAVING (v.total - pagado) > 0.01 " 
+                : " HAVING (v.total - pagado) <= 0.01 ";
+        }
+
+        $sql = "SELECT v.*, c.nombre_comercial as cliente, a.nombre as almacen_nombre,u.nombre as vendedor,
+                (SELECT IFNULL(SUM(monto), 0) FROM historial_pagos WHERE venta_id = v.id) as pagado
+                FROM ventas v
+                join usuarios u on u.id=v.vendedor_id 
+                JOIN clientes c ON v.id_cliente = c.id 
+                JOIN almacenes a ON v.almacen_id = a.id 
+                $where $having ORDER BY v.fecha DESC";
+
+        $res = $this->db->query($sql);
+        return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+    }
+
     public function obtenerVentasFiltradasVendedor($filtros, $rol_id, $usuario) {
         $where = " WHERE v.id > '0' ";
         

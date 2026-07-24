@@ -1199,7 +1199,7 @@ window.procesarVenta = function() {
                             showDenyButton: true,
                             showCancelButton: true,
                             confirmButtonText: '<i class="bi bi-receipt"></i> Con Precios',
-                            denyButtonText: '<i class="bi bi-receipt"></i> Sin Precios',
+                            denyButtonText: '<i class="bi bi-receipt"></i> Ticket Formal',
                             cancelButtonText: 'Cerrar',
                             confirmButtonColor: '#34c759',
                             denyButtonColor: '#5856d6',
@@ -1211,10 +1211,12 @@ window.procesarVenta = function() {
                             if (result.isConfirmed) url =
                                 `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`;
                             else if (result.isDenied) url =
-                                `/cfsistem/app/backend/ventas/ticket_sin_precio.php?id=${res.id_venta}`;
+                            
+                                `/cfsistem/app/backend/ventas/ticketFormal.php?id=${res.id_venta}`;
 
                             if (url !== '') window.open(url, '_blank');
                             location.reload();
+                        
                         });
                     } else {
                         Swal.fire({

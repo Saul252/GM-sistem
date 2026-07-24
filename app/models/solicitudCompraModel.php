@@ -47,7 +47,7 @@ class SolicitudCompra {
         }
 
         $this->db->commit();
-        return true;
+        return $solicitud_id;
 
     } catch (Throwable $e) {
         $this->db->rollback();

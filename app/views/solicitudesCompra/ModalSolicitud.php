@@ -454,8 +454,8 @@ $('#formSolicitud').on('submit', async function(e) {
         // 1. Eliminamos 'timer' para que la alerta no se cierre sola
         showDenyButton: true,
         showCancelButton: true,
-        confirmButtonText: '<i class="bi bi-receipt"></i> Sí',
-        denyButtonText: '<i class="bi bi-receipt"></i> No',
+        confirmButtonText: 'IMPRIMIR',
+        denyButtonText: 'SALIR',
         cancelButtonText: 'Cerrar',
         confirmButtonColor: '#34c759',
         denyButtonColor: '#5856d6',
@@ -466,9 +466,15 @@ $('#formSolicitud').on('submit', async function(e) {
         let url = '';
         
         if (result.isConfirmed) {
-            url = `/cfsistem/app/controllers/solicitudesCompraController.php`;
+            $('#modalSolicitud').modal('hide');
+            prepararImpresion(res.id);
+
+    setTimeout(() => {
+        ejecutarImpresion();
+        cargarSolicitudes();
+    }, 500);
         } else if (result.isDenied) {
-            url = `/cfsistem/app/controllers/egresosController.php`;
+            url = `/cfsistem/app/controllers/solicitudesCompraController.php`;
         }
 
         // Si se seleccionó una opción válida, abre la pestaña
@@ -477,7 +483,7 @@ $('#formSolicitud').on('submit', async function(e) {
         }
         
         // Finalmente recarga la página actual
-        location.reload();
+      
     });
 } else {
 

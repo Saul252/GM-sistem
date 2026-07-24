@@ -3,22 +3,23 @@
  * trabajadores_view.php
  * Vista de administración de personal: Filtros, CRUD por Modales y AJAX.
  */
-// Definimos los roles y estados que coinciden con el ENUM de la BD para validación visual
 $rolesEnum = ['administrador', 'vendedor', 'chofer', 'almacenista', 'cargador'];
 $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
+$paginaActual = 'trabajadores';
 ?>
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personal | Sistema</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-  
-  
-  <?php require_once __DIR__ . '/layout/icono.php' ?>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    
+    <?php require_once __DIR__ . '/layout/icono.php'; ?>
     <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
-     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
     <style>
         :root { --sidebar-width: 260px; --navbar-height: 65px; }
         body { background-color: #f4f7f6; }
@@ -36,7 +37,7 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
             display: flex !important;
             flex-direction: column !important;
             justify-content: center !important;
-            border-left: 3px solid #34c759 !important; /* Verde iOS */
+            border-left: 3px solid #34c759 !important;
         }
         .ios-m-label { 
             color: #8e8e93; font-size: 0.55rem; font-weight: 700; 
@@ -57,22 +58,26 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
 
     <main class="main-content">
         <div class="d-flex justify-content-between align-items-center flex-wrap mb-4" style="gap: 15px; width: 100%;">
-            <div style="flex: 1; min-width: 200px;">
-                <h2 class="fw-bold m-0 text-uppercase" style="letter-spacing: -0.02em; color: #1c1c1e;">Gestión de SALARIOS</h2>
-                 </div>
+            <div>
+                <h2 class="fw-bold m-0 text-uppercase" style="letter-spacing: -0.02em; color: #1c1c1e;">Gestión de Salarios</h2>
+            </div>
+            
+            <div style="min-width: 200px;">
+                <label for="semana" class="form-label text-muted small m-0 fw-semibold">Semana</label>
+                <input type="week" id="semana" class="form-control form-control-sm">
+            </div>
 
             <div class="d-flex align-items-center" style="gap: 12px;">
                 <div class="ios-micro-card">
                     <p class="ios-m-label">Staff Total</p>
-                    <div class="ios-m-value" id="conteoTrabajadores">
-                        <?= count($trabajadores) ?>
-                    </div>
+                    <div class="ios-m-value" id="conteoTrabajadores">0</div>
                 </div>
 
-                <button class="btn btn-primary rounded-pill px-4 shadow-sm" onclick="nuevoTrabajador()" style="height: 34px; font-weight: 600; font-size: 0.85rem;">
+                <button class="btn btn-primary rounded-pill px-3 shadow-sm" onclick="nuevoTrabajador()" style="height: 34px; font-weight: 600; font-size: 0.85rem;">
                     <i class="bi bi-person-plus-fill me-1"></i> Agregar
-                </button><button class="btn btn-primary rounded-pill px-4 shadow-sm" onclick="imprimirContenidoModal()" style="height: 34px; font-weight: 600; font-size: 0.85rem;">
-                    <i class="bi bi-person-plus-fill me-1"></i> Imprimir Nomina
+                </button>
+                <button class="btn btn-outline-secondary rounded-pill px-3 shadow-sm" onclick="imprimirContenidoModal()" style="height: 34px; font-weight: 600; font-size: 0.85rem;">
+                    <i class="bi bi-printer-fill me-1"></i> Imprimir Nómina
                 </button>
             </div>
         </div>
@@ -109,64 +114,23 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                             <th>Rol / Puesto</th>
                             <th>Almacén</th>
                             <th>Salario</th>
-                          <th>Prestamos Activos</th>
-                          <th>Total Nomina</th>
-                          
+                            <th>Préstamos Activos</th>
+                            <th>Total Nómina</th>
                             <th>Estado</th>
                             <th class="text-end">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <?php foreach ($trabajadores as $t): ?>
-                        <tr class="fila-trabajador" data-rol="<?= $t['rol'] ?>">
-                            <td><strong><?= htmlspecialchars($t['nombre']) ?></strong></td>
-                            <td>
-                                <a href="https://wa.me/52<?= $t['telefono'] ?>" target="_blank" class="text-decoration-none text-dark small">
-                                    <i class="bi bi-whatsapp text-success me-1"></i> <?= htmlspecialchars($t['telefono']) ?>
-                                </a>
-                            </td>
-                            <td>
-                                <span class="badge bg-light text-dark border fw-normal text-uppercase" style="font-size: 0.7rem;">
-                                    <?= $t['rol'] ?>
-                                </span>
-                            </td>
-                            <td>
-                                <span class="small text-muted"><i class="bi bi-geo-alt"></i> <?= $t['nombreAlmacen'] ?></span>
-                            </td><td>
-                                <span class="small text-muted"><i class="bi bi-geo-alt"></i> <?= $t['salario'] ?></span>
-                            </td><td>
-                                <span class="small text-muted"><i class="bi bi-geo-alt"></i> <?= $t['total_prestamos_pendientes'] ?></span>
-                            </td><td>
-                                <span class="small text-muted"><i class="bi bi-geo-alt"></i> <?= $t['salario_disponible'] ?></span>
-                            </td>
-                                           <td>
-                                <?php 
-                                    $claseEstado = match($t['estado']) {
-                                        'activo' => 'bg-success',
-                                        'vacaciones' => 'bg-warning text-dark',
-                                        default => 'bg-danger'
-                                    };
-                                ?>
-                                <span class="badge rounded-pill <?= $claseEstado ?>" style="font-size: 0.7rem;">
-                                    <?= strtoupper($t['estado']) ?>
-                                </span>
-                            </td>
-                            <td class="text-end">
-                                <div class="btn-group">
-                                    <button class="btn btn-sm btn-outline-primary border-0" onclick="editarTrabajador(<?= htmlspecialchars(json_encode($t)) ?>)">
-                                        <i class="bi bi-pencil-square fs-5"></i>
-                                    </button>
-                                    
-                                </div>
-                            </td>
+                    <tbody id="bodyTrabajadores">
+                        <tr>
+                            <td colspan="9" class="text-center py-4 text-muted">Cargando...</td>
                         </tr>
-                        <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
         </div>
     </main>
 
+    <!-- Modal Formulario Trabajador -->
     <div class="modal fade" id="modalTrabajador" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
@@ -199,21 +163,20 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
 
                             <div class="col-md-12">
                                 <label class="form-label fw-bold small">Almacén / Sucursal</label>
-                                <?php if ($_SESSION['almacen_id'] == 0): ?>
+                                <?php if (isset($_SESSION['almacen_id']) && $_SESSION['almacen_id'] == 0): ?>
                                     <select name="almacen_id" id="t_almacen_id" class="form-select" required>
                                         <option value="">Seleccionar Almacén...</option>
-                                        <?php foreach($listaAlmacenes as $alm): ?>
+                                        <?php foreach(($listaAlmacenes ?? []) as $alm): ?>
                                             <option value="<?= $alm['id'] ?>"><?= htmlspecialchars($alm['nombre']) ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 <?php else: ?>
                                     <input type="text" class="form-control bg-light" value="Asignación Automática" readonly>
-                                    <input type="hidden" name="almacen_id" id="t_almacen_id" value="<?= $_SESSION['almacen_id'] ?>">
+                                    <input type="hidden" name="almacen_id" id="t_almacen_id" value="<?= $_SESSION['almacen_id'] ?? 1 ?>">
                                 <?php endif; ?>
                             </div>
-                            
 
-                            <div class="col-md-12">
+                            <div class="col-md-6">
                                 <label class="form-label fw-bold small">Estado Laboral</label>
                                 <select name="estado" id="t_estado" class="form-select">
                                     <?php foreach($estadosEnum as $est): ?>
@@ -221,9 +184,13 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <div class="col-md-12 center">
-                                <label class="form-label fw-bold small">salario</label>
-                                <input type="money" name="salario" id="t_salario" class="form-control" maxlength="10" required>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small">Salario</label>
+                                <input type="number" step="0.01" name="salario" id="t_salario" class="form-control" required>
+                            </div>
+                             <div class="col-md-12 center">
+                                <label class="form-label fw-bold small">Complemento</label>
+                                <input type="money" name="complemento" id="t_complemento" class="form-control" maxlength="10" required>
                             </div>
                         </div>
                     </div>
@@ -235,60 +202,246 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
             </div>
         </div>
     </div>
+<div class="modal fade" id="modalBono" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 22px; overflow: hidden;">
 
+            <!-- HEADER -->
+            <div class="modal-header bg-dark text-white py-3">
+                <div>
+                    <h5 class="modal-title mb-0 fw-semibold">
+                        <i class="bi bi-gift-fill me-2"></i>
+                        Registrar Bono
+                    </h5>
+                    <small class="text-white-50">Gestión de bonificaciones y reconocimientos</small>
+                </div>
+
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form id="formBono">
+
+                <!-- BODY -->
+                <div class="modal-body p-4">
+
+                    <div class="row g-3">
+
+                        <!-- TRABAJADOR -->
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Trabajador</label>
+                            <input type="hidden" name="trabajador_id_crear_bono" id="modal_bono_trabajador_id">
+                            <input type="text" name="trabajador_nombre" id="trabajador_nombre">
+                                
+                        </div>
+
+                        <!-- TIPO DE BONO -->
+                      
+                        <!-- MONTO -->
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Monto del Bono</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text">$</span>
+                                <input type="number" step="0.01" name="monto_bono"id="monto_bono" class="form-control"
+                                    placeholder="0.00" required>
+                            </div>
+                        </div>
+
+                        <!-- FECHA -->
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small">Fecha</label>
+                            <input type="date" name="fecha" id="fecha_bono" class="form-control form-control-lg border-0 bg-light rounded-3">
+                        </div>
+
+                      
+
+                    </div>
+                </div>
+
+                <!-- FOOTER -->
+                <div class="modal-footer bg-light border-0 px-4 py-3">
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">
+                        Cancelar
+                    </button>
+
+                    <button type="submit" class="btn btn-success rounded-pill px-4">
+                        Confirmar bono
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+</div>
+    <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    // Selecciona todos los inputs de texto y también los textareas
-    document.querySelectorAll('input[type="text"], textarea').forEach(elemento => {
-        elemento.addEventListener('input', function() {
-            // Convierte el valor a mayúsculas en tiempo real
-            this.value = this.value.toUpperCase();
-        });
-    });
-</script>
+
     <script>
-    let tabla;
+    let tabla = null;
 
     $(document).ready(function() {
-        tabla = $('#tablaTrabajadores').DataTable({
-            "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
-            "dom": 'rt<"row mt-3"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
-            "pageLength": 10,
-            "order": [[0, 'asc']]
-        });
+        // Inicializar selector de semana con la semana ISO actual
+        $('#semana').val(obtenerSemanaActual());
 
+        // Cargar trabajadores por primera vez
+        cargarTrabajadores();
+
+        // Escuchar cambios en la fecha de la semana
+        $('#semana').on('change', cargarTrabajadores);
+
+        // Búsqueda y Filtro rápido
         $('#busquedaTrabajador').on('keyup', function() {
-            tabla.search(this.value).draw();
+            if (tabla) tabla.search(this.value).draw();
         });
 
         $('#filtroRol').on('change', function() {
             const val = $(this).val();
-            tabla.column(2).search(val ? `^${val}$` : '', true, false).draw();
+            if (tabla) tabla.column(2).search(val ? `^${val}$` : '', true, false).draw();
+        });
+
+        // Convertir automáticamente textos a MAYÚSCULAS
+        $(document).on('input', 'input[type="text"], textarea', function() {
+            this.value = this.value.toUpperCase();
         });
     });
+$('#formBono').on('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+
+            try {
+                const resp = await fetch(`/cfsistem/app/controllers/nominaController.php?action=crearBono`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const res = await resp.json();
+                if (res.success) {
+                    Swal.fire('Éxito', res.message, 'success').then(() => location.reload());
+                } else {
+                    Swal.fire('Error', res.message || 'Error desconocido', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                Swal.fire('Error', 'Error en la petición', 'error');
+            }
+        });
+    async function cargarTrabajadores() {
+        const valor = $('#semana').val();
+        if (!valor) return;
+
+        const [anio, semana] = valor.split('-W');
+        const lunes = obtenerLunesISO(parseInt(anio), parseInt(semana));
+        const domingo = new Date(lunes);
+        domingo.setDate(lunes.getDate() + 6);
+
+        const inicio = formatearFecha(lunes);
+        const fin = formatearFecha(domingo);
+
+        try {
+            const res = await fetch(`/cfsistem/app/controllers/nominaController.php?action=listar&fecha_inicio=${inicio}&fecha_fin=${fin}`);
+            const response = await res.json();
+
+            if (!response.success) {
+                throw new Error(response.message || 'Error al obtener nómina');
+            }
+
+            const data = response.data;
+            
+            // Destruir la instancia actual de DataTable si existe
+            if ($.fn.DataTable.isDataTable('#tablaTrabajadores')) {
+                $('#tablaTrabajadores').DataTable().destroy();
+            }
+
+            let html = '';
+            if (data.length === 0) {
+                html = `<tr><td colspan="9" class="text-center py-4 text-muted">No se encontraron trabajadores en este rango.</td></tr>`;
+            } else {
+                data.forEach(t => {
+                    let claseEstado = 'bg-danger';
+                    if (t.estado === 'activo') claseEstado = 'bg-success';
+                    else if (t.estado === 'vacaciones') claseEstado = 'bg-warning text-dark';
+                    else if (t.estado === 'en_ruta') claseEstado = 'bg-info text-dark';
+
+                    // Convertir objeto entero a JSON escapando comillas para evitar errores JS en línea
+                    const tJson = JSON.stringify(t).replace(/'/g, "&#39;");
+
+                    html += `
+                    <tr>
+                        <td class="fw-semibold">${t.nombre}</td>
+                        <td>
+                            <a href="https://wa.me/52${t.telefono}" target="_blank" class="text-decoration-none">
+                                <i class="bi bi-whatsapp text-success me-1"></i>${t.telefono}
+                            </a>
+                        </td>
+                        <td><span class="badge bg-light text-dark border text-uppercase">${t.rol}</span></td>
+                        <td><i class="bi bi-geo-alt text-danger me-1"></i>${t.nombreAlmacen || 'N/A'}</td>
+                        <td class="fw-bold text-primary">$${parseFloat(t.salario || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
+                        <td class="text-danger fw-semibold">$${parseFloat(t.total_prestamos_pendientes || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
+                        <td>
+                            <div class="small">
+                                <div><span class="text-danger">Faltas:</span> $${parseFloat(t.total_faltas || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</div>
+                                <div><span class="text-success">Viajes:</span> $${parseFloat(t.total_viajes || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</div>
+                                <div><span class="text-warning">Abonos:</span> $${parseFloat(t.total_abonos || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</div>
+                                <hr class="my-1">
+                                <div class="fw-bold fs-6 text-primary">$${parseFloat(t.total_nomina || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</div>
+                            </div>
+                        </td>
+                        <td><span class="badge rounded-pill ${claseEstado}">${t.estado ? t.estado.toUpperCase() : ''}</span></td>
+                        <td class="text-end">
+                         <button class="btn btn-primary rounded-pill px-4" onclick="nuevoPrestamo()">
+                <i class="bi bi-cash-stack me-2"></i> Crear Bono
+            </button>
+                            <button class="btn btn-sm btn-outline-primary" onclick='editarTrabajador(${tJson})'>
+                                <i class="bi bi-pencil-square"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick='eliminarTrabajador(${t.id})'>
+                                <i class="bi bi-trash"></i>
+                            </button>
+
+                        </td>
+                    </tr>`;
+                });
+            }
+
+            $('#bodyTrabajadores').html(html);
+            $('#conteoTrabajadores').text(data.length);
+
+            // Re-inicializar DataTable con los nuevos elementos
+            tabla = $('#tablaTrabajadores').DataTable({
+                "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
+                "dom": 'rt<"row mt-3"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                "pageLength": 10,
+                "order": [[0, 'asc']]
+            });
+
+        } catch (err) {
+            console.error(err);
+            Swal.fire('Error', err.message || 'Error al cargar listado de trabajadores', 'error');
+        }
+    }
 
     function nuevoTrabajador() {
         $('#formTrabajador')[0].reset();
         $('#trabajador_id').val('0');
-        // Si el select de almacén existe, resetearlo también
         if ($('#t_almacen_id').is('select')) $('#t_almacen_id').val('');
         $('#modalTitulo').text('Nuevo Trabajador');
         $('#modalTrabajador').modal('show');
     }
 
     function editarTrabajador(t) {
+        console.log(t);
         $('#modalTitulo').text('Editar Trabajador');
         $('#trabajador_id').val(t.id);
         $('#t_nombre').val(t.nombre);
         $('#t_telefono').val(t.telefono);
         $('#t_rol').val(t.rol);
         $('#t_estado').val(t.estado);
-         $('#t_salario').val(t.salario);
-        // Seteamos el almacén
+        $('#t_salario').val(t.salario);
+           $('#t_complemento').val(t.complemento_pago);
         if ($('#t_almacen_id').is('select')) {
             $('#t_almacen_id').val(t.almacen_id);
         }
@@ -302,15 +455,29 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
         try {
             const resp = await fetch('/cfsistem/app/controllers/trabajadoresController.php', { method: 'POST', body: formData });
             const res = await resp.json();
-            if (res.status === 'success') {
-                Swal.fire({ icon: 'success', title: '¡Éxito!', showConfirmButton: false, timer: 1000 })
-                .then(() => location.reload());
+            if (res.status === 'success' || res.success) {
+                $('#modalTrabajador').modal('hide');
+                Swal.fire({ icon: 'success', title: '¡Éxito!', showConfirmButton: false, timer: 1200 });
+                cargarTrabajadores();
             } else {
-                Swal.fire('Error', res.message, 'error');
+                Swal.fire('Error', res.message || 'No se pudo guardar los cambios', 'error');
             }
-        } catch (e) { Swal.fire('Error', 'No se pudo guardar', 'error'); }
+        } catch (e) { 
+            Swal.fire('Error', 'Error de comunicación con el servidor', 'error'); 
+        }
     });
-
+function nuevoBono(t) {
+    $('#formBono')[0].reset();
+    const modal = new bootstrap.Modal(document.getElementById('modalBono'));
+    $('modal_bono_trabajador_id').val(t.id);
+        $('#trabajador_nombre').val(t.nombre);
+        $('#fecha__bono').val(<?=date('Y-m-d')?>);
+        
+    modal.show();
+    if ($('#modal_bono_almacen_id').val()) {
+        $('#modal_bono_almacen_id').trigger('change');
+    }
+}
     async function eliminarTrabajador(id) {
         const result = await Swal.fire({
             title: '¿Eliminar trabajador?',
@@ -318,385 +485,289 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
-            confirmButtonText: 'Sí, eliminar'
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
         });
 
         if (result.isConfirmed) {
             const fd = new FormData();
             fd.append('action', 'eliminar');
             fd.append('id', id);
-            const resp = await fetch('/cfsistem/app/controllers/trabajadoresController.php', { method: 'POST', body: fd });
-            const res = await resp.json();
-            if(res.status === 'success') location.reload();
+            
+            try {
+                const resp = await fetch('/cfsistem/app/controllers/trabajadoresController.php', { method: 'POST', body: fd });
+                const res = await resp.json();
+                if(res.status === 'success' || res.success) {
+                    Swal.fire({ icon: 'success', title: 'Eliminado', timer: 1200, showConfirmButton: false });
+                    cargarTrabajadores();
+                } else {
+                    Swal.fire('Error', res.message || 'Error al eliminar', 'error');
+                }
+            } catch(e) {
+                Swal.fire('Error', 'No se pudo completar la solicitud', 'error');
+            }
         }
     }
 
     function limpiarFiltros() {
         $('#busquedaTrabajador').val('');
         $('#filtroRol').val('');
-        tabla.search('').column(2).search('').draw();
+        if (tabla) tabla.search('').column(2).search('').draw();
     }
 
-
-function subirDocumentoCompra(trabajador_id) {
-    
-                
-           
-
-    Swal.fire({
-        title: 'Documento de Vehiculo',
-        html: `
-            <div class="text-start">
-                <label class="fw-bold small mb-2">Subir / Reemplazar documento</label>
-                <input type="file" id="swal_file_doc" class="form-control mb-2" accept=".pdf,image/*">
-                
-                
-            </div>
-        `,
-        icon: 'info',
-        showCancelButton: true,
-        confirmButtonText: 'Guardar',
-        confirmButtonColor: '#198754',
-        focusConfirm: false,
-
-        preConfirm: async () => {
-
-            const fileInput = document.getElementById('swal_file_doc');
-            const file = fileInput?.files[0];
-
-            if (!file) {
-                Swal.showValidationMessage('Selecciona un archivo');
-                return false;
-            }
-
-            const formData = new FormData();
-            
-            formData.append('trabajador_id', trabajador_id);
-           
-            formData.append('documento', file);
-            console.log(file,trabajador_id);
-            
-             
-
-            try {
-
-    const response = await fetch(
-        '/cfsistem/app/controllers/trabajadoresController.php?action=subirDocumento',
-        {
-            method: 'POST',
-            body: formData
-        }
-    );
-
-    console.log('Status:', response.status);
-
-    const text = await response.text();
-
-    console.log('Respuesta completa:', text);
-
-    if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
+    function imprimirContenidoModal() {
+        window.print();
     }
 
-    let res;
+    /* Auxiliares Fecha / Semana */
+    function obtenerSemanaActual() {
+        const hoy = new Date();
+        const jueves = new Date(hoy);
+        jueves.setDate(hoy.getDate() + 4 - (hoy.getDay() || 7));
+        const inicioAnio = new Date(jueves.getFullYear(), 0, 1);
+        const numeroSemana = Math.ceil((((jueves - inicioAnio) / 86400000) + 1) / 7);
+        return `${jueves.getFullYear()}-W${String(numeroSemana).padStart(2,'0')}`;
+    }
+
+    function obtenerLunesISO(anio, semana) {
+        const simple = new Date(anio, 0, 1 + (semana - 1) * 7);
+        const dia = simple.getDay();
+        const lunes = new Date(simple);
+        if (dia <= 4) lunes.setDate(simple.getDate() - simple.getDay() + 1);
+        else lunes.setDate(simple.getDate() + 8 - simple.getDay());
+        return lunes;
+    }
+
+    function formatearFecha(fecha) {
+        const y = fecha.getFullYear();
+        const m = String(fecha.getMonth() + 1).padStart(2,'0');
+        const d = String(fecha.getDate()).padStart(2,'0');
+        return `${y}-${m}-${d}`;
+    }async function imprimirContenidoModal() {
+    // 1. Obtener la semana seleccionada
+    const valorSemana = $('#semana').val();
+    let queryParams = '';
+
+    if (valorSemana) {
+        const [anio, semana] = valorSemana.split('-W');
+        const lunes = obtenerLunesISO(parseInt(anio), parseInt(semana));
+        const domingo = new Date(lunes);
+        domingo.setDate(lunes.getDate() + 6);
+
+        const inicio = formatearFecha(lunes);
+        const fin = formatearFecha(domingo);
+        queryParams = `&fecha_inicio=${inicio}&fecha_fin=${fin}`;
+    }
 
     try {
-        res = JSON.parse(text);
-    } catch {
-        throw new Error('El servidor devolvió HTML o texto inválido');
-    }
+        // 2. Obtener los datos de la nómina
+        const res = await fetch(`/cfsistem/app/controllers/nominaController.php?action=listar${queryParams}`);
+        const response = await res.json();
 
-    if (!res.success) {
-        throw new Error(res.message || 'Error al subir archivo');
-    }
-
-    return res;
-
-} catch (err) {
-    console.error(err);
-    Swal.showValidationMessage(err.message);
-    return false;
-}
+        if (!response.success) {
+            throw new Error(response.message || 'No se pudieron obtener los datos de la nómina.');
         }
 
-    }).then(result => {
+        const data = response.data || [];
 
-        if (!result.isConfirmed || !result.value) return;
-
-       Swal.fire({
-    icon: 'success',
-    title: 'Guardado',
-    text: 'Documento actualizado correctamente',
-    timer: 1800,
-    showConfirmButton: false
-}).then(() => {
-    location.reload();
-});
-       
-    });
-}
-
-function eliminarDocumento(id) {
-    
-                console.log('gasto');
-           
-
-    Swal.fire({
-        title: 'Eliminar Documento',
-        
-        icon: 'info',
-        showCancelButton: true,
-        confirmButtonText: 'Guardar',
-        confirmButtonColor: '#ed0909',
-        focusConfirm: false,
-
-        preConfirm: async () => {
-
-         
-
-            const formData = new FormData();
-            
-             formData.append('id', id);
-             
-
-            try {
-                const response = await fetch('/cfsistem/app/controllers/trabajadoresController.php?action=eliminarDocumento', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                // 🔥 LEEMOS COMO TEXTO PRIMERO (ANTI "Unexpected token <")
-                const text = await response.text();
-                console.log('RESPUESTA CRUDA:', text);
-
-                let res;
-                try {
-                    res = JSON.parse(text);
-                } catch (e) {
-                    throw new Error('El servidor no devolvió JSON válido');
-                }
-
-                if (!res.success) {
-                    throw new Error(res.message || 'Error al subir archivo');
-                }
-
-                return res;
-
-            } catch (err) {
-                Swal.showValidationMessage(err.message);
-                return false;
-            }
+        if (data.length === 0) {
+            Swal.fire('Atención', 'No hay registros de nómina para imprimir en esta semana.', 'info');
+            return;
         }
 
-    }).then(result => {
+        // 3. Generar las tarjetas/cheques individuales recortables
+        let chequesHTML = '';
 
-        if (!result.isConfirmed || !result.value) return;
+        data.forEach((t, index) => {
+            const salario = parseFloat(t.salario || 0);
+            const prestamos = parseFloat(t.total_prestamos_pendientes || 0);
+            const faltas = parseFloat(t.total_faltas || 0);
+            const viajes = parseFloat(t.total_viajes || 0);
+            const abonos = parseFloat(t.total_abonos || 0);
+            const totalNomina = parseFloat(t.total_nomina || 0);
 
-       Swal.fire({
-    icon: 'success',
-    title: 'Eliminado',
-    text: 'Documento eliminado correctamente',
-    timer: 1800,
-    showConfirmButton: false
-}).then(() => {
-    location.reload();
-});
-        if (typeof cargarCompras === 'function') {
-            cargarCompras();
-        }
-    });
-} 
-async function imprimirContenidoModal() {
-        
-        
-            const res = await fetch(`http://localhost/cfsistem/app/controllers/nominaController.php?action=listar`);
-            const data = await res.json();
-            //<td class="ps-3 small">${v.id}</td>
-            let totalVendido=0;
-            let deuda=0;
+            chequesHTML += `
+                <div class="cheque-contenedor">
+                    <!-- Marca de Agua Individual -->
+                    <img src="/cfsistem/public/assets/logo.ico" class="watermark-cheque" alt="Logo">
 
-    // 1. Obtener los elementos clave del modal actual
-    const folio = $('#spanFolio').text();
-    const cliente = $('#detCliente').text();
-    const almacen = $('#detAlmacen').text();
-    
-    // 2. Clonar las tablas de datos para no alterar el modal visual
-    const tablaProductos = $('#tbodyDetalle').html();
-    const tablaEntregas = $('#tbodyHistorial').html();
-    const tablaPagos = $('#tbodyPagos').html();
-    
-    const total = $('#detTotalLabel').text();
-    const saldo = $('#detSaldoLabel').text();
-
-    // 3. Crear una nueva ventana temporal en el navegador
-    const ventanaImpresion = window.open('', '_blank');
-    let tabla='';
-
-data.map(t => {
-    tabla+=` <tr class="fila-trabajador" >
-    
-                            <td><strong>${t.nombre}</strong></td>
-                            
-                            <td>
-                                <span class="badge bg-light text-dark border fw-normal text-uppercase" style="font-size: 0.7rem;">
-                                     ${t.rol}
-                                </span>
-                            </td>
-                            <td>
-                                <span class="small text-muted">  ${t.nombreAlmacen}</span>
-                            </td><td>
-                                <span class="small text-muted">  ${t.salario}</span>
-                            </td><td>
-                                <span class="small text-muted">  ${t.total_prestamos_pendientes}</span>
-                            </td><td>
-                                <span class="small text-muted">  ${t.salario_disponible}</span>
-                            </td>
-                                           <td>
-                                
-                                    
-                                
-                            </td>
-                            </tr>
-                            `
-                            
-
-})
-
-    // 4. Inyectar el HTML estructurado con estilos limpios y profesionales
-    ventanaImpresion.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Nomina</title>
-            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-            <style>
-                body {font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 30px; color: #333; }
-                .ticket-header { border-bottom: 2px solid #007aff; padding-bottom: 15px; margin-bottom: 20px; }
-                .meta-box { background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 15px; }
-                .section-title { font-size: 0.85rem; font-weight: bold; text-transform: uppercase; color: #666; margin-top: 25px; margin-bottom: 10px; letter-spacing: 0.5px; }
-                .table-responsive { max-height: none !important; overflow: visible !important; }
-                .d-none { display: none !important; } /* Oculta columnas de inputs si están activas */
-                @media print {
-                    body { padding: 40px;  }
-                    .btn-imprimir { display: none; }
-                }
-                     @page { 
-                        margin: 0; /* Esto elimina el título de arriba y la fecha/hora de abajo */
-                    }
-            </style>
-        </head>
-        <body>
-         <div id="areaImpresion" class="text-uppercase  bg-white" style="min-height: 650px; font-size: 0.95rem;">
- <img
-    src="/cfsistem/public/assets/logo.ico"
-    style="
-        position: fixed;
-        top: 30%;                  /* Centro vertical */
-        left: 50%;                 /* Centro horizontal */
-        transform: translate(-50%, -50%); /* Compensa el propio tamaño de la imagen */
-        width: 240px;
-        opacity: 0.08;
-        z-index: 1;               /* Cambiado a -1 para que quede detrás del texto y no tape los clics */
-        pointer-events: none;      /* Evita que interfiera si alguien intenta hacer clic sobre ella */
-    "
->
-                        <!-- ENCABEZADO -->
-                        
-<div class=" ">
-
-    <!-- Logo + Título -->
-    <div class="">
-
-        <img src="/cfsistem/public/assets/logo.ico"
-             alt="Logo"
-             width="55"
-             height="55"
-             class="me-3">
-
-         <div class="ticket-header d-flex justify-content-between align-items-center">
-                <div>
-                    <h4 class="fw-bold m-0">CF SYSTEM NOMINA</h4>
-                    
-                </div>
-               
-            </div>
-
-            
-    </div>
-
-  
-
-
-                        </div>
-                        <div class="row g-3">
-                
-                
-            </div>
-            <div class="table-responsive" style="max-height: 180px;">
-                                <table class="table table-sm align-middle mb-0">
-                                    <thead class="table-light">
-                                        <tr class="small text-uppercase">
-                                             <th>Nombre</th>
-                           
-                            <th>Rol / Puesto</th>
-                            <th>Almacén</th>
-                            <th>Salario</th>
-                          <th>Prestamos Activos</th>
-                          <th>Total Nomina</th>
-                          
-                           
-                                        </tr>
-                                    </thead>
-                                    <tbody >${tabla}</tbody>
-                                </table>
+                    <!-- Encabezado del Cheque -->
+                    <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-2 border-primary">
+                        <div class="d-flex align-items-center">
+                            <img src="/cfsistem/public/assets/logo.ico" width="38" height="38" class="me-2" alt="Logo">
+                            <div>
+                                <h6 class="fw-bold m-0 text-uppercase">CF SYSTEM - RECIBO DE NÓMINA</h6>
+                                <small class="text-muted" style="font-size: 0.7rem;">COMPROBANTE DE PAGO DE SALARIO</small>
                             </div>
-                       
-
-                            
-
-                          
-
-</div>
-                       
-
-                        
-
+                        </div>
+                        <div class="text-end">
+                            <span class="badge bg-dark text-white font-monospace" style="font-size: 0.75rem;">SEMANA: ${valorSemana || 'N/A'}</span>
+                            <small class="d-block text-muted" style="font-size: 0.65rem;">Emisión: ${new Date().toLocaleDateString('es-MX')}</small>
+                        </div>
                     </div>
-             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script> 
+
+                    <!-- Datos del Trabajador y Salario Total -->
+                    <div class="row g-2 mb-2 bg-light p-2 rounded align-items-center border">
+                        <div class="col-7">
+                            <div class="text-uppercase fw-bold text-dark" style="font-size: 0.95rem;">${t.nombre}</div>
+                            <small class="text-muted d-block" style="font-size: 0.75rem;">
+                                <strong>Puesto:</strong> ${t.rol.toUpperCase()} | <strong>Almacén:</strong> ${t.nombreAlmacen || 'N/A'}
+                            </small>
+                        </div>
+                        <div class="col-5 text-end">
+                            <small class="text-uppercase text-muted d-block" style="font-size: 0.65rem; font-weight: 700;">Neto a Recibir</small>
+                            <span class="fs-5 fw-bold text-success font-monospace">$${totalNomina.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+                        </div>
+                    </div>
+
+                    <!-- Desglose de Percepciones y Deducciones -->
+                    <table class="table table-sm table-bordered text-center mb-3" style="font-size: 0.75rem;">
+                        <thead class="table-secondary text-uppercase">
+                            <tr>
+                                <th>Salario Base</th>
+                                <th>(+) Viajes</th>
+                                <th>(-) Faltas</th>
+                                <th>(-) Abonos Préstamo</th>
+                                <th>Saldo Préstamo Act.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>$${salario.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                                <td class="text-success">+$${viajes.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                                <td class="text-danger">-$${faltas.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                                <td class="text-warning text-dark">-$${abonos.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                                <td class="text-muted">$${prestamos.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Leyenda y Zona de Firmas -->
+                    <p class="text-muted text-justify mb-3" style="font-size: 0.62rem; line-height: 1.1;">
+                        Recibí a mi entera satisfacción la cantidad neta descrita en este documento por concepto de pago de mis salarios y prestaciones correspondientes al período indicado, no adeudándome cantidad alguna.
+                    </p>
+
+                    <div class="row pt-3 text-center" style="font-size: 0.75rem;">
+                        <div class="col-6">
+                            <div class="border-top border-dark mx-3 pt-1 fw-bold text-uppercase">
+                                Firma del Trabajador
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border-top border-dark mx-3 pt-1 fw-bold text-uppercase">
+                                Conformidad / Empresa
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Línea de corte para tijeras -->
+                <div class="corte-linea">
+                    <span><i class="bi bi-scissors"></i> CORTE AQUÍ</span>
+                </div>
+            `;
+        });
+
+        // 4. Inyectar en la ventana de impresión
+        const ventanaImpresion = window.open('', '_blank');
+
+        ventanaImpresion.document.write(`
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <title>Cheques de Nómina - ${valorSemana || 'Semanal'}</title>
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+                <style>
+                    body { 
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+                        padding: 15px; 
+                        background: #f4f4f4;
+                        color: #222;
+                    }
+                    .cheque-contenedor {
+                        background: #ffffff;
+                        border: 2px dashed #007aff;
+                        border-radius: 8px;
+                        padding: 15px 20px;
+                        position: relative;
+                        overflow: hidden;
+                        page-break-inside: avoid;
+                        margin-bottom: 10px;
+                    }
+                    .watermark-cheque {
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        width: 160px;
+                        opacity: 0.04;
+                        pointer-events: none;
+                        z-index: 0;
+                    }
+                    .corte-linea {
+                        text-align: center;
+                        border-bottom: 1px dashed #999;
+                        line-height: 0.1em;
+                        margin: 20px 0 25px 0;
+                        page-break-inside: avoid;
+                    }
+                    .corte-linea span {
+                        background: #f4f4f4;
+                        padding: 0 10px;
+                        font-size: 0.7rem;
+                        color: #666;
+                        font-weight: bold;
+                        letter-spacing: 1px;
+                    }
+                    @media print {
+                        body { background: #ffffff; padding: 0; }
+                        .cheque-contenedor { border: 1.5px solid #333; }
+                        .corte-linea span { background: #ffffff; }
+                    }
+                    @page { 
+                        margin: 0.8cm; 
+                    }
+                </style>
+            </head>
+            <body>
+                <div id="areaImpresion">
+                    ${chequesHTML}
+                </div>
+
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
                 <script>
-   window.addEventListener('DOMContentLoaded', () => {
-        // 1. Detectar si el usuario está en un dispositivo móvil
-        const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                    window.addEventListener('DOMContentLoaded', () => {
+                        const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-        // 2. Esperar 1 segundo a que carguen estilos, fuentes e imágenes
-        setTimeout(() => {
-            if (esMovil) {
-                // --- COMPORTAMIENTO EN CELULARES: DESCARGA DE PDF AUTOMÁTICA ---
-                const elementoParaConvertir = document.getElementById('areaImpresion');
+                        setTimeout(() => {
+                            if (esMovil) {
+                                const elementoParaConvertir = document.getElementById('areaImpresion');
+                                const opciones = {
+                                    margin: 0.5,
+                                    filename: 'Recibos_Nomina_${valorSemana || 'Semana'}.pdf',
+                                    image: { type: 'jpeg', quality: 0.98 },
+                                    html2canvas: { scale: 2, useCORS: true },
+                                    jsPDF: { unit: 'cm', format: 'letter', orientation: 'portrait' }
+                                };
+                                html2pdf().set(opciones).from(elementoParaConvertir).save();
+                            } else {
+                                window.print();
+                            }
+                        }, 800);
+                    });
+                <\/script>
+            </body>
+            </html>
+        `);
 
-                const opciones = {
-                    margin:       1,
-                    filename:     'nomina_${folio}.pdf',
-                    image:        { type: 'jpeg', quality: 0.98 },
-                    html2canvas:  { scale: 2, useCORS: true }, // Mayor calidad visual
-                    jsPDF:        { unit: 'cm', format: 'letter', orientation: 'portrait' }
-                };
+        ventanaImpresion.document.close();
 
-                // Generar y descargar el PDF directamente
-                html2pdf().set(opciones).from(elementoParaConvertir).save();
-                
-            } else {
-                // --- COMPORTAMIENTO EN COMPUTADORAS: DIÁLOGO NATIVO DE IMPRESIÓN ---
-                window.print();
-            }
-        }, 1000); // 1000 milisegundos = 1 segundo de espera
-    });
- <\/script>
-        </body>
-        </html>
-    `);
-
-    ventanaImpresion.document.close();
+    } catch (err) {
+        console.error("Error al generar recibos de nómina:", err);
+        Swal.fire('Error', err.message || 'No se pudieron generar los recibos.', 'error');
+    }
 }
 
     </script>

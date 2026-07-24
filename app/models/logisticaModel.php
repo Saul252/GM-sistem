@@ -76,12 +76,15 @@ public function obtenerViajesFiltrados(
         trm.estado_reparto AS estatus_logistico,
         tv.nombre AS unidad_nombre,
         u_chofer.nombre AS nombre_chofer,
+         trp.descripcion_punto as direccion,
         GROUP_CONCAT(DISTINCT u_ayu.nombre SEPARATOR ' / ') AS ayudantes
 
     FROM transporte_consolidacion tc
 
     LEFT JOIN transporte_repartos_maestro trm 
         ON tc.reparto_id = trm.id
+        LEFT JOIN transporte_rutas_puntos trp
+        ON trp.reparto_id=trm.id
 
     LEFT JOIN transporte_vehiculos tv 
         ON tc.vehiculo_id = tv.id
@@ -91,6 +94,125 @@ public function obtenerViajesFiltrados(
 
     LEFT JOIN trabajadores u_ayu 
         ON ttd.usuario_id = u_ayu.id
+
+    LEFT JOIN trabajadores u_chofer 
+        ON trm.usuario_encargado_id = u_chofer.id
+
+    LEFT JOIN almacenes a 
+        ON u_chofer.almacen_id = a.id
+
+    $where_sql
+
+    GROUP BY 
+        tc.viaje_folio,
+        a.nombre,
+        a.id,
+        tv.nombre,
+        u_chofer.nombre,
+        trm.estado_reparto
+
+    ORDER BY 
+        tc.fecha_creacion DESC,
+        tc.viaje_folio ASC";
+
+    $stmt = $this->db->prepare($sql);
+
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
+    }
+
+    $stmt->execute();
+
+    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+public function obtenerViajesFiltradosPago(
+    $almacen = 0, 
+    $fecha_inicio = null, 
+    $fecha_fin = null,
+    $chofer = '', 
+    $ayudantes = '', 
+    $estado = ''
+) {
+
+    $where = [];
+    $params = [];
+    $types = '';
+
+    // 🔹 FILTRO POR ALMACÉN
+    if (!empty($almacen) && $almacen > 0) {
+        $where[] = "a.id = ?";
+        $params[] = $almacen;
+        $types .= 'i';
+    }
+
+    // 🔹 FILTRO POR RANGO DE FECHAS
+    if (!empty($fecha_inicio) && !empty($fecha_fin)) {
+        $where[] = "DATE(tc.fecha_creacion) BETWEEN ? AND ?";
+        $params[] = $fecha_inicio;
+        $params[] = $fecha_fin;
+        $types .= 'ss';
+    } elseif (!empty($fecha_inicio)) {
+        $where[] = "DATE(tc.fecha_creacion) >= ?";
+        $params[] = $fecha_inicio;
+        $types .= 's';
+    }
+ if (!empty($chofer) && $chofer > 0) {
+        $where[] = "u_chofer.id = ?";
+        $params[] = $chofer;
+        $types .= 'i';
+    }
+    // 🔹 FILTRO CHOFER
+   
+
+    // 🔹 FILTRO AYUDANTES
+    if (!empty($ayudantes)) {
+        $where[] = "u_ayu.nombre LIKE ?";
+        $params[] = "%$ayudantes%";
+        $types .= 's';
+    }
+
+    // 🔹 FILTRO ESTADO
+    if (!empty($estado)) {
+        $where[] = "trm.estado_reparto = ?";
+        $params[] = $estado;
+        $types .= 's';
+    }
+
+    // 🔥 SI NO HAY FILTROS → NO PONE WHERE (TRAE TODO)
+    $where_sql = (!empty($where)) ? "WHERE " . implode(" AND ", $where) : "";
+
+    $sql = "SELECT 
+        a.nombre as almacenOrigen,
+        a.id,
+        tc.viaje_folio AS folio_viaje,
+        tc.fecha_creacion AS fecha_viaje,
+        MAX(trm.hora_llegada_real) AS fecha_llegada,
+        trm.estado_reparto AS estatus_logistico,
+        tv.nombre AS unidad_nombre,
+        u_chofer.nombre AS nombre_chofer,
+        u_chofer.id as chofer_id,
+         trp.descripcion_punto as direccion,
+         trp.reparto_id as viaje_id,
+         pv.monto as monto,
+        GROUP_CONCAT(DISTINCT u_ayu.nombre SEPARATOR ' / ') AS ayudantes
+
+    FROM transporte_consolidacion tc
+
+    LEFT JOIN transporte_repartos_maestro trm 
+        ON tc.reparto_id = trm.id
+        LEFT JOIN transporte_rutas_puntos trp
+        ON trp.reparto_id=trm.id
+
+    LEFT JOIN transporte_vehiculos tv 
+        ON tc.vehiculo_id = tv.id
+
+    LEFT JOIN transporte_tripulantes_detalle ttd 
+        ON trm.id = ttd.reparto_id
+
+    LEFT JOIN trabajadores u_ayu 
+        ON ttd.usuario_id = u_ayu.id
+        left join pagos_viaje pv
+        on trp.reparto_id= pv.id_viaje
 
     LEFT JOIN trabajadores u_chofer 
         ON trm.usuario_encargado_id = u_chofer.id
@@ -269,5 +391,58 @@ public function obtenerViajesFiltrados(
     $stmt->execute();
 
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+}
+
+    public function aplicarPagoPorViaje($idViaje, $idChofer, $monto,$fecha)
+{
+    $sql = "INSERT INTO pagos_viaje (
+                id_viaje,
+                id_chofer,
+                monto,
+                fecha
+            ) VALUES (?, ?, ?,?)";
+
+    $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) {
+        throw new Exception("Error al preparar la consulta: " . $this->db->error);
+    }
+
+    $stmt->bind_param("iids", $idViaje, $idChofer, $monto,$fecha);
+
+    if (!$stmt->execute()) {
+        throw new Exception("Error al guardar el pago: " . $stmt->error);
+    }
+
+    return [
+        'success' => true,
+        'message' => 'Pago registrado correctamente.',
+        'id' => $stmt->insert_id
+    ];
+}
+public function eliminarPagoPorViaje($idViaje)
+{
+    $sql = "DELETE FROM pagos_viaje WHERE id_viaje = ?";
+
+    $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) {
+        throw new Exception("Error al preparar la consulta: " . $this->db->error);
+    }
+
+    $stmt->bind_param("i", $idViaje);
+
+    if (!$stmt->execute()) {
+        throw new Exception("Error al eliminar el pago: " . $stmt->error);
+    }
+
+    if ($stmt->affected_rows === 0) {
+        throw new Exception("No se encontró un pago para el viaje indicado.");
+    }
+
+    return [
+        'success' => true,
+        'message' => 'Pago eliminado correctamente.'
+    ];
 }
 }

@@ -411,6 +411,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'elimin
         if ($almacen_final <= 0) throw new Exception("Almacén no válido.");
 
         $urlDocumento = '';
+        $desc=$_POST['precio'];
+       
       
         $cabecera = [
             'folio'        => $_POST['folio'] ?? 'S/F',
@@ -424,11 +426,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'elimin
             'documento_url'=> $urlDocumento,
             'observaciones'=> $_POST['observaciones'] ?? ''
         ];
-
         // 1. Registrar el gasto en la BD
         $res = $egresoModel->registrarGastoInsumo($cabecera, $_POST['desc'] ?? [], $_POST['cant'] ?? [], $_POST['precio'] ?? [],$_POST['items'] ?? []);
         
         // Validar que se haya obtenido un ID correcto
+
         $id = $res['id'] ?? 0;
         if ($id <= 0) {
             throw new Exception("No se pudo registrar el gasto en la base de datos.");
@@ -770,7 +772,11 @@ if ($action === 'guardar_insumo') {
     header('Content-Type: application/json; charset=utf-8');
 
     try {
-        $nombre = trim($_POST['nombre'] ?? '');$descripcion = trim($_POST['descripcion'] ?? '');
+        $nombre = trim($_POST['nombre'] ?? '');
+        $descripcion = trim($_POST['descripcion'] ?? '');
+        $uma=trim($_POST['uma'] ?? '');
+        $umi=trim($_POST['umi'] ?? '');
+        $factor=($_POST['factor'] ?? 1);
         
         if (empty($nombre)) {
             throw new Exception("El nombre de la categoría es obligatorio.");
@@ -778,7 +784,7 @@ if ($action === 'guardar_insumo') {
 
         // Usamos la instancia que ya definiste al inicio de tu controller
         // Si tu modelo devuelve el ID insertado:
-        $id_final = $gastosCategorias->guardarInsumo($nombre, $descripcion); 
+        $id_final = $gastosCategorias->guardarInsumo($nombre, $descripcion,$uma,$umi,$factor); 
 
         if ($id_final) {
             echo json_encode([

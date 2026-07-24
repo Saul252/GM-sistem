@@ -269,7 +269,8 @@ public function registrarGasto($cabecera, $descripciones, $cantidades, $precios)
         $this->db->rollback();
         throw $e;
     }
-}public function registrarGastoInsumo($cabecera, $descripciones, $cantidades, $precios, $items) {
+}
+public function registrarGastoInsumo($cabecera, $descripciones, $cantidades, $precios, $items) {
     // 1. Iniciar transacción
     $this->db->begin_transaction();
     
@@ -301,16 +302,21 @@ public function registrarGasto($cabecera, $descripciones, $cantidades, $precios)
         if (!$stmt->execute()) {
             throw new Exception("Error al ejecutar Cabecera: " . $stmt->error);
         }
+        
 
         $gasto_id = $this->db->insert_id;
 
         // 3. Preparar Consultas de Detalles e Insumos
         $sqlDet = "INSERT INTO detalle_gasto (gasto_id, descripcion, cantidad, precio_unitario, subtotal) VALUES (?, ?, ?, ?, ?)";
-        $insumo = "INSERT INTO compras_insumos (id_insumo, costo, cantidad, proveedor, fecha,existencias_lote) VALUES (?,?, ?, ?, ?, NOW())";
+        $insumo = "INSERT INTO compras_insumos (id_insumo, costo, cantidad, proveedor, fecha, existencias_lote) VALUES (?, ?, ?, ?, NOW(),?)";
         
         // CORRECCIÓN STOCK: Si ya existe el insumo, suma la cantidad al stock actual
         $insumo_stock = "INSERT INTO insumos_stock (id_insumo, existencias) VALUES (?, ?) 
                          ON DUPLICATE KEY UPDATE existencias = existencias + VALUES(existencias)";
+                         // Obtener el nombre del insumo
+$sqlinfo = "SELECT nombre FROM insumos WHERE id = ?";
+
+
 
         $stmtD = $this->db->prepare($sqlDet);
         $stmtI = $this->db->prepare($insumo);
@@ -328,11 +334,31 @@ public function registrarGasto($cabecera, $descripciones, $cantidades, $precios)
             $prec = floatval($precios[$i]);
             $subt = $cant * $prec;
             $id_insumo = intval($items[$i] ?? 0);
-
+             
+$nombreInsumo='';
             // Si está vinculado a un insumo, registrar en inventario
             if ($id_insumo > 0) {
-                // "iddd" -> entero, double, double, string (proveedor)
-                $stmtI->bind_param("idds", $id_insumo, $prec, $cant, $cabecera['beneficiario']);
+               
+                // "iddsd" -> entero, double, double, string (proveedor)
+                $stmtI->bind_param(
+    "iddsd",
+    $id_insumo,
+    $prec,
+    $cant,
+    $cabecera['beneficiario'],
+    $cant 
+);
+$stmt = $this->db->prepare($sqlinfo);
+$stmt->bind_param("i", $id_insumo);
+$stmt->execute();
+
+$result = $stmt->get_result();
+
+if ($row = $result->fetch_assoc()) {
+    $nombreInsumo = $row['nombre'];
+} else {
+    $nombreInsumo = '';
+}
                 if (!$stmtI->execute()) {
                     throw new Exception("Error al registrar compra de insumo en fila $i: " . $stmtI->error);
                 }
@@ -343,9 +369,10 @@ public function registrarGasto($cabecera, $descripciones, $cantidades, $precios)
                     throw new Exception("Error al actualizar stock en fila $i: " . $stmtstock->error);
                 }
             }
+          $razon= $desc . ' articulo comprado: ' . $nombreInsumo;
 
             // Registrar el detalle general del gasto
-            $stmtD->bind_param("isdddd", $gasto_id, $desc, $cant, $prec, $subt,$cant);
+            $stmtD->bind_param("isddd", $gasto_id, $razon, $cant, $prec, $subt);
             if (!$stmtD->execute()) {
                 throw new Exception("Error al ejecutar Detalle en fila $i: " . $stmtD->error);
             }

@@ -81,6 +81,8 @@
     #modalGasto,
     #modalNuevaCompra,
     #modalVerDetalle,
+    #gastoDetalle_seccionImpresion,
+    #gastoDetalle_modalPrincipal,
     #modalAjusteFaltante {
         z-index: 1060 !important;
     }
@@ -590,14 +592,22 @@
                                 </button>
                             <?php endif; ?>
                             <?php if ($e['tipo'] != 'pago_deuda'): ?>
-                              <button class="btn btn-sm btn-light border shadow-sm px-2 text-primary" onclick="verDetalle('<?= $e['tipo'] ?>', <?= $e['id'] ?>)">
+                                 <?php if ($e['tipo'] != 'gasto'): ?>
+                            <button class="btn btn-sm btn-light border shadow-sm px-2 text-primary" onclick="verDetalle('<?= $e['tipo'] ?>', <?= $e['id'] ?>)">
+                                <i class="bi bi-eye-fill"></i>
+                            </button> 
+<?php endif; ?>
+                             
+                            <?php if ($e['tipo'] == 'gasto'): ?>
+                            <button class="btn btn-sm btn-light border shadow-sm px-2 text-primary" onclick="gastoDetalle_cargarVista('gasto', <?= $e['id'] ?>)">
                                 <i class="bi bi-eye-fill"></i>
                             </button>
-
+<?php endif; ?>
                             <button class="btn btn-sm btn-light border shadow-sm px-2 text-danger" 
                                 onclick="<?= ($e['tipo']=='compra') ? "confirmarCancelacionCompra" : "confirmarCancelacionGasto" ?>('<?= $e['id'] ?>','<?= $e['folio'] ?>')">
                                 <i class="bi bi-trash3"></i>
                             </button>
+                             
                         <?php endif; ?>
 
                           
@@ -636,7 +646,7 @@ require_once $ruta;
     <?php require_once __DIR__ . '/egresosComponets/modalCompra.php'; ?>
    
     <?php require_once __DIR__ . '/egresosComponets/modalAjuste.php'; ?>
-    <?php require_once __DIR__ . '/egresosComponets/modalDetalles.php'; ?>
+    <?php require_once __DIR__ . '/egresosComponets/modalDetalles.php'; ?><?php require_once __DIR__ . '/egresosComponets/modalDetalleGasto.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/modalGasto.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/cuentasPendientes.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/historialCuentasPorPagar.php'; ?>

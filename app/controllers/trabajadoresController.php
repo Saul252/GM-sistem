@@ -30,6 +30,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'guardar') {
             'rol'        => $_POST['rol'] ?? 'vendedor',
             'estado'     => $_POST['estado'] ?? 'activo',
             'salario'     => $_POST['salario'] ?? '0',
+             'complemento'     => $_POST['complemento'] ?? '0',
             // Si el usuario es admin (0), toma el del select; si no, toma el de su sesión
             'almacen_id' => ($_SESSION['almacen_id'] == 0) ? intval($_POST['almacen_id'] ?? 0) : intval($_SESSION['almacen_id'])
         ];
@@ -180,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
           $trabajadores = $trabajadorModel->listarTrabajadores($almacenusu);
        $listaAlmacenes = $almacenesModel->getAlmacenes($almacenusu); 
         $tituloPagina = "Gestión de Personal";
-        require_once __DIR__ . '/../views/nomina_view.php';
+        require_once __DIR__ . '/../views/trabajadores_view.php';
         
     } catch (Exception $e) {
         die("Error al cargar la vista: " . $e->getMessage());
@@ -222,4 +223,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     } catch (Exception $e) {
         die("Error al cargar la vista de trabajadores: " . $e->getMessage());
     }
+}
+if (
+    $_SERVER['REQUEST_METHOD'] === 'GET' &&
+    isset($_GET['action']) &&
+    $_GET['action'] === 'getTrabajadores'
+) 
+ {
+
+    while (ob_get_level()) ob_end_clean();
+    header('Content-Type: application/json');
+
+    try {
+
+        $almacen = intval($_GET['almacen'] ?? $almacenusu);
+
+        $trabajadores = $trabajadorModel->listarTrabajadores($almacen);
+
+        echo json_encode([
+            'success' => true,
+            'data' => $trabajadores
+        ]);
+
+    } catch (Throwable $e) {
+
+        http_response_code(500);
+
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+    }
+
+    exit;
 }

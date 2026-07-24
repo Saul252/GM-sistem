@@ -173,7 +173,6 @@ ORDER BY nombre ASC;";
 
     return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
 }
-
     // NUEVO: Listar por almacén específico
     public function listarPorAlmacen($almacen_id) {
         $id = intval($almacen_id);
@@ -187,6 +186,261 @@ ORDER BY nombre ASC;";
         $res = $this->db->query($sql);
         return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
     }
+
+    public function crearBono($data) {
+        $sql = "INSERT INTO bonos 
+                (trabajador_id,fecha,monto)
+                VALUES (?, ?,?)";
+
+        $stmt = $this->db->prepare($sql);
+     return $stmt->execute([
+    $data['trabajador_id'],
+     $data['fecha'],
+    $data['monto'],
+     
+   
+   
+]);
+    }
+    public function listarNominaSemanal($fechaInicio, $fechaFin, $almacen_id = 0)
+{
+    if ($almacen_id == 0) {
+
+        // 🔥 ADMIN → Todos los almacenes
+        $sql = "SELECT
+                    t.id,
+                    t.nombre,
+                    t.telefono,
+                    t.rol,
+                    t.estado,
+                    t.almacen_id,
+                    t.fecha_registro,
+                    t.complemento_pago,
+                    (t.salario + t.complemento_pago) AS salario,
+
+                    a.nombre AS nombreAlmacen,
+
+                    COALESCE(f.total_faltas,0) AS total_faltas,
+                    COALESCE(v.total_viajes,0) AS total_viajes,
+                    COALESCE(ab.total_abonos,0) AS total_abonos,
+
+                    (
+                       ( t.salario + t.complemento_pago)
+                        - COALESCE(f.total_faltas,0)
+                        + COALESCE(v.total_viajes,0)
+                        - COALESCE(ab.total_abonos,0)
+                    ) AS total_nomina,
+
+                    (
+                        SELECT
+                            COALESCE(SUM(pre.monto_total - COALESCE(pa.total_abonado,0)),0)
+                        FROM prestamos pre
+                        LEFT JOIN (
+                            SELECT
+                                prestamo_id,
+                                SUM(monto_abono) total_abonado
+                            FROM prestamos_abonos
+                            GROUP BY prestamo_id
+                        ) pa
+                        ON pa.prestamo_id = pre.id
+                        WHERE pre.trabajador_id = t.id
+                    ) AS total_prestamos_pendientes,
+
+                    (
+                        SELECT GROUP_CONCAT(
+                            CONCAT(
+                                IFNULL(nombre,''),
+                                '|||',
+                                IFNULL(direccion,''),
+                                '|||',
+                                IFNULL(id,'')
+                            )
+                            SEPARATOR ';;;'
+                        )
+                        FROM documentos_trabajadores dt
+                        WHERE dt.trabajador_id=t.id
+                        AND dt.activo=1
+                    ) AS documentos_url
+
+                FROM trabajadores t
+
+                INNER JOIN almacenes a
+                    ON a.id=t.almacen_id
+
+                /* ===== FALTAS ===== */
+                LEFT JOIN(
+                    SELECT
+                        trabajador_id,
+                        SUM(monto) total_faltas
+                    FROM faltas
+                    WHERE fecha BETWEEN ? AND ?
+                    GROUP BY trabajador_id
+                ) f
+                    ON f.trabajador_id=t.id
+
+                /* ===== VIAJES ===== */
+                LEFT JOIN(
+                    SELECT
+                        id_chofer,
+                        SUM(monto) total_viajes
+                    FROM pagos_viaje
+                    WHERE fecha BETWEEN ? AND ?
+                    GROUP BY id_chofer
+                ) v
+                    ON v.id_chofer=t.id
+
+                /* ===== ABONOS DE PRÉSTAMOS ===== */
+                LEFT JOIN(
+                    SELECT
+                        p.trabajador_id,
+                        SUM(pa.monto_abono) total_abonos
+                    FROM prestamos_abonos pa
+                    INNER JOIN prestamos p
+                        ON p.id=pa.prestamo_id
+                    WHERE pa.fecha_abono BETWEEN ? AND ?
+                    GROUP BY p.trabajador_id
+                ) ab
+                    ON ab.trabajador_id=t.id
+
+                ORDER BY t.nombre ASC";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new Exception($this->db->error);
+        }
+
+        $stmt->bind_param(
+            "ssssss",
+            $fechaInicio,
+            $fechaFin,
+            $fechaInicio,
+            $fechaFin,
+            $fechaInicio,
+            $fechaFin
+        );
+
+    } else {
+
+        // 🔒 Solo un almacén
+        $sql = "SELECT
+                    t.id,
+                    t.nombre,
+                    t.telefono,
+                    t.rol,
+                    t.estado,
+                    t.almacen_id,
+                    t.fecha_registro,
+                   (t.salario + t.complemento_pago) AS salario,
+                    a.nombre AS nombreAlmacen,
+
+                    COALESCE(f.total_faltas,0) AS total_faltas,
+                    COALESCE(v.total_viajes,0) AS total_viajes,
+                    COALESCE(ab.total_abonos,0) AS total_abonos,
+
+                    (
+                      (t.salario+t.complemento_pago)
+                        - COALESCE(f.total_faltas,0)
+                        + COALESCE(v.total_viajes,0)
+                        - COALESCE(ab.total_abonos,0)
+                    ) AS total_nomina,
+
+                    (
+                        SELECT
+                            COALESCE(SUM(pre.monto_total - COALESCE(pa.total_abonado,0)),0)
+                        FROM prestamos pre
+                        LEFT JOIN (
+                            SELECT
+                                prestamo_id,
+                                SUM(monto_abono) total_abonado
+                            FROM prestamos_abonos
+                            GROUP BY prestamo_id
+                        ) pa
+                        ON pa.prestamo_id = pre.id
+                        WHERE pre.trabajador_id = t.id
+                    ) AS total_prestamos_pendientes,
+
+                    (
+                        SELECT GROUP_CONCAT(
+                            CONCAT(
+                                IFNULL(nombre,''),
+                                '|||',
+                                IFNULL(direccion,''),
+                                '|||',
+                                IFNULL(id,'')
+                            )
+                            SEPARATOR ';;;'
+                        )
+                        FROM documentos_trabajadores dt
+                        WHERE dt.trabajador_id=t.id
+                        AND dt.activo=1
+                    ) AS documentos_url
+
+                FROM trabajadores t
+
+                INNER JOIN almacenes a
+                    ON a.id=t.almacen_id
+
+                LEFT JOIN(
+                    SELECT
+                        trabajador_id,
+                        SUM(monto) total_faltas
+                    FROM faltas
+                    WHERE fecha BETWEEN ? AND ?
+                    GROUP BY trabajador_id
+                ) f
+                    ON f.trabajador_id=t.id
+
+                LEFT JOIN(
+                    SELECT
+                        id_chofer,
+                        SUM(monto) total_viajes
+                    FROM pagos_viaje
+                    WHERE fecha BETWEEN ? AND ?
+                    GROUP BY id_chofer
+                ) v
+                    ON v.id_chofer=t.id
+
+                LEFT JOIN(
+                    SELECT
+                        p.trabajador_id,
+                        SUM(pa.monto_abono) total_abonos
+                    FROM prestamos_abonos pa
+                    INNER JOIN prestamos p
+                        ON p.id=pa.prestamo_id
+                    WHERE pa.fecha_abono BETWEEN ? AND ?
+                    GROUP BY p.trabajador_id
+                ) ab
+                    ON ab.trabajador_id=t.id
+
+                WHERE t.almacen_id=?
+
+                ORDER BY t.nombre ASC";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new Exception($this->db->error);
+        }
+
+        $stmt->bind_param(
+            "ssssssi",
+            $fechaInicio,
+            $fechaFin,
+            $fechaInicio,
+            $fechaFin,
+            $fechaInicio,
+            $fechaFin,
+            $almacen_id
+        );
+    }
+
+    $stmt->execute();
+
+    $res = $stmt->get_result();
+
+    return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+}
  public function listarTrabajadoresDisponiblesPorAlmacen($almacen_id) {
     $id = intval($almacen_id);
 

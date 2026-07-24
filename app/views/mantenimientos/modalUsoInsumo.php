@@ -64,10 +64,13 @@
                                         </select>
                                     </td>
                                     <td>
-                                        <input type="number" name="msign_cantdisponible[]" class="form-control form-control-sm border-0 bg-light text-center" style="border-radius: 8px; height: 36px;" readonly>
+                                        <input type="text" name="msign_cantdisponible[]" class="form-control form-control-sm border-0 bg-light text-center" style="border-radius: 8px; height: 36px;" readonly>
+                                     
                                     </td>
                                     <td>
                                         <input type="number" name="msign_cant[]" class="form-control form-control-sm msign_cant border-0 bg-light text-center" style="border-radius: 8px; height: 36px;" value="1" min="0.01" step="any" required>
+                                     <input type="text" name="unidad[]" class="form-control form-control-sm msign_cant border-0 bg-light text-center" readonly>
+                                  
                                     </td>
                                     <td class="text-center"></td>
                                 </tr>
@@ -132,6 +135,8 @@ async function msign_cargarInsumosBase() {
             
             // Llenamos el primer select de la tabla estática
             const primerSelect = document.querySelector('.msign_select_item_dinamico');
+           
+            
             if (primerSelect) {
                 msign_inyectarOpciones(primerSelect);
             }
@@ -147,6 +152,9 @@ function msign_inyectarOpciones(selectElement) {
         const opcion = document.createElement('option');
         opcion.value = insumo.id;
         opcion.setAttribute('data-total', insumo.total_existencias || 0);
+        opcion.setAttribute('data-uma', insumo.u_ma|| '');
+        opcion.setAttribute('data-umi', insumo.u_mi|| '');
+        opcion.setAttribute('data-factor', insumo.factor|| '');
         opcion.textContent = `${insumo.nombre} (${insumo.total_existencias} en existencia)`;
         selectElement.appendChild(opcion);
     });
@@ -187,15 +195,20 @@ function msign_manejarCambioInsumo(selectElement) {
     const idInsumoSeleccionado = selectElement.value;
     const $filaActual = $(selectElement).closest('tr');
     const $inputCantidad = $filaActual.find('input[name="msign_cantdisponible[]"]');
+    const $inputunidad = $filaActual.find('input[name="unidad[]"]');
     
     if (idInsumoSeleccionado === "") {
-        $inputCantidad.val('');
+        $inputCantidad.val(''); $inputunidad.val('');
         return;
     }
 
     const opcionSeleccionada = selectElement.options[selectElement.selectedIndex];
     const total = opcionSeleccionada.getAttribute('data-total') || 0;
-    $inputCantidad.val(total);
+    const unidad = opcionSeleccionada.getAttribute('data-total')/opcionSeleccionada.getAttribute('data-factor')  || 0;
+   let unidadMAyor=(unidad>=1?unidad + opcionSeleccionada.getAttribute('data-uma'):'');
+    
+    $inputunidad.val(opcionSeleccionada.getAttribute('data-umi'));total + opcionSeleccionada.getAttribute('data-umi')
+    $inputCantidad.val(total +' '+ unidadMAyor);
 }
 
 function msign_agregarFilaInsumo() {
@@ -209,11 +222,14 @@ function msign_agregarFilaInsumo() {
                 </select>
         </td>
         <td>
-            <input type="number" name="msign_cantdisponible[]" class="form-control form-control-sm border-0 bg-light text-center" style="border-radius: 8px; height: 36px;" readonly>
-        </td>
+            <input type="text" name="msign_cantdisponible[]" class="form-control form-control-sm border-0 bg-light text-center" style="border-radius: 8px; height: 36px;" readonly>
+                                   
+            </td>
         <td>
             <input type="number" name="msign_cant[]" class="form-control msign_cant form-control-sm border-0 bg-light text-center" style="border-radius: 8px; height: 36px;" value="1" min="0.01" step="any" required>
-        </td>
+        <input type="text" name="unidad[]" class="form-control form-control-sm msign_cant border-0 bg-light text-center" readonly>
+        
+            </td>
         <td class="text-center">
             <button type="button" class="btn btn-sm text-danger border-0 bg-transparent" onclick="this.closest('tr').remove();">
                 <i class="bi bi-trash"></i>
@@ -235,28 +251,28 @@ function msign_limpiarTabla() {
 }
 
 // ==================== ENVÍO AL CONTROLADOR (POST) ====================
-
 function msign_guardarAsignacion() {
     const form = document.getElementById('formAsignarInsumoMantenimiento');
     if (!form) return;
-    
+
     const formData = new FormData(form);
     const btn = document.getElementById('msign_btnGuardar');
     if (!btn) return;
-    
+
     const textoOriginal = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Procesando...';
 
-    // Apuntamos al endpoint correcto del controlador de mantenimiento
     fetch('/cfsistem/app/controllers/mantenimientosController.php?action=insumok', {
         method: 'POST',
         body: formData
     })
-    .then(async res => {
-    const text = await res.text();
-    alert(text);
-})
+    .then(res => {
+        if (!res.ok) {
+            throw new Error('Error en la respuesta del servidor.');
+        }
+        return res.json();
+    })
     .then(data => {
         if (data.success) {
             Swal.fire({
@@ -271,18 +287,18 @@ function msign_guardarAsignacion() {
                     const inst = bootstrap.Modal.getInstance(modalEl);
                     if (inst) inst.hide();
                 }
-                location.reload(); 
+                location.reload();
             });
         } else {
-            throw new Error(data.message || 'Error procesando la asignación');
+            throw new Error(data.message || 'Error procesando la asignación.');
         }
     })
     .catch(err => {
         console.error('❌ Error en asignación:', err);
-        Swal.fire({ 
-            icon: 'error', 
-            title: 'Oops!', 
-            text: err.message, 
+        Swal.fire({
+            icon: 'error',
+            title: 'Oops...',
+            text: err.message,
             confirmButtonColor: '#0d6efd'
         });
     })
@@ -290,5 +306,4 @@ function msign_guardarAsignacion() {
         btn.disabled = false;
         btn.innerHTML = textoOriginal;
     });
-}
-</script>
+}</script>

@@ -682,13 +682,26 @@ const efectivoPagado = parseFloat(
                             title: '¡Venta y Despacho OK!',
                             text: res.message,
                             icon: 'success',
-                            confirmButtonText: '<i class="bi bi-printer"></i> Imprimir Ticket',
-                            confirmButtonColor: '#007aff'
-                        }).then(() => {
-                            // Abrir ticket y limpiar pantalla
-                            window.open(
-                                `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`,
-                                '_blank');
+                           icon: iconoFinal,
+                            showDenyButton: true,
+                            showCancelButton: true,
+                            confirmButtonText: '<i class="bi bi-receipt"></i> Con Precios',
+                            denyButtonText: '<i class="bi bi-receipt"></i> Ticket Formal',
+                            cancelButtonText: 'Cerrar',
+                            confirmButtonColor: '#34c759',
+                            denyButtonColor: '#5856d6',
+                            customClass: {
+                                popup: 'rounded-4 border-0 shadow-lg'
+                            }
+                        }).then((result) => {
+                            let url = '';
+                            if (result.isConfirmed) url =
+                                `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`;
+                            else if (result.isDenied) url =
+                            
+                                `/cfsistem/app/backend/ventas/ticketFormal.php?id=${res.id_venta}`;
+
+                            if (url !== '') window.open(url, '_blank');
                             location.reload();
                         });
                     } else {

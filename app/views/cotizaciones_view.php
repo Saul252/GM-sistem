@@ -1584,7 +1584,7 @@ $('#vendedor').html(vendedor);
                     </td> <td class="text-uppercase text-center" style="font-size: 0.7rem;">
                          ${i.nombre || ''}
                     </td>
- <td class="text-uppercase fw-bold"style="font-size: 0.7rem;">${i.producto_nombre}(${i.sku})</td>
+ <td class="text-uppercase fw-bold"style="font-size: 0.7rem;">${i.producto_nombre}</td>
 
                    
                     <td class="text-uppercase text-center" style="font-size: 0.7rem;">

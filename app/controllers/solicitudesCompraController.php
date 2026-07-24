@@ -91,10 +91,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardar') {
         // 🔹 Guardar
         $resultado = $solicitudModel->crear($data, $items_procesados);
 
-        if ($resultado === true) {
+        if ($resultado >0 ) {
             echo json_encode([
                 'status' => 'success',
-                'message' => '¡Solicitud guardada con éxito!'
+                'message' => '¡Solicitud guardada con éxito!',
+                'id'=>$resultado
             ]);
         } else {
             throw new Exception($resultado ?: "Error en la base de datos.");

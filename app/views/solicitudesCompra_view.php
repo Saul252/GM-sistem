@@ -533,105 +533,178 @@ error_reporting(E_ALL);
 
             <div class="modal-body p-0">
 
-                <div id="areaImpresion" class="p-5 bg-white" style="min-height: 650px; font-size: 0.95rem;">
+               <div id="areaImpresion" class="p-3 bg-white" style="min-height:650px;font-size:12px;color:#1f2937;">
 
-                    <!-- ENCABEZADO -->
-                    <div class="d-flex justify-content-between align-items-start mb-4">
-                        <div>
-                            <h2 class="fw-bold text-uppercase mb-1" style="color:#1f2a37;">
-                                Solicitud de Compra
-                            </h2>
-                            <div class="text-muted" id="print-folio">FOLIO: #00000</div>
-                        </div>
+    <!-- ENCABEZADO -->
+    <div class="d-flex justify-content-between align-items-start border-bottom pb-2 mb-3">
 
-                        <div class="text-end">
-                            <div class="fw-bold" style="color:#334155;">cfsistem</div>
-                            <div class="text-muted small" id="print-fecha">Fecha: --/--/----</div>
-                        </div>
-                    </div>
+        <div>
+            
+              <div class="row g-1">
+<!-- -->
+               <div class="col-6">
+                 <div class="fw-bold text-uppercase mb-0" style="letter-spacing:.5px;">
+                BODEGA FORTALEZA CHALCO S.A DE C,V
+            </div>   
+            </div>
+            <div class="col-6">
+            <div class="fw-bold text-uppercase text-end mb-0" style="letter-spacing:.5px;">
+                Solicitud de Compra <spam class="fw-bold text-uppercase mb-0" id="print-folio">
+               
+            </spam>
+            </div>  
+               
+            </div>
+             <div class="col-6">
+                 <div  style="letter-spacing:.5px; font-size:11px;">
+               <spam class="fw-bold text-uppercase mb-0">RFC:</spam> BFC121126CKA
+            </div>
+            <div style="letter-spacing:.5px; font-size:11px;">
+                <spam class="fw-bold text-uppercase mb-0">DOMICILIO:</spam> EMILIANO ZAPATA S/N SAN MARTIN CUAUTLALPAN CHALCO ESTADO DE MEXICO <spam class="fw-bold text-uppercase mb-0"> CP:</spam> 56644 
+            </div>   
+            </div>
+            <div class="col-6 text-end">
+                <div class="fw-bold text-uppercase mb-0" style="letter-spacing:.5px;">
+               <div class="">
+           
+            <spam class="text-muted text end" id="print-fecha"></spam>
+        </div>
+            </div>   
+            </div>
+          
+              </div>
+            
+        </div>
 
-                    <div class="mb-4"
-                        style="height:2px; background:linear-gradient(90deg,#1f2a37,#334155); opacity:0.8;">
-                    </div>
+        
 
-                    <!-- INFO -->
-                    <div class="row g-3 mb-4">
+    </div>
 
-                        <div class="col-md-6">
-                            <div class="p-3 rounded bg-light border h-100">
-                                <div class="text-uppercase text-muted small mb-1">Almacén destino</div>
-                                <div class="fw-bold" id="print-almacen">---</div>
-                            </div>
-                        </div>
 
-                        <div class="col-md-6">
-                            <div class="p-3 rounded bg-light border h-100">
+    <!-- DATOS PROVEEDOR -->
+    <div class="border rounded p-2 mb-3">
 
-                                <div class="text-uppercase text-muted small mb-1">Proveedor</div>
-                                <div class="fw-bold mb-2" id="print-proveedor">---</div>
+        
+        <div class="row g-1">
+<!-- BODEGA FORTALEZA CHALCO S.A DE C,V RFC:BFC121126CKA DOMICILIO EMILIANO ZAPATA S/N SAN MARTIN CUAUTLALPAN CHALCO ESTADO DE MEXICO CP:56644 -->
+            <div class="col-12">
+                <small style="font-size:11px;" class="text-muted">Proveedor</small><br>
+                <span style="font-size:11px;" class="fw-bold" id="print-proveedor"></span>
+            </div>
 
-                                <div class="small"><span class="text-muted">RFC:</span> <span id="print-rfc" class="fw-semibold"></span></div>
-                                <div class="small"><span class="text-muted">Dirección:</span> <span id="print-direccion" class="fw-semibold"></span></div>
-                                <div class="small"><span class="text-muted">Tel:</span> <span id="print-telefono" class="fw-semibold"></span></div>
-                                <div class="small"><span class="text-muted">Tel 2:</span> <span id="print-telefono2" class="fw-semibold"></span></div>
-                                <div class="small"><span class="text-muted">Ext:</span> <span id="print-extencion" class="fw-semibold"></span></div>
+            <div class="col-6">
+                <small style="font-size:11px;" class="text-muted">RFC</small><br>
+                <span style="font-size:11px;" id="print-rfc"></span>
+            </div>
 
-                            </div>
-                        </div>
+            <div class="col-6">
+                <small style="font-size:11px;" class="text-muted">Teléfono</small><br>
+                <span style="font-size:11px;" id="print-telefono"></span>
+            </div>
 
-                    </div>
+            <div class="col-8">
+                <small style="font-size:11px;" class="text-muted">Dirección</small><br>
+                <span style="font-size:11px;" id="print-direccion"></span>
+            </div>
 
-                    <!-- TABLA -->
-                    <div class="table-responsive mb-3">
-                        <table class="table align-middle">
+            <div class="col-2">
+                <small style="font-size:11px;" class="text-muted">Tel. 2</small><br>
+                <span style="font-size:11px;" id="print-telefono2"></span>
+            </div>
 
-                            <thead style="background:#1f2a37; color:#fff;">
-                                <tr>
-                                    <th>Descripción</th>
-                                    <th class="text-center">Cantidad</th>
-                                    <th class="text-center">Costo Unitario</th>
-                                    <th class="text-center">Costo Total</th>
-                                </tr>
-                            </thead>
+            <div class="col-2">
+                <small style="font-size:11px;" class="text-muted">Ext.</small><br>
+                <span style="font-size:11px;" id="print-extencion"></span>
+            </div>
 
-                            <tbody id="print-tabla-cuerpo"></tbody>
+        </div>
 
-                        </table>
-                    </div>
+    </div>
 
-                    <!-- TOTAL -->
-                    <div class="text-end mb-4">
-                        <div class="fw-bold fs-5">
-                            Total: <span id="costo_total"></span>
-                        </div>
-                    </div>
 
-                    <!-- FIRMAS -->
-                    <div class="mt-5 pt-3">
-                        <div class="row text-center">
+    <!-- TABLA -->
+    <table class="table table-bordered table-sm mb-3" style="font-size:11px;">
 
-                            <div class="col-4">
-                                <div class="border-top pt-2">
-                                    <small class="text-muted text-uppercase">Solicita</small>
-                                </div>
-                            </div>
+        <thead class="table-dark">
 
-                            <div class="col-4">
-                                <div class="border-top pt-2">
-                                    <small class="text-muted text-uppercase">Autoriza</small>
-                                </div>
-                            </div>
+            <tr>
 
-                            <div class="col-4">
-                                <div class="border-top pt-2">
-                                    <small class="text-muted text-uppercase">Recibe</small>
-                                </div>
-                            </div>
+                <th style="width:48%;">Descripción</th>
+                <th width="14%" class="text-center">Cant.</th>
+                <th width="19%" class="text-end">P. Unit.</th>
+                <th width="19%" class="text-end">Importe</th>
 
-                        </div>
-                    </div>
+            </tr>
 
+        </thead>
+
+        <tbody id="print-tabla-cuerpo"></tbody>
+
+    </table>
+
+
+    <!-- TOTAL -->
+    <div class="d-flex justify-content-end mb-4">
+
+        <table style="width:220px;font-size:13px;">
+
+            <tr>
+
+                <td class="text-end fw-bold">
+                    Total:
+                </td>
+
+                <td class="text-end fw-bold fs-6" id="costo_total">
+
+                </td>
+
+            </tr>
+
+        </table>
+
+    </div>
+
+
+    <!-- FIRMAS -->
+    <div class="mt-5">
+
+        <div class="row text-center">
+
+            <div class="col-4">
+
+                <div style="border-top:1px solid #444;padding-top:6px;">
+                    <small class="text-uppercase fw-semibold">
+                        Solicita
+                    </small>
                 </div>
+
+            </div>
+
+            <div class="col-4">
+
+                <div style="border-top:1px solid #444;padding-top:6px;">
+                    <small class="text-uppercase fw-semibold">
+                        Autoriza
+                    </small>
+                </div>
+
+            </div>
+
+            <div class="col-4">
+
+                <div style="border-top:1px solid #444;padding-top:6px;">
+                    <small class="text-uppercase fw-semibold">
+                        Recibe
+                    </small>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
             </div>
 
             <!-- FOOTER -->
@@ -721,7 +794,7 @@ error_reporting(E_ALL);
     padding: 12px 15px;
     font-weight: 600;
     text-transform: uppercase;
-    font-size: 0.85rem;
+    
     letter-spacing: 0.5px;
 }
 
@@ -1155,11 +1228,11 @@ function asignarSiguienteFolioCompra() {
         })
         .catch(err => console.error("Error al obtener folio:", err));
 }
-
+let solicitudIDI=0;
 async function gestionarSolicitud(id) {
     try {
         $('#tablaConversion tbody').empty();
-        console.log(id);
+        console.log(id);solicitudIDI=id;
 
         const resp = await fetch(`${URL_CONTROLADOR_SOLICITUD}?action=obtenerDetalle&id=${id}`);
         asignarSiguienteFolioCompra();
@@ -1627,10 +1700,13 @@ function actualizarGranTotal() {
                         '¡Éxito!',
                         res.message,
                         'success'
-                    ).then(() => {
-                        location.reload();
-                    });
+                    )
 
+                    .then(() => {
+                        $('#modalGestionSolicitud').modal('hide');
+                        cargarSolicitudes();
+    
+});
                 } else {
 
                     Swal.fire(
@@ -1713,7 +1789,7 @@ function prepararImpresion(id) {
             const infoBase = data[0];
             const costo = res.costo;
 
-            $('#print-folio').text(`FOLIO: #${id.toString().padStart(5, '0')}`);
+            $('#print-folio').text(` #${id.toString().padStart(5, '0')}`);
             $('#print-fecha').text(`Fecha: ${new Date().toLocaleDateString()}`);
             $('#print-almacen').text(infoBase.almacen_nombre);
             $('#print-proveedor').text(infoBase.proveedor_nombre || 'No especificado');
@@ -1788,7 +1864,7 @@ function prepararImpresion(id) {
                     .fw-bold { font-weight: bold !important; }
                     @media print {
                         .no-print { display: none; }
-                        @page { margin: 1cm; }
+                        @page { margin: 0 !important; }
                     }
                     .firma-linea { border-top: 1px solid #000; margin-top: 50px; text-align: center; padding-top: 5px; font-size: 12px; }
                 </style>
