@@ -30,7 +30,7 @@
                         <div class="col-md-6">
                             <div class="form-group p-3 bg-white" style="border-radius: 15px; border: 1px solid #e5e5ea;">
                                 <label class="form-label small fw-bold text-muted text-uppercase mb-2" style="font-size: 0.65rem;">Tripulación (Ayudantes)</label>
-                                <select id="edit_tripulantes" name="tripulantes[]" class="form-select border-0 bg-light" multiple style="border-radius: 10px;"></select>
+                                <select id="edit_tripulantes" name="tripulantes" class="form-select border-0 bg-light"></select>
                             </div>
                         </div>
                     </div>
@@ -200,6 +200,7 @@ window.guardarCambiosViaje = async function() {
     // Agregamos la acción y el JSON de destinos
     formData.append('action', 'guardar_cambios_viaje');
     formData.append('destinos_data', JSON.stringify(destinosData));
+console.log(Object.fromEntries(formData));
 
     try {
         btnGuardar.disabled = true;
@@ -256,15 +257,29 @@ window.guardarCambiosViaje = async function() {
  */
 function actualizarListaAyudantes(choferId) {
     const $selectAyudantes = $('#edit_tripulantes');
-    $selectAyudantes.find('option').each(function() {
+
+    // Convertimos el ID del chofer a String para comparar sin fallos
+    const choferIdStr = (choferId !== null && choferId !== undefined) ? String(choferId) : "";
+
+    // 1. Recorrer las opciones del select comparando por ID
+    $selectAyudantes.find('option').each(function () {
         const $opt = $(this);
-        if ($opt.val() == choferId && choferId !== "") {
-            $opt.prop('selected', false).attr('disabled', 'disabled').hide();
+        const optionIdStr = String($opt.val());
+
+        // Si la opción tiene el mismo ID que el chofer
+        if (optionIdStr === choferIdStr && choferIdStr !== "") {
+            $opt.prop('disabled', true).hide();
         } else {
-            $opt.removeAttr('disabled').show();
+            $opt.prop('disabled', false).show();
         }
     });
 
+    // 2. Si el ayudante actualmente seleccionado tiene el mismo ID que el chofer, deseleccionarlo
+    if (String($selectAyudantes.val()) === choferIdStr) {
+        $selectAyudantes.val(''); // Resetea la selección a opción vacía/default
+    }
+
+    // 3. Notificar a Select2 que las opciones cambiaron para re-renderizar
     if ($selectAyudantes.hasClass('select2-hidden-accessible')) {
         $selectAyudantes.trigger('change.select2');
     }

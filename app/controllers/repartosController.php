@@ -485,6 +485,7 @@ if ($action === 'guardar_cambios_viaje') {
         $folio = $_POST['viaje_folio'] ?? '';
         $vehiculo_id = intval($_POST['vehiculo_id'] ?? 0);
         $chofer_id = intval($_POST['chofer_id'] ?? 0);
+        $tripulantes = intval($_POST['tripulantes'] ?? 0);
 
         // Validaciones críticas
         if (empty($folio)) throw new Exception("El folio del viaje es requerido.");
@@ -492,10 +493,7 @@ if ($action === 'guardar_cambios_viaje') {
         if ($chofer_id <= 0) throw new Exception("Debe asignar un chofer responsable.");
 
         // Aseguramos que tripulantes sea siempre un array (aunque venga vacío)
-        $tripulantes = $_POST['tripulantes'] ?? [];
-        if (!is_array($tripulantes)) {
-            $tripulantes = [$tripulantes];
-        }
+        
 
         $datos = [
             'viaje_folio' => $folio,

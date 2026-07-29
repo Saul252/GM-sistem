@@ -1852,7 +1852,7 @@ public function guardarCambiosViaje($datos) {
         $chofer_id   = intval($datos['chofer_id']);
          $usuario   = intval($datos['usuario']);
         $vehiculo_id = intval($datos['vehiculo_id']);
-        $tripulantes = isset($datos['tripulantes']) ? $datos['tripulantes'] : [];
+        $tripulantes = intval($datos['tripulantes']) ??0;
         $destinos    = isset($datos['destinos']) ? $datos['destinos'] : [];
 
         // 1. Mapear qué entregas existen en este folio de viaje
@@ -1902,14 +1902,14 @@ public function guardarCambiosViaje($datos) {
             
             $sqlT = "INSERT INTO transporte_tripulantes_detalle (reparto_id, usuario_id) VALUES (?, ?)";
             $stmtT = $this->db->prepare($sqlT);
-            
+           
             foreach ($ids_vivos as $rid) {
-                foreach ($tripulantes as $u_id) {
-                    $uid = intval($u_id);
-                    if ($uid === $chofer_id) continue; 
-                    $stmtT->bind_param("ii", $rid, $uid);
+                
+                   
+                    if ($tripulantes != $chofer_id && $tripulantes>0)
+                    $stmtT->bind_param("ii", $rid, $tripulantes);
                     $stmtT->execute();
-                }
+               
             }
 
             // C. Actualizar Direcciones (Puntos de Ruta)
