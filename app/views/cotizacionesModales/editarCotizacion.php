@@ -1,17 +1,17 @@
 <div class="modal fade" id="modalEditarCotizacion" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content"
-            style="border-radius: 20px; border: none; overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.2);">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-custom">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
             <form id="formEditarSolicitud">
                 <input type="hidden" id="editar_cotizacion_id" name="cotizacion_id" value="">
 
-                <div class="modal-header bg-white border-0 pt-4 px-4">
+                <!-- Encabezado -->
+                <div class="modal-header bg-white border-0 pt-4 px-4 align-items-center">
                     <div class="d-flex align-items-center">
                         <div class="bg-warning text-dark rounded-3 p-2 me-3 shadow-sm">
                             <i class="bi bi-pencil-square fs-4"></i>
                         </div>
                         <div>
-                            <h4 class="fw-bold mb-0">Editar Cotizacion</h4>
+                            <h4 class="fw-bold mb-0">Editar Cotización</h4>
                             <p class="text-muted small mb-0">Modifique los datos de la cotización existente</p>
                         </div>
                     </div>
@@ -19,147 +19,226 @@
                 </div>
 
                 <div class="modal-body px-4">
-                    <div
-                        class="row g-3 mb-4 p-4 rounded-4 bg-white border border-light-subtle shadow-sm align-items-end">
+                    <!-- Fila de Controles -->
+                    <div class="row g-3 mb-4 p-4 rounded-4 bg-white shadow-sm align-items-end border">
 
                         <!-- 1. Almacén de Cargo -->
-                        <div class="col-md-4 col-lg-3">
-                            <label
-                                class="form-label small fw-semibold text-secondary text-uppercase tracking-wider mb-2">
+                        <div class="col-md-6 col-lg-3 min-w-0">
+                            <label for="almacen_id_editar" class="form-label form-label-custom mb-1 text-uppercase tracking-wider">
                                 <i class="bi bi-box-seam me-1 text-primary"></i> Almacén de Cargo
                             </label>
                             <select name="almacen_id_editar" id="almacen_id_editar"
-                                class="form-select border-light-subtle" required>
+                                class="form-select border-slate-200 control-fixed-height w-100 shadow-none" required>
                                 <option value="">Seleccionar ubicación...</option>
                                 <?php foreach($almacenes as $a): ?>
-                                <option value="<?= $a['id'] ?>"><?= $a['nombre'] ?></option>
+                                    <option value="<?= $a['id'] ?>"><?= $a['nombre'] ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
 
                         <!-- 2. Cliente -->
-                        <div class="col-md-4 col-lg-3">
-                            <label
-                                class="form-label small fw-semibold text-secondary text-uppercase tracking-wider mb-2">
+                        <div class="col-md-6 col-lg-3 min-w-0">
+                            <label for="cliente_id_editar" class="form-label form-label-custom mb-1 text-uppercase tracking-wider">
                                 <i class="bi bi-person me-1 text-primary"></i> Cliente
                             </label>
-                            <div class="input-group">
+                            <div class="input-group input-group-fixed flex-nowrap w-100">
                                 <select name="cliente_id_editar" id="cliente_id_editar"
-                                    class="form-select select2-modal-editar border-light-subtle" required>
+                                    class="form-select select2-modal-editar border-slate-200" required>
                                     <option value="">Seleccionar cliente...</option>
                                     <?php foreach($clientes as $p): ?>
-                                    <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?>
-                                    </option>
+                                        <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?></option>
                                     <?php endforeach; ?>
                                 </select>
-                                <button class="btn btn-outline-primary px-3" type="button"
-                                    onclick="abrirModalNuevoCliente()" title="Nuevo Cliente">
+                                <button class="btn btn-outline-primary px-3 d-flex align-items-center justify-content-center flex-shrink-0"
+                                    type="button" onclick="abrirModalNuevoCliente()" title="Nuevo Cliente">
                                     <i class="bi bi-person-plus-fill"></i>
                                 </button>
                             </div>
                         </div>
 
                         <!-- 3. Vendedor -->
-                        <div class="col-md-4 col-lg-3">
-                            <label
-                                class="form-label small fw-semibold text-secondary text-uppercase tracking-wider mb-2">
+                        <div class="col-md-6 col-lg-3 min-w-0">
+                            <label for="select-vendedor1" class="form-label form-label-custom mb-1 text-uppercase tracking-wider">
                                 <i class="bi bi-person-badge me-1 text-primary"></i> Vendedor
                             </label>
                             <select name="select-vendedor1" id="select-vendedor1"
-                                class="form-select select2-modal-editar border-light-subtle" required>
+                                class="form-select select2-modal-editar border-slate-200 w-100" required>
                                 <option value="">Seleccionar vendedor...</option>
                             </select>
                         </div>
 
                         <!-- 4. Añadir Producto -->
-                        <div class="col-12 col-lg-3">
-                            <label
-                                class="form-label small fw-semibold text-secondary text-uppercase tracking-wider mb-2">
-                                <i class="bi bi-search me-1 text-primary"></i> Añadir Producto (SKU o Nombre)
+                        <div class="col-md-6 col-lg-3 min-w-0">
+                            <label for="buscadorProductosEditar" class="form-label form-label-custom mb-1 text-uppercase tracking-wider">
+                                <i class="bi bi-search me-1 text-primary"></i> Añadir Producto
                             </label>
-                            <div class="input-group">
-                                <select id="buscadorProductosEditar"
-                                    class="form-select select2-modal-editar border-light-subtle">
-                                    <option value="">Escribe para buscar...</option>
+                            <div class="input-group input-group-fixed flex-nowrap w-100">
+                                <select id="buscadorProductosEditar" class="form-select select2-modal-editar border-slate-200">
+                                    <option value="">Escribe SKU o nombre...</option>
                                     <?php foreach($listaProductos as $pr): ?>
-                                    <option value="<?= $pr['producto_id'] ?>"
-                                        data-nombre="<?= htmlspecialchars($pr['nombre']) ?>"
-                                        data-sku="<?= htmlspecialchars($pr['sku']) ?>"
-                                        data-um="<?= htmlspecialchars($pr['unidad_medida']) ?>"
-                                        data-ur="<?= htmlspecialchars($pr['unidad_reporte']) ?>"
-                                        data-factor="<?= $pr['factor_conversion'] ?? 1 ?>">
-                                        [<?= $pr['sku'] ?>] <?= $pr['nombre'] ?>
-                                    </option>
+                                        <option value="<?= $pr['producto_id'] ?>"
+                                            data-nombre="<?= htmlspecialchars($pr['nombre']) ?>"
+                                            data-sku="<?= htmlspecialchars($pr['sku']) ?>"
+                                            data-um="<?= htmlspecialchars($pr['unidad_medida']) ?>"
+                                            data-ur="<?= htmlspecialchars($pr['unidad_reporte']) ?>"
+                                            data-factor="<?= $pr['factor_conversion'] ?? 1 ?>">
+                                            [<?= $pr['sku'] ?>] <?= $pr['nombre'] ?>
+                                        </option>
                                     <?php endforeach; ?>
                                 </select>
-                                <button type="button" class="btn btn-primary d-flex align-items-center px-3"
+                                <button type="button" class="btn btn-primary d-flex align-items-center justify-content-center px-3 flex-shrink-0"
                                     onclick="abrirModalProducto()" title="Agregar nuevo producto">
                                     <i class="bi bi-plus-lg me-1"></i>
-                                    <span>Nuevo</span>
+                                    <span class="fw-medium">Nuevo</span>
                                 </button>
                             </div>
                         </div>
 
                     </div>
 
-                    <div class="table-responsive border rounded-4 bg-white">
-                        <table class="table align-middle mb-0" id="tablaDetalleEditar">
-                            <thead class="bg-light">
-                                <tr class="text-muted small uppercase">
-                                    <th class="ps-4" style="width: 45%;">Producto</th>
-                                    <th style="width: 20%;">Cantidad</th>
-                                    <th style="width: 25%;">Presentación / Unidad</th>
-                                    <th style="width: 25%;">Tipo de precio</th>
-                                    <th class="ps-4">Precio Unitario</th>
-                                    <th style="width: 50%;">TOTAL</th>
-                                    <th style="width: 10%;" class="text-end pe-4">Acción</th>
+                    <!-- Tabla de Detalle -->
+                    <div class="table-responsive border rounded-4 bg-white shadow-sm" style="max-height: 380px; overflow-y: auto;">
+                        <table class="table align-middle mb-0 table-fixed" id="tablaDetalleEditar">
+                            <thead>
+                                <tr class="bg-light text-muted small text-uppercase">
+                                    <th class="ps-4" style="width: 28%;">Producto</th>
+                                    <th style="width: 12%;">Cantidad</th>
+                                    <th style="width: 18%;">Presentación</th>
+                                    <th style="width: 18%;">Tipo Precio</th>
+                                    <th style="width: 12%;">P. Unit</th>
+                                    <th style="width: 12%;">TOTAL</th>
+                                    <th style="width: 5%;" class="text-center pe-4">Acción</th>
                                 </tr>
                             </thead>
                             <tbody>
                             </tbody>
                         </table>
 
+                        <!-- Estado Vacío -->
                         <div id="emptyStateEditar" class="text-center py-5 text-muted">
                             <div class="mb-3">
                                 <i class="bi bi-cart-plus opacity-25" style="font-size: 3.5rem;"></i>
                             </div>
-                            <p class="fw-medium">La lista está vacía</p>
-                            <small>Utiliza el buscador de arriba para añadir artículos</small>
+                            <p class="fw-medium mb-1">La lista está vacía</p>
+                            <small class="text-muted">Utiliza el buscador superior para añadir artículos</small>
                         </div>
                     </div>
 
-                    <div class="text-end mt-3">
-                        <small class="d-block text-muted fw-semibold mb-1" style="letter-spacing:.5px;">
-                            COSTO TOTAL DE COMPRA (EDICIÓN)
-                        </small>
-                        <div id="costoTotalCompraEditar" class="fw-bold text-success"
-                            style="font-size:2rem; line-height:1;">
-                            $0.00
+                    <!-- Resumen del Total -->
+                    <div class="d-flex justify-content-end align-items-center mt-4">
+                        <div class="bg-dark bg-gradient text-white p-3 rounded-4 shadow-sm text-end px-4 min-w-200">
+                            <small class="d-block text-white-50 fw-bold text-uppercase tracking-wider mb-1" style="font-size: 0.65rem; letter-spacing: 0.8px;">
+                                Total Cotización
+                            </small>
+                            <div id="costoTotalCompraEditar" class="fw-bolder text-warning" style="font-size: 2rem; line-height: 1;">
+                                $0.00
+                            </div>
+                            <input type="hidden" id="totalCotizacionEditar" name="totalCotizacionEditar">
                         </div>
-                        <input type="hidden" id="totalCotizacionEditar" name="totalCotizacionEditar">
                     </div>
                 </div>
 
-                <div class="modal-footer border-0 p-4" id="modal-footer">
-                    <button type="button" class="btn btn-link text-decoration-none text-muted fw-bold"
-                        data-bs-dismiss="modal">
+                <!-- Footer -->
+                <div class="modal-footer border-0 p-4 bg-light d-flex justify-content-between align-items-center" id="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-semibold" data-bs-dismiss="modal">
                         Cancelar
                     </button>
 
-                    <button type="button" class="btn btn-success rounded-pill px-4 fw-bold shadow"
-                        onclick="procederPago($('#totalCotizacionEditar').val(), $('#editar_cotizacion_id').val())">
-                        <i class="bi bi-cart-check me-2"></i> Convertir a Venta
-                    </button>
+                    <div class="d-flex gap-2 align-items-center">
+                        <button type="button" class="btn btn-success rounded-pill px-4 fw-bold shadow-sm d-flex align-items-center"
+                            onclick="procederPago($('#totalCotizacionEditar').val(), $('#editar_cotizacion_id').val())">
+                            <i class="bi bi-cart-check me-2"></i> Convertir a Venta
+                        </button>
 
-                    <button type="submit" class="btn btn-warning rounded-pill px-5 py-2 fw-bold shadow text-dark">
-                        <i class="bi bi-check2-circle me-2"></i> Actualizar Cotización
-                    </button>
+                        <button type="submit" class="btn btn-warning rounded-pill px-4 py-2.5 fw-bold shadow-sm text-dark d-flex align-items-center">
+                            <i class="bi bi-check2-circle me-2"></i> Actualizar Cotización
+                        </button>
+                    </div>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
+<style>
+/* Ampliación del Modal en Pantallas Grandes */
+@media (min-width: 1200px) {
+    .modal-dialog-custom {
+        max-width: 92% !important;
+    }
+}
+
+:root {
+    --control-height: 42px;
+    --border-color: #dee2e6;
+    --bg-input: #ffffff;
+}
+
+.min-w-0 {
+    min-width: 0 !important;
+}
+
+.min-w-200 {
+    min-width: 200px;
+}
+
+.form-label-custom {
+    font-size: 0.72rem !important;
+    font-weight: 600 !important;
+    color: #6c757d !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* Congelar anchos en Input Group y Select2 */
+.input-group-fixed {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.input-group-fixed .select2-container {
+    flex: 1 1 auto !important;
+    width: 1% !important;
+    min-width: 0 !important;
+}
+
+/* Altura uniforme */
+.control-fixed-height,
+.modal-body .form-select,
+.modal-body .input-group-fixed .btn {
+    height: var(--control-height) !important;
+}
+
+/* Reglas Select2 para prevenir desbordamientos */
+.modal-body .select2-container--bootstrap-5 .select2-selection,
+.modal-body .select2-container .select2-selection--single {
+    height: var(--control-height) !important;
+    background-color: var(--bg-input) !important;
+    border-color: var(--border-color) !important;
+    border-radius: 0.375rem !important;
+    display: flex !important;
+    align-items: center !important;
+    font-size: 0.875rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.modal-body .select2-container .select2-selection--single .select2-selection__rendered {
+    line-height: calc(var(--control-height) - 2px) !important;
+    color: #212529 !important;
+    padding-left: 0.75rem !important;
+    padding-right: 1.75rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    width: 100% !important;
+}
+
+/* Tabla de Ancho Fijo */
+.table-fixed {
+    table-layout: fixed !important;
+    width: 100% !important;
+}
+</style>
 <script>
 const URL_CONTROLADOR_EDITAR = '/cfsistem/app/controllers/cotizacionesController.php';
 

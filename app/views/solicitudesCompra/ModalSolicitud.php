@@ -1,165 +1,246 @@
 <div class="modal fade" id="modalSolicitud" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content"
-            style="border-radius: 20px; border: none; overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.2);">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-custom">
+        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
             <form id="formSolicitud">
-                <div class="modal-header bg-white border-0 pt-4 px-4">
+                <!-- Encabezado -->
+                <div class="modal-header bg-white border-0 pt-4 px-4 align-items-center">
                     <div class="d-flex align-items-center">
                         <div class="bg-primary text-white rounded-3 p-2 me-3 shadow-sm">
                             <i class="bi bi-file-earmark-plus fs-4"></i>
                         </div>
                         <div>
                             <h4 class="fw-bold mb-0">Nueva Solicitud de Compra</h4>
-                            <p class="text-muted small mb-0">Complete los datos para requerir materiales al almacén
-                            </p>
+                            <p class="text-muted small mb-0">Complete los datos para requerir materiales al almacén</p>
                         </div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
                 <div class="modal-body px-4">
-                    <div class="row g-3 mb-4 p-3 rounded-4 bg-light shadow-sm align-items-end">
+                    <!-- Fila de Controles -->
+                    <div class="row g-3 mb-4 p-4 rounded-4 bg-white shadow-sm align-items-end border">
 
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold">
-                                <i class="bi bi-box-seam"></i> Almacén de Cargo
+                        <!-- 1. Almacén de Cargo -->
+                        <div class="col-md-6 col-lg-4 min-w-0">
+                            <label for="almacen_id" class="form-label form-label-custom mb-1 text-uppercase tracking-wider">
+                                <i class="bi bi-box-seam me-1 text-primary"></i> Almacén de Cargo
                             </label>
 
                             <?php $es_admin = ($_SESSION['rol_id'] == 1); ?>
 
-                            <div class="input-group shadow-sm">
-                                <select id="almacen_id_cabecera_visual" name="almacen_id" id="almacen_id"
-                                    class="form-select <?= $es_admin ? '' : 'bg-light' ?>"
-                                    <?= !$es_admin ? 'disabled' : 'name="almacen_id_cabecera"' ?> required>
+                            <div class="input-group input-group-fixed flex-nowrap w-100">
+                                <select id="almacen_id" name="<?= $es_admin ? 'almacen_id' : 'almacen_id_cabecera_visual' ?>"
+                                    class="form-select border-slate-200 control-fixed-height <?= !$es_admin ? 'bg-light' : '' ?>"
+                                    <?= !$es_admin ? 'disabled' : '' ?> required>
 
                                     <?php if ($es_admin): ?>
-                                    <option value="">Seleccionar ubicación...</option>
+                                        <option value="">Seleccionar ubicación...</option>
                                     <?php endif; ?>
 
                                     <?php foreach($almacenes as $a): ?>
-                                    <option value="<?= $a['id'] ?>"
-                                        <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
-                                        <?= $a['nombre'] ?>
-                                    </option>
+                                        <option value="<?= $a['id'] ?>"
+                                            <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
+                                            <?= $a['nombre'] ?>
+                                        </option>
                                     <?php endforeach; ?>
                                 </select>
 
                                 <?php if (!$es_admin): ?>
-                                <span class="input-group-text bg-light text-muted">
-                                    <i class="bi bi-lock-fill"></i>
-                                </span>
+                                    <span class="input-group-text bg-light text-muted border-slate-200 control-fixed-height flex-shrink-0">
+                                        <i class="bi bi-lock-fill"></i>
+                                    </span>
                                 <?php endif; ?>
                             </div>
 
                             <?php if (!$es_admin): ?>
-                            <input type="hidden" name="almacen_id_cabecera" value="<?= $_SESSION['almacen_id'] ?>">
-                            <small class="text-muted">
-                                Privilegios de sede actual
-                            </small>
+                                <input type="hidden" name="almacen_id_cabecera" value="<?= $_SESSION['almacen_id'] ?>">
+                                <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">
+                                    Privilegios de sede actual
+                                </small>
                             <?php endif; ?>
                         </div>
 
-                        <div class="col-md-4">
-                            <div class="input-group">
-                            <label class="form-label small fw-bold text-muted text-uppercase">Proveedor
-                                Sugerido</label>
-                            <select name="proveedor_id" id="proveedor_id"class="form-select select2-modal" required>
-                                <option value="">Seleccionar proveedor...</option>
-                                <?php foreach($proveedores as $p): ?>
-                                <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?>
-                                </option>
-                                <?php endforeach; ?>
-                            </select>
-                               <button class="btn btn-outline-success" type="button"
-                                            onclick="abrirModalNuevoProveedor()">
-                                            <i class="bi bi-plus-lg"></i>
-                                        </button>
-                        </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            
-                            <label class="form-label small fw-bold text-muted text-uppercase">Añadir Producto (SKU o
-                                Nombre)</label>
-                            <div class="input-group">
-                                
-
-                                <select id="buscadorProductos" class="form-select select2-modal border-start-0">
-                                    <option value="">Escribe para buscar...</option>
-                                    <?php foreach($listaProductos as $pr): ?>
-                                    <option value="<?= $pr['producto_id'] ?>"
-                                        data-nombre="<?= htmlspecialchars($pr['nombre']) ?>"
-                                        data-sku="<?= htmlspecialchars($pr['sku']) ?>"
-                                        data-um="<?= htmlspecialchars($pr['unidad_medida']) ?>"
-                                        data-ur="<?= htmlspecialchars($pr['unidad_reporte']) ?>"
-                                        data-factor="<?= $pr['factor_conversion'] ?? 1 ?>">
-                                        [<?= $pr['sku'] ?>] <?= $pr['nombre'] ?>
-                                    </option>
+                        <!-- 2. Proveedor Sugerido -->
+                        <div class="col-md-6 col-lg-4 min-w-0">
+                            <label for="proveedor_id" class="form-label form-label-custom mb-1 text-uppercase tracking-wider">
+                                <i class="bi bi-truck me-1 text-primary"></i> Proveedor Sugerido
+                            </label>
+                            <div class="input-group input-group-fixed flex-nowrap w-100">
+                                <select name="proveedor_id" id="proveedor_id" class="form-select select2-modal border-slate-200" required>
+                                    <option value="">Seleccionar proveedor...</option>
+                                    <?php foreach($proveedores as $p): ?>
+                                        <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?></option>
                                     <?php endforeach; ?>
                                 </select>
-                                <button type="button" class="btn btn-primary d-flex align-items-center"
-                                    onclick="abrirModalProducto()" title="Agregar nuevo producto">
-                                    <i class="bi bi-plus-lg me-1"></i>
-                                    <span class="d-none d-xl-inline">Nuevo</span>
+                                <button class="btn btn-outline-success px-3 d-flex align-items-center justify-content-center flex-shrink-0"
+                                    type="button" onclick="abrirModalNuevoProveedor()" title="Nuevo Proveedor">
+                                    <i class="bi bi-plus-lg"></i>
                                 </button>
                             </div>
                         </div>
+
+                        <!-- 3. Añadir Producto -->
+                        <div class="col-md-12 col-lg-4 min-w-0">
+                            <label for="buscadorProductos" class="form-label form-label-custom mb-1 text-uppercase tracking-wider">
+                                <i class="bi bi-search me-1 text-primary"></i> Añadir Producto
+                            </label>
+                            <div class="input-group input-group-fixed flex-nowrap w-100">
+                                <select id="buscadorProductos" class="form-select select2-modal border-slate-200">
+                                    <option value="">Escribe SKU o nombre...</option>
+                                    <?php foreach($listaProductos as $pr): ?>
+                                        <option value="<?= $pr['producto_id'] ?>"
+                                            data-nombre="<?= htmlspecialchars($pr['nombre']) ?>"
+                                            data-sku="<?= htmlspecialchars($pr['sku']) ?>"
+                                            data-um="<?= htmlspecialchars($pr['unidad_medida']) ?>"
+                                            data-ur="<?= htmlspecialchars($pr['unidad_reporte']) ?>"
+                                            data-factor="<?= $pr['factor_conversion'] ?? 1 ?>">
+                                            [<?= $pr['sku'] ?>] <?= $pr['nombre'] ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                </select>
+                                <button type="button" class="btn btn-primary d-flex align-items-center justify-content-center px-3 flex-shrink-0"
+                                    onclick="abrirModalProducto()" title="Agregar nuevo producto">
+                                    <i class="bi bi-plus-lg me-1"></i>
+                                    <span class="fw-medium">Nuevo</span>
+                                </button>
+                            </div>
+                        </div>
+
                     </div>
 
-                    <div class="table-responsive border rounded-4 bg-white">
-                        <table class="table align-middle mb-0" id="tablaDetalle">
-                            <thead class="bg-light">
-                                <tr class="text-muted small uppercase">
-                                    <th class="ps-4" style="width: 45%;">Producto</th>
-                                    <th style="width: 20%;">Cantidad</th>
-                                    <th style="width: 25%;">Presentación / Unidad</th>
-                                    <th style="width: 25%;">PrecioUnitario</th>
-                                    <th style="width: 50%;">Precio</th>
-                                    <th style="width: 10%;" class="text-end pe-4">Acción</th>
+                    <!-- Tabla de Detalle -->
+                    <div class="table-responsive border rounded-4 bg-white shadow-sm" style="max-height: 380px; overflow-y: auto;">
+                        <table class="table align-middle mb-0 table-fixed" id="tablaDetalle">
+                            <thead>
+                                <tr class="bg-light text-muted small text-uppercase">
+                                    <th class="ps-4" style="width: 30%;">Producto</th>
+                                    <th style="width: 12%;">Cantidad</th>
+                                    <th style="width: 20%;">Presentación</th>
+                                    <th style="width: 15%;">P. Unitario</th>
+                                    <th style="width: 15%;">TOTAL</th>
+                                    <th style="width: 8%;" class="text-center pe-4">Acción</th>
                                 </tr>
                             </thead>
                             <tbody>
                             </tbody>
-
                         </table>
 
+                        <!-- Estado Vacío -->
                         <div id="emptyState" class="text-center py-5 text-muted">
                             <div class="mb-3">
                                 <i class="bi bi-cart-plus opacity-25" style="font-size: 3.5rem;"></i>
                             </div>
-                            <p class="fw-medium">La lista está vacía</p>
-                            <small>Utiliza el buscador de arriba para añadir artículos</small>
+                            <p class="fw-medium mb-1">La lista está vacía</p>
+                            <small class="text-muted">Utiliza el buscador superior para añadir artículos</small>
                         </div>
                     </div>
-                    <div class="text-end mt-3">
 
-                        <small class="d-block text-muted fw-semibold mb-1" style="letter-spacing:.5px;">
-                            COSTO TOTAL DE COMPRA
-                        </small>
-
-                        <div id="costoTotalCompra" class="fw-bold text-success" style="
-            font-size:2rem;
-            line-height:1;
-        ">
-                            $0.00
+                    <!-- Resumen del Total -->
+                    <div class="d-flex justify-content-end align-items-center mt-4">
+                        <div class="bg-dark bg-gradient text-white p-3 rounded-4 shadow-sm text-end px-4 min-w-200">
+                            <small class="d-block text-white-50 fw-bold text-uppercase tracking-wider mb-1" style="font-size: 0.65rem; letter-spacing: 0.8px;">
+                                Costo Total de Compra
+                            </small>
+                            <div id="costoTotalCompra" class="fw-bolder text-success" style="font-size: 2rem; line-height: 1;">
+                                $0.00
+                            </div>
                         </div>
-
                     </div>
                 </div>
 
-                <div class="modal-footer border-0 p-4">
-                    <button type="button" class="btn btn-link text-decoration-none text-muted fw-bold"
-                        data-bs-dismiss="modal">
+                <!-- Footer -->
+                <div class="modal-footer border-0 p-4 bg-light d-flex justify-content-between align-items-center">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-semibold" data-bs-dismiss="modal">
                         Cancelar
                     </button>
-                    <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow">
-                        <i class="bi bi-check2-circle me-2"></i> Confirmar Solicitud
+                    <button type="submit" class="btn btn-primary rounded-pill px-5 py-2.5 fw-bold shadow-sm d-flex align-items-center">
+                        <i class="bi bi-check2-circle fs-5 me-2"></i> Confirmar Solicitud
                     </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+<style>
+/* Ampliación del Modal */
+@media (min-width: 1200px) {
+    .modal-dialog-custom {
+        max-width: 92% !important;
+    }
+}
+
+:root {
+    --control-height: 42px;
+    --border-color: #dee2e6;
+    --bg-input: #ffffff;
+}
+
+.min-w-0 {
+    min-width: 0 !important;
+}
+
+.min-w-200 {
+    min-width: 200px;
+}
+
+.form-label-custom {
+    font-size: 0.72rem !important;
+    font-weight: 600 !important;
+    color: #6c757d !important;
+    letter-spacing: 0.5px !important;
+}
+
+/* Forzar límites en Input Groups */
+.input-group-fixed {
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.input-group-fixed .select2-container {
+    flex: 1 1 auto !important;
+    width: 1% !important;
+    min-width: 0 !important;
+}
+
+/* Alturas homogéneas */
+.control-fixed-height,
+.modal-body .form-select,
+.modal-body .input-group-fixed .btn {
+    height: var(--control-height) !important;
+}
+
+/* Reglas estrictas Select2 */
+.modal-body .select2-container--bootstrap-5 .select2-selection,
+.modal-body .select2-container .select2-selection--single {
+    height: var(--control-height) !important;
+    background-color: var(--bg-input) !important;
+    border-color: var(--border-color) !important;
+    border-radius: 0.375rem !important;
+    display: flex !important;
+    align-items: center !important;
+    font-size: 0.875rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+.modal-body .select2-container .select2-selection--single .select2-selection__rendered {
+    line-height: calc(var(--control-height) - 2px) !important;
+    color: #212529 !important;
+    padding-left: 0.75rem !important;
+    padding-right: 1.75rem !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    width: 100% !important;
+}
+
+/* Tabla Fija */
+.table-fixed {
+    table-layout: fixed !important;
+    width: 100% !important;
+}
+</style>
 
 <script>
 const URL_CONTROLADOR = '/cfsistem/app/controllers/solicitudesCompraController.php';
