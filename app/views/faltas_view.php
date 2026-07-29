@@ -87,28 +87,9 @@ $paginaActual = $paginaActual ?? 'prestamos';
         <div class="col-md-4">
             <div class="glass-card deuda-widget position-relative overflow-hidden animate__animated animate__fadeInUp">
 
-                <!-- Header -->
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="icon-circle bg-danger-subtle text-danger">
-                            <i class="bi bi-cash-stack"></i>
-                        </div>
-                        <div>
-                            <div class="small text-muted">Deuda Total</div>
-                            <div id="deudaTotal" class="fw-bold fs-4">$0.00</div>
-                        </div>
-                    </div>
-
-                    <span class="badge bg-danger-subtle text-danger small">
-                        Activa
-                    </span>
-                </div>
-
+            
                 <!-- Barra visual -->
-                <div class="progress mt-2" style="height: 6px;">
-                    <div id="barraDeuda" class="progress-bar bg-danger" style="width: 0%"></div>
-                </div>
-
+                
             </div>
         </div>
         <div class="card card-ui p-4">
@@ -319,7 +300,7 @@ $paginaActual = $paginaActual ?? 'prestamos';
                                 <div class="col-12">
                                     <label class="form-label text-muted small">Motivo / Descripción</label>
                                     <textarea name="descripcion" class="form-control text-uppercase rounded-3" rows="3"
-                                        placeholder="Ej. Adelanto de quincena, emergencia, etc."></textarea>
+                                        placeholder="Retardo, Falta, etc"></textarea>
                                 </div>
 
                             </div>
