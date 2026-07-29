@@ -80,7 +80,7 @@ class VentaHistorialController {
             if (session_status() === PHP_SESSION_NONE) { session_start(); }
             $data['usuario_id'] = $_SESSION['usuario_id'] ?? 1;
 
-            $res = $this->model->recalcularYEditarVenta($data);
+            $res = $this->model->recalcularYEditarVenta2($data);
             echo json_encode($res);
         } catch (Exception $e) {
             echo json_encode(["status" => "error", "message" => $e->getMessage()]);
@@ -160,24 +160,93 @@ public function guardarEdicionVentaSaldoAFavor() {
     /**
      * Registra un nuevo pago/abono a la venta.
      */
-    public function registrarAbono() {
-        header('Content-Type: application/json');
-        try {
-            $venta_id = intval($_POST['venta_id'] ?? 0);
-            $monto = floatval($_POST['monto'] ?? 0);
-            
-            if ($venta_id <= 0 || $monto <= 0) throw new Exception("Monto o ID de venta inválidos.");
+    public function procesarSaldoEdicion()
+{
+    header('Content-Type: application/json');
 
-            if (session_status() === PHP_SESSION_NONE) { session_start(); }
-            $usuario_id = $_SESSION['usuario_id'] ?? 1;
+    try {
 
-            $res = $this->model->registrarAbono($venta_id, $monto, $usuario_id);
-            echo json_encode($res);
-        } catch (Exception $e) {
-            echo json_encode(["status" => "error", "message" => $e->getMessage()]);
+        $venta_id   = intval($_POST['venta_id'] ?? 0);
+        $cliente_id = intval($_POST['cliente_id'] ?? 0);
+        $diferencia = floatval($_POST['diferencia'] ?? 0);
+
+        if ($venta_id <= 0) {
+            throw new Exception("ID de venta inválido.");
         }
-    }
 
+        if ($cliente_id <= 0) {
+            throw new Exception("ID de cliente inválido.");
+        }
+
+        $usuario_id = $_SESSION['usuario_id'] ?? 1;
+        $fecha      = date('Y-m-d H:i:s');
+
+        if ($diferencia != 0) {
+
+            $monto_ajuste = $diferencia * -1;
+            $tipo_log = ($diferencia > 0)
+                ? 'CARGO_EDICION'
+                : 'ABONO_EDICION';
+
+            $this->clientesModel->abono_saldos_log(
+                $cliente_id,
+                $venta_id,
+                abs($diferencia),
+                $usuario_id,
+                $tipo_log,
+                $fecha
+            );
+
+            $ok = $this->clientesModel->abono_saldosAFavor(
+                $cliente_id,
+                $monto_ajuste,
+                $venta_id,
+                $fecha
+            );
+
+            if (!$ok) {
+                throw new Exception("No fue posible actualizar el saldo del cliente.");
+            }
+        }
+
+        echo json_encode([
+            "status"  => "success",
+            "message" => "Saldo actualizado correctamente."
+        ]);
+
+    } catch (Exception $e) {
+
+        echo json_encode([
+            "status"  => "error",
+            "message" => $e->getMessage()
+        ]);
+    }
+}
+    public function procesarEdicionVentaRegresarSaldo()
+{
+    header('Content-Type: application/json');
+
+    try {
+
+        $venta_id   = intval($_POST['venta_id'] ?? 0);
+        $cliente_id = intval($_POST['cliente_id'] ?? 0);
+        $diferencia = floatval($_POST['diferencia'] ?? 0);
+
+       
+        echo json_encode([
+            "status"  => "success",
+            "message" => "Saldo actualizado correctamente."
+        ]);
+
+    } catch (Exception $e) {
+
+        echo json_encode([
+            "status"  => "error",
+            "message" => $e->getMessage()
+        ]);
+    }
+}
+    
     /**
      * Registra la salida física de mercancía (Entrega parcial).
      */
@@ -269,8 +338,8 @@ if (isset($_GET['action'])) {
           case 'guardarEdicionVentaSaldoAFavor': 
             $controller->guardarEdicionVentaSaldoAFavor();
             break;
-        case 'guardarAbono':
-            $controller->registrarAbono();
+        case 'guardarComoAbono':
+            $controller->procesarSaldoEdicion();
             break;
         case 'guardarEntrega':
             $controller->registrarEntrega();

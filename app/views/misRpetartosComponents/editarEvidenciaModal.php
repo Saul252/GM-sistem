@@ -173,7 +173,7 @@ const API_URL = "/cfsistem/app/controllers/misRepartosController.php";
  * Recibe el índice y la cadena JSON serializada desde el onclick
  */
 function abrirModalPorIndex(index, entregaJsonRaw,viajeFolio) {
-    
+      console.log(viajeFolio);
     // 1. Convertir el texto JSON de nuevo a Objeto
     let data;
     try {
@@ -184,7 +184,7 @@ function abrirModalPorIndex(index, entregaJsonRaw,viajeFolio) {
     }
 // 4. Mapeo de datos
 // Hacemos un log para ver exactamente qué tiene el objeto 'data' cuando falla
-console.log("Objeto recibido en modal:", data);
+console.log("Objeto recibido en modal :", data);
 
 // Intentamos obtener el ID de la confirmación (evidencia_id) 
 // Si no existe, tomamos el del movimiento (id_movimiento)
@@ -254,19 +254,24 @@ if(document.getElementById('m_id_visible')) {
     document.getElementById('m_comentario').value = data.comentario || "";
 
     // 6. Previsualización de fotos cargadas (foto_1 y foto_2)
-    if (data.foto_registrada && data.foto_registrada.length > 5) {
-        previewMat.src = data.foto_registrada + "?t=" + new Date().getTime();
-        previewMat.style.display = 'block';
-        if(txtMat) txtMat.classList.remove('d-none');
-    }
-    if (data.nota_registrada && data.nota_registrada.length > 5) {
-        previewNota.src = data.nota_registrada + "?t=" + new Date().getTime();
-        previewNota.style.display = 'block';
-        if(txtNota) txtNota.classList.remove('d-none');
-    }
+const timestamp = new Date().getTime();
 
+if (data.foto_registrada && data.foto_registrada.length > 5) {
+    console.log(data.foto_registrada);
+    // 💡 Concatenación correcta usando Template Literals (comillas invertidas)
+    previewMat.src = `/cfsistem/${data.foto_registrada}?t=${timestamp}`;
+    previewMat.style.display = 'block';
+    if (txtMat) txtMat.classList.remove('d-none');
+}
+
+if (data.nota_registrada && data.nota_registrada.length > 5) {
+    previewNota.src = `/cfsistem/${data.nota_registrada}?t=${timestamp}`;
+    previewNota.style.display = 'block';
+    if (txtNota) txtNota.classList.remove('d-none');
+}
     // 7. Abrir Modal
     const myModal = new bootstrap.Modal(modalEl);
+  
     myModal.show();
 }
 
@@ -280,7 +285,8 @@ function previewImagen(input, idDestino) {
     if (input.files && input.files[0]) {
         const reader = new FileReader();
         reader.onload = (e) => {
-            preview.src = e.target.result;
+            preview.src = `/cfsistem/${e.target.result}`;
+            console.log(`/cfsistem/${e.target.result}`);
             preview.style.display = 'block';
             const lbl = document.getElementById(labelOk);
             if(lbl) lbl.classList.add('d-none');

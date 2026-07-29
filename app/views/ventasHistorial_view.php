@@ -576,6 +576,7 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <?php require_once __DIR__ . '/ventasHistorialModales/registarAbono.php'; ?>
+    <?php require_once __DIR__ . '/ventasHistorialModales/editarVentaModal.php'; ?>
     <?php require_once __DIR__ . '/entregasComponets/modalEntregaVentas.php'; ?>
 
     <script>
@@ -873,14 +874,15 @@ ${botonCancelar}
                     aria-expanded="false"
                     data-bs-toggle="tooltip" 
                     data-bs-placement="top" 
-                    title="Más opciones">
+                     title="Más opciones">
                 <i class="bi bi-three-dots fs-5"></i>
             </button>
             <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 mt-2">
                 <li>
-                    <a class="dropdown-item py-2 text-warning" href="../controllers/editarVentaController.php?id=${v.id}">
-                        <i class="bi bi-pencil-square me-2"></i> Editar Venta
-                    </a>
+                     <button class="btn btn-sm btn-white border shadow-sm"
+                    onclick="gestionarSolicitud(${v.id})">
+                    <i class="bi bi-eye text-primary"></i> Gestionar
+                </button>
                 </li>
                 <li><hr class="dropdown-divider opacity-50"></li>
                 <li>
@@ -1504,11 +1506,12 @@ if (data.info.estado_general === 'cancelada') {
     let filas = '';
 
     datos.forEach((prod, i) => {
+        console.log(prod);
         
         const total = prod.totalCantidad / prod.factor;
-        const totalCantidad = total >= 1 ? total : prod.totalCantidad;
+        const totalCantidad = prod.totalCantidad;
         const unidad = total >= 1 ? prod.unidadReporte : (totalCantidad/(1/prod.equi))>=1?prod.nombreEqui:prod.unidadMedida;
-
+let cantidad=(1/prod.equi)==1?totalCantidad/prod.factor:totalCantidad/(1/prod.equi);
         // Formatear dinámicamente el color del badge del estado en la tabla
         let badgeColor = 'bg-warning text-dark';
         if (prod.estatus_logistico === 'completado') badgeColor = 'bg-success text-white';
@@ -1519,7 +1522,7 @@ if (data.info.estado_general === 'cancelada') {
                 <td class="text-muted fw-semibold">${i + 1}</td>
                 <td style="max-width:350px;" class="fw-medium text-dark">${prod.nombreProducto}</td>
                 <td style="max-width:250px;" class="fw-bold text-primary">
-                    ${parseFloat(totalCantidad/(1/prod.equi)).toFixed(2)} <span class="text-muted fw-normal small">${unidad}</span>
+                    ${parseFloat(cantidad).toFixed(2)} <span class="text-muted fw-normal small">${unidad}</span>
                 </td>
                 <td style="max-width:250px;" class="text-muted small">${prod.direccion_entrega ?? '-'}</td>
                 <td class="text-center">

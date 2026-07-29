@@ -420,12 +420,12 @@ window.cargarMonitorViajes = async function() {
                     <td class="text-end pe-4">
                       <button class="btn btn-sm btn-light border-0" onclick="abrirModalEdicionViaje('${v.viaje_folio}', ${v.vehiculo_id}, ${v.chofer_id})" style="border-radius: 10px; color: #007aff; background: #f2f2f7;"><i class="bi bi-pencil-square"></i></button>
                           
-                        <a href="/cfsistem/app/controllers/gestionarRepartoController.php?folio=${v.viaje_folio}" 
+                        <a href="/cfsistem/app/controllers/gestionarRepartoController.php?folio=${v.entrega_id}" 
                            class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm" style="font-size: 0.7rem;">
                             <i class="bi bi-camera-fill me-1"></i> GESTIONAR
                         </a>
                          <button class="btn btn-finish btn-sm d-flex align-items-center justify-content-center" 
-                                    onclick="finalizar(${v.vehiculo_id}, '${v.viaje_folio}')"
+                                    onclick="finalizar(${v.vehiculo_id}, '${v.viaje_folio}','${v.entrega_id}')"
                                     style="background: #14c41d; color: #fff; border: none; border-radius: 10px; padding: 6px 14px; font-weight: 600; font-size: 0.68rem;">
                                 <i class="bi bi-check2-all me-1"></i> FINALIZAR
                             </button>
@@ -435,10 +435,10 @@ window.cargarMonitorViajes = async function() {
         });
     } catch (e) { body.html('<tr><td colspan="5" class="text-center text-danger py-4">Error de conexión</td></tr>'); }
 };
-async function finalizar (vehiculoId, folioRuta) {
+async function finalizar (vehiculoId, folioRuta,entrega_id) {
      
          const container = document.getElementById('contenedor-entregas');
-    fetch(`/cfsistem/app/controllers/gestionarRepartoController.php?action=get_entregas_folio&folio=${folioRuta}`)
+    fetch(`/cfsistem/app/controllers/gestionarRepartoController.php?action=get_entregas_folio&folio=${entrega_id}`)
         .then(res => res.json())
         .then(res => {
           

@@ -106,7 +106,7 @@ if ($monto_favor > 0 && $monto_favor == $monto_pagado) {
        
 
         // 1. VALIDACIÓN DE STOCK Y CÁLCULO DE TOTALES
-        $subtotal = 0;
+        $subtotal = floatval($data['subtotal']);
         $total_vendido_global = 0;
         $total_entregado_global = 0;
 
@@ -124,12 +124,12 @@ if ($monto_favor > 0 && $monto_favor == $monto_pagado) {
                 $carrito[$key]['entrega_hoy'] = $stockActual;
             }
 
-            $subtotal += floatval($item['subtotal']);
+            
             $total_vendido_global += floatval($item['cantidad']);
             $total_entregado_global += $carrito[$key]['entrega_hoy'];
         }
 
-        $total = $subtotal - $descuento;
+        $total = $subtotal ;
 
         // 2. GENERAR FOLIO DINÁMICO
         $resFolio = $conexion->query("SELECT MAX(id) as ultimo_id FROM ventas");

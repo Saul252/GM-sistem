@@ -15,6 +15,7 @@ require_once __DIR__ . '/../models/usuariosModel.php';
 require_once __DIR__ . '/../models/almacen_model.php'; 
 require_once __DIR__ . '/../models/entregasModel.php'; 
 
+require_once __DIR__ . '/../models/almacen/productosModel.php';
 // Instancias de Modelos
 $sendModelo    = new EntregaModel($conexion);
 $almacenModel  = new AlmacenModel($conexion);
@@ -23,6 +24,7 @@ $ventasModel   = new VentaHistorialModel($conexion);
 $clientesModel = new ClientesModel($conexion);
 $repartosModel = new RepartoModel($conexion); // <-- Nombre correcto e inicializado
 
+$productosModel = new ProductoModel($conexion);
 
 // ==========================================
 // ACCIÓN: Obtener Usuarios
@@ -98,5 +100,79 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtener_id_almacen') {
     } catch (Throwable $e) {
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
     }
+    exit;
+}
+if (isset($_GET['action']) && $_GET['action'] === 'obtenerProductos') {
+    header('Content-Type: application/json');
+
+    $productos = $productosModel->obtenerTodosProductos(0);
+    $medidasAdicionales = $productosModel->obtenerMedidas();
+
+    $medidasPorProducto = [];
+
+    foreach ($medidasAdicionales as $medida) {
+        $producto_id = $medida['producto_id'];
+
+        if (!isset($medidasPorProducto[$producto_id])) {
+            $medidasPorProducto[$producto_id] = [];
+        }
+
+        $medidasPorProducto[$producto_id][] = $medida;
+    }
+
+    foreach ($productos as &$producto) {
+
+        // AQUÍ
+        $idProducto = $producto['producto_id'];
+
+        $producto['medidas_adicionales'] =
+            $medidasPorProducto[$idProducto] ?? [];
+    }
+
+    unset($producto);
+
+    echo json_encode([
+        'success' => true,
+        'data' => $productos
+    ]);
+
+    exit;
+}
+if (isset($_GET['action']) && $_GET['action'] === 'obtenerProductosAlmacen') {
+    header('Content-Type: application/json');
+$almacen_usuario = !empty($_GET['id']) 
+        ? intval($_GET['id']) 
+        : (int)($_SESSION['almacen_id'] ?? 0);
+    $productos = $productosModel->obtenerTodosProductosAlmacen($almacen_usuario);
+    $medidasAdicionales = $productosModel->obtenerMedidas();
+
+    $medidasPorProducto = [];
+
+    foreach ($medidasAdicionales as $medida) {
+        $producto_id = $medida['producto_id'];
+
+        if (!isset($medidasPorProducto[$producto_id])) {
+            $medidasPorProducto[$producto_id] = [];
+        }
+
+        $medidasPorProducto[$producto_id][] = $medida;
+    }
+
+    foreach ($productos as &$producto) {
+
+        // AQUÍ
+        $idProducto = $producto['producto_id'];
+
+        $producto['medidas_adicionales'] =
+            $medidasPorProducto[$idProducto] ?? [];
+    }
+
+    unset($producto);
+
+    echo json_encode([
+        'success' => true,
+        'data' => $productos
+    ]);
+
     exit;
 }

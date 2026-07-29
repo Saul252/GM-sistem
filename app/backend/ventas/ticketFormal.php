@@ -355,7 +355,7 @@ $detallesPago = $stmtPago->get_result();
                         <td class="text-right bold" style="color: #0f172a;"><?php echo number_format($cantidadReal, 4); ?></td>
                         <?php if($mostrar_precios): ?>
                             <td class="text-right" style="color: #475569;">$<?php echo number_format(($item['precio_unitario']), 2); ?></td>
-                            <td class="text-right bold" style="color: #1e3a8a;">$<?php echo number_format($item['precio_unitario']*$item['cantidad'], 2); ?></td>
+                            <td class="text-right bold" style="color: #1e3a8a;">$<?php echo number_format(($item['precio_unitario']*$cantidadReal),2); ?></td>
                         <?php endif; ?>
                     </tr>
                     <?php endwhile; ?>

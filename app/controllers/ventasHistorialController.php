@@ -458,6 +458,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     $tituloPagina = "Control de Entregas";
  $rol = intval( $_SESSION['rol_id']?? 0);
  $almacen_usuario = $_SESSION['almacen_id'] ?? 0;
+    $clientes=$clientesModel->listarTodos($almacen_usuario);
  if($rol==1||$rol==3)
     {
         $almacen_usuario=0;

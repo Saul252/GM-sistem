@@ -15,7 +15,8 @@ require_once __DIR__ . '/../models/RepartosModel.php';
 require_once __DIR__ . '/../models/almacen/productosModel.php';
 
 protegerPagina('cajaRapida'); 
-$paginaActual = 'cajaRapida';
+$paginaActual = 'Caja Rapida';
+  $paginaTitulo='Caja_Rapida';
 
 // Instancias
 $modeloEntrega    = new EntregaModel($conexion);
@@ -175,4 +176,4 @@ if ($clientes_res) {
     while($row = $clientes_res->fetch_assoc()){ $clientes[] = $row; }
 }
 
-include __DIR__ . '/../views/cajaRapida.php';
+include __DIR__ . '/../views/venta2.php';

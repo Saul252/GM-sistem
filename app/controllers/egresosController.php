@@ -396,7 +396,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'elimin
         // }
 
         // 4. RESPUESTA ÚNICA DE ÉXITO (Al final del flujo)
-        echo json_encode(['success' => true, 'message' => 'Gasto guardado correctamente']);
+        echo json_encode(['success' => true, 'message' => 'Gasto guardado correctamente','id'=>$id]);
         
     } catch (Exception $e) {
         // Si algo falla, el catch se encarga de mandar la respuesta limpia de error

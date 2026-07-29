@@ -320,8 +320,10 @@ function guardarGasto() {
                 showConfirmButton: false
             }).then(() => {
                 const inst = bootstrap.Modal.getInstance(modalGastoEl);
+                console.log(data.id);
                 if(inst) inst.hide();
-                location.reload();
+                
+                 gastoDetalle_cargarVista('gasto', data.id);
             });
         } else {
             throw new Error(data.message || 'Error al procesar el gasto');

@@ -335,7 +335,7 @@ function enviarEdicion() {
             detalle_id: $(this).data('id'),
             producto_id: $(this).data('prod-id'),
             nueva_cantidad: $(this).find('.input-cantidad-total').val(),
-            entrega_hoy: $(this).find('.input-entrega-hoy-total').val(),
+            entrega_hoy:0,
             precio_unitario: $(this).find('.input-precio-unitario').val(),
             tipo_precio: $(this).find('.select-precio').val()
         });

@@ -80,7 +80,8 @@
     /* Nivel 1: Principales */
     #modalGasto,
     #modalNuevaCompra,
-    #modalVerDetalle,
+    #compraDetalle_seccionImpresion,
+    #compraDetalle_modalPrincipal,
     #gastoDetalle_seccionImpresion,
     #gastoDetalle_modalPrincipal,
     #modalAjusteFaltante {

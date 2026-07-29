@@ -2,7 +2,8 @@
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 25px; background: #f8f9fa;">
             <div class="modal-header border-0 bg-white" style="border-radius: 25px 25px 0 0; padding: 1.5rem 2rem;">
-                <div class="bg-success text-white rounded p-2 d-flex align-items-center justify-content-center me-3" style="width: 45px; height: 45px; border-radius: 12px !important;">
+                <div class="bg-success text-white rounded p-2 d-flex align-items-center justify-content-center me-3"
+                    style="width: 45px; height: 45px; border-radius: 12px !important;">
                     <i class="bi bi-box-seam-fill fs-4"></i>
                 </div>
                 <div>
@@ -11,36 +12,39 @@
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            
+
             <div class="modal-body px-4 py-3">
-    <div class="table-responsive">
-        <table class="table table-hover table-bordered align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>Producto</th>
-                    <th>Disponible</th>
-                    <th>Comprada</th>
-                    <th>Restante</th>
-                    <th>Entregar</th>
-                    <th>Lote</th>
-                </tr>
-            </thead>
-            <tbody id="listaItemsDespacho"></tbody>
-        </table>
-    </div>
-      
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Producto</th>
+                                <th>Disponible</th>
+                                <th>Comprada</th>
+                                <th>Restante</th>
+                                <th>Entregar</th>
+                                <th>Lote</th>
+                            </tr>
+                        </thead>
+                        <tbody id="listaItemsDespacho"></tbody>
+                    </table>
+                </div>
+
                 <div id="seccionLogisticaMasiva" class="d-none animate__animated animate__fadeIn">
                     <hr class="my-4 opacity-10">
-                    
+
                     <div class="p-3 border rounded-4 bg-white shadow-sm mb-3">
-                        <label class="text-uppercase fw-bold text-primary mb-2 d-block" style="font-size: 0.7rem; letter-spacing: 1.2px;">Método de Salida</label>
+                        <label class="text-uppercase fw-bold text-primary mb-2 d-block"
+                            style="font-size: 0.7rem; letter-spacing: 1.2px;">Método de Salida</label>
                         <div class="btn-group w-100" role="group">
-                            <input type="radio" class="btn-check" name="tipo_entrega_masiva" id="optPatio" value="patio" checked onchange="toggleFormRuta(false)">
+                            <input type="radio" class="btn-check" name="tipo_entrega_masiva" id="optPatio" value="patio"
+                                checked onchange="toggleFormRuta(false)">
                             <label class="btn btn-outline-success rounded-start-pill py-2 fw-bold" for="optPatio">
                                 <i class="bi bi-box-seam me-2"></i>ENTREGA EN PATIO
                             </label>
-                            
-                            <input type="radio" class="btn-check" name="tipo_entrega_masiva" id="optRuta" value="ruta" onchange="toggleFormRuta(true)">
+
+                            <input type="radio" class="btn-check" name="tipo_entrega_masiva" id="optRuta" value="ruta"
+                                onchange="toggleFormRuta(true)">
                             <label class="btn btn-outline-primary rounded-end-pill py-2 fw-bold" for="optRuta">
                                 <i class="bi bi-truck me-2"></i>ASIGNAR RUTA
                             </label>
@@ -48,34 +52,45 @@
                     </div>
 
                     <div id="formRutaIntegrado" class="animate__animated animate__fadeInUp">
-                        <div id="wrapperLogistica" class="p-4 rounded-4 shadow-sm" style="transition: all 0.3s ease; border: 1px solid;">
+                        <div id="wrapperLogistica" class="p-4 rounded-4 shadow-sm"
+                            style="transition: all 0.3s ease; border: 1px solid;">
                             <div class="row g-3">
                                 <div class="col-12">
                                     <div id="contenedorDireccion" class="p-3 rounded-4 mb-1 border bg-white shadow-sm">
-                                        <label id="lblDinamicoPrincipal" class="small fw-bold text-muted mb-1" style="font-size: 0.65rem;">PUNTO DE ENTREGA / OBRA</label>
+                                        <label id="lblDinamicoPrincipal" class="small fw-bold text-muted mb-1"
+                                            style="font-size: 0.65rem;">PUNTO DE ENTREGA / OBRA</label>
                                         <div class="input-group">
                                             <span class="input-group-text bg-white border-0">
                                                 <i id="iconDinamico" class="bi bi-geo-alt-fill text-danger"></i>
                                             </span>
-                                            <textarea id="mv_direccion" class="form-control  border-0 p-2 text-uppercase" rows="2" style="font-size: 0.9rem; resize: none;" placeholder="Dirección exacta..."></textarea>
+                                            <textarea id="mv_direccion"
+                                                class="form-control  border-0 p-2 text-uppercase" rows="2"
+                                                style="font-size: 0.9rem; resize: none;"
+                                                placeholder="Dirección exacta..."></textarea>
                                         </div>
                                     </div>
                                 </div>
- <div class="col-md-6" id="colVehiculo">
+                                <div class="col-md-6" id="colVehiculo">
                                     <label class="small fw-bold text-muted mb-1">UNIDAD / VEHÍCULO</label>
-                                    <select id="mv_vehiculo_id" class="form-select border-0 shadow-sm rounded-3 p-3 bg-white"></select>
+                                    <select id="mv_vehiculo_id"
+                                        class="form-select border-0 shadow-sm rounded-3 p-3 bg-white"></select>
                                 </div>
                                 <div class="col-md-6">
-                                    <label id="lblPersonal" class="small fw-bold text-muted mb-1">CHOFER RESPONSABLE</label>
-                                    <select id="mv_chofer_id" class="form-select border-0 shadow-sm rounded-3 p-3 bg-white"></select>
+                                    <label id="lblPersonal" class="small fw-bold text-muted mb-1">CHOFER
+                                        RESPONSABLE</label>
+                                    <select id="mv_chofer_id"
+                                        class="form-select border-0 shadow-sm rounded-3 p-3 bg-white"></select>
                                 </div>
 
-                               
+
 
                                 <div class="col-12">
                                     <label class="small fw-bold text-muted mb-1">AYUDANTES DE CARGA (OPCIONAL)</label>
-                                    <select id="mv_tripulantes" class="form-select border-0 shadow-sm rounded-3 p-2 bg-white" multiple size="3" style="font-size: 0.85rem;"></select>
-                                    <small class="text-muted mt-2 d-block" style="font-size: 0.6rem;">* Mantén presionada la tecla <b>Ctrl</b> para elegir varios.</small>
+                                    <select id="mv_tripulantes"
+                                        class="form-select border-0 shadow-sm rounded-3 p-2 bg-white"
+                                        style="font-size: 0.85rem;"></select>
+                                    <small class="text-muted mt-2 d-block" style="font-size: 0.6rem;">* Mantén
+                                        presionada la tecla <b>Ctrl</b> para elegir varios.</small>
                                 </div>
                             </div>
                         </div>
@@ -84,8 +99,10 @@
             </div>
 
             <div class="modal-footer border-0 bg-white py-3 px-4" style="border-radius: 0 0 25px 25px;">
-                <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" id="btnEjecutarDespachoMasivo" class="btn btn-success rounded-pill px-5 fw-bold shadow" disabled>
+                <button type="button" class="btn btn-light rounded-pill px-4 fw-bold"
+                    data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btnEjecutarDespachoMasivo"
+                    class="btn btn-success rounded-pill px-5 fw-bold shadow" disabled>
                     <i class="bi bi-check-circle me-2"></i>Confirmar Despacho
                 </button>
             </div>
@@ -93,13 +110,13 @@
     </div>
 </div>
 <script>
-    // Selecciona todos los inputs de texto y también los textareas
-    document.querySelectorAll('input[type="text"], textarea').forEach(elemento => {
-        elemento.addEventListener('input', function() {
-            // Convierte el valor a mayúsculas en tiempo real
-            this.value = this.value.toUpperCase();
-        });
+// Selecciona todos los inputs de texto y también los textareas
+document.querySelectorAll('input[type="text"], textarea').forEach(elemento => {
+    elemento.addEventListener('input', function() {
+        // Convierte el valor a mayúsculas en tiempo real
+        this.value = this.value.toUpperCase();
     });
+});
 </script>
 <script>
 /**
@@ -111,21 +128,27 @@ function toggleFormRuta(esRuta) {
 
     if (esRuta) {
         // --- ESTILO RUTA (AZUL) ---
-        wrapper.css({'background': '#eef6ff', 'border-color': '#cfe2ff'});
+        wrapper.css({
+            'background': '#eef6ff',
+            'border-color': '#cfe2ff'
+        });
         $('#lblDinamicoPrincipal').text('PUNTO DE ENTREGA / OBRA (EDITABLE)');
         $('#iconDinamico').removeClass('bi-person-badge-fill text-success').addClass('bi-geo-alt-fill text-danger');
         $('#mv_direccion').attr('placeholder', 'Dirección exacta de entrega...');
         $('#lblPersonal').text('CHOFER RESPONSABLE');
-        $('#colVehiculo').fadeIn(); 
+        $('#colVehiculo').fadeIn();
         btnConfirmar.removeClass('btn-success').addClass('btn-primary');
     } else {
         // --- ESTILO PATIO (VERDE) ---
-        wrapper.css({'background': '#f6fff8', 'border-color': '#c1e7c1'});
+        wrapper.css({
+            'background': '#f6fff8',
+            'border-color': '#c1e7c1'
+        });
         $('#lblDinamicoPrincipal').text('NOTAS / QUIÉN RECIBE (OPCIONAL)');
         $('#iconDinamico').removeClass('bi-geo-alt-fill text-danger').addClass('bi-person-badge-fill text-success');
         $('#mv_direccion').attr('placeholder', 'Ej. Se lo lleva el cliente en su camioneta...');
         $('#lblPersonal').text('DESPACHADOR RESPONSABLE (PATIO)');
-        $('#colVehiculo').hide(); 
+        $('#colVehiculo').hide();
         btnConfirmar.removeClass('btn-primary').addClass('btn-success');
     }
 }
@@ -134,19 +157,20 @@ function toggleFormRuta(esRuta) {
  * Abre el modal y carga los datos de la venta y recursos de la sucursal
  */
 let sim;
-window.carrito=0;
-async function lotes(producto_id,almacenId) {
-    const resp = await fetch(`/cfsistem/app/controllers/entregasController.php?ajax=despachar&prodId=${producto_id}&almacen=${almacenId}`
-        );
+window.carrito = 0;
+async function lotes(producto_id, almacenId) {
+    const resp = await fetch(
+        `/cfsistem/app/controllers/entregasController.php?ajax=despachar&prodId=${producto_id}&almacen=${almacenId}`
+    );
 
-        return await resp.json();
+    return await resp.json();
 
-    
+
 }
 let modal = null;
 
-async function abrirModalDespachoVentaTotal( almacenId,ventaId) {
-    const URL_ENTREGAS = 'entregasController.php'; 
+async function abrirModalDespachoVentaTotal(almacenId, ventaId) {
+    const URL_ENTREGAS = 'entregasController.php';
     const modalElement = document.getElementById('modalDespachoVentaTotal');
     modal = new bootstrap.Modal(modalElement);
     const contenedor = document.getElementById('listaItemsDespacho');
@@ -156,7 +180,8 @@ async function abrirModalDespachoVentaTotal( almacenId,ventaId) {
 
     // Reset UI inicial
     txtFolio.innerHTML = `<span class="opacity-50 small">Sincronizando...</span>`;
-    contenedor.innerHTML = `<div class="text-center py-4"><div class="spinner-border text-success opacity-25"></div></div>`;
+    contenedor.innerHTML =
+        `<div class="text-center py-4"><div class="spinner-border text-success opacity-25"></div></div>`;
     logSection.classList.add('d-none');
     $('#optPatio').prop('checked', true);
     toggleFormRuta(false); // Iniciar en modo patio
@@ -167,40 +192,42 @@ async function abrirModalDespachoVentaTotal( almacenId,ventaId) {
         // 1. Obtener items pendientes
         const respIds = await fetch(`${URL_ENTREGAS}?ajax=get_productos_para_despacho&venta_id=${ventaId}`);
         const dataIds = await respIds.json();
-        
+
         const idsParaProcesar = dataIds.ids;
-        console.log("ids",idsParaProcesar);
+        console.log("ids", idsParaProcesar);
         const primerId = almacenId;
-        
-        
+
+
         // 2. Simular Stock para el listado
-        
-         window.carrito =  [];const todos_los_lotes = await Promise.all(
-    idsParaProcesar.map(item => lotes(item.producto_id, almacenId))
-);
 
-contenedor.innerHTML = ''; // limpiar
+        window.carrito = [];
+        const todos_los_lotes = await Promise.all(
+            idsParaProcesar.map(item => lotes(item.producto_id, almacenId))
+        );
 
-idsParaProcesar.forEach((item, index) => {
-    console.log(item);
-   
-  
-     const cantidadRealFaltante=(item.cantidad)-(item.cantidad_entregada);
-     let cantidad=0;
-    if(cantidadRealFaltante>0){
-     const cantidad_maxima=item.disponible<cantidadRealFaltante?cantidadRealFaltante:item.disponible;
-    let unidad=item.nombre;
-    let multiplicador=1;
-    let factor =item.factor_conversion;
-       cantidad=(item.cantidad/factor)>=1?item.cantidad/factor:item.cantidad;
-    if((cantidadRealFaltante/factor)>=1)
+        contenedor.innerHTML = ''; // limpiar
 
-    {
-        unidad=item.unidad_reporte
-        multiplicador=factor;
-    }
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
+        idsParaProcesar.forEach((item, index) => {
+            console.log(item);
+
+
+            const cantidadRealFaltante = (item.cantidad) - (item.cantidad_entregada);
+            let cantidad = 0;
+            if (cantidadRealFaltante > 0) {
+                const cantidad_maxima = item.disponible < cantidadRealFaltante ? cantidadRealFaltante : item
+                    .disponible;
+                let unidad = item.nombre;
+                let multiplicador = 1;
+                let factor = item.factor_conversion;
+                cantidad = item.cantidad;
+                if ((cantidadRealFaltante / factor) >= 1)
+
+                {
+                    unidad = item.unidad_reporte
+                    multiplicador = factor;
+                }
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
     <td>
         <span class="fw-bold text-dark">
             <i class="bi bi-box-seam me-1 text-success"></i>
@@ -224,7 +251,7 @@ idsParaProcesar.forEach((item, index) => {
     <td>
         <span class="badge bg-warning-subtle text-dark">
            
-            ${(cantidad/((1/item.equivalencia))>=1 ) ? (cantidad/((1/item.equivalencia)).toFixed(3) ) :(cantidad)}
+            ${(cantidadRealFaltante/((1/item.equivalencia))>=1 ) ? (cantidadRealFaltante/((1/item.equivalencia)).toFixed(3) ) :(cantidad)}
         ${unidad}
             </span>
     </td>
@@ -255,38 +282,40 @@ idsParaProcesar.forEach((item, index) => {
     </td>
 `;
 
-    // 1. Seleccionamos el <select> directamente desde el div creado, es más seguro y no requiere que ya esté en el DOM principal
-    const select = tr.querySelector('select');
+                // 1. Seleccionamos el <select> directamente desde el div creado, es más seguro y no requiere que ya esté en el DOM principal
+                const select = tr.querySelector('select');
 
-    // 2. Extraemos la data con encadenamiento opcional para evitar errores si viene vacío o undefined
-    const lotesData = todos_los_lotes[index]?.data || [];
+                // 2. Extraemos la data con encadenamiento opcional para evitar errores si viene vacío o undefined
+                const lotesData = todos_los_lotes[index]?.data || [];
 
-    // 3. Agregamos las opciones al select
-    lotesData.forEach(lote => {
-        const option = document.createElement('option');
-        option.value = lote.id;
-        option.textContent = `${lote.codigo_lote} (${lote.cantidad_actual})`;
-        select.appendChild(option);
-    });
+                // 3. Agregamos las opciones al select
+                lotesData.forEach(lote => {
+                    const option = document.createElement('option');
+                    option.value = lote.id;
+                    option.textContent =
+                        `${lote.codigo_lote} (${lote.cantidad_actual/factor} ${item.nombre})`;
+                    select.appendChild(option);
+                });
 
-    // 4. Por último, agregamos todo el div (ya con los options cargados) al contenedor
-    contenedor.appendChild(tr);
+                // 4. Por último, agregamos todo el div (ya con los options cargados) al contenedor
+                contenedor.appendChild(tr);
 
-    // ⚠️ REVISA ESTA FUNCIÓN: 
-    // Si esta función vuelve a modificar el `select`, te va a borrar lo que acabamos de pintar arriba.
-    // lotesporPropducto(item.producto_id, item.almacen_id, index); 
-    }});
+                // ⚠️ REVISA ESTA FUNCIÓN: 
+                // Si esta función vuelve a modificar el `select`, te va a borrar lo que acabamos de pintar arriba.
+                // lotesporPropducto(item.producto_id, item.almacen_id, index); 
+            }
+        });
 
         // 3. Cargar Recursos (Choferes, Vehículos)
         const [respDetalle, respRecursos] = await Promise.all([
-            fetch(`${URL_ENTREGAS}?ajax=get_recursos_reparto&id=${primerId}`),
-            fetch(`${URL_ENTREGAS}?ajax=get_recursos_sucursal&almacen_id=${almacenId}`)
-        ]);
+    fetch(`${URL_ENTREGAS}?ajax=get_recursos_reparto&id=${primerId}`),
+    fetch(`${URL_ENTREGAS}?ajax=get_recursos_sucursal&almacen_id=${almacenId}`)
+]);
 
-        const resDetalle = await respDetalle.json();
-        const resRecursos = await respRecursos.json();
- 
-   if (resDetalle.success && resRecursos.success) {
+const resDetalle = await respDetalle.json();
+const resRecursos = await respRecursos.json();
+
+if (resDetalle.success && resRecursos.success) {
 
     // 1. Dirección
     $('#mv_direccion').val(resDetalle.data.entrega.cliente_direccion_fiscal || '');
@@ -297,15 +326,19 @@ idsParaProcesar.forEach((item, index) => {
         .append('<option value="">Seleccione unidad...</option>');
 
     (resRecursos.unidades || []).forEach(u => {
-        selectV.append(`<option value="${String(u.id)}">${u.nombre} [${u.placas || 'S/P'}]</option>`);
+        selectV.append(
+            `<option value="${String(u.id)}">${u.nombre} [${u.placas || 'S/P'}]</option>`);
     });
 
-    // 3. PERSONAL BASE (CHOFERES)
+    // 3. PERSONAL BASE (CHOFERES Y TRIPULANTE)
     const selectC = $('#mv_chofer_id')
         .empty()
         .append('<option value="">Seleccione responsable...</option>');
 
-    const selectT = $('#mv_tripulantes').empty();
+    // Opción por defecto para selección única de tripulante
+    const selectT = $('#mv_tripulantes')
+        .empty()
+        .append('<option value="">Seleccione tripulante...</option>');
 
     (resRecursos.choferes || []).forEach(c => {
         const id = String(c.id);
@@ -319,7 +352,7 @@ idsParaProcesar.forEach((item, index) => {
     // =========================================
     $('#mv_vehiculo_id')
         .off('change')
-        .on('change', function () {
+        .on('change', function() {
 
             const vehiculo_id = $(this).val();
             if (!vehiculo_id) return;
@@ -332,7 +365,7 @@ idsParaProcesar.forEach((item, index) => {
 
                     // LIMPIAR SIEMPRE
                     $('#mv_chofer_id').val('');
-                    $('#mv_tripulantes').val([]);
+                    $('#mv_tripulantes').val('');
 
                     // =========================
                     // 🟢 CASO 1: TIENE DATOS
@@ -349,43 +382,39 @@ idsParaProcesar.forEach((item, index) => {
 
                             if ($(`#mv_chofer_id option[value="${idChofer}"]`).length) {
                                 $('#mv_chofer_id').val(idChofer).trigger('change');
-                              $('#mv_chofer_id').prop('disabled', true);
-
+                                $('#mv_chofer_id').prop('disabled', true);
                             }
-                            
                         }
 
-                        // 👥 TRIPULANTES
-                        if (Array.isArray(data.tripulantes)) {
-                            const ids = data.tripulantes.map(t => String(t.id));
+                        // 👤 TRIPULANTE (Solo se asigna el primero)
+                        if (Array.isArray(data.tripulantes) && data.tripulantes.length > 0) {
+                            const idPrimerTripulante = String(data.tripulantes[0].id);
 
-                            const validos = ids.filter(id =>
-                                $(`#mv_tripulantes option[value="${id}"]`).length
-                            );
-
-                            $('#mv_tripulantes').val(validos).trigger('change');
+                            if ($(`#mv_tripulantes option[value="${idPrimerTripulante}"]`).length) {
+                                $('#mv_tripulantes').val(idPrimerTripulante).trigger('change');
+                            }
                         }
 
                         console.log('✔ Datos cargados desde vehículo');
 
-                    } 
+                    }
                     // =========================
                     // 🔵 CASO 2: FALLBACK
                     // =========================
                     else {
                         console.log(resRecursos.trabajadoresDisponibles);
-
                         console.log('⚠ Sin datos en vehículo → usando trabajadores disponibles');
 
-                                  $('#mv_chofer_id').prop('disabled', false);
+                        $('#mv_chofer_id').prop('disabled', false);
 
-                            
-                        // 🔥 REEMPLAZAR OPTIONS CON DISPONIBLES
+                        // REEMPLAZAR OPTIONS CON DISPONIBLES
                         const selectC = $('#mv_chofer_id')
                             .empty()
                             .append('<option value="">Seleccione responsable...</option>');
 
-                        const selectT = $('#mv_tripulantes').empty();
+                        const selectT = $('#mv_tripulantes')
+                            .empty()
+                            .append('<option value="">Seleccione tripulante...</option>');
 
                         (resRecursos.trabajadoresDisponibles || []).forEach(t => {
                             const id = String(t.id);
@@ -396,30 +425,38 @@ idsParaProcesar.forEach((item, index) => {
 
                         // reset visual
                         $('#mv_chofer_id').val('');
-                        $('#mv_tripulantes').val([]);
+                        $('#mv_tripulantes').val('');
                     }
                 })
                 .catch(err => console.error('Error fetch:', err));
         });
 
     // =========================================
-    // 🔒 EXCLUSIÓN CHOFER → TRIPULANTES
+    // 🔒 EXCLUSIÓN CHOFER → TRIPULANTE
     // =========================================
     $('#mv_chofer_id')
         .off('change')
-        .on('change', function () {
+        .on('change', function() {
 
             const sel = String($(this).val());
 
-            $('#mv_tripulantes option').each(function () {
+            $('#mv_tripulantes option').each(function() {
 
                 const val = String($(this).val());
+
+                // Omitir la opción de placeholder vacía
+                if (!val) return;
 
                 if (sel && val === sel) {
                     $(this)
                         .prop('disabled', true)
                         .prop('selected', false)
                         .hide();
+
+                    // Si el tripulante seleccionado actualmente es el chofer elegido, resetear la selección
+                    if ($('#mv_tripulantes').val() === sel) {
+                        $('#mv_tripulantes').val('');
+                    }
                 } else {
                     $(this)
                         .prop('disabled', false)
@@ -435,141 +472,135 @@ idsParaProcesar.forEach((item, index) => {
     // =========================================
     logSection.classList.remove('d-none');
     btnConfirmar.disabled = false;
-  btnConfirmar.onclick = async () => {
-    // Esperamos a que termine procesarEntregaFinal y guardamos su resultado (true o false)
-    const entregaExitosa = await procesarEntregaFinal();
+    btnConfirmar.onclick = async () => {
+        // Esperamos a que termine procesarEntregaFinal y guardamos su resultado (true o false)
+        const entregaExitosa = await procesarEntregaFinal();
 
-    // Si regresó true (success), entonces ejecutamos el segundo
-//     if (entregaExitosa) {
-//         ejecutarSalidaMasivaFinal(idsParaProcesar, btnConfirmar);
-//     }
-// 
+        // Si regresó true (success), entonces ejecutamos el segundo
+        //     if (entregaExitosa) {
+        //         ejecutarSalidaMasivaFinal(idsParaProcesar, btnConfirmar);
+        //     }
+        // 
+    }
 }
-   }
-}catch (err) {
+    } catch (err) {
         contenedor.innerHTML = `<div class="alert alert-danger mx-2 small">${err.message}</div>`;
     }
-}async function procesarEntregaFinal() {
+}
+async function procesarEntregaFinal() {
     const fd = new FormData();
-    let ok = false;
+    let hayCantidadValida = false;
 
+    // 1. Recorrer inputs y agregar únicamente los productos y lotes con cantidad > 0
     $('.input-entrega').each(function() {
         const cant = parseFloat($(this).val());
-        console.log($(this).data('dvid'), cant);
- const tipo = $('input[name="tipo_entrega_masiva"]:checked').val();
-      
-        if (cant > 0) {
-             if( $('#mv_vehiculo_id').val() == ""  ) {
-    $('#mv_vehiculo_id').val(999);
-    ok=true;
-    // Muestra la alerta de error
-   
 
-    return false; // Detiene la ejecución del código
-} 
-            // 1. Extraemos el index dinámico desde el ID de este input (ej: "cantidad_despacho_0" -> "0")
-            const index = $(this).attr('id').split('_').pop();
+        if (cant > 0) {
+            hayCantidadValida = true;
+            const dvid = $(this).data('dvid');
             
-            // 2. Buscamos el select usando ese mismo index y obtenemos su valor
+            // Extraer el index dinámico (ej: "cantidad_despacho_0" -> "0")
+            const index = $(this).attr('id').split('_').pop();
             const loteSeleccionado = $(`#merma_lote_${index}`).val();
 
-            // Tu append original (intacto)
-            fd.append(`productos[${$(this).data('dvid')}]`, cant);
-            
-            // 3. Agregamos el lote relacionado al mismo dvid
-            fd.append(`lotes[${$(this).data('dvid')}]`, loteSeleccionado);
-            fd.append('tipo_logistica', tipo);
-fd.append('vehiculo_id', tipo === 'ruta' ? $('#mv_vehiculo_id').val() : 0);
-fd.append('chofer_id', $('#mv_chofer_id').val());
-fd.append('direccion', $('#mv_direccion').val() || '');
-            
-            ok = true;
+            fd.append(`productos[${dvid}]`, cant);
+            fd.append(`lotes[${dvid}]`, loteSeleccionado || '');
         }
     });
 
-    if (!ok) {
+    // 2. Validar que haya al menos una cantidad a entregar
+    if (!hayCantidadValida) {
         Swal.fire('Atención', 'Indique al menos una cantidad válida para entregar', 'warning');
-        return false; // 🛑 Detenemos y retornamos false
+        return false;
     }
- if( $('#mv_vehiculo_id').val() == ""  ) {
-   
-    // Muestra la alerta de error
-    Swal.fire({
-        icon: 'error',
-        title: 'Campos incompletos',
-        text: 'Por favor, selecciona un vehículo.',
-        confirmButtonColor: '#d33' // Opcional: color rojo para el botón de confirmar
-    });
 
-    return false; // Detiene la ejecución del código
-} if( $('#mv_vehiculo_id').val() == "" || $('#mv_chofer_id').val() == "" || $('#mv_direccion').val() == "" ) {
-    
-    // Muestra la alerta de error
-    Swal.fire({
-        icon: 'error',
-        title: 'Campos incompletos',
-        text: 'Por favor, selecciona un chofer.',
-        confirmButtonColor: '#d33' // Opcional: color rojo para el botón de confirmar
-    });
+    // 3. Obtener valores de los campos del formulario
+    const tipo = $('input[name="tipo_entrega_masiva"]:checked').val();
+    const vehiculoId = $('#mv_vehiculo_id').val();
+    const choferId = $('#mv_chofer_id').val();
+    const tripulanteId = $('#mv_tripulantes').val(); // 👈 TRIPULANTE ÚNICO CAPTURADO
+    const direccion = $('#mv_direccion').val() ? $('#mv_direccion').val().trim() : '';
 
-    return false; // Detiene la ejecución del código
-} if(  $('#mv_direccion').val() == "" ) {
-    
-    // Muestra la alerta de error
-    Swal.fire({
-        icon: 'error',
-        title: 'Campos incompletos',
-        text: 'Por favor,  escribe una dirección.',
-        confirmButtonColor: '#d33' // Opcional: color rojo para el botón de confirmar
-    });
+    // 4. Validaciones de formulario (solo si es ruta)
+    if (tipo === 'ruta') {
+        if (!vehiculoId) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Campos incompletos',
+                text: 'Por favor, selecciona un vehículo.',
+                confirmButtonColor: '#d33'
+            });
+            return false;
+        }
 
-    return false; // Detiene la ejecución del código
-}
+        if (!choferId) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Campos incompletos',
+                text: 'Por favor, selecciona un chofer.',
+                confirmButtonColor: '#d33'
+            });
+            return false;
+        }
+    }
 
+    if (!direccion) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Campos incompletos',
+            text: 'Por favor, escribe una dirección.',
+            confirmButtonColor: '#d33'
+        });
+        return false;
+    }
+
+    // 5. Agregar los datos generales al FormData (UNA SOLA VEZ)
+    fd.append('tipo_logistica', tipo);
+    fd.append('vehiculo_id', tipo === 'ruta' ? vehiculoId : 0);
+    fd.append('chofer_id', choferId || '');
+    fd.append('tripulante_id', tripulanteId || ''); // 👈 Se envía como un ID único (ej: "12")
+    fd.append('direccion', direccion);
     fd.append('venta_id', ventaActual.info.id);
-    console.log('fate', Object.fromEntries(fd));
-    let datos=0;
+
+    console.log('Datos enviados:', Object.fromEntries(fd));
+
+    // 6. Petición al servidor
     try {
         const res = await fetch(`${URL_CONTROLLER}?action=guardarEntregaMasiva`, {
-    method: 'POST',
-    body: fd
-});
+            method: 'POST',
+            body: fd
+        });
 
-const result = await res.json();
+        const result = await res.json();
+        console.log("Respuesta servidor:", result);
 
-datos = result;
+        if (result.status === 'success') {
+            modalObj.hide();
+            getVentas();
 
-console.log(result); // 👈 debug real
+            Swal.fire({
+                title: '¡Listo!',
+                text: 'Entrega guardada correctamente',
+                icon: 'success',
+                showConfirmButton: true
+            });
 
-if (result.status === 'success') {
-
-    modalObj.hide();
-    getVentas();
-
-    Swal.fire({
-        title: '¡Listo!',
-        text: 'Entrega guardada correctamente',
-        icon: 'success',
-        showConfirmButton: true
-    });
-
-    // 👇 aquí están tus datos reales
-    console.log('ids',result.ids);
-    ejecutarSalidaMasivaFinal( result.ids)
+            console.log('ids', result.ids);
+            ejecutarSalidaMasivaFinal(result.ids);
+            return true; // 🟢 Retornamos true si todo fue exitoso
 
         } else {
             Swal.fire('No se pudo entregar', result.message || 'Error desconocido', 'error');
-            return false; // 🛑 Error del servidor: Retornamos false
+            return false;
         }
 
     } catch (e) {
         console.error("Error al procesar entrega:", e);
         Swal.fire('Error Técnico', 'Hubo un problema de conexión con el servidor', 'error');
-        return false; // 🛑 Error técnico: Retornamos false
+        return false;
     }
-    console.log(datos.data);
-}  
-document.addEventListener('change', function (e) {
+}
+document.addEventListener('change', function(e) {
 
     if (e.target.matches('select[name^="merma_lote_"]')) {
 
@@ -578,7 +609,7 @@ document.addEventListener('change', function (e) {
 
         const loteId = e.target.value;
 
-      
+
 
         const optionSeleccionada = e.target.options[e.target.selectedIndex];
         const stockLote = parseFloat(optionSeleccionada.dataset.stock || 0);
@@ -587,81 +618,86 @@ document.addEventListener('change', function (e) {
         console.log('Producto:', item.nombre);
         console.log('Lote seleccionado:', loteId);
         console.log('Stock lote:', stockLote);
-        item.lote=loteId
-        item.loteNombre=item.nombre;
-        
+        item.lote = loteId
+        item.loteNombre = item.nombre;
 
-        
-       const inputEntrega = document.querySelector(
-                `.input-entrega-modal[data-index="${index}"]`
-            );
+
+
+        const inputEntrega = document.querySelector(
+            `.input-entrega-modal[data-index="${index}"]`
+        );
 
         // Validar entrega vs stock del lote
-      
+
     }
 });
 /**
  * Envío final de los datos al servidor
  */
-async function ejecutarSalidaMasivaFinal( result_ids,loteSeleccionado) {
+async function ejecutarSalidaMasivaFinal(result_ids, loteSeleccionado) {
     const tipo = $('input[name="tipo_entrega_masiva"]:checked').val();
-    
+
     // Validaciones
     if (!$('#mv_chofer_id').val()) return Swal.fire('Atención', 'Seleccione un responsable.', 'warning');
-    if (tipo === 'ruta' && !$('#mv_vehiculo_id').val()) return Swal.fire('Atención', 'Seleccione una unidad.', 'warning');
+    if (tipo === 'ruta' && !$('#mv_vehiculo_id').val()) return Swal.fire('Atención', 'Seleccione una unidad.',
+        'warning');
 
-   
+
 
     try {
-      const formData = new FormData();
+        const formData = new FormData();
 
-formData.append('ajax', 'despachar_venta_completaConLotes');
-formData.append('tipo_logistica', tipo);
-formData.append('vehiculo_id', tipo === 'ruta' ? $('#mv_vehiculo_id').val() : 0);
-formData.append('chofer_id', $('#mv_chofer_id').val());
-formData.append('direccion', $('#mv_direccion').val() || '');
+        formData.append('ajax', 'despachar_venta_completaConLotes');
+        formData.append('tipo_logistica', tipo);
+        formData.append('vehiculo_id', tipo === 'ruta' ? $('#mv_vehiculo_id').val() : 0);
+        formData.append('chofer_id', $('#mv_chofer_id').val());
+        formData.append('direccion', $('#mv_direccion').val() || '');
 
-const tripulantes = $('#mv_tripulantes').val() || [];
-tripulantes.forEach(tId => formData.append('tripulantes[]', tId));
+        const tripulante = $('#mv_tripulantes').val() || 0;
+        formData.append('tripulante_id', tripulante);
+        console.log(tripulante);
 
-// enviar movimiento + lote asociado
-result_ids.forEach((id, index) => {
-    formData.append('ids_movimientos[]', id.movimiento_id);
-    formData.append('lotes[]',$(`#merma_lote_${index}`).val() );
-});
- console.log('fate', Object.fromEntries(formData));
+        // enviar movimiento + lote asociado
+        result_ids.forEach((id, index) => {
+            formData.append('ids_movimientos[]', id.movimiento_id);
+            formData.append('lotes[]', $(`#merma_lote_${index}`).val());
+        });
+        console.log('fate', Object.fromEntries(formData));
 
-        const resp = await fetch('entregasController.php', { method: 'POST', body: formData });
+        const resp = await fetch('entregasController.php', {
+            method: 'POST',
+            body: formData
+        });
         const res = await resp.json();
-if (res.success) {
-     modalObj.hide();
-     modal.hide();
-    getVentas();
-    
+        if (res.success) {
+            modalObj.hide();
+            modal.hide();
+            getVentas();
 
-  
-   
 
-    Swal.fire({
-        icon: 'success',
-        title: '¡Éxito!',
-        text:res.ids,
-        timer: 150000,
-        showConfirmButton:true
-    });
-setTimeout(() => {
 
-                    
-                    cargarRepartos2(ventaActual.info.id);
 
-                }, 501);
-    
-}else {
+
+            Swal.fire({
+                icon: 'success',
+                title: '¡Éxito!',
+                text: res.ids,
+                timer: 150000,
+                showConfirmButton: true
+            });
+            setTimeout(() => {
+
+
+                cargarRepartos2(ventaActual.info.id);
+
+            }, 501);
+
+        } else {
             throw new Error(res.message);
         }
     } catch (e) {
         Swal.fire('Error de Despacho', e.message, 'error');
-     
+
     }
 }
 async function cargarRepartos2(idVenta) {
@@ -678,7 +714,7 @@ async function cargarRepartos2(idVenta) {
         if (repartos.length > 0) {
             const ultimoReparto = repartos[repartos.length - 1];
             console.log('Último reparto:', ultimoReparto.entrega_id);
-            imprimirRuta(ultimoReparto.entrega_id,ultimoReparto.folio)
+            imprimirRuta(ultimoReparto.entrega_id, ultimoReparto.folio)
         } else {
             console.log('No hay repartos');
         }

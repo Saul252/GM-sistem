@@ -158,11 +158,11 @@ $folio_viaje = $_GET['folio'] ?? '';
             </div>
             
             <form id="formEvidencia">
-                <input type="number" name="id_movimiento" id="m_mov_id">
+                <input type="text" name="id_movimiento" id="id_movimiento">
                 <input type="hidden" name="id_venta" id="m_venta_id">
                 <input type="hidden" name="vehiculo_id" id="m_vehiculo_id">
                 <input type="hidden" name="action" value="subir_evidencia_reparto">
- <input type="hidden" name="folio" id="folio" value="<?php echo htmlspecialchars($folio_viaje); ?>">
+ <input type="text" name="folio" id="m_mov_id" value="<?php echo htmlspecialchars($folio_viaje); ?>">
                 <div class="modal-body px-4">
                     <div id="alertaEdicion" class="alert alert-warning py-2 small mb-3 rounded-4 d-none">
                         <i class="bi bi-pencil-square me-2"></i> Estás editando una entrega existente.
@@ -310,7 +310,8 @@ function abrirModalPorIndex(index) {
     txtNota.classList.add('d-none');
 
     const idMovimiento = data.entrega_id || 0;
-    document.getElementById('m_mov_id').value = data.entrega_id;
+    document.getElementById('id_movimiento').value = data.entrega_id;
+    document.getElementById('m_mov_id').value = data.viaje_folio;
     document.getElementById('m_id_visible').innerText = data.entrega_id;
   document.getElementById('m_venta_id').value = (data.venta_id );    document.getElementById('m_vehiculo_id').value = data.vehiculo_id || 0; 
     document.getElementById('m_cliente_full').innerText = `${data.cliente || 'S/N'} (${data.folio_venta || 'S/F'})`;
@@ -328,12 +329,12 @@ function abrirModalPorIndex(index) {
         document.getElementById('m_comentario').value = data.comentario_evidencia || "";
 
         if (data.foto_registrada && data.foto_registrada.length > 5) {
-            previewMat.src = data.foto_registrada + "?t=" + new Date().getTime();
+            previewMat.src =`/cfsistem/${data.foto_registrada}` + "?t=" + new Date().getTime();
             previewMat.style.display = 'block';
             txtMat.classList.remove('d-none');
         }
         if (data.nota_registrada && data.nota_registrada.length > 5) {
-            previewNota.src = data.nota_registrada + "?t=" + new Date().getTime();
+            previewNota.src = `/cfsistem/${data.nota_registrada}` + "?t=" + new Date().getTime();
             previewNota.style.display = 'block';
             txtNota.classList.remove('d-none');
         }

@@ -1,11 +1,11 @@
-<div id="printSection">
-<div class="modal fade" id="modalVerDetalle" tabindex="-1" aria-hidden="true" data-bs-focus="false">
-    <div class="modal-dialog modal-xl"> <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
-            <div class="modal-body p-0" id="ticketContenido">
-                </div>
+<div id="compraDetalle_seccionImpresion">
+<div class="modal fade" id="compraDetalle_modalPrincipal" tabindex="-1" aria-hidden="true" data-bs-focus="false">
+    <div class="modal-dialog modal-xl"> 
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+            <div class="modal-body p-0" id="compraDetalle_contenedorContenido"></div>
             <div class="modal-footer border-0 bg-light justify-content-center">
-                <button type="button" class="btn btn-dark btn-sm px-4 rounded-pill" onclick="imprimirTicket()"">
-                    <i class="bi bi-printer me-2"></i>Imprimir Ticket
+                <button type="button" class="btn btn-dark btn-sm px-4 rounded-pill" onclick="compraDetalle_ejecutarImpresion()">
+                    <i class="bi bi-printer me-2"></i>IMPRIMIR COMPRA
                 </button>
                 <button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-pill" data-bs-dismiss="modal">Cerrar</button>
             </div>
@@ -15,300 +15,552 @@
 </div>
 
 <style>
+/* Estilos formato Premium para compras */
+.compra-invoice-box {
+    max-width: 950px;
+    margin: auto;
+    padding: 20px;
+    background: #fff;
+    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+    color: #334155;
+}
+.compra-table-layout {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+}
+.compra-logo-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.compra-brand-title {
+    font-size: 16pt;
+    font-weight: 800;
+    color: #1e3a8a;
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+}
+.compra-company-address {
+    font-size: 8.5pt;
+    color: #64748b;
+    line-height: 1.4;
+    text-align: center;
+}
+.compra-remision-badge {
+    background: #0f172a;
+    color: #fff;
+    padding: 6px 12px;
+    text-align: center;
+    font-size: 8pt;
+    font-weight: 700;
+    letter-spacing: 1px;
+    border-radius: 4px;
+    float: right;
+    min-width: 140px;
+}
+.compra-remision-badge span {
+    display: block;
+    font-size: 13pt;
+    font-weight: 800;
+    color: #38bdf8;
+    margin-top: 2px;
+}
+.compra-date-tile {
+    width: 140px;
+    float: right;
+    margin-top: 5px;
+    border-collapse: collapse;
+    font-size: 8.5pt;
+}
+.compra-date-tile td {
+    padding: 4px 8px;
+    border: 1px solid #e2e8f0;
+}
+.compra-date-tile .title-td {
+    background: #f1f5f9;
+    color: #64748b;
+    font-weight: 600;
+}
+.compra-card-info {
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 10px 12px;
+    min-height: 90px;
+    background-color: #ffffff;
+}
+.compra-card-title {
+    font-size: 7.5pt;
+    font-weight: 800;
+    color: #64748b;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 3px;
+    text-transform: uppercase;
+}
+.compra-items-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    font-size: 8.5pt;
+}
+.compra-items-table th {
+    background: #0f172a;
+    color: #fff;
+    font-weight: 600;
+    font-size: 7.5pt;
+    text-transform: uppercase;
+    padding: 7px 8px;
+    letter-spacing: 0.5px;
+}
+.compra-items-table td {
+    padding: 8px;
+    border-bottom: 1px solid #e2e8f0;
+    vertical-align: top;
+}
+.compra-items-table tr:nth-child(even) {
+    background-color: #f8fafc;
+}
+.compra-items-table .total-row td {
+    border-bottom: none;
+    padding-top: 12px;
+}
+.compra-total-highlight {
+    font-size: 13pt;
+    font-weight: 800;
+    color: #1e3a8a;
+    background: #eff6ff;
+    padding: 6px 12px !important;
+    border-radius: 4px;
+    border: 1px solid #bfdbfe !important;
+}
+.compra-card-obs {
+    margin-top: 15px;
+    border: 1px dashed #cbd5e1;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 8pt;
+    background: #fdfdfd;
+    line-height: 1.5;
+}
+.compra-signatures {
+    margin-top: 30px;
+    padding-top: 10px;
+    text-align: center;
+}
+.compra-signature-line {
+    border-top: 2px solid #334155;
+    margin: 0 15px;
+    padding-top: 5px;
+    font-size: 7.5pt;
+    font-weight: 700;
+    color: #334155;
+}
 
-.ticket-header { background: #f8f9fa; border-bottom: 2px dashed #dee2e6; padding: 2rem 1.5rem; text-align: center; }
-.ticket-body { padding: 1.5rem; font-family: 'Courier New', Courier, monospace; }
-.ticket-row { display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem; }
-.ticket-divider { border-top: 1px dashed #ccc; my: 3; }
-.badge-ticket { font-size: 0.7rem; padding: 3px 8px; border-radius: 4px; }
-
-/* Estilo para impresión: Oculta todo excepto el contenido del ticket */
+/* Impresión por CSS */
 @media print {
-    /* 1. Ocultamos TODO lo que esté en el body */
     body * {
         visibility: hidden;
-        -webkit-print-color-adjust: exact !important; /* Mantiene colores de fondo */
-        print-color-adjust: exact !important;
     }
-
-    /* 2. Solo el contenido del ticket y sus hijos serán visibles */
-    #modalVerDetalle, 
-    #modalVerDetalle .modal-content,
-    #ticketContenido, 
-    #ticketContenido * {
+    #compraDetalle_seccionImpresion, 
+    #compraDetalle_seccionImpresion * {
         visibility: visible !important;
     }
-
-    /* 3. Posicionamos el modal al inicio de la página de impresión */
-    #modalVerDetalle {
-        position: absolute !important;
-        left: 0 !important;
-        top: 0 !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        width: 100% !important;
+    #compraDetalle_seccionImpresion {
         display: block !important;
-        overflow: visible !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
     }
-
-    /* 4. Quitamos sombras, bordes de modal y botones que no queremos en papel */
-    .modal-dialog {
-        max-width: 100% !important;
-        margin: 0 !important;
-    }
-    .modal-content {
-        border: none !important;
-        box-shadow: none !important;
-    }
-    .modal-footer, .btn-close, .btn, .modal-backdrop {
+    .modal-backdrop, .modal-footer {
         display: none !important;
     }
-
-    /* 5. Forzamos que el body no tenga scroll ni fondos grises */
-    body {
-        background-color: white !important;
-    }
-#printSection{
-    display:none;
-}
-
-@media print {
-
-    body *{
-        visibility:hidden !important;
-    }
-
-    #printSection,
-    #printSection *{
-        visibility:visible !important;
-    }
-
-    #printSection{
-        display:block !important;
-        position:absolute;
-        left:0;
-        top:0;
-        width:100%;
-        background:#fff;
-    }
-
-    .modal,
-    .modal-dialog,
-    .modal-content,
-    .modal-body,
-    .modal-footer,
-    .modal-backdrop{
-        display:none !important;
-    }
-
-    @page{
-        size:portrait;
-        margin:5mm;
-    }
-}
-
 }
 </style>
 
 <script>
-    function verDetalle(tipo, id) {
-        console.log(tipo,id);
+function verDetalle(tipo, id) {
+    if (tipo !== 'compra') return;
+
     $.get(`/cfsistem/app/controllers/egresosController.php?action=obtenerDetalleMovimiento&tipo=${tipo}&id=${id}`, function(data) {
         if (!data.success) return Swal.fire('Error', data.message, 'error');
 
-
         const c = data.cabecera;
-        const esCompra = (tipo === 'compra');
         let filasHtml = '';
 
         data.items.forEach(item => {
-            let nombre = esCompra ? item.producto_nombre : item.descripcion;
+            let nombre = item.producto_nombre;
             let conversionInfo = '';
             let detalleMovimientos = '';
-            
-            if (esCompra) {
-                let cantidad_exedente=item.cantidad_exedente;
-                let cantidad_real=item.cantidad - item.cantidad_exedente;
-              
 
-                const factor = parseFloat(item.factor_prod || 1);
-                let unidadGrande= parseFloat(item.cantidad_recibida);
-                let unidadt= parseFloat(item.cantidad_pedida || item.cantidad || 0);
-                
-                
-                let totalCant = parseFloat(item.cantidad_recibida);
-totalCant = isNaN(totalCant) ? 0 : totalCant;
+            const factor = parseFloat(item.factor_prod || 1);
+            let totalCant = parseFloat(item.cantidad_recibida || 0);
 
-if (factor && factor > 0) {
-    const uniReporte = (totalCant / factor).toFixed(2);
-
-    conversionInfo = `<div class="text-primary fw-bold" style="font-size: 0.75rem;">
-        (1 ${item.unidad_reporte} = ${factor} ${item.unidad_medida})
-    </div>`;
-}
-
-                if (item.desglose_movimientos) {
-                    const movimientos = item.desglose_movimientos.split('||');
-                    detalleMovimientos = '<div class="mt-1 text-uppercase text-muted fw-bold" style="font-size: 0.6rem;">Rastreo de Entradas:</div>';
-                    movimientos.forEach(mov => {
-                        detalleMovimientos += `
-                            <div class="small p-1 mb-1 bg-white border-start border-success border-3 shadow-sm" style="font-size: 0.7rem;">
-                                <i class="bi bi-arrow-right text-success"></i>${item.producto_id} ${mov} ${item.unidad_medida}
-                            </div>`;
-                    });
-                }
+            if (factor && factor > 0) {
+                conversionInfo = `<div class="text-primary fw-bold" style="font-size: 0.75rem;">
+                    (1 ${item.unidad_reporte} = ${factor} ${item.unidad_medida})
+                </div>`;
             }
-             const factor = parseFloat(item.factor_prod || 1);
-             let unidadc= parseFloat(item.cantidad_pedida || item.cantidad || 0);
-             let unidadr= parseFloat(item.cantidad_recibida );
-            
-             const totalComprado= (unidadc/factor).toFixed(2);
-             const totale= (parseFloat(item.cantidad_excedente)/factor).toFixed(2);
-             const totalr= (unidadr/factor).toFixed(2);
-             const totalf=(totalComprado-totalr);
-             console.log("Compra",unidadc,totalComprado);
-                
+
+            if (item.desglose_movimientos) {
+                const movimientos = item.desglose_movimientos.split('||');
+                detalleMovimientos = '<div class="mt-1 text-uppercase text-muted fw-bold" style="font-size: 0.6rem;">Rastreo de Entradas:</div>';
+                movimientos.forEach(mov => {
+                    detalleMovimientos += `
+                        <div class="small p-1 mb-1 bg-white border-start border-success border-3 shadow-sm" style="font-size: 0.7rem;">
+                            <i class="bi bi-arrow-right text-success"></i>${item.producto_id} ${mov} ${item.unidad_medida}
+                        </div>`;
+                });
+            }
+
+            let unidadc = parseFloat(item.cantidad_pedida || item.cantidad || 0);
+            let unidadr = parseFloat(item.cantidad_recibida || 0);
+
+            const totalComprado = (unidadc / factor).toFixed(2);
+            const totale = (parseFloat(item.cantidad_excedente || 0) / factor).toFixed(2);
+            const totalr = (unidadr / factor).toFixed(2);
+            const totalf = (totalComprado - totalr).toFixed(2);
+
             filasHtml += `
-                <tr class="align-top">
-                    <td class="small text-muted">${item.sku || 'N/A'}</td>
-                    <td class="text-start">
+                <tr>
+                    <td style="font-family: monospace; color: #64748b;">${item.sku || 'N/A'}</td>
+                    <td>
                         <div class="fw-bold text-dark">${nombre}</div>
                         ${conversionInfo}
-                        ${esCompra ? detalleMovimientos : ''}
+                        ${detalleMovimientos}
                     </td>
                     <td class="text-center bg-light">
-                        <span class="d-block fw-bold">${esCompra ? totalComprado+" " +item.unidad_reporte:totalComprado}</span>
-                        <small class="text-muted">(${esCompra ? unidadc+ ' '+ item.unidad_medida : 'unidades'})</small>
-                         ${esCompra ? `
-                      <td class="text-center text-success fw-bold bg-light">
-                         <span class="d-block fw-bold">${totalr} ${item.unidad_reporte}</span>
-                    
-                        
-                         <small class="text-muted">(${esCompra ? parseFloat(item.cantidad_recibida || 0)+" " +item.unidad_medida : 'unidades'})</small>
-                        </td>` : ''}
+                        <span class="d-block fw-bold">${totalComprado} ${item.unidad_reporte}</span>
+                        <small class="text-muted">(${unidadc} ${item.unidad_medida})</small>
                     </td>
-                    ${esCompra ? `
-                     <td class="text-center text-success fw-bold bg-light">
-                     ${item.cantidad_excedente > 0 ? `
-                    
-                         <span class="d-block fw-bold">${totale} ${item.unidad_reporte}</span>
-                    
-                     
-                         <small class="text-muted"> ${item.cantidad_excedente+ " "+ item.unidad_medida }</small>
-                      ` : '0'}</td>
-                    
-                     <td class="text-center bg-light">
-                  ${item.cantidad_faltante > 0 ? `
-                     <span class="d-block fw-bold">${totalf} ${item.unidad_reporte}</span>
-                      <small class="text-muted">${esCompra ? item.cantidad_faltante + " "+ item.unidad_medida : 'unidades'}</small>
-                      ` : '0'}
-                      </td>
-                     
-                        
-                    ` : ''}
-                    <td class="text-center">$${esCompra ?totalr>=1?parseFloat((item.precio_unitario)*factor).toFixed(2)+ " x "+item.unidad_reporte:item.precio_unitario+ " x "+item.unidad_medida: parseFloat(item.precio_unitario).toFixed(2)} </td>
-                    <td class="text-end fw-bold">$${parseFloat(item.subtotal).toFixed(2)}</td>
+                    <td class="text-center text-success fw-bold bg-light">
+                        <span class="d-block fw-bold">${totalr} ${item.unidad_reporte}</span>
+                        <small class="text-muted">(${unidadr} ${item.unidad_medida})</small>
+                    </td>
+                    <td class="text-center text-success fw-bold bg-light">
+                        ${item.cantidad_excedente > 0 ? `
+                            <span class="d-block fw-bold">${totale} ${item.unidad_reporte}</span>
+                            <small class="text-muted">${item.cantidad_excedente} ${item.unidad_medida}</small>
+                        ` : '0'}
+                    </td>
+                    <td class="text-center bg-light">
+                        ${item.cantidad_faltante > 0 ? `
+                            <span class="d-block fw-bold">${totalf} ${item.unidad_reporte}</span>
+                            <small class="text-muted">${item.cantidad_faltante} ${item.unidad_medida}</small>
+                        ` : '0'}
+                    </td>
+                    <td class="text-end">$${unidadr >= 1 ? parseFloat(item.precio_unitario * factor).toFixed(2) + " x " + item.unidad_reporte : parseFloat(item.precio_unitario).toFixed(2) + " x " + item.unidad_medida}</td>
+                    <td class="text-end fw-bold" style="color: #1e3a8a;">$${parseFloat(item.subtotal).toFixed(2)}</td>
                 </tr>`;
         });
-console.log(c.categoria_nombre );
-        // --- LÓGICA DE LA CATEGORÍA (SOLO PARA GASTOS) ---
-        let htmlCategoria = '';
-        if (!esCompra && c.categoria_nombre) {
-            htmlCategoria = `
-                <div class="mt-2 pt-2 border-top">
-                    <small class="text-muted d-block" style="font-size: 0.65rem;">CATEGORÍA DEL GASTO</small>
-                    <span class="fw-bold text-primary"><i class="bi bi-tag-fill me-1"></i> ${c.categoria_nombre.toUpperCase()}</span>
-                </div>`;
-        }
 
         const docHTML = `
-            <div class="p-4 bg-white shadow-sm mx-auto" style="max-width: 950px; color: #333; font-family: 'Segoe UI', sans-serif;">
-                <div class="row border-bottom border-3 border-primary pb-3 mb-4">
-                    <div class="col-7 text-start">
-                        <h2 class="fw-bold text-primary mb-0">CF SISTEM</h2>
-                        <p class="text-muted mb-0">Gestión de Inventarios y Egresos</p>
-                    </div>
-                    <div class="col-5 text-end">
-                        <div class="h4 fw-bold text-dark mb-0">${tipo.toUpperCase()}</div>
-                        <div class="badge bg-dark fs-6">FOLIO: ${c.folio}</div>
-                        <div class="small text-muted mt-1">Fecha: ${c.fecha_registro || c.fecha_gasto}</div>
-                    </div>
+            <div class="compra-invoice-box" id="compraDetalle_areaCapturaPDF">
+                <table class="compra-table-layout">
+                    <tr>
+                        <td style="width: 32%;">
+                            <div class="compra-logo-container">
+                                <img src="/cfsistem/public/assets/logo.ico" style="width: 38px; height: auto;" alt="Logo">
+                                <div class="compra-brand-title">CF SISTEM<br><span style="font-size:10pt; font-weight:600; color:#0284c7;">INVENTARIOS</span></div>
+                            </div>
+                        </td>
+                        <td style="width: 38%;" class="compra-company-address">
+                            <span style="font-weight: 600; color: #1e293b;">${c.almacen_nombre || 'ALMACÉN GENERAL'}</span><br>
+                            Gestión de Inventarios y Egresos<br>
+                            <span style="font-size: 7.5pt; color: #94a3b8;">Control de Entradas / Compras</span>
+                        </td>
+                        <td style="width: 30%;">
+                            <div class="compra-remision-badge">
+                                COMPRA
+                                <span>${c.folio}</span>
+                            </div>
+                            <div style="clear: both;"></div>
+                            <table class="compra-date-tile">
+                                <tr>
+                                    <td class="title-td">Fecha</td>
+                                    <td class="fw-bold" style="color: #334155;">${c.fecha_registro || c.fecha_gasto}</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+
+                <table class="compra-table-layout" style="margin-top: 4px;">
+                    <tr>
+                        <td style="width: 65%; padding-right: 6px;">
+                            <div class="compra-card-info">
+                                <div class="compra-card-title">PROVEEDOR</div>
+                                <table style="width:100%; border-collapse:collapse; font-size: 8.5pt;">
+                                    <tr>
+                                        <td style="color:#64748b; width: 22%;"><strong>Nombre:</strong></td>
+                                        <td class="fw-bold" style="color:#1e3a8a; font-size:9.5pt;">${c.proveedorNombre || 'N/A'}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color:#64748b;"><strong>Usuario:</strong></td>
+                                        <td style="color:#475569; font-size:8pt;">${c.usuario_nombre}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </td>
+                        <td style="width: 35%;">
+                            <div class="compra-card-info" style="background-color: #f8fafc;">
+                                <div class="compra-card-title" style="color:#0284c7;">INFORMACIÓN DE PAGO</div>
+                                <div style="line-height: 1.4; color:#64748b; font-size: 8.5pt;">
+                                    <strong>Estado:</strong> <span class="badge ${c.estado === 'confirmada' || c.estado === 'pagado' ? 'bg-success' : 'bg-warning'}">${c.estado.toUpperCase()}</span><br>
+                                    <strong>Método:</strong> ${c.metodo_pago || 'N/A'}
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+
+                <table class="compra-items-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 10%;">SKU</th>
+                            <th style="width: 28%;">DESCRIPCIÓN</th>
+                            <th class="text-center" style="width: 12%;">CANT. COMPRADA</th>
+                            <th class="text-center" style="width: 12%;">RECIBIDO</th>
+                            <th class="text-center" style="width: 12%;">EXCEDENTE</th>
+                            <th class="text-center" style="width: 8%;">PEND.</th>
+                            <th class="text-end" style="width: 9%;">P. UNIT</th>
+                            <th class="text-end" style="width: 9%;">TOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filasHtml}
+                        <tr class="total-row">
+                            <td colspan="6"></td>
+                            <td class="text-end" style="color: #475569; font-size: 10pt; font-weight: 600; vertical-align: middle;">TOTAL NETO</td>
+                            <td class="text-end compra-total-highlight">$${parseFloat(c.total).toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="compra-card-obs">
+                    <div style="font-weight: 700; color: #334155; margin-bottom: 2px; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.3px;">Observaciones</div>
+                    ${c.observaciones ? `<span style="color:#1e293b;">${c.observaciones}</span>` : 'Sin observaciones registradas.'}
                 </div>
 
-                <div class="row mb-4">
-                    <div class="col-6 text-start">
-                        <div class="p-3 border rounded-3 bg-light h-100">
-                            <small class="text-muted fw-bold text-uppercase d-block mb-2 border-bottom">Control Interno</small>
-                            <div><strong>Almacén:</strong> ${c.almacen_nombre || 'N/A'}</div>
-                            <div><strong>Usuario:</strong> ${c.usuario_nombre}</div>
-                            ${htmlCategoria} <div class="mt-2"><strong>Estado:</strong> <span class="badge ${c.estado === 'confirmada' || c.estado === 'pagado' ? 'bg-success' : 'bg-warning'}">${c.estado.toUpperCase()}</span></div>
-                        </div>
-                    </div>
-                    <div class="col-6 text-end">
-                        <div class="p-3 border rounded-3 bg-light h-100">
-                            <small class="text-muted fw-bold text-uppercase d-block mb-2 border-bottom">${esCompra ? 'Proveedor' : 'Beneficiario'}</small>
-                            <div class="h6 mb-1 fw-bold text-primary">${c.proveedorNombre || c.beneficiario}</div>
-                            
-                            <small class="d-block text-muted">Método: ${c.metodo_pago || 'N/A'}</small>
-                             </div>
-                    </div>
+                <div class="row compra-signatures">
+                    <div class="col-4"><div class="compra-signature-line">SOLICITADO POR</div></div>
+                    <div class="col-4"><div class="compra-signature-line">ALMACÉN / RECIBO</div></div>
+                    <div class="col-4"><div class="compra-signature-line">AUTORIZACIÓN</div></div>
                 </div>
-
-                <div class="table-responsive">
-                    <table class="table table-bordered align-middle">
-                        <thead class="table-dark">
-                            <tr class="small text-uppercase">
-                                <th style="width: 10%">SKU</th>
-                                <th style="width: ${esCompra ? '40%' : '55%'}">Descripción</th>
-                               ${esCompra ? '<th class="text-center">Cant. Comprada</th>' : '<th class="text-center">Cantidad</th>'} 
-                                ${esCompra ? '<th class="text-center">Recibido</th>' : ''}
-                                 ${esCompra ? '<th class="text-center">Cantidad Execedente</th><th class="text-center">Pend.</th>' : ''}
-                               
-                                <th class="text-end">P. Unit</th>
-                                <th class="text-end">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${filasHtml}
-                        </tbody>
-                        <tfoot>
-                            <tr class="table-secondary">
-                                <td colspan="${esCompra ? 5 : 4}" class="text-end fw-bold text-uppercase">Total Neto:</td>
-                                <td class="text-end fw-bold h5 text-primary mb-0">$${parseFloat(c.total).toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
-
-                ${c.observaciones ? `<div class="p-3 bg-light border-start border-4 border-warning my-3 small italic text-start"><strong>Notas:</strong> ${c.observaciones}</div>` : ''}
-
-                <div class="row mt-5 pt-4 text-center">
-                    <div class="col-4"><div style="border-top: 2px solid #333; margin: 0 15px;" class="pt-2 small fw-bold">SOLICITADO POR</div></div>
-                    <div class="col-4"><div style="border-top: 2px solid #333; margin: 0 15px;" class="pt-2 small fw-bold">ALMACÉN / RECIBO</div></div>
-                    <div class="col-4"><div style="border-top: 2px solid #333; margin: 0 15px;" class="pt-2 small fw-bold">AUTORIZACIÓN</div></div>
-                 <div class="row mt-5 pt-4 text-center" id="finImpresion">
-                    </div>
-               
             </div>`;
 
-        $('#ticketContenido').html(docHTML);
-        const modalEl = document.getElementById('modalVerDetalle');
+        $('#compraDetalle_contenedorContenido').html(docHTML);
+        const modalEl = document.getElementById('compraDetalle_modalPrincipal');
         const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
         modalInstance.show();
     });
 }
-</script>
-<script>
-function imprimirTicket() {
+function compraDetalle_ejecutarImpresion() {
+    const elemento = document.getElementById('compraDetalle_areaCapturaPDF');
+    if (!elemento) return;
 
-    const contenido = document.getElementById('ticketContenido').innerHTML;
+    // Extraer folio para el título de la ventana / archivo
+    const folioEl = document.querySelector('.compra-remision-badge span');
+    const folio = folioEl ? folioEl.innerText.trim() : '000';
 
-    const areaPrint = document.getElementById('printSection');
+    // Detección de dispositivos móviles para exportar PDF directamente
+    const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-    areaPrint.innerHTML = contenido;
+    if (esMovil) {
+        const opciones = {
+            margin:       [8, 8, 8, 8],
+            filename:     `Compra_${folio}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+            jsPDF:        { unit: 'mm', format: 'a5', orientation: 'landscape' }
+        };
+        html2pdf().set(opciones).from(elemento).save();
+        return;
+    }
 
-    window.print();
+    // 1. Crear ventana emergente independiente
+    const ventana = window.open('', '_blank', 'height=750,width=950');
 
-    areaPrint.innerHTML = '';
+    // 2. Inyectar estructura completa HTML + CSS
+    ventana.document.write(`
+    <!DOCTYPE html>
+    <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <title>COMPRA - ${folio}</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+            <style>
+                @page { 
+                    margin: 0; /* Elimina encabezados y pies de página predeterminados del navegador */
+                }
+                body { 
+                    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+                    padding: 10px;
+                    background-color: #ffffff;
+                    color: #334155;
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                }
+                
+                /* Estilos adaptados para la impresión del documento */
+                .compra-invoice-box {
+                    width: 100%;
+                    margin: auto;
+                    background: #fff;
+                }
+                .compra-table-layout {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 10px;
+                }
+                .compra-logo-container {
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                }
+                .compra-brand-title {
+                    font-size: 16pt;
+                    font-weight: 800;
+                    color: #1e3a8a;
+                    line-height: 1.1;
+                    letter-spacing: -0.5px;
+                }
+                .compra-company-address {
+                    font-size: 8.5pt;
+                    color: #64748b;
+                    line-height: 1.4;
+                    text-align: center;
+                }
+                .compra-remision-badge {
+                    background: #0f172a !important;
+                    color: #fff !important;
+                    padding: 6px 12px;
+                    text-align: center;
+                    font-size: 8pt;
+                    font-weight: 700;
+                    letter-spacing: 1px;
+                    border-radius: 4px;
+                    float: right;
+                    min-width: 140px;
+                }
+                .compra-remision-badge span {
+                    display: block;
+                    font-size: 13pt;
+                    font-weight: 800;
+                    color: #38bdf8 !important;
+                    margin-top: 2px;
+                }
+                .compra-date-tile {
+                    width: 140px;
+                    float: right;
+                    margin-top: 5px;
+                    border-collapse: collapse;
+                    font-size: 8.5pt;
+                }
+                .compra-date-tile td {
+                    padding: 4px 8px;
+                    border: 1px solid #e2e8f0;
+                }
+                .compra-date-tile .title-td {
+                    background: #f1f5f9 !important;
+                    color: #64748b;
+                    font-weight: 600;
+                }
+                .compra-card-info {
+                    border: 1px solid #e2e8f0;
+                    border-radius: 6px;
+                    padding: 10px 12px;
+                    min-height: 90px;
+                    background-color: #ffffff;
+                }
+                .compra-card-title {
+                    font-size: 7.5pt;
+                    font-weight: 800;
+                    color: #64748b;
+                    letter-spacing: 0.5px;
+                    margin-bottom: 6px;
+                    border-bottom: 1px solid #f1f5f9;
+                    padding-bottom: 3px;
+                    text-transform: uppercase;
+                }
+                .compra-items-table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 15px;
+                    font-size: 8.5pt;
+                }
+                .compra-items-table th {
+                    background: #0f172a !important;
+                    color: #fff !important;
+                    font-weight: 600;
+                    font-size: 7.5pt;
+                    text-transform: uppercase;
+                    padding: 7px 8px;
+                    letter-spacing: 0.5px;
+                }
+                .compra-items-table td {
+                    padding: 8px;
+                    border-bottom: 1px solid #e2e8f0;
+                    vertical-align: top;
+                }
+                .compra-items-table tr:nth-child(even) {
+                    background-color: #f8fafc !important;
+                }
+                .compra-items-table .total-row td {
+                    border-bottom: none;
+                    padding-top: 12px;
+                }
+                .compra-total-highlight {
+                    font-size: 13pt;
+                    font-weight: 800;
+                    color: #1e3a8a !important;
+                    background: #eff6ff !important;
+                    padding: 6px 12px !important;
+                    border-radius: 4px;
+                    border: 1px solid #bfdbfe !important;
+                }
+                .compra-card-obs {
+                    margin-top: 15px;
+                    border: 1px dashed #cbd5e1;
+                    border-radius: 6px;
+                    padding: 10px 12px;
+                    font-size: 8pt;
+                    background: #fdfdfd;
+                    line-height: 1.5;
+                }
+                .compra-signatures {
+                    margin-top: 40px;
+                    padding-top: 10px;
+                    text-align: center;
+                }
+                .compra-signature-line {
+                    border-top: 2px solid #334155;
+                    margin: 0 15px;
+                    padding-top: 5px;
+                    font-size: 7.5pt;
+                    font-weight: 700;
+                    color: #334155;
+                }
+            </style>
+        </head>
+        <body>
+            ${elemento.outerHTML}
+
+            <script>
+                window.onload = function() {
+                    window.print();
+                    window.onafterprint = function() {
+                        window.close();
+                    };
+                };
+            <\/script>
+        </body>
+    </html>
+    `);
+
+    ventana.document.close();
 }
 </script>

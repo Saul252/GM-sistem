@@ -1,21 +1,21 @@
 <div id="gastoDetalle_seccionImpresion">
-<div class="modal fade" id="gastoDetalle_modalPrincipal" tabindex="-1" aria-hidden="true" data-bs-focus="false">
-    <div class="modal-dialog modal-xl"> 
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
-            <div class="modal-body p-0" id="gastoDetalle_contenedorContenido"></div>
-            <div class="modal-footer border-0 bg-light justify-content-center">
-                <button type="button" class="btn btn-dark btn-sm px-4 rounded-pill" onclick="gastoDetalle_ejecutarImpresion()">
-                    <i class="bi bi-printer me-2"></i>IMPRIMIR GASTO 
-                </button>
-                <button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-pill" data-bs-dismiss="modal">Cerrar</button>
+    <div class="modal fade" id="gastoDetalle_modalPrincipal" tabindex="-1" aria-hidden="true" data-bs-focus="false">
+        <div class="modal-dialog modal-xl"> 
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
+                <div class="modal-body p-0" id="gastoDetalle_contenedorContenido"></div>
+                <div class="modal-footer border-0 bg-light justify-content-center">
+                    <button type="button" class="btn btn-dark btn-sm px-4 rounded-pill" onclick="gastoDetalle_ejecutarImpresion()">
+                        <i class="bi bi-printer me-2"></i>IMPRIMIR GASTO 
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-pill" data-bs-dismiss="modal">Cerrar</button>
+                </div>
             </div>
         </div>
     </div>
 </div>
-</div>
 
 <style>
-/* Estilos replicados del formato Premium para mantener consistencia visual */
+/* Estilos replicados del formato Premium */
 .gasto-invoice-box {
     max-width: 950px;
     margin: auto;
@@ -23,6 +23,7 @@
     background: #fff;
     font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
     color: #334155;
+    box-sizing: border-box;
 }
 .gasto-table-layout {
     width: 100%;
@@ -144,29 +145,78 @@
     line-height: 1.5;
 }
 
-/* Manejo de Impresión clásica por CSS */
+/* ==========================================================================
+   IMPRESIÓN EXCLUSIVA DEL CONTENIDO INTERNO (DESMONTA EL MARCO DEL MODAL)
+   ========================================================================== */
 @media print {
+    @page {
+        size: auto;
+        margin: 5mm; /* Margen básico de seguridad */
+    }
+
+    /* Ocultar el resto del sitio */
     body * {
-        visibility: hidden;
+        visibility: hidden !important;
     }
-    #gastoDetalle_seccionImpresion, 
-    #gastoDetalle_seccionImpresion * {
-        visibility: visible !important;
-    }
-    #gastoDetalle_seccionImpresion {
-        display: block !important;
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-    }
-    .modal-backdrop, .modal-footer {
+
+    /* Ocultar elementos de UI del Modal */
+    .modal-backdrop,
+    .modal-header,
+    .modal-footer,
+    .btn,
+    .btn-close {
         display: none !important;
     }
+
+    /* Desarmar la estructura visual del modal Bootstrap */
+    #gastoDetalle_modalPrincipal,
+    .modal-dialog,
+    .modal-content,
+    .modal-body {
+        position: static !important;
+        display: block !important;
+        visibility: visible !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: visible !important;
+    }
+
+    /* Hacer visible ÚNICAMENTE el contenedor interno del ticket */
+    #gastoDetalle_areaCapturaPDF,
+    #gastoDetalle_areaCapturaPDF * {
+        visibility: visible !important;
+    }
+
+    /* Posicionar el ticket en la esquina superior izquierda de la página */
+    #gastoDetalle_areaCapturaPDF {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 10px !important;
+        background: #ffffff !important;
+    }
+
+    /* Asegurar renderizado correcto de tablas */
+    .gasto-table-layout, 
+    .gasto-items-table,
+    .gasto-date-tile {
+        display: table !important;
+        width: 100% !important;
+    }
+
+    tr { page-break-inside: avoid !important; }
 }
 </style>
 
 <script>
+    let observaciones='';
 function gastoDetalle_cargarVista(gastoTipo, gastoId) {
     if (gastoTipo === 'compra') return;
 
@@ -193,10 +243,22 @@ function gastoDetalle_cargarVista(gastoTipo, gastoId) {
             htmlCategoriaGasto = `
                 <br><strong>Categoría:</strong> <span style="color:#0284c7; font-weight:600;">${cabeceraGasto.categoria_nombre.toUpperCase()}</span>`;
         }
+        observaciones=`<div id="datos" class="gasto-card-obs">
+        <strong>Observaciones:</strong>
+         ${cabeceraGasto.observaciones ? `
+                        <div style="margin-top: 3px; border-top: 1px solid #e2e8f0; padding-top: 2px;">
+                             <span style="color:#1e293b;">${cabeceraGasto.observaciones}</span>
+                        </div>
+                    ` : ' Sin observaciones registradas.'}
+                    <div style="font-weight: 700; color: #334155; margin-bottom: 2px; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.3px;">Validación de Operación</div>
+                    <strong>Método de Pago:</strong> ${cabeceraGasto.metodo_pago || 'N/A'} &nbsp;|&nbsp; 
+                    <strong>Control Interno:</strong> Sistema Egresos Premium<br>
+                    
+                   
+                </div>`;
 
         const estructuraTicketHTML = `
             <div class="gasto-invoice-box" id="gastoDetalle_areaCapturaPDF">
-                
                 <table class="gasto-table-layout">
                     <tr>
                         <td style="width: 32%;">
@@ -271,7 +333,6 @@ function gastoDetalle_cargarVista(gastoTipo, gastoId) {
                     </thead>
                     <tbody>
                         ${filasHtmlGasto}
-                        
                         <tr class="total-row">
                             <td colspan="4"></td>
                             <td class="text-right" style="color: #475569; font-size: 10pt; font-weight: 600; vertical-align: middle;">TOTAL MXN</td>
@@ -280,18 +341,7 @@ function gastoDetalle_cargarVista(gastoTipo, gastoId) {
                     </tbody>
                 </table>
 
-                <div class="gasto-card-obs">
-                    <div style="font-weight: 700; color: #334155; margin-bottom: 2px; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.3px;">Validación de Operación</div>
-                    <strong>Método de Pago:</strong> ${cabeceraGasto.metodo_pago || 'N/A'} &nbsp;|&nbsp; 
-                    <strong>Control Interno:</strong> Sistema Egresos Premium<br>
-                    <strong>Observaciones:</strong>
-                    ${cabeceraGasto.observaciones ? `
-                        <div style="margin-top: 3px; border-top: 1px solid #e2e8f0; padding-top: 2px;">
-                             <span style="color:#1e293b;">${cabeceraGasto.observaciones}</span>
-                        </div>
-                    ` : ' Sin observaciones registradas.'}
-                </div>
-
+                ${observaciones}
             </div>`;
 
         $('#gastoDetalle_contenedorContenido').html(estructuraTicketHTML);
@@ -300,29 +350,172 @@ function gastoDetalle_cargarVista(gastoTipo, gastoId) {
         instanciaModalGasto.show();
     });
 }
-
 function gastoDetalle_ejecutarImpresion() {
+    // 1. Extraer datos actuales dinámicamente del modal o respuesta
+    const folio = document.querySelector('.gasto-remision-badge span')?.innerText || '000';
+    const fecha = document.querySelector('.gasto-date-tile td.fw-bold')?.innerText || new Date().toLocaleDateString('es-MX');
+    const beneficiario = document.querySelector('.gasto-card-info td.fw-bold')?.innerText || 'N/A';
+    const usuario = document.querySelector('.gasto-card-info td[style*="color:#475569"]')?.innerText || 'N/A';
+    const totalMxn = document.querySelector('.gasto-total-highlight')?.innerText || '$0.00';
+   
+    
+    // Extraer filas de la tabla de productos/servicios
+    const filasTabla = document.querySelector('.gasto-items-table tbody')?.innerHTML || '';
+    const observaciones2=observaciones;
+    
+    // Detectar si el dispositivo es móvil para usar el visor nativo o PDF
     const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const elemento = document.getElementById('gastoDetalle_areaCapturaPDF');
-    const folio = document.querySelector('.gasto-remision-badge span').innerText;
-
+    
     if (esMovil) {
-        // Ejecución exacta para Media Hoja Horizontal (A5 Landscape) usando html2pdf
+        const elemento = document.getElementById('gastoDetalle_areaCapturaPDF');
         const opciones = {
             margin:       [8, 8, 8, 8],
-            filename:     `Gasto_Premium_${folio}.pdf`,
+            filename:     `Comprobante_Gasto_${folio}.pdf`,
             image:        { type: 'jpeg', quality: 0.98 },
             html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
             jsPDF:        { unit: 'mm', format: 'a5', orientation: 'landscape' }
         };
-
         html2pdf().set(opciones).from(elemento).save();
-    } else {
-        // Escritorio: Mapea el clon al print template nativo
-        const areaPrint = document.getElementById('gastoDetalle_seccionImpresion');
-        areaPrint.innerHTML = elemento.outerHTML;
-        window.print();
-        areaPrint.innerHTML = '';
+        return;
     }
-}
+
+    // 2. Abrir ventana emergente dedicada para impresión limpia
+    const ventana = window.open('', '_blank', 'height=700,width=900');
+
+    ventana.document.write(`
+    <!DOCTYPE html>
+    <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <title>COMPROBANTE DE GASTO - ${folio}</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+            <style>
+                @page { 
+                    margin: 0; /* Elimina encabezados/pies nativos del navegador */
+                }
+                body { 
+                    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+                    padding: 1.2cm;
+                    background-color: #ffffff;
+                    color: #1e293b;
+                }
+                .table-bordered th, .table-bordered td { 
+                    border: 1px solid #cbd5e1 !important; 
+                }
+                .marca-agua {
+                    position: fixed;
+                    top: 35%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    width: 240px;
+                    opacity: 0.06;
+                    z-index: -1;
+                    pointer-events: none;
+                }
+                .firma-linea {
+                    border-top: 1px solid #000;
+                    margin-top: 50px;
+                    text-align: center;
+                    padding-top: 5px;
+                    font-size: 11px;
+                }
+            </style>
+        </head>
+        <body>
+            <!-- Marca de agua -->
+            <img src="/cfsistem/public/assets/logo.ico" class="marca-agua" alt="Watermark">
+
+            <div id="areaImpresion" class="text-uppercase bg-white" style="font-size: 0.9rem;">
+
+                <!-- ENCABEZADO -->
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                    <div class="d-flex align-items-center">
+                        <img src="/cfsistem/public/assets/logo.ico" alt="Logo" width="50" height="50" class="me-3">
+                        <div>
+                            <h3 class="fw-bold text-uppercase mb-0" style="color:#0f172a; letter-spacing:1px;">
+                                COMPROBANTE DE GASTO
+                            </h3>
+                            <div class="text-muted small mt-1 text-uppercase">
+                                Folio: <span class="fw-bold text-dark">${folio}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-end text-uppercase">
+                        <div class="fw-bold fs-5" style="color:#1e3a8a;">
+                            FORTALEZA CENTRO
+                        </div>
+                        <div class="text-muted small">
+                            Fecha: ${fecha}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DATOS DEL BENEFICIARIO Y USUARIO -->
+                <div class="row g-2 mb-3">
+                    <div class="col-7">
+                        <div class="p-2 border rounded bg-light">
+                            <small class="text-muted fw-bold d-block" style="font-size: 0.65rem;">BENEFICIARIO DE LA OPERACIÓN</small>
+                            <div class="fw-bold text-dark mt-1" style="font-size: 0.85rem;">${beneficiario}</div>
+                        </div>
+                    </div>
+                    <div class="col-5">
+                        <div class="p-2 border rounded bg-light">
+                            <small class="text-muted fw-bold d-block" style="font-size: 0.65rem;">REGISTRADO POR</small>
+                            <div class="fw-bold text-dark mt-1" style="font-size: 0.85rem;">${usuario}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TABLA DE DETALLES -->
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm align-middle text-uppercase" style="font-size: 0.85rem;">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 15%;">CÓDIGO</th>
+                                <th style="width: 15%;">UNIDAD</th>
+                                <th>DESCRIPCIÓN</th>
+                                <th class="text-end" style="width: 12%;">CANT.</th>
+                                <th class="text-end" style="width: 15%;">P. UNITARIO</th>
+                                <th class="text-end" style="width: 15%;">IMPORTE</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filasTabla}
+                        </tbody>
+                    </table>
+                </div>
+${observaciones2}
+                <!-- VALIDEZ Y FIRMAS -->
+                <div class="row mt-4 pt-3">
+                    <div class="col-6">
+                        <div class="firma-linea">
+                            FIRMA / CONFORMIDAD DE ENTREGA
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="firma-linea">
+                            AUTORIZADO POR CONTROL INTERNO
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <script>
+                // Disparar la impresión nativa cuando todo cargue
+                window.onload = function() {
+                    window.print();
+                    // Cerrar la ventana secundaria tras imprimir o cancelar
+                    window.onafterprint = function() {
+                        window.close();
+                    };
+                };
+            <\/script>
+        </body>
+    </html>
+    `);
+
+    ventana.document.close();
+} 
 </script>

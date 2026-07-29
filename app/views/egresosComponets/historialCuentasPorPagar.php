@@ -46,7 +46,7 @@
                 <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cerrar</button>
                 <button type="button" class="btn btn-success px-4 fw-bold" onclick="pagarDeudaCompra()">
                     <i class="bi bi-check-circle me-1"></i> Aplicar Pago
-                </button>
+                </button> cargarCompras();
             </div> -->
 
         </div>

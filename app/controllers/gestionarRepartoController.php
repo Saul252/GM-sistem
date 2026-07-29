@@ -46,6 +46,7 @@ if (isset($_REQUEST['action'])) {
     try {
         
         $movimiento_id = intval($_POST['id_movimiento'] ?? 0);
+      
         $relPath = "uploads/evidencias/" . date('Y/m/d') . "/";
         $targetDir = dirname(__DIR__, 2) . "/" . $relPath;
         
@@ -77,6 +78,7 @@ if (isset($_REQUEST['action'])) {
             'estatus_entrega'    => $_POST['estatus_entrega'] ?? 'Entregado',
             'comentario'         => $_POST['comentario'] ?? ''
         ];
+       
 
         if ($repartoM->registrarEntregaMovimiento($datos)) {
             echo json_encode(["success" => true, "message" => "Evidencias guardadas correctamente"]);

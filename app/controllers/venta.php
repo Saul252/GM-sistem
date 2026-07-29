@@ -8,10 +8,10 @@ require_once __DIR__ . '/../models/almacen_model.php';
 require_once __DIR__ . '/../models/categoriasModel.php';
 
 require_once __DIR__ . '/../models/almacen/productosModel.php';
-
+require_once __DIR__ . '/../models/usuariosModel.php';
 // Instanciamos el modelo una sola vez
 $clientesModel = new ClientesModel($conexion);
-
+$modelo = new UsuarioModel($conexion);
 $productosModel = new ProductoModel($conexion);
 
 // --- ACCIONES POST (Guardar Venta) ---
@@ -241,10 +241,44 @@ unset($producto);
 
     exit;
 }
+
+ 
+
+
+if (isset($_GET['action']) && $_GET['action'] === 'obtenerUsuarios') {
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+    
+    try {
+        $rol = intval( $_SESSION['rol_id']?? 0);
+        $id = intval( $_SESSION['usuario_id']?? 0);
+         $rol = $_SESSION['rol_id'];
+        $id = intval( $_SESSION['usuario_id']?? 0);
+        if( $rol<3){
+                                          
+ $usuarios = $modelo->listarUsuarios(0);
+        }
+        else{
+            $usuarios = $modelo->listarUsuarios($id);
+        }
+        
+        
+        if ($usuarios) {
+            echo json_encode(['success' => true, 'data' => $usuarios]);
+        } else {
+            throw new Exception('Usuarios no encontrado.');
+        }
+    } catch (Throwable $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit;
+}
+// Var
 // --- CARGA DE VISTA ---
 protegerPagina('ventas'); 
 $paginaActual = 'ventas';
 $almacen_usuario = $_SESSION['almacen_id'] ?? 0;
+$usuario = $_SESSION['usuario_id'] ?? 0;
 
 // Almacenes
 $almacenModel = new AlmacenModel($conexion);
@@ -259,4 +293,4 @@ $categorias = ($categorias_res) ? $categorias_res->fetch_all(MYSQLI_ASSOC) : [];
 $clientes_res = $clientesModel->listarTodosCF($almacen_usuario); 
 $clientes = ($clientes_res) ? $clientes_res->fetch_all(MYSQLI_ASSOC) : [];
 
-include __DIR__ . '/../views/nuevaVenta.php';
+include __DIR__ . '/../views/venta2.php';

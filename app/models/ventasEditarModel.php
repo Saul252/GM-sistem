@@ -37,6 +37,8 @@ class VentaHistorialModel {
         $sqlProd = "SELECT 
                         dv.*, 
                         p.nombre as producto, 
+                        p.sku,
+                     o.nombre,o.equivalencia,
                         p.factor_conversion, 
                         p.unidad_medida as u_mayor, 
                         p.unidad_reporte as u_menor,
@@ -46,7 +48,10 @@ class VentaHistorialModel {
                         pp.precio_distribuidor
                     FROM detalle_venta dv 
                     INNER JOIN productos p ON dv.producto_id = p.id 
+                      LEFT JOIN opciones_de_medida_adicional o
+    ON dv.unidadMedida = o.id
                     LEFT JOIN precios_producto pp ON p.id = pp.producto_id AND pp.almacen_id = $almacen_id
+                   
                     LEFT JOIN inventario inv ON p.id = inv.producto_id AND inv.almacen_id = $almacen_id
                     WHERE dv.venta_id = $id";
 
@@ -64,6 +69,7 @@ class VentaHistorialModel {
                    INNER JOIN entregas_venta e ON de.entrega_id = e.id
                    INNER JOIN detalle_venta dv ON de.detalle_venta_id = dv.id
                    INNER JOIN productos p ON dv.producto_id = p.id
+                   
                    INNER JOIN usuarios u ON e.usuario_id = u.id
                    WHERE e.venta_id = $id
                    ORDER BY e.fecha DESC";
@@ -358,4 +364,195 @@ if ($resActual) {
             return ["status" => "error", "message" => $e->getMessage()];
         }
     }
+    public function recalcularYEditarVenta2($data) {
+    try {
+        $this->db->begin_transaction();
+
+        $v_id        = intval($data['venta_id']);
+        $u_id        = intval($data['usuario_id'] ?? 0);
+        $almacen_id  = intval($data['almacen_id']);
+        $cliente_id  = intval($data['id_cliente']);
+        $vendedor    = intval($data['vendedor'] ?? 0);
+        $nuevo_total = floatval($data['nuevo_total']);
+
+        // -----------------------------------------------------------------
+        // A. CAPTURAR DATOS ANTERIORES (Usando Sentencias Preparadas)
+        // -----------------------------------------------------------------
+        $stmtPrev = $this->db->prepare("SELECT folio, total, id_cliente FROM ventas WHERE id = ?");
+        $stmtPrev->bind_param("i", $v_id);
+        $stmtPrev->execute();
+        $v_prev = $stmtPrev->get_result()->fetch_assoc();
+        $stmtPrev->close();
+
+        if (!$v_prev) {
+            throw new Exception("La venta no fue encontrada.");
+        }
+        $total_anterior  = floatval($v_prev['total']);
+        $cliente_id_prev = intval($v_prev['id_cliente']);
+
+        // -----------------------------------------------------------------
+        // 1. ACTUALIZAR CABECERA DE LA VENTA
+        // -----------------------------------------------------------------
+        $sqlCab = "UPDATE ventas 
+                   SET id_cliente = ?, 
+                       subtotal = ?, 
+                       total = ?, 
+                       vendedor_id = ? 
+                   WHERE id = ?";
+        $stmtV = $this->db->prepare($sqlCab);
+        $stmtV->bind_param("idddi", $cliente_id, $nuevo_total, $nuevo_total, $vendedor, $v_id);
+
+        if (!$stmtV->execute()) {
+            throw new Exception("Error al actualizar la cabecera de la venta: " . $stmtV->error);
+        }
+        $stmtV->close();
+
+        // -----------------------------------------------------------------
+        // 2. ELIMINAR DETALLES NO INCLUIDOS EN "noEliminar" Y REVERTIR STOCK
+        // -----------------------------------------------------------------
+        $ids_a_conservar = [];
+        if (!empty($data['productos'])) {
+            foreach ($data['productos'] as $p) {
+                if (!empty($p['noEliminar'])) {
+                    $ids_a_conservar[] = intval($p['noEliminar']);
+                }
+            }
+        }
+
+        if (!empty($ids_a_conservar)) {
+            $in_ids = implode(',', $ids_a_conservar);
+            $sqlAEliminar = "SELECT id, producto_id, cantidad_entregada 
+                             FROM detalle_venta 
+                             WHERE venta_id = ? AND id NOT IN ($in_ids)";
+        } else {
+            $sqlAEliminar = "SELECT id, producto_id, cantidad_entregada 
+                             FROM detalle_venta 
+                             WHERE venta_id = ?";
+        }
+
+        $stmtElim = $this->db->prepare($sqlAEliminar);
+        $stmtElim->bind_param("i", $v_id);
+        $stmtElim->execute();
+        $resElim = $stmtElim->get_result();
+
+        while ($detDel = $resElim->fetch_assoc()) {
+            $dv_id          = intval($detDel['id']);
+            $p_id           = intval($detDel['producto_id']);
+            $cant_entregada = floatval($detDel['cantidad_entregada']);
+
+            // Eliminar entregas previas de este ítem
+            $stmtDelEntrega = $this->db->prepare("DELETE FROM detalle_entrega WHERE detalle_venta_id = ?");
+            $stmtDelEntrega->bind_param("i", $dv_id);
+            $stmtDelEntrega->execute();
+            $stmtDelEntrega->close();
+
+            if ($cant_entregada > 0) {
+                // Revertir Stock en inventario
+                $stmtStock = $this->db->prepare("UPDATE inventario SET stock = stock + ? WHERE producto_id = ? AND almacen_id = ?");
+                $stmtStock->bind_param("dii", $cant_entregada, $p_id, $almacen_id);
+                $stmtStock->execute();
+                $stmtStock->close();
+
+                // Registrar Kardex / Movimiento
+                $obs = "ELIMINACIÓN DE PRODUCTO EN EDICIÓN - Venta ID: $v_id";
+                $stmtK = $this->db->prepare("INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_origen_id, usuario_registra_id, referencia_id, observaciones) VALUES (?, 'entrada', ?, ?, ?, ?, ?)");
+                $stmtK->bind_param("idiiss", $p_id, $cant_entregada, $almacen_id, $u_id, $v_id, $obs);
+                $stmtK->execute();
+                $stmtK->close();
+            }
+
+            // Eliminar ítem del detalle
+            $stmtDelDV = $this->db->prepare("DELETE FROM detalle_venta WHERE id = ?");
+            $stmtDelDV->bind_param("i", $dv_id);
+            $stmtDelDV->execute();
+            $stmtDelDV->close();
+        }
+        $stmtElim->close();
+
+        // -----------------------------------------------------------------
+        // 3. REGISTRAR O ACTUALIZAR PRODUCTOS
+        // -----------------------------------------------------------------
+        if (!empty($data['productos'])) {
+            foreach ($data['productos'] as $prod) {
+                $dv_id           = intval($prod['noEliminar'] ?? 0);
+                $p_id            = intval($prod['producto_id']);
+                $n_cant          = floatval($prod['cantidad']);
+                $unidad_medida   = intval($prod['unidad'] ?? 0);
+                $precio_unitario = floatval($prod['precio_unitario']);
+                $tipo_p          = $prod['tipoPrecio'] ?? 'minorista';
+                $subtotal_fila   = floatval($prod['precio']);
+
+                if ($dv_id == 0) {
+                    // Producto Nuevo
+                    $sqlIns = "INSERT INTO detalle_venta 
+                               (venta_id, producto_id, cantidad, unidadMedida, cantidad_entregada, precio_unitario, subtotal, tipo_precio, estado_entrega) 
+                               VALUES (?, ?, ?, ?, 0, ?, ?, ?, 'pendiente')";
+                    $stmtIns = $this->db->prepare($sqlIns);
+                    // Tipos: i (venta_id), i (producto_id), d (cantidad), i (unidadMedida), d (precio_unitario), d (subtotal), s (tipo_precio)
+                    $stmtIns->bind_param("iidddss", $v_id, $p_id, $n_cant, $unidad_medida, $precio_unitario, $subtotal_fila, $tipo_p);
+                    
+                    if (!$stmtIns->execute()) {
+                        throw new Exception("Error al insertar producto nuevo: " . $stmtIns->error);
+                    }
+                    $stmtIns->close();
+                } else {
+                    // Actualizar Producto existente
+                    $sqlUpd = "UPDATE detalle_venta 
+                               SET cantidad = ?, unidadMedida = ?, precio_unitario = ?, subtotal = ?, tipo_precio = ? 
+                               WHERE id = ?";
+                    $stmtUpd = $this->db->prepare($sqlUpd);
+                    // Tipos: d (cantidad), i (unidadMedida), d (precio_unitario), d (subtotal), s (tipo_precio), i (id)
+                    $stmtUpd->bind_param("didssi", $n_cant, $unidad_medida, $precio_unitario, $subtotal_fila, $tipo_p, $dv_id);
+                    
+                    if (!$stmtUpd->execute()) {
+                        throw new Exception("Error al actualizar producto: " . $stmtUpd->error);
+                    }
+                    $stmtUpd->close();
+                }
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // 4. CÁLCULO FINANCIERO Y ESTADO DE PAGO
+        // -----------------------------------------------------------------
+        $stmtPagos = $this->db->prepare("SELECT SUM(monto) as pagado FROM historial_pagos WHERE venta_id = ?");
+        $stmtPagos->bind_param("i", $v_id);
+        $stmtPagos->execute();
+        $resPagos = $stmtPagos->get_result()->fetch_assoc();
+        $stmtPagos->close();
+
+        $pagado = floatval($resPagos['pagado'] ?? 0);
+        $nuevo_st_pago = ($pagado >= $nuevo_total) ? 'pagado' : ($pagado > 0 ? 'parcial' : 'pendiente');
+        
+        $stmtSt = $this->db->prepare("UPDATE ventas SET estado_pago = ? WHERE id = ?");
+        $stmtSt->bind_param("si", $nuevo_st_pago, $v_id);
+        $stmtSt->execute();
+        $stmtSt->close();
+
+        if (method_exists($this, 'sincronizarEstadosEntrega')) {
+            $this->sincronizarEstadosEntrega($v_id);
+        }
+
+        $diferencia = $nuevo_total - $total_anterior;
+
+        $this->db->commit();
+
+        return [
+            "status" => "success",
+            "financiero" => [
+                "diferencia" => $diferencia,
+                "id_cliente" => $cliente_id_prev,
+                "venta_id"   => $v_id
+            ]
+        ];
+
+    } catch (Throwable $e) {
+        $this->db->rollback();
+        return [
+            "status" => "error", 
+            "message" => $e->getMessage()
+        ];
+    }
+}
+
 }

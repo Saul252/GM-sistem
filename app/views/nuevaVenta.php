@@ -19,7 +19,7 @@
             padding-bottom: 40px;
         }
 .main-content{
-    padding-top: 45px!important;
+    padding-top: 65px!important;
 
 }
         .main-card {
@@ -31,7 +31,7 @@
         }
 
         .page-header-gradient {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            background: linear-gradient(135deg, #696969 0%, #b1b3b6 100%);
             color: #ffffff;
             padding: 1.5rem 2rem;
         }
@@ -64,15 +64,15 @@
         }
 
         .table-custom-header {
-            background-color: #0f172a !important;
-            color: #cbd5e1 !important;
+            background-color: #062347 !important;
+            color: #ffffff !important;
             font-size: 0.75rem;
             letter-spacing: 0.05em;
         }
 
         .table-custom-header th {
             background-color: transparent !important;
-            color: #94a3b8 !important;
+            color: #ffffff !important;
             border-bottom: none !important;
             padding-top: 12px;
             padding-bottom: 12px;
@@ -122,7 +122,7 @@
             transform: translateX(-50%);
             border-width: 6px;
             border-style: solid;
-            border-color: #212529 transparent transparent transparent;
+            border-color: #9e9e9e transparent transparent transparent;
         }
 
         .entregado-tooltip:hover .tooltip-custom {
@@ -131,7 +131,7 @@
         }
         .fixed-top {
     
-    z-index: 1050;
+    z-index: 2050;
 }
     </style>
 </head>
@@ -140,209 +140,164 @@
 
     <?php renderizarLayout($paginaActual); ?>
 
-  <div class="main-content">
-    <div class="main-card">
-        <form id="formEditarSolicitud">
-            <input type="hidden" id="editar_venta_id" name="cotizacion_id" value="">
+    <div class=" main-content">
+        <div class="main-card">
+            
+            <form id="formEditarSolicitud">
+                <input type="hidden" id="editar_venta_id" name="cotizacion_id" value="">
 
-            <!-- Encabezado de la Página -->
-            <div class="page-header-gradient d-flex justify-content-between align-items-center p-2">
-                <div>
-                    <h4 class="fw-bold mb-1 text-white d-flex align-items-center">
-                        <i class="bi bi-cart-check-fill me-2 fs-3"></i> Módulo de Ventas
-                    </h4>
-                   
-                </div>
-            </div>
-
-            <div class="p-4">
-                <!-- Controles y Filtros Principal -->
-                <div class="card-filter-box p-4 mb-4 shadow-sm border-0 rounded-4 bg-light">
-                    <div class="row g-3">
-                        <!-- 1. Almacén -->
-                        <div class="col-md-6 col-lg-3">
-                            <label class="form-label text-muted fw-semibold small mb-1">
-                                <i class="bi bi-box-seam me-1 text-primary"></i> Almacén de Cargo
-                            </label>
-                            <select name="almacen_id_editar" id="almacen_id_editar" class="form-select border-0 shadow-sm rounded-3 py-2" required>
-                                <option value="">Seleccionar ubicación...</option>
-                                <?php foreach($almacenes as $a): ?>
-                                    <option value="<?= $a['id'] ?>"><?= htmlspecialchars($a['nombre']) ?></option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <!-- 2. Cliente -->
-                        <div class="col-md-6 col-lg-3">
-                            <label class="form-label text-muted fw-semibold small mb-1">
-                                <i class="bi bi-person me-1 text-primary"></i> Cliente
-                            </label>
-                            <div class="input-group shadow-sm rounded-3 overflow-hidden">
-                                <select name="cliente_id_editar" id="cliente_id_editar" class="form-select border-0 select2-pagina" required>
-                                    <option value="">Seleccionar cliente...</option>
-                                    <?php foreach($clientes as $p): ?>
-                                        <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                                <button class="btn btn-primary-light border-0 px-3" type="button" onclick="abrirModalNuevoCliente()" title="Nuevo Cliente">
-                                    <i class="bi bi-person-plus-fill"></i>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- 3. Vendedor -->
-                        <div class="col-md-6 col-lg-3">
-                            <label class="form-label text-muted fw-semibold small mb-1">
-                                <i class="bi bi-person-badge me-1 text-primary"></i> Vendedor
-                            </label>
-                            <select name="select-vendedor1" id="select-vendedor1" class="form-select border-0 shadow-sm rounded-3 py-2 select2-pagina" required>
-                                <option value="">Seleccionar vendedor...</option>
-                            </select>
-                        </div>
-
-                        <!-- 4. Añadir Producto -->
-                        <div class="col-md-6 col-lg-3">
-                            <label class="form-label text-muted fw-semibold small mb-1">
-                                <i class="bi bi-search me-1 text-primary"></i> Añadir Producto
-                            </label>
-                            <div class="input-group shadow-sm rounded-3 overflow-hidden">
-                                <select id="buscadorProductosEditar" class="form-select select2-pagina border-slate-300">
-    <option value="">Escribe SKU o nombre...</option>
-</select>
-                                <button type="button" class="btn btn-primary d-flex align-items-center px-3 border-0" onclick="abrirModalProducto()" title="Agregar nuevo producto">
-                                    <i class="bi bi-plus-lg"></i>
-                                </button>
-                            </div>
-                        </div>
+                <!-- Encabezado de la Página -->
+                <div class="page-header-gradient d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="fw-bold mb-0 text-white"><i class="bi bi-cart-check me-2"></i> Módulo de Remisiones</h4>
+                       
                     </div>
                 </div>
 
-                <!-- Tabla de Artículos -->
-                <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-                    <div class="table-responsive" style="min-height:300px !important; max-height: 340px;">
-                        <table class="table table-hover align-middle mb-0" id="tablaDetalleEditar">
-                            <thead class="bg-light border-bottom">
-                                <tr class="text-secondary small fw-bold text-uppercase tracking-wider">
-                                    
-                                    <th class="ps-4 py-3" style="width: 30%;">Producto</th>
-                                      <th style="width: 12%;">Existencias</th>
+                <div class="p-4">
+                    <!-- Controles / Filtros de Edición -->
+                    <div class="card-filter-box p-4 mb-4 shadow-sm">
+                        <div class="row g-3 align-items-end">
+
+                            <!-- 1. Almacén de Cargo -->
+                            <div class="col-md-4 col-lg-3">
+                                <label class="form-label form-label-custom mb-2">
+                                    <i class="bi bi-box-seam me-1 text-indigo"></i> Almacén de Cargo
+                                </label>
+                                <select name="almacen_id_editar" id="almacen_id_editar"
+                                    class="form-select border-slate-300 rounded-3" required>
+                                    <option value="">Seleccionar ubicación...</option>
+                                    <?php foreach($almacenes as $a): ?>
+                                        <option value="<?= $a['id'] ?>"><?= htmlspecialchars($a['nombre']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <!-- 2. Cliente -->
+                            <div class="col-md-4 col-lg-3">
+                                <label class="form-label form-label-custom mb-2">
+                                    <i class="bi bi-person me-1 text-indigo"></i> Cliente
+                                </label>
+                                <div class="input-group">
+                                    <select name="cliente_id_editar" id="cliente_id_editar"
+                                        class="form-select select2-pagina border-slate-300" required>
+                                        <option value="">Seleccionar cliente...</option>
+                                        <?php foreach($clientes as $p): ?>
+                                            <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <button class="btn btn-outline-secondary px-3" type="button"
+                                        onclick="abrirModalNuevoCliente()" title="Nuevo Cliente">
+                                        <i class="bi bi-person-plus-fill"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 3. Vendedor -->
+                            <div class="col-md-4 col-lg-3">
+                                <label class="form-label form-label-custom mb-2">
+                                    <i class="bi bi-person-badge me-1 text-indigo"></i> Vendedor
+                                </label>
+                                <select name="select-vendedor1" id="select-vendedor1"
+                                    class="form-select select2-pagina border-slate-300" required>
+                                    <option value="">Seleccionar vendedor...</option>
+                                </select>
+                            </div>
+
+                            <!-- 4. Añadir Producto -->
+                            <div class="col-12 col-lg-3">
+                                <label class="form-label form-label-custom mb-2">
+                                    <i class="bi bi-search me-1 text-indigo"></i> Añadir Producto
+                                </label>
+                                <div class="input-group">
+                                    <select id="buscadorProductosEditar"
+                                        class="form-select select2-pagina border-slate-300">
+                                        <option value="">Escribe SKU o nombre...</option>
+                                        <?php foreach($productos as $pr): ?>
+                                            <option value="<?= $pr['producto_id'] ?>"
+                                                data-nombre="<?= htmlspecialchars($pr['nombre']) ?>"
+                                                data-sku="<?= htmlspecialchars($pr['sku']) ?>"
+                                                data-um="<?= htmlspecialchars($pr['unidad_medida']) ?>"
+                                                data-ur="<?= htmlspecialchars($pr['unidad_reporte']) ?>"
+                                                data-premin="<?= $pr['precio_minorista'] ?? 0 ?>"
+                                                data-premat="<?= $pr['precio_mayorista'] ?? 0 ?>"
+                                                data-predis="<?= $pr['precio_distribuidor'] ?? 0 ?>"
+                                                data-factor="<?= $pr['factor_conversion'] ?? 1 ?>">
+                                                [<?= htmlspecialchars($pr['sku']) ?>] <?= htmlspecialchars($pr['nombre']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <button type="button" class="btn btn-action-primary d-flex align-items-center px-3"
+                                        onclick="abrirModalProducto()" title="Agregar nuevo producto">
+                                        <i class="bi bi-plus-lg me-1"></i>
+                                        <span>Nuevo</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!-- Tabla de Artículos -->
+                    <div class="table-responsive border rounded-4 bg-white shadow-sm"
+                        style="max-height: 420px; overflow-y: auto;">
+                        <table class="table align-middle mb-0" id="tablaDetalleEditar">
+                            <thead>
+                                <tr class="table-custom-header text-uppercase">
+                                    <th class="ps-4" style="width: 30%;">Producto</th>
                                     <th style="width: 12%;">Cantidad</th>
-                                    <th style="width: 18%;">Presentación</th>
-                                    <th style="width: 18%;">Tipo Precio</th>
+                                    <th style="width: 18%;">Presentación / Unidad</th>
+                                    <th style="width: 18%;">Tipo de precio</th>
                                     <th style="width: 12%;">Precio Unit.</th>
-                                    <th style="width: 15%;">Total</th>
+                                    <th style="width: 15%;">TOTAL</th>
                                     <th style="width: 5%;" class="text-center pe-4">Acción</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
-                                <!-- Filas dinámicas -->
                             </tbody>
                         </table>
 
                         <!-- Estado Vacío -->
-                        <div id="emptyStateEditar" class="text-center py-5">
-                            <div class="avatar-icon-box bg-light text-muted mx-auto mb-3">
-                                <i class="bi bi-cart-x fs-1 text-secondary opacity-50"></i>
+                        <div id="emptyStateEditar" class="text-center py-5 text-muted">
+                            <div class="mb-2">
+                                <i class="bi bi-cart-x text-slate-300 opacity-50" style="font-size: 3.5rem;"></i>
                             </div>
-                            <h6 class="fw-bold text-dark mb-1">La lista está vacía</h6>
-                            <p class="text-muted small mb-0">Busca e incluye artículos a esta venta desde el panel superior</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Sección Inferior: Pagos, Notas y Total -->
-                <div class="row g-4 align-items-stretch">
-                    <!-- Panel Izquierdo: Formas de Pago y Observaciones -->
-                    <div class="col-lg-7">
-                        <div class="card border-0 shadow-sm rounded-4 h-100 p-4 bg-white">
-                            <h6 class="fw-bold text-dark mb-3 d-flex align-items-center">
-                                <i class="bi bi-credit-card-2-front text-primary me-2"></i> Datos del Pago y Observaciones
-                            </h6>
-                            
-                            <div class="row g-3 mb-3">
-                                <div class="col-sm-6">
-                                    <label class="form-label small fw-semibold text-muted">Monto Pagado</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text bg-success-subtle text-success border-0 fw-bold">$</span>
-                                        <input type="number" id="monto_pagar" class="form-control border-light-subtle bg-light fw-bold fs-5 text-success" value="0" step="0.01" min="0">
-                                    </div>
-                                </div>
-                                <div class="col-sm-6">
-                                    <label class="form-label small fw-semibold text-muted">Método de Pago</label>
-                                    <select id="metodo_pago" class="form-select border-light-subtle bg-light fw-semibold" onchange="verificarMetodoPago(this.value)">
-                                        <option value="Efectivo">💵 Efectivo</option>
-                                        <option value="Transferencia">🏦 Transferencia</option>
-                                        <option value="Tarjeta">💳 Tarjeta</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- Referencia condicional -->
-                            <div class="mb-3" id="contenedorReferencia" style="display:none;">
-                                <label class="form-label small fw-bold text-secondary text-uppercase">
-                                    Referencia de Transacción
-                                </label>
-                                <input type="text" id="inputReferencia" class="form-control border-light-subtle bg-light" placeholder="Ej. N° de Rastreo / Voucher">
-                            </div>
-
-                            <div id="pago_aviso" class="small mb-3 fw-semibold"></div>
-
-                            <div>
-                                <label class="form-label small fw-semibold text-muted">Notas / Observaciones</label>
-                                <textarea id="obsVenta" class="form-control border-light-subtle bg-light rounded-3" rows="2" placeholder="Agrega detalles o instrucciones sobre esta orden..."></textarea>
-                            </div>
+                            <p class="fw-semibold text-slate-600 mb-1">La lista está vacía</p>
+                            <small class="text-slate-400">Utiliza el buscador superior para agregar productos a esta venta</small>
                         </div>
                     </div>
 
-                    <!-- Panel Derecho: Resumen Total y Finalización -->
-                   <div class="col-lg-5">
-    <div class="card border-0 shadow-sm rounded-4 h-100 p-4 bg-gradient-dark d-flex flex-column justify-content-between">
-        
-        <!-- Bloque de Información Superior -->
-        <div>
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 small" style="font-size: 0.75rem;">
-                    <i class="bi bi-receipt me-1"></i> Resumen Final
-                </span>
-                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 small">
-                    Orden Lista
-                </span>
-            </div>
+                    <!-- Resumen del Total y Botones de Acción -->
+                    <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                        <a href="/cfsistem/app/controllers/ventasController2.php" class="btn btn-outline-secondary rounded-pill px-4 fw-bold">
+                             Reiniciar
+                        </a>
 
-            <p class="text-success-50 small mb-1 text-uppercase fw-semibold tracking-wider">
-                Monto Total de la Operación
-            </p>
-            
-            <div id="costoTotalCompraEditar" class="display-4 fw-black text-success mb-2 tracking-tight">
-                $0.00
-            </div>
-            
-            <input type="number" id="totalCotizacionEditar" name="totalCotizacionEditar" value="0">
-        </div>
+                        <div class="d-flex align-items-center gap-4">
+                            <div class="total-badge-card text-end">
+                                <small class="d-block text-white-50 fw-semibold text-uppercase tracking-wider mb-1"
+                                    style="font-size:0.7rem;">
+                                    Costo Total de Compra
+                                </small>
+                                <div id="costoTotalCompraEditar" class="fw-bold" style="font-size:2.2rem; line-height:1;">
+                                    $0.00
+                                </div>
+                                <input type="hidden" id="totalCotizacionEditar" name="totalCotizacionEditar" value="0">
+                            </div>
 
-        <!-- Bloque de Botones Inferior -->
-        <div class="pt-4 mt-3 border-top border-white-10 d-flex gap-3 align-items-center">
-            <!-- Botón Reiniciar (Estilo neutro/secundario) -->
-            <button type="button" onclick="location.reload()" class="btn btn-outline-dark rounded-pill px-4 py-2.5 fw-semibold border-white-10 btn-hover-light d-flex align-items-center justify-content-center">
-                <i class="bi bi-arrow-clockwise me-1 fs-6"></i> Reiniciar
-            </button>
-            
-            <!-- Botón Principal (Destacado en Verde) -->
-            <button type="submit" class="btn btn-success btn-lg rounded-pill px-4 py-3 fw-bold flex-grow-1 shadow-lg d-flex align-items-center justify-content-center text-nowrap">
-                <i class="bi bi-check2-circle me-2 fs-5"></i> Finalizar Venta
-            </button>
-        </div>
-
-    </div>
-</div>
+                            <button type="submit"
+                                class="btn btn-action-primary rounded-pill px-5 py-3 fw-bold shadow-sm d-flex align-items-center fs-5">
+                                <i class="bi bi-check2-circle me-2"></i> Finalizar Venta
+                            </button>
+                        </div>
+                    </div>
                 </div>
+            </form>
 
-            </div>
-        </form>
+        </div>
     </div>
-</div>
+
     <?php require_once __DIR__ . '/egresosComponets/agregarPoductoModal.php'; ?>
-       <?php require_once __DIR__ . '/clientes/clientesModal.php'; ?>
 
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -352,87 +307,6 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-    const selectAlmacen = document.getElementById('almacen_id_editar');
-
-    if (selectAlmacen) {
-        selectAlmacen.addEventListener('change', function (e) {
-            const almacenId = this.value; // ID del almacén seleccionado
-            const textoSeleccionado = this.options[this.selectedIndex].text; // Nombre del almacén
-
-            if (almacenId) {
-                console.log(`Almacén cambiado a ID: ${almacenId} - ${textoSeleccionado}`);
-                  recargarProductosEditar();
-                
-                // 🚀 Coloca aquí la función o lógica que deseas ejecutar
-                // Ejemplo: cargarProductosPorAlmacen(almacenId);
-            } else {
-                console.log('Se deseleccionó el almacén');
-            }
-        });
-    }
-});
-      async function recargarProductosEditar() {
-    const id = $('#almacen_id_editar').val();
-    const $select = $('#buscadorProductosEditar');
-
-    if (!id) return;
-
-    const url = `/cfsistem/app/controllers/accesoController.php?action=obtenerProductosAlmacen&id=${id}`;
-    console.log("Consultando URL:", url);
-
-    // 1. Hacemos la petición
-    const resp = await fetch(url);
-    
-    // 2. Leemos la respuesta como TEXTO plano primero para ver si hay errores de PHP
-    const textoServidor = await resp.text();
-    console.log("=== RESPUESTA CRUDA DEL SERVIDOR ===");
-    console.log(textoServidor);
-
-    // 3. Intentamos convertir a JSON
-    let res;
-    try {
-        res = JSON.parse(textoServidor);
-    } catch (errJson) {
-        console.error("❌ EL SERVIDOR NO DEVOLVIÓ JSON VÁLIDO. Mira el texto arriba.");
-        return;
-    }
-
-    console.log("=== JSON DECODIFICADO ===", res);
-
-    if (!res.success) {
-        console.error("❌ El PHP devolvió success: false ->", res.message);
-        return;
-    }
-
-    // 4. Si todo está bien, actualizamos el Select2
-    $select.empty();
-    $select.append(new Option("Escribe SKU o nombre...", "", true, true));
-
-    if (Array.isArray(res.data)) {
-        res.data.forEach(pr => {
-            const option = new Option(`[${pr.sku}] ${pr.nombre}`, pr.producto_id, false, false);
-            
-            $(option).attr({
-                'data-nombre': pr.nombre || '',
-                'data-medidas': JSON.stringify(pr.medidas_adicionales || []),
-                'data-sku': pr.sku || '',
-                'data-um': pr.unidad_medida || '',
-                'data-ur': pr.unidad_reporte || '',
-                'data-premin': pr.precio_minorista || 0,
-                'data-premat': pr.precio_mayorista || 0,
-                'data-predis': pr.precio_distribuidor || 0,
-                'data-factor': pr.factor_conversion || 1,
-                'data-stock': (pr.stock) || 1
-            });
-
-            $select.append(option);
-        });
-    }
-
-    // Notificar a Select2 del cambio
-    $select.trigger('change.select2');
-}
         const URL_CONTROLADOR_EDITAR = '/cfsistem/app/controllers/cotizacionesController.php';
         let total_inicial = 0;
         let cliente_nombre = '';
@@ -446,7 +320,7 @@
 
         $(document).ready(async function() {
             try {
-               
+                await recargarProductosEditar();
                 await cargarVendedores3();
             } catch (error) {
                 console.error("Error en inicialización:", error);
@@ -515,7 +389,7 @@
                     style: 'currency',
                     currency: 'MXN'
                 });
-                document.getElementById('totalCotizacionEditar').value = totalCompraEditar;
+                document.getElementById('totalCotizacionEditar').value = totalCompraEditar.toFixed(2);
 
             } finally {
                 recalculandoFilaEditar = false;
@@ -525,7 +399,43 @@
         // =====================================================
         // RECARGAR PRODUCTOS
         // =====================================================
-      // =====================================================
+        async function recargarProductosEditar() {
+            try {
+                const resp = await fetch(`/cfsistem/app/controllers/accesoController.php?action=obtenerProductos`);
+                const res = await resp.json();
+
+                if (!res.success) {
+                    throw new Error(res.message);
+                }
+
+                const select = document.getElementById('buscadorProductosEditar');
+                select.innerHTML = `<option value="">Escribe para buscar...</option>`;
+
+                res.data.forEach(pr => {
+                    const option = document.createElement('option');
+                    option.value = pr.producto_id;
+                    option.dataset.nombre = pr.nombre;
+                    option.dataset.medidas = JSON.stringify(pr.medidas_adicionales || []);
+                    option.dataset.sku = pr.sku;
+                    option.dataset.um = pr.unidad_medida;
+                    option.dataset.ur = pr.unidad_reporte;
+                    option.dataset.premin = pr.precio_minorista || 0;
+                    option.dataset.premat = pr.precio_mayorista || 0;
+                    option.dataset.predis = pr.precio_distribuidor || 0;
+                    option.dataset.factor = pr.factor_conversion || 1;
+
+                    option.textContent = `[${pr.sku}] ${pr.nombre}`;
+                    select.appendChild(option);
+                });
+
+            } catch (e) {
+                console.error(e);
+                Swal.fire('Error', 'No se pudo actualizar la lista de productos', 'error');
+            }
+            $('#buscadorProductosEditar').trigger('change.select2');
+        }
+
+        // =====================================================
         // EVENTO SELECT2: AGREGAR PRODUCTO
         // =====================================================
         $('#buscadorProductosEditar').on('select2:select', function(e) {
@@ -555,28 +465,11 @@
 
             $('#tablaDetalleEditar tbody').append(`
             <tr id="filaEditar-${id}">
-            
-                <td >
+                <td class="ps-4">
                     <b>${d.nombre}</b><br>
                     <small class="text-muted">${d.sku}</small>
                 </td>
-<td class="ps-4">
-<input 
-                        type="hidden"
-                        name="itemsEditar[${id}][exis]"
-                        class=" cantidad-exis" 
-                      
-                        value="${d.stock}"
-                        min="0.01"
-                        
-                        >
-<spam   
-                     
-                      
-                       >${d.stock/d.factor}</spam>
-                   <b> ${d.ur}</b>
-                    
-                </td>
+
                 <td>
                     <input 
                         type="number"
@@ -599,7 +492,7 @@
                         name="itemsEditar[${id}][unidad]" 
                         class="form-select unidad-select-editar"
                         onchange="actualizarEquivalencia(this);calcularPrecioSugeridoEditar(this)">
-                        <option value="" data-equivalencia="" data-medida-id="">Seleccione</option>
+                        <option value="0" data-equivalencia="1" data-medida-id="0">Seleccione</option>
                         ${opcionesUnidad}
                     </select>
                 </td>
@@ -652,71 +545,16 @@
 
             $(this).val(null).trigger('change');
         });
- function validarExistencias(fila, cantidad, equivalencia, existencias) {
 
-    const maximoPermitido = existencias / equivalencia;
-    const soli = cantidad *equivalencia;
- console.log(cantidad,equivalencia,existencias);
- console.log(soli,maximoPermitido);
+        function actualizarEquivalencia(input) {
+            const fila = $(input).closest('tr');
+            const cantidad = parseFloat(fila.find('.cantidad-editar').val()) || 0;
+            const equivalencia = parseFloat(fila.find('.unidad-select-editar option:selected').data('equivalencia')) || 1;
+            let cantidadTotal = (1 / equivalencia).toFixed(2);
+            fila.find('.equivalencia').val(cantidadTotal);
+        }
 
-    if (soli > existencias) {
-
-        fila.find('.cantidad-editar').val(maximoPermitido.toFixed(4));
-
-        Swal.fire({
-            icon: 'warning',
-            title: '¿Deseas continiar Existencias insuficientes?',
-            text: `Solo hay ${maximoPermitido.toFixed(4)} unidades disponibles.`
-        });
-
-        return cantidad;
-    }
-
-    return cantidad;
-}
-function actualizarEquivalencia(input) {
-
-    const fila = $(input).closest('tr');
-
-    const cantidad = parseFloat(fila.find('.cantidad-editar').val()) || 0;
-    const existencias = parseFloat(fila.find('.cantidad-exis').val()) || 0;
-
-    const unidad = fila.find('.unidad-select-editar').val();
-
-    // Todavía no se eligió una unidad
-    if (!unidad || unidad == "0") {
-        return;
-    }
-
-    let equivalencia = parseFloat(
-        fila.find('.unidad-select-editar option:selected').data('equivalencia')
-    );
-
-    if (isNaN(equivalencia) || equivalencia <= 0) {
-        return;
-    }
-
-    // Obtener la equivalencia inversa
-   
-    equivalencia = 1 / equivalencia;
-
-// Solo redondear si es >= 1 y está muy cerca de un entero
-if (
-    equivalencia >= 1 &&
-    Math.abs(equivalencia - Math.round(equivalencia)) <= 0.00001
-) {
-    equivalencia = Math.round(equivalencia);
-}
-
-    // Si está prácticamente en un entero, redondearlo
-    
-    // Guardar el valor que se enviará
-    fila.find('.equivalencia').val(equivalencia);
-
-   
-
-    calcularTotalSolEditar(input);
-}function calcularPrecioSugeridoEditar(select) {
+        function calcularPrecioSugeridoEditar(select) {
             const fila = select.closest('tr');
             const inputPrecio = fila.querySelector('.precio-unitario-editar');
             const unidadSelect = fila.querySelector('.unidad-select-editar');
@@ -743,26 +581,7 @@ if (
                 e.target.dataset.editado = "1";
             }
         });
-document.addEventListener('DOMContentLoaded', () => {
-    cargarUsuariosSelect();
-});
-      function verificarMetodoPago(metodo) {
-    
 
-    const contenedor = document.getElementById('contenedorReferencia');
-    const input = document.getElementById('inputReferencia');
-
-    if (!contenedor || !input) return;
-
-    if (metodo === 'Tarjeta' || metodo === 'Transferencia') {
-        contenedor.style.display = 'block';
-        input.required = true;
-    } else {
-        contenedor.style.display = 'none';
-        input.required = false;
-        input.value = '';
-    }
-}
         // =====================================================
         // GUARDAR ACTUALIZACIÓN (SUBMIT FORM)
         // =====================================================
@@ -779,19 +598,19 @@ document.addEventListener('DOMContentLoaded', () => {
     $btnFinalizar.prop('disabled', true);
 
     const totalVenta = parseFloat($('#totalCotizacionEditar').val()) || 0;
-    const montoPagado = $('#monto_pagar').val(); // Dinero real recibido
-   
+    const montoPagado = 0; // Dinero real recibido
+
     const payload = {
         accion: 'guardar_venta',
         id_cliente: $('#cliente_id_editar').val(),
         id_vendedor: $('#select-vendedor1').val(),
         monto_pagado: montoPagado,
         monto_usado_favor: 0,
-        subtotal: totalVenta,
+        total_venta: totalVenta,
         almacen_id: $('#almacen_id_editar').val(),
-        metodo_pago: $('#metodo_pago').val(),
-        referencia: $('#inputReferencia'),
-        observaciones: $('#obsVenta'),
+        metodo_pago: 'efectivo',
+        referencia: '',
+        observaciones: '',
         usar_saldo_favor: 0,
         carrito: []
     };
@@ -805,9 +624,12 @@ document.addEventListener('DOMContentLoaded', () => {
         let cantidadInicial = parseFloat(fila.find('.cantidad-editar').val()) || 0;
         let equivalencia = parseFloat(fila.find('.equivalencia').val()) || 1;
         
+        
         let cantidadT = (cantidadInicial * equivalencia);
         let cantidadTotal = (cantidadT % 1 > 0) ? cantidadT.toFixed(2) : cantidadT;
-
+        console.log(cantidadInicial);
+        console.log('equivalencia',equivalencia);
+      
         payload.carrito.push({
             producto_id: id,
             almacen_id: $('#almacen_id_editar').val(),
@@ -822,7 +644,6 @@ document.addEventListener('DOMContentLoaded', () => {
             subtotal: fila.find('.precio-total-editar').val()
         });
     });
-     console.log(payload);
 
     Swal.fire({
         title: 'Actualizando venta...',
@@ -831,7 +652,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     try {
-        const resp = await fetch(`/cfsistem/app/controllers/ventasController.php`, {
+        const resp = await fetch(`/cfsistem/app/controllers/ventasController.php?action=guardar_venta`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payload)
@@ -840,7 +661,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await resp.json();
 
         if (res.status === 'success') {
-           
+            // CORREGIDO: Se compara usando las variables definidas en este scope
             const tieneDeuda = payload.monto_pagado < payload.total_venta;
             const esEntregaTotal = (res.total_entregado ?? 0) >= (res.total_pedido ?? 0);
             const iconoFinal = esEntregaTotal ? 'success' : 'warning';

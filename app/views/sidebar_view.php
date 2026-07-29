@@ -102,8 +102,12 @@ $modulos = [
             <button class="btn btn-toggle border-0" id="toggleSidebar" aria-label="Abrir Menú">
                 <i class="bi bi-list fs-2 text-white"></i>
             </button>
-        </div>
 
+<!-- <h5 class="navbar-title text-white mb-0 fw-semibold text-truncate ms-2" style="max-width: 250px;">
+                < ?= $paginaActual ?? '' ?>
+            
+         -->
+</div>
         <div class="d-flex align-items-center gap-2 gap-md-3">
             <div class="dropdown">
                 <a href="javascript:void(0);" class="text-white position-relative p-2" id="btnNotif"
@@ -126,7 +130,7 @@ $modulos = [
                     <li></li>
                 </ul>
             </div>
-
+            </h5>
             <div class="user-badge d-flex align-items-center text-white bg-white bg-opacity-10 px-3 py-1 rounded-pill">
                 <i class="bi bi-person-circle fs-5"></i>
                 <span class="ms-2 d-none d-md-inline small"><?= $_SESSION['nombre'] ?? 'Usuario' ?></span>

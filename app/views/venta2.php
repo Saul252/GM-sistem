@@ -1,0 +1,1302 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Ventas | Sistema</title>
+    <?php
+ 
+     require_once __DIR__ . '/layout/icono.php' ?>
+    <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+        rel="stylesheet" />
+
+    <style>
+    body {
+        background-color: #f8fafc;
+
+      
+    }
+
+    .main-content{
+    padding-top: 45px!important;
+
+}
+
+    .main-card {
+        background: #ffffff;
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        overflow: hidden;
+    }
+
+    .page-header-gradient {
+        background: linear-gradient(135deg, #09b009 0%, #0f2a13 100%);
+        color: #ffffff;
+        padding: 1.5rem 2rem;
+    }
+
+    .card-filter-box {
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 18px;
+    }
+
+    .form-label-custom {
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        color: #64748b;
+        text-transform: uppercase;
+    }
+
+    .btn-action-primary {
+        background-color: #4f46e5;
+        border-color: #4f46e5;
+        color: #ffffff;
+        transition: all 0.2s ease;
+    }
+
+    .btn-action-primary:hover {
+        background-color: #4338ca;
+        border-color: #4338ca;
+        color: #ffffff;
+    }
+
+    .table-custom-header {
+        background-color: #0f172a !important;
+        color: #cbd5e1 !important;
+        font-size: 0.75rem;
+        letter-spacing: 0.05em;
+    }
+
+    .table-custom-header th {
+        background-color: transparent !important;
+        color: #94a3b8 !important;
+        border-bottom: none !important;
+        padding-top: 12px;
+        padding-bottom: 12px;
+    }
+
+    .total-badge-card {
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        color: #ffffff;
+        border-radius: 16px;
+        padding: 0 28px;
+        box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4);
+    }
+
+    .entregado-tooltip {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        cursor: help;
+    }
+.fixed-top {
+    
+    z-index: 1050;
+}
+    .tooltip-custom {
+        position: absolute;
+        bottom: 130%;
+        left: 50%;
+        transform: translateX(-50%);
+        min-width: 240px;
+        max-width: 300px;
+        padding: .6rem .8rem;
+        background: #212529;
+        color: #fff;
+        border-radius: .6rem;
+        font-size: .82rem;
+        line-height: 1.3;
+        text-align: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: .2s ease;
+        z-index: 9999;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, .25);
+    }
+
+    .tooltip-custom::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border-width: 6px;
+        border-style: solid;
+        border-color: #212529 transparent transparent transparent;
+    }
+
+    .entregado-tooltip:hover .tooltip-custom {
+        opacity: 1;
+        visibility: visible;
+    }
+    </style>
+</head>
+
+<body>
+
+    <?php renderizarLayout($paginaActual); ?>
+
+    <div class="main-content">
+        <div class="main-card">
+            <form id="formEditarSolicitud">
+                <input type="hidden" id="editar_venta_id" name="cotizacion_id" value="">
+
+                <!-- Encabezado de la Página -->
+                <div class="page-header-gradient d-flex justify-content-between align-items-center p-2">
+                    <div>
+                        <h4 class="fw-bold mb-1 text-white d-flex align-items-center">
+                            <i class="bi bi-cart-check-fill me-2 fs-3"></i> Caja Rapida
+                        </h4>
+                       
+                    </div>
+                </div>
+
+                <div class="p-4">
+                    <!-- Controles y Filtros Principal -->
+                    <div class="card-filter-box p-4 mb-4 shadow-sm border-0 rounded-4 bg-light">
+                        <div class="row g-3">
+                            <!-- 1. Almacén -->
+                            <div class="col-md-6 col-lg-3">
+                                <label class="form-label text-muted fw-semibold small mb-1">
+                                    <i class="bi bi-box-seam me-1 text-primary"></i> Almacén de Cargo
+                                </label>
+                                <select name="almacen_id_editar" id="almacen_id_editar"
+                                    class="form-select border-0 shadow-sm rounded-3 py-2" required>
+                                    <option value="">Seleccionar ubicación...</option>
+                                    <?php foreach($almacenes as $a): ?>
+                                    <option value="<?= $a['id'] ?>"><?= htmlspecialchars($a['nombre']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+
+                            <!-- 2. Cliente -->
+                            <div class="col-md-6 col-lg-3">
+                                <label class="form-label text-muted fw-semibold small mb-1">
+                                    <i class="bi bi-person me-1 text-primary"></i> Cliente
+                                </label>
+                                <div class="input-group shadow-sm rounded-3 overflow-hidden">
+                                    <select name="cliente_id_editar" id="cliente_id_editar"
+                                        class="form-select border-0 select2-pagina" required>
+                                        <option value="">Seleccionar cliente...</option>
+                                        <?php foreach($clientes as $p): ?>
+                                        <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?>
+                                        </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <button class="btn btn-primary-light border-0 px-3" type="button"
+                                        onclick="abrirModalNuevoCliente()" title="Nuevo Cliente">
+                                        <i class="bi bi-person-plus-fill"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- 3. Vendedor -->
+                            <div class="col-md-6 col-lg-3">
+                                <label class="form-label text-muted fw-semibold small mb-1">
+                                    <i class="bi bi-person-badge me-1 text-primary"></i> Vendedor
+                                </label>
+                                <select name="select-vendedor1" id="select-vendedor1"
+                                    class="form-select border-0 shadow-sm rounded-3 py-2 select2-pagina" required>
+                                    <option value="">Seleccionar vendedor...</option>
+                                </select>
+                            </div>
+
+                            <!-- 4. Añadir Producto -->
+                            <div class="col-md-6 col-lg-3">
+                                <label class="form-label text-muted fw-semibold small mb-1">
+                                    <i class="bi bi-search me-1 text-primary"></i> Añadir Producto
+                                </label>
+                                <div class="input-group shadow-sm rounded-3 overflow-hidden">
+                                    <select id="buscadorProductosEditar"
+                                        class="form-select select2-pagina border-slate-300">
+                                        <option value="">Escribe SKU o nombre...</option>
+                                    </select>
+                                    <button type="button"
+                                        class="btn btn-primary d-flex align-items-center px-3 border-0"
+                                        onclick="abrirModalProducto()" title="Agregar nuevo producto">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabla de Artículos -->
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                        <div class="table-responsive" style="min-height:280px !important; max-height: 340px;">
+                            <table class="table table-hover align-middle mb-0" id="tablaDetalleEditar">
+                                <thead class="bg-light border-bottom">
+                                    <tr class="text-secondary small fw-bold text-uppercase tracking-wider">
+
+                                        <th class="ps-4 py-3" style="width: 30%;">Producto</th>
+                                        <th style="width: 12%;">Existencias</th>
+                                        <th style="width: 12%;">Cantidad</th>
+                                        <th style="width: 18%;">Presentación</th>
+                                        <th style="width: 18%;">Tipo Precio</th>
+                                        <th style="width: 12%;">Precio Unit.</th>
+                                        <th style="width: 15%;">Total</th>
+                                        <th style="width: 5%;" class="text-center pe-4">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100">
+                                    <!-- Filas dinámicas -->
+                                </tbody>
+                            </table>
+
+                            <!-- Estado Vacío -->
+                            <div id="emptyStateEditar" class="text-center py-5">
+                                <div class="avatar-icon-box bg-light text-muted mx-auto mb-3">
+                                    <i class="bi bi-cart-x fs-1 text-secondary opacity-50"></i>
+                                </div>
+                                <h6 class="fw-bold text-dark mb-1">La lista está vacía</h6>
+                                <p class="text-muted small mb-0">Busca e incluye artículos a esta venta desde el panel
+                                    superior</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección Inferior: Pagos, Notas y Total -->
+                    <div class="row g-4 align-items-stretch">
+                        <!-- Panel Izquierdo: Formas de Pago y Observaciones -->
+                        <div class="col-lg-7">
+                            <div class="card border-0 shadow-sm rounded-4 h-100 p-4 bg-white">
+                                <h6 class="fw-bold text-dark mb-3 d-flex align-items-center">
+                                    <i class="bi bi-credit-card-2-front text-primary me-2"></i> Datos del Pago y
+                                    Observaciones
+                                </h6>
+
+                                <div class="row g-3 mb-3">
+                                    <div class="col-sm-6">
+                                        <label class="form-label small fw-semibold text-muted">Monto Pagado</label>
+                                        <div class="input-group">
+                                            <span
+                                                class="input-group-text bg-success-subtle text-success border-0 fw-bold">$</span>
+                                            <input type="number" id="monto_pagar"
+                                                class="form-control border-light-subtle bg-light fw-bold fs-5 text-success"
+                                                value="0" step="0.01" min="0" oninput=" calcularCambio()" >
+                                        </div>
+                                        
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label small fw-semibold text-muted">Método de Pago</label>
+                                        <select id="metodo_pago"
+                                            class="form-select border-light-subtle bg-light fw-semibold"
+                                            onchange="verificarMetodoPago(this.value)">
+                                            <option value="Efectivo">💵 Efectivo</option>
+                                            <option value="Transferencia">🏦 Transferencia</option>
+                                            <option value="Tarjeta">💳 Tarjeta</option>
+                                        </select>
+                                    </div>
+                                     <div id="contenedor_cambio" class=" rounded-4 text-center "
+                                         style="background: #e1fcef; border: 1px dashed #34c759;">
+                                         <span class="text-success small fw-bold text-uppercase"
+                                             style="font-size: 0.6rem; letter-spacing: 1px;">Cambio para el
+                                             cliente</span>
+                                         <h3 class="fw-bold text-success mb-0" id="texto_cambio">$0.00</h3>
+                                     </div>
+                                </div>
+                                
+
+                                <!-- Referencia condicional -->
+                                <div class="mb-3" id="contenedorReferencia" style="display:none;">
+                                    <label class="form-label small fw-bold text-secondary text-uppercase">
+                                        Referencia de Transacción
+                                    </label>
+                                    <input type="text" id="inputReferencia"
+                                        class="form-control border-light-subtle bg-light"
+                                        placeholder="Ej. N° de Rastreo / Voucher">
+                                </div>
+
+                                <div id="pago_aviso" class="small mb-3 fw-semibold"></div>
+
+                                <div>
+                                    <label class="form-label small fw-semibold text-muted">Notas / Observaciones</label>
+                                    <textarea id="obsVenta" class="form-control border-light-subtle bg-light rounded-3"
+                                        rows="2"
+                                        placeholder="Agrega detalles o instrucciones sobre esta orden..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Panel Derecho: Resumen Total y Finalización -->
+                        <div class="col-lg-5">
+                            <div
+                                class="card border-0 shadow-sm rounded-4 h-100 p-4 bg-gradient-dark d-flex flex-column justify-content-between">
+
+                                <!-- Bloque de Información Superior -->
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <span
+                                            class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 small"
+                                            style="font-size: 0.75rem;">
+                                            <i class="bi bi-receipt me-1"></i> Resumen Final
+                                        </span>
+                                        <span
+                                            class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 small">
+                                            Orden Lista
+                                        </span>
+                                    </div>
+
+                                    <p class="text-success-50 small mb-1 text-uppercase fw-semibold tracking-wider">
+                                        Monto Total de la Operación
+                                    </p>
+
+                                    <div id="costoTotalCompraEditar"
+                                        class="display-4 fw-black text-success mb-2 tracking-tight">
+                                        $0.00
+                                    </div>
+                                    
+
+                                    <input type="hidden" id="totalCotizacionEditar" name="totalCotizacionEditar"
+                                        value="0">
+                                </div>
+
+                                <!-- Bloque de Botones Inferior -->
+                                <div class="pt-4 mt-3 border-top border-white-10 d-flex gap-3 align-items-center">
+                                    <!-- Botón Reiniciar (Estilo neutro/secundario) -->
+                                    <button type="button" onclick="location.reload()"
+                                        class="btn btn-outline-dark rounded-pill px-4 py-2.5 fw-semibold border-white-10 btn-hover-light d-flex align-items-center justify-content-center">
+                                        <i class="bi bi-arrow-clockwise me-1 fs-6"></i> Reiniciar
+                                    </button>
+
+                                    <!-- Botón Principal (Destacado en Verde) -->
+                                    <button type="submit"id="botonEnviar"
+                                        class="btn btn-success btn-lg rounded-pill px-4 py-3 fw-bold flex-grow-1 shadow-lg d-flex align-items-center justify-content-center text-nowrap">
+                                        <i class="bi bi-check2-circle me-2 fs-5"></i> Finalizar Venta
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+        <div style=" display:none;" class="col-12">
+            <div class="card border-0 shadow-sm" style="border-radius: 1.5rem;">
+                <div class="card-body p-4">
+                    <h6 class="text-uppercase fw-bold mb-4 text-secondary"
+                        style="font-size: 0.7rem; letter-spacing: 1px;">
+                        <i class="bi bi-truck me-2 text-primary"></i>Datos de Despacho
+                    </h6>
+                    <div class="row g-3">
+                        <div style=" display:none;" class="col-md-4">
+                            <div class="p-3 rounded-4 bg-light">
+                                <label class="form-label small fw-bold text-muted mb-1"
+                                    style="font-size: 0.6rem;">DESPACHADOR RESPONSABLE</label>
+                                <select name="chofer_id" id="patio_chofer_id"
+                                    class="form-select border-0 bg-transparent shadow-none fw-bold p-0">
+                                    <option value="">Seleccione encargado...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style=" display:none;" class="col-md-4">
+                            <div class="p-3 rounded-4 bg-light">
+                                <label class="form-label small fw-bold text-muted mb-1"
+                                    style="font-size: 0.6rem;">AYUDANTES (MULTIPLE)</label>
+                                <select name="tripulantes[]" id="patio_tripulantes"
+                                    class="form-select border-0 bg-transparent shadow-none fw-bold p-0" multiple
+                                    style="min-height: 24px;">
+                                </select>
+                            </div>
+                        </div>
+                        <div style=" display:none;" class="col-md-4">
+                            <div class="p-3 rounded-4 bg-light">
+                                <label class="form-label small fw-bold text-muted mb-1"
+                                    style="font-size: 0.6rem;">OBSERVACIONES DE ENTREGA</label>
+                                <textarea name="observaciones"
+                                    class="form-control border-0 bg-transparent shadow-none p-0 fw-medium" rows="1"
+                                    placeholder="Ej. Revisado por cliente..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php require_once __DIR__ . '/egresosComponets/agregarPoductoModal.php'; ?>
+    <?php require_once __DIR__ . '/clientes/clientesModal.php'; ?>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const selectAlmacen = document.getElementById('almacen_id_editar');
+
+        if (selectAlmacen) {
+            selectAlmacen.addEventListener('change', function(e) {
+                const almacenId = this.value; // ID del almacén seleccionado
+                const textoSeleccionado = this.options[this.selectedIndex].text; // Nombre del almacén
+
+                if (almacenId) {
+                    console.log(`Almacén cambiado a ID: ${almacenId} - ${textoSeleccionado}`);
+                    recargarProductosEditar();
+                    const id = $('#almacen_id_editar').val();
+                    cargarPersonalDespacho(id);
+
+                    // 🚀 Coloca aquí la función o lógica que deseas ejecutar
+                    // Ejemplo: cargarProductosPorAlmacen(almacenId);
+                } else {
+                    console.log('Se deseleccionó el almacén');
+                }
+            });
+        }
+    });
+
+    async function recargarProductosEditar() {
+
+        const id = $('#almacen_id_editar').val();
+        const $select = $('#buscadorProductosEditar');
+
+        if (!id) return;
+
+        const url = `/cfsistem/app/controllers/accesoController.php?action=obtenerProductosAlmacen&id=${id}`;
+        console.log("Consultando URL:", url);
+
+        // 1. Hacemos la petición
+        const resp = await fetch(url);
+
+        // 2. Leemos la respuesta como TEXTO plano primero para ver si hay errores de PHP
+        const textoServidor = await resp.text();
+        console.log("=== RESPUESTA CRUDA DEL SERVIDOR ===");
+        console.log(textoServidor);
+
+        // 3. Intentamos convertir a JSON
+        let res;
+        try {
+            res = JSON.parse(textoServidor);
+        } catch (errJson) {
+            console.error("❌ EL SERVIDOR NO DEVOLVIÓ JSON VÁLIDO. Mira el texto arriba.");
+            return;
+        }
+
+        console.log("=== JSON DECODIFICADO ===", res);
+
+        if (!res.success) {
+            console.error("❌ El PHP devolvió success: false ->", res.message);
+            return;
+        }
+
+        // 4. Si todo está bien, actualizamos el Select2
+        $select.empty();
+        $select.append(new Option("Escribe SKU o nombre...", "", true, true));
+
+        if (Array.isArray(res.data)) {
+            res.data.forEach(pr => {
+                const option = new Option(`[${pr.sku}] ${pr.nombre}`, pr.producto_id, false, false);
+
+                $(option).attr({
+                    'data-nombre': pr.nombre || '',
+                    'data-medidas': JSON.stringify(pr.medidas_adicionales || []),
+                    'data-sku': pr.sku || '',
+                    'data-um': pr.unidad_medida || '',
+                    'data-ur': pr.unidad_reporte || '',
+                    'data-premin': pr.precio_minorista || 0,
+                    'data-premat': pr.precio_mayorista || 0,
+                    'data-predis': pr.precio_distribuidor || 0,
+                    'data-factor': pr.factor_conversion || 1,
+                    'data-stock': (pr.stock) || 1
+                });
+
+                $select.append(option);
+            });
+        }
+
+        // Notificar a Select2 del cambio
+        $select.trigger('change.select2');
+    }
+    const URL_CONTROLADOR_EDITAR = '/cfsistem/app/controllers/cotizacionesController.php';
+    let total_inicial = 0;
+    let cliente_nombre = '';
+    let dataEdicion = null;
+    let recalculandoFilaEditar = false;
+
+    // Inicializar Select2 en la página
+    $('.select2-pagina').select2({
+        theme: 'bootstrap-5'
+    });
+
+    $(document).ready(async function() {
+        try {
+
+            await cargarVendedores3();
+        } catch (error) {
+            console.error("Error en inicialización:", error);
+        }
+    });
+
+    // =====================================================
+    // CARGAR VENDEDORES
+    // =====================================================
+    async function cargarVendedores3(vendedor_id = null) {
+        const select = document.getElementById('select-vendedor1');
+        if (!select) return;
+
+        try {
+            const url = '/cfsistem/app/controllers/accesoController.php?action=obtenerUsuarios';
+            const respuesta = await fetch(url);
+
+            if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
+
+            const resultado = await respuesta.json();
+
+            if (resultado.success && Array.isArray(resultado.data)) {
+                resultado.data.forEach(usuario => {
+                    const opcion = document.createElement('option');
+                    opcion.value = usuario.id;
+                    opcion.textContent = `${usuario.nombre}`;
+                    select.appendChild(opcion);
+                });
+
+                if (vendedor_id) {
+                    $('#select-vendedor1').val(vendedor_id).trigger('change.select2');
+                }
+            } else {
+                select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
+            }
+        } catch (error) {
+            select.innerHTML = '<option value="">Error al cargar la lista</option>';
+            console.error('Error al ejecutar cargarVendedores3:', error);
+        }
+    }
+
+    // =====================================================
+    // CALCULAR TOTAL EDITAR
+    // =====================================================
+    function calcularTotalSolEditar(input) {
+        if (recalculandoFilaEditar) return;
+        recalculandoFilaEditar = true;
+
+        try {
+            const fila = input ? input.closest('tr') : null;
+            if (fila) {
+                const cantidad = parseFloat(fila.querySelector('.cantidad-editar')?.value) || 0;
+                const precioUnitarioOriginal = parseFloat(fila.querySelector('.precio-unitario-editar')?.value) || 0;
+
+                const precioTotal = cantidad * precioUnitarioOriginal;
+                fila.querySelector('.precio-total-editar').value = precioTotal.toFixed(2);
+            }
+
+            // SUMA GENERAL
+            let totalCompraEditar = 0;
+            document.querySelectorAll('#tablaDetalleEditar .precio-total-editar').forEach(el => {
+                totalCompraEditar += parseFloat(el.value) || 0;
+            });
+
+            document.getElementById('costoTotalCompraEditar').textContent = totalCompraEditar.toLocaleString('es-MX', {
+                style: 'currency',
+                currency: 'MXN'
+            });
+            document.getElementById('totalCotizacionEditar').value = totalCompraEditar.toFixed(2);
+          calcularCambio();
+
+        } finally {
+            recalculandoFilaEditar = false;
+        }
+    }
+
+    // =====================================================
+    // RECARGAR PRODUCTOS
+    // =====================================================
+    // =====================================================
+    // EVENTO SELECT2: AGREGAR PRODUCTO
+    // =====================================================
+    $('#buscadorProductosEditar').on('select2:select', function(e) {
+        const d = e.params.data.element.dataset;
+        const id = $(this).val();
+
+        if ($(`#filaEditar-${id}`).length) {
+            Swal.fire('Aviso', 'El producto ya está en la lista', 'info');
+            return;
+        }
+
+        $('#emptyStateEditar').addClass('d-none');
+        const medidas = JSON.parse(d.medidas || '[]');
+
+        let opcionesUnidad = ``;
+        medidas.forEach(m => {
+            opcionesUnidad += `
+                <option value="${m.id}" data-equivalencia="${m.equivalencia}" data-medida-id="${m.id}">
+                    ${m.nombre}
+                </option>`;
+        });
+
+        const preMin = parseFloat(d.premin) || 0;
+        const preMat = parseFloat(d.premat) || 0;
+        const preDis = parseFloat(d.predis) || 0;
+        const factor = parseFloat(d.factor) || 1;
+
+        $('#tablaDetalleEditar tbody').append(`
+            <tr id="filaEditar-${id}">
+            
+                <td >
+                    <b>${d.nombre}</b><br>
+                    <small class="text-muted">${d.sku}</small>
+                </td>
+<td class="ps-4">
+<input 
+                        type="hidden"
+                        name="itemsEditar[${id}][exis]"
+                        class=" cantidad-exis" 
+                      
+                        value="${d.stock}"
+                        min="0.01"
+                        
+                        >
+<spam   
+                     
+                      
+                       >${d.stock/d.factor}</spam>
+                   <b> ${d.ur}</b>
+                    
+                </td>
+                <td>
+                    <input 
+                        type="number"
+                        name="itemsEditar[${id}][cant]"
+                        class="form-control cantidad-editar"
+                        step="0.01"
+                        value="1"
+                        min="0.01"
+                        required
+                        oninput="actualizarEquivalencia(this);calcularTotalSolEditar(this)">
+                    <input 
+                        type="hidden"
+                        name="itemsEditar[${id}][equivalencia]"
+                        class="form-control equivalencia"
+                        value="1">
+                </td>
+
+                <td>
+                    <select 
+                        name="itemsEditar[${id}][unidad]" 
+                        class="form-select unidad-select-editar"
+                        onchange="actualizarEquivalencia(this);calcularPrecioSugeridoEditar(this)">
+                        <option value="" data-equivalencia="" data-medida-id="">Seleccione</option>
+                        ${opcionesUnidad}
+                    </select>
+                </td>
+                
+                <td>
+                    <select 
+                        name="itemsEditar[${id}][tipoPrecio]" 
+                        class="form-select tipoPrecio-select-editar"
+                        onchange="calcularPrecioSugeridoEditar(this)">
+                        <option value="seleccionar" data-precio="0">Seleccione</option>
+                        <option value="minorista" data-precio="${preMin}">Min $${(preMin * factor).toFixed(2)} x ${d.ur}</option>
+                        <option value="mayorista" data-precio="${preMat}">May $${(preMat * factor).toFixed(2)} x ${d.ur}</option>
+                        <option value="distribuidor" data-precio="${preDis}">Dis $${(preDis * factor).toFixed(2)} x ${d.ur}</option>
+                    </select>
+                </td>
+
+                <td>
+                    <input 
+                        type="number"
+                        lang="en-US"
+                        name="itemsEditar[${id}][precioUnitario]"
+                        class="form-control precio-unitario-editar"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        required
+                        oninput="calcularTotalSolEditar(this)">
+                </td>
+
+                <td style="min-width:140px;">
+                    <input 
+                        type="number"
+                        lang="en-US"
+                        name="itemsEditar[${id}][precio]"
+                        class="form-control precio-total-editar fw-bold text-success bg-light"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        oninput="calcularTotalSolEditar(this)"
+                        style="font-size:1.1rem; height:40px;">
+                </td>
+
+                <td class="text-center">
+                    <button type="button" class="btn btn-link text-danger p-0" onclick="quitarFilaEditar('${id}')">
+                        <i class="bi bi-trash fs-5"></i>
+                    </button>
+                </td>
+            </tr>
+            `);
+
+        $(this).val(null).trigger('change');
+    });
+
+    function validarExistencias(fila, cantidad, equivalencia, existencias) {
+
+        const maximoPermitido = existencias / equivalencia;
+        const soli = cantidad * equivalencia;
+        console.log(cantidad, equivalencia, existencias);
+        console.log(soli, maximoPermitido);
+
+        if (soli > existencias) {
+
+            fila.find('.cantidad-editar').val(maximoPermitido.toFixed(4));
+
+            Swal.fire({
+                icon: 'warning',
+                title: 'Existencias insuficientes',
+                text: `Solo hay ${maximoPermitido.toFixed(4)} unidades disponibles.`
+            });
+
+            return maximoPermitido;
+        }
+
+        return cantidad;
+    }
+
+    function actualizarEquivalencia(input) {
+
+        const fila = $(input).closest('tr');
+
+        const cantidad = parseFloat(fila.find('.cantidad-editar').val()) || 0;
+        const existencias = parseFloat(fila.find('.cantidad-exis').val()) || 0;
+
+        const unidad = fila.find('.unidad-select-editar').val();
+
+        // Todavía no se eligió una unidad
+        if (!unidad || unidad == "0") {
+            return;
+        }
+
+        let equivalencia = parseFloat(
+            fila.find('.unidad-select-editar option:selected').data('equivalencia')
+        );
+
+        if (isNaN(equivalencia) || equivalencia <= 0) {
+            return;
+        }
+
+        // Obtener la equivalencia inversa
+
+        equivalencia = 1 / equivalencia;
+
+        // Solo redondear si es >= 1 y está muy cerca de un entero
+        if (
+            equivalencia >= 1 &&
+            Math.abs(equivalencia - Math.round(equivalencia)) <= 0.00001
+        ) {
+            equivalencia = Math.round(equivalencia);
+        }
+
+        // Si está prácticamente en un entero, redondearlo
+
+        // Guardar el valor que se enviará
+        fila.find('.equivalencia').val(equivalencia);
+
+        validarExistencias(
+            fila,
+            cantidad,
+            equivalencia,
+            existencias
+        );
+
+        calcularTotalSolEditar(input);
+    }
+
+    function calcularPrecioSugeridoEditar(select) {
+        const fila = select.closest('tr');
+        const inputPrecio = fila.querySelector('.precio-unitario-editar');
+        const unidadSelect = fila.querySelector('.unidad-select-editar');
+        const tipoSelect = fila.querySelector('.tipoPrecio-select-editar');
+        const inputtotal = fila.querySelector('.precio-total-editar');
+
+        const unidadOption = unidadSelect.options[unidadSelect.selectedIndex];
+        const tipoOption = tipoSelect.options[tipoSelect.selectedIndex];
+
+        const equivalencia = Number(unidadOption?.dataset.equivalencia || 1);
+        const precioBase = Number(tipoOption?.dataset.precio || 0);
+
+        const sugerido = equivalencia > 0 ? (precioBase / equivalencia) : precioBase;
+        inputPrecio.value = sugerido.toFixed(2);
+
+        const cantidad = parseFloat(fila.querySelector('.cantidad-editar')?.value) || 0;
+        inputtotal.value = (sugerido * cantidad).toFixed(2);
+
+        calcularTotalSolEditar(null);
+    }
+
+    document.addEventListener('input', function(e) {
+        if (e.target.classList.contains('precio-unitario-editar')) {
+            e.target.dataset.editado = "1";
+        }
+    });
+    document.addEventListener('DOMContentLoaded', () => {
+        cargarUsuariosSelect();
+    });
+
+    function verificarMetodoPago(metodo) {
+
+
+        const contenedor = document.getElementById('contenedorReferencia');
+        const input = document.getElementById('inputReferencia');
+
+        if (!contenedor || !input) return;
+
+        if (metodo === 'Tarjeta' || metodo === 'Transferencia') {
+            contenedor.style.display = 'block';
+            input.required = true;
+        } else {
+            contenedor.style.display = 'none';
+            input.required = false;
+            input.value = '';
+        }
+    }
+    // =====================================================
+    // GUARDAR ACTUALIZACIÓN (SUBMIT FORM)
+    // =====================================================
+    // =====================================================
+    $('#formEditarSolicitud').on('submit', async function(e) {
+        e.preventDefault();
+
+        if (!$('#tablaDetalleEditar tbody tr').length) {
+            Swal.fire('Error', 'Agregue al menos un producto a la venta', 'warning');
+            return;
+        }
+
+        const $btnFinalizar = $(this).find('button[type="submit"]');
+        $btnFinalizar.prop('disabled', true);
+
+        const totalVenta = parseFloat($('#totalCotizacionEditar').val()) || 0;
+        const montoPagado = $('#monto_pagar').val(); // Dinero real recibido
+
+        const payload = {
+            accion: 'guardar_venta',
+            id_cliente: $('#cliente_id_editar').val(),
+            id_vendedor: $('#select-vendedor1').val(),
+            monto_pagado: totalVenta,
+            monto_usado_favor: 0,
+            total_venta: totalVenta,
+            almacen_id: $('#almacen_id_editar').val(),
+            metodo_pago: $('#metodo_pago').val(),
+            referencia: $('#inputReferencia'),
+            observaciones: $('#obsVenta'),
+            usar_saldo_favor: 0,
+            chofer_id: parseInt(document.getElementById('patio_chofer_id').value) || 0,
+            tripulantes: $('#patio_tripulantes').val() || [], // Array de IDs de ayudantes
+            observaciones_entrega: document.querySelector('textarea[name="observaciones"]')
+                ?.value || 'Entrega en Patio',
+            carrito: []
+        };
+
+        $('#tablaDetalleEditar tbody tr').each(function() {
+            const fila = $(this);
+            const id = fila.attr('id').replace('filaEditar-', '');
+
+            const unidadSelect = fila.find('.unidad-select-editar option:selected');
+            const tipoPrecioSelect = fila.find('.tipoPrecio-select-editar option:selected');
+            let cantidadInicial = parseFloat(fila.find('.cantidad-editar').val()) || 0;
+            let equivalencia = parseFloat(fila.find('.equivalencia').val()) || 1;
+
+            let cantidadT = (cantidadInicial * equivalencia);
+            let cantidadTotal = (cantidadT % 1 > 0) ? cantidadT.toFixed(2) : cantidadT;
+
+            payload.carrito.push({
+                producto_id: id,
+                almacen_id: $('#almacen_id_editar').val(),
+                cantidad: cantidadTotal,
+                unidad_base: unidadSelect.val(),
+                entrega_hoy: cantidadTotal,               
+                idunidadMedida: unidadSelect.data('medida-id'),
+                unidadEquivalencia: unidadSelect.data('equivalencia'),
+                tipo_precio: tipoPrecioSelect.val(),
+                precio_unitario: fila.find('.precio-unitario-editar').val(),
+                subtotal: fila.find('.precio-total-editar').val()
+            });
+        });
+        console.log(payload.carrito);
+
+        Swal.fire({
+            title: 'Actualizando venta...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        try {
+            const resp = await fetch(`/cfsistem/app/controllers/cajaRapidaController.php`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const res = await resp.json();
+
+            if (res.status === 'success') {
+                // CORREGIDO: Se compara usando las variables definidas en este scope
+                const tieneDeuda = payload.monto_pagado < payload.total_venta;
+                const esEntregaTotal = (res.total_entregado ?? 0) >= (res.total_pedido ?? 0);
+                const iconoFinal = esEntregaTotal ? 'success' : 'warning';
+
+                let htmlExtra =
+                    `<p class="mb-2">Folio: <span class="badge bg-light text-dark border">${res.folio || 'N/A'}</span></p>`;
+
+                if (tieneDeuda) {
+                    htmlExtra += `
+                <div class="alert alert-danger py-1 px-2 border-0 mb-2" style="font-size:0.75rem; border-radius:10px;">
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> Saldo pendiente registrado en cuenta
+                </div>`;
+                }
+
+                Swal.fire({
+                    title: esEntregaTotal ? '¡Venta Exitosa!' : 'Entrega Parcial Registrada',
+                    html: `
+                    <div class="alert alert-light border-0 small text-start py-2 mb-3" style="background:#f2f2f7; border-radius:12px;">
+                        ${res.message || 'Operación realizada correctamente.'}
+                    </div>
+                    ${htmlExtra}
+                    <p class="text-muted small mb-0">¿Deseas imprimir el comprobante?</p>
+                `,
+                    icon: iconoFinal,
+                    showDenyButton: true,
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="bi bi-receipt"></i> Con Precios',
+                    denyButtonText: '<i class="bi bi-receipt"></i> Ticket Formal',
+                    cancelButtonText: 'Cerrar',
+                    confirmButtonColor: '#34c759',
+                    denyButtonColor: '#5856d6',
+                    customClass: {
+                        popup: 'rounded-4 border-0 shadow-lg'
+                    }
+                }).then((result) => {
+                    let url = '';
+                    if (result.isConfirmed) {
+                        url = `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`;
+                    } else if (result.isDenied) {
+                        url = `/cfsistem/app/backend/ventas/ticketFormal.php?id=${res.id_venta}`;
+                    }
+
+                    if (url !== '') window.open(url, '_blank');
+                    location.reload();
+                });
+            } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: res.message || 'Error desconocido',
+                    icon: 'error',
+                    customClass: {
+                        popup: 'rounded-4'
+                    }
+                });
+                $btnFinalizar.prop('disabled', false);
+            }
+
+        } catch (e) {
+            console.error(e);
+            Swal.fire('Error', 'Fallo de conexión con el servidor', 'error');
+            $btnFinalizar.prop('disabled', false);
+        }
+    });
+    // ELIMINAR FILA
+    // =====================================================
+    function quitarFilaEditar(id) {
+        $(`#filaEditar-${id}`).remove();
+
+        if (!$('#tablaDetalleEditar tbody tr').length) {
+            $('#emptyStateEditar').removeClass('d-none');
+        }
+
+        calcularTotalSolEditar(null);
+    }
+
+    // =====================================================
+    // GESTIÓN DE SALDOS Y EGRESOS
+    // =====================================================
+    function mostrarModalSaldo() {
+        let total = parseFloat($('#totalCotizacionEditar').val()) || 0;
+        const diferencia = total_inicial - total;
+
+        $('#txtTotalOriginal').text(total_inicial.toFixed(2));
+        $('#txtNuevoTotal').text(total.toFixed(2));
+        $('#txtDiferencia').text(diferencia.toFixed(2));
+
+        const elemModal = document.getElementById('modalSaldoFavor');
+        if (elemModal) {
+            new bootstrap.Modal(elemModal).show();
+        }
+    }
+
+    $('#btnSaldoFavor').click(async function() {
+        const elemModal = document.getElementById('modalSaldoFavor');
+        if (elemModal) {
+            const modalInst = bootstrap.Modal.getInstance(elemModal);
+            if (modalInst) modalInst.hide();
+        }
+
+        try {
+            const id = $('#editar_venta_id').val();
+            const cliente = $('#cliente_id_editar').val();
+            const total = parseFloat($('#totalCotizacionEditar').val()) || 0;
+            const diferencia = total_inicial - total;
+
+            const fd = new FormData();
+            fd.append('venta_id', id);
+            fd.append('cliente_id', cliente);
+            fd.append('diferencia', diferencia);
+
+            const resp = await fetch(
+                '/cfsistem/app/controllers/editarVentaController.php?action=guardarComoABono', {
+                    method: 'POST',
+                    body: fd
+                });
+
+            const res = await resp.json();
+
+            if (!res.success && res.status !== 'success') {
+                throw new Error(res.message);
+            }
+
+            await Swal.fire({
+                icon: 'success',
+                title: 'Saldo aplicado',
+                text: res.message || 'El saldo a favor fue registrado correctamente.'
+            });
+
+            window.location.reload();
+
+        } catch (e) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: e.message
+            });
+        }
+    });
+
+    async function guardarComoGastoSalidadeDinero() {
+        try {
+            const respFolio = await fetch(
+                '/cfsistem/app/controllers/egresosController.php?action=getSiguienteFolioGasto');
+            const folioRes = await respFolio.json();
+
+            if (!folioRes.success) {
+                throw new Error("No fue posible obtener el folio.");
+            }
+
+            const folio = folioRes.folio;
+            const id = $('#editar_venta_id').val();
+            const total = parseFloat($('#totalCotizacionEditar').val()) || 0;
+            const diferencia = total_inicial - total;
+            const observaciones = `SALIDA DE DINERO POR EDICIÓN DE VENTA ${id}`;
+            const fecha = new Date().toISOString().split('T')[0];
+
+            const fd = new FormData();
+            fd.append('folio', folio);
+            fd.append('monto', diferencia);
+            fd.append('fecha', fecha);
+            fd.append('observaciones', observaciones);
+            fd.append('venta_id', id);
+
+            const resp = await fetch('/cfsistem/app/controllers/egresosController.php?action=guardarSalidaDinero', {
+                method: 'POST',
+                body: fd
+            });
+
+            const res = await resp.json();
+
+            if (res.success || res.status === 'success') {
+                await Swal.fire('Éxito', 'Salida de dinero registrada correctamente.', 'success');
+                window.location.reload();
+            } else {
+                throw new Error(res.message || 'Error al procesar el egreso');
+            }
+
+        } catch (e) {
+            Swal.fire('Error', e.message, 'error');
+        }
+    }
+
+    async function cargarPersonalDespacho(alm) {
+
+
+        const rutaControlador =
+            '/cfsistem/app/controllers/cajaRapidaController.php';
+
+        const selectC = $('#patio_chofer_id');
+
+        const selectT = $('#patio_tripulantes');
+
+        if (!selectC.length) return;
+
+        selectC.empty()
+            .append('<option value="">Cargando personal...</option>');
+
+        selectT.empty();
+
+        try {
+
+            const response = await fetch(
+                `${rutaControlador}?action=get_recursos_sucursal&almacen_id=${alm}`
+            );
+
+            const res = await response.json();
+            console.log(res);
+            if (res.success && res.choferes) {
+
+                selectC.empty();
+                selectT.empty();
+
+                // =====================================================
+                // 🔥 CARGAR PERSONAL
+                // =====================================================
+
+                res.choferes.forEach((persona, index) => {
+
+                    const option =
+                        `<option value="${persona.id}">
+                        ${persona.nombre}
+                    </option>`;
+
+                    selectC.append(option);
+
+                    selectT.append(option);
+
+                });
+
+                // =====================================================
+                // 🔥 AUTOSELECCIONAR PRIMER CHOFER
+                // =====================================================
+
+                if (res.choferes.length > 0) {
+
+                    const primerId =
+                        res.choferes[0].id;
+
+                    selectC
+                        .val(primerId)
+                        .trigger('change');
+                }
+
+                // =====================================================
+                // 🔥 FILTRAR TRIPULANTES
+                // =====================================================
+
+                selectC.off('change')
+                    .on('change', function() {
+
+                        const seleccionadoId =
+                            $(this).val();
+
+                        // 🔥 reset
+                        selectT.find('option')
+                            .show()
+                            .prop('disabled', false);
+
+                        if (seleccionadoId) {
+
+                            // 🔥 ocultar encargado
+                            selectT.find(
+                                    `option[value="${seleccionadoId}"]`
+                                )
+                                .hide()
+                                .prop('disabled', true);
+
+                            // 🔥 quitar selección si coincide
+                            if (
+                                selectT.val() == seleccionadoId
+                            ) {
+
+                                selectT.val(null)
+                                    .trigger('change');
+                            }
+                        }
+
+                    });
+
+                // 🔥 ejecutar filtro inicial
+                selectC.trigger('change');
+
+                console.log(
+                    `Personal cargado para almacén ${alm}`
+                );
+
+            } else {
+
+                throw new Error(
+                    res.message ||
+                    'No se encontró personal'
+                );
+            }
+
+        } catch (e) {
+
+            console.error(
+                "Error en cargarPersonalDespacho:",
+                e
+            );
+
+            selectC.empty()
+                .append(
+                    '<option value="">Error al cargar personal</option>'
+                );
+        }
+    }
+function calcularCambio() {
+    let metodo = $('#metodo_pago').val();
+    // Convertimos ambos valores explícitamente a número
+    const totalVenta = parseFloat($('#totalCotizacionEditar').val()) || 0;
+    const efectivo = parseFloat(document.getElementById('monto_pagar').value) || 0;
+    
+    const contenedor = document.getElementById('contenedor_cambio');
+    const textoCambio = document.getElementById('texto_cambio');
+    let boton = $('#botonEnviar');
+
+    if (metodo === 'Efectivo') {
+        contenedor.classList.remove('d-none');
+
+        // Evaluamos si el efectivo entregado cubre el total
+        const cambio = efectivo - totalVenta;
+
+        if (efectivo <= 0 || cambio < 0) {
+            // Si no ha ingresado dinero o le falta
+            textoCambio.classList.remove('text-success');
+            textoCambio.classList.add('text-danger');
+            
+            if (efectivo <= 0) {
+                textoCambio.innerText = `Ingrese el monto a pagar`;
+            } else {
+                textoCambio.innerText = `Faltan: $${Math.abs(cambio).toFixed(2)}`;
+            }
+            
+            // Ocultar botón por pago insuficiente
+            boton.addClass('d-none');
+        } else {
+            // Si el cambio es 0 o mayor (pago completo)
+            textoCambio.classList.remove('text-danger');
+            textoCambio.classList.add('text-success');
+            textoCambio.innerText = `Cambio: $${cambio.toFixed(2)}`;
+            
+            // Mostrar botón
+            boton.removeClass('d-none');
+        }
+    } else {
+        // Si es otro método de pago (Tarjeta, Transferencia, etc.)
+        contenedor.classList.add('d-none');
+        // Nos aseguramos de que el botón esté visible
+        boton.removeClass('d-none');
+    }
+}
+    </script>
+
+</body>
+
+</html>

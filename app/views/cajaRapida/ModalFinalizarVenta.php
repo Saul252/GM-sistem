@@ -34,7 +34,7 @@
                                              <tr class="text-muted small border-bottom border-light">
                                                  <th class="pb-3 fw-bold">Producto</th>
                                                  <th class="pb-3 text-center fw-bold">Venta</th>
-                                              
+
                                                  <th class="pb-3 text-end fw-bold">Subtotal</th>
                                              </tr>
                                          </thead>
@@ -129,16 +129,18 @@
                                              <input type="number" id="efectivo_recibido"
                                                  class="form-control border-0 bg-success bg-opacity-10 p-2 rounded-3 fw-bold text-success shadow-none text-center"
                                                  placeholder="0.00" step="0.01">
-                                                 <input  id="efectivoPagado"
-                                                 type="hidden">
-                                       
+                                             <input id="efectivoPagado" type="hidden">
+
                                          </div>
-                                           <div class="mb-3">
-    <label for="select-usuarios" class="form-label fw-bold small text-muted text-uppercase">Atendió / Usuario</label>
-    <select class="form-select rounded-pill" id="select-usuarios" name="usuario_id" required>
-      
-    </select>
-</div>
+                                         <div class="mb-3">
+                                             <label for="select-usuarios"
+                                                 class="form-label fw-bold small text-muted text-uppercase">Atendió /
+                                                 Usuario</label>
+                                             <select class="form-select rounded-pill" id="select-usuarios"
+                                                 name="usuario_id" required>
+
+                                             </select>
+                                         </div>
                                          <div class="col-4">
                                              <label class="small fw-bold text-muted mb-1"
                                                  style="font-size: 0.6rem;">MÉTODO</label>
@@ -150,17 +152,13 @@
                                              </select>
                                          </div>
 
-<div class="mb-3" id="contenedorReferencia" style="display:none;">
-    <label class="form-label small fw-bold text-secondary text-uppercase">
-        Referencia
-    </label>
-    <input 
-        type="text" 
-        id="inputReferencia" 
-        class="form-control"
-        placeholder="Ingrese referencia"
-    >
-</div>
+                                         <div class="mb-3" id="contenedorReferencia" style="display:none;">
+                                             <label class="form-label small fw-bold text-secondary text-uppercase">
+                                                 Referencia
+                                             </label>
+                                             <input type="text" id="inputReferencia" class="form-control"
+                                                 placeholder="Ingrese referencia">
+                                         </div>
                                      </div>
 
                                      <div id="contenedor_cambio" class="mt-3 p-3 rounded-4 text-center d-none"
@@ -173,13 +171,13 @@
                                  </div>
                              </div>
 
-                             <textarea id="obsVenta" class="form-control text-uppercase border-0 bg-white p-3 rounded-4 shadow-sm"
-                                 rows="2" placeholder="Notas adicionales de la venta..."
-                                 style="font-size: 0.85rem;"></textarea>
+                             <textarea id="obsVenta"
+                                 class="form-control text-uppercase border-0 bg-white p-3 rounded-4 shadow-sm" rows="2"
+                                 placeholder="Notas adicionales de la venta..." style="font-size: 0.85rem;"></textarea>
                          </div>
                      </div>
 
-                     <div style=" display:none;"  class="col-12">
+                     <div style=" display:none;" class="col-12">
                          <div class="card border-0 shadow-sm" style="border-radius: 1.5rem;">
                              <div class="card-body p-4">
                                  <h6 class="text-uppercase fw-bold mb-4 text-secondary"
@@ -187,7 +185,7 @@
                                      <i class="bi bi-truck me-2 text-primary"></i>Datos de Despacho
                                  </h6>
                                  <div class="row g-3">
-                                    <div style=" display:none;" class="col-md-4">
+                                     <div style=" display:none;" class="col-md-4">
                                          <div class="p-3 rounded-4 bg-light">
                                              <label class="form-label small fw-bold text-muted mb-1"
                                                  style="font-size: 0.6rem;">DESPACHADOR RESPONSABLE</label>
@@ -207,7 +205,7 @@
                                              </select>
                                          </div>
                                      </div>
-                                    <div style=" display:none;" class="col-md-4">
+                                     <div style=" display:none;" class="col-md-4">
                                          <div class="p-3 rounded-4 bg-light">
                                              <label class="form-label small fw-bold text-muted mb-1"
                                                  style="font-size: 0.6rem;">OBSERVACIONES DE ENTREGA</label>
@@ -266,8 +264,8 @@
  </style>
 
  <script>
-     cargarUsuariosSelect();
-    async function cargarUsuariosSelect() {
+cargarUsuariosSelect();
+async function cargarUsuariosSelect() {
     const select = document.getElementById('select-usuarios');
     if (!select) return; // Seguridad por si el select no está en la vista actual
 
@@ -275,26 +273,26 @@
         // 1. Realizar la petición a tu controlador de Cf System
         const url = '/cfsistem/app/controllers/ventasController.php?action=obtenerUsuarios';
         const respuesta = await fetch(url);
-        
+
         if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
-        
+
         const resultado = await respuesta.json();
 
         // 2. Verificar que la respuesta sea exitosa y contenga los datos
         if (resultado.success && Array.isArray(resultado.data)) {
-            
+
             // Limpiamos el select y dejamos una opción inicial neutra
-            
+
 
             // 3. Recorrer los usuarios y crear las opciones
             resultado.data.forEach(usuario => {
                 const opcion = document.createElement('option');
                 opcion.value = usuario.id; // El ID que se enviará en el formulario
-                
+
                 // Formateamos el texto: "Nombre (Almacén - Rol)" para que sea súper descriptivo
                 const almacen = usuario.almacen_nombre || 'Sin Almacén';
                 opcion.textContent = `${usuario.nombre}`;
-                
+
                 // Agregamos la opción al select
                 select.appendChild(opcion);
             });
@@ -310,8 +308,8 @@
     }
 }
 
-          function verificarMetodoPago(metodo) {
-    
+function verificarMetodoPago(metodo) {
+
 
     const contenedor = document.getElementById('contenedorReferencia');
     const input = document.getElementById('inputReferencia');
@@ -392,36 +390,36 @@ async function cargarPersonalDespacho(alm) {
             // =====================================================
 
             selectC.off('change')
-            .on('change', function () {
+                .on('change', function() {
 
-                const seleccionadoId =
-                    $(this).val();
+                    const seleccionadoId =
+                        $(this).val();
 
-                // 🔥 reset
-                selectT.find('option')
-                    .show()
-                    .prop('disabled', false);
+                    // 🔥 reset
+                    selectT.find('option')
+                        .show()
+                        .prop('disabled', false);
 
-                if (seleccionadoId) {
+                    if (seleccionadoId) {
 
-                    // 🔥 ocultar encargado
-                    selectT.find(
-                        `option[value="${seleccionadoId}"]`
-                    )
-                    .hide()
-                    .prop('disabled', true);
+                        // 🔥 ocultar encargado
+                        selectT.find(
+                                `option[value="${seleccionadoId}"]`
+                            )
+                            .hide()
+                            .prop('disabled', true);
 
-                    // 🔥 quitar selección si coincide
-                    if (
-                        selectT.val() == seleccionadoId
-                    ) {
+                        // 🔥 quitar selección si coincide
+                        if (
+                            selectT.val() == seleccionadoId
+                        ) {
 
-                        selectT.val(null)
-                            .trigger('change');
+                            selectT.val(null)
+                                .trigger('change');
+                        }
                     }
-                }
 
-            });
+                });
 
             // 🔥 ejecutar filtro inicial
             selectC.trigger('change');
@@ -450,7 +448,8 @@ async function cargarPersonalDespacho(alm) {
                 '<option value="">Error al cargar personal</option>'
             );
     }
-}</script>
+}
+ </script>
 
  <script>
 // Escuchar cambios en el efectivo recibido
@@ -465,16 +464,16 @@ function calcularCambio() {
     const efectivo = parseFloat(document.getElementById('efectivo_recibido').value) || 0;
     const contenedor = document.getElementById('contenedor_cambio');
     const textoCambio = document.getElementById('texto_cambio');
-    const efectivoPagado= document.getElementById('efectivoPagado');
-     console.log('Dinero',parseFloat(document.getElementById('efectivo_recibido').value) || 0);
-   
+    const efectivoPagado = document.getElementById('efectivoPagado');
+    console.log('Dinero', parseFloat(document.getElementById('efectivo_recibido').value) || 0);
+
 
     if (efectivo > 0) {
         const cambio = efectivo - totalVenta;
 
         // Mostrar el contenedor de cambio
         contenedor.classList.remove('d-none');
-        efectivoPagado.value=efectivo;
+        efectivoPagado.value = efectivo;
 
         if (cambio < 0) {
             // Si falta dinero
@@ -610,27 +609,27 @@ window.procesarVenta = function() {
             const btnFinalizar = document.querySelector('#btnFinalizarVenta');
             btnFinalizar.disabled = true;
             btnFinalizar.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Procesando...';
-const efectivoPagado = parseFloat(
-    document.getElementById('efectivo_recibido').value
-) || 0;
- let referencia = document.getElementById('inputReferencia').value;
-   let vendedor_id= document.getElementById("select-usuarios").value??0;
-               
-    
+            const efectivoPagado = parseFloat(
+                document.getElementById('efectivo_recibido').value
+            ) || 0;
+            let referencia = document.getElementById('inputReferencia').value;
+            let vendedor_id = document.getElementById("select-usuarios").value ?? 0;
+
+
             // 4. MAPEO DE DATOS COMPLETO (Venta + Logística)
             // --- MAPEO DE DATOS COMPLETO (Venta + Logística Automática) ---
-         console.log( 'chofer',parseInt(document.getElementById('patio_chofer_id').value) || 0);
+            console.log('chofer', parseInt(document.getElementById('patio_chofer_id').value) || 0);
             const datosVenta = {
                 // 1. Datos de la Transacción
                 id_cliente: parseInt(idCliente),
                 id_almacen: parseInt(document.getElementById('modal_select_almacen')?.value || 0),
-                 id_vendedor:parseInt(vendedor_id),
+                id_vendedor: parseInt(vendedor_id),
                 monto_pagado: parseFloat(montoPagado) || 0,
                 metodo_pago: document.getElementById('metodo_pago').value,
-                referencia:referencia??'',
+                referencia: referencia ?? '',
                 total_venta: parseFloat(totalVenta) || 0,
                 observaciones: document.getElementById('obsVenta').value,
-                 efectivoPagado:efectivoPagado,
+                efectivoPagado: efectivoPagado,
 
                 // 2. Datos de Logística (Para tu función cajaRapidaEntregarEnPatioCliente)
                 chofer_id: parseInt(document.getElementById('patio_chofer_id').value) || 0,
@@ -654,10 +653,10 @@ const efectivoPagado = parseFloat(
                     idunidadMedida: item.unidadMedidaSelect ?? 0,
                     unidadEquivalencia: item.unidadEquivalencia ?? 1,
 
-                
+
                 }))
             };
-           
+
 
             // --- ENVÍO AL CONTROLADOR ---
             fetch('/cfsistem/app/controllers/cajaRapidaController.php', {
@@ -682,7 +681,7 @@ const efectivoPagado = parseFloat(
                             title: '¡Venta y Despacho OK!',
                             text: res.message,
                             icon: 'success',
-                           icon: iconoFinal,
+                            icon: iconoFinal,
                             showDenyButton: true,
                             showCancelButton: true,
                             confirmButtonText: '<i class="bi bi-receipt"></i> Con Precios',
@@ -698,7 +697,7 @@ const efectivoPagado = parseFloat(
                             if (result.isConfirmed) url =
                                 `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`;
                             else if (result.isDenied) url =
-                            
+
                                 `/cfsistem/app/backend/ventas/ticketFormal.php?id=${res.id_venta}`;
 
                             if (url !== '') window.open(url, '_blank');
@@ -764,24 +763,24 @@ window.abrirModalFinalizar = function() {
 
         const cantFactorVenta = Math.floor(item.cantidad / item.factor);
         const piezasRestantesVenta = Math.round((item.cantidad % item.factor) * 100) / 100;
-    let leyenda='';
-         let cantidadT=item.cantidad;
-         if(item.cantidad<1)
-           {
-              cantidadT=item.unidadEquivalencia>0?(item.cantidad/(1/item.unidadEquivalencia)):item.cantidad;
-             leyenda =
-    '1 ' + item.unidadMedidaNombre +
-    ' = ' +
-    (1 / item.unidadEquivalencia) +
-    ' de ' +
-    item.unidad_medida +
-    '\n';
+        let leyenda = '';
+        let cantidadT = item.cantidad;
+        if (item.cantidad < 1) {
+            cantidadT = item.unidadEquivalencia > 0 ? (item.cantidad / (1 / item.unidadEquivalencia)) : item
+                .cantidad;
+            leyenda =
+                '1 ' + item.unidadMedidaNombre +
+                ' = ' +
+                (1 / item.unidadEquivalencia) +
+                ' de ' +
+                item.unidad_medida +
+                '\n';
         }
-         let nombreuni='';
-         let unidadNombre='';
-        if(cantFactorVenta==0 ){
-            nombreuni=item.unidadMedidaNombre;
-          unidadNombre=item.unidad_medida;
+        let nombreuni = '';
+        let unidadNombre = '';
+        if (cantFactorVenta == 0) {
+            nombreuni = item.unidadMedidaNombre;
+            unidadNombre = item.unidad_medida;
 
         }
         const tr = document.createElement("tr");

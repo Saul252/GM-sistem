@@ -989,6 +989,62 @@ public function obtenerTodosProductos($almacen_id = 0)
 
     return $productos;
 }
+public function obtenerTodosProductosAlmacen($almacen_id = 0)
+{
+    $productos = [];
+
+    // Fallback a almacén 1 si viene 0 o nulo
+    if (empty($almacen_id)) {
+        $almacen_id = 1;
+    }
+
+    $sql = "
+        SELECT 
+            p.id as producto_id, 
+            p.sku, 
+            p.nombre, 
+            p.unidad_medida, 
+            p.unidad_reporte, 
+            p.factor_conversion, 
+            p.categoria_id,
+            pp.precio_minorista, 
+            pp.precio_mayorista, 
+            pp.precio_distribuidor,
+            i.stock, 
+            i.almacen_id
+        FROM productos p
+        INNER JOIN inventario i 
+            ON p.id = i.producto_id 
+           AND i.almacen_id = ?
+        LEFT JOIN precios_producto pp 
+            ON p.id = pp.producto_id 
+           AND pp.almacen_id = ?
+        ORDER BY p.nombre ASC
+    ";
+
+    $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) {
+        // En producción es mejor registrar el error en log en lugar de un die()
+        error_log("Error prepare en obtenerTodosProductosAlmacen: " . $this->db->error);
+        return [];
+    }
+
+    // Pasamos el $almacen_id dos veces (para el JOIN de inventario y el de precios)
+    $stmt->bind_param("ii", $almacen_id, $almacen_id);
+
+    $stmt->execute();
+
+    $resultado = $stmt->get_result();
+
+    while ($row = $resultado->fetch_assoc()) {
+        $productos[] = $row;
+    }
+
+    $stmt->close();
+
+    return $productos;
+}
 public function actualizarProductoCompleto($data)
 {
     $this->db->begin_transaction();

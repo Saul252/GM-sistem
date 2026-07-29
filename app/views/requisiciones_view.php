@@ -3,37 +3,136 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Requisiciones | Sistema</title>
+    <title>Ventas | Sistema</title>
     <?php require_once __DIR__ . '/layout/icono.php' ?>
     <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
-    <link href="/cfsistem/css/ventas.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
     <style>
-    body {
-        padding-top: 20px;
-    }
+        body {
+            background-color: #f8fafc;
+            
+            padding-bottom: 40px;
+        }
+.main-content{
+    padding-top: 45px!important;
 
-    .tabla-scroll {
-        max-height: 60vh;
-        overflow-y: auto;
-    }
+}
+        .main-card {
+            background: #ffffff;
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+            overflow: hidden;
+        }
 
-    .carrito {
-        position: sticky;
-        top: 85px;
-    }
+        .page-header-gradient {
+            background: linear-gradient(135deg, #696969 0%, #b1b3b6 100%);
+            color: #ffffff;
+           
+        }
 
-    .badge-stock {
-        font-size: 0.8rem;
-        padding: 5px 10px;
-    }
+        .card-filter-box {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+        }
 
-    .modalc {
-        z-index: 2000 !important;
-    }
+        .form-label-custom {
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: #64748b;
+            text-transform: uppercase;
+        }
 
-    .swal-zindex {
-        z-index: 2000 !important;
-    }
+        .btn-action-primary {
+            background-color: #4f46e5;
+            border-color: #4f46e5;
+            color: #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        .btn-action-primary:hover {
+            background-color: #4338ca;
+            border-color: #4338ca;
+            color: #ffffff;
+        }
+
+        .table-custom-header {
+            background-color: #062347 !important;
+            color: #ffffff !important;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        .table-custom-header th {
+            background-color: transparent !important;
+            color: #ffffff !important;
+            border-bottom: none !important;
+            padding-top: 12px;
+            padding-bottom: 12px;
+        }
+
+        .total-badge-card {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            color: #ffffff;
+            border-radius: 16px;
+            padding: 14px 28px;
+            box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4);
+        }
+
+        .entregado-tooltip {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            cursor: help;
+        }
+
+        .tooltip-custom {
+            position: absolute;
+            bottom: 130%;
+            left: 50%;
+            transform: translateX(-50%);
+            min-width: 240px;
+            max-width: 300px;
+            padding: .6rem .8rem;
+            background: #212529;
+            color: #fff;
+            border-radius: .6rem;
+            font-size: .82rem;
+            line-height: 1.3;
+            text-align: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: .2s ease;
+            z-index: 9999;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, .25);
+        }
+
+        .tooltip-custom::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 6px;
+            border-style: solid;
+            border-color: #9e9e9e transparent transparent transparent;
+        }
+
+        .entregado-tooltip:hover .tooltip-custom {
+            opacity: 1;
+            visibility: visible;
+        }
+        .fixed-top {
+    
+    z-index: 2050;
+}
     </style>
 </head>
 
@@ -41,503 +140,706 @@
 
     <?php renderizarLayout($paginaActual); ?>
 
-    <div class="main-content">
+    <div class=" main-content">
+        <div class="main-card">
+            
+            <form id="formEditarSolicitud">
+                <input type="hidden" id="editar_venta_id" name="cotizacion_id" value="">
 
-        <h2 class="mb-4 fw-bold">
-            <i class="bi bi-cart-fill text-primary"></i> Remisiones
-        </h2>
-<button type="button" class="btn btn-primary d-flex align-items-center"
-                                    onclick="abrirModalProducto()" title="Agregar nuevo producto">
-                                    <i class="bi bi-plus-lg me-1"></i>
-                                    <span class="d-none d-xl-inline">Agregar Producto</span>
-                                </button>
-
-        <div class="row">
-            <div class="col-lg-8">
-                <div class="card p-3">
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <select id="filtroCategoria" class="form-select">
-                                <option value="">Todas las categorías</option>
-                                <?php foreach($categorias as $cat): ?>
-                                <option value="<?= $cat['id'] ?>">
-                                    <?= htmlspecialchars($cat['nombre']) ?>
-                                </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <div class="col-md-4">
-                            <select id="filtroAlmacen" class="form-select"
-                                <?= ($almacen_usuario > 0) ? 'disabled' : '' ?>>
-                                <?php if($almacen_usuario ==0): ?>
-                                <option value="">Todos los almacenes</option>
-                                <?php endif; ?>
-
-                                <?php foreach($almacenes as $alm): ?>
-                                <option value="<?= $alm['id'] ?>"
-                                    <?= ($almacen_usuario == $alm['id']) ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($alm['nombre']) ?>
-                                </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <div class="col-md-4">
-                            <input type="text" id="buscador" class="form-control" placeholder="🔎 Buscar producto...">
-                        </div>
+                <!-- Encabezado de la Página -->
+                <div class="page-header-gradient d-flex justify-content-between align-items-center p-2">
+                    <div>
+                        <h4 class="fw-bold mb-0 text-white"><i class="bi bi-cart-check me-2"></i> Módulo de Remisiones</h4>
+                       
                     </div>
-
-                     <div class="table-responsive tabla-scroll">
-    <table class="table table-bordered table-hover tabla-productos">
-        <thead class="table-dark">
-            <tr>
-                <!-- <th>Almacén</th>
-                <th>SKU</th> -->
-                <th>Producto</th>
-                <th>Stock</th>
-                <th width="120">Unidad</th>
-                 <th width="90">Cant</th>
-                <th>Precio</th>
-               
-                <th width="60"></th>
-            </tr>
-        </thead>
-        <tbody id="productos">
-            </tbody>
-    </table>
-</div>
                 </div>
-            </div>
 
-            <div class="col-lg-4">
-                <div class="card p-3 carrito">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-bag-fill text-success"></i> Carrito</h5>
-                    <div class="table-responsive">
-                        <table class="table table-sm" id="tablaCarrito">
-                            <thead>
-                                <tr>
-                                    <th>Almacén</th>
-                                    <th>Producto</th>
-                                    <th>Cant</th>
-                                    <th>Unidad</th>
-                                    <th>Sub</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <hr>
-                    <h4 class="text-end fw-bold">Total: $<span id="total">0.00</span></h4>
-                    <button class="btn btn-primary w-100 mt-3" onclick="abrirModalFinalizar()">
-                        <i class="bi bi-cash-stack"></i> Finalizar Venta
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+                <div class="p-4">
+                    <!-- Controles / Filtros de Edición -->
+                    <div class="card-filter-box p-4 mb-4 shadow-sm">
+                        <div class="row g-3 align-items-end">
 
-
-
-    <div class="modal fade modalc" id="modalNuevoCliente" tabindex="-1" aria-labelledby="modalNuevoClienteLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <form id="formNuevoCliente">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title" id="modalNuevoClienteLabel">
-                            <i class="fas fa-user-plus me-2"></i>Registrar Nuevo Cliente
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                            aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" name="almacen_id" value="<?= $almacen_usuario ?>">
-
-                        <div class="row g-3">
-                            <div class="col-md-12">
-                                <label class="form-label fw-bold">Nombre Comercial *</label>
-                                <input type="text" name="nombre_comercial" class="form-control"
-                                    placeholder="Ej. Materiales El Centro" required>
-                            </div>
-
-                            <div class="col-md-12">
-                                <label class="form-label fw-bold">Razón Social</label>
-                                <input type="text" name="razon_social" class="form-control"
-                                    placeholder="Nombre legal completo">
-                            </div>
-
- <div class="col-md-12">
-                                <label class="form-label fw-bold">Contacto *</label>
-                                <input type="text" name="contacto" class="form-control"
-                                    placeholder="Contacto" >
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">RFC *</label>
-                                <input type="text" name="rfc" class="form-control text-uppercase" maxlength="13"
-                                    placeholder="ABCD000000XXX" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Código Postal *</label>
-                                <input type="text" name="codigo_postal" class="form-control" maxlength="5"
-                                    placeholder="00000" required>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Régimen Fiscal</label>
-                                <input type="text" name="regimen_fiscal" class="form-control" maxlength="3"
-                                    placeholder="Ej. 601">
-                                <small class="text-muted">Clave del catálogo del SAT</small>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Uso de CFDI</label>
-                                <select name="uso_cfdi" class="form-select">
-                                    <option value="G03" selected>G03 - Gastos en general</option>
-                                    <option value="S01">S01 - Sin efectos fiscales</option>
-                                    <option value="G01">G01 - Adquisición de mercancías</option>
-                                    <option value="P01">P01 - Por definir</option>
+                            <!-- 1. Almacén de Cargo -->
+                            <div class="col-md-4 col-lg-3">
+                                <label class="form-label form-label-custom mb-2">
+                                    <i class="bi bi-box-seam me-1 text-indigo"></i> Almacén de Cargo
+                                </label>
+                                <select name="almacen_id_editar" id="almacen_id_editar"
+                                    class="form-select border-slate-300 rounded-3" required>
+                                    <option value="">Seleccionar ubicación...</option>
+                                    <?php foreach($almacenes as $a): ?>
+                                        <option value="<?= $a['id'] ?>"><?= htmlspecialchars($a['nombre']) ?></option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Correo Electrónico</label>
-                                <input type="email" name="correo" class="form-control" placeholder="cliente@correo.com">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Teléfono</label>
-                                <input type="tel" name="telefono" class="form-control" placeholder="55 0000 0000">
-                            </div>
-
-                           <div class="col-md-12">
-                                <label class="form-label fw-bold">Calle</label>
-                                <textarea name="calle" class="form-control text-uppercase" rows="2"
-                                    placeholder="Calle y número"></textarea>
-                            </div>
-                             <div class="col-md-12">
-                                <label class="form-label fw-bold">Colonia</label>
-                                <textarea name="colonia" class="form-control text-uppercase" rows="2"
-                                    placeholder="Colonia..."></textarea>
-                            </div>
-                             <div class="col-md-12">
-                                <label class="form-label fw-bold">Pueblo</label>
-                                <textarea name="pueblo" class="form-control text-uppercase" rows="2"
-                                    placeholder="Pueblo"></textarea>
-                            </div>
-                             <div class="col-md-12">
-                                <label class="form-label fw-bold">Ciudad</label>
-                                <textarea name="ciudad" class="form-control text-uppercase" rows="2"
-                                    placeholder="Ciudad"></textarea>
-                            </div>
-                            <div class="row g-3">
-                                <?php if ($almacen_usuario == 0): ?>
-                                <div class="col-md-12 mb-2" style="visibility: hidden;">
-                                    <label class="form-label fw-bold text-primary">Asignar a Almacén *</label>
-                                    <select name="almacen_id" class="form-select border-primary" required>
-                                        <option value="1">-- Selecciona un almacén --</option>
-                                        <?php foreach ($almacenes as $alm): ?>
-                                        <option value="<?= $alm['id'] ?>"><?= htmlspecialchars($alm['nombre']) ?>
-                                        </option>
+                            <!-- 2. Cliente -->
+                            <div class="col-md-4 col-lg-3">
+                                <label class="form-label form-label-custom mb-2">
+                                    <i class="bi bi-person me-1 text-indigo"></i> Cliente
+                                </label>
+                                <div class="input-group">
+                                    <select name="cliente_id_editar" id="cliente_id_editar"
+                                        class="form-select select2-pagina border-slate-300" required>
+                                        <option value="">Seleccionar cliente...</option>
+                                        <?php foreach($clientes as $p): ?>
+                                            <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?></option>
                                         <?php endforeach; ?>
                                     </select>
-                                    <small class="text-muted">Como administrador, debes elegir a qué sucursal pertenece
-                                        este cliente.</small>
+                                    <button class="btn btn-outline-secondary px-3" type="button"
+                                        onclick="abrirModalNuevoCliente()" title="Nuevo Cliente">
+                                        <i class="bi bi-person-plus-fill"></i>
+                                    </button>
                                 </div>
-                                <?php else: ?>
-                                <input type="hidden" name="almacen_id" value="<?= $almacen_usuario ?>">
-                                <?php endif; ?>
-
                             </div>
+
+                            <!-- 3. Vendedor -->
+                            <div class="col-md-4 col-lg-3">
+                                <label class="form-label form-label-custom mb-2">
+                                    <i class="bi bi-person-badge me-1 text-indigo"></i> Vendedor
+                                </label>
+                                <select name="select-vendedor1" id="select-vendedor1"
+                                    class="form-select select2-pagina border-slate-300" required>
+                                    <option value="">Seleccionar vendedor...</option>
+                                </select>
+                            </div>
+
+                            <!-- 4. Añadir Producto -->
+                            <div class="col-12 col-lg-3">
+                                <label class="form-label form-label-custom mb-2">
+                                    <i class="bi bi-search me-1 text-indigo"></i> Añadir Producto
+                                </label>
+                                <div class="input-group">
+                                    <select id="buscadorProductosEditar"
+                                        class="form-select select2-pagina border-slate-300">
+                                        <option value="">Escribe SKU o nombre...</option>
+                                        <?php foreach($productos as $pr): ?>
+                                            <option value="<?= $pr['producto_id'] ?>"
+                                                data-nombre="<?= htmlspecialchars($pr['nombre']) ?>"
+                                                data-sku="<?= htmlspecialchars($pr['sku']) ?>"
+                                                data-um="<?= htmlspecialchars($pr['unidad_medida']) ?>"
+                                                data-ur="<?= htmlspecialchars($pr['unidad_reporte']) ?>"
+                                                data-premin="<?= $pr['precio_minorista'] ?? 0 ?>"
+                                                data-premat="<?= $pr['precio_mayorista'] ?? 0 ?>"
+                                                data-predis="<?= $pr['precio_distribuidor'] ?? 0 ?>"
+                                                data-factor="<?= $pr['factor_conversion'] ?? 1 ?>">
+                                                [<?= htmlspecialchars($pr['sku']) ?>] <?= htmlspecialchars($pr['nombre']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                    <button type="button" class="btn btn-action-primary d-flex align-items-center px-3"
+                                        onclick="abrirModalProducto()" title="Agregar nuevo producto">
+                                        <i class="bi bi-plus-lg me-1"></i>
+                                        <span>Nuevo</span>
+                                    </button>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
-                    <div class="modal-footer bg-light">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary" id="btnGuardarCliente">
-                            <i class="fas fa-save me-1"></i> Guardar Cliente
-                        </button>
+
+                    <!-- Tabla de Artículos -->
+                    <div class="table-responsive border rounded-4 bg-white shadow-sm"
+                        style="max-height: 520px;min-height: 440px; overflow-y: auto;">
+                        <table class="table align-middle mb-0" id="tablaDetalleEditar">
+                            <thead>
+                                <tr class="table-custom-header text-uppercase">
+                                    <th class="ps-4" style="width: 30%;">Producto</th>
+                                    <th style="width: 12%;">Cantidad</th>
+                                    <th style="width: 18%;">Presentación / Unidad</th>
+                                    <th style="width: 18%;">Tipo de precio</th>
+                                    <th style="width: 12%;">Precio Unit.</th>
+                                    <th style="width: 15%;">TOTAL</th>
+                                    <th style="width: 5%;" class="text-center pe-4">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                            </tbody>
+                        </table>
+
+                        <!-- Estado Vacío -->
+                        <div id="emptyStateEditar" class="text-center py-5 text-muted">
+                            <div class="mb-2">
+                                <i class="bi bi-cart-x text-slate-300 opacity-50" style="font-size: 3.5rem;"></i>
+                            </div>
+                            <p class="fw-semibold text-slate-600 mb-1">La lista está vacía</p>
+                            <small class="text-slate-400">Utiliza el buscador superior para agregar productos a esta venta</small>
+                        </div>
                     </div>
-                </form>
-            </div>
+
+                    <!-- Resumen del Total y Botones de Acción -->
+                    <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+                        <a href="/cfsistem/app/controllers/ventasController2.php" class="btn btn-outline-secondary rounded-pill px-4 fw-bold">
+                             Reiniciar
+                        </a>
+
+                        <div class="d-flex align-items-center gap-4">
+                            <div class="total-badge-card text-end">
+                                <small class="d-block text-white-50 fw-semibold text-uppercase tracking-wider mb-1"
+                                    style="font-size:0.7rem;">
+                                    Costo Total de Compra
+                                </small>
+                                <div id="costoTotalCompraEditar" class="fw-bold" style="font-size:2.2rem; line-height:1;">
+                                    $0.00
+                                </div>
+                                <input type="hidden" id="totalCotizacionEditar" name="totalCotizacionEditar" value="0">
+                            </div>
+
+                            <button type="submit"
+                                class="btn btn-action-primary rounded-pill px-5 py-3 fw-bold shadow-sm d-flex align-items-center fs-5">
+                                <i class="bi bi-check2-circle me-2"></i> Finalizar Venta
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
         </div>
     </div>
-    <?php require_once __DIR__ . '/requisicionesModales/finalizarVenta.php'; ?>
 
-    <?php cargarScripts(); ?>
+    <?php require_once __DIR__ . '/egresosComponets/agregarPoductoModal.php'; ?>
+    <?php require_once __DIR__ . '/clientes/clientesModal.php'; ?>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
- <?php require_once __DIR__ . '/egresosComponets/agregarPoductoModal.php'; ?>
-  
-    <script src="/cfsistem/app/backend/js_ventas/filtros.js"></script>
-    <script src="/cfsistem/app/backend/js_ventas/nuevo_cliente.js"></script>
-    <script src="/cfsistem/app/backend/js_ventas/modal_finalizar_remisiones.js"></script>
 
+    <script>
+        const URL_CONTROLADOR_EDITAR = '/cfsistem/app/controllers/cotizacionesController.php';
+        let total_inicial = 0;
+        let cliente_nombre = '';
+        let dataEdicion = null;
+        let recalculandoFilaEditar = false;
 
-<script>
-    // Selecciona todos los inputs de texto y también los textareas
-    document.querySelectorAll('input[type="text"], textarea').forEach(elemento => {
-        elemento.addEventListener('input', function() {
-            // Convierte el valor a mayúsculas en tiempo real
-            this.value = this.value.toUpperCase();
+        // Inicializar Select2 en la página
+        $('.select2-pagina').select2({
+            theme: 'bootstrap-5'
         });
-    });
-</script>
-<script>
-        document.addEventListener("DOMContentLoaded", function() {
-    recargarProductos();
-});
 
-async function recargarProductos() {
-    // Cambia 'get_productos.php' por la ruta real de tu controlador/endpoint
-     const params = new URLSearchParams({
-    action: 'listarProductos',
-    almacen: $('#filtroAlmacen').val(),
-    categoria:$('#filtroCategoria').val()
-   
-});
-
-    let rol = <?= isset($_SESSION['rol_id']) ? (int)$_SESSION['rol_id'] : 0 ?>;
-let tablahtml = '';
-const res = await fetch(
-    `/cfsistem/app/controllers/requisicionesController.php?${params.toString()}`
-);
-
-
-let data = await res.json();
-console.log(data);
-
-// 1. Declaramos la variable como un string vacío
-let tabla = '';
-
-// Accedemos a data.data según tu respuesta del servidor
-data.data.forEach(p => {
-    // Lógica de reporte y factores
-    const factorConversion = parseFloat(p.factor_conversion) || 1;
-    const tieneReporte = (p.unidad_reporte && p.unidad_reporte.trim() !== '' && factorConversion > 1);
-    const cantidad = parseFloat(p.stock) / factorConversion;
-    
-    // Lógica de colores de stock
-    let colorStock = 'bg-success';
-    if (cantidad <= 0) colorStock = 'bg-danger';
-    else if (cantidad <= 5) colorStock = 'bg-warning text-dark';
-    else if (cantidad <= 20) colorStock = 'bg-info text-dark';
-
-    // Formato del texto del Badge de Stock
-    const textoStock = cantidad >= 1 
-        ? `${cantidad.toFixed(2)} ${p.unidad_reporte}`
-        : `${parseFloat(p.stock).toFixed(2)} ${p.unidad_medida || 'PZA'}`;
-
-    // Construcción del select de medidas adicionales
-    let opcionesMedidas = `<option value="0">Seleccione</option>`;
-    if (p.medidas_adicionales && p.medidas_adicionales.length > 0) {
-        p.medidas_adicionales.forEach(ma => {
-            opcionesMedidas += `<option value="${ma.equivalencia}" data-id="${ma.id}" data-nombre="${escapeHtml(ma.nombre)}">${escapeHtml(ma.nombre)}</option>`;
+        $(document).ready(async function() {
+            try {
+                await recargarProductosEditar();
+                await cargarVendedores3();
+            } catch (error) {
+                console.error("Error en inicialización:", error);
+            }
         });
-    }
-    const disabledMedidas = (!p.medidas_adicionales || p.medidas_adicionales.length === 0) ? 'disabled' : '';
 
-    // 2. Concatenamos directamente la fila como un string HTML (Quitamos document.createElement)
-    tabla += `
-        <tr data-categoria="${p.categoria_id}" 
-            data-almacen="${p.almacen_id}" 
-            data-factor="${factorConversion}" 
-            data-reporte-nom="${escapeHtml(p.unidad_reporte || '')}">
-            
-            <input type="hidden" class="factorC" value="${factorConversion}">
-            <td class="d-none">${escapeHtml(p.almacen_nombre)}</td>
-            <td class="d-none">${p.sku}</td>
-            <td>${escapeHtml(p.nombre)}</td>
-            <td>
-                <span class="badge ${colorStock}">${textoStock}</span>
-            </td>
-            <td style="width:1px; padding:0; border:none;">
-                ${tieneReporte ? `
-                    <select class="form-select form-select-sm select-modo-venta" style="opacity:0; position:absolute; pointer-events:none; height:0; width:0; padding:0; border:0;">
-                        <option value="individual" data-nombre="${escapeHtml(p.unidad_medida || 'PZA')}">${escapeHtml(p.unidad_medida || 'PZA')}</option>
-                        <option value="referencia" data-nombre="${escapeHtml(p.unidad_reporte)}">${escapeHtml(p.unidad_reporte)}</option>
-                    </select>
-                ` : `<span class="d-none">Individual</span>`}
-                
-                <select class="form-select border-primary medidas_adicionales" ${disabledMedidas}>
-                    ${opcionesMedidas}
-                </select>
-            </td>
-              <td>
-                <input type="number" class="form-control form-control-sm cantidad_usuario" min="1" value="1">
-                <input type="hidden" class="cantidad" value="0">
-            </td>
-            <td>
-                <div class="d-flex gap-1">
-                    <select class="form-select form-select-sm select-precio">
-                        <option value="${p.precio_minorista}">Publico - $${formatNumber(p.precio_minorista)}</option>
-                        <option value="${p.precio_mayorista}">Constructora - $${formatNumber(p.precio_mayorista)}</option>
-                        <option value="${p.precio_distribuidor}">Distribuidor - $${formatNumber(p.precio_distribuidor)}</option>
-                    </select>
-                    <input type="number" step="0.01" class="form-control form-control-sm input-precioMayor" value="${p.precio_minorista || 0}">
-                    <input type="hidden" step="0.01" class="form-control form-control-sm input-precio" value="${p.precio_minorista || 0}">
-                </div>
-            </td>
-          
-            <td class="text-center">
-                <button type="button" class="btn btn-success btn-sm"
-                    data-producto-id="${p.id}" 
-                    data-almacen-id="${p.almacen_id}"
-                    data-almacen="${escapeHtml(p.almacen_nombre)}"
-                    onclick="validarYAgregar(this)">
-                    <i class="bi bi-plus"></i>
-                </button>
-            </td>
-        </tr>
-    `;
-});
+        // =====================================================
+        // CARGAR VENDEDORES
+        // =====================================================
+        async function cargarVendedores3(vendedor_id = null) {
+            const select = document.getElementById('select-vendedor1');
+            if (!select) return;
 
-// 3. Insertamos el string acumulado directamente en el contenedor mediante jQuery
-$('#productos').html(tabla);
-                                }
+            try {
+                const url = '/cfsistem/app/controllers/accesoController.php?action=obtenerUsuarios';
+                const respuesta = await fetch(url);
 
-// Funciones auxiliares para emular los formatos de PHP de forma segura
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-}
+                if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
 
-function formatNumber(num) {
-    return parseFloat(num || 0).toFixed(2);
-}
-/**
- * Soporte para agregar productos al presionar ENTER
- */
-document.addEventListener('keydown', function(e) {
+                const resultado = await respuesta.json();
 
-    if (e.key === 'Enter' && e.target.classList.contains('input-precioMayor')) {
+                if (resultado.success && Array.isArray(resultado.data)) {
+                    resultado.data.forEach(usuario => {
+                        const opcion = document.createElement('option');
+                        opcion.value = usuario.id;
+                        opcion.textContent = `${usuario.nombre}`;
+                        select.appendChild(opcion);
+                    });
 
-        e.preventDefault();
-
-        const fila = e.target.closest('tr');
-        const btnAgregar = fila.querySelector('button.btn-success');
-
-        if (btnAgregar) {
-            validarYAgregar(btnAgregar);
-
-            btnAgregar.style.transform = "scale(0.9)";
-            setTimeout(() => btnAgregar.style.transform = "scale(1)", 100);
+                    if (vendedor_id) {
+                        $('#select-vendedor1').val(vendedor_id).trigger('change.select2');
+                    }
+                } else {
+                    select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
+                }
+            } catch (error) {
+                select.innerHTML = '<option value="">Error al cargar la lista</option>';
+                console.error('Error al ejecutar cargarVendedores3:', error);
+            }
         }
-    }
-});
 
-/**
- * Eventos CHANGE
- */
-document.addEventListener('change', function(e) {
+        // =====================================================
+        // CALCULAR TOTAL EDITAR
+        // =====================================================
+        function calcularTotalSolEditar(input) {
+            if (recalculandoFilaEditar) return;
+            recalculandoFilaEditar = true;
 
-    // Cambió el tipo de precio
-    if (e.target.classList.contains('select-precio')) {
+            try {
+                const fila = input ? input.closest('tr') : null;
+                if (fila) {
+                    const cantidad = parseFloat(fila.querySelector('.cantidad-editar')?.value) || 0;
+                    const precioUnitarioOriginal = parseFloat(fila.querySelector('.precio-unitario-editar')?.value) || 0;
 
-        const fila = e.target.closest('tr');
+                    const precioTotal = cantidad * precioUnitarioOriginal;
+                    fila.querySelector('.precio-total-editar').value = precioTotal.toFixed(2);
+                }
 
-        const inputPrecio = fila.querySelector('.input-precio');
-        const inputPrecioMayor = fila.querySelector('.input-precioMayor');
+                // SUMA GENERAL
+                let totalCompraEditar = 0;
+                document.querySelectorAll('#tablaDetalleEditar .precio-total-editar').forEach(el => {
+                    totalCompraEditar += parseFloat(el.value) || 0;
+                });
 
-        inputPrecio.value = parseFloat(e.target.value).toFixed(2);
-        inputPrecioMayor.value = parseFloat(e.target.value).toFixed(2);
+                document.getElementById('costoTotalCompraEditar').textContent = totalCompraEditar.toLocaleString('es-MX', {
+                    style: 'currency',
+                    currency: 'MXN'
+                });
+                document.getElementById('totalCotizacionEditar').value = totalCompraEditar.toFixed(2);
 
-        calcularPrecio(fila);
-    }
+            } finally {
+                recalculandoFilaEditar = false;
+            }
+        }
 
-    // Cambió la unidad
-    if (e.target.classList.contains('medidas_adicionales')) {
-        calcularPrecio(e.target.closest('tr'));
-    }
+        // =====================================================
+        // RECARGAR PRODUCTOS
+        // =====================================================
+        async function recargarProductosEditar() {
+            try {
+                const resp = await fetch(`/cfsistem/app/controllers/accesoController.php?action=obtenerProductos`);
+                const res = await resp.json();
 
-});
+                if (!res.success) {
+                    throw new Error(res.message);
+                }
 
-/**
- * Eventos INPUT
- */
-document.addEventListener('input', function(e) {
+                const select = document.getElementById('buscadorProductosEditar');
+                select.innerHTML = `<option value="">Escribe para buscar...</option>`;
 
-    // Cambió la cantidad
-    if (e.target.classList.contains('cantidad_usuario')) {
-        calcularPrecio(e.target.closest('tr'));
-    }
+                res.data.forEach(pr => {
+                    const option = document.createElement('option');
+                    option.value = pr.producto_id;
+                    option.dataset.nombre = pr.nombre;
+                    option.dataset.medidas = JSON.stringify(pr.medidas_adicionales || []);
+                    option.dataset.sku = pr.sku;
+                    option.dataset.um = pr.unidad_medida;
+                    option.dataset.ur = pr.unidad_reporte;
+                    option.dataset.premin = pr.precio_minorista || 0;
+                    option.dataset.premat = pr.precio_mayorista || 0;
+                    option.dataset.predis = pr.precio_distribuidor || 0;
+                    option.dataset.factor = pr.factor_conversion || 1;
 
-    // Usuario escribe el precio manualmente
-    if (e.target.classList.contains('input-precioMayor')) {
-        actualizarDesdePrecioMayor(e.target.closest('tr'));
-    }
+                    option.textContent = `[${pr.sku}] ${pr.nombre}`;
+                    select.appendChild(option);
+                });
 
-});
+            } catch (e) {
+                console.error(e);
+                Swal.fire('Error', 'No se pudo actualizar la lista de productos', 'error');
+            }
+            $('#buscadorProductosEditar').trigger('change.select2');
+        }
 
-/**
- * Calcula precio según unidad y tipo de precio
- */
-function calcularPrecio(fila) {
+        // =====================================================
+        // EVENTO SELECT2: AGREGAR PRODUCTO
+        // =====================================================
+        $('#buscadorProductosEditar').on('select2:select', function(e) {
+            const d = e.params.data.element.dataset;
+            const id = $(this).val();
 
-    if (!fila) return;
+            if ($(`#filaEditar-${id}`).length) {
+                Swal.fire('Aviso', 'El producto ya está en la lista', 'info');
+                return;
+            }
 
-    const inputPrecio = fila.querySelector('.input-precio');
-    const inputPrecioMayor = fila.querySelector('.input-precioMayor');
-    const inputUsuario = fila.querySelector('.cantidad_usuario');
-    const inputReal = fila.querySelector('.cantidad');
-    const selectMedida = fila.querySelector('.medidas_adicionales');
-    const precio = parseFloat(fila.querySelector('.select-precio')?.value) || 0;
+            $('#emptyStateEditar').addClass('d-none');
+            const medidas = JSON.parse(d.medidas || '[]');
 
-    if (!inputUsuario || !inputReal) return;
+            let opcionesUnidad = ``;
+            medidas.forEach(m => {
+                opcionesUnidad += `
+                <option value="${m.id}" data-equivalencia="${m.equivalencia}" data-medida-id="${m.id}">
+                    ${m.nombre}
+                </option>`;
+            });
 
-    const cantidadUsuario = parseFloat(inputUsuario.value) || 0;
-    const equivalencia = parseFloat(selectMedida?.value) || 1;
+            const preMin = parseFloat(d.premin) || 0;
+            const preMat = parseFloat(d.premat) || 0;
+            const preDis = parseFloat(d.predis) || 0;
+            const factor = parseFloat(d.factor) || 1;
 
-    const factor = fila.querySelector('.factorC');
-    const factorC = parseFloat(factor.value) || 1;
+            $('#tablaDetalleEditar tbody').append(`
+            <tr id="filaEditar-${id}">
+                <td class="ps-4">
+                    <b>${d.nombre}</b><br>
+                    <small class="text-muted">${d.sku}</small>
+                </td>
 
-    const equi = Math.round((1 / equivalencia) * 100) / 100;
+                <td>
+                    <input 
+                        type="number"
+                        name="itemsEditar[${id}][cant]"
+                        class="form-control cantidad-editar"
+                        step="0.01"
+                        value="1"
+                        min="0.01"
+                        required
+                        oninput="actualizarEquivalencia(this);calcularTotalSolEditar(this)">
+                    <input 
+                        type="hidden"
+                        name="itemsEditar[${id}][equivalencia]"
+                        class="form-control equivalencia"
+                        value="1">
+                </td>
 
-    let nuevoPrecio = 0;
+                <td>
+                    <select 
+                        name="itemsEditar[${id}][unidad]" 
+                        class="form-select unidad-select-editar"
+                        onchange="actualizarEquivalencia(this);calcularPrecioSugeridoEditar(this)">
+                        <option value="0" data-equivalencia="1" data-medida-id="0">Seleccione</option>
+                        ${opcionesUnidad}
+                    </select>
+                </td>
+                
+                <td>
+                    <select 
+                        name="itemsEditar[${id}][tipoPrecio]" 
+                        class="form-select tipoPrecio-select-editar"
+                        onchange="calcularPrecioSugeridoEditar(this)">
+                        <option value="seleccionar" data-precio="0">Seleccione</option>
+                        <option value="minorista" data-precio="${preMin}">Min $${(preMin * factor).toFixed(2)} x ${d.ur}</option>
+                        <option value="mayorista" data-precio="${preMat}">May $${(preMat * factor).toFixed(2)} x ${d.ur}</option>
+                        <option value="distribuidor" data-precio="${preDis}">Dis $${(preDis * factor).toFixed(2)} x ${d.ur}</option>
+                    </select>
+                </td>
 
-    if (equi == factorC) {
-        nuevoPrecio = precio * factorC;
-    } else {
-        nuevoPrecio = Math.round((precio * equi) * 100) / 100;
-    }
+                <td>
+                    <input 
+                        type="number"
+                        lang="en-US"
+                        name="itemsEditar[${id}][precioUnitario]"
+                        class="form-control precio-unitario-editar"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        required
+                        oninput="calcularTotalSolEditar(this)">
+                </td>
 
-    // Aquí sí actualizamos ambos porque NO viene del input-precioMayor
-    inputPrecio.value = nuevoPrecio;
-    inputPrecioMayor.value = nuevoPrecio;
+                <td style="min-width:140px;">
+                    <input 
+                        type="number"
+                        lang="en-US"
+                        name="itemsEditar[${id}][precio]"
+                        class="form-control precio-total-editar fw-bold text-success bg-light"
+                        step="0.01"
+                        min="0"
+                        placeholder="0.00"
+                        oninput="calcularTotalSolEditar(this)"
+                        style="font-size:1.1rem; height:40px;">
+                </td>
 
-    const totalReal = cantidadUsuario / equivalencia;
-    inputReal.value = totalReal;
+                <td class="text-center">
+                    <button type="button" class="btn btn-link text-danger p-0" onclick="quitarFilaEditar('${id}')">
+                        <i class="bi bi-trash fs-5"></i>
+                    </button>
+                </td>
+            </tr>
+            `);
 
-    console.log({
-        usuario: cantidadUsuario,
-        equivalencia,
-        real: totalReal
-    });
-}
+            $(this).val(null).trigger('change');
+        });
 
-/**
- * Se ejecuta cuando el usuario escribe en input-precioMayor.
- * NO modifica input-precioMayor para no bloquear la escritura.
- */
-function actualizarDesdePrecioMayor(fila) {
+        function actualizarEquivalencia(input) {
+            const fila = $(input).closest('tr');
+            const cantidad = parseFloat(fila.find('.cantidad-editar').val()) || 0;
+            const equivalencia = parseFloat(fila.find('.unidad-select-editar option:selected').data('equivalencia')) || 1;
+            let cantidadTotal = (1 / equivalencia).toFixed(2);
+            fila.find('.equivalencia').val(cantidadTotal);
+        }
 
-    if (!fila) return;
+        function calcularPrecioSugeridoEditar(select) {
+            const fila = select.closest('tr');
+            const inputPrecio = fila.querySelector('.precio-unitario-editar');
+            const unidadSelect = fila.querySelector('.unidad-select-editar');
+            const tipoSelect = fila.querySelector('.tipoPrecio-select-editar');
+            const inputtotal = fila.querySelector('.precio-total-editar');
+            
+            const unidadOption = unidadSelect.options[unidadSelect.selectedIndex];
+            const tipoOption = tipoSelect.options[tipoSelect.selectedIndex];
 
-    const inputPrecio = fila.querySelector('.input-precio');
-    const inputPrecioMayor = fila.querySelector('.input-precioMayor');
+            const equivalencia = Number(unidadOption?.dataset.equivalencia || 1);
+            const precioBase = Number(tipoOption?.dataset.precio || 0);
 
-    const precioManual = parseFloat(inputPrecioMayor.value);
+            const sugerido = equivalencia > 0 ? (precioBase / equivalencia) : precioBase;
+            inputPrecio.value = sugerido.toFixed(2);
+            
+            const cantidad = parseFloat(fila.querySelector('.cantidad-editar')?.value) || 0;
+            inputtotal.value = (sugerido * cantidad).toFixed(2);
 
-    if (isNaN(precioManual)) {
+            calcularTotalSolEditar(null);
+        }
+
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('precio-unitario-editar')) {
+                e.target.dataset.editado = "1";
+            }
+        });
+
+        // =====================================================
+        // GUARDAR ACTUALIZACIÓN (SUBMIT FORM)
+        // =====================================================
+        // =====================================================
+        $('#formEditarSolicitud').on('submit', async function(e) {
+    e.preventDefault();
+
+    if (!$('#tablaDetalleEditar tbody tr').length) {
+        Swal.fire('Error', 'Agregue al menos un producto a la venta', 'warning');
         return;
     }
 
-    // Si quieres que ambos tengan el mismo valor:
-    inputPrecio.value = precioManual;
+    const $btnFinalizar = $(this).find('button[type="submit"]');
+    $btnFinalizar.prop('disabled', true);
 
-    // NO hacer:
-    // inputPrecioMayor.value = precioManual;
-    // porque eso provoca que se dispare continuamente mientras escribe.
-}
-</script>
+    const totalVenta = parseFloat($('#totalCotizacionEditar').val()) || 0;
+    const montoPagado = 0; // Dinero real recibido
+
+    const payload = {
+        accion: 'guardar_venta',
+        id_cliente: $('#cliente_id_editar').val(),
+        id_vendedor: $('#select-vendedor1').val(),
+        monto_pagado: montoPagado,
+        monto_usado_favor: 0,
+        total_venta: totalVenta,
+        almacen_id: $('#almacen_id_editar').val(),
+        metodo_pago: 'efectivo',
+        referencia: '',
+        observaciones: '',
+        usar_saldo_favor: 0,
+        carrito: []
+    };
+
+    $('#tablaDetalleEditar tbody tr').each(function() {
+        const fila = $(this);
+        const id = fila.attr('id').replace('filaEditar-', '');
+
+        const unidadSelect = fila.find('.unidad-select-editar option:selected');
+        const tipoPrecioSelect = fila.find('.tipoPrecio-select-editar option:selected');
+        let cantidadInicial = parseFloat(fila.find('.cantidad-editar').val()) || 0;
+        let equivalencia = parseFloat(fila.find('.equivalencia').val()) || 1;
+        
+        
+        let cantidadT = (cantidadInicial * equivalencia);
+        let cantidadTotal = (cantidadT % 1 > 0) ? cantidadT.toFixed(2) : cantidadT;
+        console.log(cantidadInicial);
+        console.log('equivalencia',equivalencia);
+      
+        payload.carrito.push({
+            producto_id: id,
+            almacen_id: $('#almacen_id_editar').val(),
+            cantidad: cantidadTotal,
+            unidad_base: unidadSelect.val(),
+           
+            noEliminar: fila.find('.noEliminar').val(),
+            idunidadMedida: unidadSelect.data('medida-id'),
+            unidadEquivalencia: unidadSelect.data('equivalencia'),
+            tipo_precio: tipoPrecioSelect.val(),
+            precio_unitario: fila.find('.precio-unitario-editar').val(),
+            subtotal: fila.find('.precio-total-editar').val()
+        });
+    });
+
+    Swal.fire({
+        title: 'Actualizando venta...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    try {
+        const resp = await fetch(`/cfsistem/app/controllers/ventasController.php?action=guardar_venta`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const res = await resp.json();
+
+        if (res.status === 'success') {
+            // CORREGIDO: Se compara usando las variables definidas en este scope
+            const tieneDeuda = payload.monto_pagado < payload.total_venta;
+            const esEntregaTotal = (res.total_entregado ?? 0) >= (res.total_pedido ?? 0);
+            const iconoFinal = esEntregaTotal ? 'success' : 'warning';
+
+            let htmlExtra = `<p class="mb-2">Folio: <span class="badge bg-light text-dark border">${res.folio || 'N/A'}</span></p>`;
+
+            if (tieneDeuda) {
+                htmlExtra += `
+                <div class="alert alert-danger py-1 px-2 border-0 mb-2" style="font-size:0.75rem; border-radius:10px;">
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> Saldo pendiente registrado en cuenta
+                </div>`;
+            }
+
+            Swal.fire({
+                title: esEntregaTotal ? '¡Venta Exitosa!' : '¡Venta Exitosa! Entrega Pendiente ',
+                html: `
+                    <div class="alert alert-light border-0 small text-start py-2 mb-3" style="background:#f2f2f7; border-radius:12px;">
+                        ${res.message || 'Operación realizada correctamente.'}
+                    </div>
+                    ${htmlExtra}
+                    <p class="text-muted small mb-0">¿Deseas imprimir el comprobante?</p>
+                `,
+                icon: iconoFinal,
+                showDenyButton: true,
+                showCancelButton: true,
+                confirmButtonText: '<i class="bi bi-receipt"></i> Con Precios',
+                denyButtonText: '<i class="bi bi-receipt"></i> Ticket Formal',
+                cancelButtonText: 'Cerrar',
+                confirmButtonColor: '#34c759',
+                denyButtonColor: '#5856d6',
+                customClass: {
+                    popup: 'rounded-4 border-0 shadow-lg'
+                }
+            }).then((result) => {
+                let url = '';
+                if (result.isConfirmed) {
+                    url = `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`;
+                } else if (result.isDenied) {
+                    url = `/cfsistem/app/backend/ventas/ticketFormal.php?id=${res.id_venta}`;
+                }
+
+                if (url !== '') window.open(url, '_blank');
+                location.reload();
+            });
+        } else {
+            Swal.fire({
+                title: 'Error',
+                text: res.message || 'Error desconocido',
+                icon: 'error',
+                customClass: { popup: 'rounded-4' }
+            });
+            $btnFinalizar.prop('disabled', false);
+        }
+
+    } catch (e) {
+        console.error(e);
+        Swal.fire('Error', 'Fallo de conexión con el servidor', 'error');
+        $btnFinalizar.prop('disabled', false);
+    }
+});
+        // ELIMINAR FILA
+        // =====================================================
+        function quitarFilaEditar(id) {
+            $(`#filaEditar-${id}`).remove();
+
+            if (!$('#tablaDetalleEditar tbody tr').length) {
+                $('#emptyStateEditar').removeClass('d-none');
+            }
+
+            calcularTotalSolEditar(null);
+        }
+
+        // =====================================================
+        // GESTIÓN DE SALDOS Y EGRESOS
+        // =====================================================
+        function mostrarModalSaldo() {
+            let total = parseFloat($('#totalCotizacionEditar').val()) || 0;
+            const diferencia = total_inicial - total;
+
+            $('#txtTotalOriginal').text(total_inicial.toFixed(2));
+            $('#txtNuevoTotal').text(total.toFixed(2));
+            $('#txtDiferencia').text(diferencia.toFixed(2));
+
+            const elemModal = document.getElementById('modalSaldoFavor');
+            if (elemModal) {
+                new bootstrap.Modal(elemModal).show();
+            }
+        }
+
+        $('#btnSaldoFavor').click(async function () {
+            const elemModal = document.getElementById('modalSaldoFavor');
+            if (elemModal) {
+                const modalInst = bootstrap.Modal.getInstance(elemModal);
+                if (modalInst) modalInst.hide();
+            }
+
+            try {
+                const id = $('#editar_venta_id').val();
+                const cliente = $('#cliente_id_editar').val();
+                const total = parseFloat($('#totalCotizacionEditar').val()) || 0;
+                const diferencia = total_inicial - total;
+
+                const fd = new FormData();
+                fd.append('venta_id', id);
+                fd.append('cliente_id', cliente);
+                fd.append('diferencia', diferencia);
+
+                const resp = await fetch('/cfsistem/app/controllers/editarVentaController.php?action=guardarComoABono', {
+                    method: 'POST',
+                    body: fd
+                });
+
+                const res = await resp.json();
+
+                if (!res.success && res.status !== 'success') {
+                    throw new Error(res.message);
+                }
+
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Saldo aplicado',
+                    text: res.message || 'El saldo a favor fue registrado correctamente.'
+                });
+
+                window.location.reload();
+
+            } catch (e) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: e.message
+                });
+            }
+        });
+
+        async function guardarComoGastoSalidadeDinero() {
+            try {
+                const respFolio = await fetch('/cfsistem/app/controllers/egresosController.php?action=getSiguienteFolioGasto');
+                const folioRes = await respFolio.json();
+
+                if (!folioRes.success) {
+                    throw new Error("No fue posible obtener el folio.");
+                }
+
+                const folio = folioRes.folio;
+                const id = $('#editar_venta_id').val();
+                const total = parseFloat($('#totalCotizacionEditar').val()) || 0;
+                const diferencia = total_inicial - total;
+                const observaciones = `SALIDA DE DINERO POR EDICIÓN DE VENTA ${id}`;
+                const fecha = new Date().toISOString().split('T')[0];
+
+                const fd = new FormData();
+                fd.append('folio', folio);
+                fd.append('monto', diferencia);
+                fd.append('fecha', fecha);
+                fd.append('observaciones', observaciones);
+                fd.append('venta_id', id);
+
+                const resp = await fetch('/cfsistem/app/controllers/egresosController.php?action=guardarSalidaDinero', {
+                    method: 'POST',
+                    body: fd
+                });
+
+                const res = await resp.json();
+
+                if (res.success || res.status === 'success') {
+                    await Swal.fire('Éxito', 'Salida de dinero registrada correctamente.', 'success');
+                    window.location.reload();
+                } else {
+                    throw new Error(res.message || 'Error al procesar el egreso');
+                }
+
+            } catch (e) {
+                Swal.fire('Error', e.message, 'error');
+            }
+        }
+    </script>
 </body>
 
 </html>
