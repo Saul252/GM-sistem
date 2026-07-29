@@ -31,7 +31,7 @@
         }
 
         .page-header-gradient {
-            background: linear-gradient(135deg, #696969 0%, #b1b3b6 100%);
+            background: linear-gradient(135deg, #202a54 0%, #b1b3b6 100%);
             color: #ffffff;
            
         }
@@ -166,7 +166,7 @@
                                 </label>
                                 <select name="almacen_id_editar" id="almacen_id_editar"
                                     class="form-select border-slate-300 rounded-3" required>
-                                    <option value="">Seleccionar ubicación...</option>
+                                   
                                     <?php foreach($almacenes as $a): ?>
                                         <option value="<?= $a['id'] ?>"><?= htmlspecialchars($a['nombre']) ?></option>
                                     <?php endforeach; ?>
@@ -268,29 +268,55 @@
                     </div>
 
                     <!-- Resumen del Total y Botones de Acción -->
-                    <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
-                        <a href="/cfsistem/app/controllers/ventasController2.php" class="btn btn-outline-secondary rounded-pill px-4 fw-bold">
-                             Reiniciar
-                        </a>
+                    <div class="card border-0 shadow-sm rounded-4 mt-4 bg-white overflow-hidden">
+    <div class="card-body p-4">
+        <div class="row g-4 align-items-center">
+            
+            <!-- Columna 1: Observaciones / Notas -->
+            <div class="col-12 col-lg-5">
+                <label for="obsVenta" class="form-label small fw-semibold text-secondary d-flex align-items-center mb-2">
+                    <i class="bi bi-chat-left-text me-2 text-primary"></i>Notas / Observaciones
+                </label>
+                <textarea id="obsVenta" 
+                    class="form-control border-light-subtle bg-body-tertiary rounded-3 shadow-none p-3"
+                    rows="2"
+                    placeholder="Agrega detalles o instrucciones sobre esta orden..."></textarea>
+            </div>
 
-                        <div class="d-flex align-items-center gap-4">
-                            <div class="total-badge-card text-end">
-                                <small class="d-block text-white-50 fw-semibold text-uppercase tracking-wider mb-1"
-                                    style="font-size:0.7rem;">
-                                    Costo Total de Compra
-                                </small>
-                                <div id="costoTotalCompraEditar" class="fw-bold" style="font-size:2.2rem; line-height:1;">
-                                    $0.00
-                                </div>
-                                <input type="hidden" id="totalCotizacionEditar" name="totalCotizacionEditar" value="0">
-                            </div>
+            <!-- Columna 2: Acciones y Totales -->
+            <div class="col-12 col-lg-7">
+                <div class="d-flex flex-wrap align-items-center justify-content-lg-end justify-content-between gap-3 gap-sm-4">
+                    
+                    <!-- Botón Reiniciar -->
+                    <button type="button" onclick="location.reload()"
+                                        class="btn btn-outline-dark rounded-pill px-4 py-2.5 fw-semibold border-white-10 btn-hover-light d-flex align-items-center justify-content-center">
+                                        <i class="bi bi-arrow-clockwise me-1 fs-6"></i> Reiniciar
+                                    </button>
 
-                            <button type="submit"
-                                class="btn btn-action-primary rounded-pill px-5 py-3 fw-bold shadow-sm d-flex align-items-center fs-5">
-                                <i class="bi bi-check2-circle me-2"></i> Finalizar Venta
-                            </button>
+                    <!-- Tarjeta del Total -->
+                    <div class="bg-dark bg-gradient text-white p-3 rounded-4 shadow-sm text-end px-4 min-w-200">
+                        <small class="d-block text-white-50 fw-bold text-uppercase tracking-wider mb-1" style="font-size: 0.65rem; letter-spacing: 0.8px;">
+                             Total de Venta
+                        </small>
+                        <div id="costoTotalCompraEditar" class="fw-bolder text-warning" style="font-size: 2rem; line-height: 1;">
+                            $0.00
                         </div>
+                        <input type="hidden" id="totalCotizacionEditar" name="totalCotizacionEditar" value="0">
                     </div>
+
+                    <!-- Botón Finalizar -->
+                    <button type="submit" 
+                        class="btn btn-success btn-lg rounded-pill px-4 py-3 fw-bold shadow-sm d-inline-flex align-items-center border-0"
+                        style="background: linear-gradient(135deg, #198754 0%, #146c43 100%);">
+                        <i class="bi bi-check2-circle me-2 fs-4"></i> Finalizar Venta
+                    </button>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
                 </div>
             </form>
 
@@ -321,7 +347,7 @@
 
         $(document).ready(async function() {
             try {
-                await recargarProductosEditar();
+                recargarProductosEditar();
                 await cargarVendedores3();
             } catch (error) {
                 console.error("Error en inicialización:", error);
@@ -600,18 +626,19 @@
 
     const totalVenta = parseFloat($('#totalCotizacionEditar').val()) || 0;
     const montoPagado = 0; // Dinero real recibido
-
+console.log("k",totalVenta);
     const payload = {
         accion: 'guardar_venta',
         id_cliente: $('#cliente_id_editar').val(),
         id_vendedor: $('#select-vendedor1').val(),
         monto_pagado: montoPagado,
         monto_usado_favor: 0,
-        total_venta: totalVenta,
+        subtotal: totalVenta,
         almacen_id: $('#almacen_id_editar').val(),
         metodo_pago: 'efectivo',
         referencia: '',
-        observaciones: '',
+         observaciones: $('#obsVenta').val(),
+        
         usar_saldo_favor: 0,
         carrito: []
     };
@@ -677,7 +704,7 @@
             }
 
             Swal.fire({
-                title: esEntregaTotal ? '¡Venta Exitosa!' : '¡Venta Exitosa! Entrega Pendiente ',
+                title: esEntregaTotal ? '¡Venta Exitosa!' : '¡Venta desde Remision Exitosa! ',
                 html: `
                     <div class="alert alert-light border-0 small text-start py-2 mb-3" style="background:#f2f2f7; border-radius:12px;">
                         ${res.message || 'Operación realizada correctamente.'}

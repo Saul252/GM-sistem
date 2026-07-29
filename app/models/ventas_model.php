@@ -81,6 +81,8 @@ $params = [];
     }
 public static function procesarVenta($conexion, $data, $id_usuario) {
     $conexion->begin_transaction();
+     
+
 
     try {
        $id_cliente   = intval($data['id_cliente']);
@@ -106,7 +108,8 @@ if ($monto_favor > 0 && $monto_favor == $monto_pagado) {
        
 
         // 1. VALIDACIÓN DE STOCK Y CÁLCULO DE TOTALES
-        $subtotal = floatval($data['subtotal']);
+    
+        $subtotal = ($data['subtotal']);
         $total_vendido_global = 0;
         $total_entregado_global = 0;
 
@@ -154,7 +157,7 @@ if ($monto_favor > 0 && $monto_favor == $monto_pagado) {
         $sqlV = "INSERT INTO ventas (folio, id_cliente, almacen_id, usuario_id, subtotal, descuento, total, estado_pago, estado_entrega, estado_general, observaciones,vendedor_id) 
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activa', ?,?)";
         $stmtV = $conexion->prepare($sqlV);
-        $stmtV->bind_param("siiidddssss", $folio, $id_cliente, $id_almacen_vta, $id_usuario, $subtotal, $descuento, $total, $estado_pago, $estado_entrega_vta, $obs,$vendedor_id);
+        $stmtV->bind_param("siiidddssss", $folio, $id_cliente, $id_almacen_vta, $id_usuario, $data['subtotal'], $descuento, $data['subtotal'], $estado_pago, $estado_entrega_vta, $obs,$vendedor_id);
         $stmtV->execute();
         $id_venta = $conexion->insert_id;
 

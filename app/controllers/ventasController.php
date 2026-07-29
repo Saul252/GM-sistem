@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($data['accion'])) {
             $monto_favor = isset($data['monto_usado_favor']) ? floatval($data['monto_usado_favor']) : 0;
             $efectivo    = floatval($data['monto_pagado'] ?? 0); 
             $total_nota  = floatval($data['total_venta'] ?? 0); 
-
+           
             // 2. CONSOLIDACIÓN PARA EL MODELO DE VENTAS
             if ($usar_check === 1 && $monto_favor > 0) {
                 $data['monto_pagado'] = $efectivo + $monto_favor;

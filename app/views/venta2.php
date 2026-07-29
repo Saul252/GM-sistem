@@ -844,9 +844,12 @@
     });
 
     function verificarMetodoPago(metodo) {
+         
+    
 
 
         const contenedor = document.getElementById('contenedorReferencia');
+        const contenedorcambio = document.getElementById('contenedor_cambio');
         const input = document.getElementById('inputReferencia');
 
         if (!contenedor || !input) return;
@@ -854,10 +857,17 @@
         if (metodo === 'Tarjeta' || metodo === 'Transferencia') {
             contenedor.style.display = 'block';
             input.required = true;
+            const totalVenta = parseFloat($('#totalCotizacionEditar').val()) || 0;
+    $('#monto_pagar').val(totalVenta);
+      contenedorcambio.classList.add('d-none');
+      
+
         } else {
             contenedor.style.display = 'none';
             input.required = false;
             input.value = '';
+            contenedorcambio.classList.remove('d-none');
+            calcularCambio();
         }
     }
     // =====================================================
@@ -887,8 +897,8 @@
             total_venta: totalVenta,
             almacen_id: $('#almacen_id_editar').val(),
             metodo_pago: $('#metodo_pago').val(),
-            referencia: $('#inputReferencia'),
-            observaciones: $('#obsVenta'),
+            referencia: $('#inputReferencia').val(),
+            observaciones: $('#obsVenta').val(),
             usar_saldo_favor: 0,
             chofer_id: parseInt(document.getElementById('patio_chofer_id').value) || 0,
             tripulantes: $('#patio_tripulantes').val() || [], // Array de IDs de ayudantes
@@ -1291,6 +1301,7 @@ function calcularCambio() {
     } else {
         // Si es otro método de pago (Tarjeta, Transferencia, etc.)
         contenedor.classList.add('d-none');
+        document.getElementById('monto_pagar').value=totalVenta;
         // Nos aseguramos de que el botón esté visible
         boton.removeClass('d-none');
     }

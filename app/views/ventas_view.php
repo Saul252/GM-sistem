@@ -165,7 +165,7 @@
                                 <i class="bi bi-box-seam me-1 text-primary"></i> Almacén de Cargo
                             </label>
                             <select name="almacen_id_editar" id="almacen_id_editar" class="form-select border-0 shadow-sm rounded-3 py-2" required>
-                                <option value="">Seleccionar ubicación...</option>
+                           
                                 <?php foreach($almacenes as $a): ?>
                                     <option value="<?= $a['id'] ?>"><?= htmlspecialchars($a['nombre']) ?></option>
                                 <?php endforeach; ?>
@@ -353,24 +353,9 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-    const selectAlmacen = document.getElementById('almacen_id_editar');
+    recargarProductosEditar();
 
-    if (selectAlmacen) {
-        selectAlmacen.addEventListener('change', function (e) {
-            const almacenId = this.value; // ID del almacén seleccionado
-            const textoSeleccionado = this.options[this.selectedIndex].text; // Nombre del almacén
-
-            if (almacenId) {
-                console.log(`Almacén cambiado a ID: ${almacenId} - ${textoSeleccionado}`);
-                  recargarProductosEditar();
-                
-                // 🚀 Coloca aquí la función o lógica que deseas ejecutar
-                // Ejemplo: cargarProductosPorAlmacen(almacenId);
-            } else {
-                console.log('Se deseleccionó el almacén');
-            }
-        });
-    }
+   
 });
       async function recargarProductosEditar() {
     const id = $('#almacen_id_editar').val();
