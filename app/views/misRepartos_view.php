@@ -420,7 +420,7 @@ window.cargarMonitorViajes = async function() {
                     <td class="text-end pe-4">
                       <button class="btn btn-sm btn-light border-0" onclick="abrirModalEdicionViaje('${v.viaje_folio}', ${v.vehiculo_id}, ${v.chofer_id})" style="border-radius: 10px; color: #007aff; background: #f2f2f7;"><i class="bi bi-pencil-square"></i></button>
                           
-                        <a href="/cfsistem/app/controllers/gestionarRepartoController.php?folio=${v.entrega_id}" 
+                        <a href="/cfsistem/app/controllers/gestionarRepartoController.php?folio=${v.viaje_folio}" 
                            class="btn btn-sm btn-primary rounded-pill px-3 fw-bold shadow-sm" style="font-size: 0.7rem;">
                             <i class="bi bi-camera-fill me-1"></i> GESTIONAR
                         </a>
@@ -438,7 +438,7 @@ window.cargarMonitorViajes = async function() {
 async function finalizar (vehiculoId, folioRuta,entrega_id) {
      
          const container = document.getElementById('contenedor-entregas');
-    fetch(`/cfsistem/app/controllers/gestionarRepartoController.php?action=get_entregas_folio&folio=${entrega_id}`)
+    fetch(`/cfsistem/app/controllers/gestionarRepartoController.php?action=get_entregas_folio&folio=${folioRuta}`)
         .then(res => res.json())
         .then(res => {
           

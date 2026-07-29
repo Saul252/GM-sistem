@@ -234,17 +234,32 @@ let datosTemporales = [];
 $(document).ready(() => {
     cargarEntregas();
 });
-
 function cargarEntregas() {
     const container = document.getElementById('contenedor-entregas');
-    fetch(`${API_URL}?action=get_entregas_folio&folio=${FOLIO}`)
-        .then(res => res.json())
+    
+    // Usamos ruta relativa por si el slash inicial '/' distorsiona la ruta base
+    fetch(`/cfsistem/app/controllers/gestionarRepartoController.php?action=get_entregas_folio&folio=${FOLIO}`)
+        .then(async res => {
+            // Si el servidor devolvió un HTTP 404, 500, etc.
+            if (!res.ok) {
+                const text = await res.text();
+                throw new Error(`Error en el servidor (${res.status}): ${text}`);
+            }
+            return res.json();
+        })
         .then(res => {
             container.innerHTML = '';
+            
+            // Verificamos si PHP envió un error en formato JSON { success: false, error: "..." }
+            if (res.success === false) {
+                container.innerHTML = `<div class="alert alert-warning mx-3">Error: ${res.error || 'No se pudieron obtener los datos.'}</div>`;
+                return;
+            }
+
             console.log(res.data);
             datosTemporales = res.data || [];
 
-            if(datosTemporales.length === 0) {
+            if (datosTemporales.length === 0) {
                 container.innerHTML = '<div class="text-center py-5 text-muted">No hay paradas pendientes.</div>';
                 return;
             }
@@ -261,13 +276,13 @@ function cargarEntregas() {
                                 <span class="badge rounded-pill ${esVisitado ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary'}">
                                     ${esVisitado ? 'ENTREGADO' : estado.toUpperCase()}
                                 </span>
-                                <span class="small text-muted">Venta: ${item.folio_venta || 'S/F'} (Entrega ${item.entrega_id })</span>
+                                <span class="small text-muted">Venta: ${item.folio_venta || 'S/F'} (Entrega ${item.entrega_id})</span>
                             </div>
                             <h6 class="fw-bold mb-1">${item.cliente || 'Cliente'}</h6>
                             <p class="small text-muted mb-3"><i class="bi bi-geo-alt me-1"></i>${item.direccion_entrega || 'Sin dirección'}</p>
                             
                             <div class="p-3 rounded-4 mb-3 bg-light" style="font-size: 0.85rem; border: 1px solid #f2f2f7;">
-                                
+                            </div>
 
                             ${!esVisitado ? 
                                 `<button class="btn btn-primary-ios w-100" onclick="abrirModalPorIndex(${index})">
@@ -282,11 +297,10 @@ function cargarEntregas() {
             });
         })
         .catch(err => {
-            console.error(err);
-            container.innerHTML = '<div class="alert alert-danger mx-3">Error de conexión.</div>';
+            console.error("Detalle del error:", err);
+            container.innerHTML = `<div class="alert alert-danger mx-3">Error de conexión o respuesta no válida.<br><small>${err.message}</small></div>`;
         });
 }
-
 function abrirModalPorIndex(index) {
     const data = datosTemporales[index];
     console.log(data);

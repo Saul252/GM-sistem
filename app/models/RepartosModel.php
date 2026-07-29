@@ -1636,7 +1636,7 @@ FROM (
         odma.equivalencia as equi,
         odma.nombre as nombreEqui,
 
-        SUM(m.cantidad) AS totalCantidad,
+        m.cantidad AS totalCantidad,
 
         p.unidad_medida AS unidadMedida
 
@@ -2874,7 +2874,7 @@ public function contarTotalEntregasRuta($almacen_id = 0, $fecha_inicio = null, $
  * @param string $base_path Ruta base para la construcción de URLs de imágenes (opcional)
  * @return array Devuelve un listado (array de arrays asociativos) o un array vacío si no hay registros
  */
-public function obtenerViajesLogisticaParaEntrega($entrega_id, $base_path = '') 
+public function obtenerViajesLogisticaParaEntrega($folioViaje, $base_path = '') 
 {
     $sql = "SELECT
                 ROW_NUMBER() OVER (ORDER BY en.id) AS num_registro,
@@ -2894,10 +2894,10 @@ public function obtenerViajesLogisticaParaEntrega($entrega_id, $base_path = '')
                 MAX(IF(crv.id IS NOT NULL, 1, 0)) AS ya_entregado,
 
                 MAX(IF(crv.fotografia_entrega IS NOT NULL AND crv.fotografia_entrega != '', 
-                    CONCAT(?, crv.fotografia_entrega), NULL)) AS foto_registrada,
+                    CONCAT(crv.fotografia_entrega), NULL)) AS foto_registrada,
 
                 MAX(IF(crv.fotografia_nota IS NOT NULL AND crv.fotografia_nota != '', 
-                    CONCAT(?, crv.fotografia_nota), NULL)) AS nota_registrada,
+                    CONCAT(crv.fotografia_nota), NULL)) AS nota_registrada,
 
                 MAX(trp.descripcion_punto) AS direccion_entrega,
                 MAX(c.nombre_comercial) AS cliente,
@@ -2920,7 +2920,7 @@ public function obtenerViajesLogisticaParaEntrega($entrega_id, $base_path = '')
 
             INNER JOIN transporte_repartos_maestro trm
                 ON trm.entrega_venta_id = m.id
-
+             
             LEFT JOIN transporte_consolidacion tc
                 ON tc.reparto_id = trm.id
 
@@ -2939,24 +2939,25 @@ public function obtenerViajesLogisticaParaEntrega($entrega_id, $base_path = '')
             LEFT JOIN clientes c
                 ON c.id = v.id_cliente
 
-            WHERE en.id = ?
+            WHERE tc.viaje_folio = ?
 
             GROUP BY
                 en.id,
                 en.venta_id,
-                tc.entrega_id";
+                en.usuario_id,
+                en.fecha,
+                trp.descripcion_punto";
 
     $stmt = $this->db->prepare($sql);
 
-    // Bindeamos los parámetros: base_path (string), base_path (string), entrega_id (int)
-    $types = 'ssi';
-    $stmt->bind_param($types, $base_path, $base_path, $entrega_id);
+    // Corregido: Solo 1 parámetro tipo string ('s')
+    $types = 's';
+    $stmt->bind_param($types, $folioViaje);
 
     $stmt->execute();
 
     $result = $stmt->get_result();
 
-    // Devuelve todos los registros como un array asociativo
     return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
 }
 public function a($entrega_id = null) {

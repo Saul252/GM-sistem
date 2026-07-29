@@ -32,14 +32,37 @@ if (isset($_REQUEST['action'])) {
     try {
         // ACCIÓN: OBTENER LISTADO
         if ($action === 'get_entregas_folio') {
-            $folio = $_GET['folio'] ?? '';
-            if (empty($folio)) throw new Exception("Folio no proporcionado.");
-            
-            // IMPORTANTE: Asegúrate que el método se llame así en tu modelo
-            $entregas = $repartoM->obtenerViajesLogisticaParaEntrega($folio); 
-            echo json_encode(["success" => true, "data" => $entregas]);
-            exit;
+    // 1. Forzar encabezado JSON
+    header('Content-Type: application/json; charset=utf-8');
+
+    try {
+        $folio = $_GET['folio'] ?? '';
+        
+        if (empty($folio)) {
+            throw new Exception("Folio no proporcionado.");
         }
+        
+        $entregas = $repartoM->obtenerViajesLogisticaParaEntrega($folio); 
+
+        // 2. Usar flags para evitar fallos por caracteres raros en UTF-8
+        $json = json_encode([
+            "success" => true, 
+            "data" => $entregas
+        ], JSON_UNESCAPED_UNICODE | JSON_PARTIAL_OUTPUT_ON_ERROR);
+
+        if ($json === false) {
+            echo json_encode(["success" => false, "error" => json_last_error_msg()]);
+        } else {
+            echo $json;
+        }
+
+    } catch (Exception $e) {
+        // En lugar de que la excepción deje la pantalla en blanco:
+        echo json_encode(["success" => false, "error" => $e->getMessage()]);
+    }
+
+    exit;
+}
  
         // ACCIÓN: GUARDAR EVIDENCIA
   if ($action === 'subir_evidencia_reparto') {

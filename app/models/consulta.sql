@@ -1,40 +1,67 @@
+SELECT
+                ROW_NUMBER() OVER (ORDER BY en.id) AS num_registro,
+                MAX(v.folio) AS folio_venta,
+                en.id AS entrega_id,
+                en.venta_id,
+                en.usuario_id,
+                en.fecha,
 
-SELECT 
-                    v.id AS id_venta,
-                    MAX(v.folio) AS folio_venta,
-                    MAX(c.nombre_comercial) AS cliente,
-                    MAX(trm.vehiculo_id) AS vehiculo_id,
-                    MAX(tc.viaje_folio) AS folio_viaje,
-                    MAX(trp.descripcion_punto) AS direccion_entrega,
-                    MAX(trp.estado_punto) AS estatus_parada,
-                    MAX(crv.id) AS id_evidencia,
-                    MAX(crv.estatus) AS estatus_evidencia,
-                    MAX(crv.comentario) AS comentario_evidencia,
-                     MAX(IF(crv.id IS NOT NULL AND crv.entrega_id=834 , 1, 0)) AS ya_entregado,
-                    
-                    -- Trae el último ID de movimiento de esta venta (evita desgloses)
-                    MAX(trp.id) AS ids_movimientos_grupo,
-                    
-                    -- Evidencias fotográficas concatenando la variable PHP correctamente
-                    MAX(IF(crv.fotografia_entrega IS NOT NULL AND crv.entrega_id=834 AND crv.fotografia_entrega != '', CONCAT('" . $base_path . "', crv.fotografia_entrega), NULL)) AS foto_registrada,
-                    MAX(IF(crv.fotografia_nota IS NOT NULL  AND crv.entrega_id=834 AND crv.fotografia_nota != '', CONCAT('" . $base_path . "', crv.fotografia_nota), NULL)) AS nota_registrada,
-                    
-                    -- 🔥 Agrupamos los productos de la misma venta en una sola celda
-                    GROUP_CONCAT(p.nombre SEPARATOR ', ') AS productos,
-                    GROUP_CONCAT(CONCAT(m.cantidad, ' ', p.unidad_medida) SEPARATOR ', ') AS cantidades_detalladas,
-                    
-                    -- Sumamos las cantidades de los productos que integran esta venta
-                    SUM(m.cantidad) AS total_piezas_venta
-                FROM transporte_consolidacion tc
-                INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
-                INNER JOIN transporte_rutas_puntos trp ON trm.id = trp.reparto_id 
-                INNER JOIN movimientos m ON trm.entrega_venta_id = m.id
-                INNER JOIN productos p ON m.producto_id = p.id
-                LEFT JOIN ventas v ON m.referencia_id = v.id
-                LEFT JOIN clientes c ON v.id_cliente = c.id
-               LEFT JOIN confirmacion_reparto_viaje crv
-    ON v.id = crv.id_venta
-    AND crv.reparto_folio = tc.viaje_folio
-    WHERE tc.entrega_id =834
-    GROUP BY v.id
-   
+                MAX(tc.id) AS folio,
+                IFNULL(MAX(tc.viaje_folio), 'Sin Viaje Asignado') AS viaje_folio,
+
+                -- Evidencias e imágenes
+                MAX(crv.id) AS id_evidencia,
+                MAX(crv.estatus) AS estatus_evidencia,
+                MAX(crv.comentario) AS comentario_evidencia,
+                MAX(IF(crv.id IS NOT NULL, 1, 0)) AS ya_entregado,
+
+                MAX(IF(crv.fotografia_entrega IS NOT NULL AND crv.fotografia_entrega != '', 
+                    CONCAT( crv.fotografia_entrega), NULL)) AS foto_registrada,
+
+                MAX(IF(crv.fotografia_nota IS NOT NULL AND crv.fotografia_nota != '', 
+                    CONCAT( crv.fotografia_nota), NULL)) AS nota_registrada,
+
+                MAX(trp.descripcion_punto) AS direccion_entrega,
+                MAX(c.nombre_comercial) AS cliente,
+                MAX(trm.vehiculo_id) AS vehiculo_id,
+
+                GROUP_CONCAT(DISTINCT p.nombre ORDER BY p.nombre SEPARATOR ', ') AS productos,
+
+                GROUP_CONCAT(
+                    DISTINCT CONCAT(m.cantidad, ' ', p.unidad_medida)
+                    ORDER BY p.nombre
+                    SEPARATOR ', '
+                ) AS cantidades_detalladas,
+
+                SUM(m.cantidad) AS total_piezas_venta
+
+            FROM entregas_venta en
+
+            INNER JOIN movimientos m
+                ON m.entrega_id = en.id
+
+            INNER JOIN transporte_repartos_maestro trm
+                ON trm.entrega_venta_id = m.id
+             
+            LEFT JOIN transporte_consolidacion tc
+                ON tc.reparto_id = trm.id
+            LEFT JOIN confirmacion_reparto_viaje crv
+                ON crv.entrega_id = en.id
+
+            LEFT JOIN transporte_rutas_puntos trp
+                ON trp.reparto_id = trm.id
+
+            LEFT JOIN productos p
+                ON p.id = m.producto_id
+
+            LEFT JOIN ventas v
+                ON v.id = en.venta_id
+
+            LEFT JOIN clientes c
+                ON c.id = v.id_cliente
+
+            WHERE tc.viaje_folio='RUT-260729-1012-90'
+
+            GROUP BY
+               
+                trp.descripcion_punto 
