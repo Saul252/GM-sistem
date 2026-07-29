@@ -16,7 +16,7 @@
         body {
             background-color: #f8fafc;
             
-            padding-bottom: 40px;
+          
         }
 .main-content{
     padding-top: 45px!important;
@@ -131,7 +131,7 @@
         }
         .fixed-top {
     
-    z-index: 2050;
+    z-index: 1050;
 }
     </style>
 </head>
