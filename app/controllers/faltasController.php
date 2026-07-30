@@ -386,7 +386,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'detalle') {
     }
     exit;
 }
-if (isset($_GET['action']) && $_GET['action'] === 'eliminarPrestamo') {
+if (isset($_GET['action']) && $_GET['action'] === 'eliminarFalta') {
     header('Content-Type: application/json');
 
     try {
@@ -397,20 +397,9 @@ if (isset($_GET['action']) && $_GET['action'] === 'eliminarPrestamo') {
             throw new Exception("ID inválido");
         }
 
-        // 🔥 Validar si tiene abonos
-        if ($prestamosModel->tieneAbonos($id)) {
-            throw new Exception("No puedes eliminar, el préstamo tiene abonos");
-        }
-
-        // 🔥 Eliminar gasto (folio → id → delete)
-        $okGasto = $prestamosModel->eliminarGastoPorPrestamo($id);
-
-        if (!$okGasto) {
-            throw new Exception("Error al eliminar el gasto");
-        }
-
+      
         // 🔥 Eliminar préstamo
-        $okPrestamo = $prestamosModel->eliminarPrestamo($id);
+        $okPrestamo = $faltasModel->eliminarFalta($id);
 
         if (!$okPrestamo) {
             throw new Exception("Error al eliminar el préstamo");
@@ -418,10 +407,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'eliminarPrestamo') {
 
         echo json_encode([
             'success'  => true,
-            'message'  => 'Préstamo eliminado correctamente',
+            'message'  => 'Falta eliminada correctamente',
             'debug'    => [
-                'gasto'     => $okGasto,
-                'prestamo'  => $okPrestamo
+                
+                'faltaEliminada'  => $okPrestamo
             ]
         ]);
 

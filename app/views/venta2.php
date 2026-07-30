@@ -15,43 +15,74 @@
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
         rel="stylesheet" />
 
-    <style>
-    body {
-        background-color: #f8fafc;
-
-      
+   <style>
+    /* Variables de color para Modo Claro (por defecto) */
+    :root {
+        --bg-main: #f8fafc;
+        --card-bg: #ffffff;
+        --card-shadow: rgba(15, 23, 42, 0.08);
+        --header-gradient: linear-gradient(135deg, #09b009 0%, #0f2a13 100%);
+        --filter-box-bg: #f8fafc;
+        --filter-box-border: #e2e8f0;
+        --form-label-color: #64748b;
+        --table-header-bg: #0f172a;
+        --table-header-text: #94a3b8;
+        --tooltip-bg: #212529;
+        --tooltip-text: #ffffff;
     }
 
-    .main-content{
-    padding-top: 45px!important;
+    /* Sobrescritura de variables para Modo Oscuro */
+    [data-bs-theme="dark"] {
+        --bg-main: #0f172a;
+        --card-bg: #1e293b;
+        --card-shadow: rgba(0, 0, 0, 0.35);
+        --header-gradient: linear-gradient(135deg, #059669 0%, #022c22 100%);
+        --filter-box-bg: #0f172a;
+        --filter-box-border: #334155;
+        --form-label-color: #94a3b8;
+        --table-header-bg: #020617;
+        --table-header-text: #cbd5e1;
+        --tooltip-bg: #020617;
+        --tooltip-text: #f8fafc;
+    }
 
-}
+    body {
+        background-color: var(--bg-main);
+        transition: background-color 0.3s ease;
+    }
+
+    .main-content {
+        padding-top: 45px !important;
+         background-color: var(--bg-main) !important;
+    }
 
     .main-card {
-        background: #ffffff;
+        background: var(--card-bg);
         border-radius: 20px;
         border: none;
-        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+        box-shadow: 0 10px 30px var(--card-shadow);
         overflow: hidden;
+        transition: background-color 0.3s ease, box-shadow 0.3s ease;
     }
 
     .page-header-gradient {
-        background: linear-gradient(135deg, #09b009 0%, #0f2a13 100%);
+        background: var(--header-gradient);
         color: #ffffff;
         padding: 1.5rem 2rem;
     }
 
     .card-filter-box {
-        background-color: #f8fafc;
-        border: 1px solid #e2e8f0;
+        background-color: var(--filter-box-bg);
+        border: 1px solid var(--filter-box-border);
         border-radius: 18px;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
     }
 
     .form-label-custom {
         font-size: 0.75rem;
         font-weight: 700;
         letter-spacing: 0.05em;
-        color: #64748b;
+        color: var(--form-label-color);
         text-transform: uppercase;
     }
 
@@ -69,15 +100,15 @@
     }
 
     .table-custom-header {
-        background-color: #0f172a !important;
-        color: #cbd5e1 !important;
+        background-color: var(--table-header-bg) !important;
+        color: var(--table-header-text) !important;
         font-size: 0.75rem;
         letter-spacing: 0.05em;
     }
 
     .table-custom-header th {
         background-color: transparent !important;
-        color: #94a3b8 !important;
+        color: var(--table-header-text) !important;
         border-bottom: none !important;
         padding-top: 12px;
         padding-bottom: 12px;
@@ -97,10 +128,11 @@
         align-items: center;
         cursor: help;
     }
-.fixed-top {
-    
-    z-index: 1050;
-}
+
+    .fixed-top {
+        z-index: 1050;
+    }
+
     .tooltip-custom {
         position: absolute;
         bottom: 130%;
@@ -109,8 +141,8 @@
         min-width: 240px;
         max-width: 300px;
         padding: .6rem .8rem;
-        background: #212529;
-        color: #fff;
+        background: var(--tooltip-bg);
+        color: var(--tooltip-text);
         border-radius: .6rem;
         font-size: .82rem;
         line-height: 1.3;
@@ -130,14 +162,14 @@
         transform: translateX(-50%);
         border-width: 6px;
         border-style: solid;
-        border-color: #212529 transparent transparent transparent;
+        border-color: var(--tooltip-bg) transparent transparent transparent;
     }
 
     .entregado-tooltip:hover .tooltip-custom {
         opacity: 1;
         visibility: visible;
     }
-    </style>
+</style>
 </head>
 
 <body>
@@ -161,7 +193,7 @@
 
                 <div class="p-4">
                     <!-- Controles y Filtros Principal -->
-                    <div class="card-filter-box p-4 mb-4 shadow-sm border-0 rounded-4 bg-light">
+                    <div class="card-filter-box p-4 mb-4 shadow-sm border-0 rounded-4 ">
                         <div class="row g-3">
                             <!-- 1. Almacén -->
                             <div class="col-md-6 col-lg-3">
@@ -233,7 +265,7 @@
                     <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
                         <div class="table-responsive" style="min-height:280px !important; max-height: 340px;">
                             <table class="table table-hover align-middle mb-0" id="tablaDetalleEditar">
-                                <thead class="bg-light border-bottom">
+                                <thead class=" border-bottom">
                                     <tr class="text-secondary small fw-bold text-uppercase tracking-wider">
 
                                         <th class="ps-4 py-3" style="width: 30%;">Producto</th>
@@ -253,10 +285,10 @@
 
                             <!-- Estado Vacío -->
                             <div id="emptyStateEditar" class="text-center py-5">
-                                <div class="avatar-icon-box bg-light text-muted mx-auto mb-3">
+                                <div class="avatar-icon-box  text-muted mx-auto mb-3">
                                     <i class="bi bi-cart-x fs-1 text-secondary opacity-50"></i>
                                 </div>
-                                <h6 class="fw-bold text-dark mb-1">La lista está vacía</h6>
+                                <h6 class="fw-bold  mb-1">La lista está vacía</h6>
                                 <p class="text-muted small mb-0">Busca e incluye artículos a esta venta desde el panel
                                     superior</p>
                             </div>
@@ -267,8 +299,8 @@
                     <div class="row g-4 align-items-stretch">
                         <!-- Panel Izquierdo: Formas de Pago y Observaciones -->
                         <div class="col-lg-7">
-                            <div class="card border-0 shadow-sm rounded-4 h-100 p-4 bg-white">
-                                <h6 class="fw-bold text-dark mb-3 d-flex align-items-center">
+                            <div class="card border-0 shadow-sm rounded-4 h-100 p-4 ">
+                                <h6 class="fw-bold  mb-3 d-flex align-items-center">
                                     <i class="bi bi-credit-card-2-front text-primary me-2"></i> Datos del Pago y
                                     Observaciones
                                 </h6>
@@ -280,15 +312,15 @@
                                             <span
                                                 class="input-group-text bg-success-subtle text-success border-0 fw-bold">$</span>
                                             <input type="number" id="monto_pagar"
-                                                class="form-control border-light-subtle bg-light fw-bold fs-5 text-success"
-                                                value="0" step="0.01" min="0" oninput=" calcularCambio()" >
+                                                class="form-control border-light-subtle  fw-bold fs-5 text-success"
+                                                value="0" step="0.01" min="0"  oninput=" calcularCambio()" >
                                         </div>
                                         
                                     </div>
                                     <div class="col-sm-6">
                                         <label class="form-label small fw-semibold text-muted">Método de Pago</label>
                                         <select id="metodo_pago"
-                                            class="form-select border-light-subtle bg-light fw-semibold"
+                                            class="form-select border-light-subtle  fw-semibold"
                                             onchange="verificarMetodoPago(this.value)">
                                             <option value="Efectivo">💵 Efectivo</option>
                                             <option value="Transferencia">🏦 Transferencia</option>
@@ -311,7 +343,7 @@
                                         Referencia de Transacción
                                     </label>
                                     <input type="text" id="inputReferencia"
-                                        class="form-control border-light-subtle bg-light"
+                                        class="form-control border-light-subtle "
                                         placeholder="Ej. N° de Rastreo / Voucher">
                                 </div>
 
@@ -319,7 +351,7 @@
 
                                 <div>
                                     <label class="form-label small fw-semibold text-muted">Notas / Observaciones</label>
-                                    <textarea id="obsVenta" class="form-control border-light-subtle bg-light rounded-3"
+                                    <textarea id="obsVenta" class="form-control border-light-subtle  rounded-3"
                                         rows="2"
                                         placeholder="Agrega detalles o instrucciones sobre esta orden..."></textarea>
                                 </div>
@@ -390,7 +422,7 @@
                     </h6>
                     <div class="row g-3">
                         <div style=" display:none;" class="col-md-4">
-                            <div class="p-3 rounded-4 bg-light">
+                            <div class="p-3 rounded-4 ">
                                 <label class="form-label small fw-bold text-muted mb-1"
                                     style="font-size: 0.6rem;">DESPACHADOR RESPONSABLE</label>
                                 <select name="chofer_id" id="patio_chofer_id"
@@ -400,7 +432,7 @@
                             </div>
                         </div>
                         <div style=" display:none;" class="col-md-4">
-                            <div class="p-3 rounded-4 bg-light">
+                            <div class="p-3 rounded-4 ">
                                 <label class="form-label small fw-bold text-muted mb-1"
                                     style="font-size: 0.6rem;">AYUDANTES (MULTIPLE)</label>
                                 <select name="tripulantes[]" id="patio_tripulantes"
@@ -410,7 +442,7 @@
                             </div>
                         </div>
                         <div style=" display:none;" class="col-md-4">
-                            <div class="p-3 rounded-4 bg-light">
+                            <div class="p-3 rounded-4 ">
                                 <label class="form-label small fw-bold text-muted mb-1"
                                     style="font-size: 0.6rem;">OBSERVACIONES DE ENTREGA</label>
                                 <textarea name="observaciones"
@@ -721,7 +753,7 @@
                         type="number"
                         lang="en-US"
                         name="itemsEditar[${id}][precio]"
-                        class="form-control precio-total-editar fw-bold text-success bg-light"
+                        class="form-control precio-total-editar fw-bold text-success "
                         step="0.01"
                         min="0"
                         placeholder="0.00"
@@ -951,64 +983,65 @@
 
             const res = await resp.json();
 
-            if (res.status === 'success') {
-                // CORREGIDO: Se compara usando las variables definidas en este scope
-                const tieneDeuda = payload.monto_pagado < payload.total_venta;
-                const esEntregaTotal = (res.total_entregado ?? 0) >= (res.total_pedido ?? 0);
-                const iconoFinal = esEntregaTotal ? 'success' : 'warning';
+          if (res.status === 'success') {
+    const tieneDeuda = payload.monto_pagado < payload.total_venta;
+    const esEntregaTotal = (res.total_entregado ?? 0) >= (res.total_pedido ?? 0);
+    const iconoFinal = esEntregaTotal ? 'success' : 'warning';
 
-                let htmlExtra =
-                    `<p class="mb-2">Folio: <span class="badge bg-light text-dark border">${res.folio || 'N/A'}</span></p>`;
+    // Usamos 'bg-body-secondary text-body border' para que la badge cambie según el tema
+    let htmlExtra =
+        `<p class="mb-2">Folio: <span class="badge bg-body-secondary text-body border">${res.folio || 'N/A'}</span></p>`;
 
-                if (tieneDeuda) {
-                    htmlExtra += `
-                <div class="alert alert-danger py-1 px-2 border-0 mb-2" style="font-size:0.75rem; border-radius:10px;">
-                    <i class="bi bi-exclamation-circle-fill me-1"></i> Saldo pendiente registrado en cuenta
-                </div>`;
-                }
+    if (tieneDeuda) {
+        htmlExtra += `
+    <div class="alert alert-danger py-1 px-2 border-0 mb-2" style="font-size:0.75rem; border-radius:10px;">
+        <i class="bi bi-exclamation-circle-fill me-1"></i> Saldo pendiente registrado en cuenta
+    </div>`;
+    }
 
-                Swal.fire({
-                    title: esEntregaTotal ? '¡Venta Exitosa!' : 'Entrega Parcial Registrada',
-                    html: `
-                    <div class="alert alert-light border-0 small text-start py-2 mb-3" style="background:#f2f2f7; border-radius:12px;">
-                        ${res.message || 'Operación realizada correctamente.'}
-                    </div>
-                    ${htmlExtra}
-                    <p class="text-muted small mb-0">¿Deseas imprimir el comprobante?</p>
-                `,
-                    icon: iconoFinal,
-                    showDenyButton: true,
-                    showCancelButton: true,
-                    confirmButtonText: '<i class="bi bi-receipt"></i> Con Precios',
-                    denyButtonText: '<i class="bi bi-receipt"></i> Ticket Formal',
-                    cancelButtonText: 'Cerrar',
-                    confirmButtonColor: '#34c759',
-                    denyButtonColor: '#5856d6',
-                    customClass: {
-                        popup: 'rounded-4 border-0 shadow-lg'
-                    }
-                }).then((result) => {
-                    let url = '';
-                    if (result.isConfirmed) {
-                        url = `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`;
-                    } else if (result.isDenied) {
-                        url = `/cfsistem/app/backend/ventas/ticketFormal.php?id=${res.id_venta}`;
-                    }
+    Swal.fire({
+        title: esEntregaTotal ? '¡Venta Exitosa!' : 'Entrega Parcial Registrada',
+        html: `
+        <div class="alert bg-body-tertiary border-0 small text-start py-2 mb-3" style="border-radius:12px;">
+            ${res.message || 'Operación realizada correctamente.'}
+        </div>
+        ${htmlExtra}
+        <p class="text-body-secondary small mb-0">¿Deseas imprimir el comprobante?</p>
+    `,
+        icon: iconoFinal,
+        showDenyButton: true,
+        showCancelButton: true,
+        confirmButtonText: '<i class="bi bi-receipt"></i> Con Precios',
+        denyButtonText: '<i class="bi bi-receipt"></i> Ticket Formal',
+        cancelButtonText: 'Cerrar',
+        confirmButtonColor: '#34c759',
+        denyButtonColor: '#5856d6',
+        customClass: {
+            // 'bg-body text-body' hace que la alerta tome los colores del tema de Bootstrap
+            popup: 'rounded-4 border-0 shadow-lg bg-body text-body' 
+        }
+    }).then((result) => {
+        let url = '';
+        if (result.isConfirmed) {
+            url = `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`;
+        } else if (result.isDenied) {
+            url = `/cfsistem/app/backend/ventas/ticketFormal.php?id=${res.id_venta}`;
+        }
 
-                    if (url !== '') window.open(url, '_blank');
-                    location.reload();
-                });
-            } else {
-                Swal.fire({
-                    title: 'Error',
-                    text: res.message || 'Error desconocido',
-                    icon: 'error',
-                    customClass: {
-                        popup: 'rounded-4'
-                    }
-                });
-                $btnFinalizar.prop('disabled', false);
-            }
+        if (url !== '') window.open(url, '_blank');
+        location.reload();
+    });
+} else {
+    Swal.fire({
+        title: 'Error',
+        text: res.message || 'Error desconocido',
+        icon: 'error',
+        customClass: {
+            popup: 'rounded-4 bg-body text-body'
+        }
+    });
+    $btnFinalizar.prop('disabled', false);
+}
 
         } catch (e) {
             console.error(e);

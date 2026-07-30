@@ -32,12 +32,7 @@
                         </div>
                     </div>
 
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold text-secondary">Subir Evidencia (Documento/Foto)</label>
-                            <input type="file" id="msign_documento" name="documento" class="form-control border-0 bg-light" style="border-radius: 12px; height: 42px;" accept=".jpg,.png,.pdf">
-                        </div>
-                    </div>
+                   
 
                     <div class="d-flex justify-content-between align-items-center mb-3 pt-2">
                         <h6 class="fw-bold mb-0 text-dark" style="letter-spacing: -0.3px;">Insumos a Utilizar</h6>

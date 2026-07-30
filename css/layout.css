@@ -1,12 +1,34 @@
 :root { 
     --nav-height: 65px; 
     --sidebar-width: 260px;
-    /* Paleta Premium */
+    
+    /* Paleta Claro (Default) */
     --negro-delicado: #334155; 
     --azul-clarito-bg: #eff6ff; 
     --azul-enlace-active: #2563eb;
     --borde-suave: #e2e8f0;
     --navbar-dark: #0f172a;
+    
+    --sidebar-bg: #ffffff;
+    --sidebar-hover-bg: #f1f5f9;
+    --sidebar-hover-text: #0f172a;
+    --scrollbar-thumb: #cbd5e1;
+    --main-bg: #f8fafc;
+}
+
+/* Sobrescritura de variables para Modo Oscuro */
+[data-bs-theme="dark"] {
+    --negro-delicado: #cbd5e1; 
+    --azul-clarito-bg: rgba(37, 99, 235, 0.2); 
+    --azul-enlace-active: #60a5fa;
+    --borde-suave: #334155;
+    --navbar-dark: #020617; /* Navbar un poco más oscura en modo noche */
+    
+    --sidebar-bg: #1e293b;
+    --sidebar-hover-bg: #334155;
+    --sidebar-hover-text: #f8fafc;
+    --scrollbar-thumb: #475569;
+    --main-bg: #0f172a;
 }
 
 /* --- NAVBAR PREMIUM & EFECTOS --- */
@@ -17,8 +39,9 @@
     top: 0;
     width: 100%;
     z-index: 1050; /* Por encima de todo */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     padding: 0 1rem;
+    transition: background-color 0.3s ease;
 }
 
 /* Forzamos colores base */
@@ -29,7 +52,7 @@
     transition: all 0.3s ease;
 }
 
-/* EFECTO HOVER GENIAL EN NAVBAR */
+/* EFECTO HOVER EN NAVBAR */
 .navbar-premium .nav-link:hover,
 .navbar-premium .btn-link:hover,
 .navbar-premium .dropdown-toggle:hover {
@@ -38,7 +61,7 @@
     filter: drop-shadow(0 0 8px rgba(255,255,255,0.3));
 }
 
-/* Efecto especial para el badge de usuario al pasar el mouse */
+/* Badge de usuario */
 .user-badge {
     transition: all 0.3s ease;
     cursor: pointer;
@@ -51,18 +74,16 @@
 /* --- SIDEBAR CORREGIDO --- */
 #sidebar { 
     width: var(--sidebar-width); 
-    height: 100vh; /* Cambiado a 100vh para mejor control */
+    height: 100vh;
     position: fixed; 
     top: 0; 
     left: 0; 
-    padding-top: var(--nav-height); /* El espacio del nav se da con padding */
-    background: #ffffff;
+    padding-top: var(--nav-height);
+    background: var(--sidebar-bg);
     border-right: 1px solid var(--borde-suave); 
     transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); 
     z-index: 1040; 
     overflow-y: auto;
-    
-    /* SOLUCIÓN AL ELEMENTO PERDIDO: Padding inferior generoso */
     padding-bottom: 100px !important; 
 }
 
@@ -74,7 +95,7 @@
     background: transparent;
 }
 #sidebar::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: var(--scrollbar-thumb);
     border-radius: 10px;
 }
 
@@ -98,8 +119,8 @@
 }
 
 #sidebar .nav-link:hover {
-    background-color: #f1f5f9;
-    color: var(--navbar-dark) !important;
+    background-color: var(--sidebar-hover-bg);
+    color: var(--sidebar-hover-text) !important;
 }
 
 #sidebar .nav-link.active {
@@ -119,7 +140,7 @@
     padding-right: 20px;
     transition: all .3s ease;
     min-height: 100vh;
-    background-color: #f8fafc;
+    background-color: var(--main-bg);
 }
 
 /* --- RESPONSIVIDAD (MÓVIL) --- */
@@ -127,12 +148,12 @@
     #sidebar {
         left: calc(-1 * var(--sidebar-width));
         top: 0;
-        padding-top: 20px; /* En móvil el nav no lo tapa */
+        padding-top: 20px;
     }
 
     #sidebar.show {
         left: 0;
-        box-shadow: 10px 0 30px rgba(0,0,0,0.15);
+        box-shadow: 10px 0 30px rgba(0,0,0,0.3);
     }
 
     .main-content {
@@ -145,7 +166,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(15, 23, 42, 0.4);
+        background: rgba(15, 23, 42, 0.6);
         backdrop-filter: blur(3px);
         z-index: 1035;
         display: none;

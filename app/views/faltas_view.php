@@ -856,7 +856,7 @@ $paginaActual = $paginaActual ?? 'prestamos';
     function eliminarPrestamo(id) {
 
     Swal.fire({
-        title: '¿Eliminar préstamo?',
+        title: '¿Eliminar falta?',
         text: "No podrás revertir esta acción",
         icon: 'warning',
         showCancelButton: true,
@@ -870,7 +870,7 @@ $paginaActual = $paginaActual ?? 'prestamos';
 
         try {
 
-            const resp = await fetch(`${CONTROLLER}?action=eliminarPrestamo&id=${id}`, {
+            const resp = await fetch(`${CONTROLLER}?action=eliminarFalta&id=${id}`, {
                 method: 'GET'
             });
 
@@ -881,7 +881,7 @@ $paginaActual = $paginaActual ?? 'prestamos';
                 Swal.fire({
                     icon: 'success',
                     title: 'Eliminado',
-                    text: res.message || 'Préstamo eliminado',
+                    text: res.message || 'Falda eliminada',
                     timer: 1500,
                     showConfirmButton: false
                 });

@@ -104,107 +104,100 @@ $modulos = [
             <button class="btn btn-toggle border-0" id="toggleSidebar" aria-label="Abrir Menú">
                 <i class="bi bi-list fs-2 text-white"></i>
             </button>
+        </div>
 
-<!-- <h5 class="navbar-title text-white mb-0 fw-semibold text-truncate ms-2" style="max-width: 250px;">
-                < ?= $paginaActual ?? '' ?>
-            
-         -->
-</div>
         <div class="d-flex align-items-center gap-2 gap-md-3">
+            <button type="button" class="btn btn-toggle-all d-flex align-items-center gap-2" id="btnThemeToggle" onclick="alternarModoOscuro()">
+                <i class="bi bi-moon-stars-fill" id="themeIcon"></i> 
+                <span id="themeLabel">Modo Oscuro</span>
+            </button>
+
             <div class="dropdown">
-                <a href="javascript:void(0);" class="text-white position-relative p-2" id="btnNotif"
-                    data-bs-toggle="dropdown">
+                <a href="javascript:void(0);" class="text-white position-relative p-2" id="btnNotif" data-bs-toggle="dropdown">
                     <i class="bi bi-bell fs-4"></i>
-                    <span id="notif-badge"
-                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
+                    <span id="notif-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
                 </a>
-                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0" id="menuNotif"
-                    style="width: 320px; max-width: 90vw; max-height: 400px; overflow-y: auto;">
-                    <li class="p-3 border-bottom bg-light">
-                        <h6 class="mb-0 fw-bold text-dark">Traspasos Pendientes</h6>
+                <!-- Menú desplegable con bg-body y border adaptable -->
+                <ul class="dropdown-menu dropdown-menu-end shadow-lg border p-0" id="menuNotif" style="width: 320px; max-width: 90vw; max-height: 400px; overflow-y: auto;">
+                    <li class="p-3 border-bottom bg-body-tertiary">
+                        <h6 class="mb-0 fw-bold text-body">Traspasos Pendientes</h6>
                     </li>
                     <div id="lista-notificaciones">
-                        <li class="p-3 text-center text-muted small">Cargando...</li>
+                        <li class="p-3 text-center text-body-secondary small">Cargando...</li>
                     </div>
-                    <li>
-                        <hr class="dropdown-divider m-0">
-                    </li>
-                    <li></li>
                 </ul>
             </div>
-            </h5>
+
             <div class="user-badge d-flex align-items-center text-white bg-white bg-opacity-10 px-3 py-1 rounded-pill">
                 <i class="bi bi-person-circle fs-5"></i>
                 <span class="ms-2 d-none d-md-inline small"><?= $_SESSION['nombre'] ?? 'Usuario' ?></span>
             </div>
 
-            <a href="/cfsistem/logout.php" class="btn btn-sm btn-outline-light border-0 rounded-circle"
-                title="Cerrar Sesión">
+            <a href="/cfsistem/logout.php" class="btn btn-sm btn-outline-light border-0 rounded-circle" title="Cerrar Sesión">
                 <i class="bi bi-box-arrow-right fs-4"></i>
             </a>
         </div>
     </div>
 </nav>
 
-<aside id="sidebar" class="bg-white border-end shadow-sm">
+<!-- Sidebar con bg-body-tertiary para adaptarse al tema -->
+<aside id="sidebar" class="bg-body-tertiary border-end shadow-sm">
     <div class="p-3">
         <div class="text-center mb-4">
             <h5 class="fw-bold text-primary mb-1">Menú</h5>
             <?php if (!empty($_SESSION['rol'])): ?>
-            <span class="badge bg-light text-secondary border">Rol: <?= ucfirst($_SESSION['rol']) ?></span>
+            <span class="badge bg-body-secondary text-body-secondary border">Rol: <?= ucfirst($_SESSION['rol']) ?></span>
             <?php endif; ?>
         </div>
 
-      <ul class="nav nav-pills flex-column gap-1">
-    <?php foreach ($modulos as $grupo): ?>
-        <?php 
-        // 1. Filtrar los submódulos que el usuario realmente puede ver
-        $submodulosPermitidos = array_filter($grupo['submodulos'], function($sub) {
-            return puedeVerModulo($sub['id']);
-        });
+        <ul class="nav nav-pills flex-column gap-1">
+            <?php foreach ($modulos as $grupo): ?>
+                <?php 
+                $submodulosPermitidos = array_filter($grupo['submodulos'], function($sub) {
+                    return puedeVerModulo($sub['id']);
+                });
 
-        // 2. Si el usuario no tiene permiso para ver NINGÚN submódulo de este grupo, saltamos al siguiente grupo
-        if (empty($submodulosPermitidos)) continue;
+                if (empty($submodulosPermitidos)) continue;
 
-        // 3. Verificar si alguno de los submódulos permitidos está activo
-        $grupoActivo = false;
-        foreach ($submodulosPermitidos as $sub) {
-            if ($sub['active']) {
-                $grupoActivo = true;
-                break;
-            }
-        }
-        ?>
+                $grupoActivo = false;
+                foreach ($submodulosPermitidos as $sub) {
+                    if ($sub['active']) {
+                        $grupoActivo = true;
+                        break;
+                    }
+                }
+                ?>
 
-        <li class="nav-item">
-            <a href="#drop-<?= $grupo['id_grupo'] ?>" 
-               class="nav-link d-flex align-items-center justify-content-between gap-3 <?= $grupoActivo ? 'bg-light text-dark fw-bold' : 'text-dark' ?>" 
-               data-bs-toggle="collapse" 
-               aria-expanded="<?= $grupoActivo ? 'true' : 'false' ?>">
-                
-                <div class="d-flex align-items-center gap-3">
-                    <i class="<?= $grupo['icono'] ?> fs-5"></i>
-                    <span><?= $grupo['titulo'] ?></span>
-                </div>
-                <i class="bi bi-chevron-down small transition-icon"></i>
-            </a>
+                <li class="nav-item">
+                    <!-- Enlace principal con text-body y bg-body-secondary cuando está activo -->
+                    <a href="#drop-<?= $grupo['id_grupo'] ?>" 
+                       class="nav-link d-flex align-items-center justify-content-between gap-3 <?= $grupoActivo ? 'bg-body-secondary text-body fw-bold' : 'text-body' ?>" 
+                       data-bs-toggle="collapse" 
+                       aria-expanded="<?= $grupoActivo ? 'true' : 'false' ?>">
+                        
+                        <div class="d-flex align-items-center gap-3">
+                            <i class="<?= $grupo['icono'] ?> fs-5"></i>
+                            <span><?= $grupo['titulo'] ?></span>
+                        </div>
+                        <i class="bi bi-chevron-down small transition-icon"></i>
+                    </a>
 
-            <div class="collapse <?= $grupoActivo ? 'show' : '' ?>" id="drop-<?= $grupo['id_grupo'] ?>">
-                <ul class="nav nav-pills flex-column gap-1 ps-4 pt-1 pb-1">
-                    <?php foreach ($submodulosPermitidos as $m): ?>
-                        <li class="nav-item">
-                            <a href="<?= $m['url'] ?>"
-                               class="nav-link d-flex align-items-center gap-3 <?= $m['active'] ? 'active shadow-sm' : 'text-secondary' ?>" style="font-size: 0.95rem;">
-                                <i class="<?= $m['icon'] ?> fs-6"></i>
-                                <span><?= $m['label'] ?></span>
-                            </a>
-                        </li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-        </li>
-    <?php endforeach; ?>
-</ul>
+                    <div class="collapse <?= $grupoActivo ? 'show' : '' ?>" id="drop-<?= $grupo['id_grupo'] ?>">
+                        <ul class="nav nav-pills flex-column gap-1 ps-4 pt-1 pb-1">
+                            <?php foreach ($submodulosPermitidos as $m): ?>
+                                <li class="nav-item">
+                                    <a href="<?= $m['url'] ?>"
+                                       class="nav-link d-flex align-items-center gap-3 <?= $m['active'] ? 'active shadow-sm' : 'text-body-secondary' ?>" style="font-size: 0.95rem;">
+                                        <i class="<?= $m['icon'] ?> fs-6"></i>
+                                        <span><?= $m['label'] ?></span>
+                                    </a>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                </li>
+            <?php endforeach; ?>
+        </ul>
     </div>
 </aside>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>';
@@ -299,7 +292,7 @@ ${item.vehiculo}   ${item.placas}`,
 
                     onClick: function(){
 
-                        window.location.href="/cfsistem/app/controllers/mantenimientos.php";
+                        window.location.href="/cfsistem/app/controllers/mantenimientosController.php";
 
                     }
 
@@ -668,4 +661,40 @@ setInterval(verificarMantenimientos(), 35000);
         }
     });
 });
+
+</script>
+<script>
+     function actualizarBotonTema(tema) {
+            const icon = document.getElementById('themeIcon');
+            const label = document.getElementById('themeLabel');
+            if (!icon || !label) return;
+
+            if (tema === 'dark') {
+                icon.className = 'bi bi-sun-fill text-warning';
+                label.textContent = 'Modo Claro';
+            } else {
+                icon.className = 'bi bi-moon-stars-fill';
+                label.textContent = 'Modo Oscuro';
+            }
+        }
+          function alternarModoOscuro() {
+    const html = document.documentElement;
+    // Si está en 'dark' lo cambia a 'light', si no, a 'dark'
+    const nuevoTema = html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+    
+    // 1. Aplica el atributo en el HTML (esto activa tus estilos CSS)
+    html.setAttribute('data-bs-theme', nuevoTema);
+    
+    // 2. Guarda la elección en el navegador
+    localStorage.setItem('theme', nuevoTema);
+    
+    // 3. Actualiza el icono/texto del botón si existe en la vista
+    if (typeof actualizarBotonTema === 'function') {
+        actualizarBotonTema(nuevoTema);
+    }
+}
+    (function() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-bs-theme', savedTheme);
+    })();
 </script>

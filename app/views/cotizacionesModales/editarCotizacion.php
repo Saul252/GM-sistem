@@ -96,33 +96,32 @@
 
                     </div>
 
-                    <!-- Tabla de Detalle -->
-                    <div class="table-responsive border rounded-4 bg-white shadow-sm" style="max-height: 380px; overflow-y: auto;">
-                        <table class="table align-middle mb-0 table-fixed" id="tablaDetalleEditar">
-                            <thead>
-                                <tr class="bg-light text-muted small text-uppercase">
-                                    <th class="ps-4" style="width: 28%;">Producto</th>
-                                    <th style="width: 12%;">Cantidad</th>
-                                    <th style="width: 18%;">Presentación</th>
-                                    <th style="width: 18%;">Tipo Precio</th>
-                                    <th style="width: 12%;">P. Unit</th>
-                                    <th style="width: 12%;">TOTAL</th>
-                                    <th style="width: 5%;" class="text-center pe-4">Acción</th>
+                   <div class="table-responsive border rounded-4 bg-white">
+                        <table class="table align-middle mb-0" id="tablaDetalleEditar">
+                            <thead class="bg-light">
+                                <tr class="text-muted small uppercase">
+                                    <th class="ps-4" style="width: 45%;">Producto</th>
+                                    <th style="width: 20%;">Cantidad</th>
+                                    <th style="width: 25%;">Presentación / Unidad</th>
+                                    <th style="width: 25%;">Tipo de precio</th>
+                                    <th class="ps-4">Precio Unitario</th>
+                                    <th style="width: 50%;">TOTAL</th>
+                                    <th style="width: 10%;" class="text-end pe-4">Acción</th>
                                 </tr>
                             </thead>
                             <tbody>
                             </tbody>
                         </table>
 
-                        <!-- Estado Vacío -->
                         <div id="emptyStateEditar" class="text-center py-5 text-muted">
                             <div class="mb-3">
                                 <i class="bi bi-cart-plus opacity-25" style="font-size: 3.5rem;"></i>
                             </div>
-                            <p class="fw-medium mb-1">La lista está vacía</p>
-                            <small class="text-muted">Utiliza el buscador superior para añadir artículos</small>
+                            <p class="fw-medium">La lista está vacía</p>
+                            <small>Utiliza el buscador de arriba para añadir artículos</small>
                         </div>
                     </div>
+
 
                     <!-- Resumen del Total -->
                     <div class="d-flex justify-content-end align-items-center mt-4">

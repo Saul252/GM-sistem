@@ -450,6 +450,7 @@ $('#formBono').on('submit', async function(e) {
             }
 
             const data = response.data;
+            console.log(data);
             
             // Destruir la instancia actual de DataTable si existe
             if ($.fn.DataTable.isDataTable('#tablaTrabajadores')) {
@@ -542,7 +543,7 @@ $('#formBono').on('submit', async function(e) {
         $('#t_telefono').val(t.telefono);
         $('#t_rol').val(t.rol);
         $('#t_estado').val(t.estado);
-        $('#t_salario').val(t.salario);
+        $('#t_salario').val((t.salario-t.complemento_pago));
            $('#t_complemento').val(t.complemento_pago);
         if ($('#t_almacen_id').is('select')) {
             $('#t_almacen_id').val(t.almacen_id);

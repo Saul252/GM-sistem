@@ -26,6 +26,27 @@ class FaltasModel {
    
 ]);
     }
+    public function eliminarFalta($id) {
+
+    
+
+    // 🧨 2. Eliminar préstamo
+    $sql = "DELETE FROM faltas WHERE  id = ?";
+    $stmt = $this->db->prepare($sql);
+    $stmt->bind_param("i", $id);
+
+    if ($stmt->execute()) {
+        return [
+            'success' => true,
+            'message' => 'Falta eliminada correctamente.'
+        ];
+    }
+
+    return [
+        'success' => false,
+        'message' => 'Error al eliminar el falta.'
+    ];
+}
 
 public function registrarAbono($data) {
 

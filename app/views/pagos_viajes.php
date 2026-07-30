@@ -524,13 +524,13 @@ async function guardarPago() {
         const viaje_id = $('#mpago_idViaje').val();
         const chofer_id = $('#mpago_idChofer').val();
         const monto = $('#mpago_monto').val();
-        const mpago_fecha = $('#mpago_fecha').val();
+        const mpago_fecha = $('#mpago_fecha').text();
 
         const fd = new FormData();
         fd.append('id', viaje_id);
         fd.append('chofer_id', chofer_id);
         fd.append('monto', monto);
-        fd.append('fecha',mpago_fecha)
+        
 
         const res = await fetch('/cfsistem/app/controllers/pagos_viajesController.php?action=aplicarPagoPorViaje', {
             method: 'POST',

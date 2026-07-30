@@ -63,7 +63,7 @@ if ($action === 'aplicarPagoPorViaje') {
         $viaje_id  = intval($_POST['id'] ?? 0);
         $chofer_id = intval($_POST['chofer_id'] ?? 0);
         $monto     = floatval($_POST['monto'] ?? 0);
-        $fecha     = floatval($_POST['fecha'] ?? date('y-m-d'));
+        $fecha     =  date('y-m-d');
 
         if ($viaje_id <= 0) {
             throw new Exception("ID del viaje no válido.");
