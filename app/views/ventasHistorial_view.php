@@ -175,7 +175,7 @@
     <div class="main-content">
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="fw-bold text-dark m-0">Historial de Ventas</h3>
+                <h3 class="fw-bold card-title-text m-0">Historial de Ventas</h3>
                 <div id="loader" class="spinner-border spinner-border-sm text-secondary d-none"></div>
             </div>
             <div class="dropdown">
@@ -312,7 +312,7 @@
                     </div>
                     <div class="modal-body p-0">
                         <div class="row g-0">
-                            <div class="col-md-3 bg-light border-end p-4">
+                            <div class="col-md-3  border-end p-4">
                                 <div class="d-flex flex-column gap-2 mb-4">
 
                                     <!-- Cliente -->
@@ -322,7 +322,7 @@
                                             <i class="bi bi-person me-1 text-primary"></i> Cliente
                                         </small>
                                         <span id="detCliente"
-                                            class="fw-bold text-dark small d-block text-truncate">--</span>
+                                            class="fw-bold card-title-text small d-block text-truncate">--</span>
                                     </div>
 
                                     <!-- Almacén -->
@@ -332,7 +332,7 @@
                                             <i class="bi bi-box-seam me-1 text-primary"></i> Almacén
                                         </small>
                                         <span id="detAlmacen"
-                                            class="fw-bold text-dark small d-block text-truncate">--</span>
+                                            class="fw-bold card-title-text small d-block text-truncate">--</span>
                                     </div>
 
                                     <!-- Vendedor -->
@@ -342,7 +342,7 @@
                                             <i class="bi bi-person-badge me-1 text-primary"></i> Vendedor
                                         </small>
                                         <span id="detVendedor"
-                                            class="fw-bold text-dark small d-block text-truncate">--</span>
+                                            class="fw-bold card-title-text small d-block text-truncate">--</span>
                                     </div>
 
                                     <!-- Folio Factura -->
@@ -352,18 +352,18 @@
                                             <i class="bi bi-receipt me-1 text-primary"></i> Folio / Factura
                                         </small>
                                         <span id="folioFactura"
-                                            class="fw-bold text-dark small d-block text-truncate">--</span>
+                                            class="fw-bold card-title-text small d-block text-truncate">--</span>
                                     </div>
 
                                 </div>
 
 
 
-                                <div class="mb-4 p-2 bg-white border rounded shadow-sm text-center">
+                                <div class="mb-4 p-2  border rounded shadow-sm text-center">
                                     <div class="mb-2 pb-2 border-bottom">
                                         <span class="d-block small text-muted text-uppercase fw-bold">Total de
                                             Venta</span>
-                                        <span id="detTotalLabel" class="h6 fw-bold text-dark">$0.00</span>
+                                        <span id="detTotalLabel" class="h6 fw-bold card-title-text">$0.00</span>
                                     </div>
 
                                     <div>
@@ -493,7 +493,7 @@
                 <div class="modal-content rounded-3 border-0 shadow">
 
                     <div class="modal-header border-bottom-0 pb-0">
-                        <h5 class="modal-title fw-bold text-dark fs-5" id="modalAgregarFacturaLabel">
+                        <h5 class="modal-title fw-bold card-title-text fs-5" id="modalAgregarFacturaLabel">
                             <i class="bi bi-file-earmark-plus text-primary me-2"></i>Nueva Factura
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -846,7 +846,7 @@
                         `<span class="text-danger small fw-bold">Debe: $${saldo.toFixed(2)}</span>`;
 
                     let entrega = (v.estado_general == 'activa') ?
-                        `<span class="badge ${v.estado_entrega=='entregado'?'bg-success':(v.estado_entrega=='parcial'?'bg-warning text-dark':'bg-danger')}">
+                        `<span class="badge ${v.estado_entrega=='entregado'?'bg-success':(v.estado_entrega=='parcial'?'bg-warning card-title-text':'bg-danger')}">
             ${v.estado_entrega.toUpperCase()}
         </span>` :
                         '<span class="text-danger small fw-bold"><i class="bi bi-check-circle"></i> Cancelado</span>';
@@ -896,7 +896,7 @@
            
                 <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-2 mt-2 animated--fade-in" style="min-width: 220px;">
     <li>
-        <button class="dropdown-item py-2 px-3 rounded-3 d-flex align-items-center fw-semibold text-dark hover-bg-light" 
+        <button class="dropdown-item py-2 px-3 rounded-3 d-flex align-items-center fw-semibold card-title-text hover-bg-light" 
                 onclick="gestionarSolicitud(${v.id})">
             <i class="bi bi-pencil-square me-2 text-primary fs-6"></i> Editar
         </button>
@@ -914,7 +914,7 @@
     <li>
         <a class="dropdown-item py-2 px-3 rounded-3 d-flex align-items-center text-secondary hover-info" 
            href="/cfsistem/app/backend/ventas/ticketFormal.php?id=${v.id}" target="_blank">
-            <i class="bi bi-file-earmark-check me-2 text-dark"></i> Ticket Formal
+            <i class="bi bi-file-earmark-check me-2 card-title-text"></i> Ticket Formal
         </a>
     </li>
 
@@ -927,7 +927,7 @@
         <td><span class="badge bg-light text-dark border fw-normal">${v.almacen_nombre}</span></td>
         <td><div class="small fw-bold">${v.vendedor}</div></td>
         <td><div class="small fw-bold">${v.cliente}</div></td>
-        <td class="fw-bold text-dark">$${total.toFixed(2)}</td>
+        <td class="fw-bold card-title-text">$${total.toFixed(2)}</td>
         <td>${v.estado_general=='activa'? badgeCobro : '<span class="text-danger small fw-bold"><i class="bi bi-check-circle"></i> Cancelado</span>'}</td>
         <td><div class="small fw-bold">${factura}</div></td>
         <td class="text-center">${entrega}</td>
@@ -970,7 +970,7 @@
     <td></td>
     <td></td>
     <td></td>
-    <td class="text-dark">Total: $${totalVendido.toFixed(2)}</td>
+    <td class="card-title-text">Total: $${totalVendido.toFixed(2)}</td>
     <td class="text-success">Cobrado: $${(totalVendido - deuda).toFixed(2)}</td>
     <td class="text-danger">Por Cobrar: $${deuda.toFixed(2)}</td>
     <td></td>
@@ -1122,7 +1122,7 @@
 
                     return `<tr>
         <td>
-            <div class="fw-bold text-dark">${p.producto}</div>
+            <div class="fw-bold card-title-text">${p.producto}</div>
             ${infoEquivalenciaSub}
         </td>
         <td class="text-center">
@@ -1295,7 +1295,7 @@
                 const estadoClass =
                     g.estatus_logistico === 'completado' ?
                     'bg-success' :
-                    'bg-warning text-dark';
+                    'bg-warning card-title-text';
 
                 const tr = `
             <tr>

@@ -64,7 +64,7 @@ body {
     padding: 14px;
     border-bottom: 1px solid #eef0f3;
     font-size: 0.9rem;
-    color: #374151;
+ 
 }
 
 /* Hover tipo “card highlight” */
@@ -73,7 +73,7 @@ body {
 }
 
 .table-hover tbody tr:hover {
-    background: #f9fafb;
+  
     transform: scale(1.002);
     box-shadow: inset 4px 0 0 var(--accent);
 }
@@ -121,7 +121,7 @@ body {
     <div class="main-content">
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="fw-bold text-dark m-0">Registrar Pagos</h3>
+                <h3 class="fw-bold card-title-text m-0">Registrar Pagos</h3>
                 <div id="loader" class="spinner-border spinner-border-sm text-secondary d-none"></div>
             </div>
 
@@ -244,7 +244,7 @@ body {
                 <div class="row g-0">
 
                     <!-- SIDEBAR -->
-                    <div class="col-md-3 bg-light border-end p-4">
+                    <div class="col-md-3 border-end p-4">
 
                         <div class="mb-3">
                             <small class="text-uppercase text-muted fw-bold">Cliente</small>
@@ -296,7 +296,7 @@ body {
 
                         <!-- DETALLE PRODUCTOS -->
                         <div class="card border-0 shadow-sm mb-3">
-                            <div class="card-header bg-white fw-bold small text-uppercase text-muted">
+                            <div class="card-header fw-bold small text-uppercase text-muted">
                                 Productos
                             </div>
                             <div class="table-responsive" style="max-height: 180px;">
@@ -320,7 +320,7 @@ body {
                             <!-- HISTORIAL PAGOS -->
                             <div class="col-12">
                                 <div class="card border-0 shadow-sm">
-                                    <div class="card-header bg-white fw-bold small text-uppercase text-muted">
+                                    <div class="card-header  fw-bold small text-uppercase text-muted">
                                         Historial de Pagos
                                     </div>
                                     <div class="table-responsive" style="max-height: 180px;">
@@ -342,7 +342,7 @@ body {
                             <!-- HISTORIAL ENTREGAS (OCULTO LO RESPETÉ) -->
                             <div class="col-12 d-none">
                                 <div class="card border-0 shadow-sm">
-                                    <div class="card-header bg-white fw-bold small text-uppercase text-muted">
+                                    <div class="card-header  fw-bold small text-uppercase text-muted">
                                         Historial de Entregas
                                     </div>
                                     <div class="table-responsive" style="max-height: 180px;">
@@ -364,7 +364,7 @@ body {
                             <!-- REPARTOS (OCULTO) -->
                             <div class="col-12 d-none">
                                 <div class="card border-0 shadow-sm">
-                                    <div class="card-header bg-white fw-bold small text-uppercase text-muted">
+                                    <div class="card-header  fw-bold small text-uppercase text-muted">
                                         Repartos
                                     </div>
                                     <div class="table-responsive" style="max-height: 220px;">
@@ -514,13 +514,13 @@ body {
 
                 return `<tr>
               
-                <td class="ps-3 small">${v.fecha}</td>
+                <td class="ps-3 small ">${v.fecha}</td>
                 <td class="fw-bold">${v.folio}</td>
                 <td><span class="badge bg-light text-dark border fw-normal">${v.almacen_nombre}</span></td>
                  <td><div class="small fw-bold">${v.vendedor}</div></td>
                 <td><div class="small fw-bold">${v.cliente}</div></td>
                 <td><div class="small fw-bold">${factura}</div></td>
-                <td class="fw-bold text-dark">$${total.toFixed(2)} </td>
+                <td class="fw-bold card-title-text">$${total.toFixed(2)} </td>
                <td>${v.estado_general=='activa'? badgeCobro:'<span class="text-danger small fw-bold"><i class="bi bi-check-circle"></i> Cancelado</span>'}</td>
                 
                 
@@ -692,7 +692,7 @@ $('#boton').html(htmlboton);
 
                 return `<tr>
         <td>
-            <div class="fw-bold text-dark">${p.producto}</div>
+            <div class="fw-bold card-title-text">${p.producto}</div>
             ${infoEquivalenciaSub}
         </td>
         <td class="text-center">

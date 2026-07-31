@@ -1,8 +1,8 @@
 <div class="modal fade" id="modalGasto" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 22px;">
+        <div class="modal-content shadow-lg" style="border-radius: 22px;">
             <form id="formNuevoGasto" enctype="multipart/form-data">
-                <div class="modal-header border-0 bg-warning text-dark" style="border-radius: 22px 22px 0 0;">
+                <div class="modal-header bg-warning text-dark" style="border-radius: 22px 22px 0 0;">
                     <h5 class="modal-title fw-bold"><i class="bi bi-cash-stack me-2"></i> Registrar Nuevo Gasto</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -10,11 +10,11 @@
                     <div class="row g-3 mb-3">
                         <div class="col-md-4">
                             <label class="form-label small fw-bold">Folio/Factura</label>
-                            <input type="text" id="folio_gasto" name="folio" class="form-control border-0 bg-light" style="border-radius: 12px;" placeholder="Cargando..." readonly required>
+                            <input type="text" id="folio_gasto" name="folio" class="form-control border border-subtle" style="border-radius: 12px;" placeholder="Cargando..." readonly required>
                         </div>
                         <div class="col-md-8">
                             <label class="form-label small fw-bold">Almacén Destino</label>
-                            <select name="almacen_id" class="form-select border-0 bg-light" style="border-radius: 12px;" <?= ($_SESSION['rol_id'] != 1) ? 'readonly style="pointer-events: none;"' : '' ?> required>
+                            <select name="almacen_id" class="form-select border border-subtle" style="border-radius: 12px;" <?= ($_SESSION['rol_id'] != 1) ? 'readonly style="pointer-events: none;"' : '' ?> required>
                                 <?php foreach($almacenes as $alm): ?>
                                 <option value="<?= $alm['id'] ?>" <?= ($_SESSION['almacen_id'] == $alm['id']) ? 'selected' : '' ?>>
                                     <?= $alm['nombre'] ?>
@@ -26,7 +26,7 @@
                         <div class="col-md-6">
                             <label class="form-label small fw-bold text-primary">Categoría de Gasto</label>
                             <div class="input-group">
-                                <select id="select_categoria_gasto" name="categoria_id" class="form-select border-0 bg-light" style="border-radius: 12px 0 0 12px;" required>
+                                <select id="select_categoria_gasto" name="categoria_id" class="form-select border border-subtle" style="border-radius: 12px 0 0 12px;" required>
                                     <option value="">Seleccione categoría...</option>
                                     </select>
                                 <button type="button" class="btn btn-primary" style="border-radius: 0 12px 12px 0;" onclick="abrirModalNuevaCategoria()">
@@ -39,7 +39,7 @@
                              <label class="form-label small fw-bold">Escriba el Proveedor ó elija uno</label>
 
                             <div class="input-group">
-                                                       <input type="text"id="beneficiario" name="beneficiario" class="form-control bg-light" style="border-radius: 12px;" placeholder="Ej: CFE, Gasolinera..." required>
+                                                       <input type="text"id="beneficiario" name="beneficiario" class="form-control border border-subtle" style="border-radius: 12px;" placeholder="Ej: CFE, Gasolinera..." required>
                      
      
    
@@ -57,7 +57,7 @@
 
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Método de Pago</label>
-                            <select name="metodo_pago" class="form-select border-0 bg-light" style="border-radius: 12px;">
+                            <select name="metodo_pago" class="form-select border border-subtle" style="border-radius: 12px;">
                                 <option value="Efectivo">Efectivo</option>
                                 <option value="Transferencia">Transferencia</option>
                                 <option value="Tarjeta">Tarjeta</option>
@@ -65,21 +65,21 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Comprobante (Evidencia)</label>
-                            <input type="file" name="documento" class="form-control border-0 bg-light" style="border-radius: 12px;" accept=".jpg,.png,.pdf">
+                            <input type="file" name="documento" class="form-control border border-subtle" style="border-radius: 12px;" accept=".jpg,.png,.pdf">
                         </div>
                     </div>
 
                     <hr class="text-muted">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="fw-bold mb-0 text-dark">Conceptos del Gasto</h6>
-                        <button type="button" class="btn btn-sm btn-outline-dark border-0 fw-bold" onclick="agregarFilaGasto()">
+                        <h6 class="fw-bold mb-0 card-title-text">Conceptos del Gasto</h6>
+                        <button type="button" class="btn btn-sm fw-bold border border-subtle card-title-text" onclick="agregarFilaGasto()">
                             <i class="bi bi-plus-circle-fill"></i> Agregar Concepto
                         </button>
                     </div>
 
                     <div class="table-responsive mb-3">
                         <table class="table table-borderless align-middle" id="tablaConceptosGasto">
-                            <thead class="bg-light">
+                            <thead class="border border-subtle">
                                 <tr class="small text-uppercase">
                                     <th>Descripción</th>
                                     <th width="100">Cant.</th>
@@ -90,9 +90,9 @@
                             </thead>
                             <tbody>
                                 <tr class="border-bottom">
-                                    <td><input type="text" name="desc[]" class="form-control form-control-sm border-0 bg-light" style="border-radius: 8px;" required></td>
-                                    <td><input type="number" name="cant[]" class="form-control form-control-sm border-0 bg-light cant text-center" style="border-radius: 8px;" value="1" step="any" oninput="calcularGasto()"></td>
-                                    <td><input type="number" name="precio[]" class="form-control form-control-sm border-0 bg-light precio" style="border-radius: 8px;" value="0.00" step="any" oninput="calcularGasto()"></td>
+                                    <td><input type="text" name="desc[]" class="form-control form-control-sm border border-subtle" style="border-radius: 8px;" required></td>
+                                    <td><input type="number" name="cant[]" class="form-control form-control-sm border border-subtle cant text-center" style="border-radius: 8px;" value="1" step="any" oninput="calcularGasto()"></td>
+                                    <td><input type="number" name="precio[]" class="form-control form-control-sm border border-subtle precio" style="border-radius: 8px;" value="0.00" step="any" oninput="calcularGasto()"></td>
                                     <td class="text-end fw-bold subtotal_fila pe-3">$0.00</td>
                                     <td></td>
                                 </tr>
@@ -103,8 +103,8 @@
                     <div class="row align-items-center">
                         <div class="col-md-7">
                             <label class="form-label small fw-bold">Observaciones</label>
-                            <textarea name="observaciones" class="form-control text-uppercase border-0 bg-light" style="border-radius: 12px;" rows="2" placeholder="Notas internas..."></textarea>
-                       <input type="date" id="fecha"name="fecha" value="<?= date("Y-m-d") ?>" class="form-control border-0 bg-light" style="border-radius: 12px;">
+                            <textarea name="observaciones" class="form-control text-uppercase border border-subtle" style="border-radius: 12px;" rows="2" placeholder="Notas internas..."></textarea>
+                       <input type="date" id="fecha"name="fecha" value="<?= date("Y-m-d") ?>" class="form-control border border-subtle" style="border-radius: 12px;">
                         </div>
                         <div class="col-md-5 text-end">
                             <h4 class="text-muted small fw-bold mb-0">TOTAL</h4>
@@ -113,7 +113,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer border-0">
+                <div class="modal-footer">
                     <button type="button" class="btn btn-light fw-bold" data-bs-dismiss="modal" style="border-radius: 12px;">Cancelar</button>
                     <button type="submit" class="btn btn-warning fw-bold px-4 shadow-sm" style="border-radius: 12px;">Guardar Gasto</button>
                 </div>
@@ -124,19 +124,19 @@
 
 <div class="modal fade" id="modalNuevaCategoriaGasto" tabindex="-1" aria-hidden="true" style="background: rgba(0,0,0,0.4);">
     <div class="modal-dialog modal-sm modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
-            <div class="modal-header border-0">
+        <div class="modal-content shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header">
                 <h6 class="modal-title fw-bold">Nueva Categoría</h6>
                 <button type="button" class="btn-close" onclick="$('#modalNuevaCategoriaGasto').modal('hide')"></button>
             </div>
             <div class="modal-body pt-0">
                 <div class="mb-3">
                     <label class="small fw-bold text-muted">Nombre</label>
-                    <input type="text" id="nuevo_nombre_cat" class="form-control border-0 bg-light" style="border-radius: 10px;" placeholder="Ej: Servicios">
+                    <input type="text" id="nuevo_nombre_cat" class="form-control border border-subtle" style="border-radius: 10px;" placeholder="Ej: Servicios">
                 </div>
                
             </div>
-            <div class="modal-footer border-0 pt-0">
+            <div class="modal-footer pt-0">
                 <button type="button" class="btn btn-primary w-100 fw-bold" onclick="guardarNuevaCategoria()" style="border-radius: 10px;">Agregar</button>
             </div>
         </div> 
@@ -384,9 +384,9 @@ function agregarFilaGasto() {
     const tbody = document.querySelector('#tablaConceptosGasto tbody');
     const fila = document.createElement('tr');
     fila.innerHTML = `
-        <td><input type="text" name="desc[]" class="form-control form-control-sm border-0 bg-light" style="border-radius: 8px;" required></td>
-        <td><input type="number" name="cant[]" class="form-control form-control-sm border-0 bg-light cant text-center" style="border-radius: 8px;" value="1" min="0" step="any"></td>
-        <td><input type="number" name="precio[]" class="form-control form-control-sm border-0 bg-light precio" style="border-radius: 8px;" value="0.00" min="0" step="0.01"></td>
+        <td><input type="text" name="desc[]" class="form-control form-control-sm border border-subtle" style="border-radius: 8px;" required></td>
+        <td><input type="number" name="cant[]" class="form-control form-control-sm border border-subtle cant text-center" style="border-radius: 8px;" value="1" min="0" step="any"></td>
+        <td><input type="number" name="precio[]" class="form-control form-control-sm border border-subtle precio" style="border-radius: 8px;" value="0.00" min="0" step="0.01"></td>
         <td class="text-end fw-bold subtotal_fila pe-3">$0.00</td>
         <td><button type="button" class="btn btn-sm text-danger" onclick="this.closest('tr').remove(); calcularGasto();">
             <i class="bi bi-trash"></i>

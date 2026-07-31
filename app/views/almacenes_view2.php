@@ -30,7 +30,7 @@
 
     <div class="main-content">
         <div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
-            <h2 class="fw-bold mb-0" style="letter-spacing: -0.02em; color: #1c1c1e;">
+            <h2 class="fw-bold mb-0 card-title-text" style="letter-spacing: -0.02em;">
                 <i class="bi bi-box-seam text-primary"></i> Módulo de Almacén
             </h2>
 
@@ -150,7 +150,7 @@
                             <td><?= htmlspecialchars($p['descripcion']?? 'sin descripcion') ?></td>
                             
                             <td><span
-                                    class="badge bg-light text-dark border"><?= htmlspecialchars($p['categoria_nombre'] ?? 'Sin Categoría') ?></span>
+                                    class="badge border border-subtle text-dark border"><?= htmlspecialchars($p['categoria_nombre'] ?? 'Sin Categoría') ?></span>
                             </td>
                              <td>
                                        <?php

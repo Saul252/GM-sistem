@@ -208,7 +208,7 @@ if (isset($_GET['detalle_id'])) {
     <div class="main-content">
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="fw-bold text-dark m-0">Control de Entregas</h3>
+                <h3 class="fw-bold card-title-text m-0">Control de Entregas</h3>
                 <div id="loader" class="spinner-border spinner-border-sm text-secondary d-none"></div>
             </div>
 
@@ -300,11 +300,11 @@ if (isset($_GET['detalle_id'])) {
             </div>
             <div class="modal-body p-0">
                 <div class="row g-0">
-                    <div class="col-md-3 bg-light border-end p-4">
+                    <div class="col-md-3  border-end p-4">
                         <p id="detCliente" class="fw-bold small mb-1"></p>
                         <p id="detAlmacen" class="fw-bold small mb-3"></p>
                         
-                        <div class="mb-4 p-2 bg-white border rounded shadow-sm text-center">
+                        <div class="mb-4 p-2  border rounded shadow-sm text-center">
                             <span class="d-block small text-muted text-uppercase fw-bold">Saldo Pendiente</span>
                             <span id="detSaldoLabel" class="h5 fw-bold text-danger">$0.00</span>
                         </div>
@@ -393,7 +393,7 @@ if (isset($_GET['detalle_id'])) {
                     <td class="fw-bold">${v.folio}</td>
                     <td><div class="small fw-bold">${v.cliente}</div></td>
                     <td>${badgeCobro}</td>
-                    <td class="text-center"><span class="badge ${v.estado_entrega=='entregado'?'bg-success':(v.estado_entrega=='parcial'?'bg-warning text-dark':'bg-danger')}">${v.estado_entrega.toUpperCase()}</span></td>
+                    <td class="text-center"><span class="badge ${v.estado_entrega=='entregado'?'bg-success':(v.estado_entrega=='parcial'?'bg-warning card-title-text':'bg-danger')}">${v.estado_entrega.toUpperCase()}</span></td>
                     <td class="text-end pe-3">
     <div class="btn-group" role="group" aria-label="Acciones de venta">
         <button class="btn btn-sm btn-dark shadow-sm" onclick="verDetalle(${v.id})" title="Ver Detalles">
@@ -441,7 +441,7 @@ async function verDetalle(id) {
         $('#tbodyDetalle').html(data.productos.map(p => {
             let pen = parseFloat(p.cantidad) - parseFloat(p.cantidad_entregada);
             return `<tr>
-                <td>${p.producto}</td>
+                <td class="card-title-text">${p.producto}</td>
                 <td class="text-center">${p.cantidad}</td>
                 <td class="text-center">${p.cantidad_entregada}1234567</td>
                 <td class="text-center text-danger fw-bold">${pen}</td>

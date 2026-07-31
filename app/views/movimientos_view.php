@@ -15,7 +15,7 @@
     <style>
         :root { --glass-bg: rgba(255, 255, 255, 0.9); }
         body { 
-            background-color: #f4f7fa; 
+           
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
             padding-top: 75px; 
         }
@@ -23,10 +23,10 @@
         .card-custom { 
             border: none; border-radius: 16px; 
             box-shadow: 0 4px 12px rgba(0,0,0,0.03); 
-            background: var(--glass-bg); backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
         }
         .table thead th { 
-            background-color: #fcfcfd; color: #64748b; font-weight: 700;
+           color: #64748b; font-weight: 700;
             text-transform: uppercase; font-size: 0.7rem; letter-spacing: 0.05em;
             padding: 1.25rem; border-bottom: 2px solid #f1f5f9;
         }
@@ -35,12 +35,12 @@
             font-weight: 700; font-size: 0.65rem; text-transform: uppercase;
         }
         .ruta-pill {
-            display: inline-flex; align-items: center; background: #fff;
+            display: inline-flex; align-items: center; 
             border: 1px solid #e2e8f0; padding: 4px 12px; border-radius: 20px;
             font-size: 0.8rem; color: #475569;
         }
         .ruta-arrow { color: #94a3b8; margin: 0 8px; font-size: 0.9rem; }
-        .input-disabled { background-color: #f8fafc !important; color: #94a3b8; cursor: not-allowed; }
+        
         
         .btn-recibir {
             background: #10b981;
@@ -63,7 +63,7 @@
             
             <div class="d-flex justify-content-between align-items-end mb-4">
                 <div>
-                    <h2 class="fw-bold m-0 text-dark">Movimientos de Stock</h2>
+                    <h2 class="fw-bold m-0 card-title-text">Movimientos de Stock</h2>
                     <p class="text-muted small">Consulta de entradas, salidas y traspasos</p>
                 </div>
                 <div id="loader" class="spinner-border text-primary d-none" role="status"></div>
@@ -74,7 +74,7 @@
                     <form id="formFiltros" class="row g-3 align-items-end">
                         <div class="col-md-2">
                             <label class="form-label small fw-bold text-muted">PERIODO</label>
-                            <select id="selectorPeriodo" class="form-select border-0 bg-light">
+                            <select id="selectorPeriodo" class="form-select  border border-subtle">
                                 <option value="hoy">Hoy</option>
                                 <option value="ayer">Ayer</option>
                                 <option value="semana">Últimos 7 días</option>
@@ -95,7 +95,7 @@
 
                         <div class="col-md-2">
                             <label class="form-label small fw-bold text-muted">ALMACÉN</label>
-                            <select id="filtroAlmacen" class="form-select border-0 bg-light" <?= ($almacen_usuario > 0) ? 'disabled' : '' ?>>
+                            <select id="filtroAlmacen" class="form-select  border border-subtle" <?= ($almacen_usuario > 0) ? 'disabled' : '' ?>>
                                 <?php if($almacen_usuario == 0): ?>
                                     <option value="0">-- Ver Todos --</option>
                                     <?php 
@@ -114,7 +114,7 @@
                         
                         <div class="col-md-2">
                             <label class="form-label small fw-bold text-muted">TIPO</label>
-                            <select id="filtroTipo" class="form-select border-0 bg-light">
+                            <select id="filtroTipo" class="form-select  border border-subtle">
                                 <option value="">Todos</option>
                                 <option value="entrada">Entradas</option>
                                 <option value="salida">Salidas</option>
@@ -124,7 +124,7 @@
                         </div>
                         
                         <div class="col-md-2">
-                            <button type="button" id="btnReset" class="btn btn-dark w-100 rounded-pill fw-bold border-0 shadow-sm">
+                            <button type="button" id="btnReset" class="btn btn-dark w-100 rounded-pill fw-bold  shadow-sm">
                                 <i class="bi bi-arrow-counterclockwise"></i> Limpiar
                             </button>
                         </div>
@@ -187,10 +187,10 @@
             if(factor > 1 && cant >= factor) {
                 const uReporte = Math.floor(cant / factor);
                 const resto = Math.round((cant % factor) * 100) / 100;
-                return `<div class="fw-bold text-dark">${uReporte} ${m.unidad_reporte}</div>` +
+                return `<div class="fw-bold card-title-text">${uReporte} ${m.unidad_reporte}</div>` +
                        (resto > 0 ? `<small class="text-muted">+ ${resto} ${m.unidad_medida}</small>` : '');
             }
-            return `<div class="fw-bold text-dark">${cant} <small class="fw-normal">${unidad} </small></div>`;
+            return `<div class="fw-bold card-title-text">${cant} <small class="fw-normal">${unidad} </small></div>`;
         }
 
         function cargarHistorial() {
@@ -228,8 +228,8 @@
                             }
 
                             tabla.row.add([
-                                `<span class="ps-3 text-dark fw-bold">${m.fecha_format}</span>`,
-                                `<div><div class="text-dark fw-bold">${m.producto}</div><small class="text-primary">${m.sku}</small></div>`,
+                                `<span class="ps-3 card-title-text fw-bold">${m.fecha_format}</span>`,
+                                `<div><div class="card-title-text fw-bold">${m.producto}</div><small class="text-primary">${m.sku}</small></div>`,
                                 `<div class="text-center"><span class="badge badge-mov bg-${m.color} bg-opacity-10 text-${m.color} border border-${m.color} border-opacity-25">${m.tipo}</span></div>`,
                                 `<div class="text-center">${formatQty(m)}</div>`,
                                 `<div><div class="ruta-pill">${labelOri} <i class="bi bi-arrow-right ruta-arrow"></i> ${labelDes}</div></div>`,

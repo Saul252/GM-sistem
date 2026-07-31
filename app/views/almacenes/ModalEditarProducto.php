@@ -1,8 +1,8 @@
 <div class="modal fade" id="modalEditarProducto" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px; overflow: hidden;">
+        <div class="modal-content  shadow-lg" style="border-radius: 20px; overflow: hidden;">
 
-            <div class="modal-header border-0 bg-warning bg-gradient p-4">
+            <div class="modal-header  bg-warning bg-gradient p-4">
                 <h5 class="modal-title fw-bold text-dark d-flex align-items-center">
                     <i class="bi bi-pencil-square fs-4 me-2"></i>
                     <span>Editar Producto:</span>
@@ -15,39 +15,39 @@
                 <input type="hidden" name="producto_id" id="edit_id">
                 <input type="hidden" name="almacen_actual_id" id="edit_almacen_id">
 
-                <div class="modal-body p-4 bg-white">
+                <div class="modal-body p-4 border border-subtle">
                     <div class="row g-4">
 
                         <div class="col-md-4">
-                            <div class="p-3 rounded-4 bg-light border border-opacity-10 h-100">
+                            <div class="p-3 rounded-4 border border-subtle border border-opacity-10 h-100">
                                 <h6 class="fw-bold text-primary mb-3 d-flex align-items-center">
                                     <i class="bi bi-info-circle me-2"></i> Datos Generales
                                 </h6>
 
                                 <div class="mb-3">
                                     <label class="form-label small fw-bold text-secondary">SKU / Código</label>
-                                    <input type="text" name="sku" id="edit_sku" class="form-control border-0 shadow-sm"
+                                    <input type="text" name="sku" id="edit_sku" class="form-control  shadow-sm"
                                         style="border-radius: 10px;" required>
                                 </div>
 
                                 <div class="mb-3">
                                     <label class="form-label small fw-bold text-secondary">Nombre del Producto</label>
                                     <input type="text" name="nombre" id="edit_nombre"
-                                        class="form-control border-0 shadow-sm" style="border-radius: 10px;" required>
+                                        class="form-control  shadow-sm" style="border-radius: 10px;" required>
                                 </div>
 
                                 <div class="mb-3">
                                     <label class="form-label small fw-bold text-secondary">Categoría</label>
                                     <div class="input-group shadow-sm" style="border-radius: 10px; overflow: hidden;">
                                         <select name="categoria_id" id="edit_categoria_idx"
-                                            class="form-select border-0">
+                                            class="form-select ">
                                             <option value="">Seleccione...</option>
                                             <?php foreach($categorias as $cat): ?>
                                             <option value="<?= trim($cat['id']) ?>">
                                                 <?= htmlspecialchars($cat['nombre']) ?></option>
                                             <?php endforeach; ?>
                                         </select>
-                                        <button class="btn btn-white border-0 text-success" type="button"
+                                        <button class="btn btn-white  text-success" type="button"
                                             onclick="abrirSubModalCategoria()">
                                             <i class="bi bi-plus-circle-fill"></i>
                                         </button>
@@ -57,7 +57,7 @@
                                 <div class="mb-3">
                                     <label class="form-label small fw-bold text-secondary">Descripción</label>
                                     <textarea name="descripcion" id="edit_descripcion"
-                                        class="form-control text-uppercase border-0 shadow-sm" style="border-radius: 10px;"
+                                        class="form-control text-uppercase  shadow-sm" style="border-radius: 10px;"
                                         rows="3"></textarea>
                                 </div>
 
@@ -68,17 +68,17 @@
                                     <div class="col-6">
                                         <label class="small text-muted">Clave Prod.</label>
                                         <input type="text" name="fiscal_clave_prod" id="edit_fiscal_clave_prod"
-                                            class="form-control form-control-sm border-0 shadow-sm">
+                                            class="form-control form-control-sm  shadow-sm">
                                     </div>
                                     <div class="col-6">
                                         <label class="small text-muted">Clave Unidad</label>
                                         <input type="text" name="fiscal_clave_unidad" id="edit_fiscal_clave_unidad"
-                                            class="form-control form-control-sm border-0 shadow-sm">
+                                            class="form-control form-control-sm  shadow-sm">
                                     </div>
                                     <div class="col-12 mt-2">
                                         <label class="small text-muted">IVA (%)</label>
                                         <input type="number" step="0.01" name="impuesto_iva" id="edit_impuesto_iva"
-                                            class="form-control form-control-sm border-0 shadow-sm">
+                                            class="form-control form-control-sm  shadow-sm">
                                     </div>
                                 </div>
                             </div>
@@ -107,47 +107,47 @@
                             <h6 class="fw-bold text-success mb-3">Gestión de Precios</h6>
                             <div class="row g-3 mb-4">
                                 <div class="col-md-4">
-                                    <div class="card border-0 shadow-sm p-3 rounded-4">
+                                    <div class="card  shadow-sm p-3 rounded-4">
                                         <label class="small fw-bold text-muted mb-2">P. Publico</label>
                                         <div class="input-group">
                                             <span
-                                                class="input-group-text bg-transparent border-0 text-success fw-bold">$</span>
+                                                class="input-group-text bg-transparent  text-success fw-bold">$</span>
                                             <input type="number" step="0.01" name="precio_minorista" id="edit_p_min"
-                                                class="form-control border-0 fw-bold fs-5 p-0 shadow-none">
+                                                class="form-control  fw-bold fs-5 p-0 shadow-none">
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
-                                    <div class="card border-0 shadow-sm p-3 rounded-4">
+                                    <div class="card  shadow-sm p-3 rounded-4">
                                         <label class="small fw-bold text-muted mb-2">P. Constructora</label>
                                         <div class="input-group">
                                             <span
-                                                class="input-group-text bg-transparent border-0 text-success fw-bold">$</span>
+                                                class="input-group-text bg-transparent  text-success fw-bold">$</span>
                                             <input type="number" step="0.01" name="precio_mayorista" id="edit_p_may"
-                                                class="form-control border-0 fw-bold fs-5 p-0 shadow-none">
+                                                class="form-control  fw-bold fs-5 p-0 shadow-none">
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
-                                    <div class="card border-0 shadow-sm p-3 rounded-4">
+                                    <div class="card  shadow-sm p-3 rounded-4">
                                         <label class="small fw-bold text-muted mb-2">P. Distribuidor</label>
                                         <div class="input-group">
                                             <span
-                                                class="input-group-text bg-transparent border-0 text-success fw-bold">$</span>
+                                                class="input-group-text bg-transparent  text-success fw-bold">$</span>
                                             <input type="number" step="0.01" name="precio_distribuidor" id="edit_p_dist"
-                                                class="form-control border-0 fw-bold fs-5 p-0 shadow-none">
+                                                class="form-control  fw-bold fs-5 p-0 shadow-none">
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <h6 class="fw-bold text-dark mb-3">Configuración de Unidades</h6>
-                            <div class="row g-3 p-3 rounded-4 bg-light border mb-4">
+                            <div class="row g-3 p-3 rounded-4 border border-subtle border mb-4">
                                 <div class="col-md-4">
                                     <label class="small fw-bold text-secondary">Unidad Compra</label>
 
                                     <select name="unidad_reporte" id="edit_unidad_reporte"
-                                        class="form-select border-0 shadow-sm text-center fw-bold">
+                                        class="form-select  shadow-sm text-center fw-bold">
                                         <option value="">Seleccione...</option>
                                         <?php foreach($unidadesMedida as $u): ?>
                                         <option value="<?= trim($u['clave']) ?>">
@@ -163,7 +163,7 @@
                                         <i class="bi bi-arrow-repeat fs-4 text-primary me-2"></i>
                                         <input type="number" step="0.01" name="factor_conversion"
                                             id="edit_factor_conversion"
-                                            class="form-control border-0 shadow-sm text-center fw-bold fs-5 text-primary"
+                                            class="form-control  shadow-sm text-center fw-bold fs-5 text-primary"
                                             style="width: 100px;">
                                     </div>
                                 </div>
@@ -172,7 +172,7 @@
                                     <label class="small fw-bold text-secondary">Unidad Venta (Base)</label>
 
                                     <select name="unidad_medida" id="edit_unidad_medida"
-                                        class="form-select border-0 shadow-sm text-center fw-bold">
+                                        class="form-select  shadow-sm text-center fw-bold">
 
                                         <option value="">Seleccione...</option>
 
@@ -189,22 +189,22 @@
                             <h6 class="fw-bold text-secondary mb-3">Control de Inventario</h6>
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <div class="p-3 rounded-4 border-start border-4 border-success bg-white shadow-sm">
+                                    <div class="p-3 rounded-4 border-start border-4 border-success border border-subtle shadow-sm">
                                         <label class="small fw-bold text-muted">Stock Actual</label>
                                         <div class="d-flex align-items-center mt-1">
                                             <i class="bi bi-box-fill text-success me-2"></i>
                                             <input type="number" step="0.01" name="stock" id="edit_stock"
-                                                class="form-control border-0 fw-bold fs-4 p-0 shadow-none" readonly>
+                                                class="form-control  fw-bold fs-4 p-0 shadow-none" readonly>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="p-3 rounded-4 border-start border-4 border-danger bg-white shadow-sm">
+                                    <div class="p-3 rounded-4 border-start border-4 border-danger border border-subtle shadow-sm">
                                         <label class="small fw-bold text-muted">Mínimo Permitido</label>
                                         <div class="d-flex align-items-center mt-1">
                                             <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
                                             <input type="number" step="0.01" name="stock_minimo" id="edit_s_min"
-                                                class="form-control border-0 fw-bold fs-4 p-0 shadow-none">
+                                                class="form-control  fw-bold fs-4 p-0 shadow-none">
                                         </div>
                                     </div>
                                 </div>
@@ -219,7 +219,7 @@
     <i class="bi bi-list-ul me-2"></i>
     Ver Medidas
 </button>
-                <div class="modal-footer border-0 p-4 bg-light d-flex justify-content-between">
+                <div class="modal-footer  p-4 border border-subtle d-flex justify-content-between">
                     <button type="button" class="btn btn-link text-secondary text-decoration-none fw-bold"
                         data-bs-dismiss="modal">Descartar</button>
                     <button type="submit" class="btn btn-warning px-5 fw-bold shadow-sm" style="border-radius: 12px;">

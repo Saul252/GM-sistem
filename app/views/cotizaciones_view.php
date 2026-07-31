@@ -31,10 +31,10 @@ error_reporting(E_ALL);
 
         <div class="glass-card p-4 mb-4">
 
-            <div class="row align-items-center mb-5">
+            <div class="row align-items-center ">
                 <div class="col-md-8">
-                    <h1 class="h3 fw-bold mb-1">Cotizaciones</h1>
-                    <p class="text-muted small">Gestión de cotizaciones de materiales</p>
+                    <h1 class="h3 fw-bold mb-1 card-title-text">Cotizaciones</h1>
+                    <p class="text-muted small card-title-text">Gestión de cotizaciones de materiales</p>
                 </div>
                 <div class="col-md-4 text-md-end">
                     <button class="btn btn-add" onclick="nuevaCotizacion()">
@@ -50,11 +50,11 @@ error_reporting(E_ALL);
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h5 class="fw-bold mb-1">
+            <h5 class="fw-bold mb-1 card-title-text">
                 <i class="bi bi-funnel-fill text-primary me-2"></i>
                 Filtros de búsqueda
             </h5>
-            <small class="text-muted">
+            <small class="text-muted card-title-text">
                 Filtra las cotizaciones por fecha, almacén, estado o cliente.
             </small>
         </div>
@@ -72,7 +72,7 @@ error_reporting(E_ALL);
                 type="date"
                 id="fechaInicio"
                 value="<?= date('Y-m-01') ?>"
-                class="form-control border-0 bg-light shadow-sm"
+                class="form-control border-0  shadow-sm"
                 style="border-radius:12px;">
         </div>
 
@@ -86,7 +86,7 @@ error_reporting(E_ALL);
                 type="date"
                 id="fechaFin"
                 value="<?= date('Y-m-d') ?>"
-                class="form-control border-0 bg-light shadow-sm"
+                class="form-control border-0  shadow-sm"
                 style="border-radius:12px;">
         </div>
 
@@ -96,7 +96,7 @@ error_reporting(E_ALL);
                 Almacén
             </label>
 
-            <select id="filtroAlmacen" class="form-select border-0 bg-light shadow-sm"
+            <select id="filtroAlmacen" class="form-select border-0  shadow-sm"
                 style="border-radius:12px;">
 
                 <?php if (isset($es_admin) && $es_admin): ?>
@@ -120,7 +120,7 @@ error_reporting(E_ALL);
                 Estado
             </label>
 
-            <select id="filtroEstado" class="form-select border-0 bg-light shadow-sm"
+            <select id="filtroEstado" class="form-select border-0  shadow-sm"
                 style="border-radius:12px;">
 
                 <option value="">Todos</option>
@@ -147,14 +147,14 @@ error_reporting(E_ALL);
 
             <div class="input-group shadow-sm">
 
-                <span class="input-group-text bg-light border-0">
+                <span class="input-group-text  border-0">
                     <i class="bi bi-search text-secondary"></i>
                 </span>
 
                 <input
                     type="text"
                     id="buscadorGeneral"
-                    class="form-control border-0 bg-light"
+                    class="form-control border-0 "
                     placeholder="Folio o Cliente">
 
             </div>
@@ -218,18 +218,18 @@ error_reporting(E_ALL);
 
                 <div class="text-center mb-4">
                     <small class="text-muted d-block">Total a pagar</small>
-                    <h3 id="pagoTotal" class="fw-bold text-dark m-0">$0.00</h3>
+                    <h3 id="pagoTotal" class="fw-bold card-title-text m-0">$0.00</h3>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label small text-muted">Monto recibido</label>
                     <input type="number" id="montoPago"
-                        class="form-control form-control-lg border-0 bg-light rounded-3" placeholder="0.00">
+                        class="form-control form-control-lg border-0  rounded-3" placeholder="0.00">
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label small text-muted">Método de pago</label>
-                    <select id="metodoPago" class="form-select form-select-lg border-0 bg-light rounded-3">
+                    <select id="metodoPago" class="form-select form-select-lg border-0  rounded-3">
                         <option value="">Seleccione</option>
                         <option value="efectivo">Efectivo</option>
                         <option value="transferencia">Transferencia</option>
@@ -242,7 +242,7 @@ error_reporting(E_ALL);
                 <div class="mb-3 d-none" id="refBox">
                     <label class="form-label small text-muted">Referencia</label>
                     <input type="text" id="referenciaPago"
-                        class="form-control form-control-lg border-0 bg-light rounded-3"
+                        class="form-control form-control-lg border-0  rounded-3"
                         placeholder="Número de referencia">
                 </div>
                  
@@ -716,7 +716,7 @@ let data=await res.json();
 
         switch (status) {
             case 'PENDIENTE':
-                clase = 'bg-warning text-dark';
+                clase = 'bg-warning card-title-text';
                 break;
             case 'COMPLETADO':
                 clase = 'bg-primary text-white';
@@ -730,7 +730,7 @@ let data=await res.json();
             <tr>
 
                 <td>
-                    <span class="text-dark fw-bold">#${id}</span>
+                    <span class="card-title-text fw-bold">#${id}</span>
                 </td>
 
                 <td class="text-muted small">
@@ -742,12 +742,12 @@ let data=await res.json();
                 </td>
 
                 <td>
-                    <span class="badge bg-light text-dark border">
+                    <span class="badge  card-title-text border">
                         ${s.almacen_nombre}
                     </span>
                 </td>
  <td>
-                    <span class="badge bg-light text-dark border">
+                    <span class="badge  card-title-text border">
                         ${s.vendedor}
                     </span>
                 </td>
@@ -795,7 +795,7 @@ let data=await res.json();
                         title="Imprimir solicitud">
 
                         <i class="bi bi-printer text-primary me-1"></i>
-                        <span class="text-dark fw-medium">Imprimir</span>
+                        <span class="card-title-text fw-medium">Imprimir</span>
 
                     </button>
 

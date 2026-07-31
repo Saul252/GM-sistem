@@ -33,7 +33,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
         body { 
             background-color: var(--apple-bg); 
             font-family: 'SF Pro Display', -apple-system, sans-serif;
-            color: #1d1d1f;
+           
         }
 
         .main-content { 
@@ -46,7 +46,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
             border: none; 
             border-radius: 20px; 
             box-shadow: 0 8px 30px rgba(0,0,0,0.04); 
-            background: rgba(255, 255, 255, 0.9);
+            
             backdrop-filter: blur(10px);
         }
 
@@ -88,8 +88,8 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
         
         <div class="d-flex justify-content-between align-items-center mb-5 animate__animated animate__fadeIn">
             <div>
-                <h2 class="fw-bold m-0" style="font-size: 2rem; letter-spacing: -0.03em;">Cartera de Clientes</h2>
-                <p class="text-muted mb-0">Gestión de datos fiscales y comerciales</p>
+                <h2 class="fw-bold m-0 card-title-text" style="font-size: 2rem; letter-spacing: -0.03em;">Cartera de Clientes</h2>
+                <p class="text-muted mb-0 card-title-text">Gestión de datos fiscales y comerciales</p>
             </div>
             <button class="btn btn-primary rounded-pill px-4 shadow-sm d-flex align-items-center" 
                     onclick="nuevoCliente()" style="background: var(--accent-blue); border:none; height: 42px; font-weight: 600;">
@@ -100,7 +100,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
         <div class="card card-premium p-4 animate__animated animate__fadeInUp">
             <div class="row mb-4 g-3">
                 <div class="col-md-5">
-                    <div class="input-group bg-light rounded-3 p-1">
+                    <div class="input-group border border-subtle rounded-3 p-1">
                         <span class="input-group-text bg-transparent border-0 text-muted"><i class="bi bi-search"></i></span>
                         <input type="text" id="busquedaCliente" class="form-control border-0 bg-transparent shadow-none" placeholder="Buscar por nombre, RFC o correo...">
                     </div>
@@ -108,7 +108,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
 
                 <?php if ($almacen_usuario == 0): ?>
                 <div class="col-md-4">
-                    <select id="filtroAlmacenVista" class="form-select border-0 bg-light rounded-3 h-100 shadow-none">
+                    <select id="filtroAlmacenVista" class="form-select    border-subtle rounded-3 h-100 shadow-none">
                         <option value="">🌐 Todas las Sucursales</option>
                         <?php foreach ($almacenes as $alm): ?>
                             <option value="<?= $alm['id'] ?>">📍 <?= htmlspecialchars($alm['nombre']) ?></option>
@@ -116,7 +116,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <button class="btn btn-outline-secondary w-100 rounded-3 border-0 bg-light fw-bold text-muted" onclick="limpiarFiltros()">
+                    <button class="btn btn-outline-secondary w-100 rounded-3 border-0  fw-bold text-muted" onclick="limpiarFiltros()">
                         <i class="bi bi-arrow-clockwise me-1"></i> RESET
                     </button>
                 </div>
@@ -138,7 +138,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
                         <?php foreach ($clientes as $c): ?>
                         <tr class="fila-cliente" data-almacen-id="<?= $c['almacen_id'] ?>">
                             <td class="ps-3">
-                                <div class="fw-bold" style="color: #1d1d1f;"><?= htmlspecialchars($c['nombre_comercial']) ?></div>
+                                <div class="fw-bold card-title-text" ><?= htmlspecialchars($c['nombre_comercial']) ?></div>
                                 <?php if (!empty($c['razon_social'])): ?>
                                 <div class="text-muted small" style="font-size: 0.7rem;"><?= htmlspecialchars($c['razon_social']) ?></div>
                                 <?php endif; ?>

@@ -9,7 +9,7 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
-            <div class="modal-body bg-light">
+            <div class="modal-body ">
                 <form id="formProvRapido">
                     <div class="row g-3">
 
@@ -21,7 +21,7 @@
 
                         <div class="col-12">
                             <select name="almacen_id" id="almacen_id"
-                                class="form-select <?= $_SESSION['almacen_id']==0 ? '' : 'bg-light' ?>"
+                                class="form-select <?= $_SESSION['almacen_id']==0 ? '' : '' ?>"
                                 <?= $_SESSION['almacen_id'] != 0 ? 'disabled' : '' ?> required>
 
                                 <?php if ($_SESSION['almacen_id']==0): ?>
@@ -94,7 +94,7 @@
                 </form>
             </div>
 
-            <div class="modal-footer bg-white">
+            <div class="modal-footer ">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
 
                 <!-- 🔥 PASAMOS EVENT -->

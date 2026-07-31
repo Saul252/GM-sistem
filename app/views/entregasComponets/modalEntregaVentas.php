@@ -1,14 +1,14 @@
 <div class="modal fade" id="modalDespachoVentaTotal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 25px; background: #f8f9fa;">
-            <div class="modal-header border-0 bg-white" style="border-radius: 25px 25px 0 0; padding: 1.5rem 2rem;">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 25px; ">
+            <div class="modal-header border-0 border border-subtle" style="border-radius: 25px 25px 0 0; padding: 1.5rem 2rem;">
                 <div class="bg-success text-white rounded p-2 d-flex align-items-center justify-content-center me-3"
                     style="width: 45px; height: 45px; border-radius: 12px !important;">
                     <i class="bi bi-box-seam-fill fs-4"></i>
                 </div>
                 <div>
                     <h5 class="modal-title fw-bold mb-0">Despacho Masivo Por Venta</h5>
-                    <span class="badge bg-light text-dark border mt-1" id="txtFolioVenta">Cargando...</span>
+                    <span class="badge bg-light card-title-text border mt-1" id="txtFolioVenta">Cargando...</span>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -33,7 +33,7 @@
                 <div id="seccionLogisticaMasiva" class="d-none animate__animated animate__fadeIn">
                     <hr class="my-4 opacity-10">
 
-                    <div class="p-3 border rounded-4 bg-white shadow-sm mb-3">
+                    <div class="p-3 border rounded-4 border border-subtle shadow-sm mb-3">
                         <label class="text-uppercase fw-bold text-primary mb-2 d-block"
                             style="font-size: 0.7rem; letter-spacing: 1.2px;">Método de Salida</label>
                         <div class="btn-group w-100" role="group">
@@ -56,11 +56,11 @@
                             style="transition: all 0.3s ease; border: 1px solid;">
                             <div class="row g-3">
                                 <div class="col-12">
-                                    <div id="contenedorDireccion" class="p-3 rounded-4 mb-1 border bg-white shadow-sm">
+                                    <div id="contenedorDireccion" class="p-3 rounded-4 mb-1 border border border-subtle shadow-sm">
                                         <label id="lblDinamicoPrincipal" class="small fw-bold text-muted mb-1"
                                             style="font-size: 0.65rem;">PUNTO DE ENTREGA / OBRA</label>
                                         <div class="input-group">
-                                            <span class="input-group-text bg-white border-0">
+                                            <span class="input-group-text border border-subtle border-0">
                                                 <i id="iconDinamico" class="bi bi-geo-alt-fill text-danger"></i>
                                             </span>
                                             <textarea id="mv_direccion"
@@ -73,13 +73,13 @@
                                 <div class="col-md-6" id="colVehiculo">
                                     <label class="small fw-bold text-muted mb-1">UNIDAD / VEHÍCULO</label>
                                     <select id="mv_vehiculo_id"
-                                        class="form-select border-0 shadow-sm rounded-3 p-3 bg-white"></select>
+                                        class="form-select border-0 shadow-sm rounded-3 p-3 border border-subtle"></select>
                                 </div>
                                 <div class="col-md-6">
                                     <label id="lblPersonal" class="small fw-bold text-muted mb-1">CHOFER
                                         RESPONSABLE</label>
                                     <select id="mv_chofer_id"
-                                        class="form-select border-0 shadow-sm rounded-3 p-3 bg-white"></select>
+                                        class="form-select border-0 shadow-sm rounded-3 p-3 border border-subtle"></select>
                                 </div>
 
 
@@ -87,7 +87,7 @@
                                 <div class="col-12">
                                     <label class="small fw-bold text-muted mb-1">AYUDANTES DE CARGA (OPCIONAL)</label>
                                     <select id="mv_tripulantes"
-                                        class="form-select border-0 shadow-sm rounded-3 p-2 bg-white"
+                                        class="form-select border-0 shadow-sm rounded-3 p-2 border border-subtle"
                                         style="font-size: 0.85rem;"></select>
                                     <small class="text-muted mt-2 d-block" style="font-size: 0.6rem;">* Mantén
                                         presionada la tecla <b>Ctrl</b> para elegir varios.</small>
@@ -98,7 +98,7 @@
                 </div>
             </div>
 
-            <div class="modal-footer border-0 bg-white py-3 px-4" style="border-radius: 0 0 25px 25px;">
+            <div class="modal-footer border-0 border border-subtle py-3 px-4" style="border-radius: 0 0 25px 25px;">
                 <button type="button" class="btn btn-light rounded-pill px-4 fw-bold"
                     data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" id="btnEjecutarDespachoMasivo"
@@ -129,8 +129,7 @@ function toggleFormRuta(esRuta) {
     if (esRuta) {
         // --- ESTILO RUTA (AZUL) ---
         wrapper.css({
-            'background': '#eef6ff',
-            'border-color': '#cfe2ff'
+            
         });
         $('#lblDinamicoPrincipal').text('PUNTO DE ENTREGA / OBRA (EDITABLE)');
         $('#iconDinamico').removeClass('bi-person-badge-fill text-success').addClass('bi-geo-alt-fill text-danger');
@@ -141,8 +140,7 @@ function toggleFormRuta(esRuta) {
     } else {
         // --- ESTILO PATIO (VERDE) ---
         wrapper.css({
-            'background': '#f6fff8',
-            'border-color': '#c1e7c1'
+           
         });
         $('#lblDinamicoPrincipal').text('NOTAS / QUIÉN RECIBE (OPCIONAL)');
         $('#iconDinamico').removeClass('bi-geo-alt-fill text-danger').addClass('bi-person-badge-fill text-success');
@@ -229,27 +227,27 @@ async function abrirModalDespachoVentaTotal(almacenId, ventaId) {
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
     <td>
-        <span class="fw-bold text-dark">
+        <span class="fw-bold card-title-text">
             <i class="bi bi-box-seam me-1 text-success"></i>
             ${item.producto}
         </span>
     </td>
 
     <td>
-        <span class="badge bg-info-subtle text-dark">
+        <span class="badge bg-info-subtle card-title-text">
             ${item.disponible/factor} ${item.unidad_reporte}
         </span>
     </td>
 
     <td>
-        <span class="badge bg-primary-subtle text-dark">
+        <span class="badge bg-primary-subtle card-title-text">
             ${(cantidad/((1/item.equivalencia))>=1 ) ? (cantidad/((1/item.equivalencia)).toFixed(3) ) :(cantidad)}
          ${item.nombre}
         </span>
     </td>
 
     <td>
-        <span class="badge bg-warning-subtle text-dark">
+        <span class="badge bg-warning-subtle card-title-text">
            
             ${(cantidadRealFaltante/((1/item.equivalencia))>=1 ) ? (cantidadRealFaltante/((1/item.equivalencia)).toFixed(3) ) :(cantidad)}
         ${unidad}

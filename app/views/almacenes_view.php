@@ -96,8 +96,8 @@
     </style>
     <div class="main-content">
    <div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
-    <h2 class="fw-bold mb-0" style="letter-spacing: -0.02em; color: #1c1c1e;">
-        <i class="bi bi-box-seam text-primary"></i> Módulo de Almacén
+    <h2 class="fw-bold mb-0 card-title-text" style="letter-spacing: -0.02em;">
+        <i class="bi bi-box-seam card-title-text"></i> Módulo de Almacén
     </h2>
 
     <?php 
@@ -139,7 +139,7 @@
 <style>
     /* Estilos ultra-finos para no afectar el main-content */
     .ios-micro-card {
-        background: #ffffff;
+       
         border-radius: 12px;
         border: 1px solid rgba(0,0,0,0.05);
         padding: 5px 10px;
@@ -244,7 +244,7 @@
                             <td class="fw-bold"><?= $p['sku'] ?></td>
                             <td><?= htmlspecialchars($p['nombre']) ?></td>
                             <td><span
-                                    class="badge bg-light text-dark border"><?= htmlspecialchars($p['categoria_nombre'] ?? 'Sin Categoría') ?></span>
+                                    class="badge border border-subtle text-dark border"><?= htmlspecialchars($p['categoria_nombre'] ?? 'Sin Categoría') ?></span>
                             </td>
                             <td>
                                 <?php 
@@ -327,7 +327,7 @@
                                 <input type="hidden" name="cantidad" id="cantidad_traspaso_final" required>
 
                                 <div id="resumen_conversion"
-                                    class="mt-2 p-2 rounded bg-light border-start border-4 border-primary"
+                                    class="mt-2 p-2 rounded border border-subtle border-start border-4 border-primary"
                                     style="display:none; font-size: 0.9rem;">
                                     <strong>Movimiento total:</strong> <span id="txt_total_pzas">0</span> piezas.
                                 </div>
@@ -359,7 +359,7 @@
                 </div>
                 <div class="modal-body">
                     <?php if($_SESSION['rol_id'] == 1): ?>
-                    <div class="row mb-4 bg-light p-3 rounded border">
+                    <div >
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Ver movimientos del Almacén:</label>
                             <select id="admin_filtro_almacen" class="form-select" onchange="cargarTraspasos()">
@@ -507,7 +507,7 @@
                             </div>
                         </div>
 
-                        <div class="card bg-light border-warning mb-4 shadow-sm">
+                        <div class="card border border-subtle border-warning mb-4 shadow-sm">
                             <div class="card-body">
                                 <h6 class="fw-bold text-dark mb-3"><i class="bi bi-calculator-fill text-warning"></i>
                                     Control de Entrada y Conversión</h6>
@@ -536,7 +536,7 @@
                                     </div>
 
                                     <div class="col-md-4 text-center">
-                                        <div class="p-2 border rounded bg-white shadow-sm border-dark">
+                                        <div class="p-2 border rounded border border-subtle shadow-sm border-dark">
                                             <span class="small text-muted d-block text-uppercase fw-bold"
                                                 style="font-size: 0.6rem;">Total Unidades Base a Repartir</span>
                                             <span id="displayLimiteBultos" class="fw-bold fs-4 text-dark">0.00</span>
@@ -603,7 +603,7 @@
                     </div>
                     
 
-                    <div class="modal-footer bg-light">
+                    <div class="modal-footer border border-subtle">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                         <button type="submit" id="btnGuardarProducto" class="btn btn-success px-5 fw-bold shadow">
                             <i class="bi bi-save me-2"></i> GUARDAR PRODUCTO
@@ -630,11 +630,11 @@
                 <input type="hidden" name="producto_id" id="edit_id">
                 <input type="hidden" name="almacen_actual_id" id="edit_almacen_id">
 
-                <div class="modal-body p-4 bg-white">
+                <div class="modal-body p-4 border border-subtle">
                     <div class="row g-4">
                         
                         <div class="col-md-4">
-                            <div class="p-3 rounded-4 bg-light border border-opacity-10 h-100">
+                            <div class="p-3 rounded-4 border border-subtle border border-opacity-10 h-100">
                                 <h6 class="fw-bold text-primary mb-3 d-flex align-items-center">
                                     <i class="bi bi-info-circle me-2"></i> Datos Generales
                                 </h6>
@@ -738,7 +738,7 @@
                             </div>
 
                             <h6 class="fw-bold text-dark mb-3">Configuración de Unidades</h6>
-                            <div class="row g-3 p-3 rounded-4 bg-light border mb-4">
+                            <div class="row g-3 p-3 rounded-4 border border-subtle border mb-4">
                                 <div class="col-md-4">
                                     <label class="small fw-bold text-secondary">Unidad Compra</label>
                                     <input type="text" name="unidad_reporte" id="edit_unidad_reporte" class="form-control border-0 shadow-sm text-center fw-bold" placeholder="CAJA">
@@ -759,7 +759,7 @@
                             <h6 class="fw-bold text-secondary mb-3">Control de Inventario</h6>
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <div class="p-3 rounded-4 border-start border-4 border-success bg-white shadow-sm">
+                                    <div class="p-3 rounded-4 border-start border-4 border-success border border-subtle shadow-sm">
                                         <label class="small fw-bold text-muted">Stock Actual</label>
                                         <div class="d-flex align-items-center mt-1">
                                             <i class="bi bi-box-fill text-success me-2"></i>
@@ -768,7 +768,7 @@
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="p-3 rounded-4 border-start border-4 border-danger bg-white shadow-sm">
+                                    <div class="p-3 rounded-4 border-start border-4 border-danger border border-subtle shadow-sm">
                                         <label class="small fw-bold text-muted">Mínimo Permitido</label>
                                         <div class="d-flex align-items-center mt-1">
                                             <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
@@ -781,7 +781,7 @@
                     </div>
                 </div>
 
-                <div class="modal-footer border-0 p-4 bg-light d-flex justify-content-between">
+                <div class="modal-footer border-0 p-4 border border-subtle d-flex justify-content-between">
                     <button type="button" class="btn btn-link text-secondary text-decoration-none fw-bold" data-bs-dismiss="modal">Descartar</button>
                     <button type="submit" class="btn btn-warning px-5 fw-bold shadow-sm" style="border-radius: 12px;">
                         Actualizar Producto <i class="bi bi-check-lg ms-1"></i>
@@ -968,7 +968,7 @@
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table table-sm table-bordered bg-white small">
+                        <table class="table table-sm table-bordered border border-subtle small">
                             <thead class="table-secondary">
                                 <tr>
                                     <th>Act.</th>

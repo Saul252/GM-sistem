@@ -40,7 +40,7 @@
 
     .table-responsive {
         border-radius: var(--primary-radius);
-        background: white;
+       
         border: 1px solid #e2e8f0;
         /* Evita que la tabla rompa el layout en móvil */
         overflow-x: auto;
@@ -126,7 +126,7 @@
     </style>
 </head>
 
-<body class="bg-light">
+<body class="">
 
     <?php renderizarLayout($tituloPagina); ?>
 
@@ -135,7 +135,7 @@
 
             <div class="row align-items-center mb-4">
                 <div class="col-md-7">
-                    <h2 class="fw-bold text-dark mb-1" style="letter-spacing: -0.5px;">Compras y Gastos</h2>
+                    <h2 class="fw-bold card-title-text mb-1" style="letter-spacing: -0.5px;">Compras y Gastos</h2>
                     <p class="text-muted mb-0 small text-uppercase fw-semibold" style="letter-spacing: 0.5px;">
                         <i class="bi bi-layers-half"></i> Gestión de flujo de caja e inventario
                     </p>
@@ -210,7 +210,7 @@
                                     <i class="bi bi-calendar3 me-1"></i> Periodo
                                 </label>
                                 <select id="filtro_rapido" name="periodo_filtro"
-                                    class="form-select border-0 bg-light fw-bold" style="border-radius: 10px;">
+                                    class="form-select  border border-subtle fw-bold" style="border-radius: 10px;">
                                     <option value="hoy" <?= ($periodo_sel == 'hoy') ? 'selected' : '' ?>>Hoy</option>
                                     <option value="ayer" <?= ($periodo_sel == 'ayer') ? 'selected' : '' ?>>Ayer</option>
                                     <option value="semana" <?= ($periodo_sel == 'semana') ? 'selected' : '' ?>>Esta
@@ -225,21 +225,21 @@
 
                             <div class="col-md-2 div-fechas <?= ($periodo_sel !== 'personalizado') ? 'd-none' : '' ?>">
                                 <label class="form-label fw-bold small text-uppercase text-muted">Desde</label>
-                                <input type="date" name="desde" id="fecha_desde" class="form-control border-0 bg-light"
+                                <input type="date" name="desde" id="fecha_desde" class="form-control  border border-subtle"
                                     style="border-radius: 10px;" value="<?= $fecha_desde ?>"
                                     <?= ($periodo_sel !== 'personalizado') ? 'disabled' : '' ?>>
                             </div>
 
                             <div class="col-md-2 div-fechas <?= ($periodo_sel !== 'personalizado') ? 'd-none' : '' ?>">
                                 <label class="form-label fw-bold small text-uppercase text-muted">Hasta</label>
-                                <input type="date" name="hasta" id="fecha_hasta" class="form-control border-0 bg-light"
+                                <input type="date" name="hasta" id="fecha_hasta" class="form-control  border border-subtle"
                                     style="border-radius: 10px;" value="<?= $fecha_hasta ?>"
                                     <?= ($periodo_sel !== 'personalizado') ? 'disabled' : '' ?>>
                             </div>
                             <div class="col-md-2">
                                 <label class="form-label fw-bold small text-uppercase text-primary">Mostrar</label>
                                 <select name="tipo_filtro" id="tipo_filtro"
-                                    class="form-select fw-bold border-0 bg-light" style="border-radius: 10px;">
+                                    class="form-select fw-bold  border border-subtle" style="border-radius: 10px;">
                                     <option value="todos" <?= ($tipo_sel == 'todos') ? 'selected' : '' ?>>📁 Todos
                                     </option>
                                     <option value="compra" <?= ($tipo_sel == 'compra') ? 'selected' : '' ?>>🛒 Compras
@@ -271,7 +271,7 @@
                             <div class="col-md-2 d-none animate__animated animate__fadeIn" id="contenedor_categoria">
                                 <label class="form-label fw-bold small text-uppercase text-muted">Categoría</label>
                                 <select id="categoria_gasto_filtro" name="categoria_gasto_filtro"
-                                    class="form-select border-0 bg-light" style="border-radius: 10px;">
+                                    class="form-select  border border-subtle" style="border-radius: 10px;">
                                     <option value="0">-- Todas --</option>
                                     <?php foreach ($listaCategoriasGastos as $cat): ?>
                                     <option value="<?= $cat['id'] ?>"
@@ -285,7 +285,7 @@
                             <?php if ($_SESSION['rol_id'] == 1): ?>
                             <div class="col-md-2">
                                 <label class="form-label fw-bold small text-uppercase text-muted">Almacén</label>
-                                <select id="almacen_filtro" name="almacen_filtro" class="form-select border-0 bg-light"
+                                <select id="almacen_filtro" name="almacen_filtro" class="form-select  border border-subtle"
                                     style="border-radius: 10px;">
                                     <option value="0">🌐 Todos</option>
                                     <?php foreach ($almacenes as $alm): ?>
@@ -335,7 +335,7 @@
                     <div class="card card-kpi border-start border-danger border-4 p-2">
                         <div class="card-body py-2">
                             <p class="text-danger small fw-bold mb-1">TOTAL EGRESOS</p>
-                            <h3 id="kpi_total" class="fw-bold mb-0 text-dark">
+                            <h3 id="kpi_total" class="fw-bold mb-0 card-title-text">
                                 $ <?= number_format($granTotalEgresos, 2) ?>
                             </h3>
                         </div>
@@ -369,7 +369,7 @@
                 <tr class="border-bottom" style="transition: all 0.2s ease;">
 
                     <td class="ps-4">
-                        <span class="badge bg-light text-dark border fw-medium">#<?= $e['id'] ?></span>
+                        <span class="badge border border-subtle card-title-text border fw-medium">#<?= $e['id'] ?></span>
                     </td>
 
                     <td>
@@ -377,7 +377,7 @@
                             <div class="rounded-circle bg-danger bg-opacity-10 d-flex align-items-center justify-content-center me-2" style="width: 24px; height: 24px;">
                                 <i class="bi bi-geo-alt text-danger" style="font-size: 0.75rem;"></i>
                             </div>
-                            <span class="fw-medium text-dark small"><?= htmlspecialchars($e['almacen_nombre'] ?? 'N/A') ?></span>
+                            <span class="fw-medium card-title-text small"><?= htmlspecialchars($e['almacen_nombre'] ?? 'N/A') ?></span>
                         </div>
                     </td>
 
@@ -386,7 +386,7 @@
                     </td>
 
                     <td>
-                        <span class="fw-bold text-dark" style="letter-spacing: -0.3px;">
+                        <span class="fw-bold card-title-text" style="letter-spacing: -0.3px;">
                             <?= ($e['tipo'] == 'compra' ? 'FC-' : ($e['tipo'] == 'gasto' ? 'FG-' : 'PD-')) . $e['folio'] ?>
                         </span>
                     </td>
@@ -408,7 +408,7 @@
                     </td>
 
                     <td>
-                        <div class="text-dark fw-medium small text-truncate" style="max-width: 150px;">
+                        <div class="card-title-text fw-medium small text-truncate" style="max-width: 150px;">
                             <?= htmlspecialchars($e['entidad']) ?>
                         </div>
                     </td>
@@ -423,14 +423,14 @@
                         <?php endif; ?>
                     </td>
 
-                    <td class="fw-bold text-end text-dark">
+                    <td class="fw-bold text-end card-title-text">
                         $<?= number_format($e['total'], 2) ?>
                     </td>
 
                     <?php
                         $metodo = strtoupper($e['metodo_pago'] ?? 'EFECTIVO');
                         $dot_color = 'text-secondary';
-                        if (str_contains($metodo, 'EFECT')) $dot_color = 'text-dark';
+                        if (str_contains($metodo, 'EFECT')) $dot_color = 'card-title-text';
                         elseif (str_contains($metodo, 'TARJ')) $dot_color = 'text-primary';
                         elseif (str_contains($metodo, 'TRANS')) $dot_color = 'text-warning';
                     ?>
@@ -515,7 +515,7 @@
 
                                 <a href="../../<?= $direccion ?>"
                                    target="_blank"
-                                   class="text-decoration-none text-dark flex-grow-1">
+                                   class="text-decoration-none card-title-text flex-grow-1">
 
                                     <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
 

@@ -75,13 +75,13 @@ body {
     padding: 14px;
     border-bottom: 1px solid #eef0f3;
     font-size: 0.9rem;
-    color: #374151;
+ 
 }
 .table-clientes tbody td {
     padding: 14px;
     border-bottom: 1px solid #eef0f3;
     font-size: 0.9rem;
-    color: #000000 !important;
+  
 }
 
 /* Hover tipo “card highlight” */
@@ -138,7 +138,7 @@ body {
     <div class="main-content">
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="fw-bold text-dark m-0">Historial Ventas Vendedor</h3>
+                <h3 class="fw-bold card-title-text m-0">Historial Ventas Vendedor</h3>
                 <div id="loader" class="spinner-border spinner-border-sm text-secondary d-none"></div>
             </div>
 
@@ -161,7 +161,7 @@ body {
                         </div>
                        <?php if ($puede == true): ?>
 <div class="col-md-2">
-    <label for="select-usuarios" class="form-label fw-bold small text-muted text-uppercase">Vendedor</label>
+    <label for="select-usuarios" class="form-label fw-bold small card-title-text text-uppercase">Vendedor</label>
     <select class="form-select rounded-pill" id="select-usuarios" name="usuario_id" onchange="getVentas()">
        <option value="">Seleccione vendedor</option>
     </select>
@@ -208,16 +208,16 @@ body {
                         </div><div class="col-md-12"> <!-- Ampliado a col-md-3 para que respire mejor el dinero -->
     <div class="d-flex flex-column gap-3">
         <!-- Bloque Total Venta -->
-        <div class="bg-light p-2 px-3 rounded-3 border-start border-primary border-4 shadow-sm">
-            <small class="text-uppercase text-muted fw-bold d-block ls-wide style-label">Total Venta</small>
+        <div class=" p-2 px-3 rounded-3 border-start border-primary border-4 shadow-sm">
+            <small class="text-uppercase card-title-text fw-bold d-block ls-wide style-label">Total Venta</small>
             <span id="venta" class="fs-4 fw-black text-primary d-block mt-1">
                 $0.00
             </span>
         </div>
         
         <!-- Bloque Restante por Cobrar -->
-        <div class="bg-light p-2 px-3 rounded-3 border-start border-danger border-4 shadow-sm">
-            <small class="text-uppercase text-muted fw-bold d-block ls-wide style-label">Por Cobrar</small>
+        <div class=" p-2 px-3 rounded-3 border-start border-danger border-4 shadow-sm">
+            <small class="text-uppercase card-title-text fw-bold d-block ls-wide style-label">Por Cobrar</small>
             <span id="deuda" class="fs-4 fw-black text-danger d-block mt-1">
                 $0.00
             </span>
@@ -232,7 +232,7 @@ body {
               
     <div class="table-responsive" style="max-height: 60vh; min-height: 30vh; overflow-y: auto;">
         <table class="table table-hover align-middle mb-0" id="tablaVentas">
-            <thead class="table-light sticky-top top-0 text-muted fw-semibold uppercase-tracking">
+            <thead class="table-light sticky-top top-0 card-title-text fw-semibold uppercase-tracking">
                 <tr>
                     <th class="ps-4 py-3">Fecha</th>
                     <th class="py-3">Folio</th>
@@ -257,7 +257,7 @@ body {
             </span>
     <div class="table-responsive" style="max-height: 60vh;  overflow-y: auto;">
         <table class="table table-clientes table-hover align-middle mb-0" id="tablaClientes">
-            <thead class="table table-clientes sticky-top top-0 text-muted fw-semibold uppercase-tracking">
+            <thead class="table table-clientes sticky-top top-0 card-title-text fw-semibold uppercase-tracking">
                 <tr>
                     <th class="ps-4 py-3">ID</th>
                     <th class="py-3">Cliente</th>
@@ -290,15 +290,15 @@ body {
                 <div class="row g-0">
 
                     <!-- SIDEBAR -->
-                    <div class="col-md-3 bg-light border-end p-4">
+                    <div class="col-md-3 border-end p-4">
 
                         <div class="mb-3">
-                            <small class="text-uppercase text-muted fw-bold">Cliente</small>
+                            <small class="text-uppercase card-title-text fw-bold">Cliente</small>
                             <div id="detCliente" class="fw-semibold"></div>
                         </div>
 
                         <div class="mb-4">
-                            <small class="text-uppercase text-muted fw-bold">Almacén</small>
+                            <small class="text-uppercase card-title-text fw-bold">Almacén</small>
                             <div id="detAlmacen" class="fw-semibold"></div>
                         </div>
 
@@ -307,7 +307,7 @@ body {
                             <div class="card-body text-center">
 
                                 <div class="mb-3">
-                                    <small class="text-uppercase text-muted fw-bold d-block">
+                                    <small class="text-uppercase card-title-text fw-bold d-block">
                                         Total de Venta
                                     </small>
                                     <span id="detTotalLabel" class="fs-5 fw-bold text-primary">
@@ -318,7 +318,7 @@ body {
                                 <hr>
 
                                 <div>
-                                    <small class="text-uppercase text-muted fw-bold d-block">
+                                    <small class="text-uppercase card-title-text fw-bold d-block">
                                         Saldo Pendiente
                                     </small>
                                     <span id="detSaldoLabel" class="fs-4 fw-bold text-danger">
@@ -338,7 +338,7 @@ body {
 
                         <!-- DETALLE PRODUCTOS -->
                         <div class="card border-0 shadow-sm mb-3">
-                            <div class="card-header bg-white fw-bold small text-uppercase text-muted">
+                            <div class="card-header fw-bold small text-uppercase card-title-text">
                                 Productos
                             </div>
                             <div class="table-responsive" style="max-height: 180px;">
@@ -362,7 +362,7 @@ body {
                             <!-- HISTORIAL PAGOS -->
                             <div class="col-12">
                                 <div class="card border-0 shadow-sm">
-                                    <div class="card-header bg-white fw-bold small text-uppercase text-muted">
+                                    <div class="card-header  fw-bold small text-uppercase card-title-text">
                                         Historial de Pagos
                                     </div>
                                     <div class="table-responsive" style="max-height: 180px;">
@@ -384,7 +384,7 @@ body {
                             <!-- HISTORIAL ENTREGAS (OCULTO LO RESPETÉ) -->
                             <div class="col-12 d-none">
                                 <div class="card border-0 shadow-sm">
-                                    <div class="card-header bg-white fw-bold small text-uppercase text-muted">
+                                    <div class="card-header bg-white fw-bold small text-uppercase card-title-text">
                                         Historial de Entregas
                                     </div>
                                     <div class="table-responsive" style="max-height: 180px;">
@@ -406,7 +406,7 @@ body {
                             <!-- REPARTOS (OCULTO) -->
                             <div class="col-12 d-none">
                                 <div class="card border-0 shadow-sm">
-                                    <div class="card-header bg-white fw-bold small text-uppercase text-muted">
+                                    <div class="card-header bg-white fw-bold small text-uppercase card-title-text">
                                         Repartos
                                     </div>
                                     <div class="table-responsive" style="max-height: 220px;">
@@ -550,8 +550,8 @@ let agregarPago = (saldo <= 0) ?
     <td class="align-middle"><span class="badge bg-light text-dark border fw-normal">${v.almacen_nombre}</span></td>
     <td class="align-middle"><div class="small fw-bold">${v.vendedor}</div></td>
     <td class="align-middle"><div class="small fw-bold">${v.cliente}</div></td>
-    <td class="fw-bold text-dark align-middle">${factura}</td>
-    <td class="fw-bold text-dark align-middle">$${total.toFixed(2)}</td>
+    <td class="fw-bold card-title-text align-middle">${factura}</td>
+    <td class="fw-bold card-title-text align-middle">$${total.toFixed(2)}</td>
     <td class="align-middle">
         ${v.estado_general == 'activa' ? badgeCobro : '<span class="text-danger small fw-bold"><i class="bi bi-x-circle-fill me-1"></i>Cancelado</span>'}
     </td>
@@ -608,7 +608,7 @@ const resultado = agruparVentasPorCliente(data.data);
     <td class="align-middle"><span class="badge bg-light text-dark border fw-normal">${v.cliente}</span></td>
     <td class="align-middle"><div class="small text-center fw-bold">${v.total_compro}</div></td>
     <td class="align-middle"><div class="small text-center fw-bold">${v.total_cobrado}</div></td>
-    <td class="fw-bold text-dark align-middle text-center">${(v.total_debe*(-1))}</td>
+    <td class="fw-bold card-title-text align-middle text-center">${(v.total_debe*(-1))}</td>
     
   
     
@@ -794,11 +794,11 @@ if (data.info.estado_general === 'cancelada') {
 
                     // Lo que se verá grande en la celda
                     visualizacionVenta =
-                        `<span class="fw-bold">${totalUnidadesStr} ${p.unidad_reporte}</span> <br> <small class="text-muted">(${cant} ${p.unidad_medida})</small>`;
+                        `<span class="fw-bold">${totalUnidadesStr} ${p.unidad_reporte}</span> <br> <small class="card-title-text">(${cant} ${p.unidad_medida})</small>`;
 
                     // Leyenda pequeña debajo del nombre del producto (opcional, para referencia)
                     infoEquivalenciaSub =
-                        `<div class="text-muted small" style="font-size: 0.65rem;">1 ${p.unidad_reporte} = ${factor} ${p.unidad_medida}</div>`;
+                        `<div class="card-title-text small" style="font-size: 0.65rem;">1 ${p.unidad_reporte} = ${factor} ${p.unidad_medida}</div>`;
                 } else {
                     // Si no llega al factor (Ej: 10 bultos) mostramos la unidad normal
                     //agregar observaciones en ticket 
@@ -808,7 +808,7 @@ if (data.info.estado_general === 'cancelada') {
 
                 return `<tr>
         <td>
-            <div class="fw-bold text-dark">${p.producto}</div>
+            <div class="fw-bold card-title-text">${p.producto}</div>
             ${infoEquivalenciaSub}
         </td>
         <td class="text-center">
@@ -861,7 +861,7 @@ if (data.info.estado_general === 'cancelada') {
 
                         visualizacionHistorial = `
             <span class="fw-bold text-primary">${totalUnidadesStrH} ${uReporteH}</span> 
-            <br> <small class="text-muted">(${cantH} ${uMedidaH})</small>
+            <br> <small class="card-title-text">(${cantH} ${uMedidaH})</small>
         `;
                     } else {
                         // Aquí verás si unidad_medida viene vacío desde la base de datos
@@ -880,7 +880,7 @@ if (data.info.estado_general === 'cancelada') {
         </td>
     </tr>`;
                 }).join('') :
-                '<tr><td colspan="4" class="text-center text-muted p-3">No hay entregas registradas</td></tr>');
+                '<tr><td colspan="4" class="text-center card-title-text p-3">No hay entregas registradas</td></tr>');
 
 
             // --- RENDERIZADO DE HISTORIAL DE PAGOS ---
@@ -891,7 +891,7 @@ if (data.info.estado_general === 'cancelada') {
             <td class="fw-bold text-success">$${parseFloat(p.monto).toFixed(2)}</td>
             <td>
                 <span class="badge bg-light text-dark border fw-normal">${p.metodo_pago}</span>
-                <div class="text-muted" style="font-size:0.65rem">Recibió: ${p.usuario_nombre}</div>
+                <div class="card-title-text" style="font-size:0.65rem">Recibió: ${p.usuario_nombre}</div>
             </td>
              <td>
             <span>
@@ -907,7 +907,7 @@ if (data.info.estado_general === 'cancelada') {
     `).join(''));
             } else {
                 $('#tbodyPagos').html(
-                    '<tr><td colspan="3" class="text-center text-muted p-3">No hay abonos registrados</td></tr>'
+                    '<tr><td colspan="3" class="text-center card-title-text p-3">No hay abonos registrados</td></tr>'
                 );
             }
             alternarModo(false);

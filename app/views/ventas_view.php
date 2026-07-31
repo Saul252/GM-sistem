@@ -442,9 +442,7 @@
             </form>
         </div>
     </div>
-    <?php require_once __DIR__ . '/egresosComponets/agregarPoductoModal.php'; ?>
-    <?php require_once __DIR__ . '/clientes/clientesModal.php'; ?>
-
+   
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
@@ -454,10 +452,29 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        recargarProductosEditar();
+          recargarProductosEditar();
+        const selectAlmacen = document.getElementById('almacen_id_editar');
 
+        if (selectAlmacen) {
+            selectAlmacen.addEventListener('change', function(e) {
+                const almacenId = this.value; // ID del almacén seleccionado
+                const textoSeleccionado = this.options[this.selectedIndex].text; // Nombre del almacén
 
+                if (almacenId) {
+                    console.log(`Almacén cambiado a ID: ${almacenId} - ${textoSeleccionado}`);
+                    recargarProductosEditar();
+                   
+                   
+
+                    // 🚀 Coloca aquí la función o lógica que deseas ejecutar
+                    // Ejemplo: cargarProductosPorAlmacen(almacenId);
+                } else {
+                    console.log('Se deseleccionó el almacén');
+                }
+            });
+        }
     });
+
     let totalCalculo=0;
     async function recargarProductosEditar() {
         const id = $('#almacen_id_editar').val();

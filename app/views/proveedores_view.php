@@ -75,7 +75,7 @@
         <div class="card border-0 shadow-sm rounded-4">
 
             <!-- CARD HEADER -->
-            <div class="card-header bg-white border-0 py-3 px-4 d-flex justify-content-between align-items-center">
+            <div class="card-header  border-0 py-3 px-4 d-flex justify-content-between align-items-center">
 
                 <span class="fw-semibold text-muted small">
                     Lista de proveedores
@@ -88,7 +88,7 @@
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0" id="tablaProveedores">
 
-                    <thead class="bg-light">
+                    <thead class="">
                         <tr class="text-muted small">
                             <th class="ps-4">Nombre</th>
                             <th>RFC</th>
@@ -118,7 +118,7 @@
         <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
 
             <!-- HEADER -->
-            <div class="modal-header border-0 bg-white">
+            <div class="modal-header border-0 ">
                 <h5 class="modal-title fw-semibold fs-5" id="tituloModal">
                     ✏️ Editar Proveedor
                 </h5>
@@ -128,7 +128,7 @@
 #formProveedor .card-seccion{
     border: 1px solid #eef1f5;
     border-radius: 18px;
-    background: #fff;
+   
     box-shadow: 0 2px 10px rgba(0,0,0,.04);
     padding: 18px;
     height: 100%;
@@ -172,7 +172,7 @@
 
 #formProveedor .input-group-text{
     border-radius: 14px 0 0 14px;
-    background: #f8fafc;
+  
     border-color: #e4e7ec;
 }
 
@@ -192,7 +192,7 @@
 }
 
 #formProveedor .header-form{
-    background: linear-gradient(135deg,#4f46e5,#7c3aed);
+    
     border-radius: 18px;
     padding: 18px 22px;
     color: #fff;
@@ -238,7 +238,7 @@
 
                             <select name="almacen_id"
                                 id="almacen_id"
-                                class="form-select <?= $_SESSION['almacen_id']==0 ? '' : 'bg-light' ?>"
+                                class="form-select <?= $_SESSION['almacen_id']==0 ? '' : '' ?>"
                                 <?= $_SESSION['almacen_id'] != 0 ? 'disabled' : '' ?>
                                 >
 
@@ -433,7 +433,7 @@
                             <label class="form-label">Fecha creación</label>
 
                             <input type="text"
-                                class="form-control bg-light"
+                                class="form-control "
                                 id="creado_at"
                                 readonly>
                         </div>

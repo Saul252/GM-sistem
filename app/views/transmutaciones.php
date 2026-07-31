@@ -29,7 +29,8 @@
         <div class="card card-custom mb-4 h-100">
             <div class="card-header-custom">
                 <h6 class="m-0 font-weight-bold text-dark">
-                    <i class="fas fa-book me-2"></i>Guía de Equivalencias Activas<button type="button" class="btn btn-dark btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#modalEquivalencia">
+                    <i class="fas fa-book me-2"></i>Guía de Equivalencias Activas
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalEquivalencia">
                 <i class="fas fa-cog me-1"></i> Nueva Regla
             </button>
                 </h6>

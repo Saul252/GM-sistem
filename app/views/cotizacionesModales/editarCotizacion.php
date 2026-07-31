@@ -5,9 +5,9 @@
                 <input type="hidden" id="editar_cotizacion_id" name="cotizacion_id" value="">
 
                 <!-- Encabezado -->
-                <div class="modal-header bg-white border-0 pt-4 px-4 align-items-center">
+                <div class="modal-header  border-0 pt-4 px-4 align-items-center">
                     <div class="d-flex align-items-center">
-                        <div class="bg-warning text-dark rounded-3 p-2 me-3 shadow-sm">
+                        <div class="bg-warning card-title-text rounded-3 p-2 me-3 shadow-sm">
                             <i class="bi bi-pencil-square fs-4"></i>
                         </div>
                         <div>
@@ -20,7 +20,7 @@
 
                 <div class="modal-body px-4">
                     <!-- Fila de Controles -->
-                    <div class="row g-3 mb-4 p-4 rounded-4 bg-white shadow-sm align-items-end border">
+                    <div class="row g-3 mb-4 p-4 rounded-4  shadow-sm align-items-end border">
 
                         <!-- 1. Almacén de Cargo -->
                         <div class="col-md-6 col-lg-3 min-w-0">
@@ -96,9 +96,9 @@
 
                     </div>
 
-                   <div class="table-responsive border rounded-4 bg-white">
+                   <div class="table-responsive border rounded-4 ">
                         <table class="table align-middle mb-0" id="tablaDetalleEditar">
-                            <thead class="bg-light">
+                            <thead class="">
                                 <tr class="text-muted small uppercase">
                                     <th class="ps-4" style="width: 45%;">Producto</th>
                                     <th style="width: 20%;">Cantidad</th>
@@ -138,7 +138,7 @@
                 </div>
 
                 <!-- Footer -->
-                <div class="modal-footer border-0 p-4 bg-light d-flex justify-content-between align-items-center" id="modal-footer">
+                <div class="modal-footer border-0 p-4  d-flex justify-content-between align-items-center" id="modal-footer">
                     <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-semibold" data-bs-dismiss="modal">
                         Cancelar
                     </button>
@@ -149,7 +149,7 @@
                             <i class="bi bi-cart-check me-2"></i> Convertir a Venta
                         </button>
 
-                        <button type="submit" class="btn btn-warning rounded-pill px-4 py-2.5 fw-bold shadow-sm text-dark d-flex align-items-center">
+                        <button type="submit" class="btn btn-warning rounded-pill px-4 py-2.5 fw-bold shadow-sm card-title-text d-flex align-items-center">
                             <i class="bi bi-check2-circle me-2"></i> Actualizar Cotización
                         </button>
                     </div>
@@ -457,7 +457,7 @@ $('#buscadorProductosEditar').on('select2:select', function(e) {
                 type="number"
                 lang="en-US"
                 name="itemsEditar[${id}][precio]"
-                class="form-control precio-total-editar fw-bold text-success bg-light"
+                class="form-control precio-total-editar fw-bold text-success "
                 step="0.01"
                 min="0"
                 placeholder="0.00"
@@ -726,7 +726,7 @@ async function gestionarSolicitud(id) {
                         type="number"
                         lang="en-US"
                         name="itemsEditar[${prodId}][precio]"
-                        class="form-control precio-total-editar fw-bold text-success bg-light"
+                        class="form-control precio-total-editar fw-bold text-success "
                         step="0.01"
                         min="0"
                         value="${parseFloat(i.subtotal).toFixed(2)}"

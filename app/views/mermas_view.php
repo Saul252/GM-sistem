@@ -21,7 +21,7 @@
         body { 
             background-color: var(--apple-gray); 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            color: #1d1d1f;
+           
         }
 
         .main-content { 
@@ -35,7 +35,7 @@
             border: none; 
             border-radius: 20px; 
             box-shadow: 0 4px 24px rgba(0,0,0,0.04); 
-            background: rgba(255, 255, 255, 0.8);
+            
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255,255,255,0.3);
@@ -44,7 +44,7 @@
         .header-title {
             font-weight: 600;
             letter-spacing: -0.02em;
-            color: #1d1d1f;
+           
         }
 
         /* Inputs Estilo iOS/macOS */
@@ -216,7 +216,7 @@
                     </span>
                 </td>
                 <td class="pe-4 text-end">
-                    <div class="small fw-medium text-dark"><?= htmlspecialchars($m['responsable'] ?? 'S/R') ?></div>
+                    <div class="small fw-medium card-title-text"><?= htmlspecialchars($m['responsable'] ?? 'S/R') ?></div>
                 </td>
             </tr>
             <?php endforeach; ?>

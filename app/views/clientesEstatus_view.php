@@ -20,14 +20,14 @@
 
     <style>
         :root { --sidebar-width: 260px; --navbar-height: 65px; }
-        body { background-color: #f4f7f6; }
+       
         .main-content { 
             margin-left: var(--sidebar-width); 
             padding: 40px; 
             padding-top: calc(var(--navbar-height) + 20px); 
             transition: all 0.3s ease; 
         }
-        .card-table { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); background: white; }
+        .card-table { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
         .bg-gradient-dark { background: linear-gradient(45deg, #212529, #343a40); }
         .text-warning-dark { color: #856404; }
         @media (max-width: 768px) { .main-content { margin-left: 0; padding: 20px; padding-top: 90px; } }
@@ -179,7 +179,7 @@ console.log(clientes);
 }
                                 badgeEntrega = pEntregas > 0 
                                     ? `<span class="badge bg-warning-subtle text-warning-dark border border-warning-subtle rounded-pill px-3">PENDIENTE (${pEntregas})</span>` 
-                                    : '<span class="badge bg-light text-muted border rounded-pill px-3 text-uppercase small">Completo</span>';
+                                    : '<span class="badge  text-muted border rounded-pill px-3 text-uppercase small">Completo</span>';
                                 
                                 // CORRECCIÓN AQUÍ: Apuntamos al controlador del expediente con el ID del cliente
     btnAccion = `<a href="/cfsistem/app/controllers/clienteExpedienteController.php?id=${c.id}" 
@@ -191,7 +191,7 @@ console.log(clientes);
                             html += `
                             <tr>
                                 <td>
-                                    <div class="fw-bold text-dark">${c.nombre}</div>
+                                    <div class="fw-bold card-title-text">${c.nombre}</div>
                                     <small class="text-muted font-monospace">${c.rfc}</small>
                                 </td>
                                 <td class="text-center">${badgePago}</td>

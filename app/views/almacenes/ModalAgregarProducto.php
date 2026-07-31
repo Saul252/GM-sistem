@@ -1,6 +1,6 @@
 <div class="modal fade" id="modalAgregarProducto" tabindex="-1">
     <div class="modal-dialog modal-xl">
-        <div class="modal-content shadow-lg border-0">
+        <div class="modal-content shadow-lg ">
             <div class="modal-header bg-success text-white">
                 <h5 class="modal-title"><i class="bi bi-box-seam me-2"></i> Nuevo Producto y Entrada de Almacén</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -13,7 +13,7 @@
                    <div class="row g-4 align-items-start">
     <!-- Bloque de Identificación Principal -->
     <div class="col-lg-8">
-        <div class="card border-0 bg-light shadow-sm">
+        <div class="card  border border-subtle shadow-sm">
             <div class="card-body p-4">
                 <h6 class="text-uppercase text-muted fw-bold mb-4" style="font-size: 0.75rem; letter-spacing: 1px;">
                     Información General
@@ -23,14 +23,14 @@
                  <div class="col-md-3">
     <label class="form-label small fw-bold text-dark">SKU</label>
     <input type="text" id="input_sku" name="sku"
-        class="form-control border-0 shadow-sm"
+        class="form-control  shadow-sm"
         placeholder="Ej: AL-25" required>
 </div>
 
 <div class="col-md-9">
     <label class="form-label small fw-bold text-dark">Nombre del Producto</label>
     <input type="text" id="input_nombre" name="nombre"
-        class="form-control border-0 shadow-sm"
+        class="form-control  shadow-sm"
         placeholder="Ej: Alambre calibre 25" required>
 </div>
 
@@ -38,7 +38,7 @@
                     <div class="col-md-12">
                         <label class="form-label small fw-bold text-dark">Categoría</label>
                         <div class="input-group shadow-sm">
-                            <select name="categoria_id" id="edit_categoria" class="form-select border-0">
+                            <select name="categoria_id" id="edit_categoria" class="form-select ">
                                 <option value="" selected disabled>Seleccionar categoría...</option>
                                 <?php foreach($categorias as $cat): ?>
                                 <option value="<?= $cat['id'] ?>"><?= $cat['nombre'] ?></option>
@@ -53,7 +53,7 @@
                     <!-- Descripción -->
                     <div class="col-12">
                         <label class="form-label small fw-bold text-dark">Descripción Corta</label>
-                        <textarea name="description" class="form-control text-uppercase border-0 shadow-sm" rows="2" 
+                        <textarea name="description" class="form-control text-uppercase  shadow-sm" rows="2" 
                                   placeholder="Detalles adicionales del producto..."></textarea>
                     </div>
                 </div>
@@ -63,7 +63,7 @@
 
     <!-- Bloque de Costos (Sidebar) -->
     <div class="col-lg-4">
-        <div class="card border-0 bg-danger bg-opacity-10 shadow-sm h-100">
+        <div class="card  bg-danger bg-opacity-10 shadow-sm h-100">
             <div class="card-body p-4">
                 <h6 class="text-uppercase text-danger fw-bold mb-4" style="font-size: 0.75rem; letter-spacing: 1px;">
                     Análisis de Costo
@@ -72,13 +72,13 @@
                 <div class="mb-3">
                     <label class="form-label small fw-bold text-danger">PRECIO DE COMPRA (LOTE)</label>
                     <div class="input-group input-group-lg shadow-sm">
-                        <span class="input-group-text bg-danger text-white border-0">$</span>
+                        <span class="input-group-text bg-danger text-white ">$</span>
                         <input type="number" name="precio_adquisicion"
-                            class="form-control border-0 fw-bold text-danger" value="0"step="0.01" placeholder="0.00" required>
+                            class="form-control  fw-bold text-danger" value="0"step="0.01" placeholder="0.00" required>
                     </div>
                 </div>
 
-                <div class="p-3 bg-white rounded-3 border-start border-danger border-4 shadow-sm">
+                <div class="p-3 border border-subtlee rounded-3 border-start border-danger border-4 shadow-sm">
                     <p class="mb-0 text-muted" style="font-size: 0.8rem; line-height: 1.4;">
                         <i class="bi bi-info-circle-fill text-danger me-1"></i>
                         Este valor define el <strong>costo real del lote</strong>. Es fundamental para el cálculo automático de tus márgenes de ganancia.
@@ -114,9 +114,9 @@
 
                     
 <!-- Card Principal -->
-<div class="card border-0 shadow-sm mb-4">
+<div class="card  shadow-sm mb-4">
     <!-- Encabezado con sutil contraste -->
-    <div class="card-header bg-white border-0 pt-4 pb-0">
+    <div class="card-header border border-subtlee  pt-4 pb-0">
         <div class="d-flex align-items-center">
             <div class="p-2 bg-warning bg-opacity-10 rounded-3 me-3">
                 <i class="bi bi-calculator-fill text-warning fs-4"></i>
@@ -133,12 +133,12 @@
             
             <!-- Bloque de Selección de Unidades -->
             <div class="col-lg-7">
-                <div class="p-3 bg-light rounded-3 border">
+                <div class="p-3 border border-subtle rounded-3 border">
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-bold text-secondary">UNIDAD DE COMPRA</label>
                             <select name="unidad_reporte" id="unidad_medida_compra"
-                                class="form-select border-0 shadow-sm fw-bold">
+                                class="form-select  shadow-sm fw-bold">
                                 <option value="">Seleccione...</option>
                                 <?php foreach($unidadesMedida as $ur): ?>
                                 <option value="<?= trim($ur['clave']) ?>">
@@ -150,7 +150,7 @@
                         <div class="col-md-6">
                             <label class="form-label small fw-bold text-secondary">UNIDAD BASE (VENTA)</label>
                             <select name="unidad_medida" id="unidad_medida"
-                                class="form-select border-0 shadow-sm fw-bold">
+                                class="form-select  shadow-sm fw-bold">
                                 <option value="">Seleccione...</option>
                                 <?php foreach($unidadesMedida as $j): ?>
                                 <option value="<?= trim($j['clave']) ?>">
@@ -191,7 +191,7 @@
 
             <!-- Panel de Resultado (Full Width) -->
             <div class="col-12 mt-4">
-                <div class="card bg-dark text-white border-0 shadow">
+                <div class="card bg-dark text-white  shadow">
                     <div class="card-body py-2 px-4 d-flex justify-content-between align-items-center">
                         <div class="d-flex align-items-center">
                             <div class="vr me-3 opacity-50" style="height: 40px; width: 3px; background: #ffc107;"></div>
@@ -268,7 +268,7 @@
                 </div>
 <!-- Botón para Crear -->
 
-     <div class="modal-footer bg-light">
+     <div class="modal-footer border border-subtle">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
                     <button type="submit" id="btnGuardarProducto" class="btn btn-success px-5 fw-bold shadow">
                         <i class="bi bi-save me-2"></i> GUARDAR PRODUCTO

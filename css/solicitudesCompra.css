@@ -9,7 +9,7 @@
     body {
         background-color: var(--bg-light);
         font-family: 'Inter', sans-serif;
-        color: #334155;
+       
     }
 
     .main-content {
@@ -18,9 +18,13 @@
         min-height: 100vh;
         transition: all 0.3s;
     }
+    .text-1{
+        color:var(--bg-light);
+
+    }
 
     .glass-card {
-        background: #ffffff;
+      
         border: 1px solid rgba(0, 0, 0, 0.05);
         border-radius: 1.25rem;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);

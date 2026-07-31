@@ -68,7 +68,7 @@
                                 <input type="hidden" name="cantidad" id="cantidad_traspaso_final" required>
 
                                 <div id="resumen_conversion"
-                                    class="mt-2 p-2 rounded bg-light border-start border-4 border-primary"
+                                    class="mt-2 p-2 rounded border border-subtle border-start border-4 border-primary"
                                     style="display:none; font-size: 0.9rem;">
                                     <strong>Movimiento total:</strong> <span id="txt_total_pzas">0</span> <span id="unidadF"></span>
                                 </div>
@@ -100,7 +100,7 @@
                 </div>
                 <div class="modal-body">
                     <?php if($_SESSION['rol_id'] == 1): ?>
-                    <div class="row mb-4 bg-light p-3 rounded border">
+                    <div class="row mb-4 border-subtle p-3 rounded border">
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Ver movimientos del Almacén:</label>
                             <select id="admin_filtro_almacen" class="form-select" onchange="cargarTraspasos()">

@@ -3,7 +3,7 @@
         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
             <form id="formSolicitud">
                 <!-- Encabezado -->
-                <div class="modal-header bg-white border-0 pt-4 px-4 align-items-center">
+                <div class="modal-header  border-0 pt-4 px-4 align-items-center">
                     <div class="d-flex align-items-center">
                         <div class="bg-primary text-white rounded-3 p-2 me-3 shadow-sm">
                             <i class="bi bi-file-earmark-plus fs-4"></i>
@@ -18,7 +18,7 @@
 
                 <div class="modal-body px-4">
                     <!-- Fila de Controles -->
-                    <div class="row g-3 mb-4 p-4 rounded-4 bg-white shadow-sm align-items-end border">
+                    <div class="row g-3 mb-4 p-4 rounded-4  shadow-sm align-items-end border">
                         
                         <!-- 1. Almacén de Cargo -->
                         <div class="col-md-6 col-lg-3 min-w-0">
@@ -94,9 +94,9 @@
                     </div>
 
                     <!-- Tabla de Detalle -->
-                   <div class="table-responsive border rounded-4 bg-white">
+                   <div class="table-responsive border rounded-4 ">
                         <table class="table align-middle mb-0" id="tablaDetalle">
-                            <thead class="bg-light">
+                            <thead class="">
                                 <tr class="text-muted small uppercase">
                                     <th class="ps-4" style="width: 45%;">Producto</th>
                                     <th style="width: 20%;">Cantidad</th>
@@ -136,7 +136,7 @@
                 </div>
 
                 <!-- Footer -->
-                <div class="modal-footer border-0 p-4 bg-light d-flex justify-content-between align-items-center">
+                <div class="modal-footer border-0 p-4  d-flex justify-content-between align-items-center">
                     <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-semibold" data-bs-dismiss="modal">
                         Cancelar
                     </button>
@@ -545,7 +545,7 @@ $('#buscadorProductos').on('select2:select', function(e) {
             type="number"
             lang="en-US"
             name="items[${id}][precio]"
-            class="form-control precio-total fw-bold text-success bg-light"
+            class="form-control precio-total fw-bold text-success "
             step="0.01"
             min="0"
             placeholder="0.00"

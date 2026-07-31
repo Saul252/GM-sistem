@@ -17,7 +17,7 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
             </div>
 
             <form id="formNuevaCompra" enctype="multipart/form-data" autocomplete="off">
-                <div class="modal-body bg-light">
+                <div class="modal-body  border-subtle">
                     <div class="card mb-4 border-0 shadow-sm">
                         <div class="card-body">
 
@@ -66,7 +66,7 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
 
                                     <div class="input-group shadow-sm">
                                         <select id="almacen_id_cabecera_visual"
-                                            class="form-select <?= $es_admin ? '' : 'bg-light' ?>"
+                                            class="form-select <?= $es_admin ? '' : 'border border-subtle' ?>"
                                             <?= !$es_admin ? 'disabled' : 'name="almacen_id_cabecera"' ?> required>
 
                                             <?php if ($es_admin): ?>
@@ -82,7 +82,7 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
                                         </select>
 
                                         <?php if (!$es_admin): ?>
-                                        <span class="input-group-text bg-light text-muted">
+                                        <span class="input-group-text border border-subtle text-muted">
                                             <i class="bi bi-lock-fill"></i>
                                         </span>
                                         <?php endif; ?>
@@ -128,7 +128,7 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
                                 <!-- TOTAL -->
                                 <div class="col-md-3">
                                     <label class="form-label small fw-bold text-muted">TOTAL FACTURA</label>
-                                    <div class="bg-light border rounded-3 p-2 text-center shadow-sm">
+                                    <div class="border border-subtle border rounded-3 p-2 text-center shadow-sm">
                                         <span class="h4 text-success fw-bold m-0" id="granTotalCompra">$ 0.00</span>
                                     </div>
                                 </div>
@@ -153,7 +153,7 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
                     </div>
                 </div>
 
-                <div class="modal-footer bg-white shadow-sm">
+                <div class="modal-footer border border-subtle shadow-sm">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-success px-5" id="btnGuardarCompra"
                         onclick="procesarGuardadoCompra(); return false;">

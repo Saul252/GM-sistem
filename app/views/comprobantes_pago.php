@@ -26,11 +26,11 @@ error_reporting(E_ALL);
 <body>
     <?php renderizarLayout($paginaActual); ?>
 
-    <main class="main-content">
+    <main class="main-content border border-subtle">
 
-        <div class="glass-card p-4 mb-4">
+        <div class="glass-card p-4 mb-1">
 
-            <div class="row align-items-center mb-5">
+            <div class="row align-items-center ">
                 <div class="col-md-8">
                     <h1 class="h3 fw-bold mb-1">Comprobante de pago</h1>
                     <p class="text-muted small">Gestión de Comprobate de pago</p>
@@ -43,7 +43,7 @@ error_reporting(E_ALL);
                 </div>
             </div>
 
-           <div class="row g-3 align-items-end">
+           <div class="row g-3 align-items-end  mb-3 p-3">
 
         <!-- Fecha Inicio -->
         <div class="col-lg-2 col-md-6">
@@ -55,7 +55,7 @@ error_reporting(E_ALL);
                 type="date"
                 id="fechaInicio"
                 value="<?= date('Y-m-01') ?>"
-                class="form-control border-0 bg-light shadow-sm"
+                class="form-control border-0 border border-subtle shadow-sm"
                 style="border-radius:12px;">
         </div>
 
@@ -69,7 +69,7 @@ error_reporting(E_ALL);
                 type="date"
                 id="fechaFin"
                 value="<?= date('Y-m-d') ?>"
-                class="form-control border-0 bg-light shadow-sm"
+                class="form-control border-0 border border-subtle shadow-sm"
                 style="border-radius:12px;">
         </div>
 
@@ -79,7 +79,7 @@ error_reporting(E_ALL);
                 Almacén
             </label>
 
-            <select id="filtroAlmacen" class="form-select border-0 bg-light shadow-sm"
+            <select id="filtroAlmacen" class="form-select border-0 border border-subtle shadow-sm"
                 style="border-radius:12px;">
 
               <?php if (isset($es_admin) && $es_admin): ?>
@@ -117,14 +117,14 @@ error_reporting(E_ALL);
 
             <div class="input-group shadow-sm">
 
-                <span class="input-group-text bg-light border-0">
+                <span class="input-group-text border border-subtle border-0">
                     <i class="bi bi-search text-secondary"></i>
                 </span>
 
                 <input
                     type="text"
                     id="buscadorGeneral"
-                    class="form-control border-0 bg-light"
+                    class="form-control border-0 border border-subtle"
                     placeholder="Folio o Cliente">
 
             </div>
@@ -135,7 +135,7 @@ error_reporting(E_ALL);
 </div>
         </div>
 
-      <div class="glass-card p-4">
+      <div class="glass-card p-4 border border-subtle">
     <div class="table-responsive">
         <table class="table align-middle w-100">
             <thead>

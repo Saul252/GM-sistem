@@ -68,7 +68,7 @@ error_reporting(E_ALL);
                 type="date"
                 id="fechaInicio"
                 value="<?= date('Y-m-01') ?>"
-                class="form-control border-0 bg-light shadow-sm"
+                class="form-control border-0 border border-subtle shadow-sm"
                 style="border-radius:12px;">
         </div>
 
@@ -82,7 +82,7 @@ error_reporting(E_ALL);
                 type="date"
                 id="fechaFin"
                 value="<?= date('Y-m-d') ?>"
-                class="form-control border-0 bg-light shadow-sm"
+                class="form-control border-0 border border-subtle shadow-sm"
                 style="border-radius:12px;">
         </div>
 
@@ -92,7 +92,7 @@ error_reporting(E_ALL);
                 Almacén
             </label>
 
-            <select id="filtroAlmacen" class="form-select border-0 bg-light shadow-sm"
+            <select id="filtroAlmacen" class="form-select border-0 border border-subtle shadow-sm"
                 style="border-radius:12px;">
                  <?php if (isset($es_admin) && $es_admin): ?>
 
@@ -135,14 +135,14 @@ error_reporting(E_ALL);
 
             <div class="input-group shadow-sm">
 
-                <span class="input-group-text bg-light border-0">
+                <span class="input-group-text border border-subtle border-0">
                     <i class="bi bi-search text-secondary"></i>
                 </span>
 
                 <input
                     type="text"
                     id="buscadorGeneral"
-                    class="form-control border-0 bg-light"
+                    class="form-control border-0 border border-subtle"
                     placeholder="Folio o Proveedor">
 
             </div>
@@ -194,13 +194,13 @@ error_reporting(E_ALL);
 
     <input type="hidden" name="solicitud_id" id="uni-solicitud-id">
 
-    <div class="modal-body bg-light px-4 py-4">
+    <div class="modal-body border border-subtle px-4 py-4">
 
         <!-- ====================================== -->
         <!-- CARD PRINCIPAL -->
         <!-- ====================================== -->
 
-        <div class="bg-white rounded-4 shadow-sm p-4 mb-4 border">
+        <div class="rounded-4 shadow-sm p-4 mb-4 border">
 
             <!-- HEADER -->
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -259,7 +259,7 @@ error_reporting(E_ALL);
 
                     <input 
                         type="text"
-                        class="form-control rounded-3 shadow-sm bg-light fw-bold"
+                        class="form-control rounded-3 shadow-sm border border-subtle fw-bold"
                         value="<?= htmlspecialchars($almacenes[0]['nombre'] ?? 'Almacén Asignado') ?>"
                         readonly
                     >
@@ -285,7 +285,7 @@ error_reporting(E_ALL);
                     <input 
                         type="text"
                         id="uni-proveedor"
-                        class="form-control rounded-3 shadow-sm bg-light fw-bold"
+                        class="form-control rounded-3 shadow-sm border border-subtle fw-bold"
                         readonly
                     >
 
@@ -445,9 +445,9 @@ error_reporting(E_ALL);
         <!-- TABLA -->
         <!-- ====================================== -->
 
-        <div class="bg-white rounded-4 shadow-sm border overflow-hidden">
+        <div class=" rounded-4 shadow-sm border overflow-hidden">
 
-            <div class="p-3 border-bottom bg-light">
+            <div class="p-3 border-bottom border border-subtle">
 
                 <h6 class="fw-bold mb-1">
                     <i class="bi bi-box-seam me-2 text-success"></i>
@@ -494,7 +494,7 @@ error_reporting(E_ALL);
     <!-- FOOTER -->
     <!-- ====================================== -->
 
-    <div class="modal-footer bg-light border-0 px-4 pb-4">
+    <div class="modal-footer border border-subtle border-0 px-4 pb-4">
 
         <button 
             type="button"
@@ -708,7 +708,7 @@ error_reporting(E_ALL);
             </div>
 
             <!-- FOOTER -->
-            <div class="modal-footer bg-light border-0">
+            <div class="modal-footer border border-subtle border-0">
                 <button class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">
                     Cerrar
                 </button>
@@ -1077,7 +1077,7 @@ async function cargarSolicitudes() {
             // Se va acumulando dinámicamente la estructura completa de la fila actual dentro de 'tablaHTML'
             tablaHTML += `
                 <tr>
-                    <td><span class="text-dark fw-bold">#${folio}</span></td>
+                    <td><span class=" fw-bold">#${folio}</span></td>
                     <td class="text-muted small">${fechaFormateada}</td>
                     <td class="fw-medium">${escapeHtml(s.proveedor_nombre || 'Sin asignar')}</td>
                     <td><span class="badge bg-light text-dark border">${escapeHtml(s.almacen_nombre || '')}</span></td>
@@ -1089,7 +1089,7 @@ async function cargarSolicitudes() {
                         <button class="btn btn-sm btn-white border shadow-sm rounded-pill px-3"
                             onclick="prepararImpresion(${s.id})" title="Imprimir solicitud">
                             <i class="bi bi-printer text-primary me-1"></i>
-                            <span class="text-dark fw-medium">Imprimir</span>
+                            <span class="fw-medium">Imprimir</span>
                         </button>
                     </td>
                 </tr>
@@ -1276,13 +1276,13 @@ if (deuda <= 0) {
 
     $('#input_pagar_deuda')
         .prop('disabled', true)
-        .addClass('bg-light');
+       
 
 } else {
 
     $('#input_pagar_deuda')
         .prop('disabled', false)
-        .removeClass('bg-light');
+      
 }
 const almacenInput = document.getElementById('almacen_id2');
 
