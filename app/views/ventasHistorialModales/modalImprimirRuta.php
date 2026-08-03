@@ -87,12 +87,12 @@ let cantidad=(1/prod.equi)==1?totalCantidad/prod.factor:totalCantidad/(1/prod.eq
 
         filas += `
             <tr>
-                <td class="text-muted fw-semibold">${i + 1}</td>
+                <td class="text-body-secondary fw-semibold">${i + 1}</td>
                 <td style="max-width:350px;" class="fw-medium text-dark">${prod.nombreProducto}</td>
                 <td style="max-width:250px;" class="fw-bold text-primary">
-                    ${parseFloat(cantidad).toFixed(2)} <span class="text-muted fw-normal small">${unidad}</span>
+                    ${parseFloat(cantidad).toFixed(2)} <span class="text-body-secondary fw-normal small">${unidad}</span>
                 </td>
-                <td style="max-width:250px;" class="text-muted small">${prod.direccion_entrega ?? '-'}</td>
+                <td style="max-width:250px;" class="text-body-secondary small">${prod.direccion_entrega ?? '-'}</td>
                 <td class="text-center">
                     <span class="badge ${badgeColor}  text-uppercase font-monospace">${prod.estatus_logistico}</span>
                 </td>
@@ -119,16 +119,16 @@ let cantidad=(1/prod.equi)==1?totalCantidad/prod.factor:totalCantidad/(1/prod.eq
                         <span>🚚</span> Venta ${data.data[0].folio_venta}: Hoja de Ruta
                     </h4>
 
-                    <div class="text-muted small mt-1">
+                    <div class="text-body-secondary small mt-1">
                         Folio de viaje: <span class="fw-bold text-dark font-monospace">${data.data[0].folio_viaje}</span>
-                    </div><div class="text-muted small mt-1">
+                    </div><div class="text-body-secondary small mt-1">
                         Registro de viaje: <span class="fw-bold text-dark font-monospace">${data.data[0].fecha_viaje ?? '-'}</span>
                     </div>
                 </div>
 
                 <div class="text-end">
-                    <div class="small text-muted mb-1">Fecha de Salida:____________________</div>
-                    <div class="small text-muted mb-1">Fecha de llegada:____________________</div>
+                    <div class="small text-body-secondary mb-1">Fecha de Salida:____________________</div>
+                    <div class="small text-body-secondary mb-1">Fecha de llegada:____________________</div>
                 </div>
             </div>
 <style>
@@ -193,7 +193,7 @@ text-transform: uppercase !important;}
     <div class="info-box">
         <div class="info-title">Operador / Chofer</div>
         <div class="info-value">${data.data[0].nombre_chofer ?? '-'}</div>
-        <div class="info-sub mt-1 text-muted">Asignado de ruta</div>
+        <div class="info-sub mt-1 text-body-secondary">Asignado de ruta</div>
     </div>
 
     <div class="info-box">
@@ -231,14 +231,14 @@ text-transform: uppercase !important;}
                         <div class="firma-box">
                             <div class="firma-linea"></div>
                             <div class="firma-nombre">Firma Chofer / Transportista</div>
-                            <div class="text-muted small">Nombre y Fecha</div>
+                            <div class="text-body-secondary small">Nombre y Fecha</div>
                         </div>
                     </div>
                     <div class="col-4">
                         <div class="firma-box">
                             <div class="firma-linea"></div>
                             <div class="firma-nombre">Firma Cliente / Recibe</div>
-                            <div class="text-muted small">Sello y Firma de conformidad</div>
+                            <div class="text-body-secondary small">Sello y Firma de conformidad</div>
                         </div>
                     </div>
                     <div class="col-4">

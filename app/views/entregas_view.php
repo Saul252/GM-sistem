@@ -26,7 +26,7 @@
         body { 
             background-color: var(--apple-bg); 
             font-family: 'SF Pro Display', -apple-system, sans-serif;
-            color: #1d1d1f;
+          
         }
 
         .main-content { 
@@ -167,8 +167,8 @@
             
             <div class="d-flex justify-content-between align-items-end mb-4">
                 <div>
-                    <h2 class="fw-bold m-0 text-dark">Despacho de Materiales</h2>
-                    <p class="text-muted small">Control físico de lotes y entregas en patio</p>
+                    <h2 class="fw-bold m-0 ">Despacho de Materiales</h2>
+                    <p class="text-body-secondary small">Control físico de lotes y entregas en patio</p>
                 </div>
                 <div id="loader" class="spinner-border text-primary d-none" role="status"></div>
             </div>
@@ -176,28 +176,28 @@
 
     <div class="col-md-3">
         <div class="card shadow-sm border-0 rounded-4 p-3 text-center">
-            <div class="small text-muted">Unidades</div>
+            <div class="small text-body-secondary">Unidades</div>
             <div class="fs-4 fw-bold" id="w_unidades">0</div>
         </div>
     </div>
 
     <div class="col-md-3">
         <div class="card shadow-sm border-0 rounded-4 p-3 text-center">
-            <div class="small text-muted">Costo Total</div>
+            <div class="small text-body-secondary">Costo Total</div>
             <div class="fs-4 fw-bold text-danger" id="w_costo">$0</div>
         </div>
     </div>
 
     <div class="col-md-3">
         <div class="card shadow-sm border-0 rounded-4 p-3 text-center">
-            <div class="small text-muted">Ventas</div>
+            <div class="small text-body-secondary">Ventas</div>
             <div class="fs-4 fw-bold text-primary" id="w_venta">$0</div>
         </div>
     </div>
 
     <div class="col-md-3">
         <div class="card shadow-sm border-0 rounded-4 p-3 text-center">
-            <div class="small text-muted">Ganancia</div>
+            <div class="small text-body-secondary">Ganancia</div>
             <div class="fs-4 fw-bold" id="w_ganancia">$0</div>
         </div>
     </div>
@@ -207,8 +207,8 @@
                 <div class="card-body p-4">
                     <form id="formFiltros" class="row g-3 align-items-end">
                         <div class="col-md-3">
-                            <label class="form-label small fw-bold text-muted">PERIODO</label>
-                            <select id="selectorPeriodo" class="form-select border-0 bg-light">
+                            <label class="form-label small fw-bold text-body-secondary">PERIODO</label>
+                            <select id="selectorPeriodo" class="form-select border-0 ">
                                 <option value="hoy" selected>Hoy</option>
                                 <option value="ayer">Ayer</option>
                                 <option value="semana">Últimos 7 días</option>
@@ -217,16 +217,16 @@
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label small fw-bold text-muted">DESDE</label>
+                            <label class="form-label small fw-bold text-body-secondary">DESDE</label>
                             <input type="date" id="f_inicio" class="form-control input-disabled" disabled>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label small fw-bold text-muted">HASTA</label>
+                            <label class="form-label small fw-bold text-body-secondary">HASTA</label>
                             <input type="date" id="f_fin" class="form-control input-disabled" disabled>
                         </div>
                         <div class="col-md-3">
-                            <label class="form-label small fw-bold text-muted">ALMACÉN</label>
-                            <select id="filtroAlmacen" class="form-select border-0 bg-light" <?= ($almacen_usuario > 0) ? 'disabled' : '' ?>>
+                            <label class="form-label small fw-bold text-body-secondary">ALMACÉN</label>
+                            <select id="filtroAlmacen" class="form-select border-0 " <?= ($almacen_usuario > 0) ? 'disabled' : '' ?>>
                                 <?php if($almacen_usuario == 0): ?>
                                     <option value="0">-- Todos los Almacenes --</option>
                                     <?php 
@@ -293,7 +293,7 @@
                     </div>
                 </div>
                 <div class="modal-body p-4" id="documentoPatio"></div>
-                <div class="modal-footer bg-light">
+                <div class="modal-footer ">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" id="btnConfirmarFinal" class="btn btn-primary px-4 fw-bold">
                         <i class="bi bi-check-circle me-1"></i> Generar Entrega
@@ -339,10 +339,10 @@ $(document).ready(function() {
         if(fac > 1 && cant >= fac) {
             const uReporte = Math.floor(cant / fac);
             const resto = Math.round((cant % fac) * 100) / 100;
-            return `<div class="fw-bold text-dark fs-6">${uReporte} ${unidad}</div>` +
-                   (resto > 0 ? `<small class="text-muted">+ ${resto} ${unidad_medida}</small>` : '');
+            return `<div class="fw-bold  fs-6">${uReporte} ${unidad}</div>` +
+                   (resto > 0 ? `<small class="text-body-secondary">+ ${resto} ${unidad_medida}</small>` : '');
         }
-        return `<div class="fw-bold text-dark fs-6">${cant} <small class="fw-normal text-muted">${unidad_medida}</small></div>`;
+        return `<div class="fw-bold  fs-6">${cant} <small class="fw-normal text-body-secondary">${unidad_medida}</small></div>`;
     }
 
 function renderWidgetGanancias(data) {
@@ -443,8 +443,8 @@ function cargarEntregas() {
                     const todoCompletado = (m.total_items === m.items_completados);
                     const algoEnRuta     = (m.items_en_ruta > 0);
 
-                    cantCol = `<div class="text-center text-muted small">${m.total_items} Artículos</div>`;
-                    prodCol = `<b>Venta Consolidada</b><br><small class="text-muted">Folio: ${m.folio_venta}</small>`;
+                    cantCol = `<div class="text-center text-body-secondary small">${m.total_items} Artículos</div>`;
+                    prodCol = `<b>Venta Consolidada</b><br><small class="text-body-secondary">Folio: ${m.folio_venta}</small>`;
 
                     if (todoCompletado) {
                         // Estado: Entrega finalizada para todos los items
@@ -562,11 +562,11 @@ function cargarEntregas() {
                 tabla.row.add([
                     `<span class="ps-3 fw-bold text-secondary">#${m.id}</span>`,
                     `<span class="fw-bold text-primary">${m.folio_venta || '---'}</span>`,
-                    `<span class="text-uppercase fw-semibold" style="color: #48484a; font-size: 0.75rem;">${m.cliente || '---'}</span>`,
-                    `<span class="text-dark small">${m.fecha_format}</span>`,
+                    `<span class="text-uppercase fw-semibold" style=" font-size: 0.75rem;">${m.cliente || '---'}</span>`,
+                    `<span class=" small">${m.fecha_format}</span>`,
                     prodCol,
                     cantCol,
-                    `<div><span class="badge bg-light text-dark border small"><i class="bi bi-geo-alt me-1"></i>${m.origen}</span></div>`,
+                    `<div><span class="badge   border small"><i class="bi bi-geo-alt me-1"></i>${m.origen}</span></div>`,
                     accionHtml
                 ]);
             });
@@ -609,7 +609,7 @@ $('#checkAgruparVenta').on('change', cargarEntregas);
             let html = `
                 <div class="text-center mb-4">
                     <h4 class="mb-1 text-uppercase fw-bold">Hoja de Ruta de Patio</h4>
-                    <p class="text-muted small">Despacho de Material por Lotes (PEPS)</p>
+                    <p class="text-body-secondary small">Despacho de Material por Lotes (PEPS)</p>
                     <div class="mt-2">${textoTotal}</div>
                 </div>
                 <div class="table-responsive">
@@ -628,9 +628,9 @@ $('#checkAgruparVenta').on('change', cargarEntregas);
             res.lotes.forEach(l => {
                 html += `
                     <tr>
-                        <td><code class="text-dark fw-bold">${l.codigo}</code></td>
+                        <td><code class=" fw-bold">${l.codigo}</code></td>
                         <td>${l.fecha_entrada}</td>
-                        <td class="text-end text-muted">${l.cantidad_en_lote} ${l.unidad_medida}</td>
+                        <td class="text-end text-body-secondary">${l.cantidad_en_lote} ${l.unidad_medida}</td>
                         <td class="text-end fw-bold text-primary">-${l.cantidad_a_extraer} ${l.unidad_medida}</td>
                         <td class="text-end">${l.saldo_final <= 0 ? '<span class="badge bg-danger">AGOTADO</span>' : l.saldo_final + l.unidad_medida}</td>
                     </tr>`;
@@ -713,7 +713,7 @@ $('#checkAgruparVenta').on('change', cargarEntregas);
            
                 <div class="text-center mb-4">
                     <h4 class="mb-1 text-uppercase fw-bold">Vale de Entrega (Patio)</h4>
-                    <p class="text-muted small">Folio de Movimiento: #<b>${d.movimiento_id}</b></p>
+                    <p class="text-body-secondary small">Folio de Movimiento: #<b>${d.movimiento_id}</b></p>
                     <div class="mt-2 text-primary fw-bold">${d.cantidad_convertida}</div>
                 </div>
                 
@@ -738,7 +738,7 @@ $('#checkAgruparVenta').on('change', cargarEntregas);
                         </thead>
                         <tbody style="font-size: 0.85rem;">
                             <tr>
-                                <td class="py-2 font-monospace text-dark">${d.detalle_lotes}</td>
+                                <td class="py-2 font-monospace ">${d.detalle_lotes}</td>
                                   <td class="text-end fw-bold text-primary py-2">${(d.cantidad_total/d.factor_conversion)>=1?(d.cantidad_total/d.factor_conversion):d.cantidad_total} ${(d.cantidad_total/d.factor_conversion)>=1?d.unidad_reporte:d.unidad_medida} </td>
                           
                                 
@@ -750,13 +750,13 @@ $('#checkAgruparVenta').on('change', cargarEntregas);
                 <div class="row mt-5 pt-4 text-center">
                     <div class="col-6">
                         <div style="border-top: 1px solid #dee2e6; width: 80%; margin: 0 auto;" class="pt-2">
-                            <small class="text-muted d-block">Despachó (Patio)</small>
+                            <small class="text-body-secondary d-block">Despachó (Patio)</small>
                             <strong class="small">${d.usuario_despacho}</strong>
                         </div>
                     </div>
                     <div class="col-6">
                         <div style="border-top: 1px solid #dee2e6; width: 80%; margin: 0 auto;" class="pt-2">
-                            <small class="text-muted d-block">Recibió (Firma)</small>
+                            <small class="text-body-secondary d-block">Recibió (Firma)</small>
                             <br>
                         </div>
                     </div>
@@ -867,9 +867,9 @@ window.verDetalleGanancia = function(id) {
 </style>
                                 <td class="font-monospace text-start ps-2">${c[0]}</td>
                                 <td>${cant}</td>
-                                <td class="text-end text-muted">$ ${cost.toFixed(2)}</td>
+                                <td class="text-end text-body-secondary">$ ${cost.toFixed(2)}</td>
                                 <td class="text-end">$ ${prec.toFixed(2)}</td>
-                                <td class="text-end text-muted">$ ${subC.toFixed(2)}</td>
+                                <td class="text-end text-body-secondary">$ ${subC.toFixed(2)}</td>
                                 <td class="text-end fw-bold">$ ${subV.toFixed(2)}</td>
                                 <td class="text-end fw-bold ${util < 0 ? 'text-danger' : 'text-success'}">$ ${util.toFixed(2)}</td>
                             </tr>`;
@@ -881,8 +881,8 @@ window.verDetalleGanancia = function(id) {
             let html = `
                 <div class="text-center mb-4">
                     <div class="badge bg-success mb-2">Reporte Financiero</div>
-                    <h4 class="mb-1 text-uppercase fw-bold text-dark">Rentabilidad de Venta</h4>
-                    <p class="text-muted small">ID Movimiento: #<b>${d.movimiento_id}</b> | Producto: <b>${d.producto || 'N/A'}</b></p>
+                    <h4 class="mb-1 text-uppercase fw-bold ">Rentabilidad de Venta</h4>
+                    <p class="text-body-secondary small">ID Movimiento: #<b>${d.movimiento_id}</b> | Producto: <b>${d.producto || 'N/A'}</b></p>
                 </div>
                 
                 <div class="table-responsive">
@@ -958,7 +958,7 @@ window.verDetalleGananciaVenta = function(idVenta) {
                                 <tr>
                                     <td class="text-start small fw-bold text-secondary">${c[0]}</td>
                                     <td>${c[1]}</td>
-                                    <td class="text-end text-muted small">$${parseFloat(c[2]).toFixed(2)}</td>
+                                    <td class="text-end text-body-secondary small">$${parseFloat(c[2]).toFixed(2)}</td>
                                     <td class="text-end small">$${parseFloat(c[3]).toFixed(2)}</td>
                                     <td class="text-end fw-bold ${subU < 0 ? 'text-danger' : 'text-success'}">$${subU.toFixed(2)}</td>
                                 </tr>`;
@@ -968,21 +968,21 @@ window.verDetalleGananciaVenta = function(idVenta) {
 
                 return `
                 <div class="card mb-4 border-0 shadow-sm" style="border-radius: 15px; overflow: hidden;">
-                    <div class="card-header bg-light border-0 py-3">
+                    <div class="card-header  border-0 py-3">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
                                 <span class="badge bg-dark mb-1">${p.sku}</span>
-                                <h5 class="mb-0 fw-bold text-dark">${p.producto}</h5>
+                                <h5 class="mb-0 fw-bold ">${p.producto}</h5>
                             </div>
                             <div class="text-end">
-                                <small class="text-muted d-block small-caps">UTILIDAD ARTÍCULO</small>
+                                <small class="text-body-secondary d-block small-caps">UTILIDAD ARTÍCULO</small>
                                 <span class="h5 mb-0 fw-bold ${colorProd}">$ ${gananciaProd.toLocaleString()}</span>
                             </div>
                         </div>
                     </div>
                     <div class="card-body p-0">
                         <table class="table table-sm mb-0 align-middle">
-                            <thead class="bg-white small text-uppercase text-muted">
+                            <thead class=" small text-uppercase text-body-secondary">
                                 <tr>
                                     <th class="ps-3" style="font-size: 0.65rem;">Lote</th>
                                     <th style="font-size: 0.65rem;">Cant.</th>
@@ -1003,27 +1003,27 @@ window.verDetalleGananciaVenta = function(idVenta) {
             let htmlFinal = `
                 <div class="px-2">
                     <div class="text-center mb-4 pt-2">
-                        <h6 class="text-uppercase text-muted ls-2 fw-bold" style="letter-spacing: 2px; font-size: 0.7rem;">Auditoría de Rentabilidad</h6>
+                        <h6 class="text-uppercase text-body-secondary ls-2 fw-bold" style="letter-spacing: 2px; font-size: 0.7rem;">Auditoría de Rentabilidad</h6>
                         <h3 class="fw-bold mb-0">Folio: ${r.productos[0].folio || 'Venta'}</h3>
                         <hr class="mx-auto" style="width: 50px; height: 3px; background: #28a745; border:0; opacity: 1;">
                     </div>
 
                     <div class="row g-3 mb-4 text-center">
                         <div class="col-4">
-                            <div class="p-3 rounded-4 bg-light shadow-sm border">
-                                <small class="text-muted d-block small-caps">INVERSIÓN TOTAL</small>
-                                <span class="h6 fw-bold text-dark">$ ${parseFloat(r.gran_total_costo).toLocaleString()}</span>
+                            <div class="p-3 rounded-4  shadow-sm border">
+                                <small class="text-body-secondary d-block small-caps">INVERSIÓN TOTAL</small>
+                                <span class="h6 fw-bold ">$ ${parseFloat(r.gran_total_costo).toLocaleString()}</span>
                             </div>
                         </div>
                         <div class="col-4">
-                            <div class="p-3 rounded-4 bg-light shadow-sm border">
-                                <small class="text-muted d-block small-caps">INGRESO BRUTO</small>
-                                <span class="h6 fw-bold text-dark">$ ${parseFloat(r.gran_total_venta).toLocaleString()}</span>
+                            <div class="p-3 rounded-4  shadow-sm border">
+                                <small class="text-body-secondary d-block small-caps">INGRESO BRUTO</small>
+                                <span class="h6 fw-bold ">$ ${parseFloat(r.gran_total_venta).toLocaleString()}</span>
                             </div>
                         </div>
                         <div class="col-4">
                             <div class="p-3 rounded-4 shadow-sm border" style="background: #f0fff4;">
-                                <small class="text-muted d-block small-caps">GANANCIA NETA</small>
+                                <small class="text-body-secondary d-block small-caps">GANANCIA NETA</small>
                                 <span class="h6 fw-bold ${colorGlobal}">$ ${parseFloat(r.ganancia_neta_total).toLocaleString()}</span>
                             </div>
                         </div>
@@ -1186,7 +1186,7 @@ display:none !important}
                                     ${index + 1}. ${p.producto}
                                 </div>
 
-                                <div class="text-muted"
+                                <div class="text-body-secondary"
                                     style="font-size:11px;">
                                     SKU: ${p.sku}
                                 </div>
@@ -1217,14 +1217,14 @@ display:none !important}
                                 <tr style="
                                     border-bottom:1px solid #ddd;
                                 ">
-                                    <th class="fw-semibold text-muted">
+                                    <th class="fw-semibold text-body-secondary">
                                         LOTE / UBICACIÓN
                                     </th>
 
-                                    <th class="fw-semibold text-muted text-end">
+                                    <th class="fw-semibold text-body-secondary text-end">
                                         CANTIDAD
                                     </th>
-                                     <th class="fw-semibold text-muted text-end">
+                                     <th class="fw-semibold text-body-secondary text-end">
                                         FECHA DE SALIDA
                                     </th>
                                 </tr>

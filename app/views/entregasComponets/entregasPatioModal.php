@@ -13,18 +13,18 @@
                     <div class="p-3 rounded-4 mb-3" style="background: #f8f9fa; border: 1px dashed #dee2e6;">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
-                                <small class="text-muted fw-bold d-block mb-1" style="font-size: 0.65rem;">MATERIAL</small>
+                                <small class="text-body-secondary fw-bold d-block mb-1" style="font-size: 0.65rem;">MATERIAL</small>
                                 <div id="patio_producto_info" class="fw-bold text-dark">---</div>
                             </div>
                             <div class="text-end">
-                                <small class="text-muted fw-bold d-block mb-1" style="font-size: 0.65rem;">CANTIDAD</small>
+                                <small class="text-body-secondary fw-bold d-block mb-1" style="font-size: 0.65rem;">CANTIDAD</small>
                                 <div id="patio_cantidad_info" class="fw-bold text-success">---</div>
                             </div>
                         </div>
                     </div>
 
                     <div class="p-3 rounded-4 mb-4" style="background: #f6fff8; border: 1px solid #c1e7c1;">
-                        <small class="text-muted fw-bold d-block mb-1" style="font-size: 0.65rem;">CLIENTE QUE RECOGE</small>
+                        <small class="text-body-secondary fw-bold d-block mb-1" style="font-size: 0.65rem;">CLIENTE QUE RECOGE</small>
                         <div class="d-flex align-items-center">
                             <i class="bi bi-person-badge text-success me-2"></i>
                             <span id="patio_cliente_nombre" class="fw-bold text-dark small">---</span>
@@ -37,27 +37,27 @@
 
                     <div class="row g-3">
                         <div class="col-12">
-                            <label class="form-label small fw-bold text-muted mb-1">DESPACHADOR RESPONSABLE (PATIO)</label>
+                            <label class="form-label small fw-bold text-body-secondary mb-1">DESPACHADOR RESPONSABLE (PATIO)</label>
                             <select name="chofer_id" id="patio_chofer_id" class="form-select border-0 bg-light p-3 rounded-3 shadow-sm" required>
                                 <option value="">Seleccione encargado...</option>
                             </select>
                         </div>
 
                         <div class="col-12">
-                            <label class="form-label small fw-bold text-muted mb-1">AYUDANTES DE CARGA (OPCIONAL)</label>
+                            <label class="form-label small fw-bold text-body-secondary mb-1">AYUDANTES DE CARGA (OPCIONAL)</label>
                             <select name="tripulantes[]" id="patio_tripulantes" class="form-select border-0 bg-light p-2 rounded-3 shadow-sm" style="font-size: 0.85rem;" multiple size="3">
                             </select>
                         </div>
                         
                         <div class="col-12">
-                            <label class="form-label small fw-bold text-muted mb-1">NOTAS / QUIÉN RECIBE</label>
+                            <label class="form-label small fw-bold text-body-secondary mb-1">NOTAS / QUIÉN RECIBE</label>
                             <textarea name="observaciones" class="form-control text-uppercase border-0 bg-light rounded-3 shadow-sm" rows="2" placeholder="Ej. Se lo lleva en camioneta propia..."></textarea>
                         </div>
                     </div>
                 </div>
 
                 <div class="modal-footer border-0 pb-4 px-4">
-                    <button type="button" class="btn btn-link text-muted fw-bold text-decoration-none" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-link text-body-secondary fw-bold text-decoration-none" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" id="btnGuardarPatio" class="btn btn-success px-4 py-2 shadow rounded-pill">
                         <i class="bi bi-check2-all me-2"></i>Finalizar Entrega
                     </button>

@@ -10,7 +10,7 @@
                      </div>
                      <div>
                          <h5 class="modal-title fw-bold text-dark mb-0">Finalizar Transacción</h5>
-                         <small class="text-muted fw-medium">Revisa los detalles antes de confirmar</small>
+                         <small class="text-body-secondary fw-medium">Revisa los detalles antes de confirmar</small>
                      </div>
                  </div>
                  <button type="button" class="btn-close shadow-none bg-light rounded-circle p-2" data-bs-dismiss="modal"
@@ -31,7 +31,7 @@
                                  <div class="table-responsive" style="max-height: 80%;">
                                      <table class="table table-borderless align-middle">
                                          <thead>
-                                             <tr class="text-muted small border-bottom border-light">
+                                             <tr class="text-body-secondary small border-bottom border-light">
                                                  <th class="pb-3 fw-bold">Producto</th>
                                                  <th class="pb-3 text-center fw-bold">Venta</th>
 
@@ -89,14 +89,14 @@
 
                                      <div class="p-3 rounded-4 bg-light border-0 small">
                                          <div class="mb-2">
-                                             <span class="text-muted d-block"
+                                             <span class="text-body-secondary d-block"
                                                  style="font-size: 0.6rem; font-weight: 800;">RAZÓN SOCIAL</span>
                                              <span id="f_razon_social"
                                                  class="fw-bold text-dark text-truncate d-block">---</span>
                                          </div>
                                          <div class="row g-0">
                                              <div class="col-6">
-                                                 <span class="text-muted d-block"
+                                                 <span class="text-body-secondary d-block"
                                                      style="font-size: 0.6rem; font-weight: 800;">RFC</span>
                                                  <span id="f_rfc" class="fw-bold text-dark">---</span>
                                              </div>
@@ -117,7 +117,7 @@
                                      </h6>
                                      <div class="row g-2">
                                          <div class="col-4">
-                                             <label class="small fw-bold text-muted mb-1" style="font-size: 0.6rem;">A
+                                             <label class="small fw-bold text-body-secondary mb-1" style="font-size: 0.6rem;">A
                                                  PAGAR</label>
                                              <input type="number" id="monto_pagar"
                                                  class="form-control border-0 bg-light p-2 rounded-3 fw-bold text-primary shadow-none text-center"
@@ -134,7 +134,7 @@
                                          </div>
                                          <div class="mb-3">
                                              <label for="select-usuarios"
-                                                 class="form-label fw-bold small text-muted text-uppercase">Atendió /
+                                                 class="form-label fw-bold small text-body-secondary text-uppercase">Atendió /
                                                  Usuario</label>
                                              <select class="form-select rounded-pill" id="select-usuarios"
                                                  name="usuario_id" required>
@@ -142,7 +142,7 @@
                                              </select>
                                          </div>
                                          <div class="col-4">
-                                             <label class="small fw-bold text-muted mb-1"
+                                             <label class="small fw-bold text-body-secondary mb-1"
                                                  style="font-size: 0.6rem;">MÉTODO</label>
                                              <select id="metodo_pago" onchange="verificarMetodoPago(this.value)"
                                                  class="form-select border-0 bg-light p-2 rounded-3 shadow-none fw-bold small">
@@ -187,7 +187,7 @@
                                  <div class="row g-3">
                                      <div style=" display:none;" class="col-md-4">
                                          <div class="p-3 rounded-4 bg-light">
-                                             <label class="form-label small fw-bold text-muted mb-1"
+                                             <label class="form-label small fw-bold text-body-secondary mb-1"
                                                  style="font-size: 0.6rem;">DESPACHADOR RESPONSABLE</label>
                                              <select name="chofer_id" id="patio_chofer_id"
                                                  class="form-select border-0 bg-transparent shadow-none fw-bold p-0">
@@ -197,7 +197,7 @@
                                      </div>
                                      <div style=" display:none;" class="col-md-4">
                                          <div class="p-3 rounded-4 bg-light">
-                                             <label class="form-label small fw-bold text-muted mb-1"
+                                             <label class="form-label small fw-bold text-body-secondary mb-1"
                                                  style="font-size: 0.6rem;">AYUDANTES (MULTIPLE)</label>
                                              <select name="tripulantes[]" id="patio_tripulantes"
                                                  class="form-select border-0 bg-transparent shadow-none fw-bold p-0"
@@ -207,7 +207,7 @@
                                      </div>
                                      <div style=" display:none;" class="col-md-4">
                                          <div class="p-3 rounded-4 bg-light">
-                                             <label class="form-label small fw-bold text-muted mb-1"
+                                             <label class="form-label small fw-bold text-body-secondary mb-1"
                                                  style="font-size: 0.6rem;">OBSERVACIONES DE ENTREGA</label>
                                              <textarea name="observaciones"
                                                  class="form-control border-0 bg-transparent shadow-none p-0 fw-medium"
@@ -222,7 +222,7 @@
              </div>
 
              <div class="modal-footer border-0 bg-white p-4 pt-2">
-                 <button class="btn btn-link text-muted fw-bold text-decoration-none me-auto"
+                 <button class="btn btn-link text-body-secondary fw-bold text-decoration-none me-auto"
                      data-bs-dismiss="modal">Cancelar</button>
                  <button id="btnFinalizarVenta" class="btn btn-success rounded-pill px-5 py-3 fw-bold shadow-sm"
                      onclick="procesarVenta()" style="background: #34c759 !important; border: none !important;">
@@ -787,7 +787,7 @@ window.abrirModalFinalizar = function() {
         tr.innerHTML = `
             <td>
                 <div class="fw-bold" style="font-size: 0.85rem;">${item.nombre}</div>
-                <small class="text-muted d-block">${item.almacen_nombre} | ${item.tipo_precio.toUpperCase()}</small>
+                <small class="text-body-secondary d-block">${item.almacen_nombre} | ${item.tipo_precio.toUpperCase()}</small>
                 
                 <div class="mt-1" style="font-size: 0.7rem; color: #055160; background: #e3f2fd; padding: 4px 8px; border-radius: 4px; border-left: 3px solid #0d6efd;">
                     <i class="bi bi-info-circle-fill"></i> Factor: 1 <b>${item.unidad_reporte}</b> = <b>${item.factor}</b>${item.unidad_medida}<br>

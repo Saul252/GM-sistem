@@ -11,16 +11,16 @@
             </div>
 
             <div class="modal-body p-4">
-                <div class="p-3 mb-3 bg-light rounded-3 border">
+                <div class="p-3 mb-3  rounded-3 border">
                     <div class="fw-bold text-primary" id="deuda_folio" style="font-size: 1.1rem;">-</div>
-                  <div class="text-muted small" id="proveedor">-</div>
-                    <div class="text-muted small" id="deuda_fecha">-</div>
+                  <div class="text-body-secondary small" id="proveedor">-</div>
+                    <div class="text-body-secondary small" id="deuda_fecha">-</div>
                 </div>
 
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <label class="form-label small fw-bold text-muted">TOTAL ORIGINAL COMPRA</label>
-                        <input type="text" id="deuda_total" class="form-control bg-white" readonly style="font-weight: 600;">
+                        <label class="form-label small fw-bold ">TOTAL ORIGINAL COMPRA</label>
+                        <input type="text" id="deuda_total" class="form-control " readonly style="font-weight: 600;">
                     </div>
 
                     <div class="col-md-6">
@@ -38,7 +38,7 @@
                         <span class="input-group-text bg-success text-white border-0">$</span>
                         <input type="hidden" id="pago_monto" class="form-control form-control-lg border-success" placeholder="0.00" step="any">
                     </div>
-                    <small class="text-muted mt-2 d-block">* Al saldar, se generará un registro automático en el historial de egresos.</small>
+                    <small class="text-body-secondary mt-2 d-block">* Al saldar, se generará un registro automático en el historial de egresos.</small>
                 </div>
             </div>
 

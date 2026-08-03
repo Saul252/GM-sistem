@@ -58,7 +58,7 @@
 
             <div>
                 <h2 class="fw-bold mb-1">Proveedores</h2>
-                <p class="text-muted small mb-0">
+                <p class="text-body-secondary small mb-0">
                     Gestiona y administra tus proveedores
                 </p>
             </div>
@@ -77,7 +77,7 @@
             <!-- CARD HEADER -->
             <div class="card-header  border-0 py-3 px-4 d-flex justify-content-between align-items-center">
 
-                <span class="fw-semibold text-muted small">
+                <span class="fw-semibold text-body-secondary small">
                     Lista de proveedores
                 </span>
 
@@ -89,7 +89,7 @@
                 <table class="table table-hover align-middle mb-0" id="tablaProveedores">
 
                     <thead class="">
-                        <tr class="text-muted small">
+                        <tr class="text-body-secondary small">
                             <th class="ps-4">Nombre</th>
                             <th>RFC</th>
                             <th>Correo</th>

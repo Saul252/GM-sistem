@@ -9,19 +9,19 @@
                 <div class="row g-2 mb-3 text-center">
                     <div class="col-4">
                         <div class="p-2 rounded-4 bg-light border">
-                            <small class="text-muted d-block text-uppercase" style="font-size: 9px; font-weight: 800;">Efectivo</small>
+                            <small class="text-body-secondary d-block text-uppercase" style="font-size: 9px; font-weight: 800;">Efectivo</small>
                             <span id="display_saldo_efectivo" class="fw-bold text-dark">$0.00</span>
                         </div>
                     </div>
                     <div class="col-4">
                         <div class="p-2 rounded-4 bg-light border">
-                            <small class="text-muted d-block text-uppercase" style="font-size: 9px; font-weight: 800;">Tarjeta</small>
+                            <small class="text-body-secondary d-block text-uppercase" style="font-size: 9px; font-weight: 800;">Tarjeta</small>
                             <span id="display_saldo_tarjeta" class="fw-bold text-dark">$0.00</span>
                         </div>
                     </div>
                     <div class="col-4">
                         <div class="p-2 rounded-4 bg-light border">
-                            <small class="text-muted d-block text-uppercase" style="font-size: 9px; font-weight: 800;">Transf.</small>
+                            <small class="text-body-secondary d-block text-uppercase" style="font-size: 9px; font-weight: 800;">Transf.</small>
                             <span id="display_saldo_transferencia" class="fw-bold text-dark">$0.00</span>
                         </div>
                     </div>
@@ -30,7 +30,7 @@
                 <form id="formNuevoMovimiento">
                     <div class="row g-3">
                         <div class="col-12">
-                            <label class="text-xs fw-bold text-muted text-uppercase">Sucursal Origen</label>
+                            <label class="text-xs fw-bold text-body-secondary text-uppercase">Sucursal Origen</label>
                             <select name="almacen_id" id="sel_almacen_origen" class="form-select ios-input" required>
                                 <?php if($esAdmin): ?>
                                     <option value="0">🌐 Todas (Administrador)</option>
@@ -43,7 +43,7 @@
 
                         <div class="col-12">
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <label class="text-xs fw-bold text-muted text-uppercase m-0">Categoría</label>
+                                <label class="text-xs fw-bold text-body-secondary text-uppercase m-0">Categoría</label>
                                 <span id="badge_tipo_operacion" class="badge bg-light text-dark" style="font-size: 10px; display: none;"></span>
                             </div>
                             <select name="categoria_id" id="sel_categoria" class="form-select ios-input" required>
@@ -57,13 +57,13 @@
                         </div>
 
                         <div class="col-6">
-                            <label class="text-xs fw-bold text-muted text-uppercase">Fecha</label>
+                            <label class="text-xs fw-bold text-body-secondary text-uppercase">Fecha</label>
                             <input type="date" name="fecha_movimiento" id="fecha_movimiento" 
                                    class="form-control ios-input" value="<?= date('Y-m-d') ?>" required>
                         </div>
 
                         <div class="col-6" id="col_metodo_pago">
-                            <label class="text-xs fw-bold text-muted text-uppercase">Método</label>
+                            <label class="text-xs fw-bold text-body-secondary text-uppercase">Método</label>
                             <select name="metodo_pago" id="sel_metodo_pago" class="form-select ios-input" required>
                                 <option value="efectivo">💵 Efectivo</option>
                                 <option value="tarjeta">💳 Tarjeta</option>
@@ -72,7 +72,7 @@
                         </div>
 
                         <div id="col_destino_almacen" class="col-12 d-none">
-                            <label class="text-xs fw-bold text-muted text-uppercase">Almacén Destino</label>
+                            <label class="text-xs fw-bold text-body-secondary text-uppercase">Almacén Destino</label>
                             <select name="almacen_destino_id" class="form-select ios-input">
                                 <option value="">Seleccione destino...</option>
                                 <?php foreach($listaAlmacenes as $alm): ?>
@@ -81,21 +81,21 @@
                             </select>
                         </div>
                         <div id="col_destino_caja" class="col-12 d-none">
-                            <label class="text-xs fw-bold text-muted text-uppercase">Caja Fuerte Destino</label>
+                            <label class="text-xs fw-bold text-body-secondary text-uppercase">Caja Fuerte Destino</label>
                             <select name="caja_fuerte_id" id="sel_caja_fuerte" class="form-select ios-input"></select>
                         </div>
                         <div id="col_destino_banco" class="col-12 d-none">
-                            <label class="text-xs fw-bold text-muted text-uppercase">Banco Destino</label>
+                            <label class="text-xs fw-bold text-body-secondary text-uppercase">Banco Destino</label>
                             <select name="banco_id" id="sel_banco" class="form-select ios-input"></select>
                         </div>
 
                         <div class="col-md-12">
-                            <label class="text-xs fw-bold text-muted text-uppercase">Monto del Movimiento</label>
+                            <label class="text-xs fw-bold text-body-secondary text-uppercase">Monto del Movimiento</label>
                             <input type="number" step="0.01" name="monto" class="form-control ios-input fw-bold" placeholder="0.00" required>
                         </div>
 
                         <div class="col-12">
-                            <label class="text-xs fw-bold text-muted text-uppercase">Concepto / Observación</label>
+                            <label class="text-xs fw-bold text-body-secondary text-uppercase">Concepto / Observación</label>
                             <textarea name="conceptos" class="form-control text-uppercase ios-input" rows="2" placeholder="Describa el motivo..."></textarea>
                         </div>
                     </div>

@@ -435,7 +435,7 @@ function gastoDetalle_ejecutarImpresion() {
                             <h3 class="fw-bold text-uppercase mb-0" style="color:#0f172a; letter-spacing:1px;">
                                 COMPROBANTE DE GASTO
                             </h3>
-                            <div class="text-muted small mt-1 text-uppercase">
+                            <div class="text-body-secondary small mt-1 text-uppercase">
                                 Folio: <span class="fw-bold text-dark">${folio}</span>
                             </div>
                         </div>
@@ -445,7 +445,7 @@ function gastoDetalle_ejecutarImpresion() {
                         <div class="fw-bold fs-5" style="color:#1e3a8a;">
                             FORTALEZA CENTRO
                         </div>
-                        <div class="text-muted small">
+                        <div class="text-body-secondary small">
                             Fecha: ${fecha}
                         </div>
                     </div>
@@ -455,13 +455,13 @@ function gastoDetalle_ejecutarImpresion() {
                 <div class="row g-2 mb-3">
                     <div class="col-7">
                         <div class="p-2 border rounded bg-light">
-                            <small class="text-muted fw-bold d-block" style="font-size: 0.65rem;">BENEFICIARIO DE LA OPERACIÓN</small>
+                            <small class="text-body-secondary fw-bold d-block" style="font-size: 0.65rem;">BENEFICIARIO DE LA OPERACIÓN</small>
                             <div class="fw-bold text-dark mt-1" style="font-size: 0.85rem;">${beneficiario}</div>
                         </div>
                     </div>
                     <div class="col-5">
                         <div class="p-2 border rounded bg-light">
-                            <small class="text-muted fw-bold d-block" style="font-size: 0.65rem;">REGISTRADO POR</small>
+                            <small class="text-body-secondary fw-bold d-block" style="font-size: 0.65rem;">REGISTRADO POR</small>
                             <div class="fw-bold text-dark mt-1" style="font-size: 0.85rem;">${usuario}</div>
                         </div>
                     </div>

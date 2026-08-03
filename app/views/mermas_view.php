@@ -106,7 +106,7 @@
                 </div>
                 <div>
                     <h2 class="header-title mb-0">Gestión de Mermas</h2>
-                    <p class="text-muted mb-0">Registra pérdidas o bajas de inventario</p>
+                    <p class="text-body-secondary mb-0">Registra pérdidas o bajas de inventario</p>
                 </div>
             </div>
 
@@ -115,7 +115,7 @@
                     <form id="formMerma" action="/cfsistem/app/controllers/mermasController.php?action=guardarMerma" method="POST">
                         <div class="row g-4">
                             <div class="col-md-4">
-                                <label class="form-label small text-uppercase fw-bold text-muted">Almacén de Origen</label>
+                                <label class="form-label small text-uppercase fw-bold text-body-secondary">Almacén de Origen</label>
                                 <select name="almacen_id" id="merma_almacen" class="form-select" required>
                                     <option value="">Seleccione...</option>
                                     <?php foreach ($almacenes as $a): ?>
@@ -124,27 +124,27 @@
                                 </select>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label small text-uppercase fw-bold text-muted">Producto</label>
+                                <label class="form-label small text-uppercase fw-bold text-body-secondary">Producto</label>
                                 <select name="producto_id" id="merma_producto" class="form-select" disabled required>
                                     <option value="">Seleccione almacén</option>
                                 </select>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label small text-uppercase fw-bold text-muted">Lote Específico</label>
+                                <label class="form-label small text-uppercase fw-bold text-body-secondary">Lote Específico</label>
                                 <select name="lote_id" id="merma_lote" class="form-select" disabled required>
                                     <option value="">Seleccione producto</option>
                                 </select>
                             </div>
 
                             <div class="col-md-4">
-                                <label class="form-label small text-uppercase fw-bold text-muted">Cantidad a Retirar</label>
+                                <label class="form-label small text-uppercase fw-bold text-body-secondary">Cantidad a Retirar</label>
                                 <input type="number" step="0.01" min="0.01" name="cantidad" id="merma_cantidad" class="form-control form-control-lg" placeholder="0.00" required>
                                 <div class="mt-2">
                                     <span class="stock-badge">Disponible: <strong id="stock_disponible">0</strong></span>
                                 </div>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label small text-uppercase fw-bold text-muted">Motivo de Merma</label>
+                                <label class="form-label small text-uppercase fw-bold text-body-secondary">Motivo de Merma</label>
                                 <select name="tipo_merma" class="form-select form-select-lg" required>
                                     <option value="daño">📦 Daño / Rotura</option>
                                     <option value="robo">⚠️ Robo / Extravío</option>
@@ -153,7 +153,7 @@
                                 </select>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label small text-uppercase fw-bold text-muted">Observaciones</label>
+                                <label class="form-label small text-uppercase fw-bold text-body-secondary">Observaciones</label>
                                 <textarea name="observaciones" class="form-control text-uppercase" rows="1" placeholder="Detalles adicionales..."></textarea>
                             </div>
                         </div>
@@ -172,12 +172,12 @@
     <table class="table table-hover align-middle mb-0" style="font-size: 0.95rem;">
         <thead class="bg-light">
             <tr>
-                <th class="ps-4 border-0 py-3 text-uppercase small fw-bold text-muted">Fecha</th>
-                <th class="border-0 py-3 text-uppercase small fw-bold text-muted">Producto / Lote</th>
-                <th class="border-0 py-3 text-uppercase small fw-bold text-muted">Almacén</th>
-                <th class="border-0 py-3 text-uppercase small fw-bold text-muted text-center">Cantidad</th>
-                <th class="border-0 py-3 text-uppercase small fw-bold text-muted text-center">Motivo</th>
-                <th class="pe-4 border-0 py-3 text-uppercase small fw-bold text-muted text-end">Responsable</th>
+                <th class="ps-4 border-0 py-3 text-uppercase small fw-bold text-body-secondary">Fecha</th>
+                <th class="border-0 py-3 text-uppercase small fw-bold text-body-secondary">Producto / Lote</th>
+                <th class="border-0 py-3 text-uppercase small fw-bold text-body-secondary">Almacén</th>
+                <th class="border-0 py-3 text-uppercase small fw-bold text-body-secondary text-center">Cantidad</th>
+                <th class="border-0 py-3 text-uppercase small fw-bold text-body-secondary text-center">Motivo</th>
+                <th class="pe-4 border-0 py-3 text-uppercase small fw-bold text-body-secondary text-end">Responsable</th>
             </tr>
         </thead>
         <tbody>
@@ -193,16 +193,16 @@
             <tr>
                 <td class="ps-4">
                     <div class="fw-bold"><?= date('d/m/Y', strtotime($m['fecha_reporte'])) ?></div>
-                    <div class="small text-muted opacity-75"><?= date('H:i', strtotime($m['fecha_reporte'])) ?> h</div>
+                    <div class="small text-body-secondary opacity-75"><?= date('H:i', strtotime($m['fecha_reporte'])) ?> h</div>
                 </td>
                 <td>
                     <div class="fw-bold text-dark"><?= htmlspecialchars($m['producto_nombre']) ?></div>
-                    <div class="small text-muted text-uppercase" style="font-size: 0.75rem;">
+                    <div class="small text-body-secondary text-uppercase" style="font-size: 0.75rem;">
                         LOTE: <?= htmlspecialchars($m['codigo_lote'] ?? 'N/A') ?>
                     </div>
                 </td>
                 <td>
-                    <span class="text-muted small">
+                    <span class="text-body-secondary small">
                         <i class="fas fa-warehouse me-1 text-secondary opacity-50"></i> 
                         <?= htmlspecialchars($m['almacen_nombre']) ?>
                     </span>
@@ -226,14 +226,14 @@
     <?php if (empty($mermas)): ?>
         <div class="text-center py-5">
             <i class="fas fa-box-open fa-3x text-light mb-3"></i>
-            <p class="text-muted fw-light">No hay registros de mermas para mostrar.</p>
+            <p class="text-body-secondary fw-light">No hay registros de mermas para mostrar.</p>
         </div>
     <?php endif; ?>
 </div>
 </div>
 
 <div class="d-flex justify-content-between align-items-center mt-3 px-2">
-    <div class="small text-muted fw-light">
+    <div class="small text-body-secondary fw-light">
         Mostrando <strong><?= count($mermas) ?></strong> de <strong><?= $totalMermas ?></strong> registros
     </div>
     <nav>
@@ -245,7 +245,7 @@
             </li>
             <?php for ($i = 1; $i <= $totalPaginas; $i++): ?>
                 <li class="page-item <?= ($i == $pagina) ? 'active' : '' ?>">
-                    <a class="page-link border-0 rounded-3 shadow-sm mx-1 <?= ($i == $pagina) ? 'bg-dark text-white shadow' : 'bg-white text-muted' ?>" href="?p=<?= $i ?>">
+                    <a class="page-link border-0 rounded-3 shadow-sm mx-1 <?= ($i == $pagina) ? 'bg-dark text-white shadow' : 'bg-white text-body-secondary' ?>" href="?p=<?= $i ?>">
                         <?= $i ?>
                     </a>
                 </li>

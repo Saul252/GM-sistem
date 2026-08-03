@@ -138,7 +138,7 @@ body.sidebar-hidden #sidebar { transform: translateX(-100%); }
             <h6 class="mb-0 fw-bold text-dark">Traspasos Pendientes</h6>
         </li>
         <div id="lista-notificaciones">
-            <li class="p-3 text-center text-muted small">Cargando...</li>
+            <li class="p-3 text-center text-body-secondary small">Cargando...</li>
         </div>
         <li><hr class="dropdown-divider m-0"></li>
         <li><a class="dropdown-item text-center py-2 small text-primary fw-bold" href="/cfsistem/vistas/almacen/traspasos.php">Ver todos</a></li>
@@ -328,13 +328,13 @@ function verificarNotificaciones() {
 
             if (lista && data.items) {
                 if (cantidadActual === 0) {
-                    lista.innerHTML = '<li class="p-3 text-center text-muted small">Sin pendientes</li>';
+                    lista.innerHTML = '<li class="p-3 text-center text-body-secondary small">Sin pendientes</li>';
                 } else {
                     lista.innerHTML = data.items.map(item => `
                         <li class="p-2 border-bottom d-flex justify-content-between align-items-center mx-2">
                             <div style="font-size: 0.8rem; max-width: 80%">
                                 <b>${item.producto}</b><br>
-                                <span class="text-muted">Cant: ${item.cantidad}</span>
+                                <span class="text-body-secondary">Cant: ${item.cantidad}</span>
                             </div>
                             <button onclick="aceptarTraspasoRapido(${item.id})" class="btn btn-sm btn-success p-1">
                                 <i class="bi bi-check2"></i>

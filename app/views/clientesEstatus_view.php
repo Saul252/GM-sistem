@@ -95,7 +95,7 @@
                         <tr>
                             <td colspan="5" class="text-center py-5">
                                 <div class="spinner-border text-primary" role="status"></div>
-                                <p class="mt-2 text-muted">Consultando movimientos y saldos...</p>
+                                <p class="mt-2 text-body-secondary">Consultando movimientos y saldos...</p>
                             </td>
                         </tr>
                     </tbody>
@@ -164,8 +164,8 @@ console.log(clientes);
 
                             // Lógica para detectar si tiene compras o no
                             if (tieneVentas === 0) {
-                                badgePago = '<span class="badge bg-light text-muted border rounded-pill px-3">SIN COMPRAS</span>';
-                                badgeEntrega = '<span class="badge bg-light text-muted border rounded-pill px-3">-</span>';
+                                badgePago = '<span class="badge bg-light text-body-secondary border rounded-pill px-3">SIN COMPRAS</span>';
+                                badgeEntrega = '<span class="badge bg-light text-body-secondary border rounded-pill px-3">-</span>';
                                 btnAccion = `<button class="btn btn-sm btn-light disabled rounded-pill px-3">
                                                 <i class="bi bi-eye-slash"></i>
                                              </button>`;
@@ -179,7 +179,7 @@ console.log(clientes);
 }
                                 badgeEntrega = pEntregas > 0 
                                     ? `<span class="badge bg-warning-subtle text-warning-dark border border-warning-subtle rounded-pill px-3">PENDIENTE (${pEntregas})</span>` 
-                                    : '<span class="badge  text-muted border rounded-pill px-3 text-uppercase small">Completo</span>';
+                                    : '<span class="badge  text-body-secondary border rounded-pill px-3 text-uppercase small">Completo</span>';
                                 
                                 // CORRECCIÓN AQUÍ: Apuntamos al controlador del expediente con el ID del cliente
     btnAccion = `<a href="/cfsistem/app/controllers/clienteExpedienteController.php?id=${c.id}" 
@@ -192,7 +192,7 @@ console.log(clientes);
                             <tr>
                                 <td>
                                     <div class="fw-bold card-title-text">${c.nombre}</div>
-                                    <small class="text-muted font-monospace">${c.rfc}</small>
+                                    <small class="text-body-secondary font-monospace">${c.rfc}</small>
                                 </td>
                                 <td class="text-center">${badgePago}</td>
                                 <td class="text-center">${badgeEntrega}</td>

@@ -263,7 +263,7 @@ $fechaFin    = $_GET['fecha_fin'] ?? date('Y-m-t');
                 <tr>
                     <td class="ps-3">
                      
-                        <small class="text-muted"><?= date('d/m/Y', strtotime($v['fecha'])) ?></small>
+                        <small class="text-body-secondary"><?= date('d/m/Y', strtotime($v['fecha'])) ?></small>
                     </td>
 
                     <td>
@@ -348,12 +348,12 @@ $fechaFin    = $_GET['fecha_fin'] ?? date('Y-m-t');
                     <div class="col-md-3 bg-light border-end p-4">
 
                         <div class="mb-3">
-                            <small class="text-uppercase text-muted fw-bold">Cliente</small>
+                            <small class="text-uppercase text-body-secondary fw-bold">Cliente</small>
                             <div id="detCliente" class="fw-semibold"></div>
                         </div>
 
                         <div class="mb-4">
-                            <small class="text-uppercase text-muted fw-bold">Almacén</small>
+                            <small class="text-uppercase text-body-secondary fw-bold">Almacén</small>
                             <div id="detAlmacen" class="fw-semibold"></div>
                         </div>
 
@@ -361,7 +361,7 @@ $fechaFin    = $_GET['fecha_fin'] ?? date('Y-m-t');
                             <div class="card-body text-center">
 
                                 <div class="mb-3">
-                                    <small class="text-uppercase text-muted fw-bold d-block">
+                                    <small class="text-uppercase text-body-secondary fw-bold d-block">
                                         Total de Venta
                                     </small>
                                     <span id="detTotalLabel" class="fs-5 fw-bold text-primary">
@@ -372,7 +372,7 @@ $fechaFin    = $_GET['fecha_fin'] ?? date('Y-m-t');
                                 <hr>
 
                                 <div>
-                                    <small class="text-uppercase text-muted fw-bold d-block">
+                                    <small class="text-uppercase text-body-secondary fw-bold d-block">
                                         Saldo Pendiente
                                     </small>
                                     <span id="detSaldoLabel" class="fs-4 fw-bold text-danger">
@@ -393,7 +393,7 @@ $fechaFin    = $_GET['fecha_fin'] ?? date('Y-m-t');
                     <div class="col-md-9 p-4">
 
                         <div class="card border-0 shadow-sm mb-3">
-                            <div class="card-header bg-white fw-bold small text-uppercase text-muted">
+                            <div class="card-header bg-white fw-bold small text-uppercase text-body-secondary">
                                 Productos
                             </div>
                             <div class="table-responsive" style="max-height: 180px;">
@@ -416,7 +416,7 @@ $fechaFin    = $_GET['fecha_fin'] ?? date('Y-m-t');
 
                             <div class="col-12">
                                 <div class="card border-0 shadow-sm">
-                                    <div class="card-header bg-white fw-bold small text-uppercase text-muted">
+                                    <div class="card-header bg-white fw-bold small text-uppercase text-body-secondary">
                                         Historial de Pagos
                                     </div>
                                     <div class="table-responsive" style="max-height: 180px;">
@@ -437,7 +437,7 @@ $fechaFin    = $_GET['fecha_fin'] ?? date('Y-m-t');
 
                             <div class="col-12 d-none">
                                 <div class="card border-0 shadow-sm">
-                                    <div class="card-header bg-white fw-bold small text-uppercase text-muted">
+                                    <div class="card-header bg-white fw-bold small text-uppercase text-body-secondary">
                                         Historial de Entregas
                                     </div>
                                     <div class="table-responsive" style="max-height: 180px;">
@@ -458,7 +458,7 @@ $fechaFin    = $_GET['fecha_fin'] ?? date('Y-m-t');
 
                             <div class="col-12 d-none">
                                 <div class="card border-0 shadow-sm">
-                                    <div class="card-header bg-white fw-bold small text-uppercase text-muted">
+                                    <div class="card-header bg-white fw-bold small text-uppercase text-body-secondary">
                                         Repartos
                                     </div>
                                     <div class="table-responsive" style="max-height: 220px;">
@@ -560,7 +560,7 @@ $fechaFin    = $_GET['fecha_fin'] ?? date('Y-m-t');
                            value="${montoMaximo.toFixed(2)}" 
                            max="${montoMaximo}" min="0.01" step="0.01">
                 </div>
-                <p class="text-muted mt-2" style="font-size: 0.75rem;">
+                <p class="text-body-secondary mt-2" style="font-size: 0.75rem;">
                     <i class="bi bi-info-circle"></i> Este ajuste restará el monto de ambas cuentas para limpiar el historial del cliente.
                 </p>
             </div>
@@ -994,8 +994,8 @@ async function imprimirEstadoCuenta() {
                 let unidadesMayores = (cant / factor);
                 let totalUnidadesStr = Number.isInteger(unidadesMayores) ? unidadesMayores : unidadesMayores.toFixed(2);
 
-                visualizacionVenta = `<span class="fw-bold">${totalUnidadesStr} ${p.unidad_reporte}</span> <br> <small class="text-muted">(${cant} ${p.unidad_medida})</small>`;
-                infoEquivalenciaSub = `<div class="text-muted small" style="font-size: 0.65rem;">1 ${p.unidad_reporte} = ${factor} ${p.unidad_medida}</div>`;
+                visualizacionVenta = `<span class="fw-bold">${totalUnidadesStr} ${p.unidad_reporte}</span> <br> <small class="text-body-secondary">(${cant} ${p.unidad_medida})</small>`;
+                infoEquivalenciaSub = `<div class="text-body-secondary small" style="font-size: 0.65rem;">1 ${p.unidad_reporte} = ${factor} ${p.unidad_medida}</div>`;
             } else {
                 visualizacionVenta = `<span>${cant} ${p.unidad_medida}</span>`;
             }
@@ -1042,7 +1042,7 @@ async function imprimirEstadoCuenta() {
                 if (factorH > 1 && cantH >= factorH) {
                     let unidadesMayoresH = (cantH / factorH);
                     let totalUnidadesStrH = Number.isInteger(unidadesMayoresH) ? unidadesMayoresH : unidadesMayoresH.toFixed(2);
-                    visualizacionHistorial = `<span class="fw-bold text-primary">${totalUnidadesStrH} ${uReporteH}</span><br><small class="text-muted">(${cantH} ${uMedidaH})</small>`;
+                    visualizacionHistorial = `<span class="fw-bold text-primary">${totalUnidadesStrH} ${uReporteH}</span><br><small class="text-body-secondary">(${cantH} ${uMedidaH})</small>`;
                 } else {
                     visualizacionHistorial = `<span>${cantH} ${uMedidaH}</span>`;
                 }
@@ -1054,7 +1054,7 @@ async function imprimirEstadoCuenta() {
                     <td class="text-center">${visualizacionHistorial}</td>
                 </tr>`;
             }).join('') :
-            '<tr><td colspan="4" class="text-center text-muted p-3">No hay entregas registradas</td></tr>'
+            '<tr><td colspan="4" class="text-center text-body-secondary p-3">No hay entregas registradas</td></tr>'
         );
 
         // --- RENDERIZADO DE HISTORIAL DE PAGOS ---
@@ -1065,7 +1065,7 @@ async function imprimirEstadoCuenta() {
                     <td class="fw-bold text-success">$${parseFloat(p.monto).toFixed(2)}</td>
                     <td>
                         <span class="badge bg-light text-dark border fw-normal">${p.metodo_pago}</span>
-                        <div class="text-muted" style="font-size:0.65rem">Recibió: ${p.usuario_nombre}</div>
+                        <div class="text-body-secondary" style="font-size:0.65rem">Recibió: ${p.usuario_nombre}</div>
                     </td>
                     <td>
                      <span>
@@ -1079,7 +1079,7 @@ async function imprimirEstadoCuenta() {
                 </tr>
             `).join(''));
         } else {
-            $('#tbodyPagos').html('<tr><td colspan="3" class="text-center text-muted p-3">No hay abonos registrados</td></tr>');
+            $('#tbodyPagos').html('<tr><td colspan="3" class="text-center text-body-secondary p-3">No hay abonos registrados</td></tr>');
         }
 
      const modalObj = new bootstrap.Modal('#modalDetalle');
@@ -1243,7 +1243,7 @@ async function imprimirEstadoCuenta() {
          <div class="ticket-header d-flex justify-content-between align-items-center">
                 <div>
                     <h4 class="fw-bold m-0">CF SYSTEM</h4>
-                    <small class="text-muted">Reporte de Operación de Venta</small>
+                    <small class="text-body-secondary">Reporte de Operación de Venta</small>
                 </div>
                 <div class="text-end">
                     <h5 class="text-primary fw-bold m-0">Folio: ${folio}</h5>
@@ -1260,13 +1260,13 @@ async function imprimirEstadoCuenta() {
                         <div class="row g-3">
                 <div class="col-6">
                     <div class="meta-box">
-                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:0.7rem;">Cliente</small>
+                        <small class="text-body-secondary d-block text-uppercase fw-semibold" style="font-size:0.7rem;">Cliente</small>
                         <span class="fw-bold">${cliente}</span>
                     </div>
                 </div>
                 <div class="col-6">
                     <div class="meta-box">
-                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:0.7rem;">Almacén Origen</small>
+                        <small class="text-body-secondary d-block text-uppercase fw-semibold" style="font-size:0.7rem;">Almacén Origen</small>
                         <span class="fw-bold">${almacen}</span>
                     </div>
                 </div>
@@ -1290,7 +1290,7 @@ async function imprimirEstadoCuenta() {
 
                             <div class="col-12">
                                 <div class="card border-0 shadow-sm">
-                                    <div class="card-header bg-white fw-bold small text-uppercase text-muted">
+                                    <div class="card-header bg-white fw-bold small text-uppercase text-body-secondary">
                                         Historial de Pagos
                                     </div>
                                     <div class="table-responsive" style="max-height: 180px;">
@@ -1312,7 +1312,7 @@ async function imprimirEstadoCuenta() {
                             <div class="col-12  d-none">
                            
                                 <div class="card border-0 shadow-sm">
-                                    <div class="card-header bg-white fw-bold small text-uppercase text-muted">
+                                    <div class="card-header bg-white fw-bold small text-uppercase text-body-secondary">
                                         Historial de Entregas
                                     </div>
                                     <div class="table-responsive" style="max-height: 180px;">
@@ -1337,11 +1337,11 @@ async function imprimirEstadoCuenta() {
                 <div class="col-5">
                     <table class="table table-sm table-borderless border-top pt-2">
                         <tr>
-                            <td class="text-end text-muted">Total Venta:</td>
+                            <td class="text-end text-body-secondary">Total Venta:</td>
                             <td class="text-end fw-bold">${total}</td>
                         </tr>
                         <tr>
-                            <td class="text-end text-muted">Saldo Pendiente:</td>
+                            <td class="text-end text-body-secondary">Saldo Pendiente:</td>
                             <td class="text-end fw-bold text-danger">${saldo}</td>
                         </tr>
                     </table>

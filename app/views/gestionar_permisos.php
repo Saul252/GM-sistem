@@ -46,7 +46,7 @@ $modulosData = $resModulos->fetch_all(MYSQLI_ASSOC);
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h2 class="fw-bold m-0 text-dark">Matriz de Seguridad</h2>
-                <p class="text-muted">Configura qué módulos puede ver cada rol de usuario</p>
+                <p class="text-body-secondary">Configura qué módulos puede ver cada rol de usuario</p>
             </div>
             <button type="button" id="btnGuardarPermisos" class="btn btn-primary rounded-pill px-4 shadow-sm">
                 <i class="bi bi-shield-check me-2"></i> Guardar Cambios

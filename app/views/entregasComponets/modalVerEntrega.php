@@ -16,7 +16,7 @@
             <div class="modal-body p-4" id="contenedor_despacho">
                 </div>
             <div class="modal-footer border-0 justify-content-center pb-4 pt-0">
-                <button type="button" class="btn btn-light rounded-pill px-5 fw-bold text-muted" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-light rounded-pill px-5 fw-bold text-body-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
@@ -60,7 +60,7 @@
                 // --- DISEÑO A: ENTREGA EN RUTA (LOGÍSTICA) ---
                 const listaTripulantes = (d.tripulantes && d.tripulantes.length > 0)
                     ? d.tripulantes.map(t => `<span class="badge bg-white text-dark border shadow-sm me-1" style="font-size:0.7rem;">${t.nombre}</span>`).join('')
-                    : '<span class="text-muted small italic">Sin ayudantes asignados</span>';
+                    : '<span class="text-body-secondary small italic">Sin ayudantes asignados</span>';
 
                 htmlBody = `
                     <div class="card border-0 shadow-sm animate__animated animate__fadeIn" style="border-radius: 24px; background: linear-gradient(145deg, #f0f7ff, #ffffff);">
@@ -76,7 +76,7 @@
                                     </div>
                                 </div>
                                 <div class="text-end">
-                                    <label class="text-muted d-block mb-0" style="font-size: 0.6rem; font-weight: 700;">CAPTURÓ</label>
+                                    <label class="text-body-secondary d-block mb-0" style="font-size: 0.6rem; font-weight: 700;">CAPTURÓ</label>
                                     <span class="fw-bold text-primary small">${d.usuario_asigno_sistema || 'Admin'}</span>
                                 </div>
                             </div>
@@ -86,7 +86,7 @@
         <div class="col-7">
             <div class="d-flex mb-2">
                 <div class="me-3">
-                    <label class="text-muted small d-block mb-0" style="font-weight: 600; font-size: 0.7rem;">
+                    <label class="text-body-secondary small d-block mb-0" style="font-weight: 600; font-size: 0.7rem;">
                         <i class="bi bi-calendar-check text-primary me-1"></i>SALIDA
                     </label>
                     <span class="fw-bold text-dark" style="font-size: 0.85rem;">
@@ -94,7 +94,7 @@
                     </span>
                 </div>
                 <div class="ps-3 border-start">
-                    <label class="text-muted small d-block mb-0" style="font-weight: 600; font-size: 0.7rem;">
+                    <label class="text-body-secondary small d-block mb-0" style="font-weight: 600; font-size: 0.7rem;">
                         <i class="bi bi-flag-fill text-success me-1"></i>LLEGADA
                     </label>
                     <span class="fw-bold ${d.fecha_llegada ? 'text-dark' : 'text-primary'}" style="font-size: 0.85rem;">
@@ -106,7 +106,7 @@
 
         <div class="col-5 border-start">
             <div class="ps-2">
-                <label class="text-muted small d-block mb-0" style="font-weight: 600; font-size: 0.7rem;">
+                <label class="text-body-secondary small d-block mb-0" style="font-weight: 600; font-size: 0.7rem;">
                     <i class="bi bi-geo-alt-fill text-danger me-1"></i>DESTINO FINAL
                 </label>
                 <div class="fw-bold text-dark text-truncate" style="font-size: 0.85rem;" title="${d.direccion_entrega || 'Entrega en Sucursal'}">
@@ -119,18 +119,18 @@
 
                             <div class="row g-2 mb-3">
                                 <div class="col-7">
-                                    <label class="text-muted d-block small mb-0">Chofer:</label>
+                                    <label class="text-body-secondary d-block small mb-0">Chofer:</label>
                                     <span class="fw-bold text-dark text-uppercase small">${d.trabajador_entrega_ruta || 'No asignado'}</span>
                                 </div>
                                 <div class="col-5 text-end">
-                                    <label class="text-muted d-block small mb-0">Unidad:</label>
+                                    <label class="text-body-secondary d-block small mb-0">Unidad:</label>
                                     <span class="d-block fw-bold small text-dark">${d.vehiculo || 'S/V'}</span>
                                     <span class="badge bg-dark text-white font-monospace" style="font-size: 0.6rem;">${d.placas || '---'}</span>
                                 </div>
                             </div>
 
                             <div class="pt-3 border-top">
-                                <label class="text-muted small d-block mb-2" style="font-weight: 600;">Equipo de Apoyo:</label>
+                                <label class="text-body-secondary small d-block mb-2" style="font-weight: 600;">Equipo de Apoyo:</label>
                                 <div class="d-flex flex-wrap gap-1">${listaTripulantes}</div>
                             </div>
                         </div>
@@ -148,24 +148,24 @@
                                     </div>
                                     <div class="ms-3">
                                         <h6 class="fw-bold mb-0">Entrega en Mostrador</h6>
-                                        <small class="text-muted fw-bold" style="font-size:0.7rem;">Despacho Directo</small>
+                                        <small class="text-body-secondary fw-bold" style="font-size:0.7rem;">Despacho Directo</small>
                                     </div>
                                 </div>
                                 <div class="text-end">
-                                    <label class="text-muted d-block mb-0" style="font-size: 0.6rem; font-weight: 700;">VALIDÓ</label>
+                                    <label class="text-body-secondary d-block mb-0" style="font-size: 0.6rem; font-weight: 700;">VALIDÓ</label>
                                     <span class="fw-bold text-success small">${d.usuario_valida_patio || 'Admin'}</span>
                                 </div>
                             </div>
 
                             <div class="p-3 bg-white rounded-4 border border-light shadow-sm mb-3">
-                                <label class="text-muted d-block small mb-1" style="font-weight: 600;"><i class="bi bi-clock-history text-success me-1"></i>Fecha de Salida</label>
+                                <label class="text-body-secondary d-block small mb-1" style="font-weight: 600;"><i class="bi bi-clock-history text-success me-1"></i>Fecha de Salida</label>
                                 <span class="fw-bold text-dark" style="font-size: 0.9rem;">${d.fecha_patio || d.fecha_movimiento}</span>
                             </div>
 
                             <div class="p-3 bg-white rounded-4 border border-light shadow-sm">
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <label class="text-muted d-block small mb-0">Encargado de Entrega:</label>
+                                        <label class="text-body-secondary d-block small mb-0">Encargado de Entrega:</label>
                                         <span class="fw-bold text-dark text-uppercase">${d.trabajador_despacho_patio || d.trabajador_entrega_ruta || 'Personal de Patio'}</span>
                                     </div>
                                     <i class="bi bi-patch-check-fill text-success fs-3"></i>

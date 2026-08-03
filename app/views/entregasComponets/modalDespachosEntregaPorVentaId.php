@@ -21,11 +21,11 @@
                         <div class="p-4 border-bottom bg-light">
                             <div class="row text-center">
                                 <div class="col-6 border-end">
-                                    <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Artículos</small>
+                                    <small class="text-body-secondary text-uppercase fw-bold" style="font-size: 0.65rem;">Artículos</small>
                                     <h4 id="gfin_totalProductos" class="mb-0 fw-bold text-dark">0</h4>
                                 </div>
                                 <div class="col-6">
-                                    <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Utilidad Neta</small>
+                                    <small class="text-body-secondary text-uppercase fw-bold" style="font-size: 0.65rem;">Utilidad Neta</small>
                                     <h4 id="gfin_totalUtilidad" class="mb-0 fw-bold text-success">$0.00</h4>
                                 </div>
                             </div>
@@ -41,7 +41,7 @@
                             </div>
 
                             <div class="mb-4">
-                                <label class="small fw-bold text-muted text-uppercase mb-2 d-block" style="font-size: 0.65rem;">Modo de Entrega</label>
+                                <label class="small fw-bold text-body-secondary text-uppercase mb-2 d-block" style="font-size: 0.65rem;">Modo de Entrega</label>
                                 <div class="btn-group w-100 shadow-sm">
                                     <input type="radio" class="btn-check" name="gfin_tipo_logistica" id="gfin_optPatio" value="patio" checked onchange="gfin_toggleRuta(false)">
                                     <label class="btn btn-outline-success py-2 fw-bold" for="gfin_optPatio">
@@ -67,17 +67,17 @@
 
                                     <div class="row g-2 mb-3">
                                         <div class="col-md-6" id="gfin_col_vehiculo">
-                                            <label class="small fw-bold text-muted">UNIDAD</label>
+                                            <label class="small fw-bold text-body-secondary">UNIDAD</label>
                                             <select id="gfin_vehiculo_id" class="form-select border-0 shadow-sm"></select>
                                         </div>
                                         <div class="col-md-6">
-                                            <label id="gfin_lbl_chofer" class="small fw-bold text-muted">CHOFER</label>
+                                            <label id="gfin_lbl_chofer" class="small fw-bold text-body-secondary">CHOFER</label>
                                             <select id="gfin_chofer_id" class="form-select border-0 shadow-sm"></select>
                                         </div>
                                     </div>
 
                                     <div class="mb-0">
-                                        <label class="small fw-bold text-muted">AYUDANTES</label>
+                                        <label class="small fw-bold text-body-secondary">AYUDANTES</label>
                                         <select id="gfin_tripulantes" class="form-select border-0 shadow-sm" multiple size="3" style="font-size: 0.85rem;"></select>
                                     </div>
                                 </div>
@@ -85,7 +85,7 @@
                             
                             <div id="gfin_loader" class="text-center py-5">
                                 <div class="spinner-grow text-primary mb-2" role="status"></div>
-                                <p class="small text-muted fw-bold">Sincronizando recursos...</p>
+                                <p class="small text-body-secondary fw-bold">Sincronizando recursos...</p>
                             </div>
                         </div>
                     </div>
@@ -93,7 +93,7 @@
             </div>
 
             <div class="modal-footer bg-white border-top-0 py-3 px-4">
-                <button class="btn btn-link text-muted fw-bold text-decoration-none" data-bs-dismiss="modal">Cerrar</button>
+                <button class="btn btn-link text-body-secondary fw-bold text-decoration-none" data-bs-dismiss="modal">Cerrar</button>
                 <button id="gfin_btnConfirmar" class="btn btn-success rounded-pill px-5 fw-bold shadow-sm" disabled>
                     <i class="bi bi-check-circle me-2"></i>EJECUTAR DESPACHO
                 </button>
@@ -152,7 +152,7 @@ async function abrirModalDespachoVentaGfin(venta_id, almacenId) {
 
     // UI Reset
     txtFolio.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Sincronizando...`;
-    contenedor.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-success opacity-25"></div><p class="text-muted mt-2">Analizando costos y lotes...</p></div>`;
+    contenedor.innerHTML = `<div class="text-center py-5"><div class="spinner-border text-success opacity-25"></div><p class="text-body-secondary mt-2">Analizando costos y lotes...</p></div>`;
     loader.classList.remove('d-none');
     btnConfirmar.disabled = true;
     window.gfin_data_tickets = [];

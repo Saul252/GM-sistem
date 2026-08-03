@@ -33,7 +33,7 @@
                 COTIZACIÓN
             </h2>
 
-            <div class="text-muted small mt-1" id="print-folio">
+            <div class="text-body-secondary small mt-1" id="print-folio">
                 Folio: <span class="fw-semibold">#00000</span>
             </div>
         </div>
@@ -46,7 +46,7 @@
             CFSistem
         </div>
 
-        <div class="text-muted small" id="print-fecha">
+        <div class="text-body-secondary small" id="print-fecha">
             Fecha: --/--/----
         </div>
     </div>
@@ -58,7 +58,7 @@
 <div class="row p-3"style="background: #ffffff02 !important;">
     <div style="background: #ffffff02 !important;"class="col-4 border rounded-3 bg-light p-3 shadow-sm">
         <div class="  ">
-            <small class="text-uppercase text-muted fw-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">
+            <small class="text-uppercase text-body-secondary fw-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">
                 Vendedor:
             </small>
             <div class="fw-bold text-black" id="vendedor" style="background: #ffffff02 !important;font-size: 0.9rem;">---</div>
@@ -67,7 +67,7 @@
     
     <div style="background: #ffffff02 !important;" class="col-8 border rounded-3 bg-light p-3 shadow-sm">
         
-            <small class="text-uppercase text-muted fw-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">
+            <small class="text-uppercase text-body-secondary fw-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">
                 Cliente:
             </small>
             <div class="row fw-bold text-black" id="clienteData"style="background: #ffffff02 !important;font-size: 0.9rem;">---</div>
@@ -144,7 +144,7 @@
 let cliente=`
     
         <div class="col-6">
-            <small class="text-muted d-block" style="font-size: 0.75rem;">CLIENTE</small>
+            <small class="text-body-secondary d-block" style="font-size: 0.75rem;">CLIENTE</small>
              
             <div>
                  <span id="print-cliente-nombre" class="fw-bold text-dark">${infoBase.cliente_nombre}</span>
@@ -154,14 +154,14 @@ let cliente=`
         <div class="col-6">
            
             <div>
-                <small class="text-muted d-block" style="font-size: 0.75rem;">Dirección</small>
+                <small class="text-body-secondary d-block" style="font-size: 0.75rem;">Dirección</small>
                 <span id="print-cliente-direccion" class="text-secondary small">${infoBase.direccion ?? ''}</span>
             </div>
         </div>
 
         <div class="col-6">
              <div>
-                <small class="text-muted d-block" style="font-size: 0.75rem;">Teléfono</small>
+                <small class="text-body-secondary d-block" style="font-size: 0.75rem;">Teléfono</small>
                 <span id="print-cliente-telefono" class="text-secondary small">${infoBase.telefono ?? '#'}</span>
             </div>
         </div>
@@ -174,7 +174,7 @@ let vendedor=`<div class="card border-0 bg-light">
         <div class="d-flex align-items-center gap-2">
             <i class="bi bi-person-fill text-secondary fs-5"></i>
             <div>
-                <small class="text-muted d-block" style="font-size: 0.75rem;">Vendedor</small>
+                <small class="text-body-secondary d-block" style="font-size: 0.75rem;">Vendedor</small>
                 <span id="print-cliente-nombre" class="fw-bold text-dark">${infoBase.nombreVendedor}</span>
             </div>
         </div>
@@ -296,7 +296,7 @@ let fecha = "<?= date('d/m/Y') ?>"; // Resultado: 01/07/2026
                 COTIZACIÓN
             </h2>
 
-            <div class="text-muted small mt-1 text-uppercase" id="print-folio">
+            <div class="text-body-secondary small mt-1 text-uppercase" id="print-folio">
                 Folio: <span class="fw-semibold">${id}</span>
             </div>
         </div>
@@ -309,7 +309,7 @@ let fecha = "<?= date('d/m/Y') ?>"; // Resultado: 01/07/2026
             CFSistem
         </div>
 
-        <div class="text-uppercase text-muted small" id="print-fecha">
+        <div class="text-uppercase text-body-secondary small" id="print-fecha">
             Fecha: ${fecha}
         </div>
     </div>
@@ -321,7 +321,7 @@ let fecha = "<?= date('d/m/Y') ?>"; // Resultado: 01/07/2026
 <div class="row p-3"style="background: #ffffff02 !important;">
     <div style="background: #ffffff02 !important;"class="col-5 border rounded-3 bg-light  shadow-sm">
         <div class="  ">
-            <small class="text-uppercase text-muted fw-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">
+            <small class="text-uppercase text-body-secondary fw-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">
                 
             </small>
             <div class="text-uppercase fw-bold text-black" id="vende" style="background: #ffffff02 !important;font-size: 0.9rem;">${vendedor}</div>
@@ -330,7 +330,7 @@ let fecha = "<?= date('d/m/Y') ?>"; // Resultado: 01/07/2026
     
     <div style="background: #ffffff02 !important;" class="col-7 border rounded-3 bg-light  shadow-sm">
         
-            <small class="text-uppercase text-muted fw-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">
+            <small class="text-uppercase text-body-secondary fw-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">
               
             </small>
             <div class="row fw-bold text-blackcard border-0 bg-light " id="clienteD"style="background: #ffffff02 !important;font-size: 0.9rem;">${cliente}</div>
@@ -376,7 +376,7 @@ ${html}
     <div class="fw-bold mb-2 text-uppercase text-secondary" style="font-size: 0.75rem; letter-spacing: 0.5px;">
         Notas y Condiciones de Venta:
     </div>
-    <ul class="mb-0 text-muted" style="font-size: 0.85rem; padding-left: 1.2rem; line-height: 1.5;">
+    <ul class="mb-0 text-body-secondary" style="font-size: 0.85rem; padding-left: 1.2rem; line-height: 1.5;">
         <li>Los precios están sujetos a cambios sin previo aviso.</li>
         <li>Los precios ya incluyen IVA.</li>
         <li>Las descargas son a pie de carro.</li>

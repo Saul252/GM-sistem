@@ -101,11 +101,11 @@ window.procesarVenta = function() {
                     Swal.fire({
                         title: res.total_entregado >= res.total_pedido ? '¡Venta Exitosa!' : 'Entrega Parcial',
                         html: `
-                            <div class="alert alert-light border-0 small shadow-sm text-start py-2">
+                            <div class="alert bg-body-tertiary text-body border-0 small shadow-sm text-start py-2">
                                 ${res.message || 'Operación realizada correctamente.'}
                             </div>
                             ${htmlExtra}
-                            <p class="text-muted small">¿Deseas imprimir el ticket?</p>
+                            <p class="text-body-secondary small">¿Deseas imprimir el ticket?</p>
                         `,
                         icon: iconoFinal,
                         showDenyButton: true,

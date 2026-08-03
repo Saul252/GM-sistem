@@ -14,9 +14,9 @@
         :root { --apple-bg: #f5f5f7; --apple-blue: #007aff; }
         body { background-color: var(--apple-bg); font-family: -apple-system, sans-serif; }
         .main-content { margin-left: 260px; padding: 80px 20px; transition: 0.3s; }
-        .glass-card { background: rgba(255,255,255,0.8); backdrop-filter: blur(15px); border-radius: 22px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .ios-input { border: none; background: #eef0f2; border-radius: 12px; padding: 10px; font-size: 14px; }
-        .ios-input:focus { background: #fff; box-shadow: 0 0 0 3px rgba(0,122,255,0.1); }
+        .glass-card { backdrop-filter: blur(15px); border-radius: 22px; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .ios-input { border: none;  border-radius: 12px; padding: 10px; font-size: 14px; }
+        .ios-input:focus { box-shadow: 0 0 0 3px rgba(0,122,255,0.1); }
         .table thead th { background: transparent; text-transform: uppercase; letter-spacing: 0.8px; font-weight: 700; color: #8e8e93; font-size: 11px; border-bottom: 1px solid rgba(0,0,0,0.05); padding: 15px 10px; }
         .btn-ios { border-radius: 14px; font-weight: 600; transition: 0.2s; }
         .icon-box { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border-radius: 12px; background: rgba(0,122,255,0.1); color: var(--apple-blue); }
@@ -51,7 +51,7 @@
                 <form id="formFiltrosTesoreria" class="row g-3 align-items-end">
                    
                     <div class="col-md-3">
-                        <label class="small fw-bold text-muted text-uppercase mb-2 d-block">Fecha de Corte</label>
+                        <label class="small fw-bold text-body-secondary text-uppercase mb-2 d-block">Fecha de Corte</label>
                         <input type="date" id="filtro_fecha" class="form-control ios-input" value="<?= date('Y-m-d') ?>">
                     </div>
                     <div class="col-md-2">
@@ -86,8 +86,8 @@
         <div class="glass-card h-100 position-relative overflow-hidden animate__animated animate__fadeInUp"
              style="border-radius:18px; backdrop-filter: blur(12px);">
 
-            <div class="p-3 border-bottom bg-white bg-opacity-50">
-                <h6 class="mb-0 fw-semibold text-dark">🏦 Cajas Fuertes</h6>
+            <div class="p-3 border-bottom  bg-opacity-50">
+                <h6 class="mb-0 fw-semibold ">🏦 Cajas Fuertes</h6>
             </div>
 
             <div class="table-responsive">
@@ -124,8 +124,8 @@
         <div class="glass-card h-100 position-relative overflow-hidden animate__animated animate__fadeInUp"
              style="border-radius:18px; backdrop-filter: blur(12px);">
 
-            <div class="p-3 border-bottom bg-white bg-opacity-50">
-                <h6 class="mb-0 fw-semibold text-dark">🏛️ Cuentas Bancarias</h6>
+            <div class="p-3 border-bottom  bg-opacity-50">
+                <h6 class="mb-0 fw-semibold ">🏛️ Cuentas Bancarias</h6>
             </div>
 
             <div class="table-responsive">
@@ -161,14 +161,14 @@
 
             <div class="glass-card position-relative overflow-hidden animate__animated animate__fadeInUp mt-3">
             <div class="col-md-4 mt-3">
-    <label class="small fw-bold text-muted text-uppercase mb-2 d-block">Buscar por Concepto</label>
+    <label class="small fw-bold text-body-secondary text-uppercase mb-2 d-block">Buscar por Concepto</label>
     <div class="position-relative">
-        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-body-secondary"></i>
         <input type="text" id="filtro_concepto" onkeyup="Tesoreria.filtrarLocal()" class="form-control ios-input ps-5" placeholder="Escribe para buscar...">
     </div>
 </div>    
-            <div class="p-3 bg-light border-bottom">
-                    <h6 class="m-0 fw-bold text-muted"><i class="bi bi-list-check me-2"></i>DETALLE DE AFECTACIONES</h6>
+            <div class="p-3  border-bottom">
+                    <h6 class="m-0 fw-bold text-body-secondary"><i class="bi bi-list-check me-2"></i>DETALLE DE AFECTACIONES</h6>
                 </div>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
@@ -247,8 +247,8 @@
                 }
 
                 // Inyección en los contenedores correctos
-                $('#tbodyTesoreria').html(html || '<tr><td colspan="5" class="text-center py-5 text-muted">No hay registros de saldos</td></tr>');
-                $('#tbodyAfectaciones').html(htmlHistorial || '<tr><td colspan="7" class="text-center py-5 text-muted">Sin movimientos detallados</td></tr>');
+                $('#tbodyTesoreria').html(html || '<tr><td colspan="5" class="text-center py-5 text-body-secondary">No hay registros de saldos</td></tr>');
+                $('#tbodyAfectaciones').html(htmlHistorial || '<tr><td colspan="7" class="text-center py-5 text-body-secondary">Sin movimientos detallados</td></tr>');
                 
                 // Limpiamos el buscador al recargar datos del servidor
                 $('#filtro_concepto').val('');
@@ -267,7 +267,7 @@
 
             let html = '';
             filtrados.forEach(m => html += this.renderFilaHistorial(m));
-            $('#tbodyAfectaciones').html(html || '<tr><td colspan="7" class="text-center py-5 text-muted">No se encontraron coincidencias</td></tr>');
+            $('#tbodyAfectaciones').html(html || '<tr><td colspan="7" class="text-center py-5 text-body-secondary">No se encontraron coincidencias</td></tr>');
         },
 
         renderFila: function(m) {
@@ -279,8 +279,8 @@
                         <div class="d-flex align-items-center">
                             <div class="icon-box me-3"><i class="bi bi-shop"></i></div>
                             <div>
-                                <span class="fw-bold d-block text-dark">${m.almacen || 'Sucursal'}</span>
-                                <span class="text-muted" style="font-size:10px;">SALDO ACTUAL</span>
+                                <span class="fw-bold d-block ">${m.almacen || 'Sucursal'}</span>
+                                <span class="text-body-secondary" style="font-size:10px;">SALDO ACTUAL</span>
                             </div>
                         </div>
                     </td>
@@ -299,22 +299,22 @@
             return `
                 <tr class="animate__animated animate__fadeIn">
                     <td class="ps-4">
-                        <span class="d-block fw-bold text-dark">${m.fecha_movimiento || 'S/F'}</span>
+                        <span class="d-block fw-bold ">${m.fecha_movimiento || 'S/F'}</span>
                     </td>
                     <td>
                         <div class="d-flex align-items-center">
                             <div class="avatar-sucursal me-3">
                                 ${m.almacen ? m.almacen.substring(0, 1).toUpperCase() : 'A'}
                             </div>
-                            <span class="fw-bold text-dark">${m.almacen || 'Almacén'}</span>
+                            <span class="fw-bold ">${m.almacen || 'Almacén'}</span>
                         </div>
                     </td>
                     <td>
-                        <span class="d-block fw-bold text-dark text-uppercase small">${m.concepto || 'Sin Concepto'}</span>
+                        <span class="d-block fw-bold  text-uppercase small">${m.concepto || 'Sin Concepto'}</span>
                     </td>
-                    <td class="text-end fw-medium text-dark">${this.f(m.monto_efectivo)}</td>
-                    <td class="text-end fw-medium text-dark">${this.f(m.monto_tarjeta)}</td>
-                    <td class="text-end fw-medium text-dark">${this.f(m.monto_transferencia)}</td>
+                    <td class="text-end fw-medium ">${this.f(m.monto_efectivo)}</td>
+                    <td class="text-end fw-medium ">${this.f(m.monto_tarjeta)}</td>
+                    <td class="text-end fw-medium ">${this.f(m.monto_transferencia)}</td>
                     <td class="text-end pe-4">
                         <span class="fw-bolder fs-6 text-primary">
                             ${this.f(m.monto)}

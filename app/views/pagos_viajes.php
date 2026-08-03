@@ -17,7 +17,7 @@
     <style>
        /* Glassmorphism & Contenedores */
 .glass-card {
-  background: rgba(255, 255, 255, 0.85);
+ 
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(225, 230, 240, 0.7);
@@ -36,16 +36,16 @@
 
 /* Inputs Personalizados (iOS Style) */
 .custom-input {
-  border: 1px solid #e2e8f0;
+  
   border-radius: 10px;
   padding: 0.55rem 0.85rem;
   font-size: 0.9rem;
   transition: all 0.2s ease;
-  background-color: #f8fafc;
+ 
 }
 
 .custom-input:focus {
-  background-color: #fff;
+ 
   border-color: #0d6efd;
   box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.12);
 }
@@ -57,8 +57,8 @@
 }
 
 .custom-table thead th {
-  background-color: #f8fafc;
-  color: #475569;
+ 
+ 
   font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.6px;
@@ -69,7 +69,7 @@
 
 .custom-table tbody td {
   padding: 14px 16px;
-  color: #334155;
+  
   font-size: 0.9rem;
   border-bottom: 1px solid #f1f5f9;
 }
@@ -102,18 +102,18 @@
     <!-- HEADER -->
     <div class="d-flex justify-content-between align-items-center mb-4">
       <div>
-        <h2 class="fw-bold m-0 text-dark tracking-tight">Pagos por viaje</h2>
-        <p class="text-muted small m-0">Gestión de rutas, choferes y viáticos en tiempo real</p>
+        <h2 class="fw-bold m-0  tracking-tight">Pagos por viaje</h2>
+        <p class="text-body-secondary small m-0">Gestión de rutas, choferes y viáticos en tiempo real</p>
       </div>
       <div>
-        <span class="badge bg-white text-dark shadow-sm px-3 py-2 rounded-pill border">
+        <span class="badge text-dark  shadow-sm px-3 py-2 rounded-pill border">
           <i class="bi bi-shield-check text-success me-1"></i> Sistema Activo
         </span>
       </div>
     </div>
 
     <!-- FILTROS CARD -->
-    <div class="glass-card p-4 mb-4 border-0 shadow-sm rounded-4">
+    <div class="glass-card p-4 mb-4  shadow-sm rounded-4">
       <form id="formFiltros" class="row g-3 align-items-end">
 
        <div class="col-md-2">
@@ -196,9 +196,9 @@ $inicioSemana = date('Y-m-d', strtotime('monday this week'));
     </div>
 
     <!-- TABLA DE VIAJES -->
-    <div class="glass-card p-4 border-0 shadow-sm rounded-4">
+    <div class="glass-card p-4  shadow-sm rounded-4">
       <div class="d-flex justify-content-between align-items-center mb-3">
-        <h6 class="fw-bold m-0 text-dark">
+        <h6 class="fw-bold m-0 ">
           <i class="bi bi-truck me-2 text-primary"></i>Listado de Viajes
         </h6>
       </div>
@@ -229,7 +229,7 @@ $inicioSemana = date('Y-m-d', strtotime('monday this week'));
 <!-- MODAL REGISTRAR PAGO -->
 <div class="modal fade" id="modalPagoViaje" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+    <div class="modal-content  shadow-lg rounded-4 overflow-hidden">
 
       <div class="modal-header bg-dark text-white p-4">
         <div class="d-flex align-items-center">
@@ -247,30 +247,30 @@ $inicioSemana = date('Y-m-d', strtotime('monday this week'));
       <div class="modal-body p-4">
 
         <!-- Ficha Resumen -->
-        <div class="bg-light p-3 rounded-3 mb-3 border">
+        <div class=" p-3 rounded-3 mb-3 border">
           <div class="row g-2">
             <div class="col-6">
-              <span class="text-muted small d-block">Chofer</span>
-              <strong id="mpago_chofer" class="text-dark">-</strong>
+              <span class="text-body-secondary small d-block">Chofer</span>
+              <strong id="mpago_chofer" class="">-</strong>
             </div>
             <div class="col-6">
-              <span class="text-muted small d-block">Fecha</span>
-              <strong id="mpago_fecha" class="text-dark">-</strong>
+              <span class="text-body-secondary small d-block">Fecha</span>
+              <strong id="mpago_fecha" class="">-</strong>
             </div>
             <div class="col-12 mt-2 pt-2 border-top">
-              <span class="text-muted small d-block">Destino / Viaje</span>
-              <span id="mpago_viaje" class="text-dark fw-medium">-</span>
+              <span class="text-body-secondary small d-block">Destino / Viaje</span>
+              <span id="mpago_viaje" class=" fw-medium">-</span>
             </div>
           </div>
         </div>
 
         <!-- Campo Monto -->
         <div class="mb-3">
-          <label for="mpago_monto" class="form-label fw-semibold text-dark small">
+          <label for="mpago_monto" class="form-label fw-semibold  small">
             Monto Acreditar
           </label>
           <div class="input-group input-group-lg">
-            <span class="input-group-text bg-white border-end-0 fw-bold text-muted">$</span>
+            <span class="input-group-text bg-white border-end-0 fw-bold text-body-secondary">$</span>
             <input type="number" class="form-control border-start-0 ps-0 fw-bold text-primary" id="mpago_monto" placeholder="0.00" step="0.01" min="0">
           </div>
         </div>
@@ -281,7 +281,7 @@ $inicioSemana = date('Y-m-d', strtotime('monday this week'));
 
       </div>
 
-      <div class="modal-footer bg-light px-4 py-3 border-0">
+      <div class="modal-footer  px-4 py-3 ">
         <button type="button" class="btn btn-link text-secondary text-decoration-none me-2" data-bs-dismiss="modal">
           Cancelar
         </button>
@@ -362,7 +362,7 @@ if ($('#almacen').length) {
         
 
         if (!data.length) {
-            html = `<tr><td colspan="6" class="text-center text-muted">Sin datos</td></tr>`;
+            html = `<tr><td colspan="6" class="text-center text-body-secondary">Sin datos</td></tr>`;
         }
 data.forEach(v => {
     let boton = Number(v.monto) > 0
@@ -411,7 +411,7 @@ data.forEach(v => {
         </td>
 
         <td style="max-width:280px;">
-            <div class="fw-semibold text-dark">
+            <div class="fw-semibold ">
                 <i class="bi bi-geo-alt-fill text-danger me-1"></i>
                 ${v.direccion}
             </div>
@@ -419,11 +419,11 @@ data.forEach(v => {
 
         <td>
             <i class="bi bi-person-circle text-secondary me-1"></i>
-            ${v.nombre_chofer || '<span class="text-muted">Sin asignar</span>'}
+            ${v.nombre_chofer || '<span class="text-body-secondary">Sin asignar</span>'}
         </td>
 
         <td>
-            <span class="badge bg-light text-dark border">
+            <span class="badge  text-dark border">
                 <i class="bi bi-truck me-1"></i>
                 ${v.unidad_nombre || '-'}
             </span>

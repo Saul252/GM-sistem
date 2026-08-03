@@ -110,13 +110,13 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
         <div class="row g-3 mb-3">
             <div class="col-md-6 col-lg-3">
                 <div class="card shadow-sm border-0 rounded-4 p-3">
-                    <div class="text-muted small">Cantidad Inicial</div>
+                    <div class="text-body-secondary small">Cantidad Inicial</div>
                     <h3 class="fw-bold mb-0" id="total_inicial">0</h3>
                 </div>
             </div>
             <div class="col-md-6 col-lg-3">
                 <div class="card shadow-sm border-0 rounded-4 p-3">
-                    <div class="text-muted small">Cantidad Actual</div>
+                    <div class="text-body-secondary small">Cantidad Actual</div>
                     <h3 class="fw-bold mb-0" id="total_actual">0</h3>
                 </div>
             </div>
@@ -141,7 +141,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
                     </thead>
                     <tbody id="tablaHistorial">
                         <tr>
-                            <td colspan="10" class="text-center text-muted">Selecciona un producto</td>
+                            <td colspan="10" class="text-center text-body-secondary">Selecciona un producto</td>
                         </tr>
                     </tbody>
                 </table>

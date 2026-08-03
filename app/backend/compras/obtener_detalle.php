@@ -91,7 +91,7 @@ try {
             $claseFaltanteFactura = ($item['cantidad_faltante'] > 0) ? 'table-warning' : '';
             
             echo "<tr class='{$claseFaltanteFactura}'>
-                    <td>" . htmlspecialchars($item['producto_nombre']) . "<br><small class='text-muted'>SKU: {$item['sku']}</small></td>
+                    <td>" . htmlspecialchars($item['producto_nombre']) . "<br><small class='text-body-secondary'>SKU: {$item['sku']}</small></td>
                     <td class='text-center'>" . number_format($item['cantidad'], 2) . "</td>
                     
                     <td class='text-center {$claseAlmacen}'>
@@ -116,7 +116,7 @@ try {
             $resDest = $stmtDest->get_result();
 
             if($resDest->num_rows > 0) {
-                echo "<tr><td colspan='7' class='p-0 border-0'><div class='bg-light px-4 py-1 small border-bottom shadow-sm text-muted' style='font-size: 0.75rem;'>";
+                echo "<tr><td colspan='7' class='p-0 border-0'><div class='bg-light px-4 py-1 small border-bottom shadow-sm text-body-secondary' style='font-size: 0.75rem;'>";
                 while($d = $resDest->fetch_assoc()) {
                     echo "<span class='me-4'><i class='bi bi-geo-alt-fill text-secondary'></i> 
                           <b>" . number_format($d['cantidad'], 2) . " PZ</b> -> " . htmlspecialchars($d['almacen_n']) . "</span>";

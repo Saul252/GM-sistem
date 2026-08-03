@@ -96,7 +96,11 @@ $modulos = [
     ]
 ];
 ?>
-
+<sytile>
+    .texto{
+        color:#000 !important;
+    }
+</sytile>
 
 <nav class="navbar fixed-top navbar-expand navbar-dark navbar-premium shadow-sm">
     <div class="container-fluid px-2 px-md-4">
@@ -107,9 +111,9 @@ $modulos = [
         </div>
 
         <div class="d-flex align-items-center gap-2 gap-md-3">
-            <button type="button" class="btn btn-toggle-all d-flex align-items-center gap-2" id="btnThemeToggle" onclick="alternarModoOscuro()">
+            <button type="button" class="btn  d-flex align-items-center gap-2" id="btnThemeToggle" onclick="alternarModoOscuro()">
                 <i class="bi bi-moon-stars-fill" id="themeIcon"></i> 
-                <span id="themeLabel">Modo Oscuro</span>
+                <span class="texto" id="themeLabel">Modo Oscuro</span>
             </button>
 
             <div class="dropdown">
@@ -311,7 +315,7 @@ ${item.vehiculo}   ${item.placas}`,
                 if(cantidadActual==0){
 
                     lista.innerHTML=`
-                        <div class="p-4 text-center text-muted">
+                        <div class="p-4 text-center text-body-secondary">
                             No hay mantenimientos próximos.
                         </div>`;
 
@@ -515,7 +519,7 @@ onclick="window.location='/cfsistem/app/controllers/mantenimientos.php?id=${item
                 if (lista && data.items) {
                     if (cantidadActual === 0) {
                         lista.innerHTML =
-                            '<div class="p-4 text-center text-muted small">Sin traspasos pendientes</div>';
+                            '<div class="p-4 text-center text-body-secondary small">Sin traspasos pendientes</div>';
                     } else {
                         lista.innerHTML = data.items.map(item => {
                             const mostrarCantidad = item.cantidad_texto ? item.cantidad_texto : (
@@ -524,7 +528,7 @@ onclick="window.location='/cfsistem/app/controllers/mantenimientos.php?id=${item
                             <div class="d-flex align-items-center justify-content-between p-3 border-bottom bg-white hover-notif">
                                 <div style="flex: 1; line-height: 1.4;">
                                     <b class="text-primary d-block small text-uppercase text-success">${item.producto}</b>
-                                    <b class="d-block text-muted text-success" style="font-size: 0.75rem;">De: ${item.emisor}</b>
+                                    <b class="d-block text-body-secondary text-success" style="font-size: 0.75rem;">De: ${item.emisor}</b>
                                     <div class="mt-1">
                                         <b class="text-primary d-block small text-uppercase text-success">${mostrarCantidad}</b>
                                     </div>

@@ -5,59 +5,63 @@ MODAL LISTA DE MEDIDAS
 
     <div class="modal-dialog modal-dialog-centered modal-lg">
 
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-content border-0 shadow-lg overflow-hidden">
 
-            <!-- HEADER -->
-            <div class="modal-header bg-dark text-white border-0">
+            <!-- HEADER: Gradiente adaptativo -->
+            <div class="modal-header bg-primary bg-gradient text-white border-0 p-4 position-relative">
 
-                <div>
-                    <h5 class="modal-title fw-bold mb-0">
-                        <i class="bi bi-rulers me-2"></i>
+                <div class="pe-4">
+                    <h5 class="modal-title fw-bold mb-1 d-flex align-items-center gap-2">
+                        <i class="bi bi-rulers fs-4"></i>
                         Medidas Disponibles
                     </h5>
 
-                    <small
-                        id="subtituloListaMedidas"
-                        class="text-white-50">
-
+                    <small id="subtituloListaMedidas" class="text-white-50 fw-medium">
                         Cargando detalles...
                     </small>
                 </div>
 
-                <button
-                    type="button"
-                    class="btn-close btn-close-white"
-                    data-bs-dismiss="modal">
+                <button type="button" 
+                        class="btn-close btn-close-white position-absolute top-0 end-0 m-4" 
+                        data-bs-dismiss="modal" 
+                        aria-label="Close">
                 </button>
 
             </div>
   
             <!-- BODY -->
-            <div class="modal-body bg-light p-0">
+            <div class="modal-body p-0 bg-body">
+
+                <!-- Barra superior de acciones -->
+                <div class="p-3 border-bottom bg-body-tertiary d-flex justify-content-between align-items-center">
+                    <span class="text-body-secondary small fw-semibold text-uppercase tracking-wide">
+                        Lista de Equivalencias
+                    </span>
+                    <button type="button" 
+                            id="agregarMedida" 
+                            class="btn btn-primary btn-sm rounded-pill px-3 shadow-sm d-flex align-items-center gap-2">
+                        <i class="bi bi-plus-circle-fill"></i>
+                        <span>Agregar Medida</span>
+                    </button>
+                </div>
 
                 <div class="table-responsive">
 
                     <table class="table table-hover align-middle mb-0">
-                         <button type="button" id="agregarMedida"
-        class="btn btn-dark rounded-pill shadow-sm" 
-       
-    <i class="bi bi-plus-circle me-2"></i>
-    Agregar Medida
-</button>
 
-                        <thead class="table-light">
+                        <thead class="bg-body-tertiary border-bottom">
 
                             <tr>
-                                <th class="ps-4">Nombre Medida</th>
-                                <th>Equivalencia</th>
-                                <th class="text-end pe-4">Acciones</th>
+                                <th class="ps-4 text-body-secondary small text-uppercase">Nombre Medida</th>
+                                <th class="text-body-secondary small text-uppercase">Equivalencia</th>
+                                <th class="text-end pe-4 text-body-secondary small text-uppercase">Acciones</th>
                             </tr>
 
                         </thead>
 
                         <tbody id="tablaCuerpoMedidas">
 
-                            <!-- JS -->
+                            <!-- JS Populate -->
 
                         </tbody>
 
@@ -65,15 +69,13 @@ MODAL LISTA DE MEDIDAS
 
                 </div>
 
-                <!-- EMPTY -->
-                <div
-                    id="listaVacia"
-                    class="text-center py-5 d-none">
+                <!-- EMPTY STATE -->
+                <div id="listaVacia" class="text-center py-5 d-none">
 
-                    <i class="bi bi-info-circle fs-2 text-muted"></i>
+                    <i class="bi bi-inbox fs-1 text-body-tertiary d-block mb-2"></i>
 
-                    <p class="text-muted mt-2 mb-0">
-                        No hay medidas adicionales para este producto.
+                    <p class="text-body-secondary fw-medium mb-0">
+                        No hay medidas adicionales configuradas para este producto.
                     </p>
 
                 </div>
@@ -81,13 +83,11 @@ MODAL LISTA DE MEDIDAS
             </div>
 
             <!-- FOOTER -->
-            <div class="modal-footer border-0 bg-white">
+            <div class="modal-footer border-top bg-body-tertiary px-4 py-3">
 
-                <button
-                    type="button"
-                    class="btn btn-light rounded-pill px-4"
-                    data-bs-dismiss="modal">
-
+                <button type="button" 
+                        class="btn btn-outline-secondary rounded-pill px-4 fw-semibold" 
+                        data-bs-dismiss="modal">
                     Cerrar
                 </button>
 
@@ -100,275 +100,33 @@ MODAL LISTA DE MEDIDAS
 </div>
 
 
-<script>
-
-const URL_MEDIDAS =
-    '/cfsistem/app/controllers/productosController.php';
-
-    
-let ultimaMedidaProductoId = 0;
-let ultimaMedidaAlmacenId = 0;
-let ultimaMedidaNombreProducto = '';
-let ultimaUnidadMedida = '';
-
-
-// =========================================
-// VER LISTA MEDIDAS
-// =========================================
-
-async function verListaMedidas(
-    idProducto,
-    idAlmacen,
-    nombreProducto,
-    unidad_medida
-) {
-  ultimaMedidaProductoId = idProducto;
-    ultimaMedidaAlmacenId = idAlmacen;
-    ultimaMedidaNombreProducto = nombreProducto;
-    ultimaUnidadMedida = unidad_medida;
-    const tbody =
-        document.getElementById('tablaCuerpoMedidas');
-
-    const subtitulo =
-        document.getElementById('subtituloListaMedidas');
-
-    const emptyState =
-        document.getElementById('listaVacia');
-
-
-    // =========================================
-    // PREPARAR UI
-    // =========================================
-
-    subtitulo.innerText =
-        `Producto: ${nombreProducto}`;
-
-    emptyState.classList.add('d-none');
-
-    tbody.innerHTML = `
-        <tr>
-            <td colspan="3" class="text-center py-4">
-
-                <div
-                    class="spinner-border spinner-border-sm text-secondary"
-                    role="status">
-                </div>
-
-                <span class="ms-2">
-                    Cargando medidas...
-                </span>
-
-            </td>
-        </tr>
-    `;
-
-
-    // =========================================
-    // MODAL
-    // =========================================
-
-    const modalEl =
-        document.getElementById('modalListaMedidas');
-
-    let myModal =
-        bootstrap.Modal.getInstance(modalEl);
-
-    if (!myModal) {
-
-        myModal =
-            new bootstrap.Modal(modalEl);
-    }
-
-    myModal.show();
-
-
-    try {
-
-        // =========================================
-        // FETCH
-        // =========================================
-
-        const resp = await fetch(
-            `${URL_MEDIDAS}?action=obtnerMedidas&id=${idProducto}`
-        );
-        
-        if (!resp.ok) {
-
-            throw new Error('Error en la red');
-        }
-
-        const data = await resp.json();
-        console.log(data.producto.medidas);
-
-
-        tbody.innerHTML = '';
-
-
-        // =========================================
-        // DATOS
-        // =========================================
-
-        if (
-            data.status 
-           
-           
-        ) {
-          
- $('#agregarMedida')
-                  
-                    .attr(
-                        'onclick',
-                        `prepararNuevaMedida(${idProducto}, ${idAlmacen},'${nombreProducto}','${unidad_medida}')`
-                    );
-
-            data.producto.medidas.forEach(m => {
-
-                // 🔥 SOLUCIÓN SEGURA
-                const medidaData =
-                    encodeURIComponent(
-                        JSON.stringify(m)
-                    );
-
-                const fila = `
-
-                    <tr>
-
-                        <td class="ps-4">
-
-                            <div class="fw-bold text-dark">
-                                ${m.nombre}
-                            </div>
-
-                        </td>
-
-                        <td>
-
-                            <span class="badge bg-light text-dark border px-3 py-2">
-                            ${m.equivalencia} ${m.nombre}s =  1 ${unidad_medida} 
-                               
-                               
-
-                            </span>
-
-                        </td>
-
-                        <td class="text-end pe-4">
-
-                            <button
-                                class="btn btn-sm btn-light rounded-circle me-1 shadow-sm"
-
-                                onclick="abrirEditarMedida('${medidaData}')">
-
-                                <i class="bi bi-pencil text-primary"></i>
-
-                            </button>
-
-                            <button
-                                class="btn btn-sm btn-light rounded-circle shadow-sm"
-
-                                onclick="eliminarMedida(${m.id})">
-
-                                <i class="bi bi-trash text-danger"></i>
-
-                            </button>
-
-                        </td>
-
-                    </tr>
-                `;
-
-                tbody.insertAdjacentHTML(
-                    'beforeend',
-                    fila
-                );
-
-            });
-
-        } else {
-
-            emptyState.classList.remove('d-none');
-        }
-
-    } catch (error) {
-
-        console.error("Error:", error);
-
-        tbody.innerHTML = `
-
-            <tr>
-
-                <td
-                    colspan="3"
-                    class="text-center py-4 text-danger">
-
-                    <i class="bi bi-exclamation-triangle me-2"></i>
-
-                    No se pudo cargar la información
-
-                </td>
-
-            </tr>
-        `;
-    }
-}
-
-
-function recargarModalMedidas() {
-
-    verListaMedidas(
-        ultimaMedidaProductoId,
-        ultimaMedidaAlmacenId,
-        ultimaMedidaNombreProducto,
-        ultimaUnidadMedida
-    );
-}
-// =========================================
-// ABRIR EDITAR
-// =========================================
-
-function abrirEditarMedida(data) {
-
-    const medida =
-        JSON.parse(
-            decodeURIComponent(data)
-        );
-
-    console.log(medida);
-
-    // AQUÍ LLENAS TU MODAL
-}
-
-
-</script>
 <!-- =========================================
 MODAL EDITAR MEDIDA
 ========================================= -->
-<div class="modal fade"
-     id="modalEditarMedida"
-     tabindex="-1"
-     aria-hidden="true">
+<div class="modal fade" id="modalEditarMedida" tabindex="-1" aria-hidden="true">
 
     <div class="modal-dialog modal-dialog-centered">
 
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-content border-0 shadow-lg overflow-hidden">
 
             <!-- HEADER -->
-            <div class="modal-header bg-primary text-white border-0">
+            <div class="modal-header bg-primary bg-gradient text-white border-0 p-4 position-relative">
 
-                <div>
-                    <h5 class="modal-title fw-bold mb-0">
-                        <i class="bi bi-pencil-square me-2"></i>
+                <div class="pe-4">
+                    <h5 class="modal-title fw-bold mb-1 d-flex align-items-center gap-2">
+                        <i class="bi bi-pencil-square fs-4"></i>
                         Editar Medida
                     </h5>
 
-                    <small class="text-white-50">
-                        Modifica la equivalencia
+                    <small class="text-white-50 fw-medium">
+                        Modifica el nombre y la equivalencia
                     </small>
                 </div>
 
-                <button type="button"
-                        class="btn-close btn-close-white"
-                        data-bs-dismiss="modal">
+                <button type="button" 
+                        class="btn-close btn-close-white position-absolute top-0 end-0 m-4" 
+                        data-bs-dismiss="modal" 
+                        aria-label="Close">
                 </button>
 
             </div>
@@ -376,76 +134,64 @@ MODAL EDITAR MEDIDA
             <!-- FORM -->
             <form id="formEditarMedida">
 
-                <input type="hidden"
-                       id="edit_medida_id"
-                       name="id">
+                <input type="hidden" id="edit_medida_id" name="id">
+                <input type="hidden" id="edit_producto_id" name="producto_id">
 
-                <input type="hidden"
-                       id="edit_producto_id"
-                       name="producto_id">
-
-                <div class="modal-body bg-light p-4">
+                <div class="modal-body p-4 bg-body">
 
                     <!-- NOMBRE -->
-                    <div class="mb-3">
-
-                      <!-- NOMBRE -->
-<div class="mb-3">
-    <label class="form-label fw-semibold small text-uppercase text-muted">
-        Nombre
-    </label>
- <input type="text"
-       id="edit_nombre_medida"
-       class="form-control rounded-3"
-       name="nombre_edit"
-       required>
-</div>
-
-
-
+                    <div class="mb-4">
+                        <label for="edit_nombre_medida" class="form-label fw-bold small text-uppercase text-body-secondary">
+                            Nombre de la medida
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-body-tertiary border-end-0 text-body-secondary">
+                                <i class="bi bi-tag-fill"></i>
+                            </span>
+                            <input type="text" 
+                                   id="edit_nombre_medida" 
+                                   class="form-control border-start-0 ps-0" 
+                                   name="nombre_edit" 
+                                   placeholder="Ej. Caja, Gramo" 
+                                   required>
+                        </div>
                     </div>
 
                     <!-- EQUIVALENCIA -->
                     <div class="mb-3">
-
-                        <label class="form-label fw-semibold small text-uppercase text-muted">
+                        <label for="edit_equivalencia" class="form-label fw-bold small text-uppercase text-body-secondary">
                             Equivalencia
                         </label>
 
                         <div class="input-group">
-
-                            <input type="number"
-                                   class="form-control"
-                                   id="edit_equivalencia"
-                                   name="equivalencia"
-                                   step="0.000000001"
-                                   min="0.0001"
+                            <input type="number" 
+                                   class="form-control fw-bold fs-5 text-primary" 
+                                   id="edit_equivalencia" 
+                                   name="equivalencia" 
+                                   step="0.000000001" 
+                                   min="0.0001" 
                                    required>
 
-                            <span class="input-group-text"
-                                  id="edit_unidad_text">
+                            <span class="input-group-text bg-body-tertiary fw-semibold" id="edit_unidad_text">
+                                Unidades
                             </span>
-
                         </div>
-
                     </div>
 
                 </div>
 
                 <!-- FOOTER -->
-                <div class="modal-footer border-0 bg-white px-4 pb-4">
+                <div class="modal-footer border-0 bg-body px-4 pb-4 pt-0 gap-2">
 
-                    <button type="button"
-                            class="btn btn-light rounded-pill px-4"
+                    <button type="button" 
+                            class="btn btn-outline-secondary rounded-pill px-4 fw-semibold" 
                             data-bs-dismiss="modal">
-
                         Cancelar
                     </button>
 
-                    <button type="submit"
-                            class="btn btn-primary rounded-pill px-5 shadow-sm">
-
-                        <i class="bi bi-check-circle me-2"></i>
+                    <button type="submit" 
+                            class="btn btn-primary rounded-pill px-5 fw-semibold shadow-sm">
+                        <i class="bi bi-check-lg me-1"></i>
                         Guardar Cambios
                     </button>
 
@@ -459,39 +205,201 @@ MODAL EDITAR MEDIDA
 
 </div>
 
+
+<!-- =========================================
+ESTILOS ADICIONALES (CSS)
+========================================= -->
 <style>
-
-/* =========================================
-Z INDEX MODAL
-========================================= */
-
+/* Z-Index para modales anidados */
 #modalEditarMedida {
-    z-index: 9999 !important;
+    z-index: 1065 !important;
 }
 
 #modalEditarMedida + .modal-backdrop {
-    z-index: 9998 !important;
+    z-index: 1060 !important;
 }
 
+.miSwalZ {
+    z-index: 10000 !important;
+}
+
+.tracking-wide {
+    letter-spacing: 0.05em;
+}
 </style>
 
+
+<!-- =========================================
+JAVASCRIPT
+========================================= -->
 <script>
+const URL_MEDIDAS = '/cfsistem/app/controllers/productosController.php';
+
+let ultimaMedidaProductoId = 0;
+let ultimaMedidaAlmacenId = 0;
+let ultimaMedidaNombreProducto = '';
+let ultimaUnidadMedida = '';
 
 // =========================================
-// ABRIR MODAL EDITAR
+// VER LISTA MEDIDAS
 // =========================================
+async function verListaMedidas(idProducto, idAlmacen, nombreProducto, unidad_medida) {
+    ultimaMedidaProductoId = idProducto;
+    ultimaMedidaAlmacenId = idAlmacen;
+    ultimaMedidaNombreProducto = nombreProducto;
+    ultimaUnidadMedida = unidad_medida;
 
-function abrirEditarMedida(data) {
-    // 1. Decodificar los datos
-    const medida = JSON.parse(decodeURIComponent(data));
-    console.log("Cargando en modal:", medida);
+    const tbody = document.getElementById('tablaCuerpoMedidas');
+    const subtitulo = document.getElementById('subtituloListaMedidas');
+    const emptyState = document.getElementById('listaVacia');
 
-    // 2. Asignación mediante IDs únicos
-    // Usamos value para inputs y innerText para etiquetas
+    subtitulo.innerText = `Producto: ${nombreProducto}`;
+    emptyState.classList.add('d-none');
+
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="3" class="text-center py-4">
+                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                <span class="ms-2 text-body-secondary fw-medium">Cargando medidas...</span>
+            </td>
+        </tr>
+    `;
+
+    const modalEl = document.getElementById('modalListaMedidas');
+    let myModal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    myModal.show();
+
+    try {
+        const resp = await fetch(`${URL_MEDIDAS}?action=obtnerMedidas&id=${idProducto}`);
+        
+        if (!resp.ok) throw new Error('Error en la red');
+
+        const data = await resp.json();
+        tbody.innerHTML = '';
+
+        if (data.status && data.producto.medidas && data.producto.medidas.length > 0) {
+            
+            $('#agregarMedida').attr(
+                'onclick',
+                `prepararNuevaMedida(${idProducto}, ${idAlmacen}, '${nombreProducto}', '${unidad_medida}')`
+            );
+
+           data.producto.medidas.forEach(m => {
+    const medidaData = encodeURIComponent(JSON.stringify(m));
+
+    // Convertir a número por seguridad
+    const equiv = parseFloat(m.equivalencia) || 0;
     
+    // Cálculo de la relación inversa (1 / equivalencia)
+    const inversa = equiv > 0 ? (1 / equiv) : 0;
+
+    // Formateo inteligente para limpiar ceros innecesarios a la derecha
+    const equivFormateada = Number(equiv.toFixed(6));
+    const inversaFormateada = Number(inversa.toFixed(6));
+
+    // Determinar la frase según el tipo de equivalencia para máxima claridad
+    let textoRelacion = '';
+    
+    if (equiv >= 1) {
+        // Caso: Unidad menor (Ej: 1 KG = 1000 Gramos)
+        textoRelacion = `
+            <span class="badge bg-body-tertiary text-body border border-translucent rounded-pill px-3 py-2 fw-normal d-inline-flex align-items-center gap-2 shadow-sm">
+                <span><strong class="text-primary">${equivFormateada}</strong> ${m.nombre}(s)= <strong>1</strong> ${unidad_medida} </span>
+            </span>
+        `;
+    } else {
+        // Caso: Unidad mayor (Ej: 1 Tonelada = 0.001 -> 1000 KG = 1 Tonelada)
+        textoRelacion = `
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2 fw-normal d-inline-flex align-items-center gap-2 shadow-sm">
+                <i class="bi bi-arrow-left-right opacity-75"></i>
+                <span> <strong>1</strong> ${m.nombre} = <strong>${inversaFormateada}</strong> ${unidad_medida}(s) </span>
+            </span>
+        `;
+    }
+
+    const fila = `
+        <tr class="align-middle">
+            <!-- NOMBRE DE LA MEDIDA -->
+            <td class="ps-4 py-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="p-2 bg-body-tertiary rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                        <i class="bi bi-rulers text-primary fs-6"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-body mb-0">${m.nombre}</div>
+                        <small class="text-body-secondary fs-7">
+                            Valor base: ${equivFormateada}
+                        </small>
+                    </div>
+                </div>
+            </td>
+
+            <!-- RELACIÓN / EQUIVALENCIA ELEGANTE -->
+            <td>
+                ${textoRelacion}
+            </td>
+
+            <!-- ACCIONES -->
+            <td class="text-end pe-4">
+                <div class="d-inline-flex gap-1">
+                    <button class="btn btn-sm btn-light-hover text-primary rounded-circle border-0 p-2 d-inline-flex align-items-center justify-content-center"
+                            title="Editar medida"
+                            style="width: 34px; height: 34px;"
+                            onclick="abrirEditarMedida('${medidaData}')">
+                        <i class="bi bi-pencil-fill fs-6"></i>
+                    </button>
+                    <button class="btn btn-sm btn-light-hover text-danger rounded-circle border-0 p-2 d-inline-flex align-items-center justify-content-center"
+                            title="Eliminar medida"
+                            style="width: 34px; height: 34px;"
+                            onclick="eliminarMedida(${m.id})">
+                        <i class="bi bi-trash-fill fs-6"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `;
+
+    tbody.insertAdjacentHTML('beforeend', fila);
+});
+        } else {
+            emptyState.classList.remove('d-none');
+            $('#agregarMedida').attr(
+                'onclick',
+                `prepararNuevaMedida(${idProducto}, ${idAlmacen}, '${nombreProducto}', '${unidad_medida}')`
+            );
+        }
+
+    } catch (error) {
+        console.error("Error:", error);
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="3" class="text-center py-4 text-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    No se pudo cargar la información
+                </td>
+            </tr>
+        `;
+    }
+}
+
+function recargarModalMedidas() {
+    verListaMedidas(
+        ultimaMedidaProductoId,
+        ultimaMedidaAlmacenId,
+        ultimaMedidaNombreProducto,
+        ultimaUnidadMedida
+    );
+}
+
+// =========================================
+// ABRIR EDITAR
+// =========================================
+function abrirEditarMedida(data) {
+    const medida = JSON.parse(decodeURIComponent(data));
+
     const inputId = document.getElementById('edit_medida_id');
     const inputProdId = document.getElementById('edit_producto_id');
-    const inputNombre = document.getElementById('edit_nombre_medida'); // ID único
+    const inputNombre = document.getElementById('edit_nombre_medida');
     const inputEquiv = document.getElementById('edit_equivalencia');
     const textUnidad = document.getElementById('edit_unidad_text');
 
@@ -499,126 +407,76 @@ function abrirEditarMedida(data) {
     if (inputProdId) inputProdId.value = medida.producto_id;
     if (inputEquiv) inputEquiv.value = medida.equivalencia;
     if (textUnidad) textUnidad.innerText = medida.nombre;
+    if (inputNombre) inputNombre.value = medida.nombre;
 
-    // 3. LA CORRECCIÓN CRÍTICA:
-    if (inputNombre) {
-        inputNombre.value = medida.nombre;
-        console.log("Nombre asignado al input:", inputNombre.value);
-    } else {
-        console.error("No se encontró el input con ID: edit_nombre_medida");
-    }
-
-    // 4. Abrir Modal
     const modalEl = document.getElementById('modalEditarMedida');
     const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
     modal.show();
 }
+
 // =========================================
 // GUARDAR CAMBIOS
 // =========================================
+document.getElementById('formEditarMedida').addEventListener('submit', async function(e) {
+    e.preventDefault();
 
-document
-    .getElementById('formEditarMedida')
-    .addEventListener('submit', async function(e) {
+    try {
+        Swal.fire({
+            title: 'Actualizando...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading(),
+            customClass: { popup: 'miSwalZ' }
+        });
 
-        e.preventDefault();
+        const formData = new FormData(this);
 
-        try {
+        const resp = await fetch(`${URL_MEDIDAS}?action=actualizarMedidaAdicional`, {
+            method: 'POST',
+            body: formData
+        });
 
-            Swal.fire({
-                title: 'Actualizando...',
-                allowOutsideClick: false,
-                didOpen: () => Swal.showLoading(),
-                customClass: {
-                    popup: 'miSwalZ'
-                }
+        const data = await resp.json();
+        Swal.close();
+
+        if (data.status || data.success) {
+            await Swal.fire({
+                icon: 'success',
+                title: 'Actualizado',
+                text: 'La medida fue actualizada correctamente',
+                timer: 1500,
+                showConfirmButton: false,
+                customClass: { popup: 'miSwalZ' }
             });
 
-            const formData =
-                new FormData(this);
+            const modalEditar = bootstrap.Modal.getInstance(document.getElementById('modalEditarMedida'));
+            if (modalEditar) modalEditar.hide();
 
-            const resp = await fetch(
-                `${URL_MEDIDAS}?action=actualizarMedidaAdicional`,
-                {
-                    method: 'POST',
-                    body: formData
-                }
-            );
+            recargarModalMedidas();
 
-            const data =
-                await resp.json();
-
-            Swal.close();
-
-            if (data.status || data.success) {
-      
-
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'Actualizado',
-                    text: 'La medida fue actualizada correctamente',
-                    timer: 1500,
-                    showConfirmButton: false,
-                    customClass: {
-                        popup: 'miSwalZ'
-                    }
-                });
-       
-                // CERRAR MODAL
-                const modalEditar =
-    bootstrap.Modal.getInstance(
-        document.getElementById('modalEditarMedida')
-    );
-
-if (modalEditar) {
-    modalEditar.hide();
-}
-recargarModalMedidas();
-               
-              
-
-                // RECARGAR LISTA
-                const productoId =
-                    document.getElementById('edit_producto_id').value;
-
-                console.log('Recargar lista de medidas');
-
-            } else {
-
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: data.message || 'No se pudo actualizar',
-                    customClass: {
-                        popup: 'miSwalZ'
-                    }
-                });
-                
-            }
-
-        } catch (error) {
-
-            console.error(error);
-
+        } else {
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'Falló la comunicación con el servidor',
-                customClass: {
-                    popup: 'miSwalZ'
-                }
+                text: data.message || 'No se pudo actualizar',
+                customClass: { popup: 'miSwalZ' }
             });
         }
 
-    });
+    } catch (error) {
+        console.error(error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Falló la comunicación con el servidor',
+            customClass: { popup: 'miSwalZ' }
+        });
+    }
+});
+
 // =========================================
 // ELIMINAR MEDIDA
 // =========================================
-
 async function eliminarMedida(id) {
-    
-    // Usamos el modal actual como target para que el alert herede el z-index o 
-    // simplemente forzamos el z-index con customClass
     const swalConfig = {
         title: '¿Estás seguro?',
         text: "Esta acción no se puede deshacer",
@@ -628,16 +486,13 @@ async function eliminarMedida(id) {
         cancelButtonColor: '#6c757d',
         confirmButtonText: 'Sí, eliminar',
         cancelButtonText: 'Cancelar',
-        customClass: {
-            container: 'miSwalZ' // Asegúrate de que esta clase tenga z-index: 10000 en tu CSS
-        }
+        customClass: { container: 'miSwalZ' }
     };
 
     const confirmacion = await Swal.fire(swalConfig);
 
     if (confirmacion.isConfirmed) {
         try {
-            // Mostrar estado de carga
             Swal.fire({
                 title: 'Eliminando...',
                 allowOutsideClick: false,
@@ -665,9 +520,6 @@ async function eliminarMedida(id) {
                     customClass: { container: 'miSwalZ' }
                 });
                 recargarModalMedidas();
-
-                // RECARGAR LA LISTA (Opcional: puedes llamar a verListaMedidas de nuevo)
-                // location.reload(); // O tu lógica de refresco de tabla
             } else {
                 Swal.fire({
                     icon: 'error',

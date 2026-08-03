@@ -21,7 +21,7 @@
         <div class="col-12 d-flex justify-content-between align-items-center">
             <h3 class="fw-bold"><i class="bi bi-person-vcard me-2"></i><?= $cliente['nombre_comercial'] ?></h3>
             <div class="text-end">
-                <span class="text-muted d-block">Deuda Total Acumulada</span>
+                <span class="text-body-secondary d-block">Deuda Total Acumulada</span>
                 <h2 class="text-danger fw-bold">$ <?= number_format($resumen['saldo_total'], 2) ?></h2>
             </div>
         </div>
@@ -38,11 +38,11 @@
                 <div class="header-venta d-flex justify-content-between align-items-center">
                     <div>
                         <span class="badge bg-dark mb-1">Folio: #<?= $v['folio'] ?></span>
-                        <span class="text-muted ms-2 small"><i class="bi bi-calendar3"></i> <?= date('d/m/Y', strtotime($v['fecha'])) ?></span>
+                        <span class="text-body-secondary ms-2 small"><i class="bi bi-calendar3"></i> <?= date('d/m/Y', strtotime($v['fecha'])) ?></span>
                     </div>
                     <div class="d-flex align-items-center">
                         <div class="text-end me-4">
-                            <small class="text-muted d-block">Saldo Pendiente</small>
+                            <small class="text-body-secondary d-block">Saldo Pendiente</small>
                             <span class="fw-bold <?= $saldoIndividual > 0 ? 'text-danger' : 'text-success' ?>">
                                 $ <?= number_format($saldoIndividual, 2) ?>
                             </span>
@@ -61,11 +61,11 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-7">
-                            <p class="small fw-bold text-muted mb-2"><i class="bi bi-box-seam"></i> PRODUCTOS EN ESTA VENTA</p>
+                            <p class="small fw-bold text-body-secondary mb-2"><i class="bi bi-box-seam"></i> PRODUCTOS EN ESTA VENTA</p>
                             <div class="detalle-productos">
                                 <table class="table table-sm table-borderless mb-0">
                                     <thead>
-                                        <tr class="text-muted border-bottom" style="font-size: 0.8rem;">
+                                        <tr class="text-body-secondary border-bottom" style="font-size: 0.8rem;">
                                             <th>Producto</th>
                                             <th class="text-center">Cant.</th>
                                             <th class="text-end">Precio</th>
@@ -75,7 +75,7 @@
                                     <tbody>
                                         <?php foreach ($v['productos'] as $p): ?>
                                         <tr style="font-size: 0.9rem;">
-                                            <td><?= $p['producto'] ?> <br><small class="text-muted">SKU: <?= $p['sku'] ?> | Lote: <?= $p['lote_codigo'] ?></small></td>
+                                            <td><?= $p['producto'] ?> <br><small class="text-body-secondary">SKU: <?= $p['sku'] ?> | Lote: <?= $p['lote_codigo'] ?></small></td>
                                             <td class="text-center"><?= number_format($p['cantidad'], 2) ?></td>
                                             <td class="text-end">$ <?= number_format($p['precio_venta'], 2) ?></td>
                                             <td class="text-end fw-bold">$ <?= number_format($p['cantidad'] * $p['precio_venta'], 2) ?></td>
@@ -84,7 +84,7 @@
                                     </tbody>
                                     <tfoot>
                                         <tr class="border-top">
-                                            <td colspan="3" class="text-end text-muted">Total Venta:</td>
+                                            <td colspan="3" class="text-end text-body-secondary">Total Venta:</td>
                                             <td class="text-end fw-bold text-dark">$ <?= number_format($v['total'], 2) ?></td>
                                         </tr>
                                     </tfoot>
@@ -93,10 +93,10 @@
                         </div>
 
                         <div class="col-md-5">
-                            <p class="small fw-bold text-muted mb-2"><i class="bi bi-clock-history"></i> HISTORIAL DE PAGOS</p>
+                            <p class="small fw-bold text-body-secondary mb-2"><i class="bi bi-clock-history"></i> HISTORIAL DE PAGOS</p>
                             <?php if (empty($v['pagos'])): ?>
-                                <div class="alert alert-light border text-center py-2">
-                                    <small class="text-muted">No se han registrado abonos aún.</small>
+                                <div class="alert bg-body-tertiary text-body border text-center py-2">
+                                    <small class="text-body-secondary">No se han registrado abonos aún.</small>
                                 </div>
                             <?php else: ?>
                                 <div class="historial-pagos">
@@ -104,7 +104,7 @@
                                     <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-white border rounded shadow-sm">
                                         <div>
                                             <span class="d-block fw-bold text-success">$ <?= number_format($pago['monto'], 2) ?></span>
-                                            <small class="text-muted" style="font-size: 0.7rem;">
+                                            <small class="text-body-secondary" style="font-size: 0.7rem;">
                                                 <?= date('d/m/Y H:i', strtotime($pago['fecha'])) ?>
                                             </small>
                                         </div>
@@ -114,7 +114,7 @@
                                     </div>
                                     <?php endforeach; ?>
                                     <div class="mt-2 text-end">
-                                        <small class="text-muted">Total Abonado: </small>
+                                        <small class="text-body-secondary">Total Abonado: </small>
                                         <span class="fw-bold text-success">$ <?= number_format($v['total_pagado'], 2) ?></span>
                                     </div>
                                 </div>

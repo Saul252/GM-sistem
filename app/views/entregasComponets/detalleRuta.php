@@ -202,7 +202,7 @@
                     <!-- UNIDAD -->
                     <div class="col-md-3">
                         <div class="p-3 h-100 bg-white rounded-4 shadow-sm">
-                            <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem;">Unidad</small>
+                            <small class="text-body-secondary text-uppercase fw-semibold" style="font-size: 0.65rem;">Unidad</small>
                             <div id="txtUnidad" class="fw-bold fs-6 text-dark mt-1"></div>
                             <span id="txtPlacas" class="badge bg-secondary-subtle text-dark mt-2"></span>
                         </div>
@@ -211,15 +211,15 @@
                     <!-- FECHAS -->
                     <div class="col-md-3">
                         <div class="p-3 h-100 bg-white rounded-4 shadow-sm">
-                            <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem;">Fechas</small>
+                            <small class="text-body-secondary text-uppercase fw-semibold" style="font-size: 0.65rem;">Fechas</small>
                             
                             <div class="mt-2">
-                                <small class="text-muted">Inicio</small>
+                                <small class="text-body-secondary">Inicio</small>
                                 <div id="txtFInicio" class="fw-bold text-dark"></div>
                             </div>
 
                             <div class="mt-2">
-                                <small class="text-muted">Final</small>
+                                <small class="text-body-secondary">Final</small>
                                 <div id="txtFFinal" class="fw-bold text-success"></div>
                             </div>
                         </div>
@@ -228,19 +228,19 @@
                     <!-- EQUIPO -->
                     <div class="col-md-3">
                         <div class="p-3 h-100 bg-white rounded-4 shadow-sm">
-                            <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem;">Equipo</small>
+                            <small class="text-body-secondary text-uppercase fw-semibold" style="font-size: 0.65rem;">Equipo</small>
                             <div class="mt-2">
                                 <strong>Chofer:</strong>
                                 <div id="txtChofer" class="fw-semibold"></div>
                             </div>
-                            <small id="txtAyudantes" class="text-muted d-block mt-1"></small>
+                            <small id="txtAyudantes" class="text-body-secondary d-block mt-1"></small>
                         </div>
                     </div>
 
                     <!-- ESTATUS -->
                     <div class="col-md-3">
                         <div class="p-3 h-100 bg-white rounded-4 shadow-sm">
-                            <small class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem;">Estatus</small>
+                            <small class="text-body-secondary text-uppercase fw-semibold" style="font-size: 0.65rem;">Estatus</small>
                             <div id="txtEstatusLogistico" class="mt-2"></div>
                         </div>
                     </div>
@@ -251,7 +251,7 @@
                 <div class="table-responsive bg-white rounded-4 shadow-sm">
                     <table class="table align-middle mb-0">
                         <thead style="background: #f1f3f5;">
-                            <tr class="text-muted">
+                            <tr class="text-body-secondary">
                                 <th class="ps-3" style="font-size: 0.75rem;">#</th>
                                 <th style="font-size: 0.75rem;">Cliente / Destino</th>
                                 <th style="font-size: 0.75rem;">Ticket</th>
@@ -327,7 +327,7 @@ registros.forEach(item => {
 
     const mapsUrl = (item.latitud && item.longitud) 
         ? `<a href="https://www.google.com/maps?q=${item.latitud},${item.longitud}" target="_blank" class="btn btn-sm btn-outline-primary" style="border-radius: 10px;"><i class="fas fa-map-marker-alt"></i></a>`
-        : `<span class="text-muted small">N/A</span>`;
+        : `<span class="text-body-secondary small">N/A</span>`;
 
     html += `
     <tr>
@@ -339,7 +339,7 @@ registros.forEach(item => {
             <small class="d-block text-secondary" style="font-size: 0.7rem;">${item.direccion_entrega}</small>
         </td>
         <td><code class="text-primary">${item.folio_venta}</code></td>
-        <td>${item.producto_nombre} <br> <small class="text-muted">${item.um || ''}</small></td>
+        <td>${item.producto_nombre} <br> <small class="text-body-secondary">${item.um || ''}</small></td>
         <td class="text-center fw-bold">${cantidadUnidad}</td>
         <td class="text-center">${mapsUrl}</td>
     </tr>`;

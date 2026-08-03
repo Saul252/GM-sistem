@@ -25,7 +25,7 @@
                     <div class="p-3 mb-4"
                          style="background:#f5f5f7;border-radius:20px;border:1px solid #e5e5e7;">
                         
-                        <small class="text-muted fw-bold d-block mb-1">
+                        <small class="text-body-secondary fw-bold d-block mb-1">
                             Producto / Concepto Original
                         </small>
 
@@ -39,7 +39,7 @@
                             </span>
 
                             <div class="text-end">
-                                <small class="text-muted d-block">
+                                <small class="text-body-secondary d-block">
                                     PRECIO UNITARIO BASE
                                 </small>
                                 <div class="fw-bold text-primary"

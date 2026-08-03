@@ -12,7 +12,7 @@
                         </div>
                         <div>
                             <h4 class="fw-bold mb-0 text-dark">Nuevo Comprobante / Depósito</h4>
-                            <p class="text-muted small mb-0">Complete los datos para registrar el movimiento en el
+                            <p class="text-body-secondary small mb-0">Complete los datos para registrar el movimiento en el
                                 sistema</p>
                         </div>
                     </div>
@@ -27,7 +27,7 @@
                                 <i class="bi bi-box-seam me-1"></i> Almacén de Cargo
                             </label>
                             <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0 text-muted"><i
+                                <span class="input-group-text bg-white border-end-0 text-body-secondary"><i
                                         class="bi bi-geo-alt"></i></span>
                                 <select name="almacen_id" id="almacen_id" class="form-select border-start-0 ps-0"
                                     required>
@@ -107,7 +107,7 @@
                 </div>
 
                 <div class="modal-footer border-0 p-4 pt-2">
-                    <button type="button" class="btn btn-light text-muted fw-bold rounded-pill px-4 me-2"
+                    <button type="button" class="btn btn-light text-body-secondary fw-bold rounded-pill px-4 me-2"
                         data-bs-dismiss="modal">
                         Cancelar
                     </button>

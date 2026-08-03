@@ -13,18 +13,18 @@
             </div>
 
             <form id="formAjusteFaltante">
-                <div class="modal-body bg-light px-4 py-4">
+                <div class="modal-body  px-4 py-4">
 
                     <input type="hidden" name="compra_id" id="ajuste_compra_id">
 
                     <!-- ALERTA PREMIUM -->
                     <div
-                        class="d-flex align-items-start gap-3 p-3 mb-4 rounded-4 bg-white shadow-sm border-start border-4 border-danger">
+                        class="d-flex align-items-start gap-3 p-3 mb-4 rounded-4  shadow-sm border-start border-4 border-danger">
                         <div>
                             <i class="bi bi-exclamation-triangle-fill text-danger fs-4"></i>
                         </div>
-                        <div class="small text-muted">
-                            <div class="fw-semibold text-dark mb-1">Control de Entradas</div>
+                        <div class="small text-body-secondary">
+                            <div class="fw-semibold  mb-1">Control de Entradas</div>
                             Habilite el almacén de destino y después capture la cantidad recibida para evitar errores en
                             inventario.
                         </div>
@@ -38,7 +38,7 @@
                 </div>
 
                 <!-- FOOTER -->
-                <div class="modal-footer bg-white px-4 py-3 border-0 d-flex justify-content-between">
+                <div class="modal-footer  px-4 py-3 border-0 d-flex justify-content-between">
 
                     <button type="button" class="btn btn-light rounded-pill px-4 shadow-sm" data-bs-dismiss="modal">
                         Cancelar
@@ -71,12 +71,12 @@ function toggleAlmacen(check, prodId, almId) {
     const input = document.querySelector(`input[name="distribucion[${prodId}][${almId}]"]`);
     if (check.checked) {
         input.disabled = false;
-        input.classList.remove('bg-light');
+        input.classList.remove('');
         input.focus();
     } else {
         input.disabled = true;
         input.value = ''; // Limpiamos el valor si se deshabilita
-        input.classList.add('bg-light');
+        input.classList.add('');
     }
 }
 
@@ -165,7 +165,7 @@ function abrirModalAjuste(id, folio) {
             data.forEach(p => {
                 let tablaAlmacenes = `
                     <table class="table table-sm align-middle mb-0">
-                        <thead class="bg-light text-muted" style="font-size: 0.75rem;">
+                        <thead class=" text-body-secondary" style="font-size: 0.75rem;">
                             <tr>
                                 <th width="50">Envío</th>
                                 <th>Almacén Destino</th>
@@ -190,7 +190,7 @@ function abrirModalAjuste(id, folio) {
                            <td>
     <input type="number" 
        name="distribucion[${p.producto_id}][${alm.id}]1" 
-       class="form-control form-control-sm border-danger input-dist1 bg-light" 
+       class="form-control form-control-sm border-danger input-dist1 " 
        data-prod-id="${p.producto_id}"
        data-max="${p.cantidad_pendiente}"
        disabled 
@@ -200,7 +200,7 @@ function abrirModalAjuste(id, folio) {
        oninput="recalcularRestante(${p.producto_id},${p.factor_conversion})">
  <input type="hidden" 
        name="distribucion[${p.producto_id}][${alm.id}]" 
-       class="form-control form-control-sm border-danger input-dist bg-light" 
+       class="form-control form-control-sm border-danger input-dist " 
        data-prod-id="${p.producto_id}"
        data-max="${p.cantidad_pendiente}"
        disabled 
@@ -222,8 +222,8 @@ function abrirModalAjuste(id, folio) {
                 contenedor.innerHTML += `
                     <div class="col-lg-6">
                         <div class="card border-0 shadow-sm h-100">
-                            <div class="card-header bg-white border-bottom-0 py-3 d-flex justify-content-between align-items-center">
-                                <h6 class="fw-bold mb-0 text-dark">${p.nombre}</h6>
+                            <div class="card-header  border-bottom-0 py-3 d-flex justify-content-between align-items-center">
+                                <h6 class="fw-bold mb-0 ">${p.nombre}</h6>
                                 <span class="badge rounded-pill bg-danger-subtle text-danger border border-danger-subtle">
                                     Pendiente: ${(p.cantidad_pendiente)/(p.factor_conversion)} ${p.unidad_reporte}
                                 </span>
@@ -310,7 +310,7 @@ function toggleAlmacen(check, prodId, almId) {
         inputVisible.disabled = false;
         inputHidden.disabled = false;
 
-        inputVisible.classList.remove('bg-light');
+        inputVisible.classList.remove('');
 
         inputVisible.focus();
 
@@ -322,7 +322,7 @@ function toggleAlmacen(check, prodId, almId) {
         inputVisible.value = '';
         inputHidden.value = '';
 
-        inputVisible.classList.add('bg-light');
+        inputVisible.classList.add('');
 
         recalcularRestante(prodId);
     }

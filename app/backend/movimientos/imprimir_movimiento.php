@@ -104,7 +104,7 @@ if ($factor > 1 && $cantidad >= $factor) {
         <div class="row align-items-center mb-4" style="z-index: 1; position: relative;">
             <div class="col-7 header-title">
                 <h2 class="fw-black mb-0 text-dark">CF <span class="text-primary">SISTEM</span></h2>
-                <p class="text-muted small mb-0">Comprobante Interno de Control de Inventarios</p>
+                <p class="text-body-secondary small mb-0">Comprobante Interno de Control de Inventarios</p>
                 <span class="badge bg-primary-subtle text-primary border border-primary-subtle mt-2 badge-type">
                     <?= strtoupper($m['tipo']) ?>
                 </span>
@@ -112,7 +112,7 @@ if ($factor > 1 && $cantidad >= $factor) {
             <div class="col-5 text-end">
                 <div class="mb-1 label-sm text-dark">Folio del Movimiento</div>
                 <h3 class="fw-bold mb-0">#<?= str_pad($m['id'], 6, "0", STR_PAD_LEFT) ?></h3>
-                <p class="small text-muted mb-0">Impreso: <?= date('d/m/Y H:i') ?></p>
+                <p class="small text-body-secondary mb-0">Impreso: <?= date('d/m/Y H:i') ?></p>
             </div>
         </div>
 
@@ -148,14 +148,14 @@ if ($factor > 1 && $cantidad >= $factor) {
                         <td class="fw-bold text-primary"><?= $m['sku'] ?></td>
                         <td>
                             <div class="fw-bold"><?= $m['prod'] ?></div>
-                            <small class="text-muted">Unidad Base: <?= $unidad_base ?></small>
+                            <small class="text-body-secondary">Unidad Base: <?= $unidad_base ?></small>
                         </td>
                         <td class="text-center text-dark">
                             <span class="fs-5"><?= $visual_detalle ?></span>
                         </td>
                         <td class="text-center">
                             <span class="fw-bold fs-5"><?= number_format($cantidad, 2) ?></span><br>
-                            <small class="text-muted"><?= strtoupper($unidad_base) ?></small>
+                            <small class="text-body-secondary"><?= strtoupper($unidad_base) ?></small>
                         </td>
                     </tr>
                 </tbody>
@@ -166,13 +166,13 @@ if ($factor > 1 && $cantidad >= $factor) {
             <div class="col-6">
                 <div class="p-3 border rounded shadow-sm bg-light-subtle h-100">
                     <div class="label-sm mb-2 text-danger"><i class="bi bi-box-arrow-left"></i> Almacén Origen</div>
-                    <div class="h5 fw-bold mb-0"><?= $m['origen'] ?? '<span class="text-muted fw-normal">N/A</span>' ?></div>
+                    <div class="h5 fw-bold mb-0"><?= $m['origen'] ?? '<span class="text-body-secondary fw-normal">N/A</span>' ?></div>
                 </div>
             </div>
             <div class="col-6">
                 <div class="p-3 border rounded shadow-sm bg-light-subtle h-100">
                     <div class="label-sm mb-2 text-success"><i class="bi bi-box-arrow-in-right"></i> Almacén Destino</div>
-                    <div class="h5 fw-bold mb-0"><?= $m['destino'] ?? '<span class="text-muted fw-normal">N/A</span>' ?></div>
+                    <div class="h5 fw-bold mb-0"><?= $m['destino'] ?? '<span class="text-body-secondary fw-normal">N/A</span>' ?></div>
                 </div>
             </div>
         </div>

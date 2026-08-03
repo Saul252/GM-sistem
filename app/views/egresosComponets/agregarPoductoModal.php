@@ -1,6 +1,6 @@
 <div class="modal fade" id="modalAgregarProducto" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-lg">
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-content  shadow-lg rounded-4 overflow-hidden">
 
             <!-- HEADER -->
             <div class="modal-header bg-dark text-white py-3">
@@ -13,10 +13,10 @@
             <!-- FORM -->
             <form id="formAgregarProducto" autocomplete="off">
 
-                <div class="modal-body bg-light p-4">
+                <div class="modal-body  p-4">
 
                     <!-- 🔹 BLOQUE: INFORMACIÓN GENERAL -->
-                    <div class="card border-0 shadow-sm mb-4 rounded-4">
+                    <div class="card  shadow-sm mb-4 rounded-4">
                         <div class="card-body">
                             <h6 class="fw-bold mb-3 text-dark">
                                 <i class="bi bi-box-seam me-2"></i>Información del Producto
@@ -27,18 +27,18 @@
                                 <input type="hidden" name="precio_adquisicion" value="0">
 
                                 <div class="col-md-4">
-                                    <label class="form-label small text-muted">SKU / Código</label>
+                                    <label class="form-label small text-body-secondary">SKU / Código</label>
                                     <input type="text" name="sku" class="form-control shadow-sm" required>
                                 </div>
 
                                 <div class="col-md-8">
-                                    <label class="form-label small text-muted">Nombre del Producto</label>
+                                    <label class="form-label small text-body-secondary">Nombre del Producto</label>
                                     <input type="text" name="nombre" id="nombreProducto" class="form-control shadow-sm" required>
                                 </div>
 
                                 <div class="col-md-6">
                                     <div class="d-flex justify-content-between align-items-center">
-                                        <label class="form-label small text-muted">Categoría</label>
+                                        <label class="form-label small text-body-secondary">Categoría</label>
                                         <button type="button" class="btn btn-sm btn-light border rounded-circle"
                                             onclick="abrirSubModalCategoria()" title="Agregar categoría">
                                             <i class="bi bi-plus"></i>
@@ -56,7 +56,7 @@
                     </div>
 
                     <!-- 🔹 BLOQUE: UNIDADES -->
-                    <div class="card border-0 shadow-sm mb-4 rounded-4">
+                    <div class="card  shadow-sm mb-4 rounded-4">
                         <div class="card-body">
                             <h6 class="fw-bold mb-3 text-dark">
                                 <i class="bi bi-diagram-3 me-2"></i>Unidades y Conversión
@@ -68,7 +68,7 @@
 
                                     <label class="form-label small fw-bold text-secondary">UNIDAD BASE (VENTA)</label>
                                     <select required id="u_mayoreo" name="unidad_reporte"
-                                        class="form-select border-0 shadow-sm fw-bold">
+                                        class="form-select  shadow-sm fw-bold">
                                         <option value="">Seleccione...</option>
                                         
                                     </select>
@@ -78,7 +78,7 @@
 
                                     <label class="form-label small fw-bold text-secondary">UNIDAD BASE (VENTA)</label>
                                     <select required name="unidad_medida" id="u_base"
-                                        class="form-select border-0 shadow-sm fw-bold">
+                                        class="form-select  shadow-sm fw-bold">
                                         <option value="">Seleccione...</option>
                                       
                                     </select>
@@ -88,7 +88,7 @@
 
 
                                 <div class="col-md-4">
-                                    <label class="form-label small text-muted">Factor de conversión</label>
+                                    <label class="form-label small text-body-secondary">Factor de conversión</label>
                                     <input type="number" id="f_conversion" name="factor_conversion"
                                         class="form-control shadow-sm" value="1">
                                     <small id="helper-conversion" class="text-primary"></small>
@@ -99,7 +99,7 @@
                     </div>
 
                     <!-- 🔹 BLOQUE: DATOS FISCALES -->
-                    <div class="card border-0 shadow-sm mb-4 rounded-4">
+                    <div class="card  shadow-sm mb-4 rounded-4">
                         <div class="card-body">
                             <h6 class="fw-bold mb-3 text-dark">
                                 <i class="bi bi-receipt me-2"></i>Datos Fiscales
@@ -108,17 +108,17 @@
                             <div class="row g-3">
 
                                 <div class="col-md-4">
-                                    <label class="form-label small text-muted">IVA (%)</label>
+                                    <label class="form-label small text-body-secondary">IVA (%)</label>
                                     <input type="number" name="impuesto_iva" class="form-control shadow-sm" value="16">
                                 </div>
 
                                 <div class="col-md-4">
-                                    <label class="form-label small text-muted">Clave SAT</label>
+                                    <label class="form-label small text-body-secondary">Clave SAT</label>
                                     <input type="text" name="fiscal_clave_prod" class="form-control shadow-sm">
                                 </div>
 
                                 <div class="col-md-4">
-                                    <label class="form-label small text-muted">Clave Unidad</label>
+                                    <label class="form-label small text-body-secondary">Clave Unidad</label>
                                     <input type="text" name="fiscal_clave_unidad" class="form-control shadow-sm">
                                 </div>
 
@@ -127,7 +127,7 @@
                     </div>
 
                     <!-- 🔹 BLOQUE: PRECIOS -->
-                    <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card  shadow-sm rounded-4">
                         <div class="card-body">
                             <h6 class="fw-bold mb-3 text-dark">
                                 <i class="bi bi-cash-coin me-2"></i>Precios de Venta
@@ -136,17 +136,17 @@
                             <div class="row g-3">
 
                                 <div class="col-md-4">
-                                    <label class="form-label small text-muted">Minorista</label>
+                                    <label class="form-label small text-body-secondary">Minorista</label>
                                     <input type="number" step="0.01" name="precio_minorista" class="form-control shadow-sm" value="0">
                                 </div>
 
                                 <div class="col-md-4">
-                                    <label class="form-label small text-muted">Mayorista</label>
+                                    <label class="form-label small text-body-secondary">Mayorista</label>
                                     <input type="number" step="0.01" name="precio_mayorista" class="form-control shadow-sm"value="0">
                                 </div>
 
                                 <div class="col-md-4">
-                                    <label class="form-label small text-muted">Distribuidor</label>
+                                    <label class="form-label small text-body-secondary">Distribuidor</label>
                                     <input type="number" step="0.01" name="precio_distribuidor" class="form-control shadow-sm"value="0">
                                 </div>
 
@@ -157,7 +157,7 @@
                 </div>
 
                 <!-- FOOTER -->
-                <div class="modal-footer bg-white border-0 px-4 pb-4">
+                <div class="modal-footer   px-4 pb-4">
 
                     <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">
                         Cancelar
@@ -604,10 +604,10 @@ MODAL LISTA DE MEDIDAS
 
     <div class="modal-dialog modal-dialog-centered modal-lg">
 
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-content  shadow-lg rounded-4 overflow-hidden">
 
             <!-- HEADER -->
-            <div class="modal-header bg-dark text-white border-0">
+            <div class="modal-header bg-dark text-white ">
 
                 <div>
                     <h5 class="modal-title fw-bold mb-0">
@@ -632,13 +632,13 @@ MODAL LISTA DE MEDIDAS
             </div>
   
             <!-- BODY -->
-            <div class="modal-body bg-light p-0">
+            <div class="modal-body  p-0">
 
                 <div class="table-responsive">
 
                     <table class="table table-hover align-middle mb-0">
                          <button type="button" id="agregarMedida"
-        class="btn btn-dark rounded-pill shadow-sm" 
+        class="btn btn-success rounded-pill shadow-sm" 
        
     <i class="bi bi-plus-circle me-2"></i>
     Agregar Medida
@@ -669,9 +669,9 @@ MODAL LISTA DE MEDIDAS
                     id="listaVacia"
                     class="text-center py-5 d-none">
 
-                    <i class="bi bi-info-circle fs-2 text-muted"></i>
+                    <i class="bi bi-info-circle fs-2 text-body-secondary"></i>
 
-                    <p class="text-muted mt-2 mb-0">
+                    <p class="text-body-secondary mt-2 mb-0">
                         No hay medidas adicionales para este producto.
                     </p>
 
@@ -680,7 +680,7 @@ MODAL LISTA DE MEDIDAS
             </div>
 
             <!-- FOOTER -->
-            <div class="modal-footer border-0 bg-white">
+            <div class="modal-footer  ">
 
                 <button
                     type="button"
@@ -834,7 +834,7 @@ async function verListaMedidas(
 
                         <td class="ps-4">
 
-                            <div class="fw-bold text-dark">
+                            <div class="fw-bold ">
                                 ${m.nombre}
                             </div>
 
@@ -842,7 +842,7 @@ async function verListaMedidas(
 
                         <td>
 
-                            <span class="badge bg-light text-dark border px-3 py-2">
+                            <span class="badge   border px-3 py-2">
                             ${m.equivalencia} ${m.nombre}s =  1 ${unidad_medida} 
                                
                                
@@ -949,10 +949,10 @@ MODAL EDITAR MEDIDA
 
     <div class="modal-dialog modal-dialog-centered">
 
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-content  shadow-lg rounded-4 overflow-hidden">
 
             <!-- HEADER -->
-            <div class="modal-header bg-primary text-white border-0">
+            <div class="modal-header bg-primary text-white ">
 
                 <div>
                     <h5 class="modal-title fw-bold mb-0">
@@ -983,14 +983,14 @@ MODAL EDITAR MEDIDA
                        id="edit_producto_id"
                        name="producto_id">
 
-                <div class="modal-body bg-light p-4">
+                <div class="modal-body  p-4">
 
                     <!-- NOMBRE -->
                     <div class="mb-3">
 
                       <!-- NOMBRE -->
 <div class="mb-3">
-    <label class="form-label fw-semibold small text-uppercase text-muted">
+    <label class="form-label fw-semibold small text-uppercase text-body-secondary">
         Nombre
     </label>
  <input type="text"
@@ -1007,7 +1007,7 @@ MODAL EDITAR MEDIDA
                     <!-- EQUIVALENCIA -->
                     <div class="mb-3">
 
-                        <label class="form-label fw-semibold small text-uppercase text-muted">
+                        <label class="form-label fw-semibold small text-uppercase text-body-secondary">
                             Equivalencia
                         </label>
 
@@ -1032,7 +1032,7 @@ MODAL EDITAR MEDIDA
                 </div>
 
                 <!-- FOOTER -->
-                <div class="modal-footer border-0 bg-white px-4 pb-4">
+                <div class="modal-footer   px-4 pb-4">
 
                     <button type="button"
                             class="btn btn-light rounded-pill px-4"
@@ -1369,32 +1369,27 @@ MODAL CREAR MEDIDA ADICIONAL
 
     <div class="modal-dialog modal-dialog-centered">
 
-        <div class="modal-content">
+        <!-- modal-content usa las variables de color del tema actual -->
+        <div class="modal-content border-0 shadow-lg overflow-hidden">
 
-            <!-- HEADER -->
-            <div class="modal-header text-white p-4">
+            <!-- HEADER: Gradiente adaptativo con mejor contraste -->
+            <div class="modal-header bg-primary bg-gradient text-white p-4 border-0 position-relative">
 
-                <div>
-
-                    <h5 class="modal-title fw-bold mb-1">
-
-                        <i class="bi bi-rulers me-2"></i>
-                        Nueva Medida
-
-                    </h5>
-
-                    <small id="infoProductoModal"
-                           class="text-white-50">
-
-                        Configura equivalencia
-
-                    </small>
-
+                <div class="pe-4">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <i class="bi bi-rulers fs-4"></i>
+                        <h5 class="modal-title fw-bold mb-0">Nueva Medida</h5>
+                    </div>
+                    <p id="infoProductoModal"
+                       class="text-white-50 small mb-0 fw-medium">
+                        Configura equivalencia de unidades
+                    </p>
                 </div>
 
                 <button type="button"
-                        class="btn-close btn-close-white"
-                        data-bs-dismiss="modal">
+                        class="btn-close btn-close-white position-absolute top-0 end-0 m-4"
+                        data-bs-dismiss="modal"
+                        aria-label="Close">
                 </button>
 
             </div>
@@ -1415,185 +1410,131 @@ MODAL CREAR MEDIDA ADICIONAL
 
                     <!-- NOMBRE -->
                     <div class="mb-4">
-
-                        <label class="form-label fw-semibold small text-uppercase text-muted">
-
+                        <label for="nombreNuevaUnidad" 
+                               class="form-label fw-bold small text-uppercase text-body-secondary tracking-wide">
                             Nombre de la nueva unidad
-
                         </label>
 
-                        <input type="text"
-                               name="nombre"
-                               id="nombreNuevaUnidad"
-                               class="form-control"
-                               placeholder="Ej: Caja, Gramo, Tonelada"
-                               required>
-
+                        <div class="input-group">
+                            <span class="input-group-text bg-body-tertiary text-body-secondary border-end-0">
+                                <i class="bi bi-tag-fill"></i>
+                            </span>
+                            <input type="text"
+                                   name="nombre"
+                                   id="nombreNuevaUnidad"
+                                   class="form-control border-start-0 ps-0"
+                                   placeholder="Ej: Caja, Gramo, Tonelada"
+                                   required>
+                        </div>
                     </div>
 
-                    <!-- TIPO -->
+                    <!-- TIPO CONVERSIÓN -->
                     <div class="mb-4">
-
-                        <label class="form-label fw-semibold small text-uppercase text-muted mb-3">
-
+                        <label class="form-label fw-bold small text-uppercase text-body-secondary mb-2 tracking-wide">
                             Tipo de conversión
-
                         </label>
 
                         <div class="row g-3">
 
                             <!-- MÁS GRANDE -->
                             <div class="col-md-6">
-
-                                <label class="tipo-card w-100">
-
-                                    <div class="d-flex align-items-center gap-2">
-
+                                <label class="card h-100 border bg-body-tertiary role-button custom-option-card">
+                                    <div class="card-body p-3 d-flex align-items-center gap-3">
                                         <input type="radio"
                                                name="tipoConversion"
                                                value="grande"
+                                               class="form-check-input mt-0 fs-5 flex-shrink-0"
                                                checked>
-
                                         <div>
-
-                                            <div class="fw-bold">
-
-                                                Unidad MÁS GRANDE
-
-                                            </div>
-
-                                            <small class="text-muted">
-
-                                                Ej: Tonelada
-
-                                            </small>
-
+                                            <div class="fw-bold text-body fs-6 mb-0">MÁS GRANDE</div>
+                                            <small class="text-body-secondary d-block lh-sm">Ej: Tonelada</small>
                                         </div>
-
                                     </div>
-
                                 </label>
-
                             </div>
 
                             <!-- MÁS PEQUEÑA -->
                             <div class="col-md-6">
-
-                                <label class="tipo-card w-100">
-
-                                    <div class="d-flex align-items-center gap-2">
-
+                                <label class="card h-100 border bg-body-tertiary role-button custom-option-card">
+                                    <div class="card-body p-3 d-flex align-items-center gap-3">
                                         <input type="radio"
                                                name="tipoConversion"
-                                               value="pequena">
-
+                                               value="pequena"
+                                               class="form-check-input mt-0 fs-5 flex-shrink-0">
                                         <div>
-
-                                            <div class="fw-bold">
-
-                                                Unidad MÁS PEQUEÑA
-
-                                            </div>
-
-                                            <small class="text-muted">
-
-                                                Ej: Gramo
-
-                                            </small>
-
+                                            <div class="fw-bold text-body fs-6 mb-0">MÁS PEQUEÑA</div>
+                                            <small class="text-body-secondary d-block lh-sm">Ej: Gramo</small>
                                         </div>
-
                                     </div>
-
                                 </label>
-
                             </div>
 
                         </div>
-
                     </div>
 
-                    <!-- FORMULA -->
-                    <div class="formula-box">
+                    <!-- CAJA DE FÓRMULA -->
+                    <div class="p-3 bg-body-tertiary rounded-3 border mb-4">
 
                         <div class="mb-3">
-
-                            <label class="form-label fw-semibold small text-uppercase text-muted">
-
+                            <label for="cantidadConversion" 
+                                   class="form-label fw-bold small text-uppercase text-body-secondary tracking-wide">
                                 Conversión
-
                             </label>
 
                             <input type="number"
                                    id="cantidadConversion"
-                                   class="form-control text-center fw-bold"
+                                   class="form-control form-control-lg text-center fw-bold fs-4"
                                    step="0.00000001"
                                    min="0"
-                                   placeholder="Escribe una cantidad">
-
+                                   placeholder="0.00">
                         </div>
 
-                        <!-- TEXTO -->
-                        <div class="alert alert-light border text-center mb-3">
-
-                            <span id="textoFormula"
-                                  class="fw-semibold">
-
-                                Fórmula de conversión
-
+                        <!-- TEXTO FÓRMULA -->
+                        <div class="alert bg-body border text-body text-center py-2 px-3 mb-3 shadow-sm rounded-2">
+                            <span id="textoFormula" class="fw-medium small">
+                                <i class="bi bi-calculator me-1 text-primary"></i> Fórmula de conversión
                             </span>
-
                         </div>
 
                         <!-- RESULTADO -->
                         <div>
-
-                            <label class="form-label fw-semibold small text-uppercase text-muted">
-
+                            <label for="equivalencia" 
+                                   class="form-label fw-bold small text-uppercase text-body-secondary tracking-wide">
                                 Equivalencia calculada
-
                             </label>
 
                             <input type="number"
                                    id="equivalencia"
                                    name="equivalencia"
-                                   class="form-control"
+                                   class="form-control bg-body border-0 fw-bold text-primary"
                                    step="0.000000001"
                                    readonly>
-
                         </div>
 
                     </div>
 
-                    <!-- EJEMPLO -->
-                    <div class="alert alert-warning border mt-4 mb-0">
-
-                        <small id="ejemploConversion">
-
-                            Esperando datos...
-
+                    <!-- EJEMPLO EN MODO ALERTA DINÁMICA -->
+                    <div class="alert alert-info border-0 bg-info-subtle text-info-emphasis d-flex align-items-start gap-2 m-0 p-3 rounded-3">
+                        <i class="bi bi-info-circle-fill fs-5 flex-shrink-0 mt-n1"></i>
+                        <small id="ejemploConversion" class="fw-medium">
+                            Esperando datos para calcular ejemplo...
                         </small>
-
                     </div>
 
                 </div>
 
                 <!-- FOOTER -->
-                <div class="modal-footer border-0 bg-white px-4 pb-4">
+                <div class="modal-footer border-0 px-4 pb-4 pt-0 gap-2">
 
                     <button type="button"
-                            class="btn btn-light rounded-pill px-4"
+                            class="btn btn-outline-secondary rounded-pill px-4 fw-semibold"
                             data-bs-dismiss="modal">
-
                         Cancelar
-
                     </button>
 
                     <button type="submit"
-                            class="btn btn-dark rounded-pill px-5">
-
-                        Guardar
-
+                            class="btn btn-primary rounded-pill px-5 fw-semibold shadow-sm">
+                        <i class="bi bi-check-lg me-1"></i> Guardar
                     </button>
 
                 </div>

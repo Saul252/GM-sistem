@@ -89,7 +89,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
         <div class="d-flex justify-content-between align-items-center mb-5 animate__animated animate__fadeIn">
             <div>
                 <h2 class="fw-bold m-0 card-title-text" style="font-size: 2rem; letter-spacing: -0.03em;">Cartera de Clientes</h2>
-                <p class="text-muted mb-0 card-title-text">Gestión de datos fiscales y comerciales</p>
+                <p class="text-body-secondary mb-0 card-title-text">Gestión de datos fiscales y comerciales</p>
             </div>
             <button class="btn btn-primary rounded-pill px-4 shadow-sm d-flex align-items-center" 
                     onclick="nuevoCliente()" style="background: var(--accent-blue); border:none; height: 42px; font-weight: 600;">
@@ -101,7 +101,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
             <div class="row mb-4 g-3">
                 <div class="col-md-5">
                     <div class="input-group border border-subtle rounded-3 p-1">
-                        <span class="input-group-text bg-transparent border-0 text-muted"><i class="bi bi-search"></i></span>
+                        <span class="input-group-text bg-transparent border-0 text-body-secondary"><i class="bi bi-search"></i></span>
                         <input type="text" id="busquedaCliente" class="form-control border-0 bg-transparent shadow-none" placeholder="Buscar por nombre, RFC o correo...">
                     </div>
                 </div>
@@ -116,7 +116,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
                     </select>
                 </div>
                 <div class="col-md-3">
-                    <button class="btn btn-outline-secondary w-100 rounded-3 border-0  fw-bold text-muted" onclick="limpiarFiltros()">
+                    <button class="btn btn-outline-secondary w-100 rounded-3 border-0  fw-bold text-body-secondary" onclick="limpiarFiltros()">
                         <i class="bi bi-arrow-clockwise me-1"></i> RESET
                     </button>
                 </div>
@@ -140,7 +140,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
                             <td class="ps-3">
                                 <div class="fw-bold card-title-text" ><?= htmlspecialchars($c['nombre_comercial']) ?></div>
                                 <?php if (!empty($c['razon_social'])): ?>
-                                <div class="text-muted small" style="font-size: 0.7rem;"><?= htmlspecialchars($c['razon_social']) ?></div>
+                                <div class="text-body-secondary small" style="font-size: 0.7rem;"><?= htmlspecialchars($c['razon_social']) ?></div>
                                 <?php endif; ?>
                             </td>
                             <td>
@@ -198,11 +198,11 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
                         
                         <div class="row g-3">
                             <div class="col-md-12">
-                                <label class="form-label small fw-bold text-muted">NOMBRE COMERCIAL *</label>
+                                <label class="form-label small fw-bold text-body-secondary">NOMBRE COMERCIAL *</label>
                                 <input type="text" name="nombre_comercial" id="nombre_comercial" class="form-control rounded-3" required>
                             </div>
                             <div class="col-md-12">
-                                <label class="form-label small fw-bold text-muted">RAZÓN SOCIAL</label>
+                                <label class="form-label small fw-bold text-body-secondary">RAZÓN SOCIAL</label>
                                 <input type="text" name="razon_social" id="razon_social" class="form-control rounded-3">
                             </div>
 
@@ -212,11 +212,11 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
                                     placeholder="Contacto" >
                             </div>
                             <div class="col-md-12">
-                                <label class="form-label small fw-bold text-muted">TELEFONO</label>
+                                <label class="form-label small fw-bold text-body-secondary">TELEFONO</label>
                                 <input type="text" name="telefono" id="telefono" class="form-control rounded-3">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold text-muted">RFC *</label>
+                                <label class="form-label small fw-bold text-body-secondary">RFC *</label>
                                 <input type="text" name="rfc" id="rfc" class="form-control text-uppercase rounded-3" maxlength="13" required>
                             </div>
                             <div class="col-md-12">
@@ -240,11 +240,11 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
                                     placeholder="Calle, número, colonia..."></textarea>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold text-muted">CÓDIGO POSTAL</label>
+                                <label class="form-label small fw-bold text-body-secondary">CÓDIGO POSTAL</label>
                                 <input type="text" name="codigo_postal" id="codigo_postal" class="form-control text-uppercase rounded-3" maxlength="5">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold text-muted">USO CFDI</label>
+                                <label class="form-label small fw-bold text-body-secondary">USO CFDI</label>
                                 <select name="uso_cfdi" id="uso_cfdi" class="form-select rounded-3">
                                     <?php foreach($usosCFDI as $key => $val): ?>
                                         <option value="<?= $key ?>"><?= $key ?> - <?= $val ?></option>
@@ -252,7 +252,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-bold text-muted">CORREO</label>
+                                <label class="form-label small fw-bold text-body-secondary">CORREO</label>
                                 <input type="email" name="correo" id="correo" class="form-control rounded-3">
                             </div>
 
@@ -294,7 +294,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
     $(document).ready(function() {
         tabla = $('#tablaClientes').DataTable({
             "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
-            "dom": 'rt<"row mt-3 px-3"<"col-sm-12 col-md-5 small text-muted"i><"col-sm-12 col-md-7"p>>',
+            "dom": 'rt<"row mt-3 px-3"<"col-sm-12 col-md-5 small text-body-secondary"i><"col-sm-12 col-md-7"p>>',
             "pageLength": 15,
             "order": [[0, 'asc']],
             "columnDefs": [

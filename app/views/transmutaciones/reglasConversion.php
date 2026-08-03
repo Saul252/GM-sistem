@@ -40,7 +40,7 @@ $isGlobal = (int)($_SESSION['almacen_id'] ?? 0) === 0;
 
 <div class="tm-widget">
     <div class="tm-search-box mb-2">
-        <i class="bi bi-search text-muted small"></i>
+        <i class="bi bi-search text-body-secondary small"></i>
         <input type="text" id="tm-q" placeholder="Producto o SKU..." onkeyup="tm_f()">
         <?php if ($isGlobal): ?>
             <select id="tm-a" onchange="tm_f()" style="border:none; background:transparent; font-size:0.65rem; font-weight:bold; outline:none; cursor:pointer;">

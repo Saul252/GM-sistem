@@ -33,7 +33,7 @@ error_reporting(E_ALL);
             <div class="row align-items-center ">
                 <div class="col-md-8">
                     <h1 class="h3 fw-bold mb-1">Comprobante de pago</h1>
-                    <p class="text-muted small">Gestión de Comprobate de pago</p>
+                    <p class="text-body-secondary small">Gestión de Comprobate de pago</p>
                 </div>
                 <div class="col-md-4 text-md-end">
                     <button class="btn btn-dark" onclick="nuevaCotizacion()">
@@ -47,7 +47,7 @@ error_reporting(E_ALL);
 
         <!-- Fecha Inicio -->
         <div class="col-lg-2 col-md-6">
-            <label class="form-label small fw-bold text-muted text-uppercase">
+            <label class="form-label small fw-bold text-body-secondary text-uppercase">
                 Inicio
             </label>
 
@@ -61,7 +61,7 @@ error_reporting(E_ALL);
 
         <!-- Fecha Fin -->
         <div class="col-lg-2 col-md-6">
-            <label class="form-label small fw-bold text-muted text-uppercase">
+            <label class="form-label small fw-bold text-body-secondary text-uppercase">
                 Fin
             </label>
 
@@ -75,7 +75,7 @@ error_reporting(E_ALL);
 
         <!-- Almacén -->
         <div class="col-lg-3 col-md-6">
-            <label class="form-label small fw-bold text-muted text-uppercase">
+            <label class="form-label small fw-bold text-body-secondary text-uppercase">
                 Almacén
             </label>
 
@@ -100,7 +100,7 @@ error_reporting(E_ALL);
 
         <!-- Estado -->
        <div class="col-lg-2 col-md-12">
-                    <label class="form-label small fw-bold text-muted text-uppercase">Estado</label>
+                    <label class="form-label small fw-bold text-body-secondary text-uppercase">Estado</label>
                     <select id="filtroEstado" class="form-select border-light shadow-sm">
                         <option value="">Todos los estados</option>
                         <option value="activo">Activo</option>
@@ -111,7 +111,7 @@ error_reporting(E_ALL);
 
         <!-- Buscador -->
         <div class="col-lg-3 col-md-12">
-            <label class="form-label small fw-bold text-muted text-uppercase">
+            <label class="form-label small fw-bold text-body-secondary text-uppercase">
                 Buscar
             </label> 
 
@@ -196,7 +196,7 @@ error_reporting(E_ALL);
                                         Información de Compra
                                     </h5>
 
-                                    <small class="text-muted">
+                                    <small class="text-body-secondary">
                                         Datos generales de la entrada
                                     </small>
                                 </div>
@@ -216,7 +216,7 @@ error_reporting(E_ALL);
                                 <!-- ALMACÉN -->
                                 <div class="col-md-3">
 
-                                    <label class="form-label small fw-bold text-muted text-uppercase">
+                                    <label class="form-label small fw-bold text-body-secondary text-uppercase">
                                         Almacén destino
                                     </label>
 
@@ -252,7 +252,7 @@ error_reporting(E_ALL);
                                 <!-- PROVEEDOR -->
                                 <div class="col-md-3">
 
-                                    <label class="form-label small fw-bold text-muted text-uppercase">
+                                    <label class="form-label small fw-bold text-body-secondary text-uppercase">
                                         Proveedor
                                     </label>
 
@@ -266,7 +266,7 @@ error_reporting(E_ALL);
                                 <!-- FOLIO -->
                                 <div class="col-md-2">
 
-                                    <label class="form-label small fw-bold text-muted text-uppercase">
+                                    <label class="form-label small fw-bold text-body-secondary text-uppercase">
                                         Folio factura
                                     </label>
 
@@ -278,7 +278,7 @@ error_reporting(E_ALL);
                                 <!-- MÉTODO -->
                                 <div class="col-md-2">
 
-                                    <label class="form-label small fw-bold text-muted text-uppercase">
+                                    <label class="form-label small fw-bold text-body-secondary text-uppercase">
                                         Método pago
                                     </label>
 
@@ -295,7 +295,7 @@ error_reporting(E_ALL);
                                 <!-- EVIDENCIA -->
                                 <div class="col-md-2">
 
-                                    <label class="form-label small fw-bold text-muted text-uppercase">
+                                    <label class="form-label small fw-bold text-body-secondary text-uppercase">
                                         Evidencia
                                     </label>
 
@@ -353,7 +353,7 @@ error_reporting(E_ALL);
                                             class="form-control border-primary shadow-sm rounded-3" value="0" min="0"
                                             step="0.1">
 
-                                        <small class="label-abono-info text-muted mt-2 d-block"></small>
+                                        <small class="label-abono-info text-body-secondary mt-2 d-block"></small>
 
                                     </div>
 
@@ -394,7 +394,7 @@ error_reporting(E_ALL);
                                     Productos
                                 </h6>
 
-                                <small class="text-muted">
+                                <small class="text-body-secondary">
                                     Conversión de unidades y costos
                                 </small>
 
@@ -406,7 +406,7 @@ error_reporting(E_ALL);
 
                                     <thead class="table-light">
 
-                                        <tr class="small text-muted">
+                                        <tr class="small text-body-secondary">
 
                                             <th class="ps-4">Producto</th>
                                             <th>Mayoreo</th>
@@ -805,7 +805,7 @@ async function cargarComprobantes() {
         // Validación de seguridad: Comprueba si la respuesta no trae datos o el arreglo viene totalmente vacío
         if (!data.data || data.data.length === 0) {
             // Inserta una fila única con un mensaje centralizado indicando que no hay registros y frena el script
-            $('#tablaComprobantes').html('<tr><td colspan="7" class="text-center text-muted py-3">No se encontraron registros de pago</td></tr>');
+            $('#tablaComprobantes').html('<tr><td colspan="7" class="text-center text-body-secondary py-3">No se encontraron registros de pago</td></tr>');
             return;
         }
 
@@ -913,7 +913,7 @@ if (estado !== 'cancelado') {
             tablaHTML += `
                 <tr>
                     <td><span class="text-dark fw-bold">#${folio}</span></td>
-                    <td class="text-muted small">${fechaFormateada}</td>
+                    <td class="text-body-secondary small">${fechaFormateada}</td>
                     <td class="fw-medium">${escapeHtml(c.nombre_comercial || 'Sin asignar')}</td>
                     <td><span class="badge bg-light text-dark border">${escapeHtml(c.almacen || '')}</span></td>
                     <td class="fw-bold">$${parseFloat(c.monto || 0).toFixed(2)}</td>

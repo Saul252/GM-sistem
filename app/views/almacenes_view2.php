@@ -149,8 +149,24 @@
                             <td><?= htmlspecialchars($p['nombre']) ?></td>
                             <td><?= htmlspecialchars($p['descripcion']?? 'sin descripcion') ?></td>
                             
-                            <td><span
-                                    class="badge border border-subtle text-dark border"><?= htmlspecialchars($p['categoria_nombre'] ?? 'Sin Categoría') ?></span>
+                            <td><span style="
+    --bs-badge-padding-x: 0.65em;
+    --bs-badge-padding-y: 0.35em;
+    --bs-badge-font-size: 0.75em;
+    --bs-badge-font-weight: 700;
+  
+    --bs-badge-border-radius: var(--bs-border-radius);
+    display: inline-block;
+    padding: var(--bs-badge-padding-y) var(--bs-badge-padding-x);
+    font-size: var(--bs-badge-font-size);
+    font-weight: var(--bs-badge-font-weight);
+    line-height: 1;
+    color: var(--bs-badge-color);
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: var(--bs-badge-border-radius);"
+                                    class="   card-title-text "><?= htmlspecialchars($p['categoria_nombre'] ?? 'Sin Categoría') ?></span>
                             </td>
                              <td>
                                        <?php

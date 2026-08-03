@@ -12,7 +12,7 @@
                         </div>
                         <div>
                             <h4 class="fw-bold mb-0">Editar Cotizacion</h4>
-                            <p class="text-muted small mb-0">Modifique los datos de la cotización existente</p>
+                            <p class="text-body-secondary small mb-0">Modifique los datos de la cotización existente</p>
                         </div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -44,7 +44,7 @@
 
                         <div class="col-md-3">
                             <div class="input-group">
-                                <label class="form-label small fw-bold text-muted text-uppercase">Cliente</label>
+                                <label class="form-label small fw-bold text-body-secondary text-uppercase">Cliente</label>
                                 <select name="cliente_id_editar" id="cliente_id_editar" class="form-select select2-modal-editar" required>
                                     <option value="">Seleccionar cliente...</option>
                                     <?php foreach($clientes as $p): ?>
@@ -59,7 +59,7 @@
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold text-muted text-uppercase">Añadir Producto (SKU o Nombre)</label>
+                            <label class="form-label small fw-bold text-body-secondary text-uppercase">Añadir Producto (SKU o Nombre)</label>
                             <div class="input-group">
                                 <select id="buscadorProductosEditar" class="form-select select2-modal-editar border-start-0">
                                     <option value="">Escribe para buscar...</option>
@@ -86,7 +86,7 @@
                     <div class="table-responsive border rounded-4 bg-white">
                         <table class="table align-middle mb-0" id="tablaDetalleEditar">
                             <thead class="bg-light">
-                                <tr class="text-muted small uppercase">
+                                <tr class="text-body-secondary small uppercase">
                                     <th class="ps-4" style="width: 45%;">Producto</th>
                                     <th style="width: 20%;">Cantidad</th>
                                     <th style="width: 25%;">Presentación / Unidad</th>
@@ -100,7 +100,7 @@
                             </tbody>
                         </table>
 
-                        <div id="emptyStateEditar" class="text-center py-5 text-muted">
+                        <div id="emptyStateEditar" class="text-center py-5 text-body-secondary">
                             <div class="mb-3">
                                 <i class="bi bi-cart-plus opacity-25" style="font-size: 3.5rem;"></i>
                             </div>
@@ -110,7 +110,7 @@
                     </div>
 
                     <div class="text-end mt-3">
-                        <small class="d-block text-muted fw-semibold mb-1" style="letter-spacing:.5px;">
+                        <small class="d-block text-body-secondary fw-semibold mb-1" style="letter-spacing:.5px;">
                             COSTO TOTAL DE COMPRA (EDICIÓN)
                         </small>
                         <div id="costoTotalCompraEditar" class="fw-bold text-success" style="font-size:2rem; line-height:1;">
@@ -121,7 +121,7 @@
                 </div>
 
                <div class="modal-footer border-0 p-4" id="modal-footer">
-    <button type="button" class="btn btn-link text-decoration-none text-muted fw-bold" data-bs-dismiss="modal">
+    <button type="button" class="btn btn-link text-decoration-none text-body-secondary fw-bold" data-bs-dismiss="modal">
         Cancelar
     </button>
     
@@ -258,7 +258,7 @@ $('#buscadorProductosEditar').on('select2:select', function(e) {
     <tr id="filaEditar-${id}">
         <td class="ps-4">
             <b>${d.nombre}</b><br>
-            <small class="text-muted">${d.sku}</small>
+            <small class="text-body-secondary">${d.sku}</small>
         </td>
 
         <td>

@@ -136,7 +136,7 @@
             <div class="row align-items-center mb-4">
                 <div class="col-md-7">
                     <h2 class="fw-bold card-title-text mb-1" style="letter-spacing: -0.5px;">Compras y Gastos</h2>
-                    <p class="text-muted mb-0 small text-uppercase fw-semibold" style="letter-spacing: 0.5px;">
+                    <p class="text-body-secondary mb-0 small text-uppercase fw-semibold" style="letter-spacing: 0.5px;">
                         <i class="bi bi-layers-half"></i> Gestión de flujo de caja e inventario
                     </p>
                 </div>
@@ -224,14 +224,14 @@
                             </div>
 
                             <div class="col-md-2 div-fechas <?= ($periodo_sel !== 'personalizado') ? 'd-none' : '' ?>">
-                                <label class="form-label fw-bold small text-uppercase text-muted">Desde</label>
+                                <label class="form-label fw-bold small text-uppercase text-body-secondary">Desde</label>
                                 <input type="date" name="desde" id="fecha_desde" class="form-control  border border-subtle"
                                     style="border-radius: 10px;" value="<?= $fecha_desde ?>"
                                     <?= ($periodo_sel !== 'personalizado') ? 'disabled' : '' ?>>
                             </div>
 
                             <div class="col-md-2 div-fechas <?= ($periodo_sel !== 'personalizado') ? 'd-none' : '' ?>">
-                                <label class="form-label fw-bold small text-uppercase text-muted">Hasta</label>
+                                <label class="form-label fw-bold small text-uppercase text-body-secondary">Hasta</label>
                                 <input type="date" name="hasta" id="fecha_hasta" class="form-control  border border-subtle"
                                     style="border-radius: 10px;" value="<?= $fecha_hasta ?>"
                                     <?= ($periodo_sel !== 'personalizado') ? 'disabled' : '' ?>>
@@ -269,7 +269,7 @@
                             </div>
 
                             <div class="col-md-2 d-none animate__animated animate__fadeIn" id="contenedor_categoria">
-                                <label class="form-label fw-bold small text-uppercase text-muted">Categoría</label>
+                                <label class="form-label fw-bold small text-uppercase text-body-secondary">Categoría</label>
                                 <select id="categoria_gasto_filtro" name="categoria_gasto_filtro"
                                     class="form-select  border border-subtle" style="border-radius: 10px;">
                                     <option value="0">-- Todas --</option>
@@ -284,7 +284,7 @@
 
                             <?php if ($_SESSION['rol_id'] == 1): ?>
                             <div class="col-md-2">
-                                <label class="form-label fw-bold small text-uppercase text-muted">Almacén</label>
+                                <label class="form-label fw-bold small text-uppercase text-body-secondary">Almacén</label>
                                 <select id="almacen_filtro" name="almacen_filtro" class="form-select  border border-subtle"
                                     style="border-radius: 10px;">
                                     <option value="0">🌐 Todos</option>
@@ -314,7 +314,7 @@
                 <div class="col-md-4">
                     <div class="card card-kpi border-start border-primary border-4 p-2">
                         <div class="card-body py-2">
-                            <p class="text-muted small fw-bold mb-1">TOTAL COMPRAS</p>
+                            <p class="text-body-secondary small fw-bold mb-1">TOTAL COMPRAS</p>
                             <h3 id="kpi_compras" class="fw-bold mb-0 text-primary">
                                 $ <?= number_format($totalSumCompras, 2) ?>
                             </h3>
@@ -324,7 +324,7 @@
                 <div class="col-md-4">
                     <div class="card card-kpi border-start border-warning border-4 p-2">
                         <div class="card-body py-2">
-                            <p class="text-muted small fw-bold mb-1">GASTOS OPERATIVOS</p>
+                            <p class="text-body-secondary small fw-bold mb-1">GASTOS OPERATIVOS</p>
                             <h3 id="kpi_gastos" class="fw-bold mb-0 text-warning">
                                 $ <?= number_format($totalSumGastos, 2) ?>
                             </h3>
@@ -369,7 +369,7 @@
                 <tr class="border-bottom" style="transition: all 0.2s ease;">
 
                     <td class="ps-4">
-                        <span class="badge border border-subtle card-title-text border fw-medium">#<?= $e['id'] ?></span>
+                        <span class=" border border-subtle card-title-text border fw-medium">#<?= $e['id'] ?></span>
                     </td>
 
                     <td>
@@ -402,7 +402,7 @@
                             // Fallback para pago_deuda si no tienes purple en tu CSS
                             if($e['tipo'] == 'pago_deuda') $bg_tipo = 'bg-primary bg-opacity-10 text-primary border-primary';
                         ?>
-                        <span class="badge border py-1.5 px-2 fw-semibold text-uppercase <?= $bg_tipo ?>" style="font-size: 0.65rem;">
+                        <span class=" border py-1.5 px-2 fw-semibold text-uppercase <?= $bg_tipo ?>" style="font-size: 0.65rem;">
                             <?= str_replace('_', ' ', strtoupper($e['tipo'])) ?>
                         </span>
                     </td>
@@ -415,11 +415,11 @@
 
                     <td class="text-center">
                         <?php if(($e['tiene_deuda'] ?? 0) == 1): ?>
-                            <span class="badge bg-danger rounded-circle p-1" title="Pendiente de pago">
+                            <span class=" bg-danger rounded-circle p-1" title="Pendiente de pago">
                                 <i class="bi bi-clock-history"></i>
                             </span>
                         <?php else: ?>
-                            <i class="bi bi-dash text-muted"></i>
+                            <i class="bi bi-dash text-body-secondary"></i>
                         <?php endif; ?>
                     </td>
 
@@ -444,16 +444,16 @@
                     <td class="text-center">
                         <?php if($e['tipo'] == 'compra'): ?>
                             <?php if(($e['piezas_faltantes'] ?? 0) > 0): ?>
-                                <span class="badge bg-white text-danger border border-danger fw-bold shadow-sm" style="font-size: 0.7rem;">
+                                <span class=" bg-white text-danger border border-danger fw-bold shadow-sm" style="font-size: 0.7rem;">
                                     - <?= number_format($e['piezas_faltantes'], 2) ?>
                                 </span>
                             <?php else: ?>
-                                <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-circle">
+                                <span class=" bg-success bg-opacity-10 text-success border border-success rounded-circle">
                                     <i class="bi bi-check"></i>
                                 </span>
                             <?php endif; ?>
                         <?php else: ?>
-                            <span class="text-muted opacity-50 small">N/A</span>
+                            <span class="text-body-secondary opacity-50 small">N/A</span>
                         <?php endif; ?>
                     </td>
 
@@ -474,7 +474,7 @@
 
                     <i class="bi bi-folder2-open text-success"></i>
 
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">
+                    <span class="position-absolute top-0 start-100 translate-middle  rounded-pill bg-primary">
                         <?= count($documentos) ?>
                     </span>
 
@@ -619,7 +619,7 @@
                 <?php endforeach; ?>
                 <?php else: ?>
                 <tr>
-                    <td colspan="12" class="text-center py-5 text-muted">
+                    <td colspan="12" class="text-center py-5 text-body-secondary">
                         <i class="bi bi-inbox h1 d-block opacity-25"></i>
                         No se encontraron movimientos registrados.
                     </td>

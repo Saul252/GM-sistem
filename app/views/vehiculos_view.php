@@ -28,12 +28,12 @@ $estadosUnidad = [
         :root { 
             --sidebar-width: 260px; 
             --navbar-height: 65px;
-            --glass-bg: rgba(255, 255, 255, 0.85);
+           
             --accent-color: #007aff;
         }
 
         body { 
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+          
             min-height: 100vh;
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
@@ -46,7 +46,7 @@ $estadosUnidad = [
         }
 
         .card-premium {
-            background: var(--glass-bg);
+           
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255,255,255,0.3);
             border-radius: 24px;
@@ -123,8 +123,8 @@ $estadosUnidad = [
     <main class="main-content">
         <div class="d-flex justify-content-between align-items-end flex-wrap mb-5" style="gap: 20px;">
             <div>
-                <h1 class="fw-bold m-0 text-dark" style="letter-spacing: -1px;">Flota Vehicular</h1>
-                <span class="text-muted fw-medium">Panel de control logístico de cfsistem</span>
+                <h1 class="fw-bold m-0 " style="letter-spacing: -1px;">Flota Vehicular</h1>
+                <span class="text-body-secondary fw-medium">Panel de control logístico de cfsistem</span>
             </div>
 
             <div class="d-flex align-items-center gap-3">
@@ -146,12 +146,12 @@ $estadosUnidad = [
             <div class="row mb-4 g-3 align-items-center">
                 <div class="col-md-5">
                     <div class="input-group search-box shadow-sm rounded-4 overflow-hidden">
-                        <span class="input-group-text bg-white border-0"><i class="bi bi-search text-muted"></i></span>
-                        <input type="text" id="busquedaVehiculo" class="form-control border-0 p-3" placeholder="Buscar por placa, VIN o nombre...">
+                        <span class="input-group-text  "><i class="bi bi-search text-body-secondary"></i></span>
+                        <input type="text" id="busquedaVehiculo" class="form-control  p-3" placeholder="Buscar por placa, VIN o nombre...">
                     </div>
                 </div>
                 <div class="col-md-3">
-                    <select id="filtroEstado" class="form-select border-0 shadow-sm p-3 rounded-4 fw-medium">
+                    <select id="filtroEstado" class="form-select  shadow-sm p-3 rounded-4 fw-medium">
                         <option value="">Todos los estados</option>
                         <?php foreach($estadosUnidad as $key => $val): ?>
                             <option value="<?= $key ?>"><?= $val['label'] ?></option>
@@ -186,34 +186,34 @@ $estadosUnidad = [
                         <tr data-estado="<?= $v['estado_unidad'] ?>">
                             <td class="py-4">
                                 <div class="d-flex align-items-center">
-                                    <div class="p-3 bg-white rounded-4 shadow-sm me-3">
+                                    <div class="p-3  rounded-4 shadow-sm me-3">
                                         <i class="bi bi-truck-front text-primary fs-4"></i>
                                     </div>
                                     <div>
-                                        <div class="fw-bold text-dark fs-6"><?= htmlspecialchars($v['nombre']) ?></div>
-                                        <span class="text-muted small">Mod. <?= $v['modelo_año'] ?: 'N/A' ?></span>
+                                        <div class="fw-bold  fs-6"><?= htmlspecialchars($v['nombre']) ?></div>
+                                        <span class="text-body-secondary small">Mod. <?= $v['modelo_año'] ?: 'N/A' ?></span>
                                     </div>
                                 </div>
                             </td>
                             <td>
-                                <div class="badge bg-white text-dark border px-3 py-2 rounded-pill shadow-xs mb-1">
+                                <div class="   border px-3 py-2 rounded-pill shadow-xs mb-1">
                                     <i class="bi bi-card-text me-2 text-primary"></i><strong><?= htmlspecialchars($v['placas']) ?></strong>
                                 </div>
-                                <div class="text-muted small ps-2">VIN: <?= htmlspecialchars($v['serie_vin'] ?: '---') ?></div>
+                                <div class="text-body-secondary small ps-2">VIN: <?= htmlspecialchars($v['serie_vin'] ?: '---') ?></div>
                             </td>
                             <td>
                                 <div class="fw-bold">
                                     <span class="fs-5"><?= number_format($v['capacidad_carga_kg'], 0) ?></span>
-                                    <small class="text-muted fw-normal">kg</small>
+                                    <small class="text-body-secondary fw-normal">kg</small>
                                 </div>
                             </td>
                             <?php if ($_SESSION['almacen_id'] == 0): ?>
                             <td>
-                                <span class="small text-muted"><i class="bi bi-geo-alt"></i> ID: <?= $v['almacen_id'] ?></span>
+                                <span class="small text-body-secondary"><i class="bi bi-geo-alt"></i> ID: <?= $v['almacen_id'] ?></span>
                             </td>
                             <?php endif; ?>
                              <td>
-                                <span class="small text-muted"><?= $v['tipo'] ?></span>
+                                <span class="small text-body-secondary"><?= $v['tipo'] ?></span>
                             </td>
                              <td class="text-center">
                                 
@@ -241,7 +241,7 @@ $estadosUnidad = [
 
                 </button>
 
-                <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="min-width:320px;">
+                <ul class="dropdown-menu dropdown-menu-end shadow " style="min-width:320px;">
 
                     <li>
                         <h6 class="dropdown-header">
@@ -281,7 +281,7 @@ $estadosUnidad = [
 
                                 <a href="../../<?= $direccion ?>"
                                    target="_blank"
-                                   class="text-decoration-none text-dark flex-grow-1">
+                                   class="text-decoration-none  flex-grow-1">
 
                                     <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
 
@@ -292,7 +292,7 @@ $estadosUnidad = [
                                 </a>
 
                                 <button
-                                    class="btn btn-sm btn-outline-danger border-0"
+                                    class="btn btn-sm btn-outline-danger "
                                     title="Eliminar documento"
                                     onclick="eliminarDocumento(<?= $idDoc ?>)">
 
@@ -353,10 +353,10 @@ $estadosUnidad = [
 
     <div class="modal fade" id="modalVehiculo" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content border-0 shadow-2xl" style="border-radius: 30px; overflow: hidden;">
+            <div class="modal-content  shadow-2xl" style="border-radius: 30px; overflow: hidden;">
                 <form id="formVehiculo">
-                    <div class="modal-header border-0 bg-white p-4 pb-0">
-                        <h4 class="fw-bold text-dark" id="modalTitulo">Detalles Técnicos</h4>
+                    <div class="modal-header   p-4 pb-0">
+                        <h4 class="fw-bold " id="modalTitulo">Detalles Técnicos</h4>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                     </div>
                     <div class="modal-body p-4 row g-4">
@@ -365,23 +365,23 @@ $estadosUnidad = [
                         
                         <div class="col-12">
                             <label class="form-label fw-bold text-secondary">Descripción de Unidad</label>
-                            <input type="text" name="nombre" id="v_nombre" class="form-control form-control-lg bg-light border-0 rounded-4" placeholder="Ej. Kenworth T680" required>
+                            <input type="text" name="nombre" id="v_nombre" class="form-control form-control-lg   rounded-4" placeholder="Ej. Kenworth T680" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold text-secondary">Placas</label>
-                            <input type="text" name="placas" id="v_placas" class="form-control bg-light border-0 rounded-4 text-uppercase" required>
+                            <input type="text" name="placas" id="v_placas" class="form-control   rounded-4 text-uppercase" required>
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-bold text-secondary">Unidad Economica</label>
-                            <input type="text" name="tipo" id="v_tipo" class="form-control bg-light border-0 rounded-4 text-uppercase">
+                            <input type="text" name="tipo" id="v_tipo" class="form-control   rounded-4 text-uppercase">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold text-secondary">Capacidad (kg)</label>
-                            <input type="number" step="0.01" name="capacidad_carga_kg" id="v_capacidad" class="form-control bg-light border-0 rounded-4">
+                            <input type="number" step="0.01" name="capacidad_carga_kg" id="v_capacidad" class="form-control   rounded-4">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold text-secondary">Estado</label>
-                            <select name="estado_unidad" id="v_estado" class="form-select bg-light border-0 rounded-4 fw-medium">
+                            <select name="estado_unidad" id="v_estado" class="form-select   rounded-4 fw-medium">
                                 <?php foreach($estadosUnidad as $key => $val): ?>
                                     <option value="<?= $key ?>"><?= $val['label'] ?></option>
                                 <?php endforeach; ?>
@@ -389,30 +389,30 @@ $estadosUnidad = [
                         </div>
                         <div class="col-md-6">
                             <label class="form-label fw-bold text-secondary">Año</label>
-                            <input type="number" name="modelo_año" id="v_modelo" class="form-control bg-light border-0 rounded-4">
+                            <input type="number" name="modelo_año" id="v_modelo" class="form-control   rounded-4">
                         </div>
 
                         <div class="col-12">
                             <label class="form-label fw-bold text-secondary">Almacén Asignado</label>
                             <?php if ($_SESSION['almacen_id'] == 0): ?>
-                                <select name="almacen_id" id="v_almacen_id" class="form-select bg-light border-0 rounded-4 fw-medium" required>
+                                <select name="almacen_id" id="v_almacen_id" class="form-select   rounded-4 fw-medium" required>
                                     <option value="">Seleccionar Almacén...</option>
                                     <?php foreach($listaAlmacenes as $alm): ?>
                                         <option value="<?= $alm['id'] ?>"><?= htmlspecialchars($alm['nombre']) ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             <?php else: ?>
-                                <input type="text" class="form-control bg-light border-0 rounded-4" value="Sucursal Actual" readonly>
+                                <input type="text" class="form-control   rounded-4" value="Sucursal Actual" readonly>
                                 <input type="hidden" name="almacen_id" id="v_almacen_id" value="<?= $_SESSION['almacen_id'] ?>">
                             <?php endif; ?>
                         </div>
 
                         <div class="col-12">
                             <label class="form-label fw-bold text-secondary">VIN / Serie</label>
-                            <input type="text" name="serie_vin" id="v_vin" class="form-control bg-light border-0 rounded-4 text-uppercase">
+                            <input type="text" name="serie_vin" id="v_vin" class="form-control   rounded-4 text-uppercase">
                         </div>
                     </div>
-                    <div class="modal-footer border-0 p-4">
+                    <div class="modal-footer  p-4">
                         <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cerrar</button>
                         <button type="submit" class="btn btn-gradient px-5">Confirmar y Guardar</button>
                     </div>

@@ -8,7 +8,7 @@
                         </div>
                         <div>
                             <h4 class="fw-bold mb-0 text-dark">Nuevo Registro de Mantenimiento</h4>
-                            <p class="text-muted small mb-0">Complete los datos para registrar el movimiento en el sistema</p>
+                            <p class="text-body-secondary small mb-0">Complete los datos para registrar el movimiento en el sistema</p>
                         </div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -118,7 +118,7 @@
                 </div>
 
                 <div class="modal-footer border-0 p-4 pt-2">
-                    <button type="button" class="btn btn-light text-muted fw-bold rounded-pill px-4 me-2" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-light text-body-secondary fw-bold rounded-pill px-4 me-2" data-bs-dismiss="modal">
                         Cancelar
                     </button>
                     <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-sm">

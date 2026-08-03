@@ -48,7 +48,7 @@
                                 <label class="form-label fw-bold">Régimen Fiscal</label>
                                 <input type="text" name="regimen_fiscal" class="form-control" maxlength="3"
                                     placeholder="Ej. 601">
-                                <small class="text-muted">Clave del catálogo del SAT</small>
+                                <small class="text-body-secondary">Clave del catálogo del SAT</small>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Uso de CFDI</label>
@@ -100,7 +100,7 @@
                                         </option>
                                         <?php endforeach; ?>
                                     </select>
-                                    <small class="text-muted">Como administrador, debes elegir a qué sucursal pertenece
+                                    <small class="text-body-secondary">Como administrador, debes elegir a qué sucursal pertenece
                                         este cliente.</small>
                                 </div>
                                 <?php else: ?>

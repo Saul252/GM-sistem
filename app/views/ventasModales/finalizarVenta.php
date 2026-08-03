@@ -211,7 +211,7 @@
                         <div class="table-responsive border rounded-3 bg-white mb-3" style="max-height: 80%;">
                             <table class="table table-hover align-middle mb-0">
                                 <thead class="table-light sticky-top">
-                                    <tr class="small text-uppercase text-muted">
+                                    <tr class="small text-uppercase text-body-secondary">
                                         <th class="ps-3">Producto</th>
                                         <th class="text-center">Venta</th>
                                         <th class="text-center">Entregar Hoy</th>
@@ -347,7 +347,7 @@
             </div>
 
             <div class="widget-body" id="listaMovimientos">
-                <div class="text-center py-4 text-muted small">
+                <div class="text-center py-4 text-body-secondary small">
                     <div class="spinner-border spinner-border-sm"></div>
                 </div>
             </div>
@@ -365,14 +365,14 @@
             </div>
 
             <div id="inputSaldoContainer" class="mt-2" style="display:none;">
-                <label class="small text-muted">Cantidad a descontar:</label>
+                <label class="small text-body-secondary">Cantidad a descontar:</label>
                 <div class="input-group">
                     <span class="input-group-text bg-success text-white border-success">$</span>
                     <input type="number" id="monto_usar_favor"
                         class="form-control border-success fw-bold" value="0" step="0.01" min="0"
                         oninput="validarMontoMaximo(this)">
                 </div>
-                <div id="msgMaximo" class="text-muted" style="font-size: 0.7rem;"></div>
+                <div id="msgMaximo" class="text-body-secondary" style="font-size: 0.7rem;"></div>
             </div>
         </div>
 
@@ -396,7 +396,7 @@
                             </div>
                         </div>
                         <div class="mb-3">
-    <label for="select-usuarios" class="form-label fw-bold small text-muted text-uppercase">Atendió / Vendedor</label>
+    <label for="select-usuarios" class="form-label fw-bold small text-body-secondary text-uppercase">Atendió / Vendedor</label>
     <select class="form-select rounded-pill" id="select-usuarios" name="usuario_id" required>
         <option value="" selected disabled>Cargando vendedores...</option>
     </select>
@@ -448,7 +448,7 @@
             </div>
 
             <div class="modal-footer bg-light border-0" style="border-radius:0 0 20px 20px;">
-                <button class="btn btn-link text-muted me-auto" data-bs-dismiss="modal">Cerrar</button>
+                <button class="btn btn-link text-body-secondary me-auto" data-bs-dismiss="modal">Cerrar</button>
                 <button class="btn btn-success btn-lg px-5 shadow fw-bold rounded-pill" onclick="procesarVenta()">
                     <i class="bi bi-check-circle-fill me-1"></i> FINALIZAR VENTA
                 </button>
@@ -653,16 +653,16 @@ function consultarEstatusFinanciero(id) {
             $lista.innerHTML = `
                 <div class="p-2 small">
                     <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="text-muted">Por Pagar:</span>
+                        <span class="text-body-secondary">Por Pagar:</span>
                         <span class="fw-bold text-danger">${saldoEnContra}</span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="text-muted">A Favor:</span>
+                        <span class="text-body-secondary">A Favor:</span>
                         <span class="fw-bold text-success">${saldoAFavorFmt}</span>
                     </div>
                     <hr class="my-1" style="opacity:0.1">
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Estado:</span>
+                        <span class="text-body-secondary">Estado:</span>
                         <span class="fw-bold ${estadoColor}">${estadoTexto}</span>
                     </div>
                 </div>`;
@@ -1084,7 +1084,7 @@ window.procesarVenta = function() {
         title: '¿Finalizar Venta?',
         html: `
             <div class="text-center mb-2">
-                <span class="text-muted d-block small">Total de la Nota</span>
+                <span class="text-body-secondary d-block small">Total de la Nota</span>
                 <h3 class="fw-bold" style="color: #007aff;">$${totalOriginalVenta.toFixed(2)}</h3>
             </div>
             <div class="p-2 rounded-3 bg-light small text-start border">
@@ -1199,11 +1199,11 @@ window.procesarVenta = function() {
                             title: esEntregaTotal ? '¡Venta Exitosa!' :
                                 'Entrega Parcial Registrada',
                             html: `
-                            <div class="alert alert-light border-0 small text-start py-2 mb-3" style="background:#f2f2f7; border-radius:12px;">
+                            <div class="alert bg-body-tertiary text-body border-0 small text-start py-2 mb-3" style="background:var(--bs-tertiary-bg);; border-radius:12px;">
                                 ${res.message || 'Operación realizada correctamente.'}
                             </div>
                             ${htmlExtra}
-                            <p class="text-muted small mb-0">¿Deseas imprimir el comprobante?</p>
+                            <p class="text-body-secondary small mb-0">¿Deseas imprimir el comprobante?</p>
                         `,
                             icon: iconoFinal,
                             showDenyButton: true,

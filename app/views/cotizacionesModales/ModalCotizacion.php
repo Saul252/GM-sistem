@@ -10,7 +10,7 @@
                         </div>
                         <div>
                             <h4 class="fw-bold mb-0">Nueva Cotización</h4>
-                            <p class="text-muted small mb-0">Complete los datos para requerir materiales al almacén</p>
+                            <p class="text-body-secondary small mb-0">Complete los datos para requerir materiales al almacén</p>
                         </div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -97,7 +97,7 @@
                    <div class="table-responsive border rounded-4 ">
                         <table class="table align-middle mb-0" id="tablaDetalle">
                             <thead class="">
-                                <tr class="text-muted small uppercase">
+                                <tr class="text-body-secondary small uppercase">
                                     <th class="ps-4" style="width: 45%;">Producto</th>
                                     <th style="width: 20%;">Cantidad</th>
                                     <th style="width: 25%;">Presentación / Unidad</th>
@@ -112,7 +112,7 @@
 
                         </table>
 
-                        <div id="emptyState" class="text-center py-5 text-muted">
+                        <div id="emptyState" class="text-center py-5 text-body-secondary">
                             <div class="mb-3">
                                 <i class="bi bi-cart-plus opacity-25" style="font-size: 3.5rem;"></i>
                             </div>
@@ -468,7 +468,7 @@ $('#buscadorProductos').on('select2:select', function(e) {
     <!-- PRODUCTO -->
     <td class="ps-4">
         <b>${d.nombre}</b><br>
-        <small class="text-muted">${d.sku}</small>
+        <small class="text-body-secondary">${d.sku}</small>
     </td>
 
     <!-- CANTIDAD -->

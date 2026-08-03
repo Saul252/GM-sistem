@@ -305,7 +305,7 @@ if (isset($_GET['detalle_id'])) {
                         <p id="detAlmacen" class="fw-bold small mb-3"></p>
                         
                         <div class="mb-4 p-2  border rounded shadow-sm text-center">
-                            <span class="d-block small text-muted text-uppercase fw-bold">Saldo Pendiente</span>
+                            <span class="d-block small text-body-secondary text-uppercase fw-bold">Saldo Pendiente</span>
                             <span id="detSaldoLabel" class="h5 fw-bold text-danger">$0.00</span>
                         </div>
 
@@ -454,7 +454,7 @@ async function verDetalle(id) {
         // Llenar historial
         $('#tbodyHistorial').html(data.historial.length > 0 ? data.historial.map(h => `
             <tr><td>${h.fecha}</td><td>${h.usuario_nombre}</td><td>${h.producto}</td><td class="text-center fw-bold">${h.cantidad}</td></tr>
-        `).join('') : '<tr><td colspan="4" class="text-center text-muted">No hay entregas registradas</td></tr>');
+        `).join('') : '<tr><td colspan="4" class="text-center text-body-secondary">No hay entregas registradas</td></tr>');
 
         alternarModo(false);
         modalObj.show();

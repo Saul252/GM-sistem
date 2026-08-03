@@ -164,7 +164,7 @@
             </div>
             <div class="modal-body pt-0">
                 <div class="mb-3">
-                    <label class="small fw-bold text-muted">Nombre</label>
+                    <label class="small fw-bold text-body-secondary">Nombre</label>
                     <input type="text" id="nuevo_nombre_cat" class="form-control border-0 bg-light"
                         style="border-radius: 10px;" placeholder="Ej: Servicios">
                 </div>
@@ -187,29 +187,29 @@
             </div>
             <div class="modal-body pt-0">
                 <div class="mb-3">
-                    <label class="small fw-bold text-muted">Nombre y Marca</label>
+                    <label class="small fw-bold text-body-secondary">Nombre y Marca</label>
                     <input type="text" id="nuevo_nombre_insumo" class="form-control border-0 bg-light"
                         style="border-radius: 10px;" placeholder="Ej: Servicios">
                 </div>
                 <div class="mb-3">
-                    <label class="small fw-bold text-muted">Unidad maxima</label>
+                    <label class="small fw-bold text-body-secondary">Unidad maxima</label>
                     <input type="text" id="nuevo_maximo_insumo" class="form-control border-0 bg-light"
                         style="border-radius: 10px;" placeholder="Ej: cubeta, tambo">
                 </div>
 
           
                 <div class="mb-3">
-                    <label class="small fw-bold text-muted">Unidad minima</label>
+                    <label class="small fw-bold text-body-secondary">Unidad minima</label>
                     <input type="text" id="nuevo_minimo_insumo" class="form-control border-0 bg-light"
                         style="border-radius: 10px;" placeholder="Ej:  litro ">
                 </div> 
                 <div class="mb-3">
-                    <label class="small fw-bold text-muted">FACTOR </label>
+                    <label class="small fw-bold text-body-secondary">FACTOR </label>
                     <input type="number" id="factor" class="form-control border-0 bg-light"
                         style="border-radius: 10px;" placeholder="1">
                 </div>
                  <div class="mb-3">
-                    <label class="small fw-bold text-muted">Descripcion y modelo</label>
+                    <label class="small fw-bold text-body-secondary">Descripcion y modelo</label>
                     <input type="text" id="nuevo_descripcion_insumo" class="form-control border-0 bg-light"
                         style="border-radius: 10px;" placeholder="Ej: BARDAL MOD 1234">
                 </div> 

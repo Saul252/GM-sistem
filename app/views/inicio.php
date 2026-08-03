@@ -48,7 +48,7 @@ $gruposModulos = [
             ['id' => 'movimientos', 'url' => '/cfsistem/app/controllers/movimientosController.php', 'icon' => 'bi-arrow-left-right', 'class' => 'text-primary', 'label' => 'Movimientos'],
             ['id' => 'Mermas', 'url' => '/cfsistem/app/controllers/mermasController.php', 'icon' => 'bi-exclamation-triangle-fill', 'class' => 'text-danger', 'label' => 'Mermas'],
             ['id' => 'transmutaciones', 'url' => '/cfsistem/app/controllers/transmutacionesController.php', 'icon' => 'bi-arrow-repeat', 'class' => 'text-secondary', 'label' => 'Conversiones'],
-            ['id' => 'historialLotes', 'url' => '/cfsistem/app/controllers/lotesHistorialController.php', 'icon' => 'bi-clock-history', 'class' => 'text-muted', 'label' => 'Historial Lotes'],
+            ['id' => 'historialLotes', 'url' => '/cfsistem/app/controllers/lotesHistorialController.php', 'icon' => 'bi-clock-history', 'class' => 'text-body-secondary', 'label' => 'Historial Lotes'],
             ['id' => 'comprasHistorial', 'url' => '/cfsistem/app/controllers/comprasHistorialController.php', 'icon' => 'bi-collection', 'class' => 'text-dark', 'label' => 'Historial Compras'],
         ]
     ],

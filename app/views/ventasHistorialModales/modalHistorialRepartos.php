@@ -162,7 +162,7 @@ display:none !important}
                                     ${index + 1}. ${p.producto}
                                 </div>
 
-                                <div class="text-muted"
+                                <div class="text-body-secondary"
                                     style="font-size:11px;">
                                     SKU: ${p.sku}
                                 </div>
@@ -193,14 +193,14 @@ display:none !important}
                                 <tr style="
                                     border-bottom:1px solid #ddd;
                                 ">
-                                    <th class="fw-semibold text-muted">
+                                    <th class="fw-semibold text-body-secondary">
                                         LOTE / UBICACIÓN
                                     </th>
 
-                                    <th class="fw-semibold text-muted text-end">
+                                    <th class="fw-semibold text-body-secondary text-end">
                                         CANTIDAD
                                     </th>
-                                     <th class="fw-semibold text-muted text-end">
+                                     <th class="fw-semibold text-body-secondary text-end">
                                         FECHA DE SALIDA
                                     </th>
                                 </tr>

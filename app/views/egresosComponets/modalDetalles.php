@@ -206,7 +206,7 @@ function verDetalle(tipo, id) {
 
             if (item.desglose_movimientos) {
                 const movimientos = item.desglose_movimientos.split('||');
-                detalleMovimientos = '<div class="mt-1 text-uppercase text-muted fw-bold" style="font-size: 0.6rem;">Rastreo de Entradas:</div>';
+                detalleMovimientos = '<div class="mt-1 text-uppercase text-body-secondary fw-bold" style="font-size: 0.6rem;">Rastreo de Entradas:</div>';
                 movimientos.forEach(mov => {
                     detalleMovimientos += `
                         <div class="small p-1 mb-1 bg-white border-start border-success border-3 shadow-sm" style="font-size: 0.7rem;">
@@ -233,22 +233,22 @@ function verDetalle(tipo, id) {
                     </td>
                     <td class="text-center bg-light">
                         <span class="d-block fw-bold">${totalComprado} ${item.unidad_reporte}</span>
-                        <small class="text-muted">(${unidadc} ${item.unidad_medida})</small>
+                        <small class="text-body-secondary">(${unidadc} ${item.unidad_medida})</small>
                     </td>
                     <td class="text-center text-success fw-bold bg-light">
                         <span class="d-block fw-bold">${totalr} ${item.unidad_reporte}</span>
-                        <small class="text-muted">(${unidadr} ${item.unidad_medida})</small>
+                        <small class="text-body-secondary">(${unidadr} ${item.unidad_medida})</small>
                     </td>
                     <td class="text-center text-success fw-bold bg-light">
                         ${item.cantidad_excedente > 0 ? `
                             <span class="d-block fw-bold">${totale} ${item.unidad_reporte}</span>
-                            <small class="text-muted">${item.cantidad_excedente} ${item.unidad_medida}</small>
+                            <small class="text-body-secondary">${item.cantidad_excedente} ${item.unidad_medida}</small>
                         ` : '0'}
                     </td>
                     <td class="text-center bg-light">
                         ${item.cantidad_faltante > 0 ? `
                             <span class="d-block fw-bold">${totalf} ${item.unidad_reporte}</span>
-                            <small class="text-muted">${item.cantidad_faltante} ${item.unidad_medida}</small>
+                            <small class="text-body-secondary">${item.cantidad_faltante} ${item.unidad_medida}</small>
                         ` : '0'}
                     </td>
                     <td class="text-end">$${unidadr >= 1 ? parseFloat(item.precio_unitario * factor).toFixed(2) + " x " + item.unidad_reporte : parseFloat(item.precio_unitario).toFixed(2) + " x " + item.unidad_medida}</td>

@@ -194,7 +194,7 @@
                         <div class="row g-3">
                             <!-- 1. Almacén -->
                             <div class="col-md-6 col-lg-3">
-                                <label class="form-label text-muted fw-semibold small mb-1">
+                                <label class="form-label text-body-secondary fw-semibold small mb-1">
                                     <i class="bi bi-box-seam me-1 text-primary"></i> Almacén de Cargo
                                 </label>
                                 <select name="almacen_id_editar" id="almacen_id_editar"
@@ -208,7 +208,7 @@
 
                             <!-- 2. Cliente -->
                             <div class="col-md-6 col-lg-3">
-                                <label class="form-label text-muted fw-semibold small mb-1">
+                                <label class="form-label text-body-secondary fw-semibold small mb-1">
                                     <i class="bi bi-person me-1 text-primary"></i> Cliente
                                 </label>
                                 <div class="input-group shadow-sm rounded-3 overflow-hidden">
@@ -229,7 +229,7 @@
 
                             <!-- 3. Vendedor -->
                             <div class="col-md-6 col-lg-3">
-                                <label class="form-label text-muted fw-semibold small mb-1">
+                                <label class="form-label text-body-secondary fw-semibold small mb-1">
                                     <i class="bi bi-person-badge me-1 text-primary"></i> Vendedor
                                 </label>
                                 <select name="select-vendedor1" id="select-vendedor1"
@@ -240,7 +240,7 @@
 
                             <!-- 4. Añadir Producto -->
                             <div class="col-md-6 col-lg-3">
-                                <label class="form-label text-muted fw-semibold small mb-1">
+                                <label class="form-label text-body-secondary fw-semibold small mb-1">
                                     <i class="bi bi-search me-1 text-primary"></i> Añadir Producto
                                 </label>
                                 <div class="input-group shadow-sm rounded-3 overflow-hidden">
@@ -282,11 +282,11 @@
 
                             <!-- Estado Vacío -->
                             <div id="emptyStateEditar" class="text-center py-5">
-                                <div class="avatar-icon-box  text-muted mx-auto mb-3">
+                                <div class="avatar-icon-box  text-body-secondary mx-auto mb-3">
                                     <i class="bi bi-cart-x fs-1 text-secondary opacity-50"></i>
                                 </div>
                                 <h6 class="fw-bold  mb-1">La lista está vacía</h6>
-                                <p class="text-muted small mb-0">Busca e incluye artículos a esta venta desde el panel
+                                <p class="text-body-secondary small mb-0">Busca e incluye artículos a esta venta desde el panel
                                     superior</p>
                             </div>
                         </div>
@@ -304,7 +304,7 @@
 
                                 <div class="row g-3 mb-3">
                                     <div class="col-sm-6">
-                                        <label class="form-label small fw-semibold text-muted">Monto Pagado</label>
+                                        <label class="form-label small fw-semibold text-body-secondary">Monto Pagado</label>
                                         <div class="input-group">
                                             <span
                                                 class="input-group-text bg-success-subtle text-success border-0 fw-bold">$</span>
@@ -314,7 +314,7 @@
                                         </div>
                                     </div>
                                     <div class="col-sm-6">
-                                        <label class="form-label small fw-semibold text-muted">Método de Pago</label>
+                                        <label class="form-label small fw-semibold text-body-secondary">Método de Pago</label>
                                         <select id="metodo_pago"
                                             class="form-select border-light-subtle  fw-semibold"
                                             onchange="verificarMetodoPago(this.value)">
@@ -338,7 +338,7 @@
         <div class="row g-2 align-items-center">
             <!-- Saldo Disponible (Solo Lectura) -->
             <div class="col-6">
-                <label for="saldoFavorTotal" class="form-label text-muted small fw-semibold mb-1" style="font-size: 0.75rem;">
+                <label for="saldoFavorTotal" class="form-label text-body-secondary small fw-semibold mb-1" style="font-size: 0.75rem;">
                     Disponible
                 </label>
                 <div class="input-group input-group-sm">
@@ -379,7 +379,7 @@
                                 <div id="pago_aviso" class="small mb-3 fw-semibold"></div>
 
                                 <div>
-                                    <label class="form-label small fw-semibold text-muted">Notas / Observaciones</label>
+                                    <label class="form-label small fw-semibold text-body-secondary">Notas / Observaciones</label>
                                     <textarea id="obsVenta" class="form-control border-light-subtle  rounded-3"
                                         rows="2"
                                         placeholder="Agrega detalles o instrucciones sobre esta orden..."></textarea>
@@ -665,7 +665,7 @@
             
                 <td >
                     <b>${d.nombre}</b><br>
-                    <small class="text-muted">${d.sku}</small>
+                    <small class="text-body-secondary">${d.sku}</small>
                 </td>
 <td class="ps-4">
 <input 
@@ -999,11 +999,11 @@
                 Swal.fire({
                     title: esEntregaTotal ? '¡Venta Exitosa!' : 'Entrega Parcial Registrada',
                     html: `
-                    <div class="alert alert-light border-0 small text-start py-2 mb-3" style="background:#f2f2f7; border-radius:12px;">
+                    <div class="alert bg-body-tertiary text-body border-0 small text-start py-2 mb-3" style="background:var(--bs-tertiary-bg);; border-radius:12px;">
                         ${res.message || 'Operación realizada correctamente.'}
                     </div>
                     ${htmlExtra}
-                    <p class="text-muted small mb-0">¿Deseas imprimir el comprobante?</p>
+                    <p class="text-body-secondary small mb-0">¿Deseas imprimir el comprobante?</p>
                 `,
                     icon: iconoFinal,
                     showDenyButton: true,

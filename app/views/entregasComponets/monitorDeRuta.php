@@ -141,7 +141,7 @@ window.cargarMonitorViajes = async function() {
     const almacenId = selectAlm ? selectAlm.value : '';
 
     try {
-        body.html('<tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary spinner-border-sm"></div><div class="mt-2 text-muted small">Consultando rutas...</div></td></tr>');
+        body.html('<tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary spinner-border-sm"></div><div class="mt-2 text-body-secondary small">Consultando rutas...</div></td></tr>');
         
         const resp = await fetch(`/cfsistem/app/controllers/repartosController.php?action=listar_viajes_activos&almacen_id=${almacenId}`);
         const result = await resp.json();
@@ -154,14 +154,14 @@ window.cargarMonitorViajes = async function() {
         }
 
         if (!data || data.length === 0) {
-            body.html('<tr><td colspan="5" class="text-center py-5 text-muted"><i class="bi bi-geo-alt fs-2 d-block mb-2 opacity-25"></i> No hay unidades en ruta actualmente</td></tr>');
+            body.html('<tr><td colspan="5" class="text-center py-5 text-body-secondary"><i class="bi bi-geo-alt fs-2 d-block mb-2 opacity-25"></i> No hay unidades en ruta actualmente</td></tr>');
             return;
         }
 
         body.empty();
         data.forEach(v => {
             const listaAyudantes = v.tripulantes 
-                ? `<div class="small text-muted fw-medium"><i class="bi bi-people-fill me-1 text-primary"></i> ${v.tripulantes}</div>`
+                ? `<div class="small text-body-secondary fw-medium"><i class="bi bi-people-fill me-1 text-primary"></i> ${v.tripulantes}</div>`
                 : `<span class="badge bg-light text-secondary fw-normal border" style="font-size:0.65rem;">Solo Chofer</span>`;
 
             body.append(`
@@ -169,7 +169,7 @@ window.cargarMonitorViajes = async function() {
                     <td class="ps-4">
                         <div class="fw-bold text-dark" style="font-size:0.95rem;">${v.unidad}</div>
                         <div class="badge-folio mt-1"><i class="bi bi-hash"></i>${v.viaje_folio}</div>
-                        <div class="small text-muted mt-1" style="font-size:0.7rem;">📍 ${v.almacen_nombre || 'N/A'}</div>
+                        <div class="small text-body-secondary mt-1" style="font-size:0.7rem;">📍 ${v.almacen_nombre || 'N/A'}</div>
                     </td>
                     <td>
                         <div class="d-flex align-items-center">
@@ -178,7 +178,7 @@ window.cargarMonitorViajes = async function() {
                             </div>
                             <div>
                                 <div class="fw-bold text-uppercase" style="font-size: 0.8rem; color:#1d1d1f;">${v.chofer}</div>
-                                <small class="text-muted">Conductor</small>
+                                <small class="text-body-secondary">Conductor</small>
                             </div>
                         </div>
                     </td>

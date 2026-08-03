@@ -17,22 +17,22 @@
                 <!-- INFO GENERAL -->
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <small class="text-muted">Proveedor</small>
+                        <small class="text-body-secondary">Proveedor</small>
                         <div id="dp_proveedor" class="fw-bold"></div>
                     </div>
 
                     <div class="col-md-6">
-                        <small class="text-muted">Almacén</small>
+                        <small class="text-body-secondary">Almacén</small>
                         <div id="dp_almacen" class="fw-bold"></div>
                     </div>
 
                     <div class="col-md-6 mt-2">
-                        <small class="text-muted">Usuario</small>
+                        <small class="text-body-secondary">Usuario</small>
                         <div id="dp_usuario" class="fw-bold"></div>
                     </div>
 
                     <div class="col-md-6 mt-2">
-                        <small class="text-muted">Fecha</small>
+                        <small class="text-body-secondary">Fecha</small>
                         <div id="dp_fecha" class="fw-bold"></div>
                     </div>
                 </div>
@@ -40,12 +40,12 @@
                 <!-- PAGO -->
                 <div class="row mb-3">
                     <div class="col-md-6">
-                        <small class="text-muted">Monto Pagado</small>
+                        <small class="text-body-secondary">Monto Pagado</small>
                         <div id="dp_monto" class="fw-bold text-success fs-5"></div>
                     </div>
 
                     <div class="col-md-6">
-                        <small class="text-muted">Método de Pago</small>
+                        <small class="text-body-secondary">Método de Pago</small>
                         <div id="dp_metodo" class="fw-bold"></div>
                     </div>
                 </div>
@@ -54,17 +54,17 @@
                 <div class="border rounded p-3 mb-3 bg-light">
                     <div class="row">
                         <div class="col-md-6">
-                            <small class="text-muted">Producto</small>
+                            <small class="text-body-secondary">Producto</small>
                             <div id="dp_producto" class="fw-bold"></div>
                         </div>
 
                         <div class="col-md-3">
-                            <small class="text-muted">Excedente</small>
+                            <small class="text-body-secondary">Excedente</small>
                             <div id="dp_excedente" class="fw-bold text-danger"></div>
                         </div>
 
                         <div class="col-md-3">
-                            <small class="text-muted">Precio Unitario</small>
+                            <small class="text-body-secondary">Precio Unitario</small>
                             <div id="dp_precio" class="fw-bold"></div>
                         </div>
                     </div>
@@ -72,7 +72,7 @@
 
                 <!-- OBSERVACIONES -->
                 <div>
-                    <small class="text-muted">Observaciones</small>
+                    <small class="text-body-secondary">Observaciones</small>
                     <div id="dp_obs" class="p-2 border rounded bg-light"></div>
                 </div>
 

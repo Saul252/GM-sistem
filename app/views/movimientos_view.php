@@ -64,7 +64,7 @@
             <div class="d-flex justify-content-between align-items-end mb-4">
                 <div>
                     <h2 class="fw-bold m-0 card-title-text">Movimientos de Stock</h2>
-                    <p class="text-muted small">Consulta de entradas, salidas y traspasos</p>
+                    <p class="text-body-secondary small">Consulta de entradas, salidas y traspasos</p>
                 </div>
                 <div id="loader" class="spinner-border text-primary d-none" role="status"></div>
             </div>
@@ -73,7 +73,7 @@
                 <div class="card-body p-4">
                     <form id="formFiltros" class="row g-3 align-items-end">
                         <div class="col-md-2">
-                            <label class="form-label small fw-bold text-muted">PERIODO</label>
+                            <label class="form-label small fw-bold text-body-secondary">PERIODO</label>
                             <select id="selectorPeriodo" class="form-select  border border-subtle">
                                 <option value="hoy">Hoy</option>
                                 <option value="ayer">Ayer</option>
@@ -84,17 +84,17 @@
                         </div>
                         
                         <div class="col-md-2">
-                            <label class="form-label small fw-bold text-muted">DESDE</label>
+                            <label class="form-label small fw-bold text-body-secondary">DESDE</label>
                             <input type="date" id="f_inicio" class="form-control input-disabled" disabled>
                         </div>
                         
                         <div class="col-md-2">
-                            <label class="form-label small fw-bold text-muted">HASTA</label>
+                            <label class="form-label small fw-bold text-body-secondary">HASTA</label>
                             <input type="date" id="f_fin" class="form-control input-disabled" disabled>
                         </div>
 
                         <div class="col-md-2">
-                            <label class="form-label small fw-bold text-muted">ALMACÉN</label>
+                            <label class="form-label small fw-bold text-body-secondary">ALMACÉN</label>
                             <select id="filtroAlmacen" class="form-select  border border-subtle" <?= ($almacen_usuario > 0) ? 'disabled' : '' ?>>
                                 <?php if($almacen_usuario == 0): ?>
                                     <option value="0">-- Ver Todos --</option>
@@ -113,7 +113,7 @@
                         </div>
                         
                         <div class="col-md-2">
-                            <label class="form-label small fw-bold text-muted">TIPO</label>
+                            <label class="form-label small fw-bold text-body-secondary">TIPO</label>
                             <select id="filtroTipo" class="form-select  border border-subtle">
                                 <option value="">Todos</option>
                                 <option value="entrada">Entradas</option>
@@ -188,7 +188,7 @@
                 const uReporte = Math.floor(cant / factor);
                 const resto = Math.round((cant % factor) * 100) / 100;
                 return `<div class="fw-bold card-title-text">${uReporte} ${m.unidad_reporte}</div>` +
-                       (resto > 0 ? `<small class="text-muted">+ ${resto} ${m.unidad_medida}</small>` : '');
+                       (resto > 0 ? `<small class="text-body-secondary">+ ${resto} ${m.unidad_medida}</small>` : '');
             }
             return `<div class="fw-bold card-title-text">${cant} <small class="fw-normal">${unidad} </small></div>`;
         }
@@ -233,7 +233,7 @@
                                 `<div class="text-center"><span class="badge badge-mov bg-${m.color} bg-opacity-10 text-${m.color} border border-${m.color} border-opacity-25">${m.tipo}</span></div>`,
                                 `<div class="text-center">${formatQty(m)}</div>`,
                                 `<div><div class="ruta-pill">${labelOri} <i class="bi bi-arrow-right ruta-arrow"></i> ${labelDes}</div></div>`,
-                                `<div><small class="d-block"><b>R:</b> ${m.u_reg}</small><small class="text-muted"><b>A:</b> ${m.u_rec}</small></div>`,
+                                `<div><small class="d-block"><b>R:</b> ${m.u_reg}</small><small class="text-body-secondary"><b>A:</b> ${m.u_rec}</small></div>`,
                                 `<div class="pe-3 text-end">${btnAccion}</div>`
                             ]);
                         });

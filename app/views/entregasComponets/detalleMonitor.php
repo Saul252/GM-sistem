@@ -15,7 +15,7 @@
             <div class="modal-body p-4" id="contenedor_detalle_ios"></div>
 
             <div class="modal-footer border-0 justify-content-center pb-4 pt-0">
-                <button type="button" class="btn btn-white border shadow-sm rounded-pill px-5 fw-bold text-muted" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-white border shadow-sm rounded-pill px-5 fw-bold text-body-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>
@@ -31,7 +31,7 @@ async function verDetalleEntrega(tipo, id) {
     modalInstancia.show();
 
     const contenedor = $('#contenedor_detalle_ios');
-    contenedor.html('<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2 small fw-bold text-muted">Cargando...</p></div>');
+    contenedor.html('<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="mt-2 small fw-bold text-body-secondary">Cargando...</p></div>');
 
     try {
         const url = `/cfsistem/app/controllers/repartosController.php?action=get_detalle_trazabilidad&tipo=${tipo}&id=${id}`;
@@ -76,12 +76,12 @@ function pintarHTMLDetalle(tipo, d) {
                 <i class="bi ${esRuta ? 'bi-truck' : 'bi-person-badge'}" style="font-size: 1.2rem;"></i>
             </div>
             <div>
-                <label class="text-muted d-block mb-0" style="font-size: 0.55rem; font-weight: 800;">
+                <label class="text-body-secondary d-block mb-0" style="font-size: 0.55rem; font-weight: 800;">
                     ${esRuta ? 'CHOFER / RESPONSABLE' : 'RESPONSABLE DE PATIO'}
                 </label>
                 <span class="fw-bold text-dark d-block" style="font-size: 0.9rem;">${nombreResponsable}</span>
                 ${esRuta && d.vehiculo
-                    ? `<small class="text-muted" style="font-size:0.65rem;">${d.vehiculo} &bull; <b>${d.placas || ''}</b></small>`
+                    ? `<small class="text-body-secondary" style="font-size:0.65rem;">${d.vehiculo} &bull; <b>${d.placas || ''}</b></small>`
                     : ''}
             </div>
         </div>
@@ -92,7 +92,7 @@ function pintarHTMLDetalle(tipo, d) {
         <div class="d-flex align-items-center bg-white rounded-4 px-3 py-2 mb-3 shadow-sm">
             <i class="bi bi-person-check text-secondary me-2" style="font-size:0.85rem;"></i>
             <div>
-                <label class="text-muted d-block" style="font-size: 0.5rem; font-weight: 800;">REGISTRADO EN SISTEMA POR</label>
+                <label class="text-body-secondary d-block" style="font-size: 0.5rem; font-weight: 800;">REGISTRADO EN SISTEMA POR</label>
                 <span class="fw-bold text-dark" style="font-size: 0.75rem;">${d.usuario_asigno_sistema}</span>
             </div>
         </div>`;
@@ -102,7 +102,7 @@ function pintarHTMLDetalle(tipo, d) {
         const productos = d.lista_productos || [];
 
         if (productos.length > 0) {
-            html += `<label class="text-muted d-block mb-2 px-1" style="font-size: 0.6rem; font-weight: 800;">ENTREGAS EN ESTE VIAJE</label>`;
+            html += `<label class="text-body-secondary d-block mb-2 px-1" style="font-size: 0.6rem; font-weight: 800;">ENTREGAS EN ESTE VIAJE</label>`;
 
             productos.forEach(item => {
                 html += `
@@ -118,17 +118,17 @@ function pintarHTMLDetalle(tipo, d) {
                         </div>
                         <div class="text-end ps-2">
                             <span class="fw-bold text-dark" style="font-size: 1rem;">${item.cantidad}</span>
-                            <div class="text-muted" style="font-size: 0.5rem; font-weight: 800;">CANT.</div>
+                            <div class="text-body-secondary" style="font-size: 0.5rem; font-weight: 800;">CANT.</div>
                         </div>
                     </div>
                     <div>
-                        <label class="text-muted d-block" style="font-size: 0.5rem; font-weight: 800;">PRODUCTO</label>
+                        <label class="text-body-secondary d-block" style="font-size: 0.5rem; font-weight: 800;">PRODUCTO</label>
                         <span class="text-dark fw-bold" style="font-size: 0.75rem;">${item.producto}</span>
                     </div>
                 </div>`;
             });
         } else {
-            html += `<p class="text-center text-muted small py-3">Sin productos registrados en este viaje.</p>`;
+            html += `<p class="text-center text-body-secondary small py-3">Sin productos registrados en este viaje.</p>`;
         }
 
         if (d.tripulantes && d.tripulantes.length > 0) {
@@ -140,7 +140,7 @@ function pintarHTMLDetalle(tipo, d) {
 
             html += `
             <div class="mt-2">
-                <label class="text-muted d-block mb-2 px-1" style="font-size: 0.6rem; font-weight: 800;">AYUDANTES / TRIPULACIÓN</label>
+                <label class="text-body-secondary d-block mb-2 px-1" style="font-size: 0.6rem; font-weight: 800;">AYUDANTES / TRIPULACIÓN</label>
                 <div class="d-flex flex-wrap">${chips}</div>
             </div>`;
         }
@@ -148,19 +148,19 @@ function pintarHTMLDetalle(tipo, d) {
     } else {
         html += `
         <div class="bg-white rounded-4 p-3 shadow-sm mb-3">
-            <label class="text-muted d-block mb-1" style="font-size: 0.55rem; font-weight: 800;">CLIENTE</label>
+            <label class="text-body-secondary d-block mb-1" style="font-size: 0.55rem; font-weight: 800;">CLIENTE</label>
             <span class="fw-bold text-dark" style="font-size: 0.9rem;">${d.cliente || 'VENTA GENERAL'}</span>
             ${d.folio_venta ? `<span class="badge bg-light text-secondary ms-2" style="font-size:0.55rem;">FOLIO #${d.folio_venta}</span>` : ''}
         </div>
 
         <div class="bg-white rounded-4 p-3 shadow-sm mb-3 d-flex justify-content-between align-items-center">
             <div>
-                <label class="text-muted d-block" style="font-size: 0.5rem; font-weight: 800;">PRODUCTO</label>
+                <label class="text-body-secondary d-block" style="font-size: 0.5rem; font-weight: 800;">PRODUCTO</label>
                 <span class="fw-bold text-dark" style="font-size: 0.8rem;">${d.producto_nombre || d.producto || '—'}</span>
             </div>
             <div class="text-end">
                 <span class="fw-bold text-dark" style="font-size: 1.1rem;">${d.cantidad}</span>
-                <div class="text-muted" style="font-size: 0.5rem; font-weight: 800;">CANT.</div>
+                <div class="text-body-secondary" style="font-size: 0.5rem; font-weight: 800;">CANT.</div>
             </div>
         </div>
 
@@ -168,7 +168,7 @@ function pintarHTMLDetalle(tipo, d) {
         <div class="d-flex align-items-center bg-white rounded-4 px-3 py-2 shadow-sm">
             <i class="bi bi-clock-history text-secondary me-2" style="font-size:0.85rem;"></i>
             <div>
-                <label class="text-muted d-block" style="font-size: 0.5rem; font-weight: 800;">FECHA DE DESPACHO EN PATIO</label>
+                <label class="text-body-secondary d-block" style="font-size: 0.5rem; font-weight: 800;">FECHA DE DESPACHO EN PATIO</label>
                 <span class="fw-bold text-dark" style="font-size: 0.75rem;">${d.fecha_patio}</span>
             </div>
         </div>` : ''}`;

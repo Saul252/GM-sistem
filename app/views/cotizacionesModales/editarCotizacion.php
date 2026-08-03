@@ -12,7 +12,7 @@
                         </div>
                         <div>
                             <h4 class="fw-bold mb-0">Editar Cotización</h4>
-                            <p class="text-muted small mb-0">Modifique los datos de la cotización existente</p>
+                            <p class="text-body-secondary small mb-0">Modifique los datos de la cotización existente</p>
                         </div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -99,7 +99,7 @@
                    <div class="table-responsive border rounded-4 ">
                         <table class="table align-middle mb-0" id="tablaDetalleEditar">
                             <thead class="">
-                                <tr class="text-muted small uppercase">
+                                <tr class="text-body-secondary small uppercase">
                                     <th class="ps-4" style="width: 45%;">Producto</th>
                                     <th style="width: 20%;">Cantidad</th>
                                     <th style="width: 25%;">Presentación / Unidad</th>
@@ -113,7 +113,7 @@
                             </tbody>
                         </table>
 
-                        <div id="emptyStateEditar" class="text-center py-5 text-muted">
+                        <div id="emptyStateEditar" class="text-center py-5 text-body-secondary">
                             <div class="mb-3">
                                 <i class="bi bi-cart-plus opacity-25" style="font-size: 3.5rem;"></i>
                             </div>
@@ -401,7 +401,7 @@ $('#buscadorProductosEditar').on('select2:select', function(e) {
     <tr id="filaEditar-${id}">
         <td class="ps-4">
             <b>${d.nombre}</b><br>
-            <small class="text-muted">${d.sku}</small>
+            <small class="text-body-secondary">${d.sku}</small>
         </td>
 
         <td>
@@ -669,7 +669,7 @@ async function gestionarSolicitud(id) {
             <tr id="filaEditar-${prodId}">
                 <td class="ps-4">
                     <b>${i.producto_nombre}</b><br>
-                    <small class="text-muted">${i.sku}</small>
+                    <small class="text-body-secondary">${i.sku}</small>
                 </td>
 
                 <td>

@@ -6,7 +6,7 @@
 <div class="modal fade" id="modalEditarCotizacion" tabindex="-1" aria-hidden="true">
     <!-- modal-fullscreen-xl-down o max-width amplia el modal en pantallas grandes -->
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-custom">
-        <div class="modal-content modal-content-custom bg-white border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-content modal-content-custom  border-0 shadow-lg rounded-4 overflow-hidden">
             <form id="formEditarSolicitud">
                 <input type="hidden" id="editar_venta_id" name="cotizacion_id" value="">
 
@@ -26,7 +26,7 @@
 
                 <div class="modal-body px-4 pt-4">
                     <!-- Controles / Filtros de Edición -->
-                    <div class="card-filter-box p-4 mb-4 rounded-4 border-0 shadow-sm bg-white">
+                    <div class="card-filter-box p-4 mb-4 rounded-4 border-0 shadow-sm ">
                         <div class="row g-3 align-items-end">
 
                             <!-- 1. Almacén de Cargo -->
@@ -108,7 +108,7 @@
                     </div>
 
                     <!-- Tabla de Artículos -->
-                    <div class="table-responsive border rounded-4 bg-white shadow-sm" style="max-height: 380px; overflow-y: auto;">
+                    <div class="table-responsive border rounded-4  shadow-sm" style="max-height: 380px; overflow-y: auto;">
                         <table class="table align-middle mb-0 table-fixed" id="tablaDetalleEditar">
                             <thead>
                                 <tr class="table-custom-header text-uppercase">
@@ -126,7 +126,7 @@
                         </table>
 
                         <!-- Estado Vacío -->
-                        <div id="emptyStateEditar" class="text-center py-5 text-muted">
+                        <div id="emptyStateEditar" class="text-center py-5 text-body-secondary">
                             <div class="mb-3">
                                 <i class="bi bi-cart-x text-slate-300 opacity-50" style="font-size: 3.5rem;"></i>
                             </div>
@@ -325,7 +325,7 @@
                                      Aplicar como saldo a favor
                                  </h6>
 
-                                 <small class="text-muted">
+                                 <small class="text-body-secondary">
                                      El importe quedará disponible para futuras compras del cliente.
                                  </small>
                              </div>
@@ -341,7 +341,7 @@
                                      Actualizar la venta
                                  </h6>
 
-                                 <small class="text-muted">
+                                 <small class="text-body-secondary">
                                      Se modifica la venta se regresara el monto excedente si lo hubiera o se
                                      incrementara la deuda si fuera el caso.
                                  </small>
@@ -569,7 +569,7 @@ $('#buscadorProductosEditar').on('select2:select', function(e) {
     <tr id="filaEditar-${id}">
         <td class="ps-4">
             <b>${d.nombre}</b><br>
-            <small class="text-muted">${d.sku}</small>
+            <small class="text-body-secondary">${d.sku}</small>
         </td>
 
         <td>
@@ -633,7 +633,7 @@ $('#buscadorProductosEditar').on('select2:select', function(e) {
                 type="number"
                 lang="en-US"
                 name="itemsEditar[${id}][precio]"
-                class="form-control precio-total-editar fw-bold text-success bg-light"
+                class="form-control precio-total-editar fw-bold text-success "
                 step="0.01"
                 min="0"
                 placeholder="0.00"
@@ -907,7 +907,7 @@ let minimo=(i.cantidad_entregada*i.equivalencia).toFixed(2);
             <tr id="filaEditar-${prodId}">
                 <td class="ps-4">
                     <b>${i.producto}</b><br>
-                    <small class="text-muted">${i.sku}</small>
+                    <small class="text-body-secondary">${i.sku}</small>
                 </td>
 
                 <td>
@@ -983,7 +983,7 @@ let minimo=(i.cantidad_entregada*i.equivalencia).toFixed(2);
                         type="number"
                         lang="en-US"
                         name="itemsEditar[${prodId}][precio]"
-                        class="form-control precio-total-editar fw-bold text-success bg-light"
+                        class="form-control precio-total-editar fw-bold text-success "
                         step="0.01"
                         min="0"
                         value="${parseFloat(i.subtotal).toFixed(2)}"

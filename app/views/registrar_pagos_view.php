@@ -143,7 +143,7 @@ body {
                             </select>
                         </div>
                          <div class="col-md-2">
-    <label for="select-usuarios" class="form-label fw-bold small text-muted text-uppercase">Vendedor</label>
+    <label for="select-usuarios" class="form-label fw-bold small text-body-secondary text-uppercase">Vendedor</label>
     <select class="form-select rounded-pill" id="select-usuarios" name="usuario_id" onchange="getVentas()">
        <option value="" > Seleccione vendedor</option>
     </select>
@@ -247,12 +247,12 @@ body {
                     <div class="col-md-3 border-end p-4">
 
                         <div class="mb-3">
-                            <small class="text-uppercase text-muted fw-bold">Cliente</small>
+                            <small class="text-uppercase text-body-secondary fw-bold">Cliente</small>
                             <div id="detCliente" class="fw-semibold"></div>
                         </div>
 
                         <div class="mb-4">
-                            <small class="text-uppercase text-muted fw-bold">Almacén</small>
+                            <small class="text-uppercase text-body-secondary fw-bold">Almacén</small>
                             <div id="detAlmacen" class="fw-semibold"></div>
                             <p class="fw-bold small mb-1">Vendedor:</p>
                             <p id="detVendedor" class="fw-bold small mb-3"></p>
@@ -265,7 +265,7 @@ body {
                             <div class="card-body text-center">
 
                                 <div class="mb-3">
-                                    <small class="text-uppercase text-muted fw-bold d-block">
+                                    <small class="text-uppercase text-body-secondary fw-bold d-block">
                                         Total de Venta
                                     </small>
                                     <span id="detTotalLabel" class="fs-5 fw-bold text-primary">
@@ -276,7 +276,7 @@ body {
                                 <hr>
 
                                 <div>
-                                    <small class="text-uppercase text-muted fw-bold d-block">
+                                    <small class="text-uppercase text-body-secondary fw-bold d-block">
                                         Saldo Pendiente
                                     </small>
                                     <span id="detSaldoLabel" class="fs-4 fw-bold text-danger">
@@ -296,7 +296,7 @@ body {
 
                         <!-- DETALLE PRODUCTOS -->
                         <div class="card border-0 shadow-sm mb-3">
-                            <div class="card-header fw-bold small text-uppercase text-muted">
+                            <div class="card-header fw-bold small text-uppercase text-body-secondary">
                                 Productos
                             </div>
                             <div class="table-responsive" style="max-height: 180px;">
@@ -320,7 +320,7 @@ body {
                             <!-- HISTORIAL PAGOS -->
                             <div class="col-12">
                                 <div class="card border-0 shadow-sm">
-                                    <div class="card-header  fw-bold small text-uppercase text-muted">
+                                    <div class="card-header  fw-bold small text-uppercase text-body-secondary">
                                         Historial de Pagos
                                     </div>
                                     <div class="table-responsive" style="max-height: 180px;">
@@ -342,7 +342,7 @@ body {
                             <!-- HISTORIAL ENTREGAS (OCULTO LO RESPETÉ) -->
                             <div class="col-12 d-none">
                                 <div class="card border-0 shadow-sm">
-                                    <div class="card-header  fw-bold small text-uppercase text-muted">
+                                    <div class="card-header  fw-bold small text-uppercase text-body-secondary">
                                         Historial de Entregas
                                     </div>
                                     <div class="table-responsive" style="max-height: 180px;">
@@ -364,7 +364,7 @@ body {
                             <!-- REPARTOS (OCULTO) -->
                             <div class="col-12 d-none">
                                 <div class="card border-0 shadow-sm">
-                                    <div class="card-header  fw-bold small text-uppercase text-muted">
+                                    <div class="card-header  fw-bold small text-uppercase text-body-secondary">
                                         Repartos
                                     </div>
                                     <div class="table-responsive" style="max-height: 220px;">
@@ -678,11 +678,11 @@ $('#boton').html(htmlboton);
 
                     // Lo que se verá grande en la celda
                     visualizacionVenta =
-                        `<span class="fw-bold">${totalUnidadesStr} ${p.unidad_reporte}</span> <br> <small class="text-muted">(${cant} ${p.unidad_medida})</small>`;
+                        `<span class="fw-bold">${totalUnidadesStr} ${p.unidad_reporte}</span> <br> <small class="text-body-secondary">(${cant} ${p.unidad_medida})</small>`;
 
                     // Leyenda pequeña debajo del nombre del producto (opcional, para referencia)
                     infoEquivalenciaSub =
-                        `<div class="text-muted small" style="font-size: 0.65rem;">1 ${p.unidad_reporte} = ${factor} ${p.unidad_medida}</div>`;
+                        `<div class="text-body-secondary small" style="font-size: 0.65rem;">1 ${p.unidad_reporte} = ${factor} ${p.unidad_medida}</div>`;
                 } else {
                     // Si no llega al factor (Ej: 10 bultos) mostramos la unidad normal
                     //agregar observaciones en ticket 
@@ -745,7 +745,7 @@ $('#boton').html(htmlboton);
 
                         visualizacionHistorial = `
             <span class="fw-bold text-primary">${totalUnidadesStrH} ${uReporteH}</span> 
-            <br> <small class="text-muted">(${cantH} ${uMedidaH})</small>
+            <br> <small class="text-body-secondary">(${cantH} ${uMedidaH})</small>
         `;
                     } else {
                         // Aquí verás si unidad_medida viene vacío desde la base de datos
@@ -764,7 +764,7 @@ $('#boton').html(htmlboton);
         </td>
     </tr>`;
                 }).join('') :
-                '<tr><td colspan="4" class="text-center text-muted p-3">No hay entregas registradas</td></tr>');
+                '<tr><td colspan="4" class="text-center text-body-secondary p-3">No hay entregas registradas</td></tr>');
 
 
             // --- RENDERIZADO DE HISTORIAL DE PAGOS ---
@@ -775,7 +775,7 @@ $('#boton').html(htmlboton);
             <td class="fw-bold text-success">$${parseFloat(p.monto).toFixed(2)}</td>
             <td>
                 <span class="badge bg-light text-dark border fw-normal">${p.metodo_pago}</span>
-                <div class="text-muted" style="font-size:0.65rem">Recibió: ${p.usuario_nombre}</div>
+                <div class="text-body-secondary" style="font-size:0.65rem">Recibió: ${p.usuario_nombre}</div>
             </td>
              <td>
             <span>
@@ -791,7 +791,7 @@ $('#boton').html(htmlboton);
     `).join(''));
             } else {
                 $('#tbodyPagos').html(
-                    '<tr><td colspan="3" class="text-center text-muted p-3">No hay abonos registrados</td></tr>'
+                    '<tr><td colspan="3" class="text-center text-body-secondary p-3">No hay abonos registrados</td></tr>'
                 );
             }
             alternarModo(false);

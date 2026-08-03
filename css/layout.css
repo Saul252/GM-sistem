@@ -176,7 +176,24 @@
         display: block;
     }
 }
+/* Adaptación global de SweetAlert2 al modo claro/oscuro de Bootstrap */
+[data-bs-theme="dark"] .swal2-popup {
+    background-color: var(--bs-body-bg) !important;
+    color: var(--bs-body-color) !important;
+}
 
+[data-bs-theme="dark"] .swal2-title,
+[data-bs-theme="dark"] .swal2-content,
+[data-bs-theme="dark"] .swal2-html-container {
+    color: var(--bs-body-color) !important;
+}
+
+/* Ajusta los fondos grises dentro de las alertas al modo oscuro */
+[data-bs-theme="dark"] .swal2-popup .bg-light,
+[data-bs-theme="dark"] .swal2-popup .bg-body-tertiary text-body {
+    background-color: var(--bs-tertiary-bg) !important;
+    color: var(--bs-body-color) !important;
+}
 /* Ocultar sidebar en escritorio */
 #sidebar.hidden { transform: translateX(-100%); }
 body.sidebar-hidden .main-content { margin-left: 0 !important; }

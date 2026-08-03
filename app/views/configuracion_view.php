@@ -35,7 +35,7 @@
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h2 class="fw-bold m-0 text-dark">Matriz de Seguridad</h2>
-                <p class="text-muted">Gestión de roles, módulos y permisos del sistema</p>
+                <p class="text-body-secondary">Gestión de roles, módulos y permisos del sistema</p>
             </div>
             <div class="d-flex gap-2">
                 <button type="button" class="btn btn-outline-secondary rounded-pill px-4" onclick="nuevoRol()">
@@ -147,20 +147,20 @@
                     <input type="hidden" name="id" id="mod_id">
                     <div class="modal-body px-4">
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">Nombre Visible</label>
+                            <label class="form-label small fw-bold text-body-secondary">Nombre Visible</label>
                             <input type="text" class="form-control" name="nombre" id="mod_nombre" required>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted">Identificador (ID Sistema)</label>
+                            <label class="form-label small fw-bold text-body-secondary">Identificador (ID Sistema)</label>
                             <input type="text" class="form-control" name="identificador" id="mod_ident" required>
                         </div>
                         <div class="row">
                             <div class="col-md-8">
-                                <label class="form-label small fw-bold text-muted">Icono (Bootstrap Icon)</label>
+                                <label class="form-label small fw-bold text-body-secondary">Icono (Bootstrap Icon)</label>
                                 <input type="text" class="form-control" name="icono" id="mod_icono" placeholder="bi bi-box">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label small fw-bold text-muted">Orden</label>
+                                <label class="form-label small fw-bold text-body-secondary">Orden</label>
                                 <input type="number" class="form-control" name="orden" id="mod_orden" value="0">
                             </div>
                         </div>

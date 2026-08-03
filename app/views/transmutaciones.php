@@ -19,7 +19,7 @@
         <div class="page-header">
             <div class="page-title">
                 <h1><i class="fas fa-random text-primary me-2"></i>Transmutación de Productos</h1>
-                <small class="text-muted">Procesa la transformación de materiales e insumos</small>
+                <small class="text-body-secondary">Procesa la transformación de materiales e insumos</small>
             </div>
             
         </div>
@@ -78,7 +78,7 @@
                                     <div class="col-md-5">
                                         <label class="form-label text-xs">Cant. Salida</label>
                                         <input type="number" step="0.01" name="cantidad_origen" id="trans_cant_origen" class="form-control" required>
-                                        <div class="small mt-1 text-muted">Stock: <span id="trans_stock_disp" class="fw-bold text-danger">0</span></div>
+                                        <div class="small mt-1 text-body-secondary">Stock: <span id="trans_stock_disp" class="fw-bold text-danger">0</span></div>
                                     </div>
                                 </div>
                             </div>
@@ -196,7 +196,7 @@
             </td>
 
             <td>
-                <i class="fas fa-user-circle me-1 text-muted"></i>
+                <i class="fas fa-user-circle me-1 text-body-secondary"></i>
 
                 <small>
                     <?= htmlspecialchars($t['usuario_nombre'] ?? 'Sistema') ?>
@@ -265,7 +265,7 @@
         }
         ?>
         <div class="input-group shadow-sm">
-            <span class="input-group-text bg-light border-0"><i class="fas fa-lock text-muted"></i></span>
+            <span class="input-group-text bg-light border-0"><i class="fas fa-lock text-body-secondary"></i></span>
             <input type="text" class="form-control bg-light border-0 fw-bold" value="<?= htmlspecialchars($nombreAlmacen) ?>" readonly>
         </div>
         <input type="hidden" name="almacen_id" value="<?= $idSesion ?>">

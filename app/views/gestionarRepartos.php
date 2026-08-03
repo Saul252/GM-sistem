@@ -130,7 +130,7 @@ $folio_viaje = $_GET['folio'] ?? '';
         </a>
         <div>
             <h1 class="h6 mb-0 fw-bold">Ruta de Reparto</h1>
-            <small class="text-muted"><?php echo htmlspecialchars($folio_viaje); ?></small>
+            <small class="text-body-secondary"><?php echo htmlspecialchars($folio_viaje); ?></small>
         </div>
     </div>
     <button class="btn btn-light rounded-circle shadow-sm" onclick="cargarEntregas()">
@@ -150,7 +150,7 @@ $folio_viaje = $_GET['folio'] ?? '';
             <div class="modal-header border-0 pb-0 px-4 pt-4">
                 <div class="d-flex justify-content-between w-100 align-items-center">
                     <h5 class="modal-title fw-bold" id="tituloModal">Finalizar Entrega</h5>
-                    <span class="badge bg-light text-muted border rounded-pill px-3 py-2" style="font-size: 0.7rem;">
+                    <span class="badge bg-light text-body-secondary border rounded-pill px-3 py-2" style="font-size: 0.7rem;">
                         ID MOV: <span id="m_id_visible">0</span>
                     </span>
                 </div>
@@ -172,7 +172,7 @@ $folio_viaje = $_GET['folio'] ?? '';
                         <div class="info-label">Cliente / Folio de Venta</div>
                         <div id="m_cliente_full" class="fw-bold mb-2"></div>
                         <div class="info-label">Dirección de Entrega</div>
-                        <div id="m_direccion_full" class="small text-muted"></div>
+                        <div id="m_direccion_full" class="small text-body-secondary"></div>
                     </div>
 
                     <div class="mb-3" style="display:none;">
@@ -260,7 +260,7 @@ function cargarEntregas() {
             datosTemporales = res.data || [];
 
             if (datosTemporales.length === 0) {
-                container.innerHTML = '<div class="text-center py-5 text-muted">No hay paradas pendientes.</div>';
+                container.innerHTML = '<div class="text-center py-5 text-body-secondary">No hay paradas pendientes.</div>';
                 return;
             }
 
@@ -276,10 +276,10 @@ function cargarEntregas() {
                                 <span class="badge rounded-pill ${esVisitado ? 'bg-success-subtle text-success' : 'bg-primary-subtle text-primary'}">
                                     ${esVisitado ? 'ENTREGADO' : estado.toUpperCase()}
                                 </span>
-                                <span class="small text-muted">Venta: ${item.folio_venta || 'S/F'} (Entrega ${item.entrega_id})</span>
+                                <span class="small text-body-secondary">Venta: ${item.folio_venta || 'S/F'} (Entrega ${item.entrega_id})</span>
                             </div>
                             <h6 class="fw-bold mb-1">${item.cliente || 'Cliente'}</h6>
-                            <p class="small text-muted mb-3"><i class="bi bi-geo-alt me-1"></i>${item.direccion_entrega || 'Sin dirección'}</p>
+                            <p class="small text-body-secondary mb-3"><i class="bi bi-geo-alt me-1"></i>${item.direccion_entrega || 'Sin dirección'}</p>
                             
                             <div class="p-3 rounded-4 mb-3 bg-light" style="font-size: 0.85rem; border: 1px solid #f2f2f7;">
                             </div>

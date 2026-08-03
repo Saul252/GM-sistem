@@ -34,7 +34,7 @@
         <div class="d-flex justify-content-between align-items-center mb-4" data-aos="fade-down">
             <div>
                 <h2 class="fw-bold m-0 text-dark">Panel de Inteligencia</h2>
-                <p class="text-muted small">Análisis financiero y logístico detallado</p>
+                <p class="text-body-secondary small">Análisis financiero y logístico detallado</p>
             </div>
             <div class="d-flex gap-2">
                 <span class="badge bg-white text-primary border shadow-sm p-2 rounded-pill"><i class="bi bi-truck me-1"></i> <?= $pendientesTrasp['total'] ?> Traspasos</span>
@@ -90,10 +90,10 @@
                                     <span class="fw-bold small"><?= $s['producto'] ?></span>
                                     <span class="badge bg-danger">Faltan: <?= $s['stock_minimo'] - $s['stock'] ?></span>
                                 </div>
-                                <div class="text-muted extra-small" style="font-size: 11px;"><?= $s['almacen'] ?> - Actual: <?= $s['stock'] ?></div>
+                                <div class="text-body-secondary extra-small" style="font-size: 11px;"><?= $s['almacen'] ?> - Actual: <?= $s['stock'] ?></div>
                             </div>
                         <?php endwhile; else: ?>
-                            <div class="text-center py-5 text-muted small">Todo el stock está correcto</div>
+                            <div class="text-center py-5 text-body-secondary small">Todo el stock está correcto</div>
                         <?php endif; ?>
                     </div>
                 </div>

@@ -9,6 +9,7 @@ $paginaActual = 'trabajadores';
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,54 +17,87 @@ $paginaActual = 'trabajadores';
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-    
+
     <?php require_once __DIR__ . '/layout/icono.php'; ?>
     <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
 
     <style>
-        :root { --sidebar-width: 260px; --navbar-height: 65px; }
-        body { background-color: #f4f7f6; }
-        .main-content { margin-left: var(--sidebar-width); padding: 40px; padding-top: calc(var(--navbar-height) + 20px); }
-        .card-table { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); background: white; }
-        
-        /* Estilo Micro-Widget iOS */
-        .ios-micro-card {
-            background: #ffffff !important;
-            border-radius: 12px !important;
-            border: 1px solid rgba(0,0,0,0.05) !important;
-            padding: 4px 10px !important;
-            min-width: 85px !important;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
-            display: flex !important;
-            flex-direction: column !important;
-            justify-content: center !important;
-            border-left: 3px solid #34c759 !important;
-        }
-        .ios-m-label { 
-            color: #8e8e93; font-size: 0.55rem; font-weight: 700; 
-            text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.1; margin: 0;
-        }
-        .ios-m-value { 
-            color: #1c1c1e; font-size: 1rem; font-weight: 700; 
-            letter-spacing: -0.02em; line-height: 1; margin-top: 1px;
-        }
+    :root {
+        --sidebar-width: 260px;
+        --navbar-height: 65px;
+    }
 
-        @media (max-width: 768px) { 
-            .main-content { margin-left: 0; padding: 20px; padding-top: 90px; } 
+    body {
+        background-color: #f4f7f6;
+    }
+
+    .main-content {
+        margin-left: var(--sidebar-width);
+        padding: 40px;
+        padding-top: calc(var(--navbar-height) + 20px);
+    }
+
+    .card-table {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+       
+    }
+
+    /* Estilo Micro-Widget iOS */
+    .ios-micro-card {
+        background: #ffffff !important;
+        border-radius: 12px !important;
+        border: 1px solid rgba(0, 0, 0, 0.05) !important;
+        padding: 4px 10px !important;
+        min-width: 85px !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        border-left: 3px solid #34c759 !important;
+    }
+
+    .ios-m-label {
+        color: #8e8e93;
+        font-size: 0.55rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        line-height: 1.1;
+        margin: 0;
+    }
+
+    .ios-m-value {
+        color: #1c1c1e;
+        font-size: 1rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1;
+        margin-top: 1px;
+    }
+
+    @media (max-width: 768px) {
+        .main-content {
+            margin-left: 0;
+            padding: 20px;
+            padding-top: 90px;
         }
+    }
     </style>
 </head>
+
 <body>
     <?php if (function_exists('renderizarLayout')) { renderizarLayout($paginaActual); } ?>
 
     <main class="main-content">
         <div class="d-flex justify-content-between align-items-center flex-wrap mb-4" style="gap: 15px; width: 100%;">
             <div>
-                <h2 class="fw-bold m-0 text-uppercase" style="letter-spacing: -0.02em; color: #1c1c1e;">Gestión de Salarios</h2>
+                <h2 class="fw-bold m-0 text-uppercase" style="letter-spacing: -0.02em; ">Gestión de Salarios</h2>
             </div>
-            
+
             <div style="min-width: 200px;">
-                <label for="semana" class="form-label text-muted small m-0 fw-semibold">Semana</label>
+                <label for="semana" class="form-label text-body-secondary small m-0 fw-semibold">Semana</label>
                 <input type="week" id="semana" class="form-control form-control-sm">
             </div>
 
@@ -73,10 +107,12 @@ $paginaActual = 'trabajadores';
                     <div class="ios-m-value" id="conteoTrabajadores">0</div>
                 </div>
 
-                <button class="btn btn-primary rounded-pill px-3 shadow-sm" onclick="nuevoTrabajador()" style="height: 34px; font-weight: 600; font-size: 0.85rem;">
+                <button class="btn btn-primary rounded-pill px-3 shadow-sm" onclick="nuevoTrabajador()"
+                    style="height: 34px; font-weight: 600; font-size: 0.85rem;">
                     <i class="bi bi-person-plus-fill me-1"></i> Agregar
                 </button>
-                <button class="btn btn-outline-secondary rounded-pill px-3 shadow-sm" onclick="imprimirContenidoModal()" style="height: 34px; font-weight: 600; font-size: 0.85rem;">
+                <button class="btn btn-outline-secondary rounded-pill px-3 shadow-sm" onclick="imprimirContenidoModal()"
+                    style="height: 34px; font-weight: 600; font-size: 0.85rem;">
                     <i class="bi bi-printer-fill me-1"></i> Imprimir Nómina
                 </button>
             </div>
@@ -87,14 +123,15 @@ $paginaActual = 'trabajadores';
                 <div class="col-md-6">
                     <div class="input-group">
                         <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
-                        <input type="text" id="busquedaTrabajador" class="form-control border-start-0" placeholder="Buscar por nombre o teléfono...">
+                        <input type="text" id="busquedaTrabajador" class="form-control border-start-0"
+                            placeholder="Buscar por nombre o teléfono...">
                     </div>
                 </div>
                 <div class="col-md-3">
                     <select id="filtroRol" class="form-select">
                         <option value="">Todos los Roles</option>
                         <?php foreach($rolesEnum as $rol): ?>
-                            <option value="<?= $rol ?>"><?= ucfirst($rol) ?></option>
+                        <option value="<?= $rol ?>"><?= ucfirst($rol) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -114,7 +151,7 @@ $paginaActual = 'trabajadores';
                             <th>Rol / Puesto</th>
                             <th>Almacén</th>
                             <th>Salario</th>
-                             <th>Bonos</th>
+                            <th>Bonos</th>
                             <th>Préstamos Activos</th>
                             <th>Total Nómina</th>
                             <th>Estado</th>
@@ -123,7 +160,7 @@ $paginaActual = 'trabajadores';
                     </thead>
                     <tbody id="bodyTrabajadores">
                         <tr>
-                            <td colspan="9" class="text-center py-4 text-muted">Cargando...</td>
+                            <td colspan="9" class="text-center py-4 text-body-secondary">Cargando...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -143,7 +180,7 @@ $paginaActual = 'trabajadores';
                     <div class="modal-body">
                         <input type="hidden" name="id" id="trabajador_id" value="0">
                         <input type="hidden" name="action" value="guardar">
-                        
+
                         <div class="row g-3">
                             <div class="col-md-12">
                                 <label class="form-label fw-bold small">Nombre Completo</label>
@@ -151,13 +188,14 @@ $paginaActual = 'trabajadores';
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small">Teléfono</label>
-                                <input type="text" name="telefono" id="t_telefono" class="form-control" maxlength="10" required>
+                                <input type="text" name="telefono" id="t_telefono" class="form-control" maxlength="10"
+                                    required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small">Puesto / Rol</label>
                                 <select name="rol" id="t_rol" class="form-select" required>
                                     <?php foreach($rolesEnum as $rol): ?>
-                                        <option value="<?= $rol ?>"><?= ucfirst($rol) ?></option>
+                                    <option value="<?= $rol ?>"><?= ucfirst($rol) ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -165,15 +203,16 @@ $paginaActual = 'trabajadores';
                             <div class="col-md-12">
                                 <label class="form-label fw-bold small">Almacén / Sucursal</label>
                                 <?php if (isset($_SESSION['almacen_id']) && $_SESSION['almacen_id'] == 0): ?>
-                                    <select name="almacen_id" id="t_almacen_id" class="form-select" required>
-                                        <option value="">Seleccionar Almacén...</option>
-                                        <?php foreach(($listaAlmacenes ?? []) as $alm): ?>
-                                            <option value="<?= $alm['id'] ?>"><?= htmlspecialchars($alm['nombre']) ?></option>
-                                        <?php endforeach; ?>
-                                    </select>
+                                <select name="almacen_id" id="t_almacen_id" class="form-select" required>
+                                    <option value="">Seleccionar Almacén...</option>
+                                    <?php foreach(($listaAlmacenes ?? []) as $alm): ?>
+                                    <option value="<?= $alm['id'] ?>"><?= htmlspecialchars($alm['nombre']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
                                 <?php else: ?>
-                                    <input type="text" class="form-control bg-light" value="Asignación Automática" readonly>
-                                    <input type="hidden" name="almacen_id" id="t_almacen_id" value="<?= $_SESSION['almacen_id'] ?? 1 ?>">
+                                <input type="text" class="form-control bg-light" value="Asignación Automática" readonly>
+                                <input type="hidden" name="almacen_id" id="t_almacen_id"
+                                    value="<?= $_SESSION['almacen_id'] ?? 1 ?>">
                                 <?php endif; ?>
                             </div>
 
@@ -181,21 +220,23 @@ $paginaActual = 'trabajadores';
                                 <label class="form-label fw-bold small">Estado Laboral</label>
                                 <select name="estado" id="t_estado" class="form-select">
                                     <?php foreach($estadosEnum as $est): ?>
-                                        <option value="<?= $est ?>"><?= ucfirst($est) ?></option>
+                                    <option value="<?= $est ?>"><?= ucfirst($est) ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small">Salario</label>
-                                <input type="number" step="0.01" name="salario" id="t_salario" class="form-control" required>
+                                <input type="number" step="0.01" name="salario" id="t_salario" class="form-control"
+                                    required>
                             </div>
-                             <div class="col-md-12 center">
+                            <div class="col-md-12 center">
                                 <label class="form-label fw-bold small">Complemento</label>
-                                <input type="money" name="complemento" id="t_complemento" class="form-control" maxlength="10" required>
+                                <input type="money" name="complemento" id="t_complemento" class="form-control"
+                                    maxlength="10" required>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer bg-light border-0">
+                    <div class="modal-footer  border-0">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-primary px-4">Guardar Cambios</button>
                     </div>
@@ -203,155 +244,132 @@ $paginaActual = 'trabajadores';
             </div>
         </div>
     </div>
-<div class="modal fade" id="modalBono" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow rounded-4">
+    <div class="modal fade" id="modalBono" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow rounded-4">
 
-            <!-- HEADER -->
-            <div class="modal-header bg-success bg-gradient text-white border-0 py-4">
-                <div>
-                    <h4 class="modal-title fw-bold mb-1">
-                        <i class="bi bi-award-fill me-2"></i>
-                        Registrar Bono
-                    </h4>
-                    <small class="opacity-75">
-                        Asigna una bonificación al trabajador.
-                    </small>
+                <!-- HEADER -->
+                <div class="modal-header bg-success bg-gradient text-white border-0 py-4">
+                    <div>
+                        <h4 class="modal-title fw-bold mb-1">
+                            <i class="bi bi-award-fill me-2"></i>
+                            Registrar Bono
+                        </h4>
+                        <small class="opacity-75">
+                            Asigna una bonificación al trabajador.
+                        </small>
+                    </div>
+
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal">
+                    </button>
                 </div>
 
-                <button type="button"
-                        class="btn-close btn-close-white"
-                        data-bs-dismiss="modal">
-                </button>
-            </div>
+                <form id="formBono">
 
-            <form id="formBono">
+                    <div class="modal-body p-4">
 
-                <div class="modal-body p-4">
+                        <div class="row g-4">
 
-                    <div class="row g-4">
+                            <!-- Trabajador -->
+                            <div class="col-md-6">
 
-                        <!-- Trabajador -->
-                        <div class="col-md-6">
+                                <div class="card border-0  h-100">
+                                    <div class="card-body">
 
-                            <div class="card border-0 bg-light h-100">
-                                <div class="card-body">
+                                        <label class="form-label fw-semibold text-secondary">
+                                            <i class="bi bi-person-fill me-1 text-success"></i>
+                                            Trabajador
+                                        </label>
 
-                                    <label class="form-label fw-semibold text-secondary">
-                                        <i class="bi bi-person-fill me-1 text-success"></i>
-                                        Trabajador
-                                    </label>
+                                        <input type="hidden" id="modal_bono_trabajador_id"
+                                            name="trabajador_id_crear_bono">
 
-                                    <input
-                                        type="hidden"
-                                        id="modal_bono_trabajador_id"
-                                        name="trabajador_id_crear_bono">
-
-                                    <input
-                                        type="text"
-                                        id="trabajador_nombre"
-                                        name="trabajador_nombre"
-                                        class="form-control form-control-lg"
-                                        readonly>
-
-                                </div>
-                            </div>
-
-                        </div>
-
-                        <!-- Monto -->
-                        <div class="col-md-6">
-
-                            <div class="card border-0 bg-light h-100">
-                                <div class="card-body">
-
-                                    <label class="form-label fw-semibold text-secondary">
-                                        <i class="bi bi-cash-stack me-1 text-success"></i>
-                                        Monto del Bono
-                                    </label>
-
-                                    <div class="input-group input-group-lg">
-
-                                        <span class="input-group-text fw-bold">
-                                            $
-                                        </span>
-
-                                        <input
-                                            type="number"
-                                            step="0.01"
-                                            min="0"
-                                            id="monto_bono"
-                                            name="monto_bono"
-                                            class="form-control"
-                                            placeholder="0.00"
-                                            required>
+                                        <input type="text" id="trabajador_nombre" name="trabajador_nombre"
+                                            class="form-control form-control-lg" readonly>
 
                                     </div>
-
                                 </div>
+
                             </div>
 
-                        </div>
+                            <!-- Monto -->
+                            <div class="col-md-6">
 
-                        <!-- Fecha -->
-                        <div class="col-md-6">
+                                <div class="card border-0  h-100">
+                                    <div class="card-body">
 
-                            <div class="card border-0 bg-light">
-                                <div class="card-body">
+                                        <label class="form-label fw-semibold text-secondary">
+                                            <i class="bi bi-cash-stack me-1 text-success"></i>
+                                            Monto del Bono
+                                        </label>
 
-                                    <label class="form-label fw-semibold text-secondary">
-                                        <i class="bi bi-calendar-event me-1 text-success"></i>
-                                        Fecha
-                                    </label>
+                                        <div class="input-group input-group-lg">
 
-                                    <input
-                                        type="date"
-                                        id="fecha_bono"
-                                        name="fecha"
-                                        class="form-control form-control-lg"
-                                        value="<?= date('Y-m-d') ?>">
+                                            <span class="input-group-text fw-bold">
+                                                $
+                                            </span>
 
+                                            <input type="number" step="0.01" min="0" id="monto_bono" name="monto_bono"
+                                                class="form-control" placeholder="0.00" required>
+
+                                        </div>
+
+                                    </div>
                                 </div>
+
                             </div>
 
-                        </div>
+                            <!-- Fecha -->
+                            <div class="col-md-6">
 
-                        <!-- Vista previa -->
-                       
+                                <div class="card border-0 ">
+                                    <div class="card-body">
+
+                                        <label class="form-label fw-semibold text-secondary">
+                                            <i class="bi bi-calendar-event me-1 text-success"></i>
+                                            Fecha
+                                        </label>
+
+                                        <input type="date" id="fecha_bono" name="fecha"
+                                            class="form-control form-control-lg" value="<?= date('Y-m-d') ?>">
+
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- Vista previa -->
+
+
+                        </div>
 
                     </div>
 
-                </div>
+                    <!-- FOOTER -->
+                    <div class="modal-footer  border-0 py-3 px-4">
 
-                <!-- FOOTER -->
-                <div class="modal-footer bg-light border-0 py-3 px-4">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                            data-bs-dismiss="modal">
 
-                    <button
-                        type="button"
-                        class="btn btn-outline-secondary rounded-pill px-4"
-                        data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-1"></i>
+                            Cancelar
 
-                        <i class="bi bi-x-circle me-1"></i>
-                        Cancelar
+                        </button>
 
-                    </button>
+                        <button onclick="guardarBono()" class="btn btn-success rounded-pill px-4 shadow">
 
-                    <button
-                       onclick="guardarBono()"
-                        class="btn btn-success rounded-pill px-4 shadow">
+                            <i class="bi bi-check-circle-fill me-1"></i>
+                            Registrar Bono
 
-                        <i class="bi bi-check-circle-fill me-1"></i>
-                        Registrar Bono
+                        </button>
 
-                    </button>
+                    </div>
 
-                </div>
+                </form>
 
-            </form>
-
+            </div>
         </div>
     </div>
-</div>
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -387,13 +405,13 @@ $paginaActual = 'trabajadores';
             this.value = this.value.toUpperCase();
         });
     });
-$('#formBono').on('submit', async function(e) {
-            e.preventDefault();
-           
-             const trabajador_id =  $('#modal_bono_trabajador_id').val();
+    $('#formBono').on('submit', async function(e) {
+        e.preventDefault();
+
+        const trabajador_id = $('#modal_bono_trabajador_id').val();
         const monto = document.getElementById('monto_bono').value;
         const fecha = document.getElementById('fecha_bono').value;
-       
+
 
         if (!trabajador_id) {
             throw new Error("Selecciona un trabajador.");
@@ -412,23 +430,23 @@ $('#formBono').on('submit', async function(e) {
         fd.append("monto", monto);
         fd.append("fecha", fecha);
 
-            try {
-                const resp = await fetch(`/cfsistem/app/controllers/nominaController.php?action=crearBono`, {
-                    method: 'POST',
-                    body: fd
-                });
+        try {
+            const resp = await fetch(`/cfsistem/app/controllers/nominaController.php?action=crearBono`, {
+                method: 'POST',
+                body: fd
+            });
 
-                const res = await resp.json();
-                if (res.success) {
-                    Swal.fire('Éxito', res.message, 'success').then(() => location.reload());
-                } else {
-                    Swal.fire('Error', res.message || 'Error desconocido', 'error');
-                }
-            } catch (err) {
-                console.error(err);
-                Swal.fire('Error', 'Error en la petición', 'error');
+            const res = await resp.json();
+            if (res.success) {
+                Swal.fire('Éxito', res.message, 'success').then(() => location.reload());
+            } else {
+                Swal.fire('Error', res.message || 'Error desconocido', 'error');
             }
-        });
+        } catch (err) {
+            console.error(err);
+            Swal.fire('Error', 'Error en la petición', 'error');
+        }
+    });
     async function cargarTrabajadores() {
         const valor = $('#semana').val();
         if (!valor) return;
@@ -442,7 +460,9 @@ $('#formBono').on('submit', async function(e) {
         const fin = formatearFecha(domingo);
 
         try {
-            const res = await fetch(`/cfsistem/app/controllers/nominaController.php?action=listar&fecha_inicio=${inicio}&fecha_fin=${fin}`);
+            const res = await fetch(
+                `/cfsistem/app/controllers/nominaController.php?action=listar&fecha_inicio=${inicio}&fecha_fin=${fin}`
+                );
             const response = await res.json();
 
             if (!response.success) {
@@ -451,7 +471,7 @@ $('#formBono').on('submit', async function(e) {
 
             const data = response.data;
             console.log(data);
-            
+
             // Destruir la instancia actual de DataTable si existe
             if ($.fn.DataTable.isDataTable('#tablaTrabajadores')) {
                 $('#tablaTrabajadores').DataTable().destroy();
@@ -459,7 +479,8 @@ $('#formBono').on('submit', async function(e) {
 
             let html = '';
             if (data.length === 0) {
-                html = `<tr><td colspan="9" class="text-center py-4 text-muted">No se encontraron trabajadores en este rango.</td></tr>`;
+                html =
+                    `<tr><td colspan="9" class="text-center py-4 text-body-secondary">No se encontraron trabajadores en este rango.</td></tr>`;
             } else {
                 data.forEach(t => {
                     let claseEstado = 'bg-danger';
@@ -515,10 +536,14 @@ $('#formBono').on('submit', async function(e) {
 
             // Re-inicializar DataTable con los nuevos elementos
             tabla = $('#tablaTrabajadores').DataTable({
-                "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
+                "language": {
+                    "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
+                },
                 "dom": 'rt<"row mt-3"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
                 "pageLength": 10,
-                "order": [[0, 'asc']]
+                "order": [
+                    [0, 'asc']
+                ]
             });
 
         } catch (err) {
@@ -543,8 +568,8 @@ $('#formBono').on('submit', async function(e) {
         $('#t_telefono').val(t.telefono);
         $('#t_rol').val(t.rol);
         $('#t_estado').val(t.estado);
-        $('#t_salario').val((t.salario-t.complemento_pago));
-           $('#t_complemento').val(t.complemento_pago);
+        $('#t_salario').val((t.salario - t.complemento_pago));
+        $('#t_complemento').val(t.complemento_pago);
         if ($('#t_almacen_id').is('select')) {
             $('#t_almacen_id').val(t.almacen_id);
         }
@@ -554,33 +579,43 @@ $('#formBono').on('submit', async function(e) {
     $('#formTrabajador').on('submit', async function(e) {
         e.preventDefault();
         const formData = new FormData(this);
-        
+
         try {
-            const resp = await fetch('/cfsistem/app/controllers/trabajadoresController.php', { method: 'POST', body: formData });
+            const resp = await fetch('/cfsistem/app/controllers/trabajadoresController.php', {
+                method: 'POST',
+                body: formData
+            });
             const res = await resp.json();
             if (res.status === 'success' || res.success) {
                 $('#modalTrabajador').modal('hide');
-                Swal.fire({ icon: 'success', title: '¡Éxito!', showConfirmButton: false, timer: 1200 });
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    showConfirmButton: false,
+                    timer: 1200
+                });
                 cargarTrabajadores();
             } else {
                 Swal.fire('Error', res.message || 'No se pudo guardar los cambios', 'error');
             }
-        } catch (e) { 
-            Swal.fire('Error', 'Error de comunicación con el servidor', 'error'); 
+        } catch (e) {
+            Swal.fire('Error', 'Error de comunicación con el servidor', 'error');
         }
     });
-function nuevoBono(t) {
-    $('#formBono')[0].reset();
-    const modal = new bootstrap.Modal(document.getElementById('modalBono'));
-    $('#modal_bono_trabajador_id').val(t.id);
+
+    function nuevoBono(t) {
+        $('#formBono')[0].reset();
+        const modal = new bootstrap.Modal(document.getElementById('modalBono'));
+        $('#modal_bono_trabajador_id').val(t.id);
         $('#trabajador_nombre').val(t.nombre);
         $('#fecha__bono').val(<?=date('Y-m-d')?>);
-        
-    modal.show();
-    if ($('#modal_bono_almacen_id').val()) {
-        $('#modal_bono_almacen_id').trigger('change');
+
+        modal.show();
+        if ($('#modal_bono_almacen_id').val()) {
+            $('#modal_bono_almacen_id').trigger('change');
+        }
     }
-} async function eliminarTrabajador(id) {
+    async function eliminarTrabajador(id) {
         const result = await Swal.fire({
             title: '¿Eliminar trabajador?',
             text: "Esta acción no se puede deshacer",
@@ -595,17 +630,25 @@ function nuevoBono(t) {
             const fd = new FormData();
             fd.append('action', 'eliminar');
             fd.append('id', id);
-            
+
             try {
-                const resp = await fetch('/cfsistem/app/controllers/trabajadoresController.php', { method: 'POST', body: fd });
+                const resp = await fetch('/cfsistem/app/controllers/trabajadoresController.php', {
+                    method: 'POST',
+                    body: fd
+                });
                 const res = await resp.json();
-                if(res.status === 'success' || res.success) {
-                    Swal.fire({ icon: 'success', title: 'Eliminado', timer: 1200, showConfirmButton: false });
+                if (res.status === 'success' || res.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Eliminado',
+                        timer: 1200,
+                        showConfirmButton: false
+                    });
                     cargarTrabajadores();
                 } else {
                     Swal.fire('Error', res.message || 'Error al eliminar', 'error');
                 }
-            } catch(e) {
+            } catch (e) {
                 Swal.fire('Error', 'No se pudo completar la solicitud', 'error');
             }
         }
@@ -642,55 +685,56 @@ function nuevoBono(t) {
 
     function formatearFecha(fecha) {
         const y = fecha.getFullYear();
-        const m = String(fecha.getMonth() + 1).padStart(2,'0');
-        const d = String(fecha.getDate()).padStart(2,'0');
+        const m = String(fecha.getMonth() + 1).padStart(2, '0');
+        const d = String(fecha.getDate()).padStart(2, '0');
         return `${y}-${m}-${d}`;
-    }async function imprimirContenidoModal() {
-    // 1. Obtener la semana seleccionada
-    const valorSemana = $('#semana').val();
-    let queryParams = '';
-
-    if (valorSemana) {
-        const [anio, semana] = valorSemana.split('-W');
-        const lunes = obtenerLunesISO(parseInt(anio), parseInt(semana));
-        const domingo = new Date(lunes);
-        domingo.setDate(lunes.getDate() + 6);
-
-        const inicio = formatearFecha(lunes);
-        const fin = formatearFecha(domingo);
-        queryParams = `&fecha_inicio=${inicio}&fecha_fin=${fin}`;
     }
+    async function imprimirContenidoModal() {
+        // 1. Obtener la semana seleccionada
+        const valorSemana = $('#semana').val();
+        let queryParams = '';
 
-    try {
-        // 2. Obtener los datos de la nómina
-        const res = await fetch(`/cfsistem/app/controllers/nominaController.php?action=listar${queryParams}`);
-        const response = await res.json();
+        if (valorSemana) {
+            const [anio, semana] = valorSemana.split('-W');
+            const lunes = obtenerLunesISO(parseInt(anio), parseInt(semana));
+            const domingo = new Date(lunes);
+            domingo.setDate(lunes.getDate() + 6);
 
-        if (!response.success) {
-            throw new Error(response.message || 'No se pudieron obtener los datos de la nómina.');
+            const inicio = formatearFecha(lunes);
+            const fin = formatearFecha(domingo);
+            queryParams = `&fecha_inicio=${inicio}&fecha_fin=${fin}`;
         }
 
-        const data = response.data || [];
+        try {
+            // 2. Obtener los datos de la nómina
+            const res = await fetch(`/cfsistem/app/controllers/nominaController.php?action=listar${queryParams}`);
+            const response = await res.json();
 
-        if (data.length === 0) {
-            Swal.fire('Atención', 'No hay registros de nómina para imprimir en esta semana.', 'info');
-            return;
-        }
+            if (!response.success) {
+                throw new Error(response.message || 'No se pudieron obtener los datos de la nómina.');
+            }
 
-        // 3. Generar las tarjetas/cheques individuales recortables
-        let chequesHTML = '';
+            const data = response.data || [];
 
-        data.forEach((t, index) => {
-            
-            const prestamos = parseFloat(t.total_prestamos_pendientes || 0);
-            const faltas = parseFloat(t.total_faltas || 0);
-            const viajes = parseFloat(t.total_viajes || 0);
-            const abonos = parseFloat(t.total_abonos || 0);
-            const bonos = parseFloat(t.total_bonos || 0);
-            const salario = parseFloat(t.salario || 0)+ bonos;
-            const totalNomina = parseFloat(t.total_nomina || 0);
+            if (data.length === 0) {
+                Swal.fire('Atención', 'No hay registros de nómina para imprimir en esta semana.', 'info');
+                return;
+            }
 
-            chequesHTML += `
+            // 3. Generar las tarjetas/cheques individuales recortables
+            let chequesHTML = '';
+
+            data.forEach((t, index) => {
+
+                const prestamos = parseFloat(t.total_prestamos_pendientes || 0);
+                const faltas = parseFloat(t.total_faltas || 0);
+                const viajes = parseFloat(t.total_viajes || 0);
+                const abonos = parseFloat(t.total_abonos || 0);
+                const bonos = parseFloat(t.total_bonos || 0);
+                const salario = parseFloat(t.salario || 0) + bonos;
+                const totalNomina = parseFloat(t.total_nomina || 0);
+
+                chequesHTML += `
                 <div class="cheque-contenedor">
                     <!-- Marca de Agua Individual -->
                     <img src="/cfsistem/public/assets/logo.ico" class="watermark-cheque" alt="Logo">
@@ -701,12 +745,12 @@ function nuevoBono(t) {
                             <img src="/cfsistem/public/assets/logo.ico" width="38" height="38" class="me-2" alt="Logo">
                             <div>
                                 <h6 class="fw-bold m-0 text-uppercase">CF SYSTEM - RECIBO DE NÓMINA</h6>
-                                <small class="text-muted" style="font-size: 0.7rem;">COMPROBANTE DE PAGO DE SALARIO</small>
+                                <small class="text-body-secondary" style="font-size: 0.7rem;">COMPROBANTE DE PAGO DE SALARIO</small>
                             </div>
                         </div>
                         <div class="text-end">
                             <span class="badge bg-dark text-white font-monospace" style="font-size: 0.75rem;">SEMANA: ${valorSemana || 'N/A'}</span>
-                            <small class="d-block text-muted" style="font-size: 0.65rem;">Emisión: ${new Date().toLocaleDateString('es-MX')}</small>
+                            <small class="d-block text-body-secondary" style="font-size: 0.65rem;">Emisión: ${new Date().toLocaleDateString('es-MX')}</small>
                         </div>
                     </div>
 
@@ -714,12 +758,12 @@ function nuevoBono(t) {
                     <div class="row g-2 mb-2 bg-light p-2 rounded align-items-center border">
                         <div class="col-7">
                             <div class="text-uppercase fw-bold text-dark" style="font-size: 0.95rem;">${t.nombre}</div>
-                            <small class="text-muted d-block" style="font-size: 0.75rem;">
+                            <small class="text-body-secondary d-block" style="font-size: 0.75rem;">
                                 <strong>Puesto:</strong> ${t.rol.toUpperCase()} | <strong>Almacén:</strong> ${t.nombreAlmacen || 'N/A'}
                             </small>
                         </div>
                         <div class="col-5 text-end">
-                            <small class="text-uppercase text-muted d-block" style="font-size: 0.65rem; font-weight: 700;">Neto a Recibir</small>
+                            <small class="text-uppercase text-body-secondary d-block" style="font-size: 0.65rem; font-weight: 700;">Neto a Recibir</small>
                             <span class="fs-5 fw-bold text-success font-monospace">$${totalNomina.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
                         </div>
                     </div>
@@ -743,13 +787,13 @@ function nuevoBono(t) {
                                 
                                 <td class="text-danger">-$${faltas.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
                                  <td class="text-warning text-dark">-$${abonos.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
-                                <td class="text-muted">$${prestamos.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                                <td class="text-body-secondary">$${prestamos.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
                             </tr>
                         </tbody>
                     </table>
 
                     <!-- Leyenda y Zona de Firmas -->
-                    <p class="text-muted text-justify mb-3" style="font-size: 0.62rem; line-height: 1.1;">
+                    <p class="text-body-secondary text-justify mb-3" style="font-size: 0.62rem; line-height: 1.1;">
                         Recibí a mi entera satisfacción la cantidad neta descrita en este documento por concepto de pago de mis salarios y prestaciones correspondientes al período indicado, no adeudándome cantidad alguna.
                     </p>
 
@@ -772,12 +816,12 @@ function nuevoBono(t) {
                     <span><i class="bi bi-scissors"></i> CORTE AQUÍ</span>
                 </div>
             `;
-        });
+            });
 
-        // 4. Inyectar en la ventana de impresión
-        const ventanaImpresion = window.open('', '_blank');
+            // 4. Inyectar en la ventana de impresión
+            const ventanaImpresion = window.open('', '_blank');
 
-        ventanaImpresion.document.write(`
+            ventanaImpresion.document.write(`
             <!DOCTYPE html>
             <html lang="es">
             <head>
@@ -868,15 +912,15 @@ function nuevoBono(t) {
             </html>
         `);
 
-        ventanaImpresion.document.close();
+            ventanaImpresion.document.close();
 
-    } catch (err) {
-        console.error("Error al generar recibos de nómina:", err);
-        Swal.fire('Error', err.message || 'No se pudieron generar los recibos.', 'error');
+        } catch (err) {
+            console.error("Error al generar recibos de nómina:", err);
+            Swal.fire('Error', err.message || 'No se pudieron generar los recibos.', 'error');
+        }
     }
-}
-
     </script>
-    
+
 </body>
+
 </html>

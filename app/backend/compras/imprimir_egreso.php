@@ -80,7 +80,7 @@ try {
     <div class="ticket-header d-flex justify-content-between align-items-center">
         <div>
             <h3 class="mb-0">COMPROBANTE DE <?= strtoupper($tipo) ?></h3>
-            <p class="mb-0 text-muted">Sistema de Gestión de Almacén</p>
+            <p class="mb-0 text-body-secondary">Sistema de Gestión de Almacén</p>
         </div>
         <div class="text-end">
             <div class="badge-tipo">FOLIO: <?= $datos['folio'] ?></div>
@@ -158,7 +158,7 @@ try {
         </div>
     </div>
 
-    <div class="text-center mt-5 text-muted small">
+    <div class="text-center mt-5 text-body-secondary small">
         <p>Documento generado internamente. Fecha de impresión: <?= date('d/m/Y H:i') ?></p>
     </div>
 </div>

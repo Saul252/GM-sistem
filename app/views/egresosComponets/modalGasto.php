@@ -69,7 +69,7 @@
                         </div>
                     </div>
 
-                    <hr class="text-muted">
+                    <hr class="text-body-secondary">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h6 class="fw-bold mb-0 card-title-text">Conceptos del Gasto</h6>
                         <button type="button" class="btn btn-sm fw-bold border border-subtle card-title-text" onclick="agregarFilaGasto()">
@@ -107,7 +107,7 @@
                        <input type="date" id="fecha"name="fecha" value="<?= date("Y-m-d") ?>" class="form-control border border-subtle" style="border-radius: 12px;">
                         </div>
                         <div class="col-md-5 text-end">
-                            <h4 class="text-muted small fw-bold mb-0">TOTAL</h4>
+                            <h4 class="text-body-secondary small fw-bold mb-0">TOTAL</h4>
                             <h2 class="fw-bold text-dark" id="txtTotalGasto">$ 0.00</h2>
                             <input type="hidden" name="total_final" id="inputTotalGasto" value="0">
                         </div>
@@ -131,7 +131,7 @@
             </div>
             <div class="modal-body pt-0">
                 <div class="mb-3">
-                    <label class="small fw-bold text-muted">Nombre</label>
+                    <label class="small fw-bold text-body-secondary">Nombre</label>
                     <input type="text" id="nuevo_nombre_cat" class="form-control border border-subtle" style="border-radius: 10px;" placeholder="Ej: Servicios">
                 </div>
                

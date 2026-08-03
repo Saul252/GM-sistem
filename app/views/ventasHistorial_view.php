@@ -218,7 +218,7 @@
                         </div>
                         <div class="col-md-2">
                             <label for="select-usuarios"
-                                class="form-label fw-bold small text-muted text-uppercase">Vendedor</label>
+                                class="form-label fw-bold small text-body-secondary text-uppercase">Vendedor</label>
                             <select class="form-select rounded-pill" id="select-usuarios" name="usuario_id"
                                 onchange="getVentas()">
                                 <option value=""> Seleccione vendedor</option>
@@ -317,7 +317,7 @@
 
                                     <!-- Cliente -->
                                     <div class="p-2 px-3 rounded-3 bg-body-tertiary border border-light-subtle">
-                                        <small class="d-block text-muted fw-semibold text-uppercase"
+                                        <small class="d-block text-body-secondary fw-semibold text-uppercase"
                                             style="font-size: 0.68rem; letter-spacing: 0.5px;">
                                             <i class="bi bi-person me-1 text-primary"></i> Cliente
                                         </small>
@@ -327,7 +327,7 @@
 
                                     <!-- Almacén -->
                                     <div class="p-2 px-3 rounded-3 bg-body-tertiary border border-light-subtle">
-                                        <small class="d-block text-muted fw-semibold text-uppercase"
+                                        <small class="d-block text-body-secondary fw-semibold text-uppercase"
                                             style="font-size: 0.68rem; letter-spacing: 0.5px;">
                                             <i class="bi bi-box-seam me-1 text-primary"></i> Almacén
                                         </small>
@@ -337,7 +337,7 @@
 
                                     <!-- Vendedor -->
                                     <div class="p-2 px-3 rounded-3 bg-body-tertiary border border-light-subtle">
-                                        <small class="d-block text-muted fw-semibold text-uppercase"
+                                        <small class="d-block text-body-secondary fw-semibold text-uppercase"
                                             style="font-size: 0.68rem; letter-spacing: 0.5px;">
                                             <i class="bi bi-person-badge me-1 text-primary"></i> Vendedor
                                         </small>
@@ -347,7 +347,7 @@
 
                                     <!-- Folio Factura -->
                                     <div class="p-2 px-3 rounded-3 bg-body-tertiary border border-light-subtle">
-                                        <small class="d-block text-muted fw-semibold text-uppercase"
+                                        <small class="d-block text-body-secondary fw-semibold text-uppercase"
                                             style="font-size: 0.68rem; letter-spacing: 0.5px;">
                                             <i class="bi bi-receipt me-1 text-primary"></i> Folio / Factura
                                         </small>
@@ -361,13 +361,13 @@
 
                                 <div class="mb-4 p-2  border rounded shadow-sm text-center">
                                     <div class="mb-2 pb-2 border-bottom">
-                                        <span class="d-block small text-muted text-uppercase fw-bold">Total de
+                                        <span class="d-block small text-body-secondary text-uppercase fw-bold">Total de
                                             Venta</span>
                                         <span id="detTotalLabel" class="h6 fw-bold card-title-text">$0.00</span>
                                     </div>
 
                                     <div>
-                                        <span class="d-block small text-muted text-uppercase fw-bold">Saldo
+                                        <span class="d-block small text-body-secondary text-uppercase fw-bold">Saldo
                                             Pendiente</span>
                                         <span id="detSaldoLabel" class="h5 fw-bold text-danger">$0.00</span>
                                     </div>
@@ -417,7 +417,7 @@
 
                                 <div class="row">
                                     <div class="col-md-6">
-                                        <h6 class="small fw-bold text-uppercase text-muted"><i class="bi bi-truck"></i>
+                                        <h6 class="small fw-bold text-uppercase text-body-secondary"><i class="bi bi-truck"></i>
                                             Historial de Entregas</h6>
                                         <div class="table-responsive border rounded" style="max-height: 180px;">
                                             <table class="table table-sm align-middle mb-0">
@@ -434,7 +434,7 @@
                                         </div>
                                     </div>
                                     <div class="col-md-6">
-                                        <h6 class="small fw-bold text-uppercase text-muted"><i
+                                        <h6 class="small fw-bold text-uppercase text-body-secondary"><i
                                                 class="bi bi-cash-stack"></i>
                                             Historial de Pagos</h6>
                                         <div class="table-responsive border rounded" style="max-height: 180px;">
@@ -452,7 +452,7 @@
                                         </div>
                                     </div>
                                     <div class="col-md-12 mt-3">
-                                        <h6 class="small fw-bold text-uppercase text-muted">
+                                        <h6 class="small fw-bold text-uppercase text-body-secondary">
                                             <i class="bi bi-map"></i>
                                             Repartos
                                         </h6>
@@ -507,7 +507,7 @@
                                     id="id_venta_factura">
 
                                 <label for="folio-factura"
-                                    class="form-label fw-bold small text-muted text-uppercase ls-wide">
+                                    class="form-label fw-bold small text-body-secondary text-uppercase ls-wide">
                                     Folio o Número de Factura
                                 </label>
                                 <input type="text" class="form-control rounded-pill border-secondary border-opacity-25"
@@ -517,7 +517,7 @@
                     </div>
 
                     <div class="modal-footer border-top-0 pt-0 d-flex gap-2">
-                        <button type="button" class="btn btn-sm btn-light rounded-pill flex-grow-1 fw-bold text-muted"
+                        <button type="button" class="btn btn-sm btn-light rounded-pill flex-grow-1 fw-bold text-body-secondary"
                             data-bs-dismiss="modal">
                             Cancelar
                         </button>
@@ -1108,11 +1108,11 @@
 
                         // Lo que se verá grande en la celda
                         visualizacionVenta =
-                            `<span class="fw-bold">${totalUnidadesStr} ${p.unidad_reporte}</span> <br> <small class="text-muted">(${cant} ${p.unidad_medida})</small>`;
+                            `<span class="fw-bold">${totalUnidadesStr} ${p.unidad_reporte}</span> <br> <small class="text-body-secondary">(${cant} ${p.unidad_medida})</small>`;
 
                         // Leyenda pequeña debajo del nombre del producto (opcional, para referencia)
                         infoEquivalenciaSub =
-                            `<div class="text-muted small" style="font-size: 0.65rem;">1 ${p.unidad_reporte} = ${factor} ${p.unidad_medida}</div>`;
+                            `<div class="text-body-secondary small" style="font-size: 0.65rem;">1 ${p.unidad_reporte} = ${factor} ${p.unidad_medida}</div>`;
                     } else {
                         // Si no llega al factor (Ej: 10 bultos) mostramos la unidad normal
                         //agregar observaciones en ticket 
@@ -1191,7 +1191,7 @@
         </td>
     </tr>`;
                     }).join('') :
-                    '<tr><td colspan="4" class="text-center text-muted p-3">No hay entregas registradas</td></tr>'
+                    '<tr><td colspan="4" class="text-center text-body-secondary p-3">No hay entregas registradas</td></tr>'
                     );
 
 
@@ -1204,7 +1204,7 @@
             <td>
                 <span class="badge bg-light text-dark border fw-normal">${p.metodo_pago} </span>
                
-                <div class="text-muted" style="font-size:0.65rem">Recibió: ${p.usuario_nombre}</div>
+                <div class="text-body-secondary" style="font-size:0.65rem">Recibió: ${p.usuario_nombre}</div>
             </td>
             <td>
             <span>
@@ -1220,7 +1220,7 @@
     `).join(''));
                 } else {
                     $('#tbodyPagos').html(
-                        '<tr><td colspan="3" class="text-center text-muted p-3">No hay abonos registrados</td></tr>'
+                        '<tr><td colspan="3" class="text-center text-body-secondary p-3">No hay abonos registrados</td></tr>'
                     );
                 }
                 alternarModo(false);

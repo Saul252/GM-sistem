@@ -23,7 +23,7 @@
 
 }
         .main-card {
-            background: #ffffff;
+          
             border-radius: 20px;
             border: none;
             box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
@@ -37,7 +37,7 @@
         }
 
         .card-filter-box {
-            background-color: #f8fafc;
+           
             border: 1px solid #e2e8f0;
             border-radius: 18px;
         }
@@ -71,7 +71,7 @@
         }
 
         .table-custom-header th {
-            background-color: transparent !important;
+          
             color: #ffffff !important;
             border-bottom: none !important;
             padding-top: 12px;
@@ -239,7 +239,7 @@
                     </div>
 
                     <!-- Tabla de Artículos -->
-                    <div class="table-responsive border rounded-4 bg-white shadow-sm"
+                    <div class="table-responsive border rounded-4  shadow-sm"
                         style="max-height: 520px;min-height: 440px; overflow-y: auto;">
                         <table class="table align-middle mb-0" id="tablaDetalleEditar">
                             <thead>
@@ -258,7 +258,7 @@
                         </table>
 
                         <!-- Estado Vacío -->
-                        <div id="emptyStateEditar" class="text-center py-5 text-muted">
+                        <div id="emptyStateEditar" class="text-center py-5 text-body-secondary">
                             <div class="mb-2">
                                 <i class="bi bi-cart-x text-slate-300 opacity-50" style="font-size: 3.5rem;"></i>
                             </div>
@@ -268,7 +268,7 @@
                     </div>
 
                     <!-- Resumen del Total y Botones de Acción -->
-                    <div class="card border-0 shadow-sm rounded-4 mt-4 bg-white overflow-hidden">
+                    <div class="card border-0 shadow-sm rounded-4 mt-4  overflow-hidden">
     <div class="card-body p-4">
         <div class="row g-4 align-items-center">
             
@@ -494,7 +494,7 @@
             <tr id="filaEditar-${id}">
                 <td class="ps-4">
                     <b>${d.nombre}</b><br>
-                    <small class="text-muted">${d.sku}</small>
+                    <small class="text-body-secondary">${d.sku}</small>
                 </td>
 
                 <td>
@@ -706,11 +706,11 @@ console.log("k",totalVenta);
             Swal.fire({
                 title: esEntregaTotal ? '¡Venta Exitosa!' : '¡Venta desde Remision Exitosa! ',
                 html: `
-                    <div class="alert alert-light border-0 small text-start py-2 mb-3" style="background:#f2f2f7; border-radius:12px;">
+                    <div class="alert bg-body-tertiary text-body border-0 small text-start py-2 mb-3" style="background:var(--bs-tertiary-bg);; border-radius:12px;">
                         ${res.message || 'Operación realizada correctamente.'}
                     </div>
                     ${htmlExtra}
-                    <p class="text-muted small mb-0">¿Deseas imprimir el comprobante?</p>
+                    <p class="text-body-secondary small mb-0">¿Deseas imprimir el comprobante?</p>
                 `,
                 icon: iconoFinal,
                 showDenyButton: true,

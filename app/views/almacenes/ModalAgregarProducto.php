@@ -15,7 +15,7 @@
     <div class="col-lg-8">
         <div class="card  border border-subtle shadow-sm">
             <div class="card-body p-4">
-                <h6 class="text-uppercase text-muted fw-bold mb-4" style="font-size: 0.75rem; letter-spacing: 1px;">
+                <h6 class="text-uppercase text-body-secondary fw-bold mb-4" style="font-size: 0.75rem; letter-spacing: 1px;">
                     Información General
                 </h6>
                 <div class="row g-3">
@@ -79,7 +79,7 @@
                 </div>
 
                 <div class="p-3 border border-subtlee rounded-3 border-start border-danger border-4 shadow-sm">
-                    <p class="mb-0 text-muted" style="font-size: 0.8rem; line-height: 1.4;">
+                    <p class="mb-0 text-body-secondary" style="font-size: 0.8rem; line-height: 1.4;">
                         <i class="bi bi-info-circle-fill text-danger me-1"></i>
                         Este valor define el <strong>costo real del lote</strong>. Es fundamental para el cálculo automático de tus márgenes de ganancia.
                     </p>
@@ -123,7 +123,7 @@
             </div>
             <div>
                 <h6 class="fw-bold mb-0 text-dark text-uppercase" style="letter-spacing: 1px;">Control de Entrada</h6>
-                <small class="text-muted">Conversión de unidades y stock</small>
+                <small class="text-body-secondary">Conversión de unidades y stock</small>
             </div>
         </div>
     </div>
@@ -174,7 +174,7 @@
                                 class="form-control border-primary fw-bold text-center" value="1" step="0.01"
                                 oninput="actualizarLimiteMaestro()">
                         </div>
-                        <div class="form-text text-muted" style="font-size: 0.7rem;">Ej: 1 Ton es igual a 40 bultos .</div>
+                        <div class="form-text text-body-secondary" style="font-size: 0.7rem;">Ej: 1 Ton es igual a 40 bultos .</div>
                     </div>
 
                     <div class="col-sm-6">

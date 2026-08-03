@@ -33,7 +33,7 @@ error_reporting(E_ALL);
             <div class="row align-items-center mb-5">
                 <div class="col-md-8">
                     <h1 class="h3 fw-bold mb-1">Solicitudes de Compra</h1>
-                    <p class="text-muted small">Gestión de requerimientos de materiales</p>
+                    <p class="text-body-secondary small">Gestión de requerimientos de materiales</p>
                 </div>
                 <div class="col-md-4 text-md-end">
                     <button class="btn btn-add" onclick="nuevaSolicitud()">
@@ -50,7 +50,7 @@ error_reporting(E_ALL);
                 <i class="bi bi-funnel-fill text-primary me-2"></i>
                 Filtros de búsqueda
             </h5>
-            <small class="text-muted">
+            <small class="text-body-secondary">
                 Filtra las cotizaciones por fecha, almacén, estado o cliente.
             </small>
         </div>
@@ -60,7 +60,7 @@ error_reporting(E_ALL);
 
         <!-- Fecha Inicio -->
         <div class="col-lg-2 col-md-6">
-            <label class="form-label small fw-bold text-muted text-uppercase">
+            <label class="form-label small fw-bold text-body-secondary text-uppercase">
                 Inicio
             </label>
 
@@ -74,7 +74,7 @@ error_reporting(E_ALL);
 
         <!-- Fecha Fin -->
         <div class="col-lg-2 col-md-6">
-            <label class="form-label small fw-bold text-muted text-uppercase">
+            <label class="form-label small fw-bold text-body-secondary text-uppercase">
                 Fin
             </label>
 
@@ -88,7 +88,7 @@ error_reporting(E_ALL);
 
         <!-- Almacén -->
         <div class="col-lg-3 col-md-6">
-            <label class="form-label small fw-bold text-muted text-uppercase">
+            <label class="form-label small fw-bold text-body-secondary text-uppercase">
                 Almacén
             </label>
 
@@ -111,7 +111,7 @@ error_reporting(E_ALL);
 
         <!-- Estado -->
         <div class="col-lg-2 col-md-6">
-            <label class="form-label small fw-bold text-muted text-uppercase">
+            <label class="form-label small fw-bold text-body-secondary text-uppercase">
                 Estado
             </label>
 
@@ -129,7 +129,7 @@ error_reporting(E_ALL);
 
         <!-- Buscador -->
         <div class="col-lg-3 col-md-12">
-            <label class="form-label small fw-bold text-muted text-uppercase">
+            <label class="form-label small fw-bold text-body-secondary text-uppercase">
                 Buscar
             </label> 
 
@@ -211,7 +211,7 @@ error_reporting(E_ALL);
                         Información de Compra
                     </h5>
 
-                    <small class="text-muted">
+                    <small class="text-body-secondary">
                         Datos generales de la entrada
                     </small>
                 </div>
@@ -231,7 +231,7 @@ error_reporting(E_ALL);
                 <!-- ALMACÉN -->
                 <div class="col-md-3">
 
-                    <label class="form-label small fw-bold text-muted text-uppercase">
+                    <label class="form-label small fw-bold text-body-secondary text-uppercase">
                         Almacén destino
                     </label>
 
@@ -278,7 +278,7 @@ error_reporting(E_ALL);
                 <!-- PROVEEDOR -->
                 <div class="col-md-3">
 
-                    <label class="form-label small fw-bold text-muted text-uppercase">
+                    <label class="form-label small fw-bold text-body-secondary text-uppercase">
                         Proveedor
                     </label>
 
@@ -300,7 +300,7 @@ error_reporting(E_ALL);
                 <!-- FOLIO -->
                 <div class="col-md-2">
 
-                    <label class="form-label small fw-bold text-muted text-uppercase">
+                    <label class="form-label small fw-bold text-body-secondary text-uppercase">
                         Folio factura
                     </label>
 
@@ -317,7 +317,7 @@ error_reporting(E_ALL);
                 <!-- MÉTODO -->
                 <div class="col-md-2">
 
-                    <label class="form-label small fw-bold text-muted text-uppercase">
+                    <label class="form-label small fw-bold text-body-secondary text-uppercase">
                         Método pago
                     </label>
 
@@ -338,7 +338,7 @@ error_reporting(E_ALL);
                 <!-- EVIDENCIA -->
                 <div class="col-md-2">
 
-                    <label class="form-label small fw-bold text-muted text-uppercase">
+                    <label class="form-label small fw-bold text-body-secondary text-uppercase">
                         Evidencia
                     </label>
 
@@ -410,7 +410,7 @@ error_reporting(E_ALL);
                             step="0.1"
                         >
 
-                        <small class="label-abono-info text-muted mt-2 d-block"></small>
+                        <small class="label-abono-info text-body-secondary mt-2 d-block"></small>
 
                     </div>
 
@@ -454,7 +454,7 @@ error_reporting(E_ALL);
                     Productos
                 </h6>
 
-                <small class="text-muted">
+                <small class="text-body-secondary">
                     Conversión de unidades y costos
                 </small>
 
@@ -466,7 +466,7 @@ error_reporting(E_ALL);
 
                     <thead class="table-light">
 
-                        <tr class="small text-muted">
+                        <tr class="small text-body-secondary">
 
                             <th class="ps-4">Producto</th>
                             <th>Mayoreo</th>
@@ -567,7 +567,7 @@ error_reporting(E_ALL);
                 <div class="fw-bold text-uppercase mb-0" style="letter-spacing:.5px;">
                <div class="">
            
-            <spam class="text-muted text end" id="print-fecha"></spam>
+            <spam class="text-body-secondary text end" id="print-fecha"></spam>
         </div>
             </div>   
             </div>
@@ -588,32 +588,32 @@ error_reporting(E_ALL);
         <div class="row g-1">
 <!-- BODEGA FORTALEZA CHALCO S.A DE C,V RFC:BFC121126CKA DOMICILIO EMILIANO ZAPATA S/N SAN MARTIN CUAUTLALPAN CHALCO ESTADO DE MEXICO CP:56644 -->
             <div class="col-12">
-                <small style="font-size:11px;" class="text-muted">Proveedor</small><br>
+                <small style="font-size:11px;" class="text-body-secondary">Proveedor</small><br>
                 <span style="font-size:11px;" class="fw-bold" id="print-proveedor"></span>
             </div>
 
             <div class="col-6">
-                <small style="font-size:11px;" class="text-muted">RFC</small><br>
+                <small style="font-size:11px;" class="text-body-secondary">RFC</small><br>
                 <span style="font-size:11px;" id="print-rfc"></span>
             </div>
 
             <div class="col-6">
-                <small style="font-size:11px;" class="text-muted">Teléfono</small><br>
+                <small style="font-size:11px;" class="text-body-secondary">Teléfono</small><br>
                 <span style="font-size:11px;" id="print-telefono"></span>
             </div>
 
             <div class="col-8">
-                <small style="font-size:11px;" class="text-muted">Dirección</small><br>
+                <small style="font-size:11px;" class="text-body-secondary">Dirección</small><br>
                 <span style="font-size:11px;" id="print-direccion"></span>
             </div>
 
             <div class="col-2">
-                <small style="font-size:11px;" class="text-muted">Tel. 2</small><br>
+                <small style="font-size:11px;" class="text-body-secondary">Tel. 2</small><br>
                 <span style="font-size:11px;" id="print-telefono2"></span>
             </div>
 
             <div class="col-2">
-                <small style="font-size:11px;" class="text-muted">Ext.</small><br>
+                <small style="font-size:11px;" class="text-body-secondary">Ext.</small><br>
                 <span style="font-size:11px;" id="print-extencion"></span>
             </div>
 
@@ -1008,7 +1008,7 @@ async function cargarSolicitudes() {
         // Validación de seguridad: Comprueba si la respuesta no trae datos o el arreglo viene totalmente vacío
         if (!data.data || data.data.length === 0) {
             // Inserta una fila única con un mensaje centralizado indicando que no hay registros y frena el script
-            $('#tablaSolicitudes').html('<tr><td colspan="6" class="text-center text-muted py-3">No se encontraron registros</td></tr>');
+            $('#tablaSolicitudes').html('<tr><td colspan="6" class="text-center text-body-secondary py-3">No se encontraron registros</td></tr>');
             return;
         }
 
@@ -1078,7 +1078,7 @@ async function cargarSolicitudes() {
             tablaHTML += `
                 <tr>
                     <td><span class=" fw-bold">#${folio}</span></td>
-                    <td class="text-muted small">${fechaFormateada}</td>
+                    <td class="text-body-secondary small">${fechaFormateada}</td>
                     <td class="fw-medium">${escapeHtml(s.proveedor_nombre || 'Sin asignar')}</td>
                     <td><span class="badge bg-light text-dark border">${escapeHtml(s.almacen_nombre || '')}</span></td>
                     <td>
@@ -1313,18 +1313,18 @@ const cantMayoreo = Math.floor(cantidad); // 1
                     <input type="hidden" name="items[${index}][producto_id]" value="${i.producto_id}">
                     <input type="hidden" class="h-factor" value="${factor}">
                     <div class="fw-bold text-dark">${i.producto_nombre} </div>
-                    <small class="text-muted d-block">Total Pedido ${totalUnidad} ${uRep} </small>
-                    <small class="text-muted d-block">1 ${uRep} = ${factor} ${uBase}</small>
+                    <small class="text-body-secondary d-block">Total Pedido ${totalUnidad} ${uRep} </small>
+                    <small class="text-body-secondary d-block">1 ${uRep} = ${factor} ${uBase}</small>
                 </td>
 
                 <td>
-                    <label class="small text-muted text-uppercase fw-bold">${uRep}</label>
+                    <label class="small text-body-secondary text-uppercase fw-bold">${uRep}</label>
                     <input type="number" class="form-control form-control-sm i-mayoreo border-success" 
                         value="${cantMayoreo}" step=".01" oninput="recalcularFila(${index})" readonly>
                 </td>
 
                 <td>
-                    <label class="small text-muted text-uppercase fw-bold">${uBase}</label>
+                    <label class="small text-body-secondary text-uppercase fw-bold">${uBase}</label>
                     <input type="number" class="form-control form-control-sm i-sueltas border-primary" 
                         value="${cantSueltas}" step="0.01" oninput="recalcularFila(${index})" readonly>
                 </td>
@@ -1364,7 +1364,7 @@ const cantMayoreo = Math.floor(cantidad); // 1
 </td>
 
                 <td>
-                    <label class="small text-muted fw-bold">Costo Total Renglón</label>
+                    <label class="small text-body-secondary fw-bold">Costo Total Renglón</label>
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-light">$</span>
                         <input type="number" step="0.01" class="form-control i-costo-total" 
@@ -1393,7 +1393,7 @@ const cantMayoreo = Math.floor(cantidad); // 1
                 <td class="text-end bg-light-subtle">
                     <div class="h5 mb-0 fw-bold text-primary s-total-piezas">0</div>
                     
-                    <small class="text-muted umedida" >${cantMayoreo>=1?uRep: uBase}</small>
+                    <small class="text-body-secondary umedida" >${cantMayoreo>=1?uRep: uBase}</small>
                     <div>                    <small class=" mb-0 text-danger s-faltantes-piezas"></small>
                     <small class=" mb-0  text-success s-exedentes-piezas"></small>
                     <small class=" mb-0  text-dark s-unidad-piezas"></small>

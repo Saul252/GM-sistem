@@ -22,7 +22,7 @@ $id_venta = intval($_GET['id'] ?? 0);
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold m-0 text-dark">Edición de Venta</h2>
-            <p class="text-muted">Ajuste de precios y unidades para Folio: <span id="folio_titulo" class="fw-bold text-primary">...</span></p>
+            <p class="text-body-secondary">Ajuste de precios y unidades para Folio: <span id="folio_titulo" class="fw-bold text-primary">...</span></p>
         </div>
         <button class="btn btn-light rounded-pill shadow-sm" onclick="history.back()">
             <i class="bi bi-arrow-left"></i> Volver
@@ -64,7 +64,7 @@ $id_venta = intval($_GET['id'] ?? 0);
                 
                 <div class="table-responsive">
                     <table class="table align-middle">
-                        <thead class="text-muted small fw-bold text-uppercase">
+                        <thead class="text-body-secondary small fw-bold text-uppercase">
                             <tr>
                                 <th style="width: 25%;">Producto</th>
                                 <th class="text-center">Tarifa / Precio</th>
@@ -383,7 +383,7 @@ function ejecutarPeticion(accion, data) {
         contentType: 'application/json',
         success: (res) => {
             if (res.status === 'success') {
-                let infoExtra = res.mensaje_financiero ? `<br><small class="text-muted">${res.mensaje_financiero}</small>` : '';
+                let infoExtra = res.mensaje_financiero ? `<br><small class="text-body-secondary">${res.mensaje_financiero}</small>` : '';
                 Swal.fire({ icon: 'success', title: '¡Éxito!', html: `La operación se completó con éxito.${infoExtra}`, timer: 2500, showConfirmButton: false })
                 .then(() => location.reload());
             } else {

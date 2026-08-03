@@ -38,7 +38,7 @@
                             <div class="row g-3">
                                 <div class="col-12">
                                     <div id="contenedorDireccion" class="p-3 rounded-4 mb-1 border bg-white shadow-sm">
-                                        <label id="lblDinamicoPrincipal" class="small fw-bold text-muted mb-1" style="font-size: 0.65rem;">PUNTO DE ENTREGA / OBRA</label>
+                                        <label id="lblDinamicoPrincipal" class="small fw-bold text-body-secondary mb-1" style="font-size: 0.65rem;">PUNTO DE ENTREGA / OBRA</label>
                                         <div class="input-group">
                                             <span class="input-group-text bg-white border-0">
                                                 <i id="iconDinamico" class="bi bi-geo-alt-fill text-danger"></i>
@@ -48,20 +48,20 @@
                                     </div>
                                 </div>
  <div class="col-md-6" id="colVehiculo">
-                                    <label class="small fw-bold text-muted mb-1">UNIDAD / VEHÍCULO</label>
+                                    <label class="small fw-bold text-body-secondary mb-1">UNIDAD / VEHÍCULO</label>
                                     <select id="mv_vehiculo_id" class="form-select border-0 shadow-sm rounded-3 p-3 bg-white"></select>
                                 </div>
                                 <div class="col-md-6">
-                                    <label id="lblPersonal" class="small fw-bold text-muted mb-1">CHOFER RESPONSABLE</label>
+                                    <label id="lblPersonal" class="small fw-bold text-body-secondary mb-1">CHOFER RESPONSABLE</label>
                                     <select id="mv_chofer_id" class="form-select border-0 shadow-sm rounded-3 p-3 bg-white"></select>
                                 </div>
 
                                
 
                                 <div class="col-12">
-                                    <label class="small fw-bold text-muted mb-1">AYUDANTES DE CARGA (OPCIONAL)</label>
+                                    <label class="small fw-bold text-body-secondary mb-1">AYUDANTES DE CARGA (OPCIONAL)</label>
                                     <select id="mv_tripulantes" class="form-select border-0 shadow-sm rounded-3 p-2 bg-white" multiple size="3" style="font-size: 0.85rem;"></select>
-                                    <small class="text-muted mt-2 d-block" style="font-size: 0.6rem;">* Mantén presionada la tecla <b>Ctrl</b> para elegir varios.</small>
+                                    <small class="text-body-secondary mt-2 d-block" style="font-size: 0.6rem;">* Mantén presionada la tecla <b>Ctrl</b> para elegir varios.</small>
                                 </div>
                             </div>
                         </div>

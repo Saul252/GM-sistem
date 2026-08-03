@@ -93,7 +93,7 @@
             <div class="modal-header border-0 pb-0 px-4 pt-4">
                 <div class="d-flex justify-content-between w-100 align-items-center">
                     <h5 class="modal-title fw-bold" id="tituloModal">Finalizar Entrega</h5>
-                    <span class="badge bg-light text-muted border rounded-pill px-3 py-2" style="font-size: 0.7rem;">
+                    <span class="badge bg-light text-body-secondary border rounded-pill px-3 py-2" style="font-size: 0.7rem;">
                         ID MOV: <span id="m_id_visible">0</span>
                     </span>
                 </div>
@@ -116,7 +116,7 @@
                         <div class="info-label">Cliente / Folio de Venta</div>
                         <div id="m_cliente_full" class="fw-bold mb-2"></div>
                         <div class="info-label">Dirección de Entrega</div>
-                        <div id="m_direccion_full" class="small text-muted"></div>
+                        <div id="m_direccion_full" class="small text-body-secondary"></div>
                     </div>
 
                     <div class="mb-3" style="display:none;">

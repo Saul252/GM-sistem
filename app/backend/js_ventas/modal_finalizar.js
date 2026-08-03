@@ -63,7 +63,7 @@ window.abrirModalFinalizar = function () {
         tr.innerHTML = `
             <td>
                 <div class="fw-bold" style="font-size: 0.85rem;">${item.nombre}</div>
-                <small class="text-muted d-block">
+                <small class="text-body-secondary d-block">
                     ${item.almacen_nombre} | ${item.tipo_precio.toUpperCase()}
                 </small>
 
@@ -98,7 +98,7 @@ window.abrirModalFinalizar = function () {
                     </span>
                 </div>
 
-                <small class="text-muted d-block text-center" style="font-size: 0.65rem;">
+                <small class="text-body-secondary d-block text-center" style="font-size: 0.65rem;">
                     Por entregar hoy
                 </small>
             </td>

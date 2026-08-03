@@ -45,13 +45,13 @@ function verificarNotificaciones() {
             if (lista && data.items) {
                 console.log("📝 Llenando lista de notificaciones...");
                 if (cantidadActual === 0) {
-                    lista.innerHTML = '<li class="p-3 text-center text-muted small">Sin pendientes</li>';
+                    lista.innerHTML = '<li class="p-3 text-center text-body-secondary small">Sin pendientes</li>';
                 } else {
                     lista.innerHTML = data.items.map(item => `
                         <li class="p-2 border-bottom d-flex justify-content-between align-items-center mx-2">
                             <div style="font-size: 0.8rem; max-width: 75%">
                                 <b>${item.producto}</b><br>
-                                <span class="text-muted">Cant: ${item.cantidad}</span>
+                                <span class="text-body-secondary">Cant: ${item.cantidad}</span>
                             </div>
                             <button onclick="procesarRecepcion(${item.id})" class="btn btn-sm btn-success p-1">
                                 <i class="bi bi-check-lg"></i>

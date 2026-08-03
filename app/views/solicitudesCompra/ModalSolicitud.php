@@ -10,7 +10,7 @@
                         </div>
                         <div>
                             <h4 class="fw-bold mb-0">Nueva Solicitud de Compra</h4>
-                            <p class="text-muted small mb-0">Complete los datos para requerir materiales al almacén</p>
+                            <p class="text-body-secondary small mb-0">Complete los datos para requerir materiales al almacén</p>
                         </div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -46,7 +46,7 @@
                                 </select>
 
                                 <?php if (!$es_admin): ?>
-                                    <span class="input-group-text  text-muted border-slate-200 control-fixed-height flex-shrink-0">
+                                    <span class="input-group-text  text-body-secondary border-slate-200 control-fixed-height flex-shrink-0">
                                         <i class="bi bi-lock-fill"></i>
                                     </span>
                                 <?php endif; ?>
@@ -54,7 +54,7 @@
 
                             <?php if (!$es_admin): ?>
                                 <input type="hidden" name="almacen_id_cabecera" value="<?= $_SESSION['almacen_id'] ?>">
-                                <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">
+                                <small class="text-body-secondary d-block mt-1" style="font-size: 0.75rem;">
                                     Privilegios de sede actual
                                 </small>
                             <?php endif; ?>
@@ -112,7 +112,7 @@
                      <div class="table-responsive border rounded-4 ">
                         <table class="table align-middle mb-0" id="tablaDetalle">
                             <thead class="">
-                                <tr class="text-muted small uppercase">
+                                <tr class="text-body-secondary small uppercase">
                                     <th class="ps-4" style="width: 45%;">Producto</th>
                                     <th style="width: 20%;">Cantidad</th>
                                     <th style="width: 25%;">Presentación / Unidad</th>
@@ -406,7 +406,7 @@ $('#buscadorProductos').on('select2:select', function(e) {
             <!-- PRODUCTO -->
             <td class="ps-4">
                 <b>${d.nombre}</b><br>
-                <small class="text-muted">${d.sku}</small>
+                <small class="text-body-secondary">${d.sku}</small>
             </td>
 
             <!-- CANTIDAD -->

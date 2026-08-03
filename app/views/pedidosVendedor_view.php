@@ -201,7 +201,7 @@
                 <h2 class="fw-bold text-dark mb-0">
                     <i class="bi bi-cart-plus-fill me-2 text-primary"></i>Pedidos
                 </h2>
-                <p class="text-muted small mb-0">
+                <p class="text-body-secondary small mb-0">
                     <span class="badge bg-info text-dark"><?= htmlspecialchars($_SESSION['rol']) ?></span>
                     <span class="badge bg-secondary ms-1"><?= htmlspecialchars($_SESSION['almacen_nombre'] ?? 'General') ?></span>
                 </p>
@@ -218,7 +218,7 @@
         <div class="card glass-card p-3 mb-4 border-0 filtros-desktop">
             <form id="formFiltros" class="row g-2 align-items-end">
                 <div class="col-md-2">
-                    <label class="form-label small fw-bold text-muted">Período</label>
+                    <label class="form-label small fw-bold text-body-secondary">Período</label>
                     <select id="filtro_rango" class="form-select form-select-sm rounded-3" onchange="toggleFechas()">
                         <option value="hoy" selected>Hoy</option>
                         <option value="ayer">Ayer</option>
@@ -231,11 +231,11 @@
                 <div class="col-md-3" id="div_personalizado">
                     <div class="row g-1">
                         <div class="col-6">
-                            <label class="form-label small fw-bold text-muted">Desde</label>
+                            <label class="form-label small fw-bold text-body-secondary">Desde</label>
                             <input type="date" id="filtro_desde" class="form-control form-control-sm rounded-3">
                         </div>
                         <div class="col-6">
-                            <label class="form-label small fw-bold text-muted">Hasta</label>
+                            <label class="form-label small fw-bold text-body-secondary">Hasta</label>
                             <input type="date" id="filtro_hasta" class="form-control form-control-sm rounded-3">
                         </div>
                     </div>
@@ -243,7 +243,7 @@
 
                 <?php if ($_SESSION['almacen_id'] == 0): ?>
                 <div class="col-md-2">
-                    <label class="form-label small fw-bold text-muted">Sucursal</label>
+                    <label class="form-label small fw-bold text-body-secondary">Sucursal</label>
                     <select id="filtro_almacen" class="form-select form-select-sm select2-modal">
                         <option value="0">Todas</option>
                         <?php foreach ($almacenes as $alm): ?>
@@ -256,7 +256,7 @@
                 <?php endif; ?>
 
                 <div class="col-md-2">
-                    <label class="form-label small fw-bold text-muted">Estatus</label>
+                    <label class="form-label small fw-bold text-body-secondary">Estatus</label>
                     <select id="filtro_estatus" class="form-select form-select-sm rounded-3">
                         <option value="todos">Todos</option>
                         <option value="1" selected>Pendientes</option>
@@ -293,7 +293,7 @@
         <div class="card glass-card p-3 border-0 tabla-desktop">
             <div class="table-responsive tabla-scroll">
                 <table class="table table-hover align-middle">
-                    <thead class="table-light text-muted small text-uppercase">
+                    <thead class="table-light text-body-secondary small text-uppercase">
                         <tr>
                             <th width="120">Folio</th>
                             <th>Cliente / Almacén</th>
@@ -344,7 +344,7 @@
                         <div class="row g-3">
                             <?php if ($_SESSION['almacen_id'] == 0): ?>
                                 <div class="col-md-4">
-                                    <label class="form-label fw-bold text-muted small text-uppercase">Sucursal Destino</label>
+                                    <label class="form-label fw-bold text-body-secondary small text-uppercase">Sucursal Destino</label>
                                     <div class="input-group shadow-sm">
                                         <span class="input-group-text bg-white border-end-0"><i class="bi bi-geo-alt text-danger"></i></span>
                                         <select name="almacen_id" id="almacen_id" class="form-select border-start-0 ps-0" required style="border-radius: 0 10px 10px 0;">
@@ -360,7 +360,7 @@
                             <?php endif; ?>
 
                             <div class="<?= ($_SESSION['almacen_id'] == 0) ? 'col-md-5' : 'col-md-9' ?>">
-                                <label class="form-label fw-bold text-muted small text-uppercase">Cliente</label>
+                                <label class="form-label fw-bold text-body-secondary small text-uppercase">Cliente</label>
                                 <select name="cliente_id" id="cliente_id" class="form-select select2-modal" required>
                                     <option value="">Seleccione un cliente...</option>
                                     <?php foreach($clientes as $c): ?>
@@ -372,7 +372,7 @@
                             </div>
 
                             <div class="col-md-3">
-                                <label class="form-label fw-bold text-muted small text-uppercase">Prioridad</label>
+                                <label class="form-label fw-bold text-body-secondary small text-uppercase">Prioridad</label>
                                 <select name="prioridad" class="form-select shadow-sm border-0 bg-white" style="border-radius: 10px;">
                                     <option value="Baja">🟢 Baja</option>
                                     <option value="Media" selected>🟡 Media</option>
@@ -410,7 +410,7 @@
                         <div class="table-responsive border rounded-4 bg-white shadow-sm overflow-hidden mb-4">
                             <table class="table table-hover align-middle mb-0" id="tablaDetallePedido">
                                 <thead class="bg-light">
-                                    <tr class="text-muted small text-uppercase">
+                                    <tr class="text-body-secondary small text-uppercase">
                                         <th class="ps-4 py-3">Producto</th>
                                         <th width="180">Venta por</th>
                                         <th width="150">Cantidad</th>
@@ -427,7 +427,7 @@
                             <div class="col-12">
                                 <div class="form-floating shadow-sm">
                                     <textarea name="observaciones" class="form-control border-0 bg-light" placeholder="Indicaciones..." id="obsText" style="height: 80px; border-radius: 12px;"></textarea>
-                                    <label for="obsText" class="text-muted">Observaciones de Entrega</label>
+                                    <label for="obsText" class="text-body-secondary">Observaciones de Entrega</label>
                                 </div>
                             </div>
                         </div>
@@ -436,7 +436,7 @@
             </div>
 
             <div class="modal-footer border-0 bg-white p-4 pt-0">
-                <button type="button" class="btn btn-light rounded-pill px-4 text-muted fw-bold" data-bs-dismiss="modal">CANCELAR</button>
+                <button type="button" class="btn btn-light rounded-pill px-4 text-body-secondary fw-bold" data-bs-dismiss="modal">CANCELAR</button>
                 <button type="button" onclick="guardarPedido()" class="btn btn-primary btn-lg px-5 rounded-pill shadow-lg border-0" style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);">
                     <i class="bi bi-cloud-arrow-up-fill me-2"></i> REGISTRAR PEDIDO
                 </button>
@@ -458,19 +458,19 @@
                 <div class="modal-body p-3 p-md-4">
                     <div class="row g-2 mb-3 p-3 bg-light rounded-4 border">
                         <div class="col-12 col-md-6 border-md-end">
-                            <label class="text-muted small d-block text-uppercase fw-bold">Cliente</label>
+                            <label class="text-body-secondary small d-block text-uppercase fw-bold">Cliente</label>
                             <div id="view_cliente" class="fs-5 fw-bold text-dark"></div>
-                            <div id="view_almacen" class="small text-muted"></div>
+                            <div id="view_almacen" class="small text-body-secondary"></div>
                         </div>
                         <div class="col-12 col-md-6 text-md-end">
-                            <label class="text-muted small d-block text-uppercase fw-bold mt-2 mt-md-0">Registro</label>
+                            <label class="text-body-secondary small d-block text-uppercase fw-bold mt-2 mt-md-0">Registro</label>
                             <div id="view_vendedor" class="text-dark small fw-bold"></div>
                             <div id="view_fecha" class="text-secondary small"></div>
                             <div id="view_prioridad" class="mt-1"></div>
                         </div>
                     </div>
 
-                    <h6 class="fw-bold text-muted small text-uppercase mb-2">Materiales</h6>
+                    <h6 class="fw-bold text-body-secondary small text-uppercase mb-2">Materiales</h6>
                     <div class="border rounded-3 mb-3 bg-white" style="max-height: 40vh; overflow-y: auto;">
                         <table class="table table-hover align-middle mb-0" id="tablaVerDetalles">
                             <thead class="table-light">
@@ -485,7 +485,7 @@
                     </div>
 
                     <div class="p-3 bg-primary bg-opacity-10 border-start border-4 border-primary rounded-end">
-                        <label class="text-muted small d-block fw-bold text-uppercase mb-1">Notas:</label>
+                        <label class="text-body-secondary small d-block fw-bold text-uppercase mb-1">Notas:</label>
                         <p id="view_observaciones" class="mb-0 text-dark small"></p>
                     </div>
                 </div>
@@ -596,8 +596,8 @@
             let htmlDesktop = '', htmlMobile = '';
 
             if (res.data.length === 0) {
-                htmlDesktop = '<tr><td colspan="6" class="text-center p-5 text-muted">No se encontraron registros.</td></tr>';
-                htmlMobile  = '<p class="text-center text-muted py-4">No se encontraron registros.</p>';
+                htmlDesktop = '<tr><td colspan="6" class="text-center p-5 text-body-secondary">No se encontraron registros.</td></tr>';
+                htmlMobile  = '<p class="text-center text-body-secondary py-4">No se encontraron registros.</p>';
             } else {
                 res.data.forEach(p => {
                     const esCubierto = p.estatus != 1;
@@ -611,10 +611,10 @@
                         <td class="fw-bold text-primary">${p.folio}</td>
                         <td>
                             <div class="fw-bold">${p.cliente}</div>
-                            <div class="text-muted" style="font-size:11px;"><i class="bi bi-house"></i> ${p.almacen_nombre || ''}</div>
+                            <div class="text-body-secondary" style="font-size:11px;"><i class="bi bi-house"></i> ${p.almacen_nombre || ''}</div>
                         </td>
                         <td class="small">${p.vendedor}</td>
-                        <td class="small text-muted">${p.fecha_solicitud}</td>
+                        <td class="small text-body-secondary">${p.fecha_solicitud}</td>
                         <td class="text-center">${bEstatus}</td>
                         <td class="text-end">
                             <div class="btn-group shadow-sm rounded-pill overflow-hidden">
@@ -674,7 +674,7 @@
         const id = opt.val(), nombre = opt.data('nombre'), factor = parseFloat(opt.data('factor')) || 1;
         const um = opt.data('um'), ur = opt.data('ur'), tieneFactor = opt.data('tiene-factor') == '1';
 
-        let selectorMedida = `<span class="text-muted small">${um}</span>`;
+        let selectorMedida = `<span class="text-body-secondary small">${um}</span>`;
         if (tieneFactor) {
             selectorMedida = `
             <select class="form-select form-select-sm select-modo-venta" onchange="recalcularFila(this)">
@@ -786,7 +786,7 @@
                     html += `<tr>
                         <td><div class="fw-bold">${d.producto_nombre}</div></td>
                         <td class="text-center fw-bold">${d.cantidad} ${d.unidad_medida}</td>
-                        <td class="small text-muted d-none d-md-table-cell">${d.notas_producto || '-'}</td>
+                        <td class="small text-body-secondary d-none d-md-table-cell">${d.notas_producto || '-'}</td>
                     </tr>`;
                 });
                 $('#tablaVerDetalles tbody').html(html);

@@ -254,7 +254,7 @@
         <div class="text-content">
             <h1>403</h1>
             <h2>Acceso Denegado</h2>
-            <p class="text-muted">Tu usuario no tiene los permisos necesarios para circular por esta ruta.</p>
+            <p class="text-body-secondary">Tu usuario no tiene los permisos necesarios para circular por esta ruta.</p>
             
             <div class="admin-contact">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i>

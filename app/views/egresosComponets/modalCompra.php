@@ -82,7 +82,7 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
                                         </select>
 
                                         <?php if (!$es_admin): ?>
-                                        <span class="input-group-text border border-subtle text-muted">
+                                        <span class="input-group-text border border-subtle text-body-secondary">
                                             <i class="bi bi-lock-fill"></i>
                                         </span>
                                         <?php endif; ?>
@@ -91,7 +91,7 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
                                     <?php if (!$es_admin): ?>
                                     <input type="hidden" name="almacen_id_cabecera"
                                         value="<?= $_SESSION['almacen_id'] ?>">
-                                    <small class="text-muted">
+                                    <small class="text-body-secondary">
                                         Privilegios de sede actual
                                     </small>
                                     <?php endif; ?>
@@ -127,7 +127,7 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
 
                                 <!-- TOTAL -->
                                 <div class="col-md-3">
-                                    <label class="form-label small fw-bold text-muted">TOTAL FACTURA</label>
+                                    <label class="form-label small fw-bold text-body-secondary">TOTAL FACTURA</label>
                                     <div class="border border-subtle border rounded-3 p-2 text-center shadow-sm">
                                         <span class="h4 text-success fw-bold m-0" id="granTotalCompra">$ 0.00</span>
                                     </div>
@@ -355,7 +355,7 @@ function agregarFilaCompra() {
 
           <div class="col-md-4"> <!-- Aumenté a col-md-4 para que respire mejor -->
    
-     <label class="form-label small text-muted mb-1 label-urep">Producto</label>
+     <label class="form-label small text-body-secondary mb-1 label-urep">Producto</label>
                
     <div class="input-group input-group-sm shadow-sm">
         <!-- El Select -->
@@ -377,13 +377,13 @@ function agregarFilaCompra() {
 </div>
 
             <div class="col-md-1">
-                <label class="form-label small text-muted mb-1 label-urep">Mayoreo</label>
+                <label class="form-label small text-body-secondary mb-1 label-urep">Mayoreo</label>
                 <input type="number" class="form-control form-control-sm shadow-sm input-mayoreo"
                     value="0" min="0" oninput="recalcularTotales(${idUnico})">
             </div>
 
             <div class="col-md-1">
-                <label class="form-label small text-muted mb-1 label-ubase">Sueltas</label>
+                <label class="form-label small text-body-secondary mb-1 label-ubase">Sueltas</label>
                 <input type="number" class="form-control form-control-sm shadow-sm input-sueltas"
                     value="0" min="0" oninput="recalcularTotales(${idUnico})">
             </div>
@@ -429,7 +429,7 @@ function agregarFilaCompra() {
 
             <div class="col-md-2">
                
-               <label class="form-label small fw-semibold text-muted mb-1">Costo total</label>
+               <label class="form-label small fw-semibold text-body-secondary mb-1">Costo total</label>
                 <div class="input-group input-group-sm shadow-sm">
                     <span class="input-group-text">$</span>
                     <input type="number"
@@ -481,7 +481,7 @@ function agregarFilaCompra() {
         <hr class="my-3">
 
         <table class="table table-sm align-middle mb-0">
-            <thead class="text-muted small">
+            <thead class="text-body-secondary small">
                 <tr>
                     <th class="text-center">Usar</th>
                     <th>Almacén</th>

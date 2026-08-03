@@ -224,9 +224,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 <div class="p-2 mb-2 border-bottom">
                     <small class="text-uppercase fw-bold text-success" style="font-size: 10px;">2. Entradas (Ventas + Abonos)</small>
-                    <div class="d-flex justify-content-between small text-muted"><span>Total Efectivo</span><span>+$${_efectivo.toLocaleString('es-MX')}</span></div>
-                    <div class="d-flex justify-content-between small text-muted"><span>Total Tarjeta</span><span>+$${_tarjeta.toLocaleString('es-MX')}</span></div>
-                    <div class="d-flex justify-content-between small text-muted"><span>Total Transf.</span><span>+$${_transferencia.toLocaleString('es-MX')}</span></div>
+                    <div class="d-flex justify-content-between small text-body-secondary"><span>Total Efectivo</span><span>+$${_efectivo.toLocaleString('es-MX')}</span></div>
+                    <div class="d-flex justify-content-between small text-body-secondary"><span>Total Tarjeta</span><span>+$${_tarjeta.toLocaleString('es-MX')}</span></div>
+                    <div class="d-flex justify-content-between small text-body-secondary"><span>Total Transf.</span><span>+$${_transferencia.toLocaleString('es-MX')}</span></div>
                 </div>
 
                 <div class="p-2 mb-2 border-bottom bg-danger bg-opacity-10 rounded text-danger">

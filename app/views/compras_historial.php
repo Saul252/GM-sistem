@@ -119,7 +119,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
                     </thead>
                     <tbody id="tablaHistorial">
                         <tr>
-                            <td colspan="10" class="text-center text-muted">Selecciona un producto</td>
+                            <td colspan="10" class="text-center text-body-secondary">Selecciona un producto</td>
                         </tr>
                     </tbody>
                 </table>
@@ -289,8 +289,8 @@ html += `
     <tr>
         <td>${compra.almacen}</td>
         <td class="fw-bold">#${compra.id}</td>
-        <td class="text-muted">${compra.folio}</td>
-        <td class="text-muted">${compra.proveedor}</td>
+        <td class="text-body-secondary">${compra.folio}</td>
+        <td class="text-body-secondary">${compra.proveedor}</td>
         <td>${compra.fecha_compra}</td>
         <td style="max-width: 220px;" class="text-truncate">${nombresProductos}</td>
         <td>
@@ -454,7 +454,7 @@ html += `
 
     <td colspan="2">
         ${t.cliente_proveedor}
-        <small class="d-block text-muted">
+        <small class="d-block text-body-secondary">
             Material traspasado
         </small>
     </td>
@@ -472,7 +472,7 @@ html += `
         ${cantidad}
     </td>
 
-    <td class="num text-muted">
+    <td class="num text-body-secondary">
         —
     </td>
 
@@ -484,7 +484,7 @@ html += `
         ${costo}
     </td>
 
-    <td colspan="2" class="text-center text-muted">
+    <td colspan="2" class="text-center text-body-secondary">
         Sin venta
     </td>
 
@@ -619,7 +619,7 @@ html += `
 
     <td colspan="2">
         ${t.cliente_proveedor}
-        <small class="d-block text-muted">
+        <small class="d-block text-body-secondary">
             Material traspasado
         </small>
     </td>
@@ -637,7 +637,7 @@ html += `
         ${cantidad}
     </td>
 
-    <td class="num text-muted">
+    <td class="num text-body-secondary">
         —
     </td>
 
@@ -649,7 +649,7 @@ html += `
         ${costo}
     </td>
 
-    <td colspan="2" class="text-center text-muted">
+    <td colspan="2" class="text-center text-body-secondary">
         Sin venta
     </td>
 
@@ -696,7 +696,7 @@ html += `
         <strong>${rep.almacen}</strong>
       
     </td>
-    <td  class="text-center text-muted">
+    <td  class="text-center text-body-secondary">
         Entrada de mercancía
     </td>
 
@@ -724,7 +724,7 @@ html += `
         ${costo}
     </td>
 
-    <td  class="text-center text-muted">
+    <td  class="text-center text-body-secondary">
         Inventario inicial
     </td>
 </tr>
@@ -873,7 +873,7 @@ html += `
         ${costo}
     </td>
 
-    <td  class="text-center text-muted">
+    <td  class="text-center text-body-secondary">
         Inventario inicial
     </td>
 </tr>
@@ -1056,7 +1056,7 @@ html += `
 
                 <div class="col-md-6">
                     <div class="border rounded p-3 bg-light h-100">
-                        <div class="small text-muted text-uppercase fw-bold">
+                        <div class="small text-body-secondary text-uppercase fw-bold">
                           <h3 class="fw-bold text-success mb-1">   Proveedor:<//h3>
                         </div>
                         <div class="fs-5 fw-semibold">
@@ -1067,7 +1067,7 @@ html += `
 
                 <div class="col-md-3">
                     <div class="border rounded p-3 bg-light text-center h-100">
-                        <div class="small text-muted text-uppercase fw-bold">
+                        <div class="small text-body-secondary text-uppercase fw-bold">
                             <h3 class="fw-bold text-primary mb-1"> Producto:</h3>
                         </div>
                         <div class="fs-4 fw-bold text-success">
@@ -1078,7 +1078,7 @@ html += `
 
                 <div class="col-md-3">
                     <div class="border rounded p-3 bg-light text-center h-100">
-                        <div class="small text-muted text-uppercase fw-bold">
+                        <div class="small text-body-secondary text-uppercase fw-bold">
                          <h3 class="fw-bold text-primary mb-1">    Faltante:</h3>
                         </div>
                         <div class="fs-4 fw-bold text-danger">

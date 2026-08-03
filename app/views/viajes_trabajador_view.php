@@ -72,18 +72,18 @@
         <form id="formFiltros" class="row g-3">
 
             <div class="col-md-2">
-                <label class="small fw-bold text-muted">Inicio</label>
+                <label class="small fw-bold text-body-secondary">Inicio</label>
                 <input type="date" id="fecha_inicio" class="form-control ios-input">
             </div>
 
             <div class="col-md-2">
-                <label class="small fw-bold text-muted">Fin</label>
+                <label class="small fw-bold text-body-secondary">Fin</label>
                 <input type="date" id="fecha_fin" class="form-control ios-input">
             </div>
 
            <div class="col-md-2">
 
-    <label class="small fw-bold text-muted text-uppercase">
+    <label class="small fw-bold text-body-secondary text-uppercase">
         Almacén / Sucursal
     </label>
 
@@ -110,17 +110,17 @@
 
 </div>
             <div class="col-md-2">
-                <label class="small fw-bold text-muted">Chofer</label>
+                <label class="small fw-bold text-body-secondary">Chofer</label>
                 <input type="text" id="chofer" class="form-control ios-input">
             </div>
 
             <div class="col-md-2">
-                <label class="small fw-bold text-muted">Ayudante</label>
+                <label class="small fw-bold text-body-secondary">Ayudante</label>
                 <input type="text" id="ayudante" class="form-control ios-input">
             </div>
 
             <div class="col-md-2">
-                <label class="small fw-bold text-muted">Estado</label>
+                <label class="small fw-bold text-body-secondary">Estado</label>
                 <select id="estado" class="form-select ios-input">
                     <option value="">Todos</option>
                     <option value="PENDIENTE">Pendiente</option>
@@ -243,7 +243,7 @@ if ($('#almacen').length) {
         let html = '';
 
         if (!data.length) {
-            html = `<tr><td colspan="6" class="text-center text-muted">Sin datos</td></tr>`;
+            html = `<tr><td colspan="6" class="text-center text-body-secondary">Sin datos</td></tr>`;
         }
 
         data.forEach(v => {

@@ -45,8 +45,8 @@
     <main class="main-content">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-                <h2 class="fw-bold m-0 text-dark">Personal del Sistema</h2>
-                <p class="text-muted">Gestión de cuentas, roles y sucursales asignadas</p>
+                <h2 class="fw-bold m-0 ">Personal del Sistema</h2>
+                <p class="text-body-secondary">Gestión de cuentas, roles y sucursales asignadas</p>
             </div>
             <button class="btn btn-primary rounded-pill px-4 shadow-sm" onclick="nuevoUsuario()">
                 <i class="bi bi-person-plus-fill me-2"></i> Nuevo Usuario
@@ -57,7 +57,7 @@
             <div class="row mb-4">
                 <div class="col-md-4">
                     <div class="input-group">
-                        <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <span class="input-group-text bg-transparent border-end-0"><i class="bi bi-search text-body-secondary"></i></span>
                         <input type="text" id="busquedaReal" class="form-control border-start-0" placeholder="Buscar usuario o nombre...">
                     </div>
                 </div>
@@ -86,17 +86,17 @@
                                         <div class="avatar-circle me-3 bg-primary text-white d-flex align-items-center justify-content-center rounded-circle" style="width: 38px; height: 38px;">
                                             <?= strtoupper(substr($u['nombre'], 0, 1)) ?>
                                         </div>
-                                        <span class="fw-bold text-dark"><?= htmlspecialchars($u['nombre']) ?></span>
+                                        <span class="fw-bold "><?= htmlspecialchars($u['nombre']) ?></span>
                                     </div>
                                 </td>
-                                <td><span class="badge bg-light text-muted border">@<?= htmlspecialchars($u['username']) ?></span></td>
+                                <td><span class="badge  text-body-secondary border">@<?= htmlspecialchars($u['username']) ?></span></td>
                                 <td>
                                     <span class="badge-role role-<?= $u['rol_id'] ?>">
                                         <?= htmlspecialchars($u['rol_nombre']) ?>
                                     </span>
                                 </td>
                                 <td>
-                                    <small class="text-muted"><i class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($u['almacen_nombre']) ?></small>
+                                    <small class="text-body-secondary"><i class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($u['almacen_nombre']) ?></small>
                                 </td>
                                 <td class="text-center">
                                     <div class="form-check form-switch d-inline-block">
@@ -131,20 +131,20 @@
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label small fw-bold">Nombre Completo</label>
-                            <input type="text" name="nombre" id="userName" class="form-control text-uppercase bg-light" placeholder="Ej. Juan Pérez" required>
+                            <input type="text" name="nombre" id="userName" class="form-control text-uppercase " placeholder="Ej. Juan Pérez" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Nombre de Usuario</label>
-                            <input type="text" name="username" id="userLogin" class="form-control bg-light" placeholder="juan.perez" required>
+                            <input type="text" name="username" id="userLogin" class="form-control " placeholder="juan.perez" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Contraseña</label>
-                            <input type="password" name="password" id="userPass" class="form-control bg-light" placeholder="••••••••">
-                            <small class="text-muted d-block mt-1" id="passNote" style="display:none;">Vacío para no cambiar</small>
+                            <input type="password" name="password" id="userPass" class="form-control " placeholder="••••••••">
+                            <small class="text-body-secondary d-block mt-1" id="passNote" style="display:none;">Vacío para no cambiar</small>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Rol de Acceso</label>
-                            <select name="rol_id" id="userRol" class="form-select bg-light" required>
+                            <select name="rol_id" id="userRol" class="form-select " required>
                                 <option value="">Seleccione...</option>
                                 <?php foreach($rolesArray as $r): ?>
                                     <option value="<?= $r['id'] ?>"><?= $r['nombre'] ?></option>
@@ -153,7 +153,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Almacén Asignado</label>
-                            <select name="almacen_id" id="userAlmacen" class="form-select bg-light">
+                            <select name="almacen_id" id="userAlmacen" class="form-select ">
                                 <option value="">Acceso Global</option>
                                 <?php foreach($almacenesArray as $a): ?>
                                     <option value="<?= $a['id'] ?>"><?= $a['nombre'] ?></option>
@@ -162,7 +162,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer bg-light p-3">
+                <div class="modal-footer  p-3">
                     <button type="button" class="btn btn-secondary border-0" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary px-4 shadow-sm">Guardar Usuario</button>
                 </div>

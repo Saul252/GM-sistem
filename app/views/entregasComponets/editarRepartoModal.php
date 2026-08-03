@@ -23,20 +23,20 @@
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <div class="form-group p-3 bg-white" style="border-radius: 15px; border: 1px solid #e5e5ea;">
-                                <label class="form-label small fw-bold text-muted text-uppercase mb-2" style="font-size: 0.65rem;">Responsable (Chofer)</label>
+                                <label class="form-label small fw-bold text-body-secondary text-uppercase mb-2" style="font-size: 0.65rem;">Responsable (Chofer)</label>
                                 <select id="edit_chofer_id" name="chofer_id" class="form-select border-0 bg-light fw-bold" style="border-radius: 10px; padding: 10px;"></select>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group p-3 bg-white" style="border-radius: 15px; border: 1px solid #e5e5ea;">
-                                <label class="form-label small fw-bold text-muted text-uppercase mb-2" style="font-size: 0.65rem;">Tripulación (Ayudantes)</label>
+                                <label class="form-label small fw-bold text-body-secondary text-uppercase mb-2" style="font-size: 0.65rem;">Tripulación (Ayudantes)</label>
                                 <select id="edit_tripulantes" name="tripulantes" class="form-select border-0 bg-light"></select>
                             </div>
                         </div>
                     </div>
 
                     <div class="d-flex justify-content-between align-items-end mb-2">
-                        <label class="form-label small fw-bold text-muted text-uppercase mb-0" style="font-size: 0.65rem; margin-left: 10px;">Manifiesto de Carga y Clientes</label>
+                        <label class="form-label small fw-bold text-body-secondary text-uppercase mb-0" style="font-size: 0.65rem; margin-left: 10px;">Manifiesto de Carga y Clientes</label>
                         <span class="badge bg-dark rounded-pill" style="font-size: 0.6rem;">EDITABLE</span>
                     </div>
                     
@@ -126,7 +126,7 @@ window.abrirModalEdicionViaje = async function(folio, vehiculoId) {
                             <div>
                                 <span class="badge bg-light text-primary mb-1" style="font-size: 0.65rem;">SKU: ${m.sku || 'N/A'}</span>
                                 <div class="fw-bold text-dark" style="font-size: 0.9rem;">${m.producto}</div>
-                                <small class="text-muted fw-bold">Cant: ${parseFloat(cantidad).toFixed(2)} ${unidad|| ''}</small>
+                                <small class="text-body-secondary fw-bold">Cant: ${parseFloat(cantidad).toFixed(2)} ${unidad|| ''}</small>
                             </div>
                             <div class="text-end">
                                 <span class="d-block fw-bold text-primary small" style="font-size: 0.75rem;">${m.cliente || 'Público General'}</span>
@@ -145,7 +145,7 @@ window.abrirModalEdicionViaje = async function(folio, vehiculoId) {
                     </div>`;
             });
         } else {
-            hMat = '<div class="p-4 text-center text-muted">No hay productos en esta ruta</div>';
+            hMat = '<div class="p-4 text-center text-body-secondary">No hay productos en esta ruta</div>';
         }
         $('#listaMaterialesEdit').html(hMat);
 
@@ -168,7 +168,7 @@ window.quitarEntregaVisual = function(movimientoId) {
     $(`#item_mov_${movimientoId}`).fadeOut(300, function() {
         $(this).remove();
         if ($('.item-entrega').length === 0) {
-            $('#listaMaterialesEdit').html('<div class="p-4 text-center text-muted">No hay productos en esta ruta</div>');
+            $('#listaMaterialesEdit').html('<div class="p-4 text-center text-body-secondary">No hay productos en esta ruta</div>');
         }
         Toast.fire({ icon: 'info', title: 'Removido de la lista' });
     });

@@ -28,7 +28,7 @@ fetch(`/cfsistem/app/controllers/traspasosController.php?action=resumen&almacen_
             // 1. LLENAR ARRIBOS
             contenedorArribos.innerHTML = '';
             if (data.arribos.length === 0) {
-                contenedorArribos.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay mercancía pendiente de recibir.</td></tr>';
+                contenedorArribos.innerHTML = '<tr><td colspan="6" class="text-center text-body-secondary">No hay mercancía pendiente de recibir.</td></tr>';
             } else {
                 data.arribos.forEach(mov => {
                     const cantDisplay = formatearCantidad(mov.cantidad, mov.factor_conversion, mov.unidad_reporte);
@@ -39,7 +39,7 @@ fetch(`/cfsistem/app/controllers/traspasosController.php?action=resumen&almacen_
                             <td><small class="fw-bold">${mov.sku}</small><br>${mov.producto}</td>
                             <td class="text-primary">
                                 ${cantDisplay}<br>
-                                <small class="text-muted" style="font-size:0.7rem">Total: ${mov.cantidad} pzas</small>
+                                <small class="text-body-secondary" style="font-size:0.7rem">Total: ${mov.cantidad} pzas</small>
                             </td>
                             <td>${mov.origen}</td>
                             <td>${mov.enviado_por}</td>
@@ -56,7 +56,7 @@ fetch(`/cfsistem/app/controllers/traspasosController.php?action=resumen&almacen_
             // 2. LLENAR ENVÍOS
             contenedorEnvios.innerHTML = '';
             if (data.envios.length === 0) {
-                contenedorEnvios.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No se encontraron envíos realizados.</td></tr>';
+                contenedorEnvios.innerHTML = '<tr><td colspan="5" class="text-center text-body-secondary">No se encontraron envíos realizados.</td></tr>';
             } else {
                 data.envios.forEach(mov => {
                     const cantDisplay = formatearCantidad(mov.cantidad, mov.factor_conversion, mov.unidad_reporte);
@@ -68,7 +68,7 @@ fetch(`/cfsistem/app/controllers/traspasosController.php?action=resumen&almacen_
                             <td>${mov.producto}</td>
                             <td>
                                 ${cantDisplay}<br>
-                                <small class="text-muted" style="font-size:0.7rem">Total: ${mov.cantidad} pzas</small>
+                                <small class="text-body-secondary" style="font-size:0.7rem">Total: ${mov.cantidad} pzas</small>
                             </td>
                             <td>${mov.destino}</td>
                             <td><span class="badge ${badgeClass}">${mov.estado}</span></td>

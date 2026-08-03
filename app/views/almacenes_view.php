@@ -244,7 +244,7 @@
                             <td class="fw-bold"><?= $p['sku'] ?></td>
                             <td><?= htmlspecialchars($p['nombre']) ?></td>
                             <td><span
-                                    class="badge border border-subtle text-dark border"><?= htmlspecialchars($p['categoria_nombre'] ?? 'Sin Categoría') ?></span>
+                                    class="border border-subtle  "><?= htmlspecialchars($p['categoria_nombre'] ?? 'Sin Categoría') ?></span>
                             </td>
                             <td>
                                 <?php 
@@ -479,7 +479,7 @@
             <span class="input-group-text bg-danger text-white border-danger">$</span>
             <input type="number" name="precio_adquisicion" class="form-control border-danger fw-bold" step="0.01" placeholder="0.00" required>
         </div>
-        <small class="text-muted" style="font-size: 0.7rem;">Este valor define el costo real del lote para tus ganancias.</small>
+        <small class="text-body-secondary" style="font-size: 0.7rem;">Este valor define el costo real del lote para tus ganancias.</small>
     </div>
                         </div>
                      
@@ -524,7 +524,7 @@
                                         <input type="number" id="inputFactor" name="factor_conversion"
                                             class="form-control border-primary fw-bold" value="1" step="0.01"
                                             oninput="actualizarLimiteMaestro()">
-                                        <small class="text-muted" style="font-size: 0.6rem;">Ej: 40 bultos por
+                                        <small class="text-body-secondary" style="font-size: 0.6rem;">Ej: 40 bultos por
                                             Ton.</small>
                                     </div>
 
@@ -537,7 +537,7 @@
 
                                     <div class="col-md-4 text-center">
                                         <div class="p-2 border rounded border border-subtle shadow-sm border-dark">
-                                            <span class="small text-muted d-block text-uppercase fw-bold"
+                                            <span class="small text-body-secondary d-block text-uppercase fw-bold"
                                                 style="font-size: 0.6rem;">Total Unidades Base a Repartir</span>
                                             <span id="displayLimiteBultos" class="fw-bold fs-4 text-dark">0.00</span>
                                         </div>
@@ -674,15 +674,15 @@
                                 </h6>
                                 <div class="row g-2">
                                     <div class="col-6">
-                                        <label class="small text-muted">Clave Prod.</label>
+                                        <label class="small text-body-secondary">Clave Prod.</label>
                                         <input type="text" name="fiscal_clave_prod" id="edit_fiscal_clave_prod" class="form-control form-control-sm border-0 shadow-sm">
                                     </div>
                                     <div class="col-6">
-                                        <label class="small text-muted">Clave Unidad</label>
+                                        <label class="small text-body-secondary">Clave Unidad</label>
                                         <input type="text" name="fiscal_clave_unidad" id="edit_fiscal_clave_unidad" class="form-control form-control-sm border-0 shadow-sm">
                                     </div>
                                     <div class="col-12 mt-2">
-                                        <label class="small text-muted">IVA (%)</label>
+                                        <label class="small text-body-secondary">IVA (%)</label>
                                         <input type="number" step="0.01" name="impuesto_iva" id="edit_impuesto_iva" class="form-control form-control-sm border-0 shadow-sm">
                                     </div>
                                 </div>
@@ -710,7 +710,7 @@
                             <div class="row g-3 mb-4">
                                 <div class="col-md-4">
                                     <div class="card border-0 shadow-sm p-3 rounded-4">
-                                        <label class="small fw-bold text-muted mb-2">P. Minorista</label>
+                                        <label class="small fw-bold text-body-secondary mb-2">P. Minorista</label>
                                         <div class="input-group">
                                             <span class="input-group-text bg-transparent border-0 text-success fw-bold">$</span>
                                             <input type="number" step="0.01" name="precio_minorista" id="edit_p_min" class="form-control border-0 fw-bold fs-5 p-0 shadow-none">
@@ -719,7 +719,7 @@
                                 </div>
                                 <div class="col-md-4">
                                     <div class="card border-0 shadow-sm p-3 rounded-4">
-                                        <label class="small fw-bold text-muted mb-2">P. Mayorista</label>
+                                        <label class="small fw-bold text-body-secondary mb-2">P. Mayorista</label>
                                         <div class="input-group">
                                             <span class="input-group-text bg-transparent border-0 text-success fw-bold">$</span>
                                             <input type="number" step="0.01" name="precio_mayorista" id="edit_p_may" class="form-control border-0 fw-bold fs-5 p-0 shadow-none">
@@ -728,7 +728,7 @@
                                 </div>
                                 <div class="col-md-4">
                                     <div class="card border-0 shadow-sm p-3 rounded-4">
-                                        <label class="small fw-bold text-muted mb-2">P. Distribuidor</label>
+                                        <label class="small fw-bold text-body-secondary mb-2">P. Distribuidor</label>
                                         <div class="input-group">
                                             <span class="input-group-text bg-transparent border-0 text-success fw-bold">$</span>
                                             <input type="number" step="0.01" name="precio_distribuidor" id="edit_p_dist" class="form-control border-0 fw-bold fs-5 p-0 shadow-none">
@@ -760,7 +760,7 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <div class="p-3 rounded-4 border-start border-4 border-success border border-subtle shadow-sm">
-                                        <label class="small fw-bold text-muted">Stock Actual</label>
+                                        <label class="small fw-bold text-body-secondary">Stock Actual</label>
                                         <div class="d-flex align-items-center mt-1">
                                             <i class="bi bi-box-fill text-success me-2"></i>
                                             <input type="number" step="0.01" name="stock" id="edit_stock" class="form-control border-0 fw-bold fs-4 p-0 shadow-none" readonly>
@@ -769,7 +769,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="p-3 rounded-4 border-start border-4 border-danger border border-subtle shadow-sm">
-                                        <label class="small fw-bold text-muted">Mínimo Permitido</label>
+                                        <label class="small fw-bold text-body-secondary">Mínimo Permitido</label>
                                         <div class="d-flex align-items-center mt-1">
                                             <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
                                             <input type="number" step="0.01" name="stock_minimo" id="edit_s_min" class="form-control border-0 fw-bold fs-4 p-0 shadow-none">

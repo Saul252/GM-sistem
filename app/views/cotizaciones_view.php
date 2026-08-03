@@ -34,7 +34,7 @@ error_reporting(E_ALL);
             <div class="row align-items-center ">
                 <div class="col-md-8">
                     <h1 class="h3 fw-bold mb-1 card-title-text">Cotizaciones</h1>
-                    <p class="text-muted small card-title-text">Gestión de cotizaciones de materiales</p>
+                    <p class="text-body-secondary small card-title-text">Gestión de cotizaciones de materiales</p>
                 </div>
                 <div class="col-md-4 text-md-end">
                     <button class="btn btn-add" onclick="nuevaCotizacion()">
@@ -54,7 +54,7 @@ error_reporting(E_ALL);
                 <i class="bi bi-funnel-fill text-primary me-2"></i>
                 Filtros de búsqueda
             </h5>
-            <small class="text-muted card-title-text">
+            <small class="text-body-secondary card-title-text">
                 Filtra las cotizaciones por fecha, almacén, estado o cliente.
             </small>
         </div>
@@ -64,7 +64,7 @@ error_reporting(E_ALL);
 
         <!-- Fecha Inicio -->
         <div class="col-lg-2 col-md-6">
-            <label class="form-label small fw-bold text-muted text-uppercase">
+            <label class="form-label small fw-bold text-body-secondary text-uppercase">
                 Inicio
             </label>
 
@@ -72,13 +72,13 @@ error_reporting(E_ALL);
                 type="date"
                 id="fechaInicio"
                 value="<?= date('Y-m-01') ?>"
-                class="form-control border-0  shadow-sm"
+                class="form-control   shadow-sm"
                 style="border-radius:12px;">
         </div>
 
         <!-- Fecha Fin -->
         <div class="col-lg-2 col-md-6">
-            <label class="form-label small fw-bold text-muted text-uppercase">
+            <label class="form-label small fw-bold text-body-secondary text-uppercase">
                 Fin
             </label>
 
@@ -86,17 +86,17 @@ error_reporting(E_ALL);
                 type="date"
                 id="fechaFin"
                 value="<?= date('Y-m-d') ?>"
-                class="form-control border-0  shadow-sm"
+                class="form-control   shadow-sm"
                 style="border-radius:12px;">
         </div>
 
         <!-- Almacén -->
         <div class="col-lg-3 col-md-6">
-            <label class="form-label small fw-bold text-muted text-uppercase">
+            <label class="form-label small fw-bold text-body-secondary text-uppercase">
                 Almacén
             </label>
 
-            <select id="filtroAlmacen" class="form-select border-0  shadow-sm"
+            <select id="filtroAlmacen" class="form-select   shadow-sm"
                 style="border-radius:12px;">
 
                 <?php if (isset($es_admin) && $es_admin): ?>
@@ -116,11 +116,11 @@ error_reporting(E_ALL);
 
         <!-- Estado -->
         <div class="col-lg-2 col-md-6">
-            <label class="form-label small fw-bold text-muted text-uppercase">
+            <label class="form-label small fw-bold text-body-secondary text-uppercase">
                 Estado
             </label>
 
-            <select id="filtroEstado" class="form-select border-0  shadow-sm"
+            <select id="filtroEstado" class="form-select   shadow-sm"
                 style="border-radius:12px;">
 
                 <option value="">Todos</option>
@@ -132,7 +132,7 @@ error_reporting(E_ALL);
         </div>
                <?php if ($puede == true): ?>
 <div class="col-md-2">
-    <label for="select-usuarios" class="form-label fw-bold small text-muted text-uppercase">Vendedor</label>
+    <label for="select-usuarios" class="form-label fw-bold small text-body-secondary text-uppercase">Vendedor</label>
     <select class="form-select rounded-pill" id="select-usuarios" name="usuario_id" onchange="getVentas()">
      <option value="" > Seleccione vendedor</option>
     </select>
@@ -141,20 +141,20 @@ error_reporting(E_ALL);
 
         <!-- Buscador -->
         <div class="col-lg-3 col-md-12">
-            <label class="form-label small fw-bold text-muted text-uppercase">
+            <label class="form-label small fw-bold text-body-secondary text-uppercase">
                 Buscar
             </label> 
 
             <div class="input-group shadow-sm">
 
-                <span class="input-group-text  border-0">
+                <span class="input-group-text  ">
                     <i class="bi bi-search text-secondary"></i>
                 </span>
 
                 <input
                     type="text"
                     id="buscadorGeneral"
-                    class="form-control border-0 "
+                    class="form-control  "
                     placeholder="Folio o Cliente">
 
             </div>
@@ -191,7 +191,7 @@ error_reporting(E_ALL);
    
     <div class="modal fade" id="modalPago" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
+        <div class="modal-content  shadow-lg rounded-4">
 
             <div class="modal-header text-white" style="background: linear-gradient(135deg, #1f2a37, #334155);">
                 <h6 class="modal-title fw-semibold">
@@ -217,19 +217,19 @@ error_reporting(E_ALL);
                 </div>
 
                 <div class="text-center mb-4">
-                    <small class="text-muted d-block">Total a pagar</small>
+                    <small class="text-body-secondary d-block">Total a pagar</small>
                     <h3 id="pagoTotal" class="fw-bold card-title-text m-0">$0.00</h3>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label small text-muted">Monto recibido</label>
+                    <label class="form-label small text-body-secondary">Monto recibido</label>
                     <input type="number" id="montoPago"
-                        class="form-control form-control-lg border-0  rounded-3" placeholder="0.00">
+                        class="form-control form-control-lg   rounded-3" placeholder="0.00">
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label small text-muted">Método de pago</label>
-                    <select id="metodoPago" class="form-select form-select-lg border-0  rounded-3">
+                    <label class="form-label small text-body-secondary">Método de pago</label>
+                    <select id="metodoPago" class="form-select form-select-lg   rounded-3">
                         <option value="">Seleccione</option>
                         <option value="efectivo">Efectivo</option>
                         <option value="transferencia">Transferencia</option>
@@ -240,15 +240,15 @@ error_reporting(E_ALL);
                 </div>
 
                 <div class="mb-3 d-none" id="refBox">
-                    <label class="form-label small text-muted">Referencia</label>
+                    <label class="form-label small text-body-secondary">Referencia</label>
                     <input type="text" id="referenciaPago"
-                        class="form-control form-control-lg border-0  rounded-3"
+                        class="form-control form-control-lg   rounded-3"
                         placeholder="Número de referencia">
                 </div>
                  
             </div>
 
-            <div class="modal-footer border-0 px-4 pb-4 pt-0" id="boton">
+            <div class="modal-footer  px-4 pb-4 pt-0" id="boton">
                 </div>
 
         </div>
@@ -733,7 +733,7 @@ let data=await res.json();
                     <span class="card-title-text fw-bold">#${id}</span>
                 </td>
 
-                <td class="text-muted small">
+                <td class="text-body-secondary small">
                     ${fechaFormateada}
                 </td>
 
@@ -742,12 +742,12 @@ let data=await res.json();
                 </td>
 
                 <td>
-                    <span class="badge  card-title-text border">
+                    <span class=" card-title-text border">
                         ${s.almacen_nombre}
                     </span>
                 </td>
  <td>
-                    <span class="badge  card-title-text border">
+                    <span class="  card-title-text border">
                         ${s.vendedor}
                     </span>
                 </td>

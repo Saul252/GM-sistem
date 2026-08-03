@@ -205,7 +205,7 @@ session_destroy();
         </div>
         
         <div class="road"></div>
-        <p class="text-muted mt-5">Cerrando sesión de forma segura...</p>
+        <p class="text-body-secondary mt-5">Cerrando sesión de forma segura...</p>
     </div>
 
     <script>

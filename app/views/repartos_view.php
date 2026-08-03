@@ -27,12 +27,12 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
         <div class="d-flex justify-content-between align-items-end mb-4 animate__animated animate__fadeIn">
             <div>
                 <h2 class="fw-bold m-0" style="font-size: 2.2rem; letter-spacing: -0.04em;">Centro de Logística</h2>
-                <p class="text-muted mb-0" style="font-size: 1.1rem;">Supervisión de entregas y control de flota en tiempo real.</p>
+                <p class="text-body-secondary mb-0" style="font-size: 1.1rem;">Supervisión de entregas y control de flota en tiempo real.</p>
             </div>
             <div class="bg-white rounded-4 p-3 shadow-sm border d-flex align-items-center gap-3" style="min-width: 200px;">
                 <div class="text-primary fs-3"><i class="bi bi-truck-flatbed"></i></div>
                 <div>
-                    <small class="text-muted fw-bold d-block" style="font-size: 0.6rem; letter-spacing: 0.05em;">ÓRDENES DE ENTREGA</small>
+                    <small class="text-body-secondary fw-bold d-block" style="font-size: 0.6rem; letter-spacing: 0.05em;">ÓRDENES DE ENTREGA</small>
                     <span class="fs-4 fw-bold" id="count_pendientes">0</span>
                 </div>
             </div>
@@ -41,15 +41,15 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
         <div class="row g-3 mb-4 animate__animated animate__fadeInUp">
             <div class="col-md-5">
                 <div class="card-premium p-2 px-3 mb-0 d-flex align-items-center shadow-sm" style="border-radius: 16px;">
-                    <i class="bi bi-search text-muted me-3 fs-5"></i>
+                    <i class="bi bi-search text-body-secondary me-3 fs-5"></i>
                     <input type="text" id="buscarSalida" class="form-control border-0 bg-transparent py-2 shadow-none" placeholder="Buscar por folio, cliente o producto...">
                 </div>
             </div>
             
             <div class="col-md-4 d-flex align-items-center gap-2">
-                <label class="form-label mb-0 fw-bold text-muted small">Rango:</label>
+                <label class="form-label mb-0 fw-bold text-body-secondary small">Rango:</label>
                 <input type="date" id="inicio" class="form-control shadow-sm" style="width:auto; border-radius: 12px;">
-                <span class="text-muted">-</span>
+                <span class="text-body-secondary">-</span>
                 <input type="date" id="fin" class="form-control shadow-sm" style="width:auto; border-radius: 12px;">
             </div>
 
@@ -118,7 +118,7 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
             </div>
 
             <div class="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-light-subtle">
-                <div class="small text-muted fw-bold" id="pageIndicatorText" style="font-size: 0.7rem; letter-spacing: 0.05em;"></div>
+                <div class="small text-body-secondary fw-bold" id="pageIndicatorText" style="font-size: 0.7rem; letter-spacing: 0.05em;"></div>
                 <nav><ul class="pagination pagination-sm mb-0" id="paginationBootstrap"></ul></nav>
             </div>
         </div>
@@ -139,31 +139,31 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
         const body = $('#bodyMonitorViajes');
         const almacenId = $('#filtroAlmacen').val() || 0;
         try {
-            body.html('<tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary spinner-border-sm"></div><div class="mt-2 text-muted small">Consultando satélite...</div></td></tr>');
+            body.html('<tr><td colspan="5" class="text-center py-5"><div class="spinner-border text-primary spinner-border-sm"></div><div class="mt-2 text-body-secondary small">Consultando satélite...</div></td></tr>');
             const resp = await fetch(`/cfsistem/app/controllers/repartosController.php?action=listar_viajes_activos&almacen_id=${almacenId}`);
             const result = await resp.json();
             const data = result.data || result; 
 
             if (!data || data.length === 0) {
-                body.html('<tr><td colspan="5" class="text-center py-5 text-muted opacity-50"><i class="bi bi-geo-alt fs-2 d-block mb-2"></i> No hay unidades activas en ruta</td></tr>');
+                body.html('<tr><td colspan="5" class="text-center py-5 text-body-secondary opacity-50"><i class="bi bi-geo-alt fs-2 d-block mb-2"></i> No hay unidades activas en ruta</td></tr>');
                 return;
             }
             body.empty();
             data.forEach(v => {
-                const listaAyudantes = v.tripulantes ? `<div class="small text-muted fw-medium"><i class="bi bi-people-fill me-1 text-primary"></i> ${v.tripulantes}</div>` : `<span class="badge bg-light text-secondary fw-normal border" style="font-size:0.6rem;">Solo Conductor</span>`;
+                const listaAyudantes = v.tripulantes ? `<div class="small text-body-secondary fw-medium"><i class="bi bi-people-fill me-1 text-primary"></i> ${v.tripulantes}</div>` : `<span class="badge bg-light text-secondary fw-normal border" style="font-size:0.6rem;">Solo Conductor</span>`;
                 body.append(`
                     <tr class="animate__animated animate__fadeIn border-bottom" style="border-color: #f2f2f7 !important;">
                         <td class="ps-4">
                             <div class="fw-bold text-dark" style="font-size:0.95rem; letter-spacing:-0.01em;">${v.unidad}</div>
                             <div class="badge-folio mt-1"><i class="bi bi-hash"></i>${v.viaje_folio}</div>
-                            <div class="small text-muted mt-1" style="font-size:0.7rem;">📍 ${v.almacen_nombre || 'N/A'}</div>
+                            <div class="small text-body-secondary mt-1" style="font-size:0.7rem;">📍 ${v.almacen_nombre || 'N/A'}</div>
                         </td>
                         <td>
                             <div class="d-flex align-items-center">
                                 <div class="avatar-chofer me-3"><i class="bi bi-person-badge"></i></div>
                                 <div>
                                     <div class="fw-bold text-uppercase" style="font-size: 0.72rem; color:#1d1d1f; letter-spacing:0.02em;">${v.chofer}</div>
-                                    <small class="text-muted" style="font-size: 0.62rem;">Operador Logístico</small>
+                                    <small class="text-body-secondary" style="font-size: 0.62rem;">Operador Logístico</small>
                                 </div>
                             </div>
                         </td>
@@ -257,7 +257,7 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
                 renderizarFilas(response.data, false); 
             }
             else { 
-                $('#tbodyMonitor').html('<tr><td colspan="8" class="text-center text-muted py-5"><i class="bi bi-patch-check d-block fs-2 mb-2"></i>No hay movimientos pendientes.</td></tr>'); 
+                $('#tbodyMonitor').html('<tr><td colspan="8" class="text-center text-body-secondary py-5"><i class="bi bi-patch-check d-block fs-2 mb-2"></i>No hay movimientos pendientes.</td></tr>'); 
                 $('#btnCargarMas').hide();
             }
         }
@@ -274,7 +274,7 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
         const items = filteredData.slice(start, end);
 
         if (items.length === 0) {
-            body.html('<tr><td colspan="6" class="text-center py-5 text-muted">Bandeja de entrada vacía o sin resultados para el filtro seleccionado</td></tr>');
+            body.html('<tr><td colspan="6" class="text-center py-5 text-body-secondary">Bandeja de entrada vacía o sin resultados para el filtro seleccionado</td></tr>');
             return;
         }
 
@@ -315,16 +315,16 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
                 <tr class="animate__animated animate__fadeIn">
                     <td class="ps-4">
                         <div class="fw-bold text-dark" style="font-size: 0.9rem;">#${item.folio_venta || 'S/F'}</div>
-                        <div class="text-muted" style="font-size: 0.75rem;">${item.fecha_format || ''}</div>
+                        <div class="text-body-secondary" style="font-size: 0.75rem;">${item.fecha_format || ''}</div>
                     </td>
                     <td>
                         <div class="fw-bold text-dark" style="font-size: 0.9rem;">${item.cliente || 'S/F'}</div>
                     </td>
                     <td>
                         <div class="fw-bold text-dark" style="font-size: 0.85rem;">${item.producto}</div>
-                        <div class="text-muted small">${displayEntrega}</div>
+                        <div class="text-body-secondary small">${displayEntrega}</div>
                     </td>
-                    <td><span class="small text-muted fw-bold">📍 ${item.almacen_origen}</span></td>
+                    <td><span class="small text-body-secondary fw-bold">📍 ${item.almacen_origen}</span></td>
                     <td class="text-center">${badge}</td>
                     <td class="text-end pe-4">${btnAccion}</td>
                 </tr>

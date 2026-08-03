@@ -21,7 +21,7 @@ function abrirAjuste(id) {
                 <tr class="align-middle">
                     <td>
                         <div class="fw-bold">${item.nombre}</div>
-                        <small class="text-muted">SKU: ${item.sku}</small>
+                        <small class="text-body-secondary">SKU: ${item.sku}</small>
                     </td>
                     <td class="text-center">
                         <span class="badge bg-danger fs-6">${item.cantidad_faltante}</span>
@@ -54,7 +54,7 @@ function abrirAjuste(id) {
                 <tr>
                     <td colspan="4" class="text-center p-4">
                         <i class="bi bi-check-circle-fill text-success fs-2"></i>
-                        <p class="mb-0 mt-2 text-muted">No se encontraron productos con faltantes para esta compra.</p>
+                        <p class="mb-0 mt-2 text-body-secondary">No se encontraron productos con faltantes para esta compra.</p>
                     </td>
                 </tr>`;
         }

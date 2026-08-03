@@ -4,7 +4,7 @@
             <div class="modal-header border-0 bg-white p-4" style="border-radius: 20px 20px 0 0;">
                 <div>
                     <h5 class="modal-title fw-bold text-dark mb-0">Evidencias del Reparto</h5>
-                    <small id="txtFolioRuta" class="text-muted fw-bold"></small>
+                    <small id="txtFolioRuta" class="text-body-secondary fw-bold"></small>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -69,7 +69,7 @@ function verEvidenciasPorFolio(viajeFolio) {
     contenedor.html(`
         <div class="text-center py-5">
             <div class="spinner-border text-primary mb-3" role="status"></div>
-            <p class="text-muted small">Obteniendo reportes de entrega...</p>
+            <p class="text-body-secondary small">Obteniendo reportes de entrega...</p>
         </div>
     `);
 
@@ -109,7 +109,7 @@ const cantidadIni=entrega.totalCantidad/entrega.fc;
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div>
                                 <h6 class="fw-bold mb-0" style="color: #1d1d1f;">${entrega.cliente}</h6>
-                                <p class="text-muted mb-0" style="font-size: 0.75rem;">
+                                <p class="text-body-secondary mb-0" style="font-size: 0.75rem;">
                                     <i class="bi bi-geo-alt-fill text-danger"></i> ${entrega.direccion_entrega}
                                 </p>
                                  <h6 class="fw-bold mb-0" style="color: #1d1d1f;">${entrega.productos}</h6>
@@ -144,20 +144,20 @@ const cantidadIni=entrega.totalCantidad/entrega.fc;
 
                         <div class="my-3 p-2 rounded-3 bg-light" style="border-left: 3px solid #007aff;">
                             <p class="mb-0 text-dark italic" style="font-size: 0.8rem;">
-                                <i class="bi bi-chat-left-text me-1 text-muted"></i> "${entrega.comentario || 'Sin comentarios'}"
+                                <i class="bi bi-chat-left-text me-1 text-body-secondary"></i> "${entrega.comentario || 'Sin comentarios'}"
                             </p>
                         </div>
 
                         <div class="row g-2">
                             ${entrega.foto_registrada? `
                                 <div class="col-6">
-                                    <span class="d-block mb-1 text-muted fw-bold" style="font-size: 0.6rem; text-transform: uppercase;">Material</span>
+                                    <span class="d-block mb-1 text-body-secondary fw-bold" style="font-size: 0.6rem; text-transform: uppercase;">Material</span>
                                     <img src="${entrega.foto_registrada}" class="img-fluid rounded-3 shadow-sm border" style="height: 100px; width: 100%; object-fit: cover; cursor: pointer;" onclick="window.open(this.src, '_blank')">
                                 </div>` : ''}
                             
                             ${entrega.nota_registrada ? `
                                 <div class="col-6">
-                                    <span class="d-block mb-1 text-muted fw-bold" style="font-size: 0.6rem; text-transform: uppercase;">Nota</span>
+                                    <span class="d-block mb-1 text-body-secondary fw-bold" style="font-size: 0.6rem; text-transform: uppercase;">Nota</span>
                                     <img src="${entrega.nota_registrada}" class="img-fluid rounded-3 shadow-sm border" style="height: 100px; width: 100%; object-fit: cover; cursor: pointer;" onclick="window.open(this.src, '_blank')">
                                 </div>` : ''}
                         </div>
@@ -174,8 +174,8 @@ const cantidadIni=entrega.totalCantidad/entrega.fc;
             } else {
                 contenedor.html(`
                     <div class="text-center py-5">
-                        <i class="bi bi-camera-video-off display-4 text-muted mb-3"></i>
-                        <p class="text-muted">No se encontraron evidencias cargadas para esta ruta.</p>
+                        <i class="bi bi-camera-video-off display-4 text-body-secondary mb-3"></i>
+                        <p class="text-body-secondary">No se encontraron evidencias cargadas para esta ruta.</p>
                     </div>
                 `);
                 

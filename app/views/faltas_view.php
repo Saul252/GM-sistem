@@ -34,7 +34,7 @@ $paginaActual = $paginaActual ?? 'prestamos';
     .card-ui {
         border: none;
         border-radius: 18px;
-        background: rgba(255, 255, 255, 0.9);
+       
         backdrop-filter: blur(10px);
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
     }
@@ -76,7 +76,7 @@ $paginaActual = $paginaActual ?? 'prestamos';
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h2 class="fw-bold m-0">Faltas y retardos de Trabajadores</h2>
-                <small class="text-muted" id="status-almacen">Mostrando datos de:
+                <small class="text-body-secondary" id="status-almacen">Mostrando datos de:
                     <?= $almacen_usuario == 0 ? 'Todas las sucursales' : 'Sucursal Actual' ?></small>
             </div>
 
@@ -95,9 +95,9 @@ $paginaActual = $paginaActual ?? 'prestamos';
         <div class="card card-ui p-4">
             <div class="row mb-4 g-3">
                 <div class="col-md-5">
-                    <div class="input-group bg-light rounded-3 p-1">
-                        <span class="input-group-text bg-transparent border-0"><i class="bi bi-search"></i></span>
-                        <input type="text" id="busqueda" class="form-control border-0 bg-transparent"
+                    <div class="input-group  rounded-3 p-1">
+                        <span class="input-group-text bg-transparent "><i class="bi bi-search"></i></span>
+                        <input type="text" id="busqueda" class="form-control  bg-transparent"
                             placeholder="Buscar trabajador...">
                     </div>
                 </div>
@@ -105,8 +105,8 @@ $paginaActual = $paginaActual ?? 'prestamos';
 
                     <!-- 📅 PERIODO -->
                     <div class="col-md-2">
-                        <label class="form-label text-muted small">Periodo</label>
-                        <select id="periodo" class="form-select border-0 bg-light rounded-3">
+                        <label class="form-label text-body-secondary small">Periodo</label>
+                        <select id="periodo" class="form-select   rounded-3">
                             <option value="hoy">Hoy</option>
                             <option value="ayer">Ayer</option>
                             <option value="semana">Últimos 7 días</option>
@@ -117,21 +117,21 @@ $paginaActual = $paginaActual ?? 'prestamos';
 
                     <!-- 📆 FECHA INICIO -->
                     <div class="col-md-2">
-                        <label class="form-label text-muted small">Desde</label>
-                        <input type="date" id="f_inicio" class="form-control border-0 bg-light rounded-3">
+                        <label class="form-label text-body-secondary small">Desde</label>
+                        <input type="date" id="f_inicio" class="form-control   rounded-3">
                     </div>
 
                     <!-- 📆 FECHA FIN -->
                     <div class="col-md-2">
-                        <label class="form-label text-muted small">Hasta</label>
-                        <input type="date" id="f_fin" class="form-control border-0 bg-light rounded-3">
+                        <label class="form-label text-body-secondary small">Hasta</label>
+                        <input type="date" id="f_fin" class="form-control   rounded-3">
                     </div>
 
                     <!-- 🏢 SUCURSAL (solo si aplica) -->
                     <?php if ($almacen_usuario == 0): ?>
                     <div class="col-md-3">
-                        <label class="form-label text-muted small">Sucursal</label>
-                        <select id="filtroSucursal" class="form-select border-0 bg-light rounded-3">
+                        <label class="form-label text-body-secondary small">Sucursal</label>
+                        <select id="filtroSucursal" class="form-select   rounded-3">
                             <option value="0">🌐 Todas</option>
                             <?php foreach ($almacenes as $a): ?>
                             <option value="<?= $a['id'] ?>"><?= $a['nombre'] ?></option>
@@ -186,7 +186,7 @@ $paginaActual = $paginaActual ?? 'prestamos';
                         <?= $p['tipo'] ?>
                     </small>
                 </td> <td>
-                    <small class="text-muted">
+                    <small class="text-body-secondary">
                         <?= $p['descripcion'] ?>
                     </small>
                 </td>
@@ -224,7 +224,7 @@ $paginaActual = $paginaActual ?? 'prestamos';
 
         <div class="modal fade" id="modalPrestamo" tabindex="-1">
             <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content border-0 shadow-lg" style="border-radius: 22px; overflow: hidden;">
+                <div class="modal-content  shadow-lg" style="border-radius: 22px; overflow: hidden;">
 
                     <!-- HEADER -->
                     <div class="modal-header bg-dark text-white py-3">
@@ -251,7 +251,7 @@ $paginaActual = $paginaActual ?? 'prestamos';
 
                                 <!-- TRABAJADOR -->
                                 <div class="col-md-6">
-                                    <label class="form-label text-muted small">Trabajador</label>
+                                    <label class="form-label text-body-secondary small">Trabajador</label>
                                     <select name="trabajador_id" id="modal_trabajador_id"
                                         class="form-select form-select-lg rounded-3" required>
                                         <option value="0">Seleccione trabajador</option>
@@ -265,7 +265,7 @@ $paginaActual = $paginaActual ?? 'prestamos';
 
                                 <!-- WIDGET DEUDA -->
                                   <div class="col-md-6">
-                                    <label class="form-label text-muted small">Tipo </label>
+                                    <label class="form-label text-body-secondary small">Tipo </label>
                                     <select name="tipo" id="tipo"
                                         class="form-select form-select-lg rounded-3" required>
                                         <option value="falta">Seleccione Tipo</option>
@@ -283,7 +283,7 @@ $paginaActual = $paginaActual ?? 'prestamos';
 
                                 <!-- MONTO -->
                                 <div class="col-md-6">
-                                    <label class="form-label text-muted small">Monto </label>
+                                    <label class="form-label text-body-secondary small">Monto </label>
                                     <div class="input-group input-group-lg">
                                         <span class="input-group-text">$</span>
                                         <input type="number" step="0.01" name="monto" class="form-control"
@@ -291,14 +291,14 @@ $paginaActual = $paginaActual ?? 'prestamos';
                                     </div>
                                 </div>
 <div class="col-md-2">
-                        <label class="form-label text-muted small">Hasta</label>
-                        <input type="date" name="fecha" id="fecha" class="form-control border-0 bg-light rounded-3">
+                        <label class="form-label text-body-secondary small">Hasta</label>
+                        <input type="date" name="fecha" id="fecha" class="form-control   rounded-3">
                     </div>
                                 <!-- MÉTODO -->
                                
                                 <!-- DESCRIPCIÓN -->
                                 <div class="col-12">
-                                    <label class="form-label text-muted small">Motivo / Descripción</label>
+                                    <label class="form-label text-body-secondary small">Motivo / Descripción</label>
                                     <textarea name="descripcion" class="form-control text-uppercase rounded-3" rows="3"
                                         placeholder="Retardo, Falta, etc"></textarea>
                                 </div>
@@ -307,7 +307,7 @@ $paginaActual = $paginaActual ?? 'prestamos';
                         </div>
 
                         <!-- FOOTER -->
-                        <div class="modal-footer bg-light border-0 px-4 py-3">
+                        <div class="modal-footer   px-4 py-3">
                             <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">
                                 Cancelar
                             </button>
@@ -325,7 +325,7 @@ $paginaActual = $paginaActual ?? 'prestamos';
 
         <div class="modal fade" id="modalMovimientoDinero" tabindex="-1">
             <div class="modal-dialog modal-lg modal-dialog-centered">
-                <div class="modal-content border-0" style="border-radius:20px;">
+                <div class="modal-content " style="border-radius:20px;">
                     <form id="formMovimientoDinero">
                         <div class="modal-header bg-dark text-white">
                             <h5 class="modal-title">
@@ -340,14 +340,14 @@ $paginaActual = $paginaActual ?? 'prestamos';
                                 <div class="col-md-6">
                                     <label class="form-label">Movimiento</label>
                                     <input type="hidden" name="prestamo_id" id="mov_prestamo_id">
-                                    <div class="form-control bg-light">
+                                    <div class="form-control ">
                                         ID: <span id="mov_prestamo_id_text"></span>
                                     </div>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label">Saldo</label>
-                                    <div class="form-control bg-light">
+                                    <div class="form-control ">
                                         Deuda: <span id="mov_saldo_text"></span>
                                     </div>
                                 </div>
@@ -419,9 +419,9 @@ $paginaActual = $paginaActual ?? 'prestamos';
     </main>
     <div class="modal fade" id="modalPrestamoDetalleUnique" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-content  shadow rounded-4">
 
-                <div class="modal-header border-0">
+                <div class="modal-header ">
                     <h5 class="modal-title fw-bold">
                         <i class="bi bi-cash-coin me-2"></i>Detalle del Préstamo
                     </h5>
@@ -433,29 +433,29 @@ $paginaActual = $paginaActual ?? 'prestamos';
                     <div class="row g-3 mb-3">
 
                         <div class="col-md-6">
-                            <small class="text-muted">Estado</small>
+                            <small class="text-body-secondary">Estado</small>
                             <div id="mp_estado_u"></div>
                         </div>
 
                         <div class="col-md-4">
-                            <small class="text-muted">Monto</small>
+                            <small class="text-body-secondary">Monto</small>
                             <div id="mp_monto_u" class="fw-bold"></div>
                         </div>
 
                         <div class="col-md-4">
-                            <small class="text-muted">Abonado</small>
+                            <small class="text-body-secondary">Abonado</small>
                             <div id="mp_abonado_u" class="fw-bold text-primary"></div>
                         </div>
 
                         <div class="col-md-4">
-                            <small class="text-muted">Saldo</small>
+                            <small class="text-body-secondary">Saldo</small>
                             <div id="mp_saldo_u" class="fw-bold text-danger"></div>
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <small class="text-muted">Descripción</small>
-                        <div id="mp_desc_u" class="p-2 bg-light rounded-3 small"></div>
+                        <small class="text-body-secondary">Descripción</small>
+                        <div id="mp_desc_u" class="p-2  rounded-3 small"></div>
                     </div>
 
                     <div class="table-responsive">
@@ -658,7 +658,7 @@ $paginaActual = $paginaActual ?? 'prestamos';
                     </span>`,
                             ` <small class="fw-semibold">
                        ${p.tipo}
-                    </small>`,` <small class="text-muted">
+                    </small>`,` <small class="text-body-secondary">
                        ${p.descripcion}
                     </small>`,
                             `  <span class="text-end badge bg-success fs-6 px-3 py-2">
@@ -838,7 +838,7 @@ $paginaActual = $paginaActual ?? 'prestamos';
     //                 `;
     //                 });
     //             } else {
-    //                 html = `<tr><td colspan="5" class="text-center text-muted">Sin abonos</td></tr>`;
+    //                 html = `<tr><td colspan="5" class="text-center text-body-secondary">Sin abonos</td></tr>`;
     //             }
 
     //             $('#tablaAbonosPrestamoUnique').html(html);

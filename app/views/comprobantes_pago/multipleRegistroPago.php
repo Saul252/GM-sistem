@@ -76,7 +76,7 @@
                
         <div class="col-4">
             <div class="card card-total text-center border-0 bg-light p-2">
-                <span class="text-muted small fw-medium">Monto Inicial</span>
+                <span class="text-body-secondary small fw-medium">Monto Inicial</span>
                 <span class="fs-5 fw-bold text-dark">$<span id="txt-monto-inicial">0.00</span></span>
             </div>
         </div>
@@ -265,7 +265,7 @@ function renderizarListas() {
     contenedorDisponibles.innerHTML = '';
     
     if (ventasDisponibles.length === 0) {
-        contenedorDisponibles.innerHTML = `<div class="p-3 text-center text-muted small">No hay más ventas pendientes disponibles.</div>`;
+        contenedorDisponibles.innerHTML = `<div class="p-3 text-center text-body-secondary small">No hay más ventas pendientes disponibles.</div>`;
     } else {
         ventasDisponibles.forEach(v => {
             const saldo = parseFloat(v.total) - parseFloat(v.pagado);
@@ -275,7 +275,7 @@ function renderizarListas() {
                     <td class="text-secondary">${v.cliente}</td>
                     <td>
                         <span class="text-danger fw-medium">$${saldo.toFixed(2)}</span>
-                        <span class="text-muted small d-block" style="font-size: 11px;">Total: $${v.total}</span>
+                        <span class="text-body-secondary small d-block" style="font-size: 11px;">Total: $${v.total}</span>
                     </td>
                     <td class="text-center">
                         <button type="button" class="btn btn-primary btn-sm rounded-2 px-3 fw-medium" style="font-size: 12px;" onclick="aplicarVenta('${v.id}')">
@@ -292,7 +292,7 @@ function renderizarListas() {
     contenedorRenglones.innerHTML = '';
 
     if (ventasAplicadas.length === 0) {
-        contenedorRenglones.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">Ninguna venta seleccionada para abono.</td></tr>`;
+        contenedorRenglones.innerHTML = `<tr><td colspan="5" class="text-center text-body-secondary py-4">Ninguna venta seleccionada para abono.</td></tr>`;
     } else {
         ventasAplicadas.forEach(v => {
             contenedorRenglones.innerHTML += `

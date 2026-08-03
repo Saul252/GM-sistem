@@ -66,17 +66,17 @@
                                 </h6>
                                 <div class="row g-2">
                                     <div class="col-6">
-                                        <label class="small text-muted">Clave Prod.</label>
+                                        <label class="small text-body-secondary">Clave Prod.</label>
                                         <input type="text" name="fiscal_clave_prod" id="edit_fiscal_clave_prod"
                                             class="form-control form-control-sm  shadow-sm">
                                     </div>
                                     <div class="col-6">
-                                        <label class="small text-muted">Clave Unidad</label>
+                                        <label class="small text-body-secondary">Clave Unidad</label>
                                         <input type="text" name="fiscal_clave_unidad" id="edit_fiscal_clave_unidad"
                                             class="form-control form-control-sm  shadow-sm">
                                     </div>
                                     <div class="col-12 mt-2">
-                                        <label class="small text-muted">IVA (%)</label>
+                                        <label class="small text-body-secondary">IVA (%)</label>
                                         <input type="number" step="0.01" name="impuesto_iva" id="edit_impuesto_iva"
                                             class="form-control form-control-sm  shadow-sm">
                                     </div>
@@ -108,7 +108,7 @@
                             <div class="row g-3 mb-4">
                                 <div class="col-md-4">
                                     <div class="card  shadow-sm p-3 rounded-4">
-                                        <label class="small fw-bold text-muted mb-2">P. Publico</label>
+                                        <label class="small fw-bold text-body-secondary mb-2">P. Publico</label>
                                         <div class="input-group">
                                             <span
                                                 class="input-group-text bg-transparent  text-success fw-bold">$</span>
@@ -119,7 +119,7 @@
                                 </div>
                                 <div class="col-md-4">
                                     <div class="card  shadow-sm p-3 rounded-4">
-                                        <label class="small fw-bold text-muted mb-2">P. Constructora</label>
+                                        <label class="small fw-bold text-body-secondary mb-2">P. Constructora</label>
                                         <div class="input-group">
                                             <span
                                                 class="input-group-text bg-transparent  text-success fw-bold">$</span>
@@ -130,7 +130,7 @@
                                 </div>
                                 <div class="col-md-4">
                                     <div class="card  shadow-sm p-3 rounded-4">
-                                        <label class="small fw-bold text-muted mb-2">P. Distribuidor</label>
+                                        <label class="small fw-bold text-body-secondary mb-2">P. Distribuidor</label>
                                         <div class="input-group">
                                             <span
                                                 class="input-group-text bg-transparent  text-success fw-bold">$</span>
@@ -190,7 +190,7 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <div class="p-3 rounded-4 border-start border-4 border-success border border-subtle shadow-sm">
-                                        <label class="small fw-bold text-muted">Stock Actual</label>
+                                        <label class="small fw-bold text-body-secondary">Stock Actual</label>
                                         <div class="d-flex align-items-center mt-1">
                                             <i class="bi bi-box-fill text-success me-2"></i>
                                             <input type="number" step="0.01" name="stock" id="edit_stock"
@@ -200,7 +200,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="p-3 rounded-4 border-start border-4 border-danger border border-subtle shadow-sm">
-                                        <label class="small fw-bold text-muted">Mínimo Permitido</label>
+                                        <label class="small fw-bold text-body-secondary">Mínimo Permitido</label>
                                         <div class="d-flex align-items-center mt-1">
                                             <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
                                             <input type="number" step="0.01" name="stock_minimo" id="edit_s_min"
@@ -215,7 +215,7 @@
  
 <!-- Cambiamos id por class -->
 <button type="button" 
-        class="btn-ver-medidas btn btn-outline-dark rounded-pill px-3">
+        class="btn-ver-medidas btn btn-outline-success rounded-pill px-3">
     <i class="bi bi-list-ul me-2"></i>
     Ver Medidas
 </button>

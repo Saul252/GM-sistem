@@ -136,7 +136,7 @@
                 </h6>
                 
                  <!-- 🔥 NUEVO -->
-<span class="small text-muted">Fecha de Inicio:</span>
+<span class="small text-body-secondary">Fecha de Inicio:</span>
 <input
     type="date"
     id="fecha_inicio_monitor"
@@ -146,7 +146,7 @@
     onchange="cargarMonitor(1)"
 >
 
-<span class="small text-muted">Fecha de Fin:</span>
+<span class="small text-body-secondary">Fecha de Fin:</span>
 <input
     type="date"
     id="fecha_fin_monitor"
@@ -160,7 +160,7 @@
                 
                 <?php if ($es_supervisor): ?>
                 <div class="d-flex align-items-center gap-2">
-                    <span class="small text-muted">Almacén:</span>
+                    <span class="small text-body-secondary">Almacén:</span>
                     <select id="filtro_almacen_monitor" class="form-select form-select-sm border rounded-3" style="width: auto;" onchange="cargarMonitor(1)">
               
 <?php if ($es_admin): ?><option value="0">Todos</option>  <?php endif; ?>
@@ -196,7 +196,7 @@
             
             <div class="card-footer bg-white py-3 border-top-0">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                    <div class="text-muted small" id="infoConteo">
+                    <div class="text-body-secondary small" id="infoConteo">
                         Cargando registros...
                     </div>
                     <nav aria-label="Navegación">
@@ -290,7 +290,7 @@ $(document).ready(function() {
 
             } else { 
                 $('#tbodyMonitor').html(
-                    '<tr><td colspan="8" class="text-center text-muted py-5">No se encontraron entregas.</td></tr>'
+                    '<tr><td colspan="8" class="text-center text-body-secondary py-5">No se encontraron entregas.</td></tr>'
                 ); 
 
                 $('#paginacionMonitor').empty();
@@ -374,7 +374,7 @@ function renderizarFilas(data) {
                 <td><div class="text-truncate" style="max-width:150px;">${row.producto_nombre}</div></td>
                 <td class="text-center"><b>${row.total_bultos || row.lectura_fisica}</b></td>
                 <td><small class="text-uppercase">${row.responsable || '---'}</small></td>
-                <td class="text-center text-muted"><small>${row.fecha_evento || '---'}</small></td>
+                <td class="text-center text-body-secondary"><small>${row.fecha_evento || '---'}</small></td>
                 <td class="text-end pe-4">
                     <button class="btn btn-sm btn-dark rounded-pill px-3 fw-bold" 
                             onclick="verEvidenciasPorFolio('${folio}')" 
@@ -402,7 +402,7 @@ window.cargarMonitorViajes = async function() {
         );
 
         if (!filtrados || filtrados.length === 0) {
-            body.html('<tr><td colspan="5" class="text-center py-4 text-muted small">No hay unidades activas en este momento.</td></tr>');
+            body.html('<tr><td colspan="5" class="text-center py-4 text-body-secondary small">No hay unidades activas en este momento.</td></tr>');
             return;
         }
 
@@ -415,7 +415,7 @@ window.cargarMonitorViajes = async function() {
                         <span class="badge bg-dark-subtle text-dark" style="font-size:0.65rem">Folio: #${v.viaje_folio}</span>
                     </td>
                     <td><div class="small fw-bold text-uppercase"><i class="bi bi-person-circle me-1 text-primary"></i> ${v.chofer}</div></td>
-                    <td><small class="text-muted">${v.tripulantes || 'Solo Conductor'}</small></td>
+                    <td><small class="text-body-secondary">${v.tripulantes || 'Solo Conductor'}</small></td>
                     <td><div class="carga-scroll" style="background: #f5f5f7; border-radius: 8px; padding: 6px; font-size: 0.75rem; max-height: 60px; overflow-y: auto;">${v.detalles_carga}</div></td>
                     <td class="text-end pe-4">
                       <button class="btn btn-sm btn-light border-0" onclick="abrirModalEdicionViaje('${v.viaje_folio}', ${v.vehiculo_id}, ${v.chofer_id})" style="border-radius: 10px; color: #007aff; background: #f2f2f7;"><i class="bi bi-pencil-square"></i></button>

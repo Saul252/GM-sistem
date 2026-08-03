@@ -208,7 +208,7 @@ $fechaFin    = $_GET['fecha_fin'] ?? date('Y-m-t');
                 <tr>
                     <td class="ps-3">
                      
-                        <small class="text-muted"><?= date('d/m/Y', strtotime($v['fecha'])) ?></small>
+                        <small class="text-body-secondary"><?= date('d/m/Y', strtotime($v['fecha'])) ?></small>
                     </td>
 
                     <td>
@@ -689,7 +689,7 @@ ${filas}
          <div class="ticket-header d-flex justify-content-between align-items-center">
                 <div>
                     <h4 class="fw-bold m-0">CF SYSTEM</h4>
-                    <small class="text-muted">Reporte de Operación de Venta</small>
+                    <small class="text-body-secondary">Reporte de Operación de Venta</small>
                 </div>
                 <div class="text-end">
                     <h5 class="text-primary fw-bold m-0">Folio: ${folio}</h5>
@@ -706,13 +706,13 @@ ${filas}
                         <div class="row g-3">
                 <div class="col-6">
                     <div class="meta-box">
-                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:0.7rem;">Cliente</small>
+                        <small class="text-body-secondary d-block text-uppercase fw-semibold" style="font-size:0.7rem;">Cliente</small>
                         <span class="fw-bold">${cliente}</span>
                     </div>
                 </div>
                 <div class="col-6">
                     <div class="meta-box">
-                        <small class="text-muted d-block text-uppercase fw-semibold" style="font-size:0.7rem;">Almacén Origen</small>
+                        <small class="text-body-secondary d-block text-uppercase fw-semibold" style="font-size:0.7rem;">Almacén Origen</small>
                         <span class="fw-bold">${almacen}</span>
                     </div>
                 </div>
@@ -736,7 +736,7 @@ ${filas}
 
                             <div class="col-12">
                                 <div class="card border-0 shadow-sm">
-                                    <div class="card-header bg-white fw-bold small text-uppercase text-muted">
+                                    <div class="card-header bg-white fw-bold small text-uppercase text-body-secondary">
                                         Historial de Pagos
                                     </div>
                                     <div class="table-responsive" style="max-height: 180px;">
@@ -758,7 +758,7 @@ ${filas}
                             <div class="col-12  d-none">
                            
                                 <div class="card border-0 shadow-sm">
-                                    <div class="card-header bg-white fw-bold small text-uppercase text-muted">
+                                    <div class="card-header bg-white fw-bold small text-uppercase text-body-secondary">
                                         Historial de Entregas
                                     </div>
                                     <div class="table-responsive" style="max-height: 180px;">
@@ -783,11 +783,11 @@ ${filas}
                 <div class="col-5">
                     <table class="table table-sm table-borderless border-top pt-2">
                         <tr>
-                            <td class="text-end text-muted">Total Venta:</td>
+                            <td class="text-end text-body-secondary">Total Venta:</td>
                             <td class="text-end fw-bold">${total}</td>
                         </tr>
                         <tr>
-                            <td class="text-end text-muted">Saldo Pendiente:</td>
+                            <td class="text-end text-body-secondary">Saldo Pendiente:</td>
                             <td class="text-end fw-bold text-danger">${saldo}</td>
                         </tr>
                     </table>
