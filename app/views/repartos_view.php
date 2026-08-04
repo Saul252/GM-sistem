@@ -117,7 +117,7 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
                 </table>
             </div>
 
-            <div class="d-flex justify-content-between align-items-center px-4 py-3 border-top bg-light-subtle">
+            <div class="d-flex justify-content-between align-items-center px-4 py-3 border-top -subtle">
                 <div class="small text-body-secondary fw-bold" id="pageIndicatorText" style="font-size: 0.7rem; letter-spacing: 0.05em;"></div>
                 <nav><ul class="pagination pagination-sm mb-0" id="paginationBootstrap"></ul></nav>
             </div>
@@ -154,16 +154,16 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
                 body.append(`
                     <tr class="animate__animated animate__fadeIn border-bottom" style="border-color: #f2f2f7 !important;">
                         <td class="ps-4">
-                            <div class="fw-bold text-dark" style="font-size:0.95rem; letter-spacing:-0.01em;">${v.unidad}</div>
+                            <div class="fw-bold " style="font-size:0.95rem; letter-spacing:-0.01em;">${v.unidad}</div>
                             <div class="badge-folio mt-1"><i class="bi bi-hash"></i>${v.viaje_folio}</div>
-                            <div class="small text-body-secondary mt-1" style="font-size:0.7rem;">📍 ${v.almacen_nombre || 'N/A'}</div>
+                            <div class="small  mt-1" style="font-size:0.7rem;">📍 ${v.almacen_nombre || 'N/A'}</div>
                         </td>
                         <td>
                             <div class="d-flex align-items-center">
                                 <div class="avatar-chofer me-3"><i class="bi bi-person-badge"></i></div>
                                 <div>
-                                    <div class="fw-bold text-uppercase" style="font-size: 0.72rem; color:#1d1d1f; letter-spacing:0.02em;">${v.chofer}</div>
-                                    <small class="text-body-secondary" style="font-size: 0.62rem;">Operador Logístico</small>
+                                    <div class="fw-bold text-uppercase" style="font-size: 0.72rem;  letter-spacing:0.02em;">${v.chofer}</div>
+                                    <small class="" style="font-size: 0.62rem;">Operador Logístico</small>
                                 </div>
                             </div>
                         </td>
@@ -314,14 +314,14 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
             body.append(`
                 <tr class="animate__animated animate__fadeIn">
                     <td class="ps-4">
-                        <div class="fw-bold text-dark" style="font-size: 0.9rem;">#${item.folio_venta || 'S/F'}</div>
+                        <div class="fw-bold " style="font-size: 0.9rem;">#${item.folio_venta || 'S/F'}</div>
                         <div class="text-body-secondary" style="font-size: 0.75rem;">${item.fecha_format || ''}</div>
                     </td>
                     <td>
-                        <div class="fw-bold text-dark" style="font-size: 0.9rem;">${item.cliente || 'S/F'}</div>
+                        <div class="fw-bold " style="font-size: 0.9rem;">${item.cliente || 'S/F'}</div>
                     </td>
                     <td>
-                        <div class="fw-bold text-dark" style="font-size: 0.85rem;">${item.producto}</div>
+                        <div class="fw-bold " style="font-size: 0.85rem;">${item.producto}</div>
                         <div class="text-body-secondary small">${displayEntrega}</div>
                     </td>
                     <td><span class="small text-body-secondary fw-bold">📍 ${item.almacen_origen}</span></td>

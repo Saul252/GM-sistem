@@ -230,6 +230,11 @@ $paginaActual = 'trabajadores';
                                     required>
                             </div>
                             <div class="col-md-12 center">
+                                <label class="form-label fw-bold small">fecha_ingreso</label>
+                                <input type="date" name="fecha_ingreso" id="t_fecha_ingreso" class="form-control" maxlength="10"
+                                    required>
+                            </div>
+                            <div class="col-md-12 center">
                                 <label class="form-label fw-bold small">Complemento</label>
                                 <input type="money" name="complemento" id="t_complemento" class="form-control"
                                     maxlength="10" required>
@@ -490,7 +495,7 @@ $paginaActual = 'trabajadores';
 
                     // Convertir objeto entero a JSON escapando comillas para evitar errores JS en línea
                     const tJson = JSON.stringify(t).replace(/'/g, "&#39;");
-
+let total=t.total_nomina+t.total_vacaciones;
                     html += `
                     <tr>
                         <td class="fw-semibold">${t.nombre}</td>
@@ -510,8 +515,9 @@ $paginaActual = 'trabajadores';
                                 <div><span class="text-success">Viajes:</span> $${parseFloat(t.total_viajes || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</div>
                                <div><span class="text-success">Bonos:</span> $${parseFloat(t.total_bonos|| 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</div>
                                 <div><span class="text-warning">Abonos:</span> $${parseFloat(t.total_abonos || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</div>
+                               <div><span class="text-success">Vacaciones:</span> $${parseFloat(t.total_vacaciones || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</div>
                                 <hr class="my-1">
-                                <div class="fw-bold fs-6 text-primary">$${parseFloat(t.total_nomina || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</div>
+                                <div class="fw-bold fs-6 text-primary">$${parseFloat(total || 0).toLocaleString('es-MX', {minimumFractionDigits: 2})}</div>
                             </div>
                         </td>
                         <td><span class="badge rounded-pill ${claseEstado}">${t.estado ? t.estado.toUpperCase() : ''}</span></td>
@@ -570,6 +576,7 @@ $paginaActual = 'trabajadores';
         $('#t_estado').val(t.estado);
         $('#t_salario').val((t.salario - t.complemento_pago));
         $('#t_complemento').val(t.complemento_pago);
+         $('#fecha_ingreso').val(t.fecha_ingreso);
         if ($('#t_almacen_id').is('select')) {
             $('#t_almacen_id').val(t.almacen_id);
         }
@@ -689,237 +696,242 @@ $paginaActual = 'trabajadores';
         const d = String(fecha.getDate()).padStart(2, '0');
         return `${y}-${m}-${d}`;
     }
-    async function imprimirContenidoModal() {
-        // 1. Obtener la semana seleccionada
-        const valorSemana = $('#semana').val();
-        let queryParams = '';
+   async function imprimirContenidoModal() {
+    // 1. Obtener la semana seleccionada
+    const valorSemana = $('#semana').val();
+    let queryParams = '';
 
-        if (valorSemana) {
-            const [anio, semana] = valorSemana.split('-W');
-            const lunes = obtenerLunesISO(parseInt(anio), parseInt(semana));
-            const domingo = new Date(lunes);
-            domingo.setDate(lunes.getDate() + 6);
+    if (valorSemana) {
+        const [anio, semana] = valorSemana.split('-W');
+        const lunes = obtenerLunesISO(parseInt(anio), parseInt(semana));
+        const domingo = new Date(lunes);
+        domingo.setDate(lunes.getDate() + 6);
 
-            const inicio = formatearFecha(lunes);
-            const fin = formatearFecha(domingo);
-            queryParams = `&fecha_inicio=${inicio}&fecha_fin=${fin}`;
-        }
-
-        try {
-            // 2. Obtener los datos de la nómina
-            const res = await fetch(`/cfsistem/app/controllers/nominaController.php?action=listar${queryParams}`);
-            const response = await res.json();
-
-            if (!response.success) {
-                throw new Error(response.message || 'No se pudieron obtener los datos de la nómina.');
-            }
-
-            const data = response.data || [];
-
-            if (data.length === 0) {
-                Swal.fire('Atención', 'No hay registros de nómina para imprimir en esta semana.', 'info');
-                return;
-            }
-
-            // 3. Generar las tarjetas/cheques individuales recortables
-            let chequesHTML = '';
-
-            data.forEach((t, index) => {
-
-                const prestamos = parseFloat(t.total_prestamos_pendientes || 0);
-                const faltas = parseFloat(t.total_faltas || 0);
-                const viajes = parseFloat(t.total_viajes || 0);
-                const abonos = parseFloat(t.total_abonos || 0);
-                const bonos = parseFloat(t.total_bonos || 0);
-                const salario = parseFloat(t.salario || 0) + bonos;
-                const totalNomina = parseFloat(t.total_nomina || 0);
-
-                chequesHTML += `
-                <div class="cheque-contenedor">
-                    <!-- Marca de Agua Individual -->
-                    <img src="/cfsistem/public/assets/logo.ico" class="watermark-cheque" alt="Logo">
-
-                    <!-- Encabezado del Cheque -->
-                    <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-2 border-primary">
-                        <div class="d-flex align-items-center">
-                            <img src="/cfsistem/public/assets/logo.ico" width="38" height="38" class="me-2" alt="Logo">
-                            <div>
-                                <h6 class="fw-bold m-0 text-uppercase">CF SYSTEM - RECIBO DE NÓMINA</h6>
-                                <small class="text-body-secondary" style="font-size: 0.7rem;">COMPROBANTE DE PAGO DE SALARIO</small>
-                            </div>
-                        </div>
-                        <div class="text-end">
-                            <span class="badge bg-dark text-white font-monospace" style="font-size: 0.75rem;">SEMANA: ${valorSemana || 'N/A'}</span>
-                            <small class="d-block text-body-secondary" style="font-size: 0.65rem;">Emisión: ${new Date().toLocaleDateString('es-MX')}</small>
-                        </div>
-                    </div>
-
-                    <!-- Datos del Trabajador y Salario Total -->
-                    <div class="row g-2 mb-2 bg-light p-2 rounded align-items-center border">
-                        <div class="col-7">
-                            <div class="text-uppercase fw-bold text-dark" style="font-size: 0.95rem;">${t.nombre}</div>
-                            <small class="text-body-secondary d-block" style="font-size: 0.75rem;">
-                                <strong>Puesto:</strong> ${t.rol.toUpperCase()} | <strong>Almacén:</strong> ${t.nombreAlmacen || 'N/A'}
-                            </small>
-                        </div>
-                        <div class="col-5 text-end">
-                            <small class="text-uppercase text-body-secondary d-block" style="font-size: 0.65rem; font-weight: 700;">Neto a Recibir</small>
-                            <span class="fs-5 fw-bold text-success font-monospace">$${totalNomina.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
-                        </div>
-                    </div>
-
-                    <!-- Desglose de Percepciones y Deducciones -->
-                    <table class="table table-sm table-bordered text-center mb-3" style="font-size: 0.75rem;">
-                        <thead class="table-secondary text-uppercase">
-                            <tr>
-                                <th>Salario Base</th>
-                                <th>(+) Viajes</th>
-                               
-                                <th>(-) Faltas</th>
-                                <th>(-) Abonos Préstamo</th>
-                                <th>Saldo Préstamo Act.</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>$${salario.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
-                                <td class="text-success">+$${viajes.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
-                                
-                                <td class="text-danger">-$${faltas.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
-                                 <td class="text-warning text-dark">-$${abonos.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
-                                <td class="text-body-secondary">$${prestamos.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
-                            </tr>
-                        </tbody>
-                    </table>
-
-                    <!-- Leyenda y Zona de Firmas -->
-                    <p class="text-body-secondary text-justify mb-3" style="font-size: 0.62rem; line-height: 1.1;">
-                        Recibí a mi entera satisfacción la cantidad neta descrita en este documento por concepto de pago de mis salarios y prestaciones correspondientes al período indicado, no adeudándome cantidad alguna.
-                    </p>
-
-                    <div class="row pt-3 text-center" style="font-size: 0.75rem;">
-                        <div class="col-6">
-                            <div class="border-top border-dark mx-3 pt-1 fw-bold text-uppercase">
-                                Firma del Trabajador
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="border-top border-dark mx-3 pt-1 fw-bold text-uppercase">
-                                Conformidad / Empresa
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Línea de corte para tijeras -->
-                <div class="corte-linea">
-                    <span><i class="bi bi-scissors"></i> CORTE AQUÍ</span>
-                </div>
-            `;
-            });
-
-            // 4. Inyectar en la ventana de impresión
-            const ventanaImpresion = window.open('', '_blank');
-
-            ventanaImpresion.document.write(`
-            <!DOCTYPE html>
-            <html lang="es">
-            <head>
-                <meta charset="UTF-8">
-                <title>Cheques de Nómina - ${valorSemana || 'Semanal'}</title>
-                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
-                <style>
-                    body { 
-                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-                        padding: 15px; 
-                        background: #f4f4f4;
-                        color: #222;
-                    }
-                    .cheque-contenedor {
-                        background: #ffffff;
-                        border: 2px dashed #007aff;
-                        border-radius: 8px;
-                        padding: 15px 20px;
-                        position: relative;
-                        overflow: hidden;
-                        page-break-inside: avoid;
-                        margin-bottom: 10px;
-                    }
-                    .watermark-cheque {
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        width: 160px;
-                        opacity: 0.04;
-                        pointer-events: none;
-                        z-index: 0;
-                    }
-                    .corte-linea {
-                        text-align: center;
-                        border-bottom: 1px dashed #999;
-                        line-height: 0.1em;
-                        margin: 20px 0 25px 0;
-                        page-break-inside: avoid;
-                    }
-                    .corte-linea span {
-                        background: #f4f4f4;
-                        padding: 0 10px;
-                        font-size: 0.7rem;
-                        color: #666;
-                        font-weight: bold;
-                        letter-spacing: 1px;
-                    }
-                    @media print {
-                        body { background: #ffffff; padding: 0; }
-                        .cheque-contenedor { border: 1.5px solid #333; }
-                        .corte-linea span { background: #ffffff; }
-                    }
-                    @page { 
-                        margin: 0.8cm; 
-                    }
-                </style>
-            </head>
-            <body>
-                <div id="areaImpresion">
-                    ${chequesHTML}
-                </div>
-
-                <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
-                <script>
-                    window.addEventListener('DOMContentLoaded', () => {
-                        const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-                        setTimeout(() => {
-                            if (esMovil) {
-                                const elementoParaConvertir = document.getElementById('areaImpresion');
-                                const opciones = {
-                                    margin: 0.5,
-                                    filename: 'Recibos_Nomina_${valorSemana || 'Semana'}.pdf',
-                                    image: { type: 'jpeg', quality: 0.98 },
-                                    html2canvas: { scale: 2, useCORS: true },
-                                    jsPDF: { unit: 'cm', format: 'letter', orientation: 'portrait' }
-                                };
-                                html2pdf().set(opciones).from(elementoParaConvertir).save();
-                            } else {
-                                window.print();
-                            }
-                        }, 800);
-                    });
-                <\/script>
-            </body>
-            </html>
-        `);
-
-            ventanaImpresion.document.close();
-
-        } catch (err) {
-            console.error("Error al generar recibos de nómina:", err);
-            Swal.fire('Error', err.message || 'No se pudieron generar los recibos.', 'error');
-        }
+        const inicio = formatearFecha(lunes);
+        const fin = formatearFecha(domingo);
+        queryParams = `&fecha_inicio=${inicio}&fecha_fin=${fin}`;
     }
-    </script>
+
+    try {
+        // 2. Obtener los datos de la nómina
+        const res = await fetch(`/cfsistem/app/controllers/nominaController.php?action=listar${queryParams}`);
+        const response = await res.json();
+
+        if (!response.success) {
+            throw new Error(response.message || 'No se pudieron obtener los datos de la nómina.');
+        }
+
+        const data = response.data || [];
+
+        if (data.length === 0) {
+            Swal.fire('Atención', 'No hay registros de nómina para imprimir en esta semana.', 'info');
+            return;
+        }
+
+        // 3. Generar las tarjetas/cheques individuales recortables
+        let chequesHTML = '';
+
+        data.forEach((t, index) => {
+
+            const prestamos = parseFloat(t.total_prestamos_pendientes || 0);
+            const faltas = parseFloat(t.total_faltas || 0);
+            const viajes = parseFloat(t.total_viajes || 0);
+            const abonos = parseFloat(t.total_abonos || 0);
+            const bonos = parseFloat(t.total_bonos || 0);
+            const vacaciones= parseFloat(t.total_vacaciones|| 0);
+            const retenciones= parseFloat(t.total_retenciones|| 0);
+            const salario = parseFloat(t.salario || 0) + bonos;
+           
+            const totalNomina = parseFloat(t.total_nomina || 0)+vacaciones;
+           
+
+            chequesHTML += `
+            <div class="cheque-contenedor">
+                <!-- Marca de Agua Individual -->
+                <img src="/cfsistem/public/assets/logo.ico" class="watermark-cheque" alt="Logo">
+
+                <!-- Encabezado del Cheque -->
+                <div class="d-flex justify-content-between align-items-center mb-1 pb-1 border-bottom border-2 border-primary">
+                    <div class="d-flex align-items-center">
+                        <img src="/cfsistem/public/assets/logo.ico" width="28" height="28" class="me-2" alt="Logo">
+                        <div>
+                            <h6 class="fw-bold m-0 text-uppercase" style="font-size: 0.8rem;">CF SYSTEM - RECIBO DE NÓMINA</h6>
+                            <small class="text-body-secondary" style="font-size: 0.6rem;">COMPROBANTE DE PAGO DE SALARIO</small>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-dark text-white font-monospace" style="font-size: 0.65rem;">SEMANA: ${valorSemana || 'N/A'}</span>
+                        <small class="d-block text-body-secondary" style="font-size: 0.58rem;">Emisión: ${new Date().toLocaleDateString('es-MX')}</small>
+                    </div>
+                </div>
+
+                <!-- Datos del Trabajador y Salario Total -->
+                <div class="row g-1 mb-1 bg-light p-1 rounded align-items-center border">
+                    <div class="col-7">
+                        <div class="text-uppercase fw-bold text-dark" style="font-size: 0.8rem;">${t.nombre}</div>
+                        <small class="text-body-secondary d-block" style="font-size: 0.65rem;">
+                            <strong>Puesto:</strong> ${t.rol.toUpperCase()} | <strong>Almacén:</strong> ${t.nombreAlmacen || 'N/A'}
+                        </small>
+                    </div>
+                    <div class="col-5 text-end">
+                        <small class="text-uppercase text-body-secondary d-block" style="font-size: 0.58rem; font-weight: 700;">Neto a Recibir</small>
+                        <span class="fs-6 fw-bold text-success font-monospace">$${totalNomina.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                </div>
+
+                <!-- Desglose de Percepciones y Deducciones -->
+                <table class="table table-sm table-bordered text-center mb-1" style="font-size: 0.65rem;">
+                    <thead class="table-secondary text-uppercase">
+                        <tr>
+                            <th>Salario Base</th>
+                            <th>(+) Viajes</th>
+                            <th>(-) Faltas</th>
+                            <th>(-) Abonos Préstamo</th>
+                            <th>(+) Prima Vacacional</th>
+                            <th>Saldo Préstamo Act.</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>$${salario.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                            <td class="text-success">+$${viajes.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                            <td class="text-danger">-$${faltas.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                            <td class="text-warning text-dark">-$${abonos.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                            <td class="text-body-secondary">$${vacaciones.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+               
+                            <td class="text-body-secondary">$${prestamos.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
+                                     </tr>
+                    </tbody>
+                </table>
+
+                <!-- Leyenda y Zona de Firmas -->
+                <p class="text-body-secondary text-justify mb-1" style="font-size: 0.55rem; line-height: 1.05;">
+                    Recibí a mi entera satisfacción la cantidad neta descrita en este documento por concepto de pago de mis salarios y prestaciones correspondientes al período indicado, no adeudándome cantidad alguna.
+                </p>
+
+                <div class="row pt-2 text-center" style="font-size: 0.65rem;">
+                    <div class="col-6">
+                        <div class="border-top border-dark mx-2 pt-1 fw-bold text-uppercase">
+                            Firma del Trabajador
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border-top border-dark mx-2 pt-1 fw-bold text-uppercase">
+                            Conformidad / Empresa
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Línea de corte para tijeras -->
+            <div class="corte-linea">
+                <span><i class="bi bi-scissors"></i> CORTE AQUÍ</span>
+            </div>
+            `;
+        });
+
+        // 4. Inyectar en la ventana de impresión
+        const ventanaImpresion = window.open('', '_blank');
+
+        ventanaImpresion.document.write(`
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <title>Cheques de Nómina - ${valorSemana || 'Semanal'}</title>
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+            <style>
+                body { 
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+                    padding: 8px; 
+                    background: #f4f4f4;
+                    color: #222;
+                }
+                .cheque-contenedor {
+                    background: #ffffff;
+                    border: 1.5px dashed #007aff;
+                    border-radius: 6px;
+                    padding: 8px 12px;
+                    position: relative;
+                    overflow: hidden;
+                    page-break-inside: avoid;
+                    margin-bottom: 2px;
+                    height: 5.9cm; /* Altura máxima controlada para forzar 4 por página */
+                }
+                .watermark-cheque {
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    width: 110px;
+                    opacity: 0.04;
+                    pointer-events: none;
+                    z-index: 0;
+                }
+                .corte-linea {
+                    text-align: center;
+                    border-bottom: 1px dashed #999;
+                    line-height: 0.1em;
+                    margin: 6px 0 8px 0;
+                    page-break-inside: avoid;
+                }
+                .corte-linea span {
+                    background: #f4f4f4;
+                    padding: 0 6px;
+                    font-size: 0.6rem;
+                    color: #666;
+                    font-weight: bold;
+                    letter-spacing: 0.5px;
+                }
+                @media print {
+                    body { background: #ffffff; padding: 0; }
+                    .cheque-contenedor { border: 1px solid #333; }
+                    .corte-linea span { background: #ffffff; }
+                }
+                @page { 
+                    margin: 0.4cm; 
+                }
+            </style>
+        </head>
+        <body>
+            <div id="areaImpresion">
+                ${chequesHTML}
+            </div>
+
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
+            <script>
+                window.addEventListener('DOMContentLoaded', () => {
+                    const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+                    setTimeout(() => {
+                        if (esMovil) {
+                            const elementoParaConvertir = document.getElementById('areaImpresion');
+                            const opciones = {
+                                margin: 0.3,
+                                filename: 'Recibos_Nomina_${valorSemana || 'Semana'}.pdf',
+                                image: { type: 'jpeg', quality: 0.98 },
+                                html2canvas: { scale: 2, useCORS: true },
+                                jsPDF: { unit: 'cm', format: 'letter', orientation: 'portrait' }
+                            };
+                            html2pdf().set(opciones).from(elementoParaConvertir).save();
+                        } else {
+                            window.print();
+                        }
+                    }, 800);
+                });
+            <\/script>
+        </body>
+        </html>
+    `);
+
+        ventanaImpresion.document.close();
+
+    } catch (err) {
+        console.error("Error al generar recibos de nómina:", err);
+        Swal.fire('Error', err.message || 'No se pudieron generar los recibos.', 'error');
+    }
+} </script>
 
 </body>
 

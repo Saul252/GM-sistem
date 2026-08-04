@@ -1,26 +1,26 @@
 <style>
-    /* Estilos específicos para el Monitor de Viajes (Línea iOS) */
+    /* Estilos adaptables para el Monitor de Viajes (Línea iOS Glassmorphism) */
     .card-monitor {
-        background: rgba(255, 255, 255, 0.92);
+        background: var(--bs-body-bg);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.7);
+        border: 1px solid var(--bs-border-color-translucent);
         border-radius: 22px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
         overflow: hidden;
     }
 
     .header-monitor {
         background: #1d1d1f; 
-        color: white;
+        color: #ffffff;
         padding: 1.2rem 1.5rem;
         border: none;
     }
 
-    /* Estilo para el SELECT de Almacenes en el Header */
+    /* Select de Almacenes en Header */
     #filtroAlmacenMonitor {
         background-color: rgba(255, 255, 255, 0.15);
-        color: white;
+        color: #ffffff;
         border: 1px solid rgba(255, 255, 255, 0.2);
         transition: all 0.3s ease;
         cursor: pointer;
@@ -29,18 +29,19 @@
         background-color: rgba(255, 255, 255, 0.25);
     }
     #filtroAlmacenMonitor option {
-        color: #333; /* Texto oscuro para que se vea al desplegar */
-        background-color: white;
+        color: var(--bs-body-color);
+        background-color: var(--bs-body-bg);
     }
 
     .table-monitor thead th {
         font-size: 0.72rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: #86868b;
+        color: var(--bs-secondary-color);
         font-weight: 600;
         padding: 1.2rem;
-        border-bottom: 2px solid #f2f2f7;
+        border-bottom: 2px solid var(--bs-border-color);
+        background: transparent;
     }
 
     .table-monitor tbody tr {
@@ -48,46 +49,47 @@
     }
 
     .table-monitor tbody tr:hover {
-        background-color: rgba(0, 122, 255, 0.02);
+        background-color: var(--bs-tertiary-bg);
     }
 
     .badge-folio {
-        background: #e8f4ff;
-        color: #007aff;
+        background: rgba(13, 110, 253, 0.12);
+        color: #0d6efd;
         font-family: 'SF Mono', SFMono-Regular, ui-monospace, monospace;
         font-weight: 600;
         padding: 4px 10px;
         border-radius: 8px;
         font-size: 0.7rem;
+        display: inline-block;
     }
 
     .carga-scroll {
-        background: #f5f5f7;
+        background: var(--bs-tertiary-bg);
         border-radius: 12px;
         padding: 12px;
         font-size: 0.85rem;
-        color: #424245;
+        color: var(--bs-body-color);
         max-height: 100px;
         overflow-y: auto;
-        border: 1px solid rgba(0,0,0,0.03);
+        border: 1px solid var(--bs-border-color-translucent);
     }
 
     .avatar-chofer {
         width: 36px;
         height: 36px;
-        background: #007aff;
-        color: white;
+        background: #0d6efd;
+        color: #ffffff;
         border-radius: 10px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 1rem;
-        box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
+        box-shadow: 0 4px 12px rgba(13, 110, 253, 0.25);
     }
 
     .btn-finish {
-        background: #34c759;
-        color: white;
+        background: #198754;
+        color: #ffffff;
         border: none;
         border-radius: 10px;
         padding: 8px 16px;
@@ -96,16 +98,19 @@
     }
 
     .btn-finish:hover {
-        background: #28a745;
+        background: #157347;
+        color: #ffffff;
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(52, 199, 89, 0.2);
+        box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
     }
 </style>
 
 <div class="main-content">
     <div class="card card-monitor animate__animated animate__fadeIn">
         <div class="header-monitor d-flex justify-content-between align-items-center">
-   
+            <h5 class="fw-bold mb-0 text-white d-flex align-items-center">
+                <i class="bi bi-geo-fill me-2 text-primary"></i> Monitor de Viajes Activos
+            </h5>
 
             <button class="btn btn-sm btn-outline-light rounded-pill px-3 border-opacity-25" onclick="cargarMonitorViajes()">
                 <i class="bi bi-arrow-repeat me-1"></i> Actualizar
@@ -125,7 +130,7 @@
                         </tr>
                     </thead>
                     <tbody id="bodyMonitorViajes">
-                        </tbody>
+                    </tbody>
                 </table>
             </div>
         </div>

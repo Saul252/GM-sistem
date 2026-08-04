@@ -71,6 +71,7 @@ $modulos = [
             ['id' => 'misRepartos', 'url' => '/cfsistem/app/controllers/misRepartosController.php', 'icon' => 'bi-map-fill', 'label' => 'Mis Repartos', 'active' => ($archivoActual == 'misRepartosController.php')],
             ['id' => 'viajesTrabajadores', 'url' => '/cfsistem/app/controllers/viajesTrabajadoresController.php', 'icon' => 'bi-person-workspace', 'label' => 'Viajes Trabajadores', 'active' => ($archivoActual == 'viajesTrabajadoresController.php')],
               ['id' => 'mantenimientos', 'url' => '/cfsistem/app/controllers/mantenimientosController.php', 'icon' => 'bi-wrench-adjustable-circle-fill', 'label' => 'Mantenimientos', 'active' => ($archivoActual == 'mantenimientosController.php')],
+           ['id' => 'verificaciones', 'url' => '/cfsistem/app/controllers/verificacionesController.php', 'icon' => 'bi-patch-check-fill', 'label' => 'verificaciones', 'active' => ($archivoActual == 'verificacionesController.php')],
           
         ]
     ],
@@ -83,7 +84,8 @@ $modulos = [
         ['id' => 'nomina', 'url' => '/cfsistem/app/controllers/nominaController.php', 'icon' => 'bi-cash', 'label' => 'nomina', 'active' => ($archivoActual == 'nominaController.php')],
         ['id' => 'prestamos', 'url' => '/cfsistem/app/controllers/prestamosController.php', 'icon' => 'bi-cash', 'label' => 'prestamos', 'active' => ($archivoActual == 'prestamosController.php')],
         ['id' => 'faltas', 'url' => '/cfsistem/app/controllers/faltasController.php', 'icon' => 'bi-calendar-x', 'label' => 'Faltas', 'active' => ($archivoActual == 'faltasController.php')],
-        ['id' => 'pagos_viajes', 'url' => '/cfsistem/app/controllers/pagos_viajesController.php', 'icon' => 'bi-person-gear', 'label' => 'pagos_viajes', 'active' => ($archivoActual == 'pagos_viajesController.php')],
+       ['id' => 'vacaciones', 'url' => '/cfsistem/app/controllers/vacacionesController.php', 'icon' => 'bi-sun-fill', 'label' => 'Vacaciones', 'active' => ($archivoActual == 'vacacionesController.php')],
+         ['id' => 'pagos_viajes', 'url' => '/cfsistem/app/controllers/pagos_viajesController.php', 'icon' => 'bi-person-gear', 'label' => 'pagos_viajes', 'active' => ($archivoActual == 'pagos_viajesController.php')],
         ]
     ],
     [
@@ -101,7 +103,7 @@ $modulos = [
         color:#000 !important;
     }
 </sytile>
-
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 <nav class="navbar fixed-top navbar-expand navbar-dark navbar-premium shadow-sm">
     <div class="container-fluid px-2 px-md-4">
         <div class="d-flex align-items-center gap-2 gap-md-3">
@@ -215,9 +217,134 @@ $modulos = [
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+
+                        if (!document.getElementById('style-toast-red-close')) {
+                            const style = document.createElement('style');
+                            style.id = 'style-toast-red-close';
+                            style.innerHTML =
+                                `.toast-close { color: #ff0000 !important; opacity: 1; font-weight: bold; font-size: 20px; margin-left: 10px; }`;
+                            document.head.appendChild(style);
+                        }
 let ultimoConteoMantenimientos = 0;
 let primeraCargaMantenimiento = true;
+// Variables de control (asegúrate de declararlas arriba en tu script si no existen)
+// Declaración de variables globales de control para las notificaciones
+let primeraCargaVerificacion = true;
+let ultimoConteoVerificaciones = 0;
 
+function verificarVerificaciones() {
+
+    const url = "/cfsistem/app/controllers/verificacionesController.php?action=listarProximoMantenimiento";
+
+    fetch(url)
+        .then(r => r.json())
+        .then(data => {
+            console.log("Verificaciones data:", data);
+
+            const badge = document.getElementById("badge-verificaciones");
+            const lista = document.getElementById("lista-verificaciones");
+
+            const cantidadActual = Array.isArray(data) ? data.length : 0;
+
+            // 1. Actualizar Badge de Notificaciones
+            if (badge) {
+                if (cantidadActual > 0) {
+                    badge.innerText = cantidadActual;
+                    badge.classList.remove("d-none");
+                } else {
+                    badge.classList.add("d-none");
+                }
+            }
+
+            // 2. Desplegar Toastify si hay nuevas verificaciones próximas
+            if (cantidadActual > 0 &&
+                (primeraCargaVerificacion || cantidadActual > ultimoConteoVerificaciones)) {
+
+                const item = data[0];
+
+                Toastify({
+                    text:
+`📋 PRÓXIMA VERIFICACIÓN
+${item.estado}
+
+${item.vehiculo} - ${item.placas}`,
+
+                    duration: 7000,
+                    gravity: "top",
+                    position: "right",
+                    close: true,
+                    stopOnFocus: true,
+
+                    className: "toast-verificacion",
+
+                    style: {
+                        background: "#fff",
+                        color: "#111",
+                        border: "1px solid #dee2e6",
+                        borderLeft: "5px solid #0d6efd",
+                        borderRadius: "15px",
+                        boxShadow: "0 10px 25px rgba(0,0,0,.15)",
+                        fontWeight: "500",
+                        fontSize: "14px",
+                        padding: "18px"
+                    },
+
+                    onClick: function(){
+                        window.location.href = "/cfsistem/app/controllers/verificacionesController.php";
+                    }
+
+                }).showToast();
+
+                primeraCargaVerificacion = false;
+            }
+
+            ultimoConteoVerificaciones = cantidadActual;
+
+            // 3. Renderizar Lista en el Dropdown
+            if (lista) {
+                if (cantidadActual === 0) {
+                    lista.innerHTML = `
+                        <div class="p-4 text-center text-body-secondary">
+                            No hay verificaciones próximas.
+                        </div>`;
+                } else {
+                    lista.innerHTML = data.map(item => {
+
+                        let color = "success";
+                        const dias = parseInt(item.dias_restantes);
+
+                        if (dias <= 0) {
+                            color = "danger";
+                        } else if (dias <= 3) {
+                            color = "warning";
+                        }
+
+                        return `
+<div class="d-flex justify-content-between align-items-center p-3 border-bottom hover-notif">
+    <div>
+        <div class="small fw-bold">
+            ${item.estado}
+        </div>
+        <div class="fw-bold text-${color}">
+            Vehículo: ${item.vehiculo}
+        </div>
+        <div class="small text-secondary">
+            Placas: ${item.placas}
+        </div>
+    </div>
+    <button class="btn btn-outline-primary btn-sm rounded-circle"
+            title="Ver detalle"
+            onclick="window.location='/cfsistem/app/controllers/verificacionesController.php?action=obtenerDetalle&id=${item.id}'">
+        <i class="bi bi-arrow-right"></i>
+    </button>
+</div>
+`;
+                    }).join("");
+                }
+            }
+        })
+        .catch(err => console.error("Error al obtener verificaciones:", err));
+}
 function verificarMantenimientos() {
 
     const url = "/cfsistem/app/controllers/mantenimientosController.php?action=listarProximoMantenimiento";
@@ -274,7 +401,7 @@ ${item.vehiculo}   ${item.placas}`,
 
                     style: {
 
-                        background: "#fff",
+                        background: "#ffffff",
 
                         color: "#111",
 
@@ -293,6 +420,7 @@ ${item.vehiculo}   ${item.placas}`,
                         padding: "18px"
 
                     },
+                    
 
                     onClick: function(){
 
@@ -365,7 +493,7 @@ ${item.placas}
 
 onclick="window.location='/cfsistem/app/controllers/mantenimientos.php?id=${item.id_mantenimiento}'">
 
-<i class="bi bi-arrow-right"></i>
+<i class="bi bi-arrow-right text-danger"></i>
 
 </button>
 
@@ -381,6 +509,7 @@ onclick="window.location='/cfsistem/app/controllers/mantenimientos.php?id=${item
 
         })
         .catch(err=>console.error(err));
+        
 
 }
     // --- 1. VARIABLES DE ELEMENTOS ---
@@ -650,11 +779,14 @@ onclick="window.location='/cfsistem/app/controllers/mantenimientos.php?id=${item
     function mantenimientoSistema() {
         
         verificarNotificaciones();
+        verificarVerificaciones();
         // verificarCorteCaja();
     }
 
     mantenimientoSistema();
     setInterval(mantenimientoSistema, 35000);
+     verificarVerificaciones();
+     setInterval(verificarVerificaciones(), 35000);
     verificarMantenimientos();
 setInterval(verificarMantenimientos(), 35000);
 

@@ -1,7 +1,7 @@
 <?php
 /**
  * CF SYSTEM - Logística Híbrida
- * Vista con Tabla Bootstrap Nativa y Paginación Clásica.
+ * Vista con Tabla Bootstrap Nativa, Paginación Clásica y Modal de Entrega.
  */
 ?>
 <!DOCTYPE html>
@@ -11,11 +11,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title><?= $es_supervisor ? 'Monitor Global' : 'Mis Repartos' ?> | cfsistem</title>
     
-     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-   <?php require_once __DIR__ . '/layout/icono.php' ?>
+    <?php require_once __DIR__ . '/layout/icono.php' ?>
     <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
     
     <style>
@@ -28,18 +28,17 @@
         body { 
             background-color: var(--apple-bg); 
             font-family: 'SF Pro Display', -apple-system, sans-serif;
-            color: #1d1d1f;
+          
         }
 
         .main-wrapper { 
-           
             padding: 30px; 
             padding-top: 90px; 
             min-height: 100vh;
         }
 
         .card-ios {
-            background: #ffffff;
+           
             border-radius: 18px;
             border: none;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
@@ -48,7 +47,7 @@
         }
 
         .header-premium {
-            background: #1d1d1f;
+          
             color: white;
             padding: 15px 20px;
         }
@@ -59,7 +58,7 @@
             text-transform: uppercase;
             letter-spacing: 0.02em;
             color: #8e8e93;
-            background-color: #f9f9fb;
+           
             border-bottom: 1px solid #dee2e6;
         }
 
@@ -68,7 +67,7 @@
         }
 
         .carga-scroll {
-            background: #f5f5f7; 
+           
             border-radius: 8px; 
             padding: 6px;
             font-size: 0.75rem; 
@@ -90,6 +89,72 @@
             color: white;
         }
 
+        /* --- Estilo Glassmorphism adaptable para modalVerEntrega --- */
+        #modalVerEntrega .modal-content {
+            background-color: var(--bs-body-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--bs-border-color-translucent) !important;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25) !important;
+        }
+
+        #modalVerEntrega .btn-close {
+            filter: var(--bs-btn-close-white-filter, none);
+            opacity: 0.6;
+            transition: opacity 0.2s ease;
+        }
+        #modalVerEntrega .btn-close:hover {
+            opacity: 1;
+        }
+
+        #modalVerEntrega .btn-cerrar-modal {
+            background-color: var(--bs-tertiary-bg);
+            color: var(--bs-body-color);
+            border: 1px solid var(--bs-border-color-translucent);
+            transition: all 0.2s ease;
+        }
+
+        #modalVerEntrega .btn-cerrar-modal:hover {
+            background-color: var(--bs-secondary-bg);
+            color: var(--bs-body-color);
+            transform: translateY(-1px);
+        }
+
+        /* Reglas dinámicas dentro de #contenedor_despacho */
+        #contenedor_despacho .card,
+        #contenedor_despacho .list-group-item,
+        #contenedor_despacho .box-despacho {
+            background-color: var(--bs-tertiary-bg) !important;
+            border: 1px solid var(--bs-border-color-translucent) !important;
+            color: var(--bs-body-color) !important;
+        }
+
+        #contenedor_despacho .form-control,
+        #contenedor_despacho .form-select {
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+            border-color: var(--bs-border-color);
+        }
+
+        #contenedor_despacho .table {
+            --bs-table-bg: transparent;
+            --bs-table-color: var(--bs-body-color);
+            --bs-table-border-color: var(--bs-border-color-translucent);
+        }
+
+        #contenedor_despacho .text-muted,
+        #contenedor_despacho .text-secondary {
+            color: var(--bs-secondary-color) !important;
+        }
+
+        #contenedor_despacho::-webkit-scrollbar {
+            width: 6px;
+        }
+        #contenedor_despacho::-webkit-scrollbar-thumb {
+            background: var(--bs-border-color-translucent);
+            border-radius: 4px;
+        }
+
         @media (max-width: 992px) {
             .main-wrapper { margin-left: 0; padding: 15px; padding-top: 80px; }
         }
@@ -100,8 +165,9 @@
 
     <main class="main-content">
         <div>
-                    <h1 class="header-title pb-3">Gestión de Mis repartos</h1>
-                    </div>
+            <h1 class="header-title pb-3">Gestión de Mis repartos</h1>
+        </div>
+
         <div class="card-ios animate__animated animate__fadeIn">
             <div class="header-premium d-flex justify-content-between align-items-center">
                 <h6 class="mb-0 fw-bold small text-uppercase">
@@ -135,43 +201,39 @@
                     <?= $es_supervisor ? 'Monitor General de Entregas' : 'Mis Entregas Recientes' ?>
                 </h6>
                 
-                 <!-- 🔥 NUEVO -->
-<span class="small text-body-secondary">Fecha de Inicio:</span>
-<input
-    type="date"
-    id="fecha_inicio_monitor"
-    value="<?= date('Y-m-01') ?>"
-    class="form-control form-control-sm"
-    style="width:auto;"
-    onchange="cargarMonitor(1)"
->
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="small text-body-secondary">Fecha de Inicio:</span>
+                    <input
+                        type="date"
+                        id="fecha_inicio_monitor"
+                        value="<?= date('Y-m-01') ?>"
+                        class="form-control form-control-sm"
+                        style="width:auto;"
+                        onchange="cargarMonitor(1)"
+                    >
 
-<span class="small text-body-secondary">Fecha de Fin:</span>
-<input
-    type="date"
-    id="fecha_fin_monitor"
-    value="<?= date('Y-m-t') ?>"
-    class="form-control form-control-sm"
-    style="width:auto;"
-    onchange="cargarMonitor(1)"
->
+                    <span class="small text-body-secondary">Fecha de Fin:</span>
+                    <input
+                        type="date"
+                        id="fecha_fin_monitor"
+                        value="<?= date('Y-m-t') ?>"
+                        class="form-control form-control-sm"
+                        style="width:auto;"
+                        onchange="cargarMonitor(1)"
+                    >
 
-
-                
-                <?php if ($es_supervisor): ?>
-                <div class="d-flex align-items-center gap-2">
-                    <span class="small text-body-secondary">Almacén:</span>
+                    <?php if ($es_supervisor): ?>
+                    <span class="small text-body-secondary ms-2">Almacén:</span>
                     <select id="filtro_almacen_monitor" class="form-select form-select-sm border rounded-3" style="width: auto;" onchange="cargarMonitor(1)">
-              
-<?php if ($es_admin): ?><option value="0">Todos</option>  <?php endif; ?>
+                        <?php if ($es_admin): ?><option value="0">Todos</option><?php endif; ?>
                         <?php if(isset($listaAlmacenes)) foreach ($listaAlmacenes as $alm): ?>
                             <option value="<?= $alm['id'] ?>"><?= $alm['nombre'] ?></option>
                         <?php endforeach; ?>
                     </select>
+                    <?php else: ?>
+                        <input type="hidden" id="filtro_almacen_monitor" value="0">
+                    <?php endif; ?>
                 </div>
-                <?php else: ?>
-                    <input type="hidden" id="filtro_almacen_monitor" value="0">
-                <?php endif; ?>
             </div>
         </div>
 
@@ -207,6 +269,35 @@
         </div>
     </main>
 
+    <!-- Modal Ver Entrega -->
+    <div class="modal fade" id="modalVerEntrega" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 28px;">
+                <div class="modal-header border-0 pt-4 px-4 pb-2">
+                    <div class="w-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2" id="v_folio_ticket" style="border-radius: 12px; font-weight: 800;">FOLIO: ---</span>
+                            <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                        </div>
+                        <h4 class="fw-bold mb-1 text-body" id="v_producto_nombre">Cargando...</h4>
+                        <div id="v_cliente_final" class="text-body-secondary fw-medium" style="font-size: 0.85rem;">
+                            <i class="bi bi-person me-1"></i> Cargando datos...
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-body p-4" id="contenedor_despacho">
+                    <!-- Contenido dinámico con soporte de tema claro/oscuro -->
+                </div>
+
+                <div class="modal-footer border-0 justify-content-center pb-4 pt-0">
+                    <button type="button" class="btn btn-cerrar-modal rounded-pill px-5 fw-bold" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -416,7 +507,7 @@ window.cargarMonitorViajes = async function() {
                     </td>
                     <td><div class="small fw-bold text-uppercase"><i class="bi bi-person-circle me-1 text-primary"></i> ${v.chofer}</div></td>
                     <td><small class="text-body-secondary">${v.tripulantes || 'Solo Conductor'}</small></td>
-                    <td><div class="carga-scroll" style="background: #f5f5f7; border-radius: 8px; padding: 6px; font-size: 0.75rem; max-height: 60px; overflow-y: auto;">${v.detalles_carga}</div></td>
+                    <td><div class="carga-scroll" style=" border-radius: 8px; padding: 6px; font-size: 0.75rem; max-height: 60px; overflow-y: auto;">${v.detalles_carga}</div></td>
                     <td class="text-end pe-4">
                       <button class="btn btn-sm btn-light border-0" onclick="abrirModalEdicionViaje('${v.viaje_folio}', ${v.vehiculo_id}, ${v.chofer_id})" style="border-radius: 10px; color: #007aff; background: #f2f2f7;"><i class="bi bi-pencil-square"></i></button>
                           

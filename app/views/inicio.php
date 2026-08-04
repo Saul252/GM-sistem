@@ -72,6 +72,8 @@ $gruposModulos = [
         'submodulos' => [
             ['id' => 'entregas', 'url' => '/cfsistem/app/controllers/entregasController.php', 'icon' => 'bi-truck', 'class' => 'text-warning', 'label' => 'Despachos'],
             ['id' => 'vehiculos', 'url' => '/cfsistem/app/controllers/vehiculosController.php', 'icon' => 'bi-truck-front', 'class' => 'text-secondary', 'label' => 'Vehículos'],
+            ['id' => 'verificaciones', 'url' => '/cfsistem/app/controllers/verificacionesController.php', 'icon' => 'bi-patch-check-fill',  'class' => 'text-success', 'label' => 'verificaciones', ],
+         
             ['id' => 'mantenimientos', 'url' => '/cfsistem/app/controllers/mantenimientosController.php', 'icon' => 'bi-wrench-adjustable-circle-fill', 'class' => 'text-danger', 'label' => 'Mantenimientos'],
             ['id' => 'repartos', 'url' => '/cfsistem/app/controllers/repartosController.php', 'icon' => 'bi-truck-flatbed', 'class' => 'text-info', 'label' => 'Repartos'],
             ['id' => 'misRepartos', 'url' => '/cfsistem/app/controllers/misRepartosController.php', 'icon' => 'bi-map-fill', 'class' => 'text-primary', 'label' => 'Mis Repartos'],
@@ -89,7 +91,9 @@ $gruposModulos = [
             ['id' => 'prestamos', 'url' => '/cfsistem/app/controllers/prestamosController.php', 'icon' => 'bi-cash-coin', 'class' => 'text-warning', 'label' => 'Préstamos'],
             ['id' => 'faltas', 'url' => '/cfsistem/app/controllers/faltasController.php', 'icon' => 'bi-calendar-x-fill', 'class' => 'text-danger', 'label' => 'Faltas'],
             ['id' => 'pagos_viajes', 'url' => '/cfsistem/app/controllers/pagos_viajesController.php', 'icon' => 'bi-person-gear', 'class' => 'text-success', 'label' => 'Pagos Viajes'],
-        ]
+         ['id' => 'vacaciones', 'url' => '/cfsistem/app/controllers/vacacionesController.php', 'icon' => 'bi-sun-fill',  'class' => 'text-dark','label' => 'Vacaciones'],
+      
+            ]
     ],
     [
         'id_grupo' => 'administracion',

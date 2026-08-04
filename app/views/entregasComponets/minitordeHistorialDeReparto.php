@@ -153,7 +153,7 @@ function cargarMonitor() {
                 renderizarFilas(response.data, false); 
             }
             else { 
-                $('#tbodyMonitor').html('<tr><td colspan="8" class="text-center text-body-secondary py-5"><i class="bi bi-patch-check d-block fs-2 mb-2"></i>No hay movimientos pendientes.</td></tr>'); 
+                $('#tbodyMonitor').html('<tr><td colspan="8" class="text-center text-muted py-5"><i class="bi bi-patch-check d-block fs-2 mb-2"></i>No hay movimientos pendientes.</td></tr>'); 
                 $('#btnCargarMas').hide();
             }
         }
@@ -228,7 +228,7 @@ function renderizarFilas(data, append) {
                 </td>
                 <td>
                     <span class="txt-bold d-block">${row.lectura_fisica || '0'}</span>
-                    <small class="text-body-secondary" style="font-size: 0.6rem;">LOTES: ${row.lotes_involucrados || 'S/L'}</small>
+                    <small class="text-muted" style="font-size: 0.6rem;">LOTES: ${row.lotes_involucrados || 'S/L'}</small>
                 </td>
                 <td>
                     <span class="txt-bold d-block" style="font-size: 0.75rem;">${row.responsable || 'POR ASIGNAR'}</span>
@@ -236,7 +236,7 @@ function renderizarFilas(data, append) {
                 </td>
                 <td class="text-center">
                     <span class="txt-sub fw-bold">${row.fecha_evento ? row.fecha_evento.split(' ')[0] : '---'}</span>
-                    <small class="d-block text-body-secondary" style="font-size: 0.6rem;">${row.fecha_evento ? row.fecha_evento.split(' ')[1] : ''}</small>
+                    <small class="d-block text-muted" style="font-size: 0.6rem;">${row.fecha_evento ? row.fecha_evento.split(' ')[1] : ''}</small>
                 </td>
                 <td class="text-center">
                    ${botonAccion}
@@ -273,7 +273,7 @@ async function verDetalleEntrega(tipo, id) {
     }
 
     // Loader inicial
-    $('#contenedor_detalle_ios').html('<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="text-body-secondary small mt-2">Cargando trazabilidad...</p></div>');
+    $('#contenedor_detalle_ios').html('<div class="text-center py-5"><div class="spinner-border text-primary"></div><p class="text-muted small mt-2">Cargando trazabilidad...</p></div>');
     
     const modalEl = document.getElementById('modalVerDetalle');
     const instance = bootstrap.Modal.getOrCreateInstance(modalEl);

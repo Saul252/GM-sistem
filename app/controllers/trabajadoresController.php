@@ -31,6 +31,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'guardar') {
             'estado'     => $_POST['estado'] ?? 'activo',
             'salario'     => $_POST['salario'] ?? '0',
              'complemento'     => $_POST['complemento'] ?? '0',
+             'fecha_ingreso'     => $_POST['fecha_ingreso'] ?? '0',
             // Si el usuario es admin (0), toma el del select; si no, toma el de su sesión
             'almacen_id' => ($_SESSION['almacen_id'] == 0) ? intval($_POST['almacen_id'] ?? 0) : intval($_SESSION['almacen_id'])
         ];

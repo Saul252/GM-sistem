@@ -1,8 +1,31 @@
+<style>
+    /* Soporte adicional para gradientes e inputs en modo claro/oscuro */
+    .btn-gradient {
+        background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+        color: #fff;
+        border: none;
+    }
+    .btn-gradient:hover {
+        background: linear-gradient(135deg, #0b5ed7 0%, #084298 100%);
+        color: #fff;
+    }
+    /* Estilos dinámicos para los contenedores destacados */
+    .box-dashed-highlight {
+        border: 1px dashed var(--bs-border-color);
+        background-color: var(--bs-tertiary-bg);
+    }
+    .box-info-highlight {
+        border: 1px solid var(--bs-border-color-translucent);
+        background-color: var(--bs-secondary-bg);
+    }
+</style>
+
 <div class="modal fade" id="modalVehiculo" tabindex="-1" role="dialog" aria-labelledby="modalLabel">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            
             <div class="modal-header border-0 pt-4 px-4">
-                <h5 class="fw-bold m-0 text-dark" id="modalLabel">
+                <h5 class="fw-bold m-0 text-body" id="modalLabel">
                     <i class="bi bi-truck-flatbed me-2 text-primary"></i>Despacho de Logística
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -10,11 +33,13 @@
 
             <form id="formReparto">
                 <div class="modal-body p-4">
-                    <div class="p-3 rounded-4 mb-3" style="background: #f8f9fa; border: 1px dashed #dee2e6;">
+                    
+                    <!-- Resumen del Producto -->
+                    <div class="p-3 rounded-4 mb-3 box-dashed-highlight">
                         <div class="d-flex justify-content-between align-items-start">
                             <div>
                                 <small class="text-body-secondary fw-bold d-block mb-1" style="font-size: 0.65rem;">MATERIAL A ENTREGAR</small>
-                                <div id="info_producto_modal" class="fw-bold text-dark">---</div>
+                                <div id="info_producto_modal" class="fw-bold text-body">---</div>
                             </div>
                             <div class="text-end">
                                 <small class="text-body-secondary fw-bold d-block mb-1" style="font-size: 0.65rem;">CANTIDAD</small>
@@ -23,21 +48,24 @@
                         </div>
                     </div>
 
-                    <div class="p-3 rounded-4 mb-4" style="background: #eef6ff; border: 1px solid #cfe2ff;">
+                    <!-- Datos del Cliente y Obra -->
+                    <div class="p-3 rounded-4 mb-4 box-info-highlight">
                         <div class="mb-3">
                             <small class="text-body-secondary fw-bold d-block mb-1" style="font-size: 0.65rem;">CLIENTE RECEPTOR</small>
                             <div class="d-flex align-items-center">
                                 <i class="bi bi-person-check-fill text-primary me-2"></i>
-                                <span id="v_cliente_nombre" class="fw-bold text-dark small">---</span>
+                                <span id="v_cliente_nombre" class="fw-bold text-body small">---</span>
                             </div>
                         </div>
 
                         <div class="mb-0">
                             <label class="small fw-bold text-body-secondary mb-1" style="font-size: 0.65rem;">PUNTO DE ENTREGA / OBRA (EDITABLE)</label>
                             <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-white border-0 shadow-sm"><i class="bi bi-geo-alt-fill text-danger"></i></span>
+                                <span class="input-group-text bg-body-tertiary border-0 text-danger shadow-sm">
+                                    <i class="bi bi-geo-alt-fill"></i>
+                                </span>
                                 <textarea name="direccion_entrega" id="v_direccion_entrega" 
-                                          class="form-control border-0 shadow-sm p-2" 
+                                          class="form-control bg-body-tertiary text-body border-0 shadow-sm p-2" 
                                           rows="2" style="font-size: 0.85rem;" 
                                           placeholder="Dirección exacta..." required></textarea>
                             </div>
@@ -47,33 +75,34 @@
                     <input type="hidden" name="movimiento_id" id="rep_movimiento_id">
                     <input type="hidden" name="almacen_id" id="rep_almacen_id">
 
+                    <!-- Selección de Personal y Unidad -->
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label small fw-bold text-body-secondary mb-1">UNIDAD DE TRANSPORTE</label>
-                            <select name="vehiculo_id" id="v_vehiculo_id" class="form-select border-0 bg-light p-3 rounded-3 shadow-sm" required>
+                            <select name="vehiculo_id" id="v_vehiculo_id" class="form-select border-0 bg-body-tertiary text-body p-3 rounded-3 shadow-sm" required>
                                 <option value="">Cargando unidades...</option>
                             </select>
                         </div>
 
                         <div class="col-12">
                             <label class="form-label small fw-bold text-body-secondary mb-1">OPERADOR RESPONSABLE (CHOFER)</label>
-                            <select name="chofer_id" id="v_chofer_id" class="form-select border-0 bg-light p-3 rounded-3 shadow-sm" required>
+                            <select name="chofer_id" id="v_chofer_id" class="form-select border-0 bg-body-tertiary text-body p-3 rounded-3 shadow-sm" required>
                                 <option value="">Cargando choferes...</option>
                             </select>
                         </div>
 
                         <div class="col-12">
                             <label class="form-label small fw-bold text-body-secondary mb-1">AYUDANTES / TRIPULACIÓN ADICIONAL</label>
-                            <select name="tripulantes[]" id="v_tripulantes" class="form-select border-0 bg-light p-2 rounded-3 shadow-sm" style="font-size: 0.85rem;" multiple size="3">
+                            <select name="tripulantes[]" id="v_tripulantes" class="form-select border-0 bg-body-tertiary text-body p-2 rounded-3 shadow-sm" style="font-size: 0.85rem;" multiple size="3">
                             </select>
-                            <small class="text-body-secondary" style="font-size: 0.6rem;">* Control + Click para seleccionar varios</small>
+                            <small class="text-body-secondary d-block mt-1" style="font-size: 0.65rem;">* Control + Click para seleccionar varios</small>
                         </div>
                     </div>
                 </div>
 
                 <div class="modal-footer border-0 pb-4 px-4">
                     <button type="button" class="btn btn-link text-body-secondary fw-bold text-decoration-none" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" id="btnGuardarReparto" class="btn btn-gradient px-4 py-2 shadow">
+                    <button type="submit" id="btnGuardarReparto" class="btn btn-gradient px-4 py-2 shadow-sm rounded-3 fw-bold">
                         <i class="bi bi-send-check me-2"></i>Confirmar Salida
                     </button>
                 </div>

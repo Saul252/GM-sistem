@@ -999,7 +999,7 @@
                 Swal.fire({
                     title: esEntregaTotal ? '¡Venta Exitosa!' : 'Entrega Parcial Registrada',
                     html: `
-                    <div class="alert bg-body-tertiary text-body border-0 small text-start py-2 mb-3" style="background:var(--bs-tertiary-bg);; border-radius:12px;">
+                    <div class="alert bg-body-tertiary text-body border-0 small text-start py-2 mb-3" style="background:#f2f2f7; border-radius:12px;">
                         ${res.message || 'Operación realizada correctamente.'}
                     </div>
                     ${htmlExtra}

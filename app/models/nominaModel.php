@@ -223,6 +223,8 @@ ORDER BY nombre ASC;";
                     COALESCE(f.total_faltas,0) AS total_faltas,
                     COALESCE(v.total_viajes,0) AS total_viajes,
                     COALESCE(ab.total_abonos,0) AS total_abonos,
+                    COALESCE(vaca.monto_restante,0) AS total_vacaciones,
+                    COALESCE(vaca.retenciones,0) AS total_retenciones,
                        COALESCE(bo.total_bonos,0)  AS total_bonos,
 
                     (
@@ -281,6 +283,7 @@ ORDER BY nombre ASC;";
                 ) f
                     ON f.trabajador_id=t.id
                     LEFT JOIN(
+                     /* ===== BONOS ===== */
                     SELECT
                         trabajador_id,
                         SUM(monto) total_bonos
@@ -289,6 +292,18 @@ ORDER BY nombre ASC;";
                     GROUP BY trabajador_id
                 ) bo
                     ON bo.trabajador_id=t.id
+                     /* ===== VACACIONES ===== */
+                    LEFT JOIN(
+                    SELECT
+                        id_trabajador,
+                        monto_restante,
+                        retenciones
+                        
+                    FROM vacaciones
+                    WHERE fecha BETWEEN ? AND ?
+                    GROUP BY id_trabajador
+                ) vaca
+                    ON vaca.id_trabajador=t.id
 
                 /* ===== VIAJES ===== */
                 LEFT JOIN(
@@ -323,7 +338,7 @@ ORDER BY nombre ASC;";
         }
 
         $stmt->bind_param(
-            "ssssssss",
+            "ssssssssss",
             $fechaInicio,
             $fechaFin,
             $fechaInicio,
@@ -331,6 +346,7 @@ ORDER BY nombre ASC;";
             $fechaInicio,
             $fechaFin,
             $fechaInicio,
+            $fechaFin,$fechaInicio,
             $fechaFin
         );
 
@@ -351,6 +367,8 @@ ORDER BY nombre ASC;";
                     COALESCE(f.total_faltas,0) AS total_faltas,
                     COALESCE(v.total_viajes,0) AS total_viajes,
                     COALESCE(ab.total_abonos,0) AS total_abonos,
+                      COALESCE(vaca.monto_restante,0) AS total_vacaciones,
+                    COALESCE(vaca.retenciones,0) AS total_retenciones,
 
                     COALESCE(bo.total_bonos,0)  AS total_bonos,
 
@@ -417,6 +435,18 @@ ORDER BY nombre ASC;";
                     GROUP BY trabajador_id
                 ) bo
                     ON bo.trabajador_id=t.id
+                      /* ===== VACACIONES ===== */
+                    LEFT JOIN(
+                    SELECT
+                        id_trabajador,
+                        monto_restante,
+                        retenciones
+                        
+                    FROM vacaciones
+                    WHERE fecha BETWEEN ? AND ?
+                    GROUP BY id_trabajador
+                ) vaca
+                    ON vaca.id_trabajador=t.id
 
 
                 LEFT JOIN(
@@ -452,7 +482,7 @@ ORDER BY nombre ASC;";
         }
 
         $stmt->bind_param(
-            "ssssssssi",
+            "ssssssssssi",
             $fechaInicio,
             $fechaFin,
             $fechaInicio,
@@ -460,6 +490,8 @@ ORDER BY nombre ASC;";
             $fechaInicio,
             $fechaFin,
             $fechaInicio,
+            $fechaFin,
+             $fechaInicio,
             $fechaFin,
             $almacen_id
         );

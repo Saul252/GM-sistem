@@ -147,18 +147,19 @@ ORDER BY nombre ASC;";
         $estado = $this->db->real_escape_string($d['estado']); 
         $salario = $this->db->real_escape_string($d['salario']);
         $complemento = $this->db->real_escape_string($d['complemento']);
+          $fecha_ingreso = $this->db->real_escape_string($d['fecha_ingreso']);
         $alm_id = intval($d['almacen_id']); // Nueva columna crítica
 
         if (!empty($d['id'])) {
             // EDITAR: Incluimos almacen_id por si el admin global lo mueve de sucursal
             $id = intval($d['id']);
             $sql = "UPDATE trabajadores 
-                    SET nombre='$nombre', telefono='$tel', rol='$rol', estado='$estado', almacen_id=$alm_id ,salario='$salario',complemento_pago='$complemento'
+                    SET nombre='$nombre', telefono='$tel', rol='$rol', estado='$estado', almacen_id=$alm_id ,salario='$salario',complemento_pago='$complemento',fecha_ingreso='$fecha_ingreso'
                     WHERE id=$id";
         } else {
             // INSERTAR: Obligatorio asignar el almacén desde el inicio
-            $sql = "INSERT INTO trabajadores (nombre, telefono, rol, estado, almacen_id,salario,complemento_pago) 
-                    VALUES ('$nombre', '$tel', '$rol', '$estado', $alm_id,$salario,$complemento)";
+            $sql = "INSERT INTO trabajadores (nombre, telefono, rol, estado, almacen_id,salario,complemento_pago,fecha_ingreso) 
+                    VALUES ('$nombre', '$tel', '$rol', '$estado', $alm_id,$salario,$complemento,$fecha_ingreso)";
         }
         return $this->db->query($sql);
     }
