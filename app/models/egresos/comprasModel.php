@@ -70,6 +70,170 @@ public function eliminarDocumento( $id_documento) {
 
     return $stmt->execute();
 }
+/**
+ * Actualiza únicamente la cantidad excedente de un producto en el detalle de una compra.
+ *
+ * @param int   $compra_id   ID de la compra.
+ * @param int   $producto_id ID del producto.
+ * @param float $excedente   Nueva cantidad excedente a registrar.
+ * @return bool              true en caso de éxito, false en caso de falla.
+ */public function actualizarExcedenteProducto($compra_id, $producto_id, $excedente, $user_id = 1) {
+    try {
+        // 1. Iniciar transacción
+        $this->db->begin_transaction();
+
+        // 2. Obtener datos clave de la compra y del detalle del producto
+        $sqlInfo = "SELECT 
+                        c.folio, 
+                        c.proveedor, 
+                        c.almacen_id AS almacen_compra,
+                        dc.id AS detalle_compra_id, 
+                        dc.precio_unitario, 
+                        dc.subtotal
+                    FROM compras c
+                    INNER JOIN detalle_compra dc ON dc.compra_id = c.id
+                    WHERE c.id = ? AND dc.producto_id = ?
+                    LIMIT 1";
+
+        $stmtInfo = $this->db->prepare($sqlInfo);
+        if (!$stmtInfo) {
+            throw new Exception("Error al preparar la consulta de compra: " . $this->db->error);
+        }
+
+        $stmtInfo->bind_param("ii", $compra_id, $producto_id);
+        $stmtInfo->execute();
+        $resInfo = $stmtInfo->get_result();
+
+        if ($resInfo->num_rows === 0) {
+            $stmtInfo->close();
+            throw new Exception("No se encontró el registro de la compra {$compra_id} o el producto {$producto_id}.");
+        }
+
+        $info = $resInfo->fetch_assoc();
+        $stmtInfo->close();
+
+        // Asignación de variables necesarias
+        $alm_id          =  intval($info['almacen_compra']);
+        $p_id            = intval($producto_id);
+        $cantidad        = floatval($excedente);
+        $id_dc           = intval($info['detalle_compra_id']);
+        $precio_unitario = floatval($info['precio_unitario']);
+        $subtotal        = floatval($info['subtotal']);
+        $folio           = $info['folio'];
+        $proveedor       = $info['proveedor'];
+
+        // 3. Actualizar la cantidad excedente en el detalle de la compra
+        $sqlDetalle = "UPDATE detalle_compra 
+                       SET cantidad_excedente = ?
+                       WHERE id = ?";
+
+        $stmtDetalle = $this->db->prepare($sqlDetalle);
+        if (!$stmtDetalle) {
+            throw new Exception("Error al preparar UPDATE de excedente: " . $this->db->error);
+        }
+
+        $stmtDetalle->bind_param("di", $cantidad, $id_dc);
+        if (!$stmtDetalle->execute()) {
+            $stmtDetalle->close();
+            throw new Exception("Error al actualizar la cantidad excedente.");
+        }
+        $stmtDetalle->close();
+
+        // A. Actualizar Inventario (Suma en el almacén destino)
+        $sqlInv = "INSERT INTO inventario (almacen_id, producto_id, stock) 
+                   VALUES (?, ?, ?) 
+                   ON DUPLICATE KEY UPDATE stock = stock + VALUES(stock)";
+        $stmtInv = $this->db->prepare($sqlInv);
+        if (!$stmtInv) {
+            throw new Exception("Error al preparar la actualización de inventario: " . $this->db->error);
+        }
+        $stmtInv->bind_param("iid", $alm_id, $p_id, $cantidad);
+        if (!$stmtInv->execute()) {
+            $stmtInv->close();
+            throw new Exception("Error al impactar el stock en inventario.");
+        }
+        $stmtInv->close();
+
+        // Crear registro en Lotes Stock
+        $codigo_lote = "LOTE-EX-" . $compra_id . "-" . $p_id . "-" . $alm_id;
+
+        $sqlL = "INSERT INTO lotes_stock 
+                (producto_id, almacen_id, codigo_lote, cantidad_inicial, cantidad_actual, precio_compra_unitario, estado_lote) 
+                VALUES (?, ?, ?, ?, ?, ?, 'activo')";
+
+        $stmtL = $this->db->prepare($sqlL);
+        if (!$stmtL) {
+            throw new Exception("Error al preparar la creación de lote: " . $this->db->error);
+        }
+        $stmtL->bind_param("iisddd", $p_id, $alm_id, $codigo_lote, $cantidad, $cantidad, $precio_unitario);
+        if (!$stmtL->execute()) {
+            $stmtL->close();
+            throw new Exception("Error al insertar en lotes_stock.");
+        }
+
+        $lote_id = $stmtL->insert_id;
+        $stmtL->close();
+
+        // Relación lote-detalle
+        $sqlLI = "INSERT INTO lotes_ingresos_detalle 
+                  (lote_id, detalle_compra_id, cantidad_recibida, costo_aplicado) 
+                  VALUES (?, ?, ?, ?)";
+        $stmtLI = $this->db->prepare($sqlLI);
+        if (!$stmtLI) {
+            throw new Exception("Error al preparar detalle de lote ingreso: " . $this->db->error);
+        }
+        $stmtLI->bind_param("iidd", $lote_id, $id_dc, $cantidad, $subtotal);
+        if (!$stmtLI->execute()) {
+            $stmtLI->close();
+            throw new Exception("Error al registrar relacion lote-ingreso.");
+        }
+        $stmtLI->close();
+
+        // B. Registrar Movimiento (Kardex)
+        $obs = "Entrada Excedente (Compra: {$folio})";
+        $sqlK = "INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_destino_id, usuario_registra_id, referencia_id, observaciones) 
+                 VALUES (?, 'entrada', ?, ?, ?, ?, ?)";
+        $stmtK = $this->db->prepare($sqlK);
+        if (!$stmtK) {
+            throw new Exception("Error al preparar registro en movimientos: " . $this->db->error);
+        }
+        $stmtK->bind_param("idiiis", $p_id, $cantidad, $alm_id, $user_id, $compra_id, $obs);
+        if (!$stmtK->execute()) {
+            $stmtK->close();
+            throw new Exception("Error al registrar el movimiento en Kardex.");
+        }
+        $stmtK->close();
+
+        // C. Generar la obligación financiera por el excedente
+        $dataObligacion = [
+            'id_almacen'           => $alm_id,
+            'id_proveedor'         => $proveedor,
+            'beneficiario'         => "Proveedor ID: " . $proveedor,
+            'id_referencia_origen' => $compra_id,
+            'monto_total'          => ($cantidad * $precio_unitario),
+            'tipo_deuda'           => 'excedente_compra',
+            'notas'                => "Deuda generada por material excedente en Compra Folio: " . $folio
+        ];
+
+        if (method_exists($this, 'registrarObligacionFinanciera')) {
+            $resObligacion = $this->registrarObligacionFinanciera($dataObligacion);
+            if (!$resObligacion || empty($resObligacion['success'])) {
+                $msg = $resObligacion['message'] ?? 'Error al registrar la obligación financiera.';
+                throw new Exception($msg);
+            }
+        }
+
+        // Confirmar transacción
+        $this->db->commit();
+        return true;
+
+    } catch (Exception $e) {
+        // Revertir ante cualquier fallo
+        $this->db->rollback();
+        error_log("Error en actualizarExcedenteProducto: " . $e->getMessage());
+        return false;
+    }
+}
 public function guardarCompraCompleta($items, $folio, $proveedor, $evidencia, $almacen_id, $user_id, $metodo_pago) {
     $this->db->begin_transaction();
     try {

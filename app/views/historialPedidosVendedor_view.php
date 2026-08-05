@@ -190,8 +190,8 @@ body {
                         <div class="col-md-3 d-none" id="div_p">
                             <label class="form-label small fw-bold">Fechas</label>
                             <div class="input-group input-group-sm">
-                                <input type="date" id="f_ini" class="form-control" onchange="getVentas()">
-                                <input type="date" id="f_fin" class="form-control" onchange="getVentas()">
+                                <input type="date" id="f_ini" class="form-control" value="<?= date('Y-m-d')?>" onchange="getVentas()">
+                                <input type="date" id="f_fin" class="form-control" value="<?= date('Y-m-d')?>" onchange="getVentas()">
                             </div>
                         </div>
                         <div class="col-md-2">
@@ -245,7 +245,7 @@ body {
                     <th class="text-end pe-4 py-3">Acciones</th>
                 </tr>
             </thead>
-            <tbody class="text-dark font-table-body">
+            <tbody class=" font-table-body">
                 </tbody>
         </table>
     </div>
@@ -266,7 +266,7 @@ body {
                     <th class="text-center pe-4 py-3">Saldo Por Cobrar</th>
                 </tr>
             </thead>
-            <tbody class="text-dark font-table-body">
+            <tbody class=" font-table-body">
                 </tbody>
         </table>
     </div>
@@ -547,7 +547,7 @@ let agregarPago = (saldo <= 0) ?
                 return `<tr>
     <td class="ps-3 small align-middle">${v.fecha}</td>
     <td class="fw-bold align-middle">${v.folio}</td>
-    <td class="align-middle"><span class="badge bg-light text-dark border fw-normal">${v.almacen_nombre}</span></td>
+    <td class="align-middle"><span class="badge bg-light  border fw-normal">${v.almacen_nombre}</span></td>
     <td class="align-middle"><div class="small fw-bold">${v.vendedor}</div></td>
     <td class="align-middle"><div class="small fw-bold">${v.cliente}</div></td>
     <td class="fw-bold card-title-text align-middle">${factura}</td>
@@ -605,7 +605,7 @@ const resultado = agruparVentasPorCliente(data.data);
                 return `<tr>
     
     <td class="fw-bold align-middle">${v.id_cliente}</td>
-    <td class="align-middle"><span class="badge bg-light text-dark border fw-normal">${v.cliente}</span></td>
+    <td class="align-middle"><span class="badge bg-light  border fw-normal">${v.cliente}</span></td>
     <td class="align-middle"><div class="small text-center fw-bold">${v.total_compro}</div></td>
     <td class="align-middle"><div class="small text-center fw-bold">${v.total_cobrado}</div></td>
     <td class="fw-bold card-title-text align-middle text-center">${(v.total_debe*(-1))}</td>
@@ -890,7 +890,7 @@ if (data.info.estado_general === 'cancelada') {
             <td class="small">${p.fecha}</td>
             <td class="fw-bold text-success">$${parseFloat(p.monto).toFixed(2)}</td>
             <td>
-                <span class="badge bg-light text-dark border fw-normal">${p.metodo_pago}</span>
+                <span class="badge bg-light  border fw-normal">${p.metodo_pago}</span>
                 <div class="card-title-text" style="font-size:0.65rem">Recibió: ${p.usuario_nombre}</div>
             </td>
              <td>
@@ -997,7 +997,7 @@ if (data.info.estado_general === 'cancelada') {
         const estadoClass =
             g.estatus_logistico === 'completado'
                 ? 'bg-success'
-                : 'bg-warning text-dark';
+                : 'bg-warning ';
 
         const tr = `
             <tr>

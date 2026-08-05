@@ -328,7 +328,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'elimin
     }
 
     exit;
-}if ($action === 'guardarGasto') {
+}
+if ($action === 'guardarGasto') {
     header('Content-Type: application/json');
     try {
         $rol_id = $_SESSION['rol_id'] ?? 0;
@@ -504,7 +505,47 @@ if ($action === 'aplicarFaltantesCompras') {
     echo json_encode($faltantes);
     exit;
 }
+if ($action === 'actualizarExcedente') {
 
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+
+    try {
+        $user_id = $_SESSION['usuario_id'] ?? 1;
+
+        // ✅ Cambiar $_GET por $_POST
+        $compra_id   = intval($_POST['compra_id'] ?? 0);
+        $producto_id = intval($_POST['producto_id'] ?? 0);
+        $excedente   = floatval($_POST['excedente'] ?? 0);
+
+        if ($compra_id <= 0 || $producto_id <= 0) {
+            throw new Exception("Datos de compra o producto inválidos.");
+        }
+
+        if ($excedente < 0) {
+            throw new Exception("La cantidad excedente no puede ser negativa.");
+        }
+
+        $ok = $comprasModel->actualizarExcedenteProducto($compra_id, $producto_id, $excedente, $user_id);
+
+        if (!$ok) {
+            throw new Exception("Error al actualizar la cantidad excedente en la BD.");
+        }
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Cantidad excedente actualizada correctamente.'
+        ]);
+
+    } catch (Throwable $e) {
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage()
+        ]);
+    }
+
+    exit;
+}
 if ($action === 'procesarAjusteFaltante') {
     header('Content-Type: application/json');
     try {

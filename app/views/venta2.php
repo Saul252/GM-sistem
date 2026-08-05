@@ -313,7 +313,7 @@
                                                 class="input-group-text bg-success-subtle text-success border-0 fw-bold">$</span>
                                             <input type="number" id="monto_pagar"
                                                 class="form-control border-light-subtle  fw-bold fs-5 text-success"
-                                                value="0" step="0.01" min="0"  oninput=" calcularCambio()" >
+                                               step="0.01" min="0"  oninput=" calcularCambio()" required >
                                         </div>
                                         
                                     </div>
@@ -753,7 +753,7 @@ async function cargarClientes() {
                         value="${d.stock}"
                         min="0.01"
                         
-                        >
+                       required >
 <spam   
                      
                       
@@ -783,7 +783,7 @@ async function cargarClientes() {
                         name="itemsEditar[${id}][unidad]" 
                         class="form-select unidad-select-editar"
                         onchange="actualizarEquivalencia(this);calcularPrecioSugeridoEditar(this)">
-                        <option value="" data-equivalencia="" data-medida-id="">Seleccione</option>
+                       
                         ${opcionesUnidad}
                     </select>
                 </td>
@@ -792,7 +792,7 @@ async function cargarClientes() {
                     <select 
                         name="itemsEditar[${id}][tipoPrecio]" 
                         class="form-select tipoPrecio-select-editar"
-                        onchange="calcularPrecioSugeridoEditar(this)">
+                        onchange="calcularPrecioSugeridoEditar(this)" required>
                         <option value="seleccionar" data-precio="0">Seleccione</option>
                         <option value="minorista" data-precio="${preMin}">Min $${(preMin * factor).toFixed(2)} x ${d.ur}</option>
                         <option value="mayorista" data-precio="${preMat}">May $${(preMat * factor).toFixed(2)} x ${d.ur}</option>
@@ -972,150 +972,169 @@ async function cargarClientes() {
     // GUARDAR ACTUALIZACIÓN (SUBMIT FORM)
     // =====================================================
     // =====================================================
-    $('#formEditarSolicitud').on('submit', async function(e) {
-        e.preventDefault();
+   $('#formEditarSolicitud').on('submit', async function(e) {
+    e.preventDefault();
 
-        if (!$('#tablaDetalleEditar tbody tr').length) {
-            Swal.fire('Error', 'Agregue al menos un producto a la venta', 'warning');
-            return;
-        }
-
-        const $btnFinalizar = $(this).find('button[type="submit"]');
-        $btnFinalizar.prop('disabled', true);
-
-        const totalVenta = parseFloat($('#totalCotizacionEditar').val()) || 0;
-        const montoPagado = $('#monto_pagar').val(); // Dinero real recibido
-
-        const payload = {
-            accion: 'guardar_venta',
-            id_cliente: $('#cliente_id_editar').val(),
-            id_vendedor: $('#select-vendedor1').val(),
-            monto_pagado: totalVenta,
-            monto_usado_favor: 0,
-            total_venta: totalVenta,
-            almacen_id: $('#almacen_id_editar').val(),
-            metodo_pago: $('#metodo_pago').val(),
-            referencia: $('#inputReferencia').val(),
-            observaciones: $('#obsVenta').val(),
-            usar_saldo_favor: 0,
-            chofer_id: parseInt(document.getElementById('patio_chofer_id').value) || 0,
-            tripulantes: $('#patio_tripulantes').val() || [], // Array de IDs de ayudantes
-            observaciones_entrega: document.querySelector('textarea[name="observaciones"]')
-                ?.value || 'Entrega en Patio',
-            carrito: []
-        };
-
-        $('#tablaDetalleEditar tbody tr').each(function() {
-            const fila = $(this);
-            const id = fila.attr('id').replace('filaEditar-', '');
-
-            const unidadSelect = fila.find('.unidad-select-editar option:selected');
-            const tipoPrecioSelect = fila.find('.tipoPrecio-select-editar option:selected');
-            let cantidadInicial = parseFloat(fila.find('.cantidad-editar').val()) || 0;
-            let equivalencia = parseFloat(fila.find('.equivalencia').val()) || 1;
-
-            let cantidadT = (cantidadInicial * equivalencia);
-            let cantidadTotal = (cantidadT % 1 > 0) ? cantidadT.toFixed(2) : cantidadT;
-
-            payload.carrito.push({
-                producto_id: id,
-                almacen_id: $('#almacen_id_editar').val(),
-                cantidad: cantidadTotal,
-                unidad_base: unidadSelect.val(),
-                entrega_hoy: cantidadTotal,               
-                idunidadMedida: unidadSelect.data('medida-id'),
-                unidadEquivalencia: unidadSelect.data('equivalencia'),
-                tipo_precio: tipoPrecioSelect.val(),
-                precio_unitario: fila.find('.precio-unitario-editar').val(),
-                subtotal: fila.find('.precio-total-editar').val()
-            });
-        });
-        console.log(payload.carrito);
-
-        Swal.fire({
-            title: 'Actualizando venta...',
-            allowOutsideClick: false,
-            didOpen: () => Swal.showLoading()
-        });
-
-        try {
-            const resp = await fetch(`/cfsistem/app/controllers/cajaRapidaController.php`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const res = await resp.json();
-
-          if (res.status === 'success') {
-    const tieneDeuda = payload.monto_pagado < payload.total_venta;
-    const esEntregaTotal = (res.total_entregado ?? 0) >= (res.total_pedido ?? 0);
-    const iconoFinal = esEntregaTotal ? 'success' : 'warning';
-
-    // Usamos 'bg-body-secondary text-body border' para que la badge cambie según el tema
-    let htmlExtra =
-        `<p class="mb-2">Folio: <span class="badge bg-body-secondary text-body border">${res.folio || 'N/A'}</span></p>`;
-
-    if (tieneDeuda) {
-        htmlExtra += `
-    <div class="alert alert-danger py-1 px-2 border-0 mb-2" style="font-size:0.75rem; border-radius:10px;">
-        <i class="bi bi-exclamation-circle-fill me-1"></i> Saldo pendiente registrado en cuenta
-    </div>`;
+    if (!$('#tablaDetalleEditar tbody tr').length) {
+        Swal.fire('Error', 'Agregue al menos un producto a la venta', 'warning');
+        return;
     }
 
-    Swal.fire({
-        title: esEntregaTotal ? '¡Venta Exitosa!' : 'Entrega Parcial Registrada',
-        html: `
-        <div class="alert bg-body-tertiary border-0 small text-start py-2 mb-3" style="border-radius:12px;">
-            ${res.message || 'Operación realizada correctamente.'}
-        </div>
-        ${htmlExtra}
-        <p class="text-body-secondary small mb-0">¿Deseas imprimir el comprobante?</p>
-    `,
-        icon: iconoFinal,
-        showDenyButton: true,
-        showCancelButton: true,
-        confirmButtonText: '<i class="bi bi-receipt"></i> Con Precios',
-        denyButtonText: '<i class="bi bi-receipt"></i> Ticket Formal',
-        cancelButtonText: 'Cerrar',
-        confirmButtonColor: '#34c759',
-        denyButtonColor: '#5856d6',
-        customClass: {
-            // 'bg-body text-body' hace que la alerta tome los colores del tema de Bootstrap
-            popup: 'rounded-4 border-0 shadow-lg bg-body text-body' 
-        }
-    }).then((result) => {
-        let url = '';
-        if (result.isConfirmed) {
-            url = `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`;
-        } else if (result.isDenied) {
-            url = `/cfsistem/app/backend/ventas/ticketFormal.php?id=${res.id_venta}`;
-        }
+    const $btnFinalizar = $(this).find('button[type="submit"]');
+    $btnFinalizar.prop('disabled', true);
 
-        if (url !== '') window.open(url, '_blank');
-        location.reload();
-    });
-} else {
-    Swal.fire({
-        title: 'Error',
-        text: res.message || 'Error desconocido',
-        icon: 'error',
-        customClass: {
-            popup: 'rounded-4 bg-body text-body'
-        }
-    });
-    $btnFinalizar.prop('disabled', false);
-}
+    const totalVenta = parseFloat($('#totalCotizacionEditar').val()) || 0;
+    const montoPagado = parseFloat($('#monto_pagar').val()) || 0; // Dinero real recibido para cobro/cambio
 
-        } catch (e) {
-            console.error(e);
-            Swal.fire('Error', 'Fallo de conexión con el servidor', 'error');
+    // =========================================================
+    // VALIDACIÓN: Verificar que el dinero recibido cubra el total
+    // =========================================================
+    if (montoPagado < totalVenta) {
+        Swal.fire({
+            title: 'Monto insuficiente',
+            text: `No es posible continuar por el monto ingresado ($${montoPagado.toFixed(2)}). Debe ser igual o mayor al total ($${totalVenta.toFixed(2)}).`,
+            icon: 'warning',
+            customClass: {
+                popup: 'rounded-4 bg-body text-body'
+            }
+        });
+        $btnFinalizar.prop('disabled', false); // Rehabilitar el botón
+        return; // Detener la ejecución
+    }
+
+    const payload = {
+        accion: 'guardar_venta',
+        id_cliente: $('#cliente_id_editar').val(),
+        id_vendedor: $('#select-vendedor1').val(),
+        monto_pagado: totalVenta, // Queda asignado exactamente como lo tenías
+        monto_usado_favor: 0,
+        total_venta: totalVenta,
+        almacen_id: $('#almacen_id_editar').val(),
+        metodo_pago: $('#metodo_pago').val(),
+        referencia: $('#inputReferencia').val(),
+        observaciones: $('#obsVenta').val(),
+        usar_saldo_favor: 0,
+        chofer_id: parseInt(document.getElementById('patio_chofer_id').value) || 0,
+        tripulantes: $('#patio_tripulantes').val() || [], // Array de IDs de ayudantes
+        observaciones_entrega: document.querySelector('textarea[name="observaciones"]')?.value || 'Entrega en Patio',
+        carrito: []
+    };
+
+    $('#tablaDetalleEditar tbody tr').each(function() {
+        const fila = $(this);
+        const id = fila.attr('id').replace('filaEditar-', '');
+
+        const unidadSelect = fila.find('.unidad-select-editar option:selected');
+        const tipoPrecioSelect = fila.find('.tipoPrecio-select-editar option:selected');
+        let cantidadInicial = parseFloat(fila.find('.cantidad-editar').val()) || 0;
+        let equivalencia = parseFloat(fila.find('.equivalencia').val()) || 1;
+
+        let cantidadT = (cantidadInicial * equivalencia);
+        let cantidadTotal = (cantidadT % 1 > 0) ? cantidadT.toFixed(2) : cantidadT;
+
+        payload.carrito.push({
+            producto_id: id,
+            almacen_id: $('#almacen_id_editar').val(),
+            cantidad: cantidadTotal,
+            unidad_base: unidadSelect.val(),
+            entrega_hoy: cantidadTotal,               
+            idunidadMedida: unidadSelect.data('medida-id'),
+            unidadEquivalencia: unidadSelect.data('equivalencia'),
+            tipo_precio: tipoPrecioSelect.val(),
+            precio_unitario: fila.find('.precio-unitario-editar').val(),
+            subtotal: fila.find('.precio-total-editar').val()
+        });
+    });
+
+    Swal.fire({
+        title: 'Actualizando venta...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    try {
+        const resp = await fetch(`/cfsistem/app/controllers/cajaRapidaController.php`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const res = await resp.json();
+
+        if (res.status === 'success') {
+            const tieneDeuda = payload.monto_pagado < payload.total_venta;
+            const esEntregaTotal = (res.total_entregado ?? 0) >= (res.total_pedido ?? 0);
+            const iconoFinal = esEntregaTotal ? 'success' : 'warning';
+
+            let htmlExtra = `<p class="mb-2">Folio: <span class="badge bg-body-secondary text-body border">${res.folio || 'N/A'}</span></p>`;
+
+            if (tieneDeuda) {
+                htmlExtra += `
+                <div class="alert alert-danger py-1 px-2 border-0 mb-2" style="font-size:0.75rem; border-radius:10px;">
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> Saldo pendiente registrado en cuenta
+                </div>`;
+            }
+
+            // Calcular cambio para mostrarlo en el SweetAlert final de éxito si aplica
+            const cambio = montoPagado - totalVenta;
+            let htmlCambio = cambio > 0 
+                ? `<div class="alert bg-success-subtle text-success border-0 fw-bold py-2 mb-3" style="border-radius:12px; font-size:1rem;">
+                    Cambio a entregar: $${cambio.toFixed(2)}
+                   </div>` 
+                : '';
+
+            Swal.fire({
+                title: esEntregaTotal ? '¡Venta Exitosa!' : 'Entrega Parcial Registrada',
+                html: `
+                <div class="alert bg-body-tertiary border-0 small text-start py-2 mb-2" style="border-radius:12px;">
+                    ${res.message || 'Operación realizada correctamente.'}
+                </div>
+                ${htmlCambio}
+                ${htmlExtra}
+                <p class="text-body-secondary small mb-0">¿Deseas imprimir el comprobante?</p>
+            `,
+                icon: iconoFinal,
+                showDenyButton: true,
+                showCancelButton: true,
+                confirmButtonText: '<i class="bi bi-receipt"></i> Con Precios',
+                denyButtonText: '<i class="bi bi-receipt"></i> Ticket Formal',
+                cancelButtonText: 'Cerrar',
+                confirmButtonColor: '#34c759',
+                denyButtonColor: '#5856d6',
+                customClass: {
+                    popup: 'rounded-4 border-0 shadow-lg bg-body text-body' 
+                }
+            }).then((result) => {
+                let url = '';
+                if (result.isConfirmed) {
+                    url = `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`;
+                } else if (result.isDenied) {
+                    url = `/cfsistem/app/backend/ventas/ticketFormal.php?id=${res.id_venta}`;
+                }
+
+                if (url !== '') window.open(url, '_blank');
+                location.reload();
+            });
+        } else {
+            Swal.fire({
+                title: 'Error',
+                text: res.message || 'Error desconocido',
+                icon: 'error',
+                customClass: {
+                    popup: 'rounded-4 bg-body text-body'
+                }
+            });
             $btnFinalizar.prop('disabled', false);
         }
-    });
-    // ELIMINAR FILA
+
+    } catch (e) {
+        console.error(e);
+        Swal.fire('Error', 'Fallo de conexión con el servidor', 'error');
+        $btnFinalizar.prop('disabled', false);
+    }
+}); // ELIMINAR FILA
     // =====================================================
     function quitarFilaEditar(id) {
         $(`#filaEditar-${id}`).remove();

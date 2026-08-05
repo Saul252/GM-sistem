@@ -4,14 +4,14 @@
             style="border-radius: 20px; border: none; width: 95%; max-width: 1140px; overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.2);">
             <form id="formSolicitud">
 
-                <div class="modal-header bg-white border-0 pt-4 px-4 pb-2">
+                <div class="modal-header  border-0 pt-4 px-4 pb-2">
                     <div class="d-flex align-items-center">
-                        <div class="bg-primary text-white rounded-3 p-2 me-3 shadow-sm d-flex align-items-center justify-content-center"
+                        <div class="bg-primary rounded-3 p-2 me-3 shadow-sm d-flex align-items-center justify-content-center"
                             style="width: 45px; height: 45px;">
                             <i class="bi bi-file-earmark-plus fs-4"></i>
                         </div>
                         <div>
-                            <h4 class="fw-bold mb-0 text-dark">Nuevo Comprobante / Depósito</h4>
+                            <h4 class="fw-bold mb-0 ">Nuevo Comprobante / Depósito</h4>
                             <p class="text-body-secondary small mb-0">Complete los datos para registrar el movimiento en el
                                 sistema</p>
                         </div>
@@ -20,14 +20,14 @@
                 </div>
 
                 <div class="modal-body px-4 pt-3">
-                    <div class="row g-3 p-4 rounded-4 bg-light border align-items-end mb-2">
+                    <div class="row g-3 p-4 rounded-4  border align-items-end mb-2">
 
                         <div class="col-md-4">
                             <label class="form-label small fw-bold text-secondary mb-2">
                                 <i class="bi bi-box-seam me-1"></i> Almacén de Cargo
                             </label>
                             <div class="input-group">
-                                <span class="input-group-text bg-white border-end-0 text-body-secondary"><i
+                                <span class="input-group-text  border-end-0 text-body-secondary"><i
                                         class="bi bi-geo-alt"></i></span>
                                 <select name="almacen_id" id="almacen_id" class="form-select border-start-0 ps-0"
                                     required>
@@ -73,7 +73,7 @@
                             <label class="form-label small fw-bold text-secondary mb-2">
                                 <i class="bi bi-calendar3 me-1"></i> Fecha de Depósito
                             </label>
-                            <input type="date" id="fecha_deposito" name="fecha_deposito" class="form-control" required>
+                            <input type="date" id="fecha_deposito" value="<?=date('Y-m-d')?>" name="fecha_deposito" class="form-control" required>
                         </div>
 <?php endif; ?>
                         <div class="col-md-4 mt-3">
@@ -81,9 +81,9 @@
                                 <i class="bi bi-currency-dollar me-1"></i> Monto
                             </label>
                             <div class="input-group">
-                                <span class="input-group-text bg-white text-success fw-bold">$</span>
+                                <span class="input-group-text  text-success fw-bold">$</span>
                                 <input type="number" step="0.01" value="0.00" id="monto_depositado"
-                                    name="monto_depositado" class="form-control fw-bold text-dark" required>
+                                    name="monto_depositado" class="form-control fw-bold " required>
                             </div>
                         </div>
                         <div class="col-5">

@@ -29,6 +29,7 @@ $productosModel = new ProductoModel($conexion);
 // ==========================================
 // ACCIÓN: Obtener Usuarios
 // ==========================================
+
 if (isset($_GET['action']) && $_GET['action'] === 'obtenerUsuarios') {
     if (ob_get_level()) ob_clean();
     header('Content-Type: application/json');
@@ -53,6 +54,31 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerUsuarios') {
     }
     exit;
 }
+if (isset($_GET['action']) && $_GET['action'] === 'getAlmacenesJSON') {
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+    
+    try {
+        
+
+    // 1. Limpiamos cualquier salida previa (espacios, warnings, etc)
+    
+    
+        // Llamamos a tu modelo con 0 para traer todos
+        $almacenes =$almacenModel->getAlmacenes(0); 
+        
+        if (!$almacenes) {
+            echo json_encode([]);
+        } else {
+            echo json_encode($almacenes);
+        }
+    } catch (Exception $e) {
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
+    // 3. Terminamos la ejecución para que no se pegue el HTML del Layout
+    exit; 
+}
+   
 if (isset($_GET['action']) && $_GET['action'] === 'obtenerClientes') {
     if (ob_get_level()) ob_clean();
     header('Content-Type: application/json');

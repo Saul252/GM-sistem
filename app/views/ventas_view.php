@@ -1024,80 +1024,90 @@
         });
 
         try {
-            const resp = await fetch(`/cfsistem/app/controllers/ventasController.php`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(payload)
-            });
+    const resp = await fetch(`/cfsistem/app/controllers/ventasController.php`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    });
 
-            const res = await resp.json();
+    const res = await resp.json();
 
-            if (res.status === 'success') {
+    if (res.status === 'success') {
 
-                const tieneDeuda = payload.monto_pagado < payload.total_venta;
-                const esEntregaTotal = (res.total_entregado ?? 0) >= (res.total_pedido ?? 0);
-                const iconoFinal = esEntregaTotal ? 'success' : 'warning';
+        const tieneDeuda = payload.monto_pagado < payload.total_venta;
+        const esEntregaTotal = (res.total_entregado ?? 0) >= (res.total_pedido ?? 0);
+        const iconoFinal = esEntregaTotal ? 'success' : 'warning';
 
-                let htmlExtra =
-                    `<p class="mb-2">Folio: <span class="badge   border">${res.folio || 'N/A'}</span></p>`;
+        // 🎨 Ajustado para modo oscuro: 'bg-body-secondary text-body border-secondary-subtle'
+        let htmlExtra =
+            `<p class="mb-2">Folio: <span class="badge bg-body-secondary text-body border border-secondary-subtle">${res.folio || 'N/A'}</span></p>`;
 
-                if (tieneDeuda) {
-                    htmlExtra += `
-                <div class="alert alert-danger py-1 px-2 border-0 mb-2" style="font-size:0.75rem; border-radius:10px;">
-                    <i class="bi bi-exclamation-circle-fill me-1"></i> Saldo pendiente registrado en cuenta
-                </div>`;
-                }
+        if (tieneDeuda) {
+            // 🎨 Ajustado con utilidades de Bootstrap 5 para soportar temas claros y oscuros
+            htmlExtra += `
+        <div class="alert bg-danger-subtle text-danger-emphasis py-1 px-2 border-0 mb-2 rounded-3" style="font-size:0.75rem;">
+            <i class="bi bi-exclamation-circle-fill me-1"></i> Saldo pendiente registrado en cuenta
+        </div>`;
+        }
 
-                Swal.fire({
-                    title: esEntregaTotal ? '¡Venta Exitosa!' : 'Entrega Parcial Registrada',
-                    html: `
-                    <div class="alert bg-body-tertiary text-body border-0 small text-start py-2 mb-3" style="background:#f2f2f7; border-radius:12px;">
-                        ${res.message || 'Operación realizada correctamente.'}
-                    </div>
-                    ${htmlExtra}
-                    <p class="text-body-secondary small mb-0">¿Deseas imprimir el comprobante?</p>
-                `,
-                    icon: iconoFinal,
-                    showDenyButton: true,
-                    showCancelButton: true,
-                    confirmButtonText: '<i class="bi bi-receipt"></i> Con Precios',
-                    denyButtonText: '<i class="bi bi-receipt"></i> Ticket Formal',
-                    cancelButtonText: 'Cerrar',
-                    confirmButtonColor: '#34c759',
-                    denyButtonColor: '#5856d6',
-                    customClass: {
-                        popup: 'rounded-4 border-0 shadow-lg'
-                    }
-                }).then((result) => {
-                    let url = '';
-                    if (result.isConfirmed) {
-                        url = `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`;
-                    } else if (result.isDenied) {
-                        url = `/cfsistem/app/backend/ventas/ticketFormal.php?id=${res.id_venta}`;
-                    }
-
-                    if (url !== '') window.open(url, '_blank');
-                    location.reload();
-                });
-            } else {
-                Swal.fire({
-                    title: 'Error',
-                    text: res.message || 'Error desconocido',
-                    icon: 'error',
-                    customClass: {
-                        popup: 'rounded-4'
-                    }
-                });
-                $btnFinalizar.prop('disabled', false);
+        Swal.fire({
+            title: esEntregaTotal ? '¡Venta Exitosa!' : 'Entrega Parcial Registrada',
+            html: `
+            <!-- 🎨 Se remueve style="background:#f2f2f7" en favor de 'bg-body-secondary' -->
+            <div class="alert bg-body-secondary text-body border-0 small text-start py-2 mb-3 rounded-3">
+                ${res.message || 'Operación realizada correctamente.'}
+            </div>
+            ${htmlExtra}
+            <p class="text-body-secondary small mb-0">¿Deseas imprimir el comprobante?</p>
+        `,
+            icon: iconoFinal,
+            showDenyButton: true,
+            showCancelButton: true,
+            confirmButtonText: '<i class="bi bi-receipt"></i> Con Precios',
+            denyButtonText: '<i class="bi bi-receipt"></i> Ticket Formal',
+            cancelButtonText: 'Cerrar',
+            confirmButtonColor: '#34c759',
+            denyButtonColor: '#5856d6',
+            customClass: {
+                popup: 'rounded-4 border-0 shadow-lg bg-body text-body'
+            }
+        }).then((result) => {
+            let url = '';
+            if (result.isConfirmed) {
+                url = `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`;
+            } else if (result.isDenied) {
+                url = `/cfsistem/app/backend/ventas/ticketFormal.php?id=${res.id_venta}`;
             }
 
-        } catch (e) {
-            console.error(e);
-            Swal.fire('Error', 'Fallo de conexión con el servidor', 'error');
-            $btnFinalizar.prop('disabled', false);
+            if (url !== '') window.open(url, '_blank');
+            location.reload();
+        });
+    } else {
+        Swal.fire({
+            title: 'Error',
+            text: res.message || 'Error desconocido',
+            icon: 'error',
+            customClass: {
+                popup: 'rounded-4 bg-body text-body'
+            }
+        });
+        $btnFinalizar.prop('disabled', false);
+    }
+
+} catch (e) {
+    console.error(e);
+    Swal.fire({
+        title: 'Error',
+        text: 'Fallo de conexión con el servidor',
+        icon: 'error',
+        customClass: {
+            popup: 'rounded-4 bg-body text-body'
         }
+    });
+    $btnFinalizar.prop('disabled', false);
+}
     });
     // ELIMINAR FILA
     // =====================================================

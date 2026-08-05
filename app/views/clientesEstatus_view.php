@@ -54,7 +54,7 @@
                             </button>
                         </div>
                     </div>
-                    <?php if ($_SESSION['almacen_id'] == 0): ?>
+                   
     <div class="card card-expediente p-3 mb-4">
         <div class="row align-items-center">
            <div class="mb-3">
@@ -65,7 +65,7 @@
 </div>
         </div>
     </div>
-<?php endif; ?>
+
                 </div>
             </div>
         </div>
@@ -243,7 +243,7 @@ console.log(clientes);
 function cargarComboAlmacenes() {
     $.ajax({
         // Usamos la ruta completa para evitar errores de carpetas
-        url: '/cfsistem/app/controllers/almacenes.php?action=getAlmacenesJSON',
+        url: '/cfsistem/app/controllers/accesoController.php?action=getAlmacenesJSON',
         type: 'GET',
         dataType: 'json',
         success: function(data) {

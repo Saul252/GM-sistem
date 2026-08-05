@@ -90,7 +90,7 @@
 
     /* Nivel 2: Secundarios (Productos, Proveedores) */
     #modalAgregarProducto,
-    #modalNuevoProveedorRapido {
+    #modalNuevoProveedorRapido,#modalConfirmarExcedente {
         z-index: 1110 !important;
     }
 

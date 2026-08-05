@@ -142,7 +142,7 @@
     }
 
     .modal-header {
-        background-color: var(--primary-dark);
+        background-color: var(--primary-dark)!important;
         color: white;
         border: none;
     }
@@ -247,8 +247,8 @@
                         <div class="col-md-3 d-none" id="div_p">
                             <label class="form-label small fw-bold">Fechas</label>
                             <div class="input-group input-group-sm">
-                                <input type="date" id="f_ini" class="form-control" onchange="getVentas()">
-                                <input type="date" id="f_fin" class="form-control" onchange="getVentas()">
+                                 <input type="date" id="f_ini" class="form-control" value="<?= date('Y-m-d')?>" onchange="getVentas()">
+                                <input type="date" id="f_fin" class="form-control" value="<?= date('Y-m-d')?>" onchange="getVentas()">
                             </div>
                         </div>
                         <div class="col-md-2">

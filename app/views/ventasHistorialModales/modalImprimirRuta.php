@@ -1,13 +1,12 @@
-
 <div class="modal fade" id="modalImprimirRuta" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
 
-            <div class="modal-header bg-light align-items-center py-3">
-                <h5 class="modal-title d-flex align-items-center gap-2 fw-bold text-dark">
+            <div class="modal-header bg-body-tertiary align-items-center py-3">
+               <h6 class="modal-title fw-bold">
                     <i class="bi bi-receipt text-primary"></i>
                     Ruta de Reparto: <span id="folioRutaPrint" class="text-primary"></span>
-                </h5>
+                </h6>
 
                 <div class="d-flex gap-2 ms-auto me-2">
                     <button class="btn btn-primary btn-sm px-3 d-flex align-items-center gap-1" onclick="imprimirModalRuta()">
@@ -25,8 +24,9 @@
         </div>
     </div>
 </div>
+
 <script>
-     async function imprimirRuta(entrega_ida, folioViaje) {
+async function imprimirRuta(entrega_ida, folioViaje) {
 
     document.getElementById('folioRutaPrint').textContent = entrega_ida;
 
@@ -42,12 +42,6 @@
 
     const cont = document.getElementById('contenidoRutaPrint');
     const datos = data.data;
-
-    // =========================================
-    // DATOS GENERALES
-    // =========================================
-    
-    
 
     // =========================================
     // AGRUPAR PRODUCTOS
@@ -74,13 +68,11 @@
     let filas = '';
 
     datos.forEach((prod, i) => {
-        console.log(prod);
-        
         const total = prod.totalCantidad / prod.factor;
         const totalCantidad = prod.totalCantidad;
         const unidad = total >= 1 ? prod.unidadReporte : (totalCantidad/(1/prod.equi))>=1?prod.nombreEqui:prod.unidadMedida;
-let cantidad=(1/prod.equi)==1?totalCantidad/prod.factor:totalCantidad/(1/prod.equi);
-        // Formatear dinámicamente el color del badge del estado en la tabla
+        let cantidad=(1/prod.equi)==1?totalCantidad/prod.factor:totalCantidad/(1/prod.equi);
+
         let badgeColor = 'bg-warning text-dark';
         if (prod.estatus_logistico === 'completado') badgeColor = 'bg-success text-white';
         if (prod.estatus_logistico === 'en_transito') badgeColor = 'bg-primary text-white';
@@ -88,41 +80,36 @@ let cantidad=(1/prod.equi)==1?totalCantidad/prod.factor:totalCantidad/(1/prod.eq
         filas += `
             <tr>
                 <td class="text-body-secondary fw-semibold">${i + 1}</td>
-                <td style="max-width:350px;" class="fw-medium text-dark">${prod.nombreProducto}</td>
+                <td style="max-width:350px;" class="fw-medium text-body">${prod.nombreProducto}</td>
                 <td style="max-width:250px;" class="fw-bold text-primary">
                     ${parseFloat(cantidad).toFixed(2)} <span class="text-body-secondary fw-normal small">${unidad}</span>
                 </td>
                 <td style="max-width:250px;" class="text-body-secondary small">${prod.direccion_entrega ?? '-'}</td>
                 <td class="text-center">
-                    <span class="badge ${badgeColor}  text-uppercase font-monospace">${prod.estatus_logistico}</span>
+                    <span class="badge ${badgeColor} text-uppercase font-monospace">${prod.estatus_logistico}</span>
                 </td>
             </tr>
         `;
     });
 
-    // Formatear color de estatus general
-    let generalBadgeColor = 'bg-warning text-dark';
-    if (data.data[0].estatus_logistico === 'completado') generalBadgeColor = 'bg-success text-white';
-    if (data.data[0].estatus_logistico === 'en_transito') generalBadgeColor = 'bg-primary text-white';
-
     // =========================================
-    // HTML GENERADO
+    // HTML GENERADO CON VARIABLES DE TEMA
     // =========================================
-    console.log(data.data);
     let html = `
         <div class="hoja-ruta-container p-4">
 
             <!-- HEADER INTERNO -->
             <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
                 <div>
-                    <h4 class="fw-bold text-dark m-0 d-flex align-items-center gap-2">
+                    <h4 class="fw-bold text-body m-0 d-flex align-items-center gap-2">
                         <span>🚚</span> Venta ${data.data[0].folio_venta}: Hoja de Ruta
                     </h4>
 
                     <div class="text-body-secondary small mt-1">
-                        Folio de viaje: <span class="fw-bold text-dark font-monospace">${data.data[0].folio_viaje}</span>
-                    </div><div class="text-body-secondary small mt-1">
-                        Registro de viaje: <span class="fw-bold text-dark font-monospace">${data.data[0].fecha_viaje ?? '-'}</span>
+                        Folio de viaje: <span class="fw-bold text-body font-monospace">${data.data[0].folio_viaje}</span>
+                    </div>
+                    <div class="text-body-secondary small mt-1">
+                        Registro de viaje: <span class="fw-bold text-body font-monospace">${data.data[0].fecha_viaje ?? '-'}</span>
                     </div>
                 </div>
 
@@ -131,83 +118,92 @@ let cantidad=(1/prod.equi)==1?totalCantidad/prod.factor:totalCantidad/(1/prod.eq
                     <div class="small text-body-secondary mb-1">Fecha de llegada:____________________</div>
                 </div>
             </div>
-<style>
-*{
-text-transform: uppercase !important;}
-.info-grid{
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
-    width: 100%;
-}
 
-/* tarjeta */
-.info-box{
-    border:1px solid #e9e9e9;
-    border-radius:8px;
-    padding:10px 12px;
-    background:#fff;
+            <style>
+                * {
+                    text-transform: uppercase !important;
+                }
+                .info-grid {
+                    display: grid;
+                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                    gap: 12px;
+                    width: 100%;
+                }
 
-    /* CLAVE: evita deformación en modal */
-    min-width: 0;
-}
+                /* Tarjeta adaptativa al modo oscuro */
+                .info-box {
+                    border: 1px solid var(--bs-border-color);
+                    border-radius: 8px;
+                    padding: 10px 12px;
+                    background: var(--bs-tertiary-bg);
+                    min-width: 0;
+                }
 
-/* títulos */
-.info-title{
-    font-size:10.5px;
-    color:#6c757d;
-    text-transform:uppercase;
-    letter-spacing:.5px;
-    margin-bottom:4px;
-}
+                /* Títulos */
+                .info-title {
+                    font-size: 10.5px;
+                    color: var(--bs-secondary-color);
+                    text-transform: uppercase;
+                    letter-spacing: .5px;
+                    margin-bottom: 4px;
+                }
 
-/* valor */
-.info-value{
-    font-size:13px;
-    font-weight:600;
-    line-height:1.2;
+                /* Valor */
+                .info-value {
+                    font-size: 13px;
+                    font-weight: 600;
+                    line-height: 1.2;
+                    color: var(--bs-body-color);
+                    white-space: normal;
+                    word-break: break-word;
+                }
 
-    /* evita desbordes en modal */
-    white-space: normal;
-    word-break: break-word;
-}
+                /* Subtítulo */
+                .info-sub {
+                    font-size: 11.5px;
+                    color: var(--bs-secondary-color);
+                }
 
-/* subtítulo */
-.info-sub{
-    font-size:11.5px;
-    color:#666;
-}
-</style>
+                .firma-linea {
+                    width: 75%;
+                    margin: 35px auto 5px auto;
+                    border-top: 1px solid var(--bs-border-color);
+                }
+
+                .firma-nombre {
+                    font-size: 11px;
+                    font-weight: 600;
+                    color: var(--bs-body-color);
+                }
+            </style>
 
             <!-- BLOQUES DE INFORMACIÓN PRINCIPAL -->
-          <div class="info-grid">
+            <div class="info-grid">
+                <div class="info-box">
+                    <div class="info-title">Unidad de Transporte</div>
+                    <div class="info-value">${data.data[0].unidad_nombre ?? '-'}</div>
+                    <div class="info-sub mt-1">
+                        Placas: <span class="fw-semibold">${data.data[0].unidad_placas ?? '-'}</span>
+                    </div>
+                </div>
 
-    <div class="info-box">
-        <div class="info-title">Unidad de Transporte</div>
-        <div class="info-value">${data.data[0].unidad_nombre ?? '-'}</div>
-        <div class="info-sub mt-1">
-            Placas: <span class="fw-semibold">${data.data[0].unidad_placas ?? '-'}</span>
-        </div>
-    </div>
+                <div class="info-box">
+                    <div class="info-title">Operador / Chofer</div>
+                    <div class="info-value">${data.data[0].nombre_chofer ?? '-'}</div>
+                    <div class="info-sub mt-1 text-body-secondary">Asignado de ruta</div>
+                </div>
 
-    <div class="info-box">
-        <div class="info-title">Operador / Chofer</div>
-        <div class="info-value">${data.data[0].nombre_chofer ?? '-'}</div>
-        <div class="info-sub mt-1 text-body-secondary">Asignado de ruta</div>
-    </div>
-
-    <div class="info-box">
-        <div class="info-title">Cliente Destino</div>
-        <div class="info-value">${data.data[0].cliente ?? '-'}</div>
-        <div class="info-sub mt-1">
-            Tel: <span class="fw-semibold">${data.data[0].tel_cliente ?? 'Sin teléfono'}</span>
-        </div>
-    </div>
-
-</div>
+                <div class="info-box">
+                    <div class="info-title">Cliente Destino</div>
+                    <div class="info-value">${data.data[0].cliente ?? '-'}</div>
+                    <div class="info-sub mt-1">
+                        Tel: <span class="fw-semibold">${data.data[0].tel_cliente ?? 'Sin teléfono'}</span>
+                    </div>
+                </div>
+            </div>
 
             <!-- SECCIÓN DE DETALLES / TABLA -->
-            <div class="table-responsive border rounded mb-4">
+            <div class="table-responsive border rounded mb-4 mt-3">
                 <table class="table align-middle mb-0">
                     <thead>
                         <tr>
@@ -228,26 +224,24 @@ text-transform: uppercase !important;}
             <div class="firmas-container pt-4">
                 <div class="row g-5">
                     <div class="col-4">
-                        <div class="firma-box">
+                        <div class="firma-box text-center">
                             <div class="firma-linea"></div>
                             <div class="firma-nombre">Firma Chofer / Transportista</div>
                             <div class="text-body-secondary small">Nombre y Fecha</div>
                         </div>
                     </div>
                     <div class="col-4">
-                        <div class="firma-box">
+                        <div class="firma-box text-center">
                             <div class="firma-linea"></div>
                             <div class="firma-nombre">Firma Cliente / Recibe</div>
                             <div class="text-body-secondary small">Sello y Firma de conformidad</div>
                         </div>
                     </div>
                     <div class="col-4">
-                       <div class="info-box">
-        <div class="info-sub mt-1">Observaciones y Comentarios:</div>
-        
-    </div>
-                     
-                    
+                        <div class="info-box">
+                            <div class="info-sub mt-1">Observaciones y Comentarios:</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -259,10 +253,9 @@ text-transform: uppercase !important;}
     const modal = new bootstrap.Modal(document.getElementById('modalImprimirRuta'));
     modal.show();
 }
-function imprimirModalRuta() {
 
+function imprimirModalRuta() {
     const contenido = document.getElementById('contenidoRutaPrint').innerHTML;
-    // Se abre en un formato horizontal adecuado para media hoja
     const ventana = window.open('', '_blank', 'width=950,height=650');
 
     ventana.document.write(`
@@ -278,10 +271,9 @@ function imprimirModalRuta() {
                     background: #f8f9fa;
                     color: #333;
                     padding: 15px;
-                    font-size: 11.5px; /* Un poco más compacta para media hoja */
+                    font-size: 11.5px;
                 }
 
-                /* Contenedor tipo hoja limpia ajustable */
                 .ticket {
                     width: 100%;
                     max-width: 820px;
@@ -297,7 +289,6 @@ function imprimirModalRuta() {
                     padding: 20px !important;
                 }
 
-                /* Cajas de datos estilizadas */
                 .info-box {
                     border: 1px solid #e2e8f0;
                     border-radius: 8px;
@@ -327,7 +318,6 @@ function imprimirModalRuta() {
                     color: #64748b;
                 }
 
-                /* Tablas pulidas */
                 table thead th {
                     background-color: #f1f5f9 !important;
                     color: #475569 !important;
@@ -340,12 +330,13 @@ function imprimirModalRuta() {
                 }
 
                 table tbody td {
-                    
-                  
                     font-size: 11.5px;
+                    padding: 2px 6px !important;
+                    margin: 0 !important;
+                    line-height: 1.1 !important;
+                    vertical-align: middle !important;
                 }
 
-                /* Sección de Firmas estructurada */
                 .firmas-container {
                     page-break-inside: avoid;
                 }
@@ -366,32 +357,27 @@ function imprimirModalRuta() {
                     font-weight: 600;
                     color: #1e293b;
                 }
-@media print {
-    .info-grid{
-        display: grid !important;
-        grid-template-columns: repeat(3, 1fr) !important;
-        gap: 10px !important;
-    }
-}
-                /* Forzado estricto de Media Hoja (Formato Horizontal Compacto) */
+
                 @media print {
-                   
+                    .info-grid {
+                        display: grid !important;
+                        grid-template-columns: repeat(3, 1fr) !important;
+                        gap: 10px !important;
+                    }
                     body {
-                        background: #f8f9fa03 !important;
+                        background: #ffffff !important;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
                         padding: 0 !important;
                     }
                     .ticket {
-                        width: 100% !important; /* Toma el ancho horizontal disponible sin estirarse verticalmente */
+                        width: 100% !important;
                         max-width: 100% !important;
-                        background: #ffffff00 !important;
+                        background: #ffffff !important;
                         border: 1px solid #e0e0e0 !important;
                         border-radius: 12px !important;
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.05) !important;
+                        box-shadow: none !important;
                         margin: 0 auto !important;
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
                     }
                     .no-print {
                         display: none !important;
@@ -400,59 +386,31 @@ function imprimirModalRuta() {
                         page-break-inside: avoid !important; 
                     }
                     .info-box {
-                        background: #f8fafc14 !important;
+                        background: #f8fafc !important;
                         border: 1px solid #e2e8f0 !important;
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
                     }
                     table thead th {
                         background-color: #f1f5f9 !important;
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
                     }
                 }
-                    table {
-    border-collapse: collapse !important;
-}
 
-/* 🔥 CLAVE: elimina espacio interno de TODAS las celdas */
-table tbody td {
-    padding: 2px 6px !important;
-    margin: 0 !important;
-    line-height: 1.1 !important;
-    vertical-align: middle !important;
-}
+                table {
+                    border-collapse: collapse !important;
+                }
 
-/* elimina espacio extra de párrafos y saltos */
-table p {
-    margin: 0 !important;
-    padding: 0 !important;
-}
+                table p {
+                    margin: 0 !important;
+                    padding: 0 !important;
+                }
 
-/* elimina saltos visuales tipo bloque */
-table br {
-    display: none !important;
-}
-
-/* si quieres aún MÁS compacto */
-.table-compact td {
-    padding: 1px 4px !important;
-}
+                table br {
+                    display: none !important;
+                }
             </style>
         </head>
         <body>
-<img
-    src="/cfsistem/public/assets/logo.ico"
-    style="
-        position: fixed;
-        top: 22.5%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 300px;
-        opacity: 0.08;
-        z-index: -1;
-    "
->
+            <img src="/cfsistem/public/assets/logo.ico" style="position: fixed; top: 22.5%; left: 50%; transform: translate(-50%, -50%); width: 300px; opacity: 0.08; z-index: -1;">
+
             <div class="text-end mb-3 no-print" style="max-width: 850px; margin: auto;">
                 <button class="btn btn-dark px-4 shadow-sm fw-semibold" onclick="window.print()">
                     🖨 Enviar a Impresora
@@ -465,7 +423,6 @@ table br {
                 </div>
             </div>
 
-            <!-- Disparador automático de impresión al terminar de cargar -->
             <script>
                 window.onload = function() {
                     setTimeout(function() {
@@ -473,7 +430,6 @@ table br {
                     }, 300);
                 };
             <\/script>
-
         </body>
         </html>
     `);
@@ -481,5 +437,4 @@ table br {
     ventana.document.close();
     ventana.focus();
 }
-   
 </script>

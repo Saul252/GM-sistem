@@ -378,6 +378,7 @@ if ($accion === 'despachar_venta_completaConLotes') {
         
         // 🔹 CAMBIO: Ahora tripulantes se castea directamente a entero (ID)
         $tripulanteId = intval($_POST['tripulante_id'] ?? 0);
+          
          
         if (empty($ids)) {
             throw new Exception("No se seleccionaron productos para el despacho masivo.");
@@ -423,8 +424,10 @@ if ($accion === 'despachar_venta_completaConLotes') {
         
         // 2. AHORA PUEDES USARLO PARA LO QUE NECESITES
         // (Por ejemplo, guardar el tripulante desde aquí afuera)
+     
         if ($tripulanteId > 0 && $tripulanteId !== $choferId) {
-             $repartoM->guardarTripulante($reparto_id_generado, $tripulanteId);
+            
+             $repartoM->guardarTripulante($reparto_id_generado, $tripulanteId,$choferId,);
         }
                     } else {
                         $datosReparto['vehiculo_id'] = 999;
