@@ -174,9 +174,10 @@ error_reporting(E_ALL);
     </main>
 
  
-    <div class="modal fade" id="modalGestionSolicitud" tabindex="-1" data-bs-backdrop="static">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow:hidden;">
+   <div class="modal fade" id="modalGestionSolicitud" tabindex="-1" data-bs-backdrop="static">
+    <!-- Ajustado max-width y width al 95% de la pantalla -->
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width: 95vw; width: 95vw; height: 92vh;">
+        <div class="modal-content border-0 shadow-lg h-100" style="border-radius: 16px; overflow:hidden;">
 
             <!-- HEADER -->
             <div class="modal-header bg-success text-white px-4 py-3 border-0">
@@ -190,199 +191,299 @@ error_reporting(E_ALL);
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
 
-           <form id="formConvertirCompra" enctype="multipart/form-data">
+            <form id="formConvertirCompra" enctype="multipart/form-data" class="d-flex flex-column h-100">
 
-    <input type="hidden" name="solicitud_id" id="uni-solicitud-id">
+                <input type="hidden" name="solicitud_id" id="uni-solicitud-id">
 
-    <div class="modal-body border border-subtle px-4 py-4">
+                <div class="modal-body border border-subtle px-4 py-4 overflow-y-auto">
 
-        <!-- ====================================== -->
-        <!-- CARD PRINCIPAL -->
-        <!-- ====================================== -->
+                    <!-- ====================================== -->
+                    <!-- CARD PRINCIPAL -->
+                    <!-- ====================================== -->
 
-        <div class="rounded-4 shadow-sm p-4 mb-4 border">
+                    <div class="rounded-4 shadow-sm p-4 mb-4 border bg-white">
 
-            <!-- HEADER -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-
-                <div>
-                    <h5 class="fw-bold mb-1 text-dark">
-                        <i class="bi bi-cart-check me-2 text-success"></i>
-                        Información de Compra
-                    </h5>
-
-                    <small class="text-body-secondary">
-                        Datos generales de la entrada
-                    </small>
-                </div>
-
-                <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-semibold">
-                    Compra en proceso
-                </span>
-
-            </div>
-
-            <!-- ====================================== -->
-            <!-- FILA 1 -->
-            <!-- ====================================== -->
-
-            <div class="row g-3">
-
-                <!-- ALMACÉN -->
-                <div class="col-md-3">
-
-                    <label class="form-label small fw-bold text-body-secondary text-uppercase">
-                        Almacén destino
-                    </label>
-
-                    <?php if (isset($es_admin) && $es_admin): ?>
-
-                    <select 
-                        id="almacen_id2"
-                        name="almacen_id2"
-                        class="form-select rounded-3 shadow-sm"
-                        required
-                    >
-                        <option value="">-- Seleccionar --</option>
-
-                        <?php foreach ($almacenes as $alm): ?>
-
-                        <option value="<?= $alm['id'] ?>">
-                            <?= htmlspecialchars($alm['nombre']) ?>
-                        </option>
-
-                        <?php endforeach; ?>
-
-                    </select>
-
-                    <?php else: ?>
-
-                    <input 
-                        type="text"
-                        class="form-control rounded-3 shadow-sm border border-subtle fw-bold"
-                        value="<?= htmlspecialchars($almacenes[0]['nombre'] ?? 'Almacén Asignado') ?>"
-                        readonly
-                    >
-
-                    <input 
-                        type="hidden"
-                        id="almacen_id2"
-                        name="almacen_id2"
-                        value="<?= $almacen_usuario ?? ($almacenes[0]['id'] ?? '') ?>"
-                    >
-
-                    <?php endif; ?>
-
-                </div>
-
-                <!-- PROVEEDOR -->
-                <div class="col-md-3">
-
-                    <label class="form-label small fw-bold text-body-secondary text-uppercase">
-                        Proveedor
-                    </label>
-
-                    <input 
-                        type="text"
-                        id="uni-proveedor"
-                        class="form-control rounded-3 shadow-sm border border-subtle fw-bold"
-                        readonly
-                    >
-
-                    <input 
-                        type="hidden"
-                        name="proveedor"
-                        id="uni-proveedor-nombre"
-                    >
-
-                </div>
-
-                <!-- FOLIO -->
-                <div class="col-md-2">
-
-                    <label class="form-label small fw-bold text-body-secondary text-uppercase">
-                        Folio factura
-                    </label>
-
-                    <input 
-                        type="text"
-                        name="folio"
-                        class="form-control rounded-3 shadow-sm"
-                        placeholder="FAC-000"
-                        required
-                    >
-
-                </div>
-
-                <!-- MÉTODO -->
-                <div class="col-md-2">
-
-                    <label class="form-label small fw-bold text-body-secondary text-uppercase">
-                        Método pago
-                    </label>
-
-                    <select 
-                        name="metodo_pago"
-                        id="metodo_pago"
-                        class="form-select rounded-3 shadow-sm"
-                        required
-                    >
-                        <option value="">Seleccione...</option>
-                        <option value="Efectivo">Efectivo</option>
-                        <option value="Transferencia">Transferencia</option>
-                        <option value="Tarjeta">Tarjeta</option>
-                    </select>
-
-                </div>
-
-                <!-- EVIDENCIA -->
-                <div class="col-md-2">
-
-                    <label class="form-label small fw-bold text-body-secondary text-uppercase">
-                        Evidencia
-                    </label>
-
-                    <input 
-                        type="file"
-                        name="evidencia_compra"
-                        class="form-control rounded-3 shadow-sm"
-                        accept="image/*,.pdf"
-                    >
-
-                </div>
-
-            </div>
-
-            <!-- ====================================== -->
-            <!-- FILA 2 -->
-            <!-- ====================================== -->
-
-            <div class="row g-3 mt-2 align-items-stretch">
-
-                <!-- DEUDA -->
-                <div class="col-md-4">
-
-                    <div class="bg-danger-subtle border border-danger-subtle rounded-4 p-3 h-100">
-
-                        <div class="d-flex justify-content-between align-items-center">
+                        <!-- HEADER -->
+                        <div class="d-flex justify-content-between align-items-center mb-4">
 
                             <div>
+                                <h5 class="fw-bold mb-1 text-dark">
+                                    <i class="bi bi-cart-check me-2 text-success"></i>
+                                    Información de Compra
+                                </h5>
 
-                                <small class="text-danger fw-semibold d-block mb-1">
-                                    Deuda actual proveedor
+                                <small class="text-body-secondary">
+                                    Datos generales de la entrada
                                 </small>
+                            </div>
+
+                            <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-semibold">
+                                Compra en proceso
+                            </span>
+
+                        </div>
+
+                        <!-- ====================================== -->
+                        <!-- FILA 1 -->
+                        <!-- ====================================== -->
+
+                        <div class="row g-3">
+
+                            <!-- ALMACÉN -->
+                            <div class="col-md-3">
+
+                                <label class="form-label small fw-bold text-body-secondary text-uppercase">
+                                    Almacén destino
+                                </label>
+
+                                <?php if (isset($es_admin) && $es_admin): ?>
+
+                                <select 
+                                    id="almacen_id2"
+                                    name="almacen_id2"
+                                    class="form-select rounded-3 shadow-sm"
+                                    required
+                                >
+                                    <option value="">-- Seleccionar --</option>
+
+                                    <?php foreach ($almacenes as $alm): ?>
+
+                                    <option value="<?= $alm['id'] ?>">
+                                        <?= htmlspecialchars($alm['nombre']) ?>
+                                    </option>
+
+                                    <?php endforeach; ?>
+
+                                </select>
+
+                                <?php else: ?>
 
                                 <input 
                                     type="text"
-                                    name="deudaProveedor"
-                                    id="uni-proveedor-deuda"
-                                    class="form-control border-0 bg-transparent text-danger fw-bold fs-4 p-0"
+                                    class="form-control rounded-3 shadow-sm border border-subtle fw-bold"
+                                    value="<?= htmlspecialchars($almacenes[0]['nombre'] ?? 'Almacén Asignado') ?>"
                                     readonly
+                                >
+
+                                <input 
+                                    type="hidden"
+                                    id="almacen_id2"
+                                    name="almacen_id2"
+                                    value="<?= $almacen_usuario ?? ($almacenes[0]['id'] ?? '') ?>"
+                                >
+
+                                <?php endif; ?>
+
+                            </div>
+
+                            <!-- PROVEEDOR -->
+                            <div class="col-md-3">
+
+                                <label class="form-label small fw-bold text-body-secondary text-uppercase">
+                                    Proveedor
+                                </label>
+
+                                <input 
+                                    type="text"
+                                    id="uni-proveedor"
+                                    class="form-control rounded-3 shadow-sm border border-subtle fw-bold"
+                                    readonly
+                                >
+
+                                <input 
+                                    type="hidden"
+                                    name="proveedor"
+                                    id="uni-proveedor-nombre"
                                 >
 
                             </div>
 
-                            <i class="bi bi-exclamation-triangle-fill text-danger fs-2"></i>
+                            <!-- FOLIO -->
+                            <div class="col-md-2">
+
+                                <label class="form-label small fw-bold text-body-secondary text-uppercase">
+                                    Folio factura
+                                </label>
+
+                                <input 
+                                    type="text"
+                                    name="folio"
+                                    class="form-control rounded-3 shadow-sm"
+                                    placeholder="FAC-000"
+                                    required
+                                >
+
+                            </div>
+
+                            <!-- MÉTODO -->
+                            <div class="col-md-2">
+
+                                <label class="form-label small fw-bold text-body-secondary text-uppercase">
+                                    Método pago
+                                </label>
+
+                                <select 
+                                    name="metodo_pago"
+                                    id="metodo_pago"
+                                    class="form-select rounded-3 shadow-sm"
+                                    required
+                                >
+                                    <option value="">Seleccione...</option>
+                                    <option value="Efectivo">Efectivo</option>
+                                    <option value="Transferencia">Transferencia</option>
+                                    <option value="Tarjeta">Tarjeta</option>
+                                </select>
+
+                            </div>
+
+                            <!-- EVIDENCIA -->
+                            <div class="col-md-2">
+
+                                <label class="form-label small fw-bold text-body-secondary text-uppercase">
+                                    Evidencia
+                                </label>
+
+                                <input 
+                                    type="file"
+                                    name="evidencia_compra"
+                                    class="form-control rounded-3 shadow-sm"
+                                    accept="image/*,.pdf"
+                                >
+
+                            </div>
+
+                        </div>
+
+                        <!-- ====================================== -->
+                        <!-- FILA 2 -->
+                        <!-- ====================================== -->
+
+                        <div class="row g-3 mt-2 align-items-stretch">
+
+                            <!-- DEUDA -->
+                            <div class="col-md-4">
+
+                                <div class="bg-danger-subtle border border-danger-subtle rounded-4 p-3 h-100">
+
+                                    <div class="d-flex justify-content-between align-items-center">
+
+                                        <div>
+
+                                            <small class="text-danger fw-semibold d-block mb-1">
+                                                Deuda actual proveedor
+                                            </small>
+
+                                            <input 
+                                                type="text"
+                                                name="deudaProveedor"
+                                                id="uni-proveedor-deuda"
+                                                class="form-control border-0 bg-transparent text-danger fw-bold fs-4 p-0"
+                                                readonly
+                                            >
+
+                                        </div>
+
+                                        <i class="bi bi-exclamation-triangle-fill text-danger fs-2"></i>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <!-- ABONO -->
+                            <div class="col-md-3">
+
+                                <div class="bg-primary-subtle border border-primary-subtle rounded-4 p-3 h-100">
+
+                                    <label class="form-label small text-primary fw-bold mb-2">
+                                        <i class="bi bi-cash-coin me-1"></i>
+                                        Abono a deuda
+                                    </label>
+
+                                    <input 
+                                        type="number"
+                                        id="input_pagar_deuda"
+                                        name="saldo_a_pagar"
+                                        class="form-control border-primary shadow-sm rounded-3"
+                                        value="0"
+                                        min="0"
+                                        step="0.1"
+                                    >
+
+                                    <small class="label-abono-info text-body-secondary mt-2 d-block"></small>
+
+                                </div>
+
+                            </div>
+
+                            <!-- TOTAL -->
+                            <div class="col-md-5">
+
+                                <div class="bg-success-subtle border border-success-subtle rounded-4 p-3 h-100 text-end">
+
+                                    <small class="text-success fw-semibold text-uppercase d-block mb-2">
+                                        Total compra
+                                    </small>
+
+                                    <span 
+                                        class="fw-bold text-success"
+                                        id="uni-gran-total"
+                                        style="font-size:2rem;"
+                                    >
+                                        $ 0.00
+                                    </span>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- ====================================== -->
+                    <!-- TABLA -->
+                    <!-- ====================================== -->
+
+                    <div class="rounded-4 shadow-sm border overflow-hidden bg-white">
+
+                        <div class="p-3 border-bottom border-subtle">
+
+                            <h6 class="fw-bold mb-1">
+                                <i class="bi bi-box-seam me-2 text-success"></i>
+                                Productos
+                            </h6>
+
+                            <small class="text-body-secondary">
+                                Conversión de unidades y costos
+                            </small>
+
+                        </div>
+
+                        <div class="table-responsive">
+
+                            <table class="table align-middle mb-0" id="tablaConversion">
+
+                                <thead class="table-light">
+
+                                    <tr class="small text-body-secondary">
+
+                                        <th class="ps-4">Producto</th>
+                                       
+                                        <th>Cantidad Solicitada</th>
+                                        <th>Llegado</th>
+                                       
+                                        <th>Costo</th>
+                                        <th class="text-end pe-4">Total</th>
+
+                                    </tr>
+
+                                </thead>
+
+                                <tbody></tbody>
+
+                            </table>
 
                         </div>
 
@@ -390,131 +491,31 @@ error_reporting(E_ALL);
 
                 </div>
 
-                <!-- ABONO -->
-                <div class="col-md-3">
+                <!-- ====================================== -->
+                <!-- FOOTER -->
+                <!-- ====================================== -->
 
-                    <div class="bg-primary-subtle border border-primary-subtle rounded-4 p-3 h-100">
+                <div class="modal-footer border-top border-subtle px-4 py-3 bg-light">
 
-                        <label class="form-label small text-primary fw-bold mb-2">
-                            <i class="bi bi-cash-coin me-1"></i>
-                            Abono a deuda
-                        </label>
+                    <button 
+                        type="button"
+                        class="btn btn-outline-secondary rounded-pill px-4"
+                        data-bs-dismiss="modal"
+                    >
+                        Cancelar
+                    </button>
 
-                        <input 
-                            type="number"
-                            id="input_pagar_deuda"
-                            name="saldo_a_pagar"
-                            class="form-control border-primary shadow-sm rounded-3"
-                            value="0"
-                            min="0"
-                            step="0.1"
-                        >
-
-                        <small class="label-abono-info text-body-secondary mt-2 d-block"></small>
-
-                    </div>
+                    <button 
+                        type="submit"
+                        class="btn btn-success rounded-pill px-5 shadow-sm fw-semibold"
+                    >
+                        <i class="bi bi-check2-circle me-2"></i>
+                        Confirmar compra
+                    </button>
 
                 </div>
 
-                <!-- TOTAL -->
-                <div class="col-md-5">
-
-                    <div class="bg-success-subtle border border-success-subtle rounded-4 p-3 h-100 text-end">
-
-                        <small class="text-success fw-semibold text-uppercase d-block mb-2">
-                            Total compra
-                        </small>
-
-                        <span 
-                            class="fw-bold text-success"
-                            id="uni-gran-total"
-                            style="font-size:2rem;"
-                        >
-                            $ 0.00
-                        </span>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        <!-- ====================================== -->
-        <!-- TABLA -->
-        <!-- ====================================== -->
-
-        <div class=" rounded-4 shadow-sm border overflow-hidden">
-
-            <div class="p-3 border-bottom border border-subtle">
-
-                <h6 class="fw-bold mb-1">
-                    <i class="bi bi-box-seam me-2 text-success"></i>
-                    Productos
-                </h6>
-
-                <small class="text-body-secondary">
-                    Conversión de unidades y costos
-                </small>
-
-            </div>
-
-            <div class="table-responsive">
-
-                <table class="table align-middle mb-0" id="tablaConversion">
-
-                    <thead class="table-light">
-
-                        <tr class="small text-body-secondary">
-
-                            <th class="ps-4">Producto</th>
-                            <th>Mayoreo</th>
-                            <th>Sueltas</th>
-                            <th>LLegado</th>
-                           
-                            <th>Costo</th>
-                            <th class="text-end pe-4">Total</th>
-
-                        </tr>
-
-                    </thead>
-
-                    <tbody></tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
-    </div>
-
-    <!-- ====================================== -->
-    <!-- FOOTER -->
-    <!-- ====================================== -->
-
-    <div class="modal-footer border border-subtle border-0 px-4 pb-4">
-
-        <button 
-            type="button"
-            class="btn btn-outline-secondary rounded-pill px-4"
-            data-bs-dismiss="modal"
-        >
-            Cancelar
-        </button>
-
-        <button 
-            type="submit"
-            class="btn btn-success rounded-pill px-5 shadow-sm fw-semibold"
-        >
-            <i class="bi bi-check2-circle me-2"></i>
-            Confirmar compra
-        </button>
-
-    </div>
-
-</form>
+            </form>
         </div>
     </div>
 </div>
@@ -1313,19 +1314,17 @@ const cantMayoreo = Math.floor(cantidad); // 1
                     <input type="hidden" name="items[${index}][producto_id]" value="${i.producto_id}">
                     <input type="hidden" class="h-factor" value="${factor}">
                     <div class="fw-bold text-dark">${i.producto_nombre} </div>
-                    <small class="text-body-secondary d-block">Total Pedido ${totalUnidad} ${uRep} </small>
-                    <small class="text-body-secondary d-block">1 ${uRep} = ${factor} ${uBase}</small>
+                     <small class="text-body-secondary d-block">1 ${uRep} = ${factor} ${uBase}</small>
                 </td>
 
                 <td>
-                    <label class="small text-body-secondary text-uppercase fw-bold">${uRep}</label>
-                    <input type="number" class="form-control form-control-sm i-mayoreo border-success" 
+                 <div class="fw-bold text-dark">
+                    ${cantMayoreo}.${cantSueltas} ${uRep}
+                </div>
+                    <input type="hidden" class="form-control form-control-sm i-mayoreo border-success" 
                         value="${cantMayoreo}" step=".01" oninput="recalcularFila(${index})" readonly>
-                </td>
-
-                <td>
-                    <label class="small text-body-secondary text-uppercase fw-bold">${uBase}</label>
-                    <input type="number" class="form-control form-control-sm i-sueltas border-primary" 
+               
+                    <input type="hidden" class="form-control form-control-sm i-sueltas border-primary" 
                         value="${cantSueltas}" step="0.01" oninput="recalcularFila(${index})" readonly>
                 </td>
 

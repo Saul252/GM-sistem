@@ -182,9 +182,7 @@
                                     <select name="cliente_id_editar" id="cliente_id_editar"
                                         class="form-select select2-pagina border-slate-300" required>
                                         <option value="">Seleccionar cliente...</option>
-                                        <?php foreach($clientes as $p): ?>
-                                            <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?></option>
-                                        <?php endforeach; ?>
+                                       
                                     </select>
                                     <button class="btn btn-outline-secondary px-3" type="button"
                                         onclick="abrirModalNuevoCliente()" title="Nuevo Cliente">
@@ -277,11 +275,9 @@
                 <label for="obsVenta" class="form-label small fw-semibold text-secondary d-flex align-items-center mb-2">
                     <i class="bi bi-chat-left-text me-2 text-primary"></i>Notas / Observaciones
                 </label>
-                <textarea id="obsVenta" 
-                    class="form-control border-light-subtle bg-body-tertiary rounded-3 shadow-none p-3"
-                    rows="2"
-                    placeholder="Agrega detalles o instrucciones sobre esta orden..."></textarea>
-            </div>
+               <input type="text" id="obsVenta" value=" " class="form-control border-light-subtle  rounded-3"
+                                        
+                                        placeholder="Agrega detalles o instrucciones sobre esta orden..."> </div>
 
             <!-- Columna 2: Acciones y Totales -->
             <div class="col-12 col-lg-7">
@@ -339,6 +335,34 @@
         let cliente_nombre = '';
         let dataEdicion = null;
         let recalculandoFilaEditar = false;
+ document.addEventListener('DOMContentLoaded', function() {
+        const selectAlmacen = document.getElementById('almacen_id_editar');
+
+        if (selectAlmacen) {
+            selectAlmacen.addEventListener('change', function(e) {
+                const almacenId = this.value; // ID del almacén seleccionado
+                const textoSeleccionado = this.options[this.selectedIndex].text; // Nombre del almacén
+
+                if (almacenId) {
+                    console.log(`Almacén cambiado a ID: ${almacenId} - ${textoSeleccionado}`);
+                    recargarProductosEditar();
+                    const id = $('#almacen_id_editar').val();
+                   
+
+                    cargarClientes();
+
+                    // 🚀 Coloca aquí la función o lógica que deseas ejecutar
+                    // Ejemplo: cargarProductosPorAlmacen(almacenId);
+                } else {
+                    console.log('Se deseleccionó el almacén');
+                }
+            });
+        }
+    });
+      document.addEventListener('DOMContentLoaded', () => {
+        
+        cargarClientes();
+    });
 
         // Inicializar Select2 en la página
         $('.select2-pagina').select2({
@@ -388,6 +412,100 @@
                 console.error('Error al ejecutar cargarVendedores3:', error);
             }
         }
+         document.addEventListener('DOMContentLoaded', function() {
+        const selectAlmacen = document.getElementById('almacen_id_editar');
+
+        if (selectAlmacen) {
+            selectAlmacen.addEventListener('change', function(e) {
+                const almacenId = this.value; // ID del almacén seleccionado
+                const textoSeleccionado = this.options[this.selectedIndex].text; // Nombre del almacén
+
+                if (almacenId) {
+                    console.log(`Almacén cambiado a ID: ${almacenId} - ${textoSeleccionado}`);
+                    recargarProductosEditar();
+                    const id = $('#almacen_id_editar').val();
+                   
+
+                    cargarClientes();
+                    vaciarTablaEditar();
+
+                    // 🚀 Coloca aquí la función o lógica que deseas ejecutar
+                    // Ejemplo: cargarProductosPorAlmacen(almacenId);
+                } else {
+                    console.log('Se deseleccionó el almacén');
+                }
+            });
+        }
+    });
+ function vaciarTablaEditar() {
+    // 1. Remueve todas las filas del tbody
+    $('#tablaDetalleEditar tbody').empty();
+
+    // 2. Muestra el estado vacío (empty state)
+    $('#emptyStateEditar').removeClass('d-none');
+
+    // 3. Recalcula el total enviando null
+    calcularTotalSolEditar(null);
+}
+        async function cargarClientes() {
+    console.log("cargo clientes");
+    
+    // Obtenemos el ID del almacén actual
+    const almacenId = $('#almacen_id_editar').val();
+    const select = document.getElementById('cliente_id_editar');
+    if (!select) return;
+
+    // Limpiamos el select antes de poblarlo
+    select.innerHTML = '<option value="">-- Seleccione un cliente --</option>';
+
+    try {
+        const url = '/cfsistem/app/controllers/accesoController.php?action=obtenerClientes';
+        const respuesta = await fetch(url);
+
+        if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
+
+        const resultado = await respuesta.json();
+        console.log(resultado);
+
+        if (resultado.success && Array.isArray(resultado.data)) {
+            
+            // FILTRADO: 
+            // 1. Conserva clientes cuyo nombre NO contenga "público en general" (clientes normales).
+            // 2. Para "público en general", solo conserva el que coincida con el almacenId actual.
+            const clientesFiltrados = resultado.data.filter(cliente => {
+                const nombreNorm = cliente.nombre_comercial.toLowerCase().trim();
+                const esPublicoGeneral = nombreNorm.includes('publico en general') || nombreNorm.includes('público en general');
+
+                if (esPublicoGeneral) {
+                    // Revisa que coincida el ID del almacén (compara tanto número como string)
+                    return cliente.almacen_id == almacenId;
+                }
+
+                // Si es un cliente regular, se muestra siempre
+                return true;
+            });
+
+            // Llenamos el select únicamente con la lista filtrada
+            clientesFiltrados.forEach(cliente => {
+                const opcion = document.createElement('option');
+                opcion.value = cliente.id;
+                opcion.textContent = `${cliente.nombre_comercial}`;
+                select.appendChild(opcion);
+            });
+
+        } else {
+            select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
+        }
+    } catch (error) {
+        select.innerHTML = '<option value="">Error al cargar la lista</option>';
+        console.error('Error al ejecutar cargarClientes:', error);
+    }
+}
+  document.addEventListener('DOMContentLoaded', () => {
+       
+        cargarClientes();
+    });
+
 
         // =====================================================
         // CALCULAR TOTAL EDITAR

@@ -762,8 +762,8 @@ $('#fechaFin').on('change', cargarComprobantes);
  * Abre el modal de dispersión de pagos e inicializa el monto
  * @param {number} monto - El monto inicial que se va a distribuir
  */
-function abrirModalDispersion(id,monto,idComprobante) {
-    getDeuda(id,monto,idComprobante);
+function abrirModalDispersion(id,monto,idComprobante,aplicado) {
+    getDeuda(id,monto,idComprobante,aplicado);
     // 1. Buscamos el elemento por su ID exacto
     const modalElement = document.getElementById('modalDispersión');
     
@@ -854,7 +854,7 @@ const monto = parseFloat(c.monto) || 0;
 
 // 1. Botón o Indicador de Dispersión
 const dispersar = (aplicado < monto)
-    ? `<button type="button" class="btn btn-outline-dark btn-sm rounded-2 d-inline-flex align-items-center gap-1 shadow-sm" onclick="abrirModalDispersion(${c.id_cliente}, ${c.monto}, ${c.id})">
+    ? `<button type="button" class="btn btn-outline-dark btn-sm rounded-2 d-inline-flex align-items-center gap-1 shadow-sm" onclick="abrirModalDispersion(${c.id_cliente}, ${c.monto}, ${c.id},${c.aplicado})">
             <i class="bi bi-diagram-3-fill"></i> Dispersar
        </button>`
     : `<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill fw-semibold">

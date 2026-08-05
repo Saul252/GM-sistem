@@ -149,7 +149,10 @@
 <script>
     let montoInicialTotal =0;
     let ventasDisponibles = [];
-   async function getDeuda(id, monto,idComprobante) {
+    let aplicado_inicial=0;
+   async function getDeuda(id, monto,idComprobante,aplicado) {
+    aplicado_inicial=aplicado;
+    console.log(aplicado_inicial);
     console.log(id, monto);
     ventasDisponibles = [];
     
@@ -251,7 +254,8 @@ function calcularRenglon(idVenta, valorInput) {
 }
 
 function actualizarResumenTotales() {
-    const totalAsignado = ventasAplicadas.reduce((sum, v) => sum + v.monto_abono, 0);
+    const totalAsignado = ventasAplicadas.reduce((sum, v) => sum + v.monto_abono, 0)+aplicado_inicial;
+
     const sobrante = montoInicialTotal - totalAsignado;
 
     document.getElementById('txt-monto-inicial').textContent = montoInicialTotal.toFixed(2);

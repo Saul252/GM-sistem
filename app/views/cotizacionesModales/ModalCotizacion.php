@@ -43,9 +43,7 @@
                                 <select name="cliente_id" id="cliente_id" 
                                     class="form-select select2-modal border-slate-200" required>
                                     <option value="">Seleccionar cliente...</option>
-                                    <?php foreach($clientes as $p): ?>
-                                        <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?></option>
-                                    <?php endforeach; ?>
+                                   
                                 </select>
                                 <button class="btn btn-outline-primary px-3 d-flex align-items-center justify-content-center flex-shrink-0" 
                                     type="button" onclick="abrirModalNuevoCliente()" title="Nuevo Cliente">
@@ -231,6 +229,89 @@
 
 <script>
 const URL_CONTROLADOR = '/cfsistem/app/controllers/cotizacionesController.php';
+   document.addEventListener('DOMContentLoaded', function() {
+        const selectAlmacen = document.getElementById('almacen_id');
+
+        if (selectAlmacen) {
+            selectAlmacen.addEventListener('change', function(e) {
+                const almacenId = this.value; // ID del almacén seleccionado
+                const textoSeleccionado = this.options[this.selectedIndex].text; // Nombre del almacén
+
+                if (almacenId) {
+                    console.log(`Almacén cambiado a ID: ${almacenId} - ${textoSeleccionado}`);
+                    recargarProductosEditar();
+                    const id = $('#almacen_id').val();
+                   
+
+                    cargarClientes();
+
+                    // 🚀 Coloca aquí la función o lógica que deseas ejecutar
+                    // Ejemplo: cargarProductosPorAlmacen(almacenId);
+                } else {
+                    console.log('Se deseleccionó el almacén');
+                }
+            });
+        }
+    });
+ 
+        async function cargarClientes() {
+    console.log("cargo clientes");
+    
+    // Obtenemos el ID del almacén actual
+    const almacenId = $('#almacen_id').val();
+    const select = document.getElementById('cliente_id');
+    if (!select) return;
+
+    // Limpiamos el select antes de poblarlo
+    select.innerHTML = '<option value="">-- Seleccione un cliente --</option>';
+
+    try {
+        const url = '/cfsistem/app/controllers/accesoController.php?action=obtenerClientes';
+        const respuesta = await fetch(url);
+
+        if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
+
+        const resultado = await respuesta.json();
+        console.log(resultado);
+
+        if (resultado.success && Array.isArray(resultado.data)) {
+            
+            // FILTRADO: 
+            // 1. Conserva clientes cuyo nombre NO contenga "público en general" (clientes normales).
+            // 2. Para "público en general", solo conserva el que coincida con el almacenId actual.
+            const clientesFiltrados = resultado.data.filter(cliente => {
+                const nombreNorm = cliente.nombre_comercial.toLowerCase().trim();
+                const esPublicoGeneral = nombreNorm.includes('publico en general') || nombreNorm.includes('público en general');
+
+                if (esPublicoGeneral) {
+                    // Revisa que coincida el ID del almacén (compara tanto número como string)
+                    return cliente.almacen_id == almacenId;
+                }
+
+                // Si es un cliente regular, se muestra siempre
+                return true;
+            });
+
+            // Llenamos el select únicamente con la lista filtrada
+            clientesFiltrados.forEach(cliente => {
+                const opcion = document.createElement('option');
+                opcion.value = cliente.id;
+                opcion.textContent = `${cliente.nombre_comercial}`;
+                select.appendChild(opcion);
+            });
+
+        } else {
+            select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
+        }
+    } catch (error) {
+        select.innerHTML = '<option value="">Error al cargar la lista</option>';
+        console.error('Error al ejecutar cargarClientes:', error);
+    }
+}
+  document.addEventListener('DOMContentLoaded', () => {
+       
+        cargarClientes();
+    });
 
 // =====================================================
 // SELECT2

@@ -466,6 +466,16 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+        function vaciarTablaEditar() {
+    // 1. Remueve todas las filas del tbody
+    $('#tablaDetalleEditar tbody').empty();
+
+    // 2. Muestra el estado vacío (empty state)
+    $('#emptyStateEditar').removeClass('d-none');
+
+    // 3. Recalcula el total enviando null
+    calcularTotalSolEditar(null);
+}
     document.addEventListener('DOMContentLoaded', function() {
         const selectAlmacen = document.getElementById('almacen_id_editar');
 
@@ -479,6 +489,8 @@
                     recargarProductosEditar();
                     const id = $('#almacen_id_editar').val();
                     cargarPersonalDespacho(id);
+                    cargarClientes();
+                    vaciarTablaEditar();
 
                     // 🚀 Coloca aquí la función o lógica que deseas ejecutar
                     // Ejemplo: cargarProductosPorAlmacen(almacenId);
@@ -605,7 +617,60 @@
             console.error('Error al ejecutar cargarVendedores3:', error);
         }
     }
+async function cargarClientes() {
+    console.log("cargo clientes");
+    
+    // Obtenemos el ID del almacén actual
+    const almacenId = $('#almacen_id_editar').val();
+    const select = document.getElementById('cliente_id_editar');
+    if (!select) return;
 
+    // Limpiamos el select antes de poblarlo
+    select.innerHTML = '<option value="">-- Seleccione un cliente --</option>';
+
+    try {
+        const url = '/cfsistem/app/controllers/accesoController.php?action=obtenerClientes';
+        const respuesta = await fetch(url);
+
+        if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
+
+        const resultado = await respuesta.json();
+        console.log(resultado);
+
+        if (resultado.success && Array.isArray(resultado.data)) {
+            
+            // FILTRADO: 
+            // 1. Conserva clientes cuyo nombre NO contenga "público en general" (clientes normales).
+            // 2. Para "público en general", solo conserva el que coincida con el almacenId actual.
+            const clientesFiltrados = resultado.data.filter(cliente => {
+                const nombreNorm = cliente.nombre_comercial.toLowerCase().trim();
+                const esPublicoGeneral = nombreNorm.includes('publico en general') || nombreNorm.includes('público en general');
+
+                if (esPublicoGeneral) {
+                    // Revisa que coincida el ID del almacén (compara tanto número como string)
+                    return cliente.almacen_id == almacenId;
+                }
+
+                // Si es un cliente regular, se muestra siempre
+                return true;
+            });
+
+            // Llenamos el select únicamente con la lista filtrada
+            clientesFiltrados.forEach(cliente => {
+                const opcion = document.createElement('option');
+                opcion.value = cliente.id;
+                opcion.textContent = `${cliente.nombre_comercial}`;
+                select.appendChild(opcion);
+            });
+
+        } else {
+            select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
+        }
+    } catch (error) {
+        select.innerHTML = '<option value="">Error al cargar la lista</option>';
+        console.error('Error al ejecutar cargarClientes:', error);
+    }
+}
     // =====================================================
     // CALCULAR TOTAL EDITAR
     // =====================================================
@@ -873,6 +938,7 @@
     });
     document.addEventListener('DOMContentLoaded', () => {
         cargarUsuariosSelect();
+        cargarClientes();
     });
 
     function verificarMetodoPago(metodo) {

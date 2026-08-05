@@ -53,6 +53,27 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerUsuarios') {
     }
     exit;
 }
+if (isset($_GET['action']) && $_GET['action'] === 'obtenerClientes') {
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+    
+    try {
+        $rol = $_SESSION['rol_id'] ?? 0;
+        $id = intval($_SESSION['usuario_id'] ?? 0);
+        
+        $clientes_res = $clientesModel->listarTodosCF(0); 
+$clientes = ($clientes_res) ? $clientes_res->fetch_all(MYSQLI_ASSOC) : [];
+        
+        if ($clientes) {
+            echo json_encode(['success' => true, 'data' => $clientes]);
+        } else {
+            throw new Exception('Usuarios no encontrados.');
+        }
+    } catch (Throwable $e) {
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+    }
+    exit;
+}
 
 // ==========================================
 // ACCIÓN: Obtener IDs Pendientes Venta
