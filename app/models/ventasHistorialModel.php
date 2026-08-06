@@ -390,8 +390,54 @@ join opciones_de_medida_adicional odma on odma.id= dv.unidadMedida
         'historial' => $historialEntregas,
         'pagos' => $historialPagos
     ];
-}
+}public function registrarSolicitudCancelacion($id_venta, $id_usuario, $razon) {
+    $id_venta  = intval($id_venta);
+    $id_usuario = intval($id_usuario);
+    $razon     = trim($razon);
+    $estado    = 1; // Estado por defecto
 
+    // Validar datos mínimos
+    if ($id_venta <= 0 || $id_usuario <= 0 || empty($razon)) {
+        return [
+            'status' => false,
+            'message' => 'Datos incompletos o inválidos.'
+        ];
+    }
+
+    $sql = "INSERT INTO solicitudes_cancelacion_ventas (id_venta, Id_usuario, razon, estado) VALUES (?, ?, ?, ?)";
+    $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) {
+        return [
+            'status' => false,
+            'error'   => $this->db->error,
+            'message' => 'Error al preparar la consulta SQL.'
+        ];
+    }
+
+    // "iisi" -> integer, integer, string, integer
+    $stmt->bind_param("iisi", $id_venta, $id_usuario, $razon, $estado);
+
+    if ($stmt->execute()) {
+        $insert_id = $stmt->insert_id;
+        $stmt->close();
+
+        return [
+            'status' => true,
+            'insert_id' => $insert_id,
+            'message' => 'Solicitud de cancelación registrada correctamente.'
+        ];
+    } else {
+        $error = $stmt->error;
+        $stmt->close();
+
+        return [
+            'status' => false,
+            'error'   => $error,
+            'message' => 'Error al guardar en la base de datos.'
+        ];
+    }
+}
    public function procesarEntrega($venta_id, $productos, $usuario_id) {
     $this->db->begin_transaction();
     try {

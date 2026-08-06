@@ -453,6 +453,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['ac
     }
     exit;
 }
+if (isset($_GET['action']) && $_GET['action'] === 'solicitarCancelacion') {
+    // 1. Forzamos a PHP a mostrar errores en pantalla (temporalmente para depuración)
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+
+    try {
+        if (empty($_POST['id_venta'])) throw new Exception("ID de venta no recibido.");
+        $venta_id   = intval($_POST['id_venta']);
+        $razon      = isset($_POST['razon']) ? trim($_POST['razon']) : '';
+        $usuario_id = intval($_SESSION['usuario_id'] ?? 1);
+
+        if ($venta_id <= 0) throw new Exception("ID de venta no válido.");
+        if ($razon === '')  throw new Exception("La razón de cancelación es requerida.");
+
+        // 2. Ejecutar la función del modelo
+        $resultado = $ventasModel->registrarSolicitudCancelacion($venta_id, $usuario_id, $razon);
+
+        if (!$resultado['status']) {
+            throw new Exception($resultado['message'] ?? "Error al registrar la solicitud.");
+        }
+
+        echo json_encode([
+            'status' => 'success', 
+            'message' => 'Solicitud de cancelación enviada correctamente'
+        ]);
+
+    } catch (Throwable $t) {
+        // Captura cualquier Error o Excepción exacta de PHP
+        echo json_encode([
+            'status' => 'error', 
+            'message' => 'Error en PHP: ' . $t->getMessage() . ' en la línea ' . $t->getLine()
+        ]);
+    }
+    exit;
+}
 // --- CARGA DE VISTA ---
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     $tituloPagina = "Control de Entregas";

@@ -215,7 +215,7 @@ console.log(almacenId,ventaId);
 
             const cantidadRealFaltante = (item.cantidad) - (item.cantidad_entregada);
             let cantidad = 0;
-            if (cantidadRealFaltante > 0) {
+           if (cantidadRealFaltante > 0) {
                 const cantidad_maxima = item.disponible < cantidadRealFaltante ? cantidadRealFaltante : item
                     .disponible;
                 let unidad = item.nombre;
@@ -228,6 +228,10 @@ console.log(almacenId,ventaId);
                     unidad = item.unidad_reporte
                     multiplicador = factor;
                 }
+                 const aplicaConversion = (item.disponible / factor) > 1;
+const stockDisponible  = aplicaConversion ? (item.disponible / factor) : item.disponible;
+const unidadTexto      = aplicaConversion ? item.unidad_reporte : item.unidad_medida;
+            
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
     <td>
@@ -238,9 +242,9 @@ console.log(almacenId,ventaId);
     </td>
 
     <td>
-        <span class=" bg-info-subtle card-title-text">
-            ${item.disponible/factor} ${item.unidad_reporte}
-        </span>
+        <span class="bg-info-subtle card-title-text">
+    ${stockDisponible} ${unidadTexto}
+</span>
     </td>
 
     <td>

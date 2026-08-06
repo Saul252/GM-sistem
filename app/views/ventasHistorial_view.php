@@ -575,6 +575,7 @@
         <?php require_once __DIR__ . '/ventasHistorialModales/registarAbono.php'; ?>
         <?php require_once __DIR__ . '/ventasHistorialModales/editarVentaModal.php'; ?>
         <?php require_once __DIR__ . '/ventasHistorialModales/modalImprimirRuta.php'; ?>
+        <?php require_once __DIR__ . '/ventasHistorialModales/modalSolicitudCancelacion.php'; ?>
         <?php require_once __DIR__ . '/entregasComponets/modalEntregaVentas.php'; ?>
 
         <script>
@@ -871,6 +872,29 @@
     width: 36px;
     height: 36px;
     background-color: rgba(255, 255, 255, 0.1);
+    color: #090356;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-glass-danger:hover {
+    background-color: rgba(220, 53, 69, 0.25);
+    color: #2a54b0;
+    transform: scale(1.08);
+}
+</style>` : `<button type="button" 
+        class="btn btn-glass-danger rounded-3 border-0 d-inline-flex align-items-center justify-content-center" 
+        onclick="abrirModalSolicitudCancelacion('${v.id}')" 
+        data-bs-toggle="tooltip" 
+        data-bs-placement="top" 
+        title="Cancelar Venta">
+    <i class="bi bi-x-circle-fill fs-6"></i>
+</button>
+
+<style>
+.btn-glass-danger {
+    width: 36px;
+    height: 36px;
+    background-color: rgba(255, 255, 255, 0.1);
     color: #dc3545;
     transition: all 0.2s ease-in-out;
 }
@@ -880,7 +904,7 @@
     color: #b02a37;
     transform: scale(1.08);
 }
-</style>` : '';
+</style>`;
                     let cancelada = (v.estado_general == 'activa') ? `
         
 
