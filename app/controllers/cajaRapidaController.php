@@ -75,15 +75,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     foreach ($listaMovs as $idMov) {
                         // --- PASO 3: LOGÍSTICA AUTOMÁTICA ---
                         try {
-                            $datosPatio = [
-                                'movimiento_id'      => $idMov,
-                                'chofer_id'          => $data['chofer_id'] ?? 1,
-                                'usuario_sistema_id' => $usuarioSistemaId,
-                                'observaciones'      => $data['observaciones_entrega'] ?? 'Entrega Directa en Patio',
-                                'tripulantes'        => $data['tripulantes'] ?? []
-                            ];
+                            
+                             $datosReparto = [
+                    'movimiento_id'      => $idMov,
+                    'vehiculo_id'        => 999,
+                    'chofer_id'          => $data['chofer_id'] ?? 1,
+                    'direccion_entrega'  => "Ventas Mostrador", 
+                   
+                    'folio_viaje'        => "EN_PAT" . date('ymd') . "-" . $idMov,
+                    'usuario_sistema_id' => $usuarioSistemaId,
+                    'observaciones'      => 'Entrega Directa en Patio (Despacho Masivo)'
+                ];
 
-                            $modeloEntrega->cajaRapidaEntregarEnPatioCliente($datosPatio);
+                            $modeloEntrega->iniciarRepartoPatio($datosReparto);
 
                         } catch (Exception $e) {
                             error_log("Error en logística MovID {$idMov}: " . $e->getMessage());

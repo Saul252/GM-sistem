@@ -71,8 +71,7 @@ async function imprimirRuta(entrega_ida, folioViaje) {
         const total = prod.totalCantidad / prod.factor;
         const totalCantidad = prod.totalCantidad;
         const unidad = total >= 1 ? prod.unidadReporte : (totalCantidad/(1/prod.equi))>=1?prod.nombreEqui:prod.unidadMedida;
-        let cantidad=(1/prod.equi)==1?totalCantidad/prod.factor:totalCantidad/(1/prod.equi);
-
+        let cantidad=totalCantidad/(1/prod.equi);
         let badgeColor = 'bg-warning text-dark';
         if (prod.estatus_logistico === 'completado') badgeColor = 'bg-success text-white';
         if (prod.estatus_logistico === 'en_transito') badgeColor = 'bg-primary text-white';
@@ -175,32 +174,176 @@ async function imprimirRuta(entrega_ida, folioViaje) {
                     font-weight: 600;
                     color: var(--bs-body-color);
                 }
+                    :root {
+    --card-bg: #ffffff;
+    --text-primary: #1e2022;
+    --text-secondary: #8c98a4;
+    --text-muted: #b0b7c0;
+    --border-color: rgba(0, 0, 0, 0.05);
+    --accent-bg: #f8fafc;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Tarjetas flotantes y estilizadas */
+.info-card {
+    background: var(--card-bg);
+    border-radius: 16px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04), 
+                0 4px 12px -2px rgba(0, 0, 0, 0.02);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    backdrop-filter: blur(10px);
+}
+
+.info-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.07);
+}
+
+.info-card-body {
+    padding: 1.5rem 1.75rem;
+}
+
+/* Distribución 50/50 elegante */
+.info-split {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.info-col {
+    flex: 1;
+}
+
+/* Separador ultrafino entre columnas */
+.info-divider-v {
+    width: 1px;
+    height: 48px;
+    background: linear-gradient(
+        180deg, 
+        rgba(0,0,0,0) 0%, 
+        rgba(0,0,0,0.07) 50%, 
+        rgba(0,0,0,0) 100%
+    );
+    margin: 0 1.5rem;
+}
+
+/* Títulos sutiles */
+.info-label {
+    display: block;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+    margin-bottom: 0.35rem;
+}
+
+/* Valores principales */
+.info-value-main {
+    font-size: 1.25rem;
+    font-weight: 400;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+}
+
+.info-value {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+}
+
+/* Metadatos y etiquetas secundarias */
+.info-meta {
+    margin-top: 0.6rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8125rem;
+}
+
+.meta-title {
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+.meta-value {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.meta-tag {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 400;
+    font-style: italic;
+}
+
+/* Badge de placas tipo joyería/relojería */
+.meta-badge {
+    color: #475569;
+    background: var(--accent-bg);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    padding: 0.15rem 0.5rem;
+    border-radius: 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+}
             </style>
 
             <!-- BLOQUES DE INFORMACIÓN PRINCIPAL -->
-            <div class="info-grid">
-                <div class="info-box">
-                    <div class="info-title">Unidad de Transporte</div>
-                    <div class="info-value">${data.data[0].unidad_nombre ?? '-'}</div>
-                    <div class="info-sub mt-1">
-                        Placas: <span class="fw-semibold">${data.data[0].unidad_placas ?? '-'}</span>
-                    </div>
-                </div>
-
-                <div class="info-box">
-                    <div class="info-title">Operador / Chofer</div>
-                    <div class="info-value">${data.data[0].nombre_chofer ?? '-'}</div>
-                    <div class="info-sub mt-1 text-body-secondary">Asignado de ruta</div>
-                </div>
-
-                <div class="info-box">
-                    <div class="info-title">Cliente Destino</div>
-                    <div class="info-value">${data.data[0].cliente ?? '-'}</div>
-                    <div class="info-sub mt-1">
-                        Tel: <span class="fw-semibold">${data.data[0].tel_cliente ?? 'Sin teléfono'}</span>
-                    </div>
+           <div class="info-grid">
+    <!-- Tarjeta 1: Cliente -->
+    <div class="info-card">
+        <div class="info-card-body">
+            <span class="info-label">Cliente Destino</span>
+            <div class="info-value-main">${data.data[0].cliente ?? '-'}</div>
+            <div class="info-meta">
+                <span class="meta-title">Teléfono</span>
+                <span class="meta-value">${data.data[0].tel_cliente ?? 'Sin teléfono'}</span>
+            </div>
+        </div>
+    </div>
+   
+    <!-- Tarjeta 2: Operador (Izq) / Unidad (Der) -->
+    <div class="info-card">
+        <div class="info-card-body info-split">
+            <!-- Operador -->
+            <div class="info-col">
+                <span class="info-label">Operador / Chofer</span>
+                <div class="info-value">${data.data[0].nombre_chofer ?? '-'}</div>
+                <div class="info-meta">
+                    <span class="meta-tag">Asignado de ruta</span>
                 </div>
             </div>
+
+            <!-- Separador vertical delicado -->
+            <div class="info-divider-v"></div>
+
+            <!-- Unidad -->
+            <div class="info-col">
+                <span class="info-label">Unidad de Transporte</span>
+                <div class="info-value">${data.data[0].unidad_nombre ?? '-'}</div>
+                <div class="info-meta">
+                    <span class="meta-title">Placas</span>
+                    <span class="meta-badge">${data.data[0].unidad_placas ?? '-'}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
             <!-- SECCIÓN DE DETALLES / TABLA -->
             <div class="table-responsive border rounded mb-4 mt-3">
@@ -262,7 +405,7 @@ function imprimirModalRuta() {
         <!DOCTYPE html>
         <html lang="es">
         <head>
-            <meta charset="UTF-8">
+            <meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Hoja de Ruta</title>
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
             <style>

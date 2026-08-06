@@ -13,7 +13,7 @@ $estadosUnidad = [
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transporte | cfsistem</title>
     
@@ -127,7 +127,7 @@ $estadosUnidad = [
         <div class="row align-items-center">
 
             <div class="col-lg-6">
-                <h2 class="fw-bold text-dark mb-1">
+                <h2 class="fw-bold  mb-1">
                     <i class="bi bi-tools text-primary me-2"></i>
                     Mantenimiento
                 </h2>
@@ -178,7 +178,7 @@ $estadosUnidad = [
 <!-- ===================== FILTROS ===================== -->
 
 <div class="card border-0 shadow-sm mb-4">
-    <div class="card-header bg-light border-0">
+    <div class="card-header  border-0">
         <h6 class="mb-0 fw-bold">
             <i class="bi bi-funnel-fill text-primary me-2"></i>
             Filtros de búsqueda
@@ -195,7 +195,7 @@ $estadosUnidad = [
                 </label>
 
                 <div class="input-group">
-                    <span class="input-group-text bg-white">
+                    <span class="input-group-text ">
                         <i class="bi bi-search"></i>
                     </span>
 
@@ -326,7 +326,7 @@ $estadosUnidad = [
 
 <div class="card border-0 shadow-sm">
 
-    <div class="card-header bg-white">
+    <div class="card-header ">
 
         <div class="d-flex justify-content-between align-items-center">
 
@@ -393,9 +393,9 @@ $estadosUnidad = [
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <div class="modal-body p-4 bg-light">
+            <div class="modal-body p-4 ">
                 
-                <div class="card border-0 shadow-sm rounded-4 mb-3 p-3 text-center bg-white">
+                <div class="card border-0 shadow-sm rounded-4 mb-3 p-3 text-center ">
                     <div class="d-flex justify-content-center align-items-center mb-2">
                         <span id="det-badge-tipo" class="badge px-4 py-2 fs-6 rounded-pill"></span>
                     </div>
@@ -405,7 +405,7 @@ $estadosUnidad = [
 
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white">
+                        <div class="card border-0 shadow-sm rounded-4 p-3 h-100 ">
                             <h6 class="fw-bold text-secondary mb-3 small text-uppercase">
                                 <i class="bi bi-car-front me-2 text-primary"></i> Datos del Vehículo
                             </h6>
@@ -428,7 +428,7 @@ $estadosUnidad = [
                     </div>
 
                     <div class="col-md-6">
-                        <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white">
+                        <div class="card border-0 shadow-sm rounded-4 p-3 h-100 ">
                             <h6 class="fw-bold text-secondary mb-3 small text-uppercase">
                                 <i class="bi bi-calendar3 me-2 text-success"></i> Fechas e Infraestructura
                             </h6>
@@ -452,7 +452,7 @@ $estadosUnidad = [
 
             </div>
 
-            <div class="modal-footer bg-white border-0 p-4 pt-2">
+            <div class="modal-footer  border-0 p-4 pt-2">
                 <button type="button" class="btn btn-secondary rounded-pill px-4 fw-bold shadow-sm" data-bs-dismiss="modal">
                     <i class="bi bi-x-circle me-2"></i> Cerrar Vista
                 </button>
@@ -537,7 +537,7 @@ $('#tablaMantenimientos tbody').html(data.map(m => {
            <td><div class="small fw-bold">${m.kilometraje}</div></td>
         
         <td class="text-end pe-3">
-            <div class="btn-group bg-white rounded-3 shadow-sm border p-1" role="group" aria-label="Acciones de venta">
+            <div class="btn-group  rounded-3 shadow-sm border p-1" role="group" aria-label="Acciones de venta">
                 <button type="button" class="btn btn-link text-dark btn-sm px-3 border-0" 
                         onclick="verDetalle(${m.id_mantenimiento})" 
                         data-bs-toggle="tooltip" 

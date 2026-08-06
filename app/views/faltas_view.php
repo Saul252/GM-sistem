@@ -7,7 +7,7 @@ $paginaActual = $paginaActual ?? 'prestamos';
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Faltas y retardos de Trabajadores | cfsistem</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">

@@ -656,6 +656,101 @@ public function getDetalleParaDespacho($movimiento_id) {
     return $resultado;
 }
 
+ public function iniciarRepartoPatio($datos) {
+    try {
+        $vehiculo_id   = intval($datos['vehiculo_id']);
+        $chofer_id     = intval($datos['chofer_id']);
+        $movimiento_id = intval($datos['movimiento_id']);
+        $direccion     = !empty($datos['direccion_entrega']) ? $datos['direccion_entrega'] : 'Entrega en Obra';
+        
+        // 🔹 CORRECCIÓN: Verifica 'tripulante_id' primero (enviado por el controlador) y 'tripulantes' como respaldo
+       
+        // Recuperamos el folio que viene desde el controlador
+        $folio_viaje   = $datos['folio_viaje'] ?? ''; 
+
+        // --- VALIDACIÓN DE INTEGRIDAD EN TRANSPORTE ---
+        $sqlCheck = "SELECT rp.id FROM transporte_rutas_puntos rp
+                     INNER JOIN transporte_repartos_maestro trm ON rp.reparto_id = trm.id
+                     WHERE trm.entrega_venta_id = ? 
+                     AND trm.estado_reparto != 'cancelado' LIMIT 1";
+        
+        $stmtCheck = $this->db->prepare($sqlCheck);
+        $stmtCheck->bind_param("i", $movimiento_id);
+        $stmtCheck->execute();
+        
+        if ($stmtCheck->get_result()->num_rows > 0) {
+            throw new Exception("Ya existe una ruta programada para este despacho.");
+        }
+
+        $this->db->begin_transaction();
+
+        // 1. Crear el Maestro del Reparto
+        $sqlM = "INSERT INTO transporte_repartos_maestro (
+                    vehiculo_id, 
+                    usuario_encargado_id, 
+                    entrega_venta_id, 
+                    fecha_programada, 
+                    estado_reparto
+                ) VALUES (?, ?, ?, CURDATE(), 'completado')";
+        
+        $stmtM = $this->db->prepare($sqlM);
+        $stmtM->bind_param("iii", $vehiculo_id, $chofer_id, $movimiento_id);
+        $stmtM->execute();
+        $reparto_id = $this->db->insert_id;
+
+        // Obtener el entrega_id correspondiente al movimiento
+        $sqlmov = "SELECT entrega_id
+                   FROM movimientos m
+                   WHERE m.id = ?
+                   LIMIT 1";
+
+        $stmtmov = $this->db->prepare($sqlmov);
+        $stmtmov->bind_param("i", $movimiento_id);
+        $stmtmov->execute();
+
+        $result = $stmtmov->get_result();
+        $row = $result->fetch_assoc();
+        $entrega_id = $row['entrega_id'] ?? null;
+
+        // 1.1 Registro en la tabla de consolidación
+        $sqlC = "INSERT INTO transporte_consolidacion (
+                    viaje_folio, 
+                    vehiculo_id, 
+                    reparto_id, 
+                    estatus_consolidado,
+                    entrega_id
+                ) VALUES (?, ?, ?, 'cerrado', ?)";
+
+        $stmtC = $this->db->prepare($sqlC);
+        $stmtC->bind_param("siii", $folio_viaje, $vehiculo_id, $reparto_id, $entrega_id);
+        $stmtC->execute();
+
+        // 2. Insertar el Punto de Ruta
+        $sqlP = "INSERT INTO transporte_rutas_puntos (
+                    reparto_id, 
+                    orden_visita, 
+                    descripcion_punto, 
+                    estado_punto,
+                    entrega_id
+                ) VALUES (?, 1, ?, 'visitado', ?)";
+
+        $stmtP = $this->db->prepare($sqlP);
+        $stmtP->bind_param("isi", $reparto_id, $direccion, $entrega_id);
+        $stmtP->execute();
+
+        // 3. Registrar Tripulación (Solo 1 tripulante válido y distinto al chofer)
+        
+
+        $this->db->commit();
+        return $reparto_id;
+
+    } catch (Exception $e) {
+        if (isset($this->db)) {
+            try { $this->db->rollback(); } catch (Throwable $t) {}
+        }
+        throw $e;
+    }
+}
 public function cajaRapidaEntregarEnPatioCliente($datos) {
 
     mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);

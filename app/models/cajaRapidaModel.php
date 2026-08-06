@@ -176,10 +176,14 @@ class cajaRapidaModel {
                     
                     // Movimiento Kardex
                     $mov_obs = "Salida por venta rápida folio: $folio. Entregado: $cant_real de $cant_ped";
-                    $stmtMov = $conexion->prepare("INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_origen_id, usuario_registra_id, referencia_id, observaciones) 
-                                                   VALUES (?, 'salida', ?, ?, ?, ?, ?)");
-                    $stmtMov->bind_param("idiiss", $p_id, $cant_real, $alm_id, $id_usuario, $id_venta, $mov_obs);
-                    $stmtMov->execute();
+
+$stmtMov = $conexion->prepare("INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_origen_id, usuario_registra_id, referencia_id, observaciones, entrega_id) 
+                               VALUES (?, 'salida', ?, ?, ?, ?, ?, ?)");
+
+// Corregido: 'i' para $id_venta en lugar de 's'
+$stmtMov->bind_param("idiiisi", $p_id, $cant_real, $alm_id, $id_usuario, $id_venta, $mov_obs, $id_entrega_maestro);
+$stmtMov->execute();
+$stmtMov->close(); // Buena práctica cerrar el statement al terminar
                 }
             }
 

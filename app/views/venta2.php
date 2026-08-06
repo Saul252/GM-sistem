@@ -2,7 +2,9 @@
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8">
+    
+    <meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Ventas | Sistema</title>
     <?php
  
@@ -202,8 +204,7 @@
                                 </label>
                                 <select name="almacen_id_editar" id="almacen_id_editar"
                                     class="form-select border-0 shadow-sm rounded-3 py-2" required>
-                                    <option value="">Seleccionar ubicación...</option>
-                                    <?php foreach($almacenes as $a): ?>
+                                      <?php foreach($almacenes as $a): ?>
                                     <option value="<?= $a['id'] ?>"><?= htmlspecialchars($a['nombre']) ?></option>
                                     <?php endforeach; ?>
                                 </select>
@@ -476,31 +477,7 @@
     // 3. Recalcula el total enviando null
     calcularTotalSolEditar(null);
 }
-    document.addEventListener('DOMContentLoaded', function() {
-        const selectAlmacen = document.getElementById('almacen_id_editar');
-
-        if (selectAlmacen) {
-            selectAlmacen.addEventListener('change', function(e) {
-                const almacenId = this.value; // ID del almacén seleccionado
-                const textoSeleccionado = this.options[this.selectedIndex].text; // Nombre del almacén
-
-                if (almacenId) {
-                    console.log(`Almacén cambiado a ID: ${almacenId} - ${textoSeleccionado}`);
-                    recargarProductosEditar();
-                    const id = $('#almacen_id_editar').val();
-                    cargarPersonalDespacho(id);
-                    cargarClientes();
-                    vaciarTablaEditar();
-
-                    // 🚀 Coloca aquí la función o lógica que deseas ejecutar
-                    // Ejemplo: cargarProductosPorAlmacen(almacenId);
-                } else {
-                    console.log('Se deseleccionó el almacén');
-                }
-            });
-        }
-    });
-
+   
     async function recargarProductosEditar() {
 
         const id = $('#almacen_id_editar').val();
@@ -770,7 +747,7 @@ async function cargarClientes() {
                         value="1"
                         min="0.01"
                         required
-                        oninput="actualizarEquivalencia(this);calcularTotalSolEditar(this)">
+                        oninput="actualizarEquivalencia(this);calcularTotalSolEditar(this)" required>
                     <input 
                         type="hidden"
                         name="itemsEditar[${id}][equivalencia]"
@@ -807,7 +784,7 @@ async function cargarClientes() {
                         name="itemsEditar[${id}][precioUnitario]"
                         class="form-control precio-unitario-editar"
                         step="0.01"
-                        min="0"
+                        min="0.01"
                         placeholder="0.00"
                         required
                         oninput="calcularTotalSolEditar(this)">
@@ -937,10 +914,33 @@ async function cargarClientes() {
         }
     });
     document.addEventListener('DOMContentLoaded', () => {
-        cargarUsuariosSelect();
-        cargarClientes();
-    });
+    // 1. Cargas iniciales
+    recargarProductosEditar();
+            cargarPersonalDespacho();
+            cargarClientes();
+            vaciarTablaEditar();
+    // 2. Manejo del select de almacén
+    const selectAlmacen = document.getElementById('almacen_id_editar');
 
+    if (selectAlmacen) {
+        selectAlmacen.addEventListener('change', function() {
+            const almacenId = this.value;
+            
+            if (!almacenId) {
+                console.log('Se deseleccionó el almacén');
+                return;
+            }
+
+            console.log(`Almacén cambiado a ID: ${almacenId} - ${this.options[this.selectedIndex].text}`);
+            
+            // Ejecución de funciones
+            recargarProductosEditar();
+            cargarPersonalDespacho();
+            cargarClientes();
+            vaciarTablaEditar();
+        });
+    }
+});
     function verificarMetodoPago(metodo) {
          
     
@@ -953,11 +953,22 @@ async function cargarClientes() {
         if (!contenedor || !input) return;
 
         if (metodo === 'Tarjeta' || metodo === 'Transferencia') {
+            if (metodo === 'Tarjeta' )
+            {
+                 contenedor.style.display = 'block';
+            input.required = false;
+            const totalVenta = parseFloat($('#totalCotizacionEditar').val()) || 0;
+    $('#monto_pagar').val(totalVenta);
+      contenedorcambio.classList.add('d-none');
+      calcularCambio();
+
+            }
             contenedor.style.display = 'block';
             input.required = true;
             const totalVenta = parseFloat($('#totalCotizacionEditar').val()) || 0;
     $('#monto_pagar').val(totalVenta);
       contenedorcambio.classList.add('d-none');
+      calcularCambio();
       
 
         } else {
@@ -1253,9 +1264,9 @@ async function cargarClientes() {
         }
     }
 
-    async function cargarPersonalDespacho(alm) {
+    async function cargarPersonalDespacho() {
 
-
+ const alm = $('#almacen_id_editar').val();
         const rutaControlador =
             '/cfsistem/app/controllers/cajaRapidaController.php';
 

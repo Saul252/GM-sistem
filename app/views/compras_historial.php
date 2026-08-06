@@ -5,7 +5,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial de Lotes</title>
 
@@ -914,7 +914,7 @@ html += `
         <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reporte de Movimientos</title>
  <style>
         /* --- Estructura Base Compacta --- */

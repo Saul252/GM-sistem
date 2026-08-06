@@ -2,7 +2,7 @@
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial Insumos:  | CF System</title>
 
@@ -492,7 +492,7 @@ $fechaFin    = $_GET['fecha_fin'] ?? date('Y-m-t');
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Historial de Insumos</title>
 
 <style>

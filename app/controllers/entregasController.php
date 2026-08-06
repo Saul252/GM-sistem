@@ -415,9 +415,9 @@ if ($accion === 'despachar_venta_completaConLotes') {
                     'usuario_sistema_id' => $usuarioSistemaId,
                     'observaciones'      => 'Entrega Directa en Patio (Despacho Masivo)'
                 ];
+ 
 
-
-                try {
+               
                     if ($tipoLogistica === 'ruta') {
                        
                        $reparto_id_generado = $repartoM->iniciarReparto($datosReparto);
@@ -427,16 +427,16 @@ if ($accion === 'despachar_venta_completaConLotes') {
      
         if ($tripulanteId > 0 && $tripulanteId !== $choferId) {
             
-             $repartoM->guardarTripulante($reparto_id_generado, $tripulanteId,$choferId,);
+             $repartoM->guardarTripulante($reparto_id_generado, $tripulanteId,$choferId);
         }
                     } else {
-                        $datosReparto['vehiculo_id'] = 999;
-                        $repartoM->entregarEnPatioCliente($datosReparto);
+                        
+                    $folioViaje = "EN_PAT" . date('ymd') . "-" . $idMov;
+                    
+                        $datosReparto['vehiculo_id'] = 999;$datosReparto['folio_viaje'] = $folioViaje;
+                        $repartoM->iniciarRepartoPatio($datosReparto);
                     }
-                } catch (Exception $e) {
-                    error_log("Error en logística individual MovID {$idMov}: " . $e->getMessage());
-                    continue; 
-                }
+               
             }
 
             echo json_encode([

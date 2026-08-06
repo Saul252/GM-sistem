@@ -82,7 +82,7 @@
                             </label>
                             <div class="input-group">
                                 <span class="input-group-text  text-success fw-bold">$</span>
-                                <input type="number" step="0.01" value="0.00" id="monto_depositado"
+                                <input type="number" step="0.01" placeholder="0.00" id="monto_depositado"
                                     name="monto_depositado" class="form-control fw-bold " required>
                             </div>
                         </div>

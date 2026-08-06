@@ -2,7 +2,7 @@
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ventas | Sistema</title>
     <?php require_once __DIR__ . '/layout/icono.php' ?>
     <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
@@ -334,12 +334,12 @@
                             Detalles de la operación
                         </label>
 
-                        <textarea
+                        <input type="text"value=" "
                             id="obsVenta"
                             name="obsVenta"
                             class="form-control venta-observaciones"
                             rows="5"
-                            placeholder="Ejemplo: entrega pendiente, instrucciones especiales, comentarios del cliente..."></textarea>
+                            placeholder="Ejemplo: entrega pendiente, instrucciones especiales, comentarios del cliente..."></>
 
                     </div>
 
@@ -399,25 +399,37 @@
 
 
                     <!-- Total -->
-                    <div class="venta-total-contenedor text-center">
+                  <div>
+                                    
 
-                        <span class="text-uppercase venta-total-label">
-                            Total a pagar
-                        </span>
+                                    <p class="text-success-50 small mb-1 text-uppercase fw-semibold tracking-wider">
+                                        Monto Total de la Operación
+                                    </p>
 
-                        <div
-                            id="costoTotalCompraEditar"
-                            class="venta-total">
+                                    <div id="costoTotalCompraEditar"
+                                        class="display-4 fw-black text-success mb-2 tracking-tight">
+                                        $0.00
+                                    </div>
+                                    
+ 
+                                    <input type="hidden" id="totalCotizacionEditar" name="totalCotizacionEditar"
+                                        value="0">
+                                </div>
 
-                            $0.00
+                                <!-- Bloque de Botones Inferior -->
+                                <div class="pt-4 mt-3 border-top border-white-10 d-flex gap-3 align-items-center">
+                                    <!-- Botón Reiniciar (Estilo neutro/secundario) -->
+                                    <button type="button" onclick="location.reload()"
+                                        class="btn btn-outline-dark rounded-pill px-4 py-2.5 fw-semibold border-white-10 btn-hover-light d-flex align-items-center justify-content-center">
+                                        <i class="bi bi-arrow-clockwise me-1 fs-6"></i> Reiniciar
+                                    </button>
 
-                        </div>
-
-                        <small class="text-body-secondary">
-                            Importe final de la venta
-                        </small>
-
-                    </div>
+                                    <!-- Botón Principal (Destacado en Verde) -->
+                                    <button type="submit"id="botonEnviar"
+                                        class="btn btn-success btn-lg rounded-pill px-4 py-3 fw-bold flex-grow-1 shadow-lg d-flex align-items-center justify-content-center text-nowrap">
+                                        <i class="bi bi-check2-circle me-2 fs-5"></i> Finalizar Venta
+                                    </button>
+                                </div>
 
 
                     <input
@@ -429,44 +441,7 @@
 
 
                     <!-- Botones -->
-                    <div class="mt-auto pt-4">
-
-                        <div class="border-top pt-3">
-
-                            <div class="d-flex gap-2">
-
-                                <!-- Reiniciar -->
-                                <button
-                                    type="button"
-                                    onclick="location.reload()"
-                                    class="btn btn-light border venta-btn-reiniciar">
-
-                                    <i class="bi bi-arrow-clockwise"></i>
-
-                                    <span class="d-none d-sm-inline">
-                                        Reiniciar
-                                    </span>
-
-                                </button>
-
-
-                                <!-- Finalizar -->
-                                <button
-                                    type="submit"
-                                    class="btn btn-success venta-btn-finalizar flex-grow-1">
-
-                                    <i class="bi bi-check2-circle me-2"></i>
-
-                                    Finalizar venta
-
-                                </button>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
+                   
                 </div>
 
             </div>
@@ -825,7 +800,7 @@
                         name="itemsEditar[${id}][precioUnitario]"
                         class="form-control precio-unitario-editar"
                         step="0.01"
-                        min="0"
+                        min="0.01"
                         placeholder="0.00"
                         required
                         oninput="calcularTotalSolEditar(this)" required>
