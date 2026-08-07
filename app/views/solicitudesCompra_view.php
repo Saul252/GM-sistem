@@ -7,7 +7,7 @@ error_reporting(E_ALL);
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solicitudes de Compra | cfsistem</title>
 
@@ -1162,34 +1162,7 @@ function calcularTotal(input) {
       
       
         // ENVÍO DEL FORMULARIO DE CONVERSIÓN
-        $('#formConvertirCompra').on('submit', async function(e) {
-            e.preventDefault();
-            Swal.fire({
-                title: 'Procesando ingreso...',
-                allowOutsideClick: false,
-                didOpen: () => Swal.showLoading()
-            });
-            try {
-                const resp = await fetch(`${URL_CONTROLADOR_SOLICITUD}?action=convertirACompra`, {
-                    method: 'POST',
-                    body: new FormData(this)
-                });
-                const res = await resp.json();
-                if (res.status === 'success') {
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Ingresado',
-                        text: res.message
-                    });
-                    location.reload();
-                } else {
-                    Swal.fire('Error', res.message, 'error');
-                }
-            } catch (e) {
-                Swal.fire('Error', 'Fallo de conexión', 'error');
-            }
-        });
-    
+      
     function quitarFila(id) {
         $(`#fila-${id}`).remove();
         if (!$('#tablaDetalle tbody tr').length) $('#emptyState').removeClass('d-none');
@@ -1753,7 +1726,11 @@ function actualizarGranTotal() {
     });
 
 });
-  }); </script>
+  });
+  
+  
+  </script>
+  
     <script>
     /**
      * Llena el modal de impresión con la data de la solicitud

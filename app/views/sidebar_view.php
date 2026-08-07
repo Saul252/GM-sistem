@@ -206,6 +206,34 @@ $modulos = [
         </ul>
     </div>
 </aside>
+<!-- Modal Confirmación de Cancelación -->
+<div class="modal fade" id="modalConfirmarCancelacion" tabindex="-1" aria-labelledby="modalConfirmarCancelacionLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalConfirmarCancelacionLabel">Confirmar Cancelación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="modalTextoDetalle" class="fw-semibold mb-2"></p>
+                <p id="modalTextoSub" class="text-muted small"></p>
+                <div id="wrapperMotivoSinPago" class="d-none mt-3">
+                    <label class="form-label small fw-bold">Motivo de la cancelación:</label>
+                    <input type="text" id="inputMotivoSinPago" class="form-field form-control" placeholder="Escriba el motivo...">
+                </div>
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <!-- Botón Cancelar: SOLO CIERRA EL MODAL MEDIANTE BOOTSTRAP -->
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-lg"></i> Regresar
+                </button>
+                <div id="contenedorBotonesAccion" class="d-flex gap-2">
+                    <!-- Los botones dinámicos se insertan desde JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>';
 <script>
 /**
@@ -215,588 +243,578 @@ $modulos = [
 /* CF SYSTEM - LÓGICA GLOBAL DE INTERFAZ Y NOTIFICACIONES
  * Versión: 2.0 (Optimizado para Móvil y Escritorio - No jQuery)
  */
+let usuario = <?= intval($_SESSION['usuario_id'] ?? 0) ?>;
+
+// Almacén global para acumular los ítems de todos los módulos
+const almacenNotificaciones = {
+    mantenimientos: [],
+    cancelaciones: [],
+    traspasos: [],
+    verificaciones: []
+};
+
+// Estados de control para Toastify
+const estadoToasts = {
+    verificacion: { primeraCarga: true, ultimoConteo: 0 },
+    mantenimiento: { primeraCarga: true, ultimoConteo: 0 },
+    cancelacion: { primeraCarga: true, ultimoConteo: 0 },
+    traspaso: { primeraCarga: true, ultimoConteo: 0 }
+};
 
 document.addEventListener('DOMContentLoaded', () => {
-
-                        if (!document.getElementById('style-toast-red-close')) {
-                            const style = document.createElement('style');
-                            style.id = 'style-toast-red-close';
-                            style.innerHTML =
-                                `.toast-close { color: #ff0000 !important; opacity: 1; font-weight: bold; font-size: 20px; margin-left: 10px; }`;
-                            document.head.appendChild(style);
-                        }
-let ultimoConteoMantenimientos = 0;
-let primeraCargaMantenimiento = true;
-// Variables de control (asegúrate de declararlas arriba en tu script si no existen)
-// Declaración de variables globales de control para las notificaciones
-let primeraCargaVerificacion = true;
-let ultimoConteoVerificaciones = 0;
-
-function verificarVerificaciones() {
-
-    const url = "/cfsistem/app/controllers/verificacionesController.php?action=listarProximoMantenimiento";
-
-    fetch(url)
-        .then(r => r.json())
-        .then(data => {
-            console.log("Verificaciones data:", data);
-
-            const badge = document.getElementById("badge-verificaciones");
-            const lista = document.getElementById("lista-verificaciones");
-
-            const cantidadActual = Array.isArray(data) ? data.length : 0;
-
-            // 1. Actualizar Badge de Notificaciones
-            if (badge) {
-                if (cantidadActual > 0) {
-                    badge.innerText = cantidadActual;
-                    badge.classList.remove("d-none");
-                } else {
-                    badge.classList.add("d-none");
-                }
-            }
-
-            // 2. Desplegar Toastify si hay nuevas verificaciones próximas
-            if (cantidadActual > 0 &&
-                (primeraCargaVerificacion || cantidadActual > ultimoConteoVerificaciones)) {
-
-                const item = data[0];
-
-                Toastify({
-                    text:
-`📋 PRÓXIMA VERIFICACIÓN
-${item.estado}
-
-${item.vehiculo} - ${item.placas}`,
-
-                    duration: 7000,
-                    gravity: "top",
-                    position: "right",
-                    close: true,
-                    stopOnFocus: true,
-
-                    className: "toast-verificacion",
-
-                    style: {
-                        background: "#fff",
-                        color: "#111",
-                        border: "1px solid #dee2e6",
-                        borderLeft: "5px solid #0d6efd",
-                        borderRadius: "15px",
-                        boxShadow: "0 10px 25px rgba(0,0,0,.15)",
-                        fontWeight: "500",
-                        fontSize: "14px",
-                        padding: "18px"
-                    },
-
-                    onClick: function(){
-                        window.location.href = "/cfsistem/app/controllers/verificacionesController.php";
-                    }
-
-                }).showToast();
-
-                primeraCargaVerificacion = false;
-            }
-
-            ultimoConteoVerificaciones = cantidadActual;
-
-            // 3. Renderizar Lista en el Dropdown
-            if (lista) {
-                if (cantidadActual === 0) {
-                    lista.innerHTML = `
-                        <div class="p-4 text-center text-body-secondary">
-                            No hay verificaciones próximas.
-                        </div>`;
-                } else {
-                    lista.innerHTML = data.map(item => {
-
-                        let color = "success";
-                        const dias = parseInt(item.dias_restantes);
-
-                        if (dias <= 0) {
-                            color = "danger";
-                        } else if (dias <= 3) {
-                            color = "warning";
-                        }
-
-                        return `
-<div class="d-flex justify-content-between align-items-center p-3 border-bottom hover-notif">
-    <div>
-        <div class="small fw-bold">
-            ${item.estado}
-        </div>
-        <div class="fw-bold text-${color}">
-            Vehículo: ${item.vehiculo}
-        </div>
-        <div class="small text-secondary">
-            Placas: ${item.placas}
-        </div>
-    </div>
-    <button class="btn btn-outline-primary btn-sm rounded-circle"
-            title="Ver detalle"
-            onclick="window.location='/cfsistem/app/controllers/verificacionesController.php?action=obtenerDetalle&id=${item.id}'">
-        <i class="bi bi-arrow-right"></i>
-    </button>
-</div>
-`;
-                    }).join("");
-                }
-            }
-        })
-        .catch(err => console.error("Error al obtener verificaciones:", err));
-}
-function verificarMantenimientos() {
-
-    const url = "/cfsistem/app/controllers/mantenimientosController.php?action=listarProximoMantenimiento";
-
-    fetch(url)
-        .then(r => r.json())
-        .then(data => {
-            console.log(data);
-
-           
-
-            const badge = document.getElementById("badge-mantenimientos");
-            const lista = document.getElementById("lista-mantenimientos");
-
-            const cantidadActual = parseInt((data.length)) || 0;
- console.log(cantidadActual);
-            // Badge
-            if (badge) {
-
-                if (cantidadActual > 0) {
-
-                    badge.innerText = cantidadActual;
-                    badge.classList.remove("d-none");
-
-                } else {
-
-                    badge.classList.add("d-none");
-
-                }
-
-            }
-
-            // Toast
-            if (cantidadActual > 0 &&
-                (primeraCargaMantenimiento || cantidadActual > ultimoConteoMantenimientos)) {
-
-                const item = data[0];
-
-                Toastify({
-
-                    text:
-`🚗 PRÓXIMO MANTENIMIENTO
-${item.estado}
-
-${item.vehiculo}   ${item.placas}`,
-
-                    duration: 7000,
-                    gravity: "top",
-                    position: "right",
-                    close: true,
-                    stopOnFocus: true,
-
-                    className: "toast-mantenimiento",
-
-                    style: {
-
-                        background: "#ffffff",
-
-                        color: "#111",
-
-                        border: "1px solid #dee2e6",
-
-                        borderLeft: "5px solid #ffc107",
-
-                        borderRadius: "15px",
-
-                        boxShadow: "0 10px 25px rgba(0,0,0,.15)",
-
-                        fontWeight: "500",
-
-                        fontSize: "14px",
-
-                        padding: "18px"
-
-                    },
-                    
-
-                    onClick: function(){
-
-                        window.location.href="/cfsistem/app/controllers/mantenimientosController.php";
-
-                    }
-
-                }).showToast();
-
-                primeraCargaMantenimiento = false;
-
-            }
-
-            ultimoConteoMantenimientos = cantidadActual;
-
-            // Lista del dropdown
-
-            if(lista){
-
-                if(cantidadActual==0){
-
-                    lista.innerHTML=`
-                        <div class="p-4 text-center text-body-secondary">
-                            No hay mantenimientos próximos.
-                        </div>`;
-
-                }else{
-
-                    lista.innerHTML=data.map(item=>{
-
-                        let color="success";
-
-                        if(item.dias_restantes<=0){
-
-                            color="danger";
-
-                        }else if(item.dias_restantes<=3){
-
-                            color="warning";
-
-                        }
-
-                        return`
-
-<div class="d-flex justify-content-between align-items-center p-3 border-bottom hover-notif">
-
-<div>
-
-<div class="small">
-
-<b>${item.estado}</b>
-
-</div>
-<div class="fw-bold text-${color}">
-Vehiculo: ${item.vehiculo}
-</div>
-
-
-<div class="small text-secondary">
-
-${item.placas}
-
-</div>
-
-
-
-</div>
-
-<button class="btn btn-outline-primary btn-sm rounded-circle"
-
-onclick="window.location='/cfsistem/app/controllers/mantenimientos.php?id=${item.id_mantenimiento}'">
-
-<i class="bi bi-arrow-right text-danger"></i>
-
-</button>
-
-</div>
-
-`;
-
-                    }).join("");
-
-                }
-
-            }
-
-        })
-        .catch(err=>console.error(err));
-        
-
-}
-    // --- 1. VARIABLES DE ELEMENTOS ---
+    
+   
+    inyectarEstilosToast();
+
+    // UI Elements
     const toggleBtn = document.getElementById('toggleSidebar');
     const sidebar = document.getElementById('sidebar');
     const btnNotif = document.getElementById('btnNotif');
     const menuNotif = document.getElementById('menuNotif');
 
-    // Crear el overlay para móvil si no existe
-    let overlay = document.querySelector('.sidebar-overlay');
-    if (!overlay) {
-        overlay = document.createElement('div');
+    let overlay = document.querySelector('.sidebar-overlay') || document.createElement('div');
+    if (!overlay.parentElement) {
         overlay.className = 'sidebar-overlay';
         document.body.appendChild(overlay);
     }
 
-    // --- 2. ESTADO OCULTO POR DEFAULT ---
-    const isMobile = window.innerWidth <= 992;
-    if (isMobile) {
-        // En móvil asegura que no tenga las clases activas
+   // Eventos UI
+if (sidebar) {
+    // 1. OCULTAR EN AUTOMÁTICO AL CARGAR LA PÁGINA
+    if (window.innerWidth <= 992) {
         sidebar.classList.remove('show');
-        overlay.classList.remove('active');
+        if (overlay) overlay.classList.remove('active');
     } else {
-        // En escritorio agrega las clases para que inicie oculto
         sidebar.classList.add('hidden');
         document.body.classList.add('sidebar-hidden');
     }
+}
 
-    // --- 3. LÓGICA DEL SIDEBAR (RESPONSIVO) ---
-    function toggleMenu() {
-        const isMobileNow = window.innerWidth <= 992;
-
-        if (isMobileNow) {
+if (toggleBtn) {
+    // 2. EVENTO PARA ALTERNAR VISIBILIDAD EN CADA CLIC
+    toggleBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (window.innerWidth <= 992) {
             sidebar.classList.toggle('show');
-            overlay.classList.toggle('active');
+            if (overlay) overlay.classList.toggle('active');
         } else {
             sidebar.classList.toggle('hidden');
             document.body.classList.toggle('sidebar-hidden');
         }
-    }
-
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleMenu();
-        });
-    }
-
-    overlay.addEventListener('click', () => {
-        sidebar.classList.remove('show');
-        overlay.classList.remove('active');
     });
-
-    // --- 4. CIERRE DE MENÚS AL HACER CLIC FUERA ---
-    document.addEventListener('click', (e) => {
-        // Cerrar notificaciones si está abierto y se da clic fuera
-        if (menuNotif && btnNotif && !menuNotif.contains(e.target) && !btnNotif.contains(e.target)) {
-            menuNotif.style.display = 'none';
-        }
-    });
-
-    // --- 3. SISTEMA DE NOTIFICACIONES DE TRASPASOS ---
-    let ultimoConteoTraspasos = 0;
-    let primeraCarga = true;
-    let corteProcesadoHoy = false;
-
-    function verificarNotificaciones() {
-        const url = '/cfsistem/app/backend/movimientos/get_notificaciones_traspaso.php?t=' + Date.now();
-
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                const badge = document.getElementById('notif-badge');
-                const lista = document.getElementById('lista-notificaciones');
-                const cantidadActual = parseInt(data.cantidad) || 0;
-
-                if (badge) {
-                    if (cantidadActual > 0) {
-                        badge.innerText = cantidadActual;
-                        badge.classList.remove('d-none');
-                        badge.style.display = 'inline-block';
-                    } else {
-                        badge.classList.add('d-none');
-                        badge.style.display = 'none';
-                    }
-                }
-
-                if (cantidadActual > 0 && (primeraCarga || cantidadActual > ultimoConteoTraspasos)) {
-                    if (typeof Toastify === "function") {
-                        const u = data.items[0] || {};
-                        const textoCant = u.cantidad_texto || (u.cantidad + ' PZA');
-
-                        Toastify({
-                            text: `📦 TRASPASO RECIBIDO\n${u.emisor} envió ${textoCant} de ${u.producto}`,
-                            duration: 6000,
-                            close: true,
-                            gravity: "top",
-                            position: "right",
-                            stopOnFocus: true,
-                            className: "toast-traspaso",
-                            style: {
-                                background: "#ffffff",
-                                color: "#000000",
-                                borderRadius: "14px",
-                                border: "1px solid #e2e8f0",
-                                boxShadow: "0 10px 15px -3px rgba(0,0,0,0.1)",
-                                fontFamily: "'Segoe UI', Roboto, sans-serif",
-                                fontSize: "14px",
-                                fontWeight: "500",
-                                padding: "16px 20px"
-                            },
-                            offset: {
-                                x: 15,
-                                y: 15
-                            },
-                            onClick: function() {
-                                window.location.href =
-                                "/cfsistem/app/controllers/almacenes.php";
-                            }
-                        }).showToast();
-
-                        if (!document.getElementById('style-toast-red-close')) {
-                            const style = document.createElement('style');
-                            style.id = 'style-toast-red-close';
-                            style.innerHTML =
-                                `.toast-traspaso .toast-close { color: #ff0000 !important; opacity: 1; font-weight: bold; font-size: 20px; margin-left: 10px; }`;
-                            document.head.appendChild(style);
-                        }
-                    }
-                    primeraCarga = false;
-                }
-
-                ultimoConteoTraspasos = cantidadActual;
-
-                if (lista && data.items) {
-                    if (cantidadActual === 0) {
-                        lista.innerHTML =
-                            '<div class="p-4 text-center text-body-secondary small">Sin traspasos pendientes</div>';
-                    } else {
-                        lista.innerHTML = data.items.map(item => {
-                            const mostrarCantidad = item.cantidad_texto ? item.cantidad_texto : (
-                                item.cantidad + ' PZA');
-                            return `
-                            <div class="d-flex align-items-center justify-content-between p-3 border-bottom bg-white hover-notif">
-                                <div style="flex: 1; line-height: 1.4;">
-                                    <b class="text-primary d-block small text-uppercase text-success">${item.producto}</b>
-                                    <b class="d-block text-body-secondary text-success" style="font-size: 0.75rem;">De: ${item.emisor}</b>
-                                    <div class="mt-1">
-                                        <b class="text-primary d-block small text-uppercase text-success">${mostrarCantidad}</b>
-                                    </div>
-                                </div>
-                                <button onclick="procesarRecepcionRapida(${item.id})" 
-                                        class="btn btn-success btn-sm rounded-circle shadow-sm d-flex align-items-center justify-content-center" 
-                                        style="width: 32px; height: 32px;">
-                                    <i class="bi bi-check-lg"></i>
-                                </button>
-                            </div>`;
-                        }).join('');
-                    }
-                }
-            })
-            .catch(err => console.error("❌ Error fetch notificaciones:", err));
-    }
-
-    function verificarCorteCaja() {
-        const hoy = new Date().toISOString().split('T')[0];
-        const corteYaHecho = localStorage.getItem('corte_finalizado_fecha') === hoy;
-        const estaProcesando = localStorage.getItem('corte_en_progreso') === 'true';
-
-        if (corteYaHecho || estaProcesando) return;
-
-        const ahora = new Date();
-        const horaActual = ahora.getHours().toString().padStart(2, '0') + ":" + ahora.getMinutes().toString()
-            .padStart(2, '0');
-        const horaCierreConfig = localStorage.getItem('config_hora_cierre') || '12:01';
-
-        console.log("corte de caja", horaCierreConfig);
-        if (horaActual >= horaCierreConfig) {
-            ejecutarRondaDeCorte();
-        }
-    }
-
-    function ejecutarRondaDeCorte() {
-        localStorage.setItem('corte_en_progreso', 'true');
-        console.log("🚀 Procesando bloque de almacenes...");
-
-        fetch('/cfsistem/app/backend/funciones/corteApi.php?action=check_sistema', {
-                method: 'POST'
-            })
-            .then(response => {
-                // Si la respuesta no es 200-299, extraemos el texto para ver el error de PHP
-                if (!response.ok) {
-                    return response.text().then(text => {
-                        throw new Error(`Servidor respondió con ${response.status}: ${text}`);
-                    });
-                }
-                return response.json();
-            })
-            .then(res => {
-                if (res.status === 'success') {
-                    if (res.hay_mas) {
-                        console.log("⏳ Bloque completado, solicitando siguiente...");
-                        ejecutarRondaDeCorte();
-                    } else {
-                        const hoy = new Date().toISOString().split('T')[0];
-                        localStorage.setItem('corte_finalizado_fecha', hoy);
-                        localStorage.setItem('corte_en_progreso', 'false');
-                        console.log("✅ Proceso completo.");
-                        actualizarInterfazCorte(true);
-                    }
-                } else {
-                    console.error("❌ El servidor devolvió un error de lógica:", res.mensaje);
-                    localStorage.setItem('corte_en_progreso', 'false');
-                }
-            })
-            .catch(err => {
-                localStorage.setItem('corte_en_progreso', 'false');
-                // Aquí es donde verás el fallo real en la consola de F12
-                console.error("🚨 FALLO CRÍTICO EN LA COMUNICACIÓN:");
-                console.error(err.message);
-            });
-    }
-
-    function actualizarInterfazCorte(estado) {
-        const hoy = new Date().toISOString().split('T')[0];
-        if (localStorage.getItem('corte_finalizado_fecha') === hoy) {
-            estado = true;
-        }
-        const badgeCorte = document.getElementById('badgeCorte');
-        if (badgeCorte && estado) {
-            badgeCorte.classList.remove('bg-secondary', 'opacity-50');
-            badgeCorte.classList.add('bg-success', 'shadow-sm');
-            badgeCorte.innerHTML = '<i class="bi bi-check-circle-fill"></i> Caja Cerrada';
-        }
-    }
-
-    window.procesarRecepcionRapida = function(id) {
-        if (!confirm("¿Confirmar recepción de material?")) return;
-        const formData = new FormData();
-        formData.append('id', id);
-
-        fetch('/cfsistem/app/controllers/traspasosController.php?action=recibirTraspaso', {
-                method: 'POST',
-                body: formData
-            })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success || data.status === 'success') {
-                    location.reload();
-                } else {
-                    alert("Error: " + (data.message || "No se pudo procesar"));
-                }
-            })
-            .catch(err => console.error("Error en recepción:", err));
-    };
+}
 
     if (btnNotif && menuNotif) {
         btnNotif.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            const isVisible = (menuNotif.style.display === 'block');
-            menuNotif.style.display = isVisible ? 'none' : 'block';
+            menuNotif.style.display = (menuNotif.style.display === 'block') ? 'none' : 'block';
         });
     }
 
-    function mantenimientoSistema() {
-        
-        verificarNotificaciones();
-        verificarVerificaciones();
-        // verificarCorteCaja();
-    }
-
-    mantenimientoSistema();
-    setInterval(mantenimientoSistema, 35000);
-     verificarVerificaciones();
-     setInterval(verificarVerificaciones(), 35000);
-    verificarMantenimientos();
-setInterval(verificarMantenimientos(), 35000);
-
-    window.addEventListener('resize', () => {
-        if (window.innerWidth > 992) {
-            if (sidebar) sidebar.classList.remove('show');
-            if (overlay) overlay.classList.remove('active');
+    document.addEventListener('click', (e) => {
+        if (menuNotif && btnNotif && !menuNotif.contains(e.target) && !btnNotif.contains(e.target)) {
+            menuNotif.style.display = 'none';
         }
     });
+
+    // Iniciar Polling
+    mantenimientoSistema();
+    setInterval(mantenimientoSistema, 35000);
 });
+
+/* ==========================================================================
+   RENDERIZADOR CENTRALIZADO (COMBINA TODAS LAS NOTIFICACIONES)
+   ========================================================================== */
+function renderizarListaNotificaciones() {
+    const lista = document.getElementById('lista-notificaciones');
+    const badge = document.getElementById('notif-badge');
+
+    // Concatenar todos los HTMLs generados por cada módulo
+    const todosLosHTML = [
+        ...almacenNotificaciones.traspasos,
+        ...almacenNotificaciones.cancelaciones,
+        ...almacenNotificaciones.mantenimientos
+    ];
+
+    const totalNotificaciones = todosLosHTML.length;
+
+    // 1. Actualizar el Badge con la suma total
+    if (badge) {
+        if (totalNotificaciones > 0) {
+            badge.innerText = totalNotificaciones;
+            badge.classList.remove('d-none');
+            badge.style.display = 'inline-block';
+        } else {
+            badge.classList.add('d-none');
+            badge.style.display = 'none';
+        }
+    }
+
+    // 2. Renderizar la lista consolidada sin borrar los otros tipos
+    if (lista) {
+        if (totalNotificaciones === 0) {
+            lista.innerHTML = '<div class="p-4 text-center text-body-secondary small">Sin notificaciones pendientes</div>';
+        } else {
+            lista.innerHTML = todosLosHTML.join('');
+        }
+    }
+}
+
+/* ==========================================================================
+   CONSULTAS AL BACKEND
+   ========================================================================== */
+function mantenimientoSistema() {
+    verificarCancelacionesRecientes();
+     verificarNotificaciones();
+    if (usuario <= 2) {
+       
+        verificarMantenimientos();
+        verificarSolicitudesCancelacion();
+        verificarVerificaciones();
+    }
+}
+/* ==========================================================================
+   CONSULTA DE CANCELACIONES/ELIMINACIONES RECIENTES (RANGO 5 MINUTOS)
+   ========================================================================== */
+// Set en memoria para evitar que se repita la notificación durante los 5 minutos
+const idsCancelacionesNotificadas = new Set();
+
+function verificarCancelacionesRecientes() {
+    fetch('/cfsistem/app/controllers/ventasHistorialController.php?action=obtenerCancelacionesRecientes')
+        .then(res => res.json())
+        .then(res => {
+            if (res.status === 'success' && Array.isArray(res.data) && res.data.length > 0) {
+                
+                res.data.forEach(item => {
+                    // Si el ID de la solicitud no ha sido notificado aún en este navegador
+                    if (!idsCancelacionesNotificadas.has(item.id)) {
+                        
+                        // 1. Guardar en memoria local
+                        idsCancelacionesNotificadas.add(item.id);
+
+                        // 2. Disparar Toastify único para todos los usuarios
+                        if (typeof Toastify === "function") {
+                            Toastify({
+                                text: `🗑️ VENTA ELIMINADA\nSe canceló la venta #${item.id_venta}\nMotivo: ${item.razon || 'Sin motivo especificado'}`,
+                                duration: 6000,
+                                close: true,
+                                gravity: "top",
+                                position: "right",
+                                stopOnFocus: true,
+                                style: {
+                                    background: "#dc3545",
+                                    color: "#ffffff",
+                                    borderRadius: "12px",
+                                    fontWeight: "600",
+                                    padding: "14px 18px",
+                                    boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
+                                }
+                            }).showToast();
+                        }
+
+                        // 3. Recargar el listado de ventas si la pantalla del usuario la contiene
+                        if (typeof getVentas === 'function') getVentas();
+                    }
+                });
+            }
+        })
+        .catch(err => console.error("Error cancelaciones recientes:", err));
+}
+
+function verificarSolicitudesCancelacion() {
+    fetch('/cfsistem/app/controllers/ventasHistorialController.php?action=obtenerSolicitudesPendientes')
+        .then(res => res.json())
+        .then(res => {
+            const items = res.data || res.items || [];
+            const cantidad = items.length;
+            const estado = estadoToasts.cancelacion;
+
+            // Alerta Toastify individual
+            if (cantidad > 0 && (estado.primeraCarga || cantidad > estado.ultimoConteo)) {
+                if (typeof Toastify === "function") {
+                    const u = items[0] || {};
+                    Toastify({
+                        text: `⚠️ CANCELACIÓN SOLICITADA\nVenta #${u.id_venta || ''}\nMotivo: ${u.razon || 'Sin motivo'}`,
+                        duration: 6000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        className: "toast-cancelacion toast-cancel-close",
+                        style: { background: "#ffffff", color: "#000", borderRadius: "14px", padding: "16px 20px" },
+                        onClick: () => window.location.href = "/cfsistem/app/controllers/ventasHistorialController.php"
+                    }).showToast();
+                }
+                estado.primeraCarga = false;
+            }
+            estado.ultimoConteo = cantidad;
+
+            // Guardar HTMLs en el almacén
+            almacenNotificaciones.cancelaciones = items.map(item => `
+                <div class="d-flex align-items-center justify-content-between p-3 border-bottom bg-body-tertiary hover-notif">
+                    <div style="flex: 1; line-height: 1.4;">
+                        <b class="text-danger d-block small text-uppercase">Venta #${item.id_venta}</b>
+                        <b class="d-block text-body-secondary" style="font-size: 0.75rem;">Motivo: ${item.razon || 'Sin especificación'}</b>
+                        <div class="mt-1"><small class="text-body-tertiary" style="font-size: 0.70rem;">Por: ${item.usuario_nombre || 'Usuario'}</small></div>
+                    </div>
+                    <div class="d-flex gap-1 ms-2">
+                        <button onclick="procesarAceptarCancelacion(${item.idVenta},${item.id},${item.pagado},${item.venta_total},'${item.folio}','${item.razon}')" class="btn btn-success btn-sm rounded-circle shadow-sm" style="width:32px; height:32px;" title="Aceptar"><i class="bi bi-check-lg"></i></button>
+                        <button onclick="procesarEliminarCancelacion(${item.id})" class="btn btn-danger btn-sm rounded-circle shadow-sm" style="width:32px; height:32px;" title="Eliminar"><i class="bi bi-trash"></i></button>
+                    </div>
+                </div>`);
+
+            renderizarListaNotificaciones();
+        })
+        .catch(err => console.error("Error cancelaciones:", err));
+}
+
+function verificarNotificaciones() {
+    fetch('/cfsistem/app/backend/movimientos/get_notificaciones_traspaso.php?t=' + Date.now())
+        .then(res => res.json())
+        .then(data => {
+            const items = data.items || [];
+            const cantidad = parseInt(data.cantidad) || 0;
+            const estado = estadoToasts.traspaso;
+
+            if (cantidad > 0 && (estado.primeraCarga || cantidad > estado.ultimoConteo)) {
+                if (typeof Toastify === "function") {
+                    const u = items[0] || {};
+                    Toastify({
+                        text: `📦 TRASPASO RECIBIDO\n${u.emisor} envió ${u.cantidad_texto || u.cantidad} de ${u.producto}`,
+                        duration: 6000,
+                        close: true,
+                        gravity: "top",
+                        position: "right",
+                        className: "toast-traspaso toast-red-close",
+                        style: { background: "#ffffff", color: "#000", borderRadius: "14px", padding: "16px 20px" },
+                        onClick: () => window.location.href = "/cfsistem/app/controllers/almacenes.php"
+                    }).showToast();
+                }
+                estado.primeraCarga = false;
+            }
+            estado.ultimoConteo = cantidad;
+
+            // Guardar HTMLs en el almacén
+            almacenNotificaciones.traspasos = items.map(item => `
+                <div class="d-flex align-items-center justify-content-between p-3 border-bottom bg-white hover-notif">
+                    <div style="flex: 1; line-height: 1.4;">
+                        <b class="text-primary d-block small text-uppercase text-success">${item.producto}</b>
+                        <b class="d-block text-body-secondary text-success" style="font-size: 0.75rem;">De: ${item.emisor}</b>
+                        <div class="mt-1"><b class="text-primary d-block small text-uppercase text-success">${item.cantidad_texto || (item.cantidad + ' PZA')}</b></div>
+                    </div>
+                    <button onclick="procesarRecepcionRapida(${item.id})" class="btn btn-success btn-sm rounded-circle shadow-sm" style="width:32px; height:32px;"><i class="bi bi-check-lg"></i></button>
+                </div>`);
+
+            renderizarListaNotificaciones();
+        })
+        .catch(err => console.error("Error traspasos:", err));
+}
+
+function verificarMantenimientos() {
+    fetch("/cfsistem/app/controllers/mantenimientosController.php?action=listarProximoMantenimiento")
+        .then(r => r.json())
+        .then(data => {
+            const items = Array.isArray(data) ? data : [];
+            const cantidad = items.length;
+            const estado = estadoToasts.mantenimiento;
+
+            if (cantidad > 0 && (estado.primeraCarga || cantidad > estado.ultimoConteo)) {
+                const item = items[0];
+                Toastify({
+                    text: `🚗 PRÓXIMO MANTENIMIENTO\n${item.estado}\n\n${item.vehiculo} ${item.placas}`,
+                    duration: 7000,
+                    gravity: "top",
+                    position: "right",
+                    style: { background: "#ffffff", color: "#111", borderLeft: "5px solid #ffc107", borderRadius: "15px", padding: "18px" },
+                    onClick: () => window.location.href = "/cfsistem/app/controllers/mantenimientosController.php"
+                }).showToast();
+                estado.primeraCarga = false;
+            }
+            estado.ultimoConteo = cantidad;
+
+            // Guardar HTMLs en el almacén
+            almacenNotificaciones.mantenimientos = items.map(item => {
+                const dias = parseInt(item.dias_restantes);
+                const color = dias <= 0 ? "danger" : (dias <= 3 ? "warning" : "success");
+                return `
+                    <div class="d-flex justify-content-between align-items-center p-3 border-bottom hover-notif">
+                        <div>
+                            <div class="small"><b>${item.estado}</b></div>
+                            <div class="fw-bold text-${color}">Vehículo: ${item.vehiculo}</div>
+                            <div class="small text-secondary">${item.placas}</div>
+                        </div>
+                        <button class="btn btn-outline-primary btn-sm rounded-circle" onclick="window.location='/cfsistem/app/controllers/mantenimientos.php?id=${item.id_mantenimiento}'">
+                            <i class="bi bi-arrow-right text-danger"></i>
+                        </button>
+                    </div>`;
+            });
+
+            renderizarListaNotificaciones();
+        })
+        .catch(err => console.error("Error mantenimientos:", err));
+}
+
+function verificarVerificaciones() {
+    fetch("/cfsistem/app/controllers/verificacionesController.php?action=listarProximoMantenimiento")
+        .then(r => r.json())
+        .then(data => {
+            const items = Array.isArray(data) ? data : [];
+            const cantidad = items.length;
+            const estado = estadoToasts.verificacion;
+
+            // Actualiza únicamente su badge independiente si existe
+            const badgeVerif = document.getElementById("badge-verificaciones");
+            if (badgeVerif) {
+                badgeVerif.innerText = cantidad;
+                badgeVerif.classList.toggle('d-none', cantidad === 0);
+            }
+
+            if (cantidad > 0 && (estado.primeraCarga || cantidad > estado.ultimoConteo)) {
+                const item = items[0];
+                Toastify({
+                    text: `📋 PRÓXIMA VERIFICACIÓN\n${item.estado}\n\n${item.vehiculo} - ${item.placas}`,
+                    duration: 7000,
+                    gravity: "top",
+                    position: "right",
+                    style: { background: "#fff", color: "#111", borderLeft: "5px solid #0d6efd", borderRadius: "15px", padding: "18px" },
+                    onClick: () => window.location.href = "/cfsistem/app/controllers/verificacionesController.php"
+                }).showToast();
+                estado.primeraCarga = false;
+            }
+            estado.ultimoConteo = cantidad;
+
+            const listaVerif = document.getElementById("lista-verificaciones");
+            if (listaVerif) {
+                if (cantidad === 0) {
+                    listaVerif.innerHTML = '<div class="p-4 text-center text-body-secondary">No hay verificaciones próximas.</div>';
+                } else {
+                    listaVerif.innerHTML = items.map(item => {
+                        const dias = parseInt(item.dias_restantes);
+                        const color = dias <= 0 ? "danger" : (dias <= 3 ? "warning" : "success");
+                        return `
+                            <div class="d-flex justify-content-between align-items-center p-3 border-bottom hover-notif">
+                                <div>
+                                    <div class="small fw-bold">${item.estado}</div>
+                                    <div class="fw-bold text-${color}">Vehículo: ${item.vehiculo}</div>
+                                    <div class="small text-secondary">Placas: ${item.placas}</div>
+                                </div>
+                                <button class="btn btn-outline-primary btn-sm rounded-circle" onclick="window.location='/cfsistem/app/controllers/verificacionesController.php?action=obtenerDetalle&id=${item.id}'">
+                                    <i class="bi bi-arrow-right"></i>
+                                </button>
+                            </div>`;
+                    }).join("");
+                }
+            }
+        })
+        .catch(err => console.error("Error verificaciones:", err));
+}
+let ultimoIdVentaEliminadaNotificada = 0;
+
+function verificarVentasEliminadasGlobales() {
+    fetch('/cfsistem/app/controllers/ventasHistorialController.php?action=obtenerUltimaVentaEliminada')
+        .then(res => res.json())
+        .then(data => {
+            // Si hay una venta eliminada reciente y no la hemos notificado aún en esta sesión
+            if (data && data.id_venta && data.id_venta !== ultimoIdVentaEliminadaNotificada) {
+                
+                Toastify({
+                    text: `🚨 ATENCIÓN GLOBAL\nSe ha cancelado/eliminado la Venta #${data.folio || data.id_venta}`,
+                    duration: 6000,
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    stopOnFocus: true,
+                    style: {
+                        background: "#dc3545",
+                        color: "#ffffff",
+                        borderRadius: "12px",
+                        fontWeight: "600",
+                        padding: "16px"
+                    }
+                }).showToast();
+
+                ultimoIdVentaEliminadaNotificada = data.id_venta;
+
+                // Actualizar tablas en pantalla si el usuario está viendo el listado
+                if (typeof getVentas === 'function') getVentas();
+            }
+        })
+        .catch(err => console.error("Error al consultar ventas eliminadas:", err));
+}
+
+/* ==========================================================================
+   HANDLERS Y ESTILOS AUXILIARES
+   ========================================================================== */
+function inyectarEstilosToast() {
+    if (!document.getElementById('style-toast-custom')) {
+        const style = document.createElement('style');
+        style.id = 'style-toast-custom';
+        style.innerHTML = `
+            .toast-close { opacity: 1 !important; font-weight: bold; font-size: 20px; margin-left: 10px; }
+            .toast-red-close .toast-close { color: #ff0000 !important; }
+            .toast-cancel-close .toast-close { color: #dc3545 !important; }
+        `;
+        document.head.appendChild(style);
+    }
+}function procesarAceptarCancelacion(idVenta, id, pagado, total, folio, razon) {
+    const montoPagado = parseFloat(pagado) || 0;
+    const modalElem = document.getElementById('modalConfirmarCancelacion');
+    const modalBs = bootstrap.Modal.getOrCreateInstance(modalElem);
+    
+    const textoDetalle = document.getElementById('modalTextoDetalle');
+    const textoSub = document.getElementById('modalTextoSub');
+    const wrapperMotivo = document.getElementById('wrapperMotivoSinPago');
+    const contenedorBotones = document.getElementById('contenedorBotonesAccion');
+
+    textoDetalle.textContent = `¿Aceptar y Cancelar Venta ${folio || '#' + idVenta}?`;
+    
+    // Configurar estado según pago
+    if (montoPagado > 0) {
+        textoSub.textContent = `Motivo reportado: "${razon}". Selecciona si deseas reintegrar el dinero al saldo del cliente o solo anular la venta.`;
+        wrapperMotivo.classList.add('d-none');
+        
+        contenedorBotones.innerHTML = `
+            <button class="btn btn-danger" onclick="ejecutarCancelacionEncadenada(${idVenta}, ${id}, false, '${razon}')">
+                <i class="bi bi-x-circle"></i> Sin Saldo
+            </button>
+            <button class="btn btn-success" onclick="ejecutarCancelacionEncadenada(${idVenta}, ${id}, true, '${razon}')">
+                <i class="bi bi-cash-stack"></i> Con Saldo a Favor
+            </button>
+        `;
+    } else {
+        textoSub.textContent = "Esta venta no tiene pagos registrados. Se procederá a cancelarla sin saldo.";
+        wrapperMotivo.classList.remove('d-none');
+        document.getElementById('inputMotivoSinPago').value = razon || '';
+
+        contenedorBotones.innerHTML = `
+            <button class="btn btn-danger" onclick="confirmarSinPago(${idVenta}, ${id})">
+                <i class="bi bi-check-lg"></i> Sí, cancelar venta
+            </button>
+        `;
+    }
+
+    modalBs.show();
+}
+
+// Handler auxiliar cuando no hay pago
+function confirmarSinPago(idVenta, id) {
+    const motivoInput = document.getElementById('inputMotivoSinPago').value.trim();
+    if (!motivoInput) {
+        alert("¡El motivo es obligatorio!");
+        return;
+    }
+    ejecutarCancelacionEncadenada(idVenta, id, false, motivoInput);
+}
+
+// Ejecuta las peticiones backend tras cerrar el modal
+async function ejecutarCancelacionEncadenada(idVenta, id, conSaldo, motivo) {
+    // Cerrar modal Bootstrap
+    const modalElem = document.getElementById('modalConfirmarCancelacion');
+    const modalBs = bootstrap.Modal.getInstance(modalElem);
+    if (modalBs) modalBs.hide();
+
+    const esOscuro = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+    const esModoOscuroObj = {
+        background: esOscuro ? '#1e293b' : '#ffffff',
+        color: esOscuro ? '#f8fafc' : '#1e2022'
+    };
+
+    Swal.fire({
+        title: 'Procesando cancelación...',
+        text: 'Por favor espere...',
+        didOpen: () => Swal.showLoading(),
+        allowOutsideClick: false,
+        ...esModoOscuroObj
+    });
+
+    try {
+        // 1. Aceptar solicitud
+        const formData = new FormData();
+        formData.append('id', id);
+
+        const respSolicitud = await fetch('/cfsistem/app/controllers/ventasHistorialController.php?action=aceptarSolicitudCancelacion', {
+            method: 'POST',
+            body: formData
+        });
+        const dataSolicitud = await respSolicitud.json();
+
+        if (dataSolicitud.status !== 'success' && !dataSolicitud.success) {
+            Swal.fire({ icon: 'error', title: 'Error', text: dataSolicitud.message || 'Error al aceptar solicitud.' });
+            return;
+        }
+
+        // 2. Anular / Reintegrar
+        const accion = conSaldo ? 'cancelarVenta' : 'cancelarVentaSinSaldo';
+        const urlController = typeof URL_CONTROLLER !== 'undefined' ? URL_CONTROLLER : '/cfsistem/app/controllers/ventasHistorialController.php';
+
+        const respCancelacion = await fetch(`${urlController}?action=${accion}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id_venta: idVenta, motivo: motivo })
+        });
+        const resCancelacion = await respCancelacion.json();
+
+        if (resCancelacion.status === 'success' || resCancelacion.success) {
+            await Swal.fire({
+                title: '¡Venta Cancelada!',
+                text: resCancelacion.message || 'Procesado correctamente.',
+                icon: 'success',
+                timer: 2000,
+                showConfirmButton: false
+            });
+
+            if (typeof verificarSolicitudesCancelacion === 'function') verificarSolicitudesCancelacion();
+            if (typeof getVentas === 'function') getVentas();
+        } else {
+            Swal.fire({ icon: 'error', title: 'Error', text: resCancelacion.message });
+        }
+
+    } catch (error) {
+        console.error("Error:", error);
+        Swal.fire({ icon: 'error', title: 'Error de conexión', text: 'No se pudo conectar con el servidor.' });
+    }
+}
+async function procesarEliminarCancelacion(id) {
+    const esOscuro = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+    const confirm = await Swal.fire({
+        title: '¿Eliminar solicitud?',
+        text: 'Esta acción borrará físicamente el registro.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#dc3545',
+        background: esOscuro ? '#1e293b' : '#ffffff',
+        color: esOscuro ? '#f8fafc' : '#1e2022'
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    const formData = new FormData();
+    formData.append('id', id);
+
+    try {
+        const response = await fetch('/cfsistem/app/controllers/ventasHistorialController.php?action=eliminarSolicitudCancelacion', { method: 'POST', body: formData });
+        const data = await response.json();
+        if (data.status === 'success') verificarSolicitudesCancelacion();
+        else Swal.fire({ icon: 'error', title: 'Error', text: data.message });
+    } catch (err) { console.error(err); }
+}
+
+window.procesarRecepcionRapida = function(id) {
+    if (!confirm("¿Confirmar recepción de material?")) return;
+    const formData = new FormData();
+    formData.append('id', id);
+
+    fetch('/cfsistem/app/controllers/traspasosController.php?action=recibirTraspaso', { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success || data.status === 'success') location.reload();
+            else alert("Error: " + (data.message || "No se pudo procesar"));
+        })
+        .catch(err => console.error(err));
+};
 
 </script>
 <script>

@@ -632,8 +632,10 @@ function recalcularTotales(id, origen = '') {
 
         if (origen === 'precioUnitario') {
 
-            costoTotal =
-                cantidadFacturada * precioUnitario;
+            const subtotalMayoreo = mayoreo > 0 ? (mayoreo * precioUnitario) : 0;
+            const subtotalSueltas = (sueltas !== 0 && factor > 0) ? ((sueltas / factor) * precioUnitario) : 0;
+            
+            costoTotal = subtotalMayoreo + subtotalSueltas;
 
             // 🔥 SOLO AQUÍ actualizamos costo total
             card.find('.input-costo-total')
@@ -649,8 +651,10 @@ function recalcularTotales(id, origen = '') {
             precioUnitario > 0
         ) {
 
-            costoTotal =
-                cantidadFacturada * precioUnitario;
+            const subtotalMayoreo = mayoreo > 0 ? (mayoreo * precioUnitario) : 0;
+            const subtotalSueltas = (sueltas !== 0 && factor > 0) ? ((sueltas / factor) * precioUnitario) : 0;
+
+            costoTotal = subtotalMayoreo + subtotalSueltas;
 
             card.find('.input-costo-total')
                 .val(costoTotal.toFixed(2));

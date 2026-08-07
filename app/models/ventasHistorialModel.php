@@ -390,7 +390,8 @@ join opciones_de_medida_adicional odma on odma.id= dv.unidadMedida
         'historial' => $historialEntregas,
         'pagos' => $historialPagos
     ];
-}public function registrarSolicitudCancelacion($id_venta, $id_usuario, $razon) {
+}
+public function registrarSolicitudCancelacion($id_venta, $id_usuario, $razon) {
     $id_venta  = intval($id_venta);
     $id_usuario = intval($id_usuario);
     $razon     = trim($razon);
@@ -437,6 +438,233 @@ join opciones_de_medida_adicional odma on odma.id= dv.unidadMedida
             'message' => 'Error al guardar en la base de datos.'
         ];
     }
+}
+/**
+ * Elimina físicamente un registro de la tabla solicitudes_cancelacion_ventas por su ID
+ * @param int $id
+ * @return array
+ */
+/**
+ * Acepta una solicitud de cancelación cambiando su estado a 2
+ * @param int $id ID de la solicitud
+ * @return array
+ */
+public function aceptarSolicitudCancelacion($id) {
+    $id = intval($id);
+    $nuevo_estado = 2; // Estado Aceptado / Aprobado
+
+    if ($id <= 0) {
+        return [
+            'status'  => false,
+            'message' => 'ID de solicitud no válido.'
+        ];
+    }
+
+   $sql = "UPDATE solicitudes_cancelacion_ventas 
+        SET estado = ?, 
+            fecha_eliminacion = NOW() 
+        WHERE id = ? 
+          AND estado = 1";
+          $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) {
+        return [
+            'status'  => false,
+            'error'   => $this->db->error,
+            'message' => 'Error al preparar la consulta SQL.'
+        ];
+    }
+
+    // "ii" -> integer (nuevo_estado), integer (id)
+    $stmt->bind_param("ii", $nuevo_estado, $id);
+
+    if ($stmt->execute()) {
+        $affected_rows = $stmt->affected_rows;
+        $stmt->close();
+
+        if ($affected_rows > 0) {
+            return [
+                'status'  => true,
+                'message' => 'Solicitud de cancelación aceptada correctamente.'
+            ];
+        } else {
+            return [
+                'status'  => false,
+                'message' => 'No se pudo actualizar. La solicitud no existe o ya no estaba pendiente.'
+            ];
+        }
+    } else {
+        $error = $stmt->error;
+        $stmt->close();
+
+        return [
+            'status'  => false,
+            'error'   => $error,
+            'message' => 'Error al actualizar el estado en la base de datos.'
+        ];
+    }
+}public function obtenerCancelacionesRecientes($almacen_id = 0) {
+    date_default_timezone_set('America/Mexico_City');
+    $solicitudes = [];
+    $estado = 2;
+    $almacen_id = intval($almacen_id);
+
+    // Consulta base
+    $sql = "SELECT 
+                sc.id,
+                sc.id_venta,
+                sc.Id_usuario,
+                sc.razon,
+                sc.estado,
+                sc.fecha_solicitud,
+                sc.fecha_eliminacion,
+                u.nombre AS usuario_nombre,
+                v.total AS venta_total,
+                v.folio as folio,
+                v.id as idVenta
+            FROM solicitudes_cancelacion_ventas sc
+            LEFT JOIN usuarios u ON u.id = sc.Id_usuario
+            LEFT JOIN ventas v ON v.id = sc.id_venta
+            WHERE sc.estado = ?
+              AND sc.fecha_eliminacion >= NOW() - INTERVAL 5 MINUTE";
+
+    // Si almacen_id es diferente de 0, agregamos el filtro por almacén
+    if ($almacen_id > 0) {
+        $sql .= " AND v.almacen_id = ?";
+    }
+
+    $sql .= " ORDER BY sc.fecha_eliminacion DESC";
+
+    $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) {
+        return [
+            'status'  => false,
+            'error'   => $this->db->error,
+            'message' => 'Error al preparar la consulta SQL.'
+        ];
+    }
+
+    // Vincular parámetros según la presencia de almacen_id
+    if ($almacen_id > 0) {
+        $stmt->bind_param("ii", $estado, $almacen_id);
+    } else {
+        $stmt->bind_param("i", $estado);
+    }
+
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    while ($row = $result->fetch_assoc()) {
+        $solicitudes[] = $row;
+    }
+
+    $stmt->close();
+
+    return [
+        'status' => true,
+        'data'   => $solicitudes
+    ];
+}
+public function eliminarSolicitudCancelacion($id) {
+    $id = intval($id);
+
+    if ($id <= 0) {
+        return [
+            'status' => false,
+            'message' => 'ID no válido.'
+        ];
+    }
+
+    $sql = "DELETE FROM solicitudes_cancelacion_ventas WHERE id = ?";
+    $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) {
+        return [
+            'status'  => false,
+            'error'   => $this->db->error,
+            'message' => 'Error al preparar la consulta SQL.'
+        ];
+    }
+
+    $stmt->bind_param("i", $id);
+
+    if ($stmt->execute()) {
+        $affected_rows = $stmt->affected_rows;
+        $stmt->close();
+
+        if ($affected_rows > 0) {
+            return [
+                'status'  => true,
+                'message' => 'Registro eliminado de la base de datos correctamente.'
+            ];
+        } else {
+            return [
+                'status'  => false,
+                'message' => 'No se encontró la solicitud con el ID especificado.'
+            ];
+        }
+    } else {
+        $error = $stmt->error;
+        $stmt->close();
+
+        return [
+            'status'  => false,
+            'error'   => $error,
+            'message' => 'Error al ejecutar la eliminación en la base de datos.'
+        ];
+    }
+}
+/**
+ * Obtiene todas las solicitudes de cancelación pendientes (estado = 1)
+ * @return array
+ */
+public function obtenerSolicitudesPendientes() {
+    $solicitudes = [];
+    $estado = 1;
+
+    $sql = "SELECT 
+                sc.id,
+                sc.id_venta,
+                sc.Id_usuario,
+                sc.razon,
+                sc.estado,
+                -- O la columna de fecha que tengas
+                (SELECT IFNULL(SUM(monto), 0) FROM historial_pagos WHERE venta_id = v.id) as pagado,
+                u.nombre AS usuario_nombre,
+                v.total AS venta_total,
+                v.folio as folio,
+                v.id as idVenta
+            FROM solicitudes_cancelacion_ventas sc
+            INNER JOIN usuarios u ON u.id = sc.Id_usuario
+            INNER JOIN ventas v ON v.id = sc.id_venta
+            WHERE sc.estado = ?
+            ORDER BY sc.id DESC";
+
+    $stmt = $this->db->prepare($sql);
+
+    if (!$stmt) {
+        return [
+            'status' => false,
+            'error'   => $this->db->error,
+            'message' => 'Error al preparar la consulta SQL.'
+        ];
+    }
+
+    $stmt->bind_param("i", $estado);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    while ($row = $result->fetch_assoc()) {
+        $solicitudes[] = $row;
+    }
+
+    $stmt->close();
+
+    return [
+        'status' => true,
+        'data'   => $solicitudes
+    ];
 }
    public function procesarEntrega($venta_id, $productos, $usuario_id) {
     $this->db->begin_transaction();

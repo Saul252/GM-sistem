@@ -492,6 +492,131 @@ if (isset($_GET['action']) && $_GET['action'] === 'solicitarCancelacion') {
     }
     exit;
 }
+if (isset($_GET['action']) && $_GET['action'] === 'aceptarSolicitudCancelacion') {
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+
+    try {
+        if (empty($_POST['id'])) {
+            throw new Exception("ID de solicitud no recibido.");
+        }
+
+        $id = intval($_POST['id']);
+
+        $resultado = $ventasModel->aceptarSolicitudCancelacion($id);
+
+        if (!$resultado['status']) {
+            throw new Exception($resultado['message'] ?? 'Error al aceptar la solicitud.');
+        }
+
+        echo json_encode([
+            'status'  => 'success',
+            'message' => $resultado['message']
+        ]);
+
+    } catch (Throwable $t) {
+        echo json_encode([
+            'status'  => 'error',
+            'message' => 'Error en PHP: ' . $t->getMessage() . ' en la línea ' . $t->getLine()
+        ]);
+    }
+    exit;
+}
+if (isset($_GET['action']) && $_GET['action'] === 'obtenerSolicitudesPendientes') {
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+
+    try {
+        $resultado = $ventasModel->obtenerSolicitudesPendientes();
+
+        if (!$resultado['status']) {
+            throw new Exception($resultado['message'] ?? 'Error al consultar las solicitudes.');
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'data'   => $resultado['data']
+        ]);
+
+    } catch (Throwable $t) {
+        echo json_encode([
+            'status'  => 'error',
+            'message' => 'Error en PHP: ' . $t->getMessage() . ' en la línea ' . $t->getLine()
+        ]);
+    }
+    exit;
+}
+if (isset($_GET['action']) && $_GET['action'] === 'obtenerCancelacionesRecientes') {
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+    $almacen_id=$_SESSION['almacen_id'];
+
+    try {
+        $resultado = $ventasModel->obtenerCancelacionesRecientes($almacen_id);
+
+        if (!$resultado['status']) {
+            throw new Exception($resultado['message'] ?? 'Error al consultar las cancelaciones recientes.');
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'data'   => $resultado['data']
+        ]);
+
+    } catch (Throwable $t) {
+        echo json_encode([
+            'status'  => 'error',
+            'message' => 'Error en PHP: ' . $t->getMessage() . ' en la línea ' . $t->getLine()
+        ]);
+    }
+    exit;
+}
+if (isset($_GET['action']) && $_GET['action'] === 'eliminarSolicitudCancelacion') {
+    ini_set('display_errors', 1);
+    ini_set('display_startup_errors', 1);
+    error_reporting(E_ALL);
+
+    if (ob_get_level()) ob_clean();
+    header('Content-Type: application/json');
+
+    try {
+        if (empty($_POST['id'])) {
+            throw new Exception("ID no recibido.");
+        }
+
+        $id = intval($_POST['id']);
+
+        $resultado = $ventasModel->eliminarSolicitudCancelacion($id);
+
+        if (!$resultado['status']) {
+            throw new Exception($resultado['message'] ?? 'Error al eliminar el registro.');
+        }
+
+        echo json_encode([
+            'status'  => 'success',
+            'message' => $resultado['message']
+        ]);
+
+    } catch (Throwable $t) {
+        echo json_encode([
+            'status'  => 'error',
+            'message' => 'Error en PHP: ' . $t->getMessage() . ' en la línea ' . $t->getLine()
+        ]);
+    }
+    exit;
+}
 // --- CARGA DE VISTA ---
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     $tituloPagina = "Control de Entregas";
