@@ -14,7 +14,7 @@ require_once __DIR__ . '/../models/almacen_model.php';
 require_once __DIR__ . '/../models/almacen/productosModel.php';
 require_once __DIR__ . '/../models/almacen/categoriasModel.php'; 
 
-require_once __DIR__ . '/../controllers/LayoutController.php';
+require_once __DIR__ . '/LayoutController.php';
 protegerPagina('almacenes'); 
 class AlmacenController {
     private $model;
