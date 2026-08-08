@@ -25,16 +25,16 @@
                             <div class="row g-3">
 
                                 <input type="hidden" name="precio_adquisicion" value="0">
-
+  <div class="col-md-8">
+                                    <label class="form-label small text-body-secondary">Nombre del Producto</label>
+                                    <input type="text" name="nombre" id="nombreProducto" class="form-control shadow-sm" required>
+                                </div>
                                 <div class="col-md-4">
                                     <label class="form-label small text-body-secondary">SKU / Código</label>
                                     <input type="text" name="sku" class="form-control shadow-sm" required>
                                 </div>
 
-                                <div class="col-md-8">
-                                    <label class="form-label small text-body-secondary">Nombre del Producto</label>
-                                    <input type="text" name="nombre" id="nombreProducto" class="form-control shadow-sm" required>
-                                </div>
+                              
 
                                 <div class="col-md-6">
                                     <div class="d-flex justify-content-between align-items-center">
@@ -842,8 +842,8 @@ async function verListaMedidas(
 
                         <td>
 
-                            <span class="badge   border px-3 py-2">
-                            ${m.equivalencia} ${m.nombre}s =  1 ${unidad_medida} 
+                            <span class="badge text-dark  border px-3 py-2">
+                            ${(1/(m.equivalencia)).toFixed(3)} ${m.nombre}s =  1 ${unidad_medida} 
                                
                                
 

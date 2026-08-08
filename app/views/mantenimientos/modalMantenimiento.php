@@ -1,13 +1,13 @@
 <div class="modal fade" id="modalMantenimiento" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content" style="border-radius: 20px; border: none; width: 95%; max-width: 1140px; overflow: hidden; box-shadow: 0 15px 50px rgba(0,0,0,0.2);">
-            <form id="formSolicitud" novalidate> <div class="modal-header bg-white border-0 pt-4 px-4 pb-2">
+            <form id="formSolicitud" novalidate> <div class="modal-header   pt-4 px-4 pb-2">
                     <div class="d-flex align-items-center">
                         <div class="bg-primary text-white rounded-3 p-2 me-3 shadow-sm d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
                             <i class="bi bi-wrench-adjustable fs-4"></i>
                         </div>
                         <div>
-                            <h4 class="fw-bold mb-0 text-dark">Nuevo Registro de Mantenimiento</h4>
+                            <h4 class="fw-bold mb-0 ">Nuevo Registro de Mantenimiento</h4>
                             <p class="text-body-secondary small mb-0">Complete los datos para registrar el movimiento en el sistema</p>
                         </div>
                     </div>
@@ -15,7 +15,7 @@
                 </div>
 
                 <div class="modal-body px-4 pt-3">
-                    <div class="row g-3 p-4 rounded-4 bg-light border align-items-end mb-2">
+                    <div class="row g-3 p-4 rounded-4  border align-items-end mb-2">
 
                         <div class="col-md-4">
                             <label class="form-label small fw-bold text-secondary mb-2">
@@ -69,14 +69,14 @@
                             <label class="form-label small fw-bold text-secondary mb-2">
                                 <i class="bi bi-calendar3 me-1"></i> Fecha Mantenimiento
                             </label>
-                            <input type="date" id="fecha_mantenimiento" name="fecha_mantenimiento" class="form-control" required>
+                            <input type="date" id="fecha_mantenimiento" value="<?= date('Y-m-d') ?>" name="fecha_mantenimiento" class="form-control" required>
                         </div>
 
                         <div class="col-md-4 mt-3">
                             <label class="form-label small fw-bold text-secondary mb-2">
                                 <i class="bi bi-calendar3-event me-1"></i> Fecha Próximo Mantenimiento
                             </label>
-                            <input type="date" id="fecha_proximo_mantenimiento" name="fecha_proximo_mantenimiento" class="form-control" required>
+                            <input type="date" id="fecha_proximo_mantenimiento"value="<?= date('Y-m-d', strtotime('+1 month')) ?>" name="fecha_proximo_mantenimiento" class="form-control" required>
                         </div>
 
                         <div class="col-md-4 mt-3">
@@ -84,7 +84,7 @@
                                 <i class="bi bi-currency-dollar me-1"></i> Monto Costo
                             </label>
                             <div class="input-group">
-                                <span class="input-group-text bg-white text-success fw-bold">$</span>
+                                <span class="input-group-text  text-success fw-bold">$</span>
                                 <input type="number" step="0.01" value="0.00" id="monto_depositado" name="monto_depositado" class="form-control fw-bold text-dark" required>
                             </div>
                         </div>
@@ -117,7 +117,7 @@
                     </div>
                 </div>
 
-                <div class="modal-footer border-0 p-4 pt-2">
+                <div class="modal-footer  p-4 pt-2">
                     <button type="button" class="btn btn-light text-body-secondary fw-bold rounded-pill px-4 me-2" data-bs-dismiss="modal">
                         Cancelar
                     </button>

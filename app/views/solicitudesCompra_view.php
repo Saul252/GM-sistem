@@ -201,7 +201,7 @@ error_reporting(E_ALL);
                     <!-- CARD PRINCIPAL -->
                     <!-- ====================================== -->
 
-                    <div class="rounded-4 shadow-sm p-4 mb-4 border bg-white">
+                    <div class="rounded-4 shadow-sm p-4 mb-4 border ">
 
                         <!-- HEADER -->
                         <div class="d-flex justify-content-between align-items-center mb-4">
@@ -446,7 +446,7 @@ error_reporting(E_ALL);
                     <!-- TABLA -->
                     <!-- ====================================== -->
 
-                    <div class="rounded-4 shadow-sm border overflow-hidden bg-white">
+                    <div class="rounded-4 shadow-sm border overflow-hidden ">
 
                         <div class="p-3 border-bottom border-subtle">
 
@@ -495,7 +495,7 @@ error_reporting(E_ALL);
                 <!-- FOOTER -->
                 <!-- ====================================== -->
 
-                <div class="modal-footer border-top border-subtle px-4 py-3 bg-light">
+                <div class="modal-footer border-top border-subtle px-4 py-3 ">
 
                     <button 
                         type="button"
@@ -534,7 +534,7 @@ error_reporting(E_ALL);
 
             <div class="modal-body p-0">
 
-               <div id="areaImpresion" class="p-3 bg-white" style="min-height:650px;font-size:12px;color:#1f2937;">
+               <div id="areaImpresion" class="p-3 " style="min-height:650px;font-size:12px;color:#1f2937;">
 
     <!-- ENCABEZADO -->
     <div class="d-flex justify-content-between align-items-start border-bottom pb-2 mb-3">
@@ -1291,7 +1291,7 @@ const cantMayoreo = Math.floor(cantidad); // 1
                 </td>
 
                 <td>
-                 <div class="fw-bold text-dark">
+                 <div class="fw-bold ">
                     ${cantMayoreo}.${cantSueltas} ${uRep}
                 </div>
                     <input type="hidden" class="form-control form-control-sm i-mayoreo border-success" 
@@ -1338,7 +1338,7 @@ const cantMayoreo = Math.floor(cantidad); // 1
                 <td>
                     <label class="small text-body-secondary fw-bold">Costo Total Renglón</label>
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light">$</span>
+                        <span class="input-group-text ">$</span>
                         <input type="number" step="0.01" class="form-control i-costo-total" 
                             placeholder="0.00" required value="${costo}"
                             oninput="recalcularFila(${index})">

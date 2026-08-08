@@ -152,7 +152,7 @@ $estadosUnidad = [
                     </button>
 
                     <button
-                        class="btn btn-warning text-dark rounded-pill px-4 shadow-sm fw-semibold"
+                        class="btn btn-warning  rounded-pill px-4 shadow-sm fw-semibold"
                         data-bs-toggle="modal"
                         data-bs-target="#modalAsignarInsumoMantenimiento">
 
@@ -399,7 +399,7 @@ $estadosUnidad = [
                     <div class="d-flex justify-content-center align-items-center mb-2">
                         <span id="det-badge-tipo" class="badge px-4 py-2 fs-6 rounded-pill"></span>
                     </div>
-                    <h5 class="fw-bold text-dark text-uppercase tracking-wide mb-1" id="det-razon"></h5>
+                    <h5 class="fw-bold k text-uppercase tracking-wide mb-1" id="det-razon"></h5>
                     <p class="text-body-secondary small mb-0">Registrado en sistema el: <span id="det-creado_en"></span></p>
                 </div>
 
@@ -411,7 +411,7 @@ $estadosUnidad = [
                             </h6>
                             <div class="mb-2">
                                 <small class="text-body-secondary d-block">Marca / Modelo</small>
-                                <span class="fw-bold text-dark fs-5" id="det-vehiculo"></span> 
+                                <span class="fw-bold k fs-5" id="det-vehiculo"></span> 
                                 <span class="badge bg-light text-dark border ms-1" id="det-modelo"></span>
                             </div>
                             <div class="row pt-2 border-top">
@@ -421,7 +421,7 @@ $estadosUnidad = [
                                 </div>
                                 <div class="col-6">
                                     <small class="text-body-secondary d-block">Kilometraje</small>
-                                    <span class="fw-bold text-dark" id="det-kilometraje"></span>
+                                    <span class="fw-bold k" id="det-kilometraje"></span>
                                 </div>
                             </div>
                         </div>
@@ -434,12 +434,12 @@ $estadosUnidad = [
                             </h6>
                             <div class="mb-2">
                                 <small class="text-body-secondary d-block">Ubicación / Almacén de Cargo</small>
-                                <span class="fw-bold text-dark" id="det-almacen"></span>
+                                <span class="fw-bold k" id="det-almacen"></span>
                             </div>
                             <div class="row pt-2 border-top">
                                 <div class="col-6 border-end">
                                     <small class="text-body-secondary d-block">Fecha Efectuada</small>
-                                    <span class="fw-bold text-dark" id="det-fecha"></span>
+                                    <span class="fw-bold k" id="det-fecha"></span>
                                 </div>
                                 <div class="col-6 text-end text-md-start ps-md-3">
                                     <small class="text-body-secondary d-block">Próxima Cita</small>
@@ -532,13 +532,13 @@ $('#tablaMantenimientos tbody').html(data.map(m => {
         <td><span class="badge bg-light text-dark border fw-normal">${m.almacen}</span></td>
         <td><div class="small fw-bold">${m.vehiculo}</div></td>
         <td><div class="small fw-bold">${m.tipo_mantenimiento}</div></td>
-        <td class="fw-bold text-dark">${m.razon}</td>
+        <td class="fw-bold k">${m.razon}</td>
           <td><div class="small fw-bold">${m.placas}</div></td>
            <td><div class="small fw-bold">${m.kilometraje}</div></td>
         
         <td class="text-end pe-3">
             <div class="btn-group  rounded-3 shadow-sm border p-1" role="group" aria-label="Acciones de venta">
-                <button type="button" class="btn btn-link text-dark btn-sm px-3 border-0" 
+                <button type="button" class="btn btn-link k btn-sm px-3 border-0" 
                         onclick="verDetalle(${m.id_mantenimiento})" 
                         data-bs-toggle="tooltip" 
                         data-bs-placement="top" 

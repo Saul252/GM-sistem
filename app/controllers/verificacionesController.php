@@ -60,44 +60,44 @@ if (isset($_GET['action']) && $_GET['action'] === 'listar') {
     exit;
 }
 
-// --- OBTENER DETALLE DE UNA VERIFICACIÓN ---
-if (isset($_GET['action']) && $_GET['action'] === 'obtenerDetalle') {
-    if (ob_get_level()) ob_clean(); 
-    header('Content-Type: application/json');
+// // --- OBTENER DETALLE DE UNA VERIFICACIÓN ---
+// if (isset($_GET['action']) && $_GET['action'] === 'obtenerDetalle') {
+//     if (ob_get_level()) ob_clean(); 
+//     header('Content-Type: application/json');
     
-    try {
-        $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+//     try {
+//         $id = isset($_GET['id']) ? intval($_GET['id']) : 0;
         
-        if ($id <= 0) {
-            http_response_code(400);
-            throw new Exception("El ID de verificación proporcionado no es válido.");
-        }
+//         if ($id <= 0) {
+//             http_response_code(400);
+//             throw new Exception("El ID de verificación proporcionado no es válido.");
+//         }
 
-        // Se consulta la verificación en el modelo correspondiente
-        $data = $verificacionesModel->obtenerMantenimiento($id);
+//         // Se consulta la verificación en el modelo correspondiente
+//         $data = $verificacionesModel->obtenerMantenimiento($id);
         
-        if (!$data) {
-            http_response_code(404);
-            throw new Exception("No se encontró la verificación solicitada.");
-        }
+//         if (!$data) {
+//             http_response_code(404);
+//             throw new Exception("No se encontró la verificación solicitada.");
+//         }
 
-        echo json_encode([
-            'status' => 'success',
-            'data'   => $data
-        ]);
+//         echo json_encode([
+//             'status' => 'success',
+//             'data'   => $data
+//         ]);
 
-    } catch (Throwable $e) {
-        if (http_response_code() === 200) {
-            http_response_code(400);
-        }
+//     } catch (Throwable $e) {
+//         if (http_response_code() === 200) {
+//             http_response_code(400);
+//         }
         
-        echo json_encode([
-            'status'  => 'error',
-            'message' => $e->getMessage()
-        ]);
-    }
-    exit;
-}
+//         echo json_encode([
+//             'status'  => 'error',
+//             'message' => $e->getMessage()
+//         ]);
+//     }
+//     exit;
+// }
 
 // --- GUARDAR NUEVA VERIFICACIÓN ---
 // CORREGIDO: Soporta tanto POST como GET en la url con action=guardar
@@ -141,9 +141,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardar') {
         ]);
     }
     exit;
-}
-// --- LISTAR PRÓXIMAS VERIFICACIONES (NOTIFICACIONES / DROPDOWN) ---
-if (isset($_GET['action']) && $_GET['action'] === 'listarProximoMantenimiento') {
+}// --- LISTAR PRÓXIMAS VERIFICACIONES (NOTIFICACIONES / DROPDOWN) ---
+if (isset($_GET['action']) && $_GET['action'] === 'listarProximaVerificacion') {
     if (ob_get_level()) ob_clean(); 
     header('Content-Type: application/json; charset=utf-8');
     

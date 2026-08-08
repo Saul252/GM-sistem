@@ -1,5 +1,5 @@
 Deprecated: Optional parameter $usuario declared before required parameter $proxima_verificacion is implicitly treated as a required parameter in /opt/lampp/htdocs/cfsistem/app/models/verificaciones_model.php on line 147
-.texto{ color:#000 !important; } 
+
 Administrador General
 Menú
 Rol: Administrador

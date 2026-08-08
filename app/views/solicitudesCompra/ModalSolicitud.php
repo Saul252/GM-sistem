@@ -214,7 +214,7 @@
 .modal-body .select2-container--bootstrap-5 .select2-selection,
 .modal-body .select2-container .select2-selection--single {
     height: var(--control-height) !important;
-    background-color: var(--bg-input) !important;
+   
     border-color: var(--border-color) !important;
     border-radius: 0.375rem !important;
     display: flex !important;

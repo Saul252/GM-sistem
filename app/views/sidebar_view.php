@@ -126,7 +126,7 @@ $modulos = [
                 <!-- Menú desplegable con bg-body y border adaptable -->
                 <ul class="dropdown-menu dropdown-menu-end shadow-lg border p-0" id="menuNotif" style="width: 320px; max-width: 90vw; max-height: 400px; overflow-y: auto;">
                     <li class="p-3 border-bottom bg-body-tertiary">
-                        <h6 class="mb-0 fw-bold text-body">Traspasos Pendientes</h6>
+                        <h6 class="mb-0 fw-bold text-body">Notificaciones</h6>
                     </li>
                     <div id="lista-notificaciones">
                         <li class="p-3 text-center text-body-secondary small">Cargando...</li>
@@ -335,7 +335,8 @@ function renderizarListaNotificaciones() {
     const todosLosHTML = [
         ...almacenNotificaciones.traspasos,
         ...almacenNotificaciones.cancelaciones,
-        ...almacenNotificaciones.mantenimientos
+        ...almacenNotificaciones.mantenimientos,
+        ...almacenNotificaciones.verificaciones
     ];
 
     const totalNotificaciones = todosLosHTML.length;
@@ -454,7 +455,7 @@ function verificarSolicitudesCancelacion() {
             almacenNotificaciones.cancelaciones = items.map(item => `
                 <div class="d-flex align-items-center justify-content-between p-3 border-bottom bg-body-tertiary hover-notif">
                     <div style="flex: 1; line-height: 1.4;">
-                        <b class="text-danger d-block small text-uppercase">Venta #${item.id_venta}</b>
+                        <b class="text-danger d-block small text-uppercase">Cancelacion de Venta #${item.id_venta}</b>
                         <b class="d-block text-body-secondary" style="font-size: 0.75rem;">Motivo: ${item.razon || 'Sin especificación'}</b>
                         <div class="mt-1"><small class="text-body-tertiary" style="font-size: 0.70rem;">Por: ${item.usuario_nombre || 'Usuario'}</small></div>
                     </div>
@@ -540,11 +541,11 @@ function verificarMantenimientos() {
                 return `
                     <div class="d-flex justify-content-between align-items-center p-3 border-bottom hover-notif">
                         <div>
-                            <div class="small"><b>${item.estado}</b></div>
+                            <div class="small"><b>Proximo mantenimiento: ${item.estado}</b></div>
                             <div class="fw-bold text-${color}">Vehículo: ${item.vehiculo}</div>
                             <div class="small text-secondary">${item.placas}</div>
                         </div>
-                        <button class="btn btn-outline-primary btn-sm rounded-circle" onclick="window.location='/cfsistem/app/controllers/mantenimientos.php?id=${item.id_mantenimiento}'">
+                        <button class="btn btn-dark btn-sm rounded-circle" onclick="window.location='/cfsistem/app/controllers/mantenimientos.php?id=${item.id_mantenimiento}'">
                             <i class="bi bi-arrow-right text-danger"></i>
                         </button>
                     </div>`;
@@ -554,62 +555,59 @@ function verificarMantenimientos() {
         })
         .catch(err => console.error("Error mantenimientos:", err));
 }
-
 function verificarVerificaciones() {
-    fetch("/cfsistem/app/controllers/verificacionesController.php?action=listarProximoMantenimiento")
+    // 1. Se corrigió la acción de la URL a "listarProximaVerificacion"
+    fetch("/cfsistem/app/controllers/verificacionesController.php?action=listarProximaVerificacion")
         .then(r => r.json())
         .then(data => {
             const items = Array.isArray(data) ? data : [];
             const cantidad = items.length;
             const estado = estadoToasts.verificacion;
 
-            // Actualiza únicamente su badge independiente si existe
-            const badgeVerif = document.getElementById("badge-verificaciones");
-            if (badgeVerif) {
-                badgeVerif.innerText = cantidad;
-                badgeVerif.classList.toggle('d-none', cantidad === 0);
-            }
-
+            // 2. Notificación Toastify con la misma estructura visual
             if (cantidad > 0 && (estado.primeraCarga || cantidad > estado.ultimoConteo)) {
                 const item = items[0];
                 Toastify({
-                    text: `📋 PRÓXIMA VERIFICACIÓN\n${item.estado}\n\n${item.vehiculo} - ${item.placas}`,
+                    text: `📋 PRÓXIMA VERIFICACIÓN\n${item.estado}\n\n${item.vehiculo} ${item.placas}`,
                     duration: 7000,
                     gravity: "top",
                     position: "right",
-                    style: { background: "#fff", color: "#111", borderLeft: "5px solid #0d6efd", borderRadius: "15px", padding: "18px" },
+                    style: { 
+                        background: "#ffffff", 
+                        color: "#111", 
+                        borderLeft: "5px solid #0d6efd", 
+                        borderRadius: "15px", 
+                        padding: "18px" 
+                    },
                     onClick: () => window.location.href = "/cfsistem/app/controllers/verificacionesController.php"
                 }).showToast();
                 estado.primeraCarga = false;
             }
             estado.ultimoConteo = cantidad;
 
-            const listaVerif = document.getElementById("lista-verificaciones");
-            if (listaVerif) {
-                if (cantidad === 0) {
-                    listaVerif.innerHTML = '<div class="p-4 text-center text-body-secondary">No hay verificaciones próximas.</div>';
-                } else {
-                    listaVerif.innerHTML = items.map(item => {
-                        const dias = parseInt(item.dias_restantes);
-                        const color = dias <= 0 ? "danger" : (dias <= 3 ? "warning" : "success");
-                        return `
-                            <div class="d-flex justify-content-between align-items-center p-3 border-bottom hover-notif">
-                                <div>
-                                    <div class="small fw-bold">${item.estado}</div>
-                                    <div class="fw-bold text-${color}">Vehículo: ${item.vehiculo}</div>
-                                    <div class="small text-secondary">Placas: ${item.placas}</div>
-                                </div>
-                                <button class="btn btn-outline-primary btn-sm rounded-circle" onclick="window.location='/cfsistem/app/controllers/verificacionesController.php?action=obtenerDetalle&id=${item.id}'">
-                                    <i class="bi bi-arrow-right"></i>
-                                </button>
-                            </div>`;
-                    }).join("");
-                }
-            }
+            // 3. Guardar HTMLs en el almacén global (Igual que Mantenimientos)
+            almacenNotificaciones.verificaciones = items.map(item => {
+                const dias = parseInt(item.dias_restantes);
+                const color = dias <= 0 ? "danger" : (dias <= 3 ? "warning" : "success");
+                return `
+                    <div class="d-flex justify-content-between align-items-center p-3 border-bottom hover-notif">
+                        <div>
+                            <div class="small"><b>Proxima verificacion: ${item.estado}</b></div>
+
+                            <div class="fw-bold text-${color}">Vehículo: ${item.vehiculo}</div>
+                            <div class="small text-secondary">${item.placas}</div>
+                        </div>
+                        <button class="btn btn-success btn-sm rounded-circle" onclick="window.location='/cfsistem/app/controllers/verificacionesController.php?action=obtenerDetalle&id=${item.id}'">
+                            <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </div>`;
+            });
+
+            // 4. Renderizar la lista desde la función global
+            renderizarListaNotificaciones();
         })
         .catch(err => console.error("Error verificaciones:", err));
-}
-let ultimoIdVentaEliminadaNotificada = 0;
+}let ultimoIdVentaEliminadaNotificada = 0;
 
 function verificarVentasEliminadasGlobales() {
     fetch('/cfsistem/app/controllers/ventasHistorialController.php?action=obtenerUltimaVentaEliminada')

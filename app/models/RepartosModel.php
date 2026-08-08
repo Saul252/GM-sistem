@@ -2201,17 +2201,11 @@ public function listarIdsPendientesPorVenta($venta_id) {
     
     // Retorna algo como: [193, 194, 198]
     return $ids;
-}public function listarProductos($venta_id) {
+}
+
+public function listarProductos($venta_id) {
     $venta_id = intval($venta_id);
- $sqlLotes = "
-            SELECT id, codigo_lote, cantidad_actual, fecha_ingreso
-            FROM lotes_stock
-            WHERE producto_id = $prodId
-              AND almacen_id = $almId
-              AND cantidad_actual > 0
-              AND estado_lote = 'activo'
-            ORDER BY fecha_ingreso ASC
-        ";
+ 
     $sqlP = "
     SELECT 
         dv.*,
@@ -2267,12 +2261,6 @@ public function listarIdsPendientesPorVenta($venta_id) {
 
     return $productos;
 }
-/**
- * Cuenta cuántos movimientos de salida de una venta ya están 
- * asignados a un transporte y no han sido cancelados.
- * * @param int $venta_id El ID de la referencia (venta)
- * @return int Cantidad de entregas activas encontradas
- */
 public function contarEntregasActivasPorVenta($venta_id) {
     // Forzamos entero para seguridad extra
     $venta_id = intval($venta_id);

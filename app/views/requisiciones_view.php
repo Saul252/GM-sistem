@@ -456,7 +456,9 @@
             </form>
         </div>
     </div>
-   
+    <?php require_once __DIR__ . '/egresosComponets/agregarPoductoModal.php'; ?>
+    <?php require_once __DIR__ . '/clientes/clientesModal.php'; ?>
+
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
@@ -577,37 +579,45 @@
     // CARGAR VENDEDORES
     // =====================================================
     async function cargarVendedores3(vendedor_id = null) {
-        const select = document.getElementById('select-vendedor1');
-        if (!select) return;
+    const select = document.getElementById('select-vendedor1');
+    if (!select) return;
 
-        try {
-            const url = '/cfsistem/app/controllers/accesoController.php?action=obtenerUsuarios';
-            const respuesta = await fetch(url);
+    // ID del usuario desde la sesión de PHP
+    const idUsuarioSesion = "<?= $_SESSION['usuario_id'] ?? '' ?>";
 
-            if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
+    try {
+        const url = '/cfsistem/app/controllers/accesoController.php?action=obtenerUsuarios';
+        const respuesta = await fetch(url);
 
-            const resultado = await respuesta.json();
+        if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
 
-            if (resultado.success && Array.isArray(resultado.data)) {
-                resultado.data.forEach(usuario => {
-                    const opcion = document.createElement('option');
-                    opcion.value = usuario.id;
-                    opcion.textContent = `${usuario.nombre}`;
-                    select.appendChild(opcion);
-                });
+        const resultado = await respuesta.json();
 
-                if (vendedor_id) {
-                    $('#select-vendedor1').val(vendedor_id).trigger('change.select2');
-                }
-            } else {
-                select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
+        if (resultado.success && Array.isArray(resultado.data)) {
+            resultado.data.forEach(usuario => {
+                const opcion = document.createElement('option');
+                opcion.value = usuario.id;
+                opcion.textContent = `${usuario.nombre}`;
+                select.appendChild(opcion);
+            });
+
+            // Prioridad: 
+            // 1. vendedor_id (si se recibe explícitamente en la función)
+            // 2. idUsuarioSesion (ID guardado en la sesión de PHP)
+            const valorASeleccionar = vendedor_id || idUsuarioSesion;
+
+            if (valorASeleccionar) {
+                $('#select-vendedor1').val(valorASeleccionar).trigger('change.select2');
             }
-        } catch (error) {
-            select.innerHTML = '<option value="">Error al cargar la lista</option>';
-            console.error('Error al ejecutar cargarVendedores3:', error);
+        } else {
+            select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
         }
+    } catch (error) {
+        select.innerHTML = '<option value="">Error al cargar la lista</option>';
+        console.error('Error al ejecutar cargarVendedores3:', error);
     }
- async function cargarClientes() {
+}
+   async function cargarClientes() {
     console.log("cargo clientes");
     
     // Obtenemos el ID del almacén actual
@@ -629,29 +639,35 @@
 
         if (resultado.success && Array.isArray(resultado.data)) {
             
-            // FILTRADO: 
-            // 1. Conserva clientes cuyo nombre NO contenga "público en general" (clientes normales).
+            // FILTRADO:
+            // 1. Conserva clientes cuyo nombre NO contenga "público en general".
             // 2. Para "público en general", solo conserva el que coincida con el almacenId actual.
             const clientesFiltrados = resultado.data.filter(cliente => {
                 const nombreNorm = cliente.nombre_comercial.toLowerCase().trim();
                 const esPublicoGeneral = nombreNorm.includes('publico en general') || nombreNorm.includes('público en general');
 
                 if (esPublicoGeneral) {
-                    // Revisa que coincida el ID del almacén (compara tanto número como string)
                     return cliente.almacen_id == almacenId;
                 }
 
-                // Si es un cliente regular, se muestra siempre
                 return true;
             });
 
-            // Llenamos el select únicamente con la lista filtrada
+            // Llenamos el select con la lista filtrada
             clientesFiltrados.forEach(cliente => {
                 const opcion = document.createElement('option');
                 opcion.value = cliente.id;
                 opcion.textContent = `${cliente.nombre_comercial}`;
                 select.appendChild(opcion);
             });
+
+            // SELECCIÓN AUTOMÁTICA DEL PRIMER REGISTRO ENCONTRADO
+            if (clientesFiltrados.length > 0) {
+                const primerClienteId = clientesFiltrados[0].id;
+
+                // Soporte nativo y compatibilidad con Select2/jQuery
+                $('#cliente_id_editar').val(primerClienteId).trigger('change');
+            }
 
         } else {
             select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
@@ -776,8 +792,7 @@
                         name="itemsEditar[${id}][unidad]" 
                         class="form-select unidad-select-editar"
                         onchange="actualizarEquivalencia(this);calcularPrecioSugeridoEditar(this)">
-                        <option value="" data-equivalencia="" data-medida-id="">Seleccione</option>
-                        ${opcionesUnidad}
+                         ${opcionesUnidad}
                     </select>
                 </td>
                 

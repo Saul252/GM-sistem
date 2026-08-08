@@ -106,7 +106,7 @@
         <p class="text-body-secondary small m-0">Gestión de rutas, choferes y viáticos en tiempo real</p>
       </div>
       <div>
-        <span class="badge text-dark  shadow-sm px-3 py-2 rounded-pill border">
+        <span class="badge text-primary  shadow-sm px-3 py-2 rounded-pill border">
           <i class="bi bi-shield-check text-success me-1"></i> Sistema Activo
         </span>
       </div>
@@ -357,6 +357,7 @@ if ($('#almacen').length) {
     },
 
     renderViajes: function(data) {
+      console.log(data);
 
         let html = '';
         
@@ -365,6 +366,7 @@ if ($('#almacen').length) {
             html = `<tr><td colspan="6" class="text-center text-body-secondary">Sin datos</td></tr>`;
         }
 data.forEach(v => {
+
     let boton = Number(v.monto) > 0
 ? `
 <button
@@ -423,7 +425,7 @@ data.forEach(v => {
         </td>
 
         <td>
-            <span class="badge  text-dark border">
+            <span class="badge  text-success border">
                 <i class="bi bi-truck me-1"></i>
                 ${v.unidad_nombre || '-'}
             </span>

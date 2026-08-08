@@ -81,42 +81,37 @@ $params = [];
     }
 public static function procesarVenta($conexion, $data, $id_usuario) {
     $conexion->begin_transaction();
-     
-
 
     try {
-       $id_cliente   = intval($data['id_cliente']);
-       $vendedor_id   = intval($data['id_vendedor']);
-$descuento    = floatval($data['descuento']);
-$obs          = $data['observaciones'] ?? '';
-$carrito      = $data['carrito'];
-$monto_pagado = floatval($data['monto_pagado']);
+        $id_cliente   = intval($data['id_cliente']);
+        $vendedor_id  = intval($data['id_vendedor'] ?? 0);
+        $descuento    = floatval($data['descuento'] ?? 0);
+        $obs          = '';
+        $carrito      = $data['carrito'] ?? [];
+        $monto_pagado = floatval($data['monto_pagado'] ?? 0);
 
+        // 1. Manejo seguro de subtotal cuando viene en Array
+        $raw_subtotal = $data['subtotal'] ?? 0;
+        $subtotal = is_array($raw_subtotal) ? floatval($raw_subtotal[0] ?? 0) : floatval($raw_subtotal);
 
-// 1. Corregida la asignación (usa minúsculas para evitar confusiones)
-$monto_favor  = floatval($data['monto_usado_favor'] ?? 0);
+        $monto_favor = floatval($data['monto_usado_favor'] ?? 0);
 
-// 2. Corregida la sintaxis del IF (requiere paréntesis)
-// 3. Corregida la comparación de variables (deben coincidir en mayúsculas/minúsculas)
-if ($monto_favor > 0 && $monto_favor == $monto_pagado) {
-    $metodo_pago = 'Saldo a Favor';
-} else {
-    // Si no es saldo a favor total, toma el método enviado o por defecto Efectivo
-    $metodo_pago = $data['metodo_pago'] ?? 'Efectivo';
-    $efectivoPagado =$data['efectivoPagado']??0;
-}
-       
+        if ($monto_favor > 0 && $monto_favor == $monto_pagado) {
+            $metodo_pago = 'Saldo a Favor';
+            $efectivoPagado = 0;
+        } else {
+            $metodo_pago = $data['metodo_pago'] ?? 'Efectivo';
+            $efectivoPagado = floatval($data['efectivoPagado'] ?? 0);
+        }
 
-        // 1. VALIDACIÓN DE STOCK Y CÁLCULO DE TOTALES
-    
-        $subtotal = ($data['subtotal']);
+        // VALIDACIÓN DE STOCK Y CÁLCULO DE TOTALES
         $total_vendido_global = 0;
         $total_entregado_global = 0;
 
         foreach ($carrito as $key => $item) {
             $p_id = intval($item['producto_id']);
             $alm_id = intval($item['almacen_id']);
-            $entrega_solicitada = floatval($item['entrega_hoy']);
+            $entrega_solicitada = floatval($item['entrega_hoy'] ?? 0);
 
             $stmtS = $conexion->prepare("SELECT stock FROM inventario WHERE producto_id = ? AND almacen_id = ? FOR UPDATE");
             $stmtS->bind_param("ii", $p_id, $alm_id);
@@ -127,70 +122,86 @@ if ($monto_favor > 0 && $monto_favor == $monto_pagado) {
                 $carrito[$key]['entrega_hoy'] = $stockActual;
             }
 
-            
             $total_vendido_global += floatval($item['cantidad']);
-            $total_entregado_global += $carrito[$key]['entrega_hoy'];
+            $total_entregado_global =0;
         }
 
-        $total = $subtotal ;
+        $total = $subtotal - $descuento;
 
-        // 2. GENERAR FOLIO DINÁMICO
+        // GENERAR FOLIO DINÁMICO
         $resFolio = $conexion->query("SELECT MAX(id) as ultimo_id FROM ventas");
         $filaFolio = $resFolio->fetch_assoc();
         $proximo_id = ($filaFolio['ultimo_id'] ?? 0) + 1;
-        $folio='';
-        if($monto_pagado==0){
+
+        if ($monto_pagado == 0) {
             $folio = "VR-" . str_pad($proximo_id, 2, "0", STR_PAD_LEFT);
-
+        } else {
+            $folio = "V-" . str_pad($proximo_id, 2, "0", STR_PAD_LEFT);
         }
-        else{
-             $folio = "V-" . str_pad($proximo_id, 2, "0", STR_PAD_LEFT);
 
-        }
-        
-        
-        $id_almacen_vta = intval($carrito[0]['almacen_id']);
-        $estado_entrega_vta = ($total_entregado_global >= $total_vendido_global) ? 'entregado' : (($total_entregado_global > 0) ? 'parcial' : 'pendiente');
-        $estado_pago = ($monto_pagado >=number_format($total, 2, '.', '') ) ? 'pagado' : (($monto_pagado > 0) ? 'parcial' : 'pendiente');
+        $id_almacen_vta = intval($carrito[0]['almacen_id'] ?? 0);
+$estado_entrega_vta = ($total_entregado_global >= $total_vendido_global) ? 'entregado' : (($total_entregado_global > 0) ? 'parcial' : 'pendiente');
+$estado_pago = ($monto_pagado >= floatval(number_format($total, 2, '.', ''))) ? 'pagado' : (($monto_pagado > 0) ? 'parcial' : 'pendiente');
 
-        // 3. INSERTAR CABECERA DE VENTA
-        $sqlV = "INSERT INTO ventas (folio, id_cliente, almacen_id, usuario_id, subtotal, descuento, total, estado_pago, estado_entrega, estado_general, observaciones,vendedor_id) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activa', ?,?)";
-        $stmtV = $conexion->prepare($sqlV);
-        $stmtV->bind_param("siiidddssss", $folio, $id_cliente, $id_almacen_vta, $id_usuario, $data['subtotal'], $descuento, $data['subtotal'], $estado_pago, $estado_entrega_vta, $obs,$vendedor_id);
-        $stmtV->execute();
-        $id_venta = $conexion->insert_id;
+// --- SANITIZACIÓN DE VARIABLES (Evita el "Array to string conversion") ---
+$folio        = is_array($folio) ? implode('', $folio) : strval($folio ?? '');
+$id_cliente   = is_array($id_cliente) ? intval($id_cliente[0] ?? 0) : intval($id_cliente ?? 0);
+$id_usuario   = is_array($id_usuario) ? intval($id_usuario[0] ?? 0) : intval($id_usuario ?? 0);
+$subtotal     = floatval($subtotal ?? 0);
+$descuento    = floatval($descuento ?? 0);
+$total        = floatval($total ?? 0);
 
-       
-
-        // 4. REGISTRAR PAGO (Si existe)
-       if ($monto_pagado > 0) {
-    // 1. Validar el monto de saldo a favor (si está vacío o no existe, poner 0)
-    $monto_favor_valor = (isset($monto_favor) && !empty($monto_favor)) ? floatval($monto_favor) : 0.00;
-    
-    // 2. Capturar la referencia (vacío por defecto si no existe)
-    $referencia = $data['referencia'] ?? '';
-
-    // 3. Consulta preparada con las 7 columnas
-    $stmtP = $conexion->prepare("INSERT INTO historial_pagos (venta_id, usuario_id, monto, saldo_favor, metodo_pago, efectivoPagado, referencia) VALUES (?, ?,?, ?, ?, ?, ?)");
-    
-    // 4. bind_param ajustado:
-    // i = venta_id (int)
-    // i = usuario_id (int)
-    // d = monto (double)
-    // d = saldo_favor (double) <--- El nuevo valor validado
-    // s = metodo_pago (string)
-     // d = efectivoPagado (double)
-    // s = referencia (string)
-    $stmtP->bind_param("iiddsds", $id_venta, $id_usuario, $monto_pagado, $monto_favor_valor, $metodo_pago,$efectivoPagado, $referencia);
-    
-    if (!$stmtP->execute()) {
-        // Opcional: registrar error si falla la ejecución
-        error_log("Error en historial_pagos: " . $stmtP->error);
-    }
+// Si $obs es un array (ej. $_POST['observaciones']), extraemos su texto o lo convertimos a string
+if (is_array($obs)) {
+    $obs = isset($obs['observaciones']) ? strval($obs['observaciones']) : implode(' ', $obs);
+} else {
+    $obs = strval($obs ?? '');
 }
 
-        // 5. PROCESAR ENTREGAS FÍSICAS E INVENTARIO
+$vendedor_id = is_array($vendedor_id) ? intval($vendedor_id[0] ?? 0) : intval($vendedor_id ?? 0);
+
+
+// INSERTAR CABECERA DE VENTA
+$sqlV = "INSERT INTO ventas (folio, id_cliente, almacen_id, usuario_id, subtotal, descuento, total, estado_pago, estado_entrega, estado_general, observaciones, vendedor_id) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'activa', ?, ?)";
+
+$stmtV = $conexion->prepare($sqlV);
+
+if (!$stmtV) {
+    die("Error en la preparación del SQL: " . $conexion->error);
+}
+
+$stmtV->bind_param(
+    "siiidddsssi", 
+    $folio, 
+    $id_cliente, 
+    $id_almacen_vta, 
+    $id_usuario, 
+    $subtotal, 
+    $descuento, 
+    $total, 
+    $estado_pago, 
+    $estado_entrega_vta, 
+    $obs, 
+    $vendedor_id
+);
+
+$stmtV->execute();
+$id_venta = $conexion->insert_id;
+        // REGISTRAR PAGO
+        if ($monto_pagado > 0) {
+            $monto_favor_valor = $monto_favor;
+            $referencia = $data['referencia'] ?? '';
+
+            $stmtP = $conexion->prepare("INSERT INTO historial_pagos (venta_id, usuario_id, monto, saldo_favor, metodo_pago, efectivoPagado, referencia) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmtP->bind_param("iiddsds", $id_venta, $id_usuario, $monto_pagado, $monto_favor_valor, $metodo_pago, $efectivoPagado, $referencia);
+            
+            if (!$stmtP->execute()) {
+                error_log("Error en historial_pagos: " . $stmtP->error);
+            }
+        }
+
+        // PROCESAR ENTREGAS FÍSICAS E INVENTARIO
         $id_entrega_maestro = null;
         if ($total_entregado_global > 0) {
             $stmtE = $conexion->prepare("INSERT INTO entregas_venta (venta_id, usuario_id, fecha, observaciones) VALUES (?, ?, NOW(), ?)");
@@ -201,50 +212,43 @@ if ($monto_favor > 0 && $monto_favor == $monto_pagado) {
         }
 
         foreach ($carrito as $item) {
-            $p_id      = intval($item['producto_id']);
-            $alm_id    = intval($item['almacen_id']);
-            $cant_ped  = floatval($item['cantidad']);
-            $idunidadMedida=floatval($item['idunidadMedida']?? 0);
-            $cant_real = floatval($item['entrega_hoy']); 
-            $prec      = floatval($item['precio_unitario']);
-            $subt      = floatval($item['subtotal']);
-            $lote_id= intval($item['lote_id']);
+            $p_id            = intval($item['producto_id']);
+            $alm_id          = intval($item['almacen_id']);
+            $cant_ped        = floatval($item['cantidad']);
+            $idunidadMedida  = floatval($item['idunidadMedida'] ?? 0);
+            $cant_real       = floatval($item['entrega_hoy'] ?? 0); 
+            $prec            = floatval($item['precio_unitario'] ?? 0);
+            $subt            = floatval($item['subtotal'] ?? 0);
+            $lote_id         = intval($item['lote_id'] ?? 0);
             
             $st_fila = ($cant_real >= $cant_ped) ? 'entregado' : (($cant_real > 0) ? 'parcial' : 'pendiente');
             
-            $sqlD = "INSERT INTO detalle_venta (venta_id, producto_id, cantidad,unidadMedida, cantidad_entregada, precio_unitario, subtotal, estado_entrega) 
-                     VALUES (?, ?, ?, ?,?, ?, ?, ?)";
+            $sqlD = "INSERT INTO detalle_venta (venta_id, producto_id, cantidad, unidadMedida, cantidad_entregada, precio_unitario, subtotal, estado_entrega) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             $stmtD = $conexion->prepare($sqlD);
-            $stmtD->bind_param("iiddddds", $id_venta, $p_id, $cant_ped,$idunidadMedida, $cant_real, $prec, $subt, $st_fila);
+            $stmtD->bind_param("iiddddds", $id_venta, $p_id, $cant_ped, $idunidadMedida, $cant_real, $prec, $subt, $st_fila);
             $stmtD->execute();
             $id_detalle_venta = $conexion->insert_id;
-               $estado = 'reservado';
-if($lote_id!=0)
-    {
-$stmtLote = $conexion->prepare("
-    UPDATE lotes_stock 
-    SET estado_lote = ? 
-    WHERE id = ?
-");//lotes_reservados
 
-$stmtLote->bind_param("si", $estado, $lote_id);
-$stmtLote->execute();
-$sqlR = "INSERT INTO lotes_reservados (lote_id, venta_id) 
-         VALUES (?, ?)";
+            $estado = 'reservado';
+            if ($lote_id != 0) {
+                $stmtLote = $conexion->prepare("UPDATE lotes_stock SET estado_lote = ? WHERE id = ?");
+                $stmtLote->bind_param("si", $estado, $lote_id);
+                $stmtLote->execute();
 
-$stmtR = $conexion->prepare($sqlR);
+                $sqlR = "INSERT INTO lotes_reservados (lote_id, venta_id) VALUES (?, ?)";
+                $stmtR = $conexion->prepare($sqlR);
 
-if (!$stmtR) {
-    throw new Exception("Error preparando reserva: " . $conexion->error);
-}
+                if (!$stmtR) {
+                    throw new Exception("Error preparando reserva: " . $conexion->error);
+                }
 
-$stmtR->bind_param("ii", $lote_id, $id_venta);
+                $stmtR->bind_param("ii", $lote_id, $id_venta);
 
-if (!$stmtR->execute()) {
-    throw new Exception("Error guardando reserva: " . $stmtR->error);
-}
-    }
-       
+                if (!$stmtR->execute()) {
+                    throw new Exception("Error guardando reserva: " . $stmtR->error);
+                }
+            }
 
             if ($cant_real > 0 && $id_entrega_maestro) {
                 // Detalle entrega
@@ -263,9 +267,6 @@ if (!$stmtR->execute()) {
                                                VALUES (?, 'salida', ?, ?, ?, ?, ?)");
                 $stmtMov->bind_param("idiiss", $p_id, $cant_real, $alm_id, $id_usuario, $id_venta, $mov_obs);
                 $stmtMov->execute();
-             
-
-                
             }
         }
 
@@ -283,6 +284,7 @@ if (!$stmtR->execute()) {
         return ['status' => 'error', 'message' => $e->getMessage()];
     }
 }
+
 public static function procesarVentaDesdeCotizacion($conexion, $data, $id_usuario)
 {
     $conexion->begin_transaction();

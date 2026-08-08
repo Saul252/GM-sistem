@@ -148,14 +148,14 @@
                                 id="f_search"
                                 class="form-control border-start-0 ps-0"
                                 placeholder="ID, vehículo, placas..."
-                                onkeyup="getMantenimientos()">
+                                onkeyup="getverificaciones()">
                         </div>
                     </div>
 
                     <!-- Vehículo -->
                     <div class="col-lg-2 col-md-6">
                         <label class="form-label fw-semibold small ">Vehículo</label>
-                        <select class="form-select" id="select-vehiculos" onchange="getMantenimientos()">
+                        <select class="form-select" id="select-vehiculos" onchange="getverificaciones()">
                             <option value="">Todos</option>
                             <?php if(!empty($vehiculos)): foreach($vehiculos as $ve): ?>
                                 <option value="<?= $ve['id'] ?>"><?= htmlspecialchars($ve['nombre']) ?></option>
@@ -180,16 +180,16 @@
                     <div class="col-lg-3 col-md-6 d-none" id="div_p">
                         <label class="form-label fw-semibold small ">Rango de fechas</label>
                         <div class="input-group">
-                            <input type="date" id="f_ini" class="form-control" onchange="getMantenimientos()">
+                            <input type="date" id="f_ini" class="form-control" onchange="getverificaciones()">
                             <span class="input-group-text ">a</span>
-                            <input type="date" id="f_fin" class="form-control" onchange="getMantenimientos()">
+                            <input type="date" id="f_fin" class="form-control" onchange="getverificaciones()">
                         </div>
                     </div>
 
                     <!-- Almacén -->
                     <div class="col-lg-2 col-md-6">
                         <label class="form-label fw-semibold small ">Almacén</label>
-                        <select id="f_almacen" class="form-select" onchange="getMantenimientos()">
+                        <select id="f_almacen" class="form-select" onchange="getverificaciones()">
                             <option value="">Todos</option>
                             <?php if(!empty($almacenes)): foreach($almacenes as $a): ?>
                                 <option value="<?= $a['id'] ?>" <?= (isset($_SESSION['almacen_id']) && $a['id'] == $_SESSION['almacen_id']) ? 'selected':'' ?>>
@@ -222,8 +222,8 @@
                     <table class="table table-hover align-middle mb-0" id="tablaMantenimientos">
                         <thead>
                             <tr>
-                                <th class="ps-4">Fecha Trámite</th>
                                 <th>Folio ID</th>
+                                <th class="ps-4">Fecha Trámite</th>                               
                                 <th>Almacén</th>
                                 <th>Vehículo</th>
                                 <th class="text-center">Próxima Verificación</th>
@@ -303,7 +303,11 @@
             </div>
         </div>
     </div>
-
+  <!-- <button type="button" class="btn btn-action btn-light border text-primary" 
+                                    onclick="verDetalle(${m.id})" 
+                                    title="Ver Detalles">
+                                <i class="bi bi-eye"></i>
+                            </button> -->
     <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -322,10 +326,10 @@
         });
 
         $(document).ready(function() {
-            getMantenimientos();
+            getverificaciones();
         });
 
-        async function getMantenimientos() {
+        async function getverificaciones() {
             const params = new URLSearchParams({
                 action: 'listar',
                 f_search: $('#f_search').val(),
@@ -347,21 +351,18 @@
 
                 $('#tablaMantenimientos tbody').html(data.map(m => {
                     return `<tr>
-                        <td class="ps-4 small ">${m.fecha}</td>
+                       
                         <td class="fw-bold ">#${m.id}</td>
+                         <td class="ps-4 small ">${m.fecha}</td>
                         <td><span class="badge bg-light text-dark border font-normal">${m.almacen}</span></td>
-                        <td><div class="fw-semibold ">${m.vehiculo}</div></td>
+                        <td><div class="fw-semibold ">${m.vehiculo} (${m.placas})</div></td>
                         <td class="text-center">
                             <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-20 px-3 py-2">
                                 <i class="bi bi-calendar-event me-1"></i>${m.proxima_verificacion}
                             </span>
                         </td>
                         <td class="text-center pe-4">
-                            <button type="button" class="btn btn-action btn-light border text-primary" 
-                                    onclick="verDetalle(${m.id})" 
-                                    title="Ver Detalles">
-                                <i class="bi bi-eye"></i>
-                            </button>
+                          
                             <button type="button" class="btn btn-action btn-light border text-danger" 
             onclick="eliminarVerificacion(${m.id})" 
             title="Eliminar Verificación">
@@ -379,7 +380,7 @@
 
         function togglePerso() {
             $('#div_p').toggleClass('d-none', $('#f_rango').val() !== 'personalizado');
-            getMantenimientos();
+            getverificaciones();
         }
 
         async function verDetalle(id) {
@@ -460,7 +461,7 @@
                         customClass: { popup: 'rounded-4 border-0 shadow-lg' }
                     });
                     
-                    getMantenimientos();
+                    getverificaciones();
                 } else {
                     Swal.fire({
                         icon: 'error',

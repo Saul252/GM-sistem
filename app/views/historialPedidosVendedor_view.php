@@ -547,7 +547,7 @@ let agregarPago = (saldo <= 0) ?
                 return `<tr>
     <td class="ps-3 small align-middle">${v.fecha}</td>
     <td class="fw-bold align-middle">${v.folio}</td>
-    <td class="align-middle"><span class="badge bg-light  border fw-normal">${v.almacen_nombre}</span></td>
+    <td class="align-middle"><span class="badge bg-light text-primary  border fw-normal">${v.almacen_nombre}</span></td>
     <td class="align-middle"><div class="small fw-bold">${v.vendedor}</div></td>
     <td class="align-middle"><div class="small fw-bold">${v.cliente}</div></td>
     <td class="fw-bold card-title-text align-middle">${factura}</td>
@@ -605,10 +605,10 @@ const resultado = agruparVentasPorCliente(data.data);
                 return `<tr>
     
     <td class="fw-bold align-middle">${v.id_cliente}</td>
-    <td class="align-middle"><span class="badge bg-light  border fw-normal">${v.cliente}</span></td>
+    <td class="align-middle"><span class="badge bg-light text-dark border fw-normal">${v.cliente}</span></td>
     <td class="align-middle"><div class="small text-center fw-bold">${v.total_compro}</div></td>
     <td class="align-middle"><div class="small text-center fw-bold">${v.total_cobrado}</div></td>
-    <td class="fw-bold card-title-text align-middle text-center">${(v.total_debe*(-1))}</td>
+    <td class="fw-bold card-title-text align-middle text-center">${(v.total_debe)}</td>
     
   
     

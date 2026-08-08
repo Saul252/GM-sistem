@@ -1,10 +1,10 @@
 <div class="modal fade" id="modalGasto" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; background: #ffffff;">
+        <div class="modal-content  shadow-lg" style="border-radius: 24px; ">
             <form id="formNuevoGasto" enctype="multipart/form-data">
                 
-                <div class="modal-header border-0 pt-4 px-4 pb-2">
-                    <h5 class="modal-title fw-bold text-dark d-flex align-items-center" style="letter-spacing: -0.5px;">
+                <div class="modal-header  pt-4 px-4 pb-2">
+                    <h5 class="modal-title fw-bold text-primary d-flex align-items-center" style="letter-spacing: -0.5px;">
                         <i class="bi bi-cash-stack text-primary me-2 fs-4"></i> Registrar Nuevo Gasto
                     </h5>
                     <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
@@ -14,12 +14,12 @@
                     <div class="row g-3 mb-4">
                         <div class="col-md-3">
                             <label class="form-label small fw-semibold text-secondary">Folio/Factura</label>
-                            <input type="text" id="folio_gasto" name="folio" class="form-control border-0 bg-light text-center fw-bold"
+                            <input type="text" id="folio_gasto" name="folio" class="form-control   text-center fw-bold"
                                 style="border-radius: 12px; height: 42px; color: #555;" placeholder="Cargando..." readonly required>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label small fw-semibold text-secondary">Almacén Destino</label>
-                            <select name="almacen_id" class="form-select border-0 bg-light" style="border-radius: 12px; height: 42px;"
+                            <select name="almacen_id" class="form-select  " style="border-radius: 12px; height: 42px;"
                                 <?= ($_SESSION['rol_id'] != 1) ? 'readonly style="pointer-events: none;"' : '' ?> required>
                                 <?php foreach($almacenes as $alm): ?>
                                 <option value="<?= $alm['id'] ?>" <?= ($_SESSION['almacen_id'] == $alm['id']) ? 'selected' : '' ?>>
@@ -31,10 +31,10 @@
                         <div class="col-md-5">
                             <label class="form-label small fw-semibold text-secondary">Categoría de Gasto</label>
                             <div class="input-group">
-                                <select id="select_categoria_gasto" name="categoria_id" class="form-select border-0 bg-light" style="border-radius: 12px 0 0 12px; height: 42px;" required>
+                                <select id="select_categoria_gasto" name="categoria_id" class="form-select  " style="border-radius: 12px 0 0 12px; height: 42px;" required>
                                     <option value="">Seleccione categoría...</option>
                                 </select>
-                                <button type="button" class="btn btn-primary border-0" style="border-radius: 0 12px 12px 0; padding: 0 15px;" onclick="abrirModalNuevaCategoria()">
+                                <button type="button" class="btn btn-primary " style="border-radius: 0 12px 12px 0; padding: 0 15px;" onclick="abrirModalNuevaCategoria()">
                                     <i class="bi bi-plus-lg"></i>
                                 </button>
                             </div>
@@ -42,17 +42,17 @@
 
                        <div class="col-md-6 d-none" id="wrapper-beneficiario"> 
                             <label class="form-label small fw-semibold text-secondary">Beneficiario / Razón Social</label>
-                            <input type="text" id="beneficiario" name="beneficiario" class="form-control border-0 bg-light text-uppercase"
+                            <input type="text" id="beneficiario" name="beneficiario" class="form-control   text-uppercase"
                                 style="border-radius: 12px; height: 42px;" placeholder="Ej: CFE, Gasolinera..." required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold text-secondary">Vincular Proveedor Existente</label>
                             <div class="input-group">
-                                <select class="form-select border-0 bg-light" id="select-proveedor" name="proveedor_id" style="border-radius: 12px 0 0 12px; height: 42px;" onchange="actualizar()">
+                                <select class="form-select  " id="select-proveedor" name="proveedor_id" style="border-radius: 12px 0 0 12px; height: 42px;" onchange="actualizar()">
                                     <option value="">Seleccione...</option>
                                     <option value="OTRO" class="fw-bold text-primary">➕ OTRO (ESCRIBIR NUEVO)</option>
                                 </select>
-                                <button class="btn btn-outline-light border-0 bg-light text-success" type="button" style="border-radius: 0 12px 12px 0; padding: 0 15px;" onclick="abrirModalNuevoProveedor()">
+                                <button class="btn btn-outline-light   text-success" type="button" style="border-radius: 0 12px 12px 0; padding: 0 15px;" onclick="abrirModalNuevoProveedor()">
                                     <i class="bi bi-plus-lg fw-bold"></i>
                                 </button>
                             </div>
@@ -60,7 +60,7 @@
 
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold text-secondary">Método de Pago</label>
-                            <select name="metodo_pago" class="form-select border-0 bg-light" style="border-radius: 12px; height: 42px;">
+                            <select name="metodo_pago" class="form-select  " style="border-radius: 12px; height: 42px;">
                                 <option value="Efectivo">Efectivo</option>
                                 <option value="Transferencia">Transferencia</option>
                                 <option value="Tarjeta">Tarjeta</option>
@@ -68,23 +68,23 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold text-secondary">Comprobante (Evidencia)</label>
-                            <input type="file" name="documento" class="form-control border-0 bg-light" style="border-radius: 12px; height: 42px; pt-2;" accept=".jpg,.png,.pdf">
+                            <input type="file" name="documento" class="form-control  " style="border-radius: 12px; height: 42px; pt-2;" accept=".jpg,.png,.pdf">
                         </div>
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center mb-3 pt-2">
-                        <h6 class="fw-bold mb-0 text-dark" style="letter-spacing: -0.3px;">Conceptos del Gasto</h6>
-                        <button type="button" class="btn btn-sm text-darck fw-bold bg-transparent border-0 d-flex align-items-center" onclick="abrirModalNuevoInsumo()">
+                        <h6 class="fw-bold mb-0 text-primary" style="letter-spacing: -0.3px;">Conceptos del Gasto</h6>
+                        <button type="button" class="btn btn-sm text-darck fw-bold bg-transparent  d-flex align-items-center" onclick="abrirModalNuevoInsumo()">
                             <i class="bi bi-plus-circle-fill me-1 fs-6"></i> Agregar Insumo
                         </button>
-                        <button type="button" class="btn btn-sm text-primary fw-bold bg-transparent border-0 d-flex align-items-center" onclick="agregarFilaGasto()">
+                        <button type="button" class="btn btn-sm text-primary fw-bold bg-transparent  d-flex align-items-center" onclick="agregarFilaGasto()">
                             <i class="bi bi-plus-circle-fill me-1 fs-6"></i> Agregar Concepto
                         </button>
                    
                         
                     </div>
 
-                    <div class="table-responsive mb-4" style="border-radius: 16px; background: #fafafa; padding: 10px;">
+                    <div class="table-responsive mb-4" style="border-radius: 16px; padding: 10px;">
                         <table class="table table-borderless align-middle mb-0" id="tablaConceptosGasto">
                             <thead>
                                 <tr class="text-secondary small fw-bold" style="font-size: 0.75rem;">
@@ -97,15 +97,15 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr class="bg-white" style="border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                                <tr class="" style="border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
                                     <td>
-                                        <input type="text" name="desc[]" class="form-control form-control-sm border-0 bg-light text-uppercase" style="border-radius: 8px; height: 36px;" required>
+                                        <input type="text" name="desc[]" class="form-control form-control-sm   text-uppercase" style="border-radius: 8px; height: 36px;" required>
                                     </td>
                                     <td>
-                                        <input type="number" name="cant[]" class="form-control form-control-sm border-0 bg-light cant text-center" style="border-radius: 8px; height: 36px;" value="1" step="any" oninput="calcularGasto()">
+                                        <input type="number" name="cant[]" class="form-control form-control-sm   cant text-center" style="border-radius: 8px; height: 36px;" value="1" step="any" oninput="calcularGasto()">
                                     </td>
                                     <td>
-                                        <select name="items[]" class="form-select form-select-sm border-0 bg-light items" style="border-radius: 8px; height: 36px;">
+                                        <select name="items[]" class="form-select form-select-sm   items" style="border-radius: 8px; height: 36px;">
                                             <option value=""></option>
                                             <?php foreach($insumos as $ve): ?>
                                             <option value="<?= $ve['id'] ?>"><?= $ve['nombre'] ?></option>
@@ -113,9 +113,9 @@
                                         </select>
                                     </td>
                                     <td>
-                                        <input type="number" name="precio[]" class="form-control form-control-sm border-0 bg-light precio" style="border-radius: 8px; height: 36px;" value="0.00" step="any" oninput="calcularGasto()">
+                                        <input type="number" name="precio[]" class="form-control form-control-sm   precio" style="border-radius: 8px; height: 36px;" value="0.00" step="any" oninput="calcularGasto()">
                                     </td>
-                                    <td class="text-end fw-bold text-dark subtotal_fila pe-3" style="font-size: 0.9rem;">$0.00</td>
+                                    <td class="text-end fw-bold text-primary subtotal_fila pe-3" style="font-size: 0.9rem;">$0.00</td>
                                     <td class="text-center"></td>
                                 </tr>
                             </tbody>
@@ -127,16 +127,16 @@
                             <div class="row g-2">
                                 <div class="col-6">
                                     <label class="form-label small fw-semibold text-secondary">Fecha Emisión</label>
-                                    <input type="date" id="fecha" name="fecha" value="<?= date("Y-m-d") ?>" class="form-control border-0 bg-light" style="border-radius: 12px; height: 40px;">
+                                    <input type="date" id="fecha" name="fecha" value="<?= date("Y-m-d") ?>" class="form-control  " style="border-radius: 12px; height: 40px;">
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label small fw-semibold text-secondary">Observaciones Internas</label>
-                                    <textarea name="observaciones" class="form-control text-uppercase border-0 bg-light" style="border-radius: 12px;" rows="2" placeholder="Notas aclaratorias..."></textarea>
+                                    <textarea name="observaciones" class="form-control text-uppercase  " style="border-radius: 12px;" rows="2" placeholder="Notas aclaratorias..."></textarea>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-5 text-end pb-1">
-                            <div class="p-3" style="background: #f4f7f6; border-radius: 16px;">
+                            <div class="p-3" style=" border-radius: 16px;">
                                 <span class="text-secondary small fw-bold text-uppercase d-block mb-1" style="font-size: 0.75rem; letter-spacing: 0.5px;">Monto Total</span>
                                 <h1 class="fw-bolder text-primary mb-0" id="txtTotalGasto" style="font-size: 2.2rem; letter-spacing: -1px;">$ 0.00</h1>
                                 <input type="hidden" name="total_final" id="inputTotalGasto" value="0">
@@ -145,8 +145,8 @@
                     </div>
                 </div>
 
-                <div class="modal-footer border-0 px-4 pb-4 pt-2">
-                    <button type="button" class="btn btn-light fw-semibold text-secondary border-0 me-2" data-bs-dismiss="modal" style="border-radius: 12px; padding: 10px 20px; background: #f0f0f2;">Cancelar</button>
+                <div class="modal-footer  px-4 pb-4 pt-2">
+                    <button type="button" class="btn btn-light fw-semibold text-secondary  me-2" data-bs-dismiss="modal" style="border-radius: 12px; padding: 10px 20px;">Cancelar</button>
                     <button type="submit" class="btn btn-primary fw-bold px-4 shadow-sm" style="border-radius: 12px; padding: 10px 24px;">Guardar Gasto</button>
                 </div>
             </form>
@@ -157,20 +157,20 @@
 <div class="modal fade" id="modalNuevaCategoriaGasto" tabindex="-1" aria-hidden="true"
     style="background: rgba(0,0,0,0.4);">
     <div class="modal-dialog modal-sm modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
-            <div class="modal-header border-0">
+        <div class="modal-content  shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header ">
                 <h6 class="modal-title fw-bold">Nueva Categoría</h6>
                 <button type="button" class="btn-close" onclick="$('#modalNuevaCategoriaGasto').modal('hide')"></button>
             </div>
             <div class="modal-body pt-0">
                 <div class="mb-3">
                     <label class="small fw-bold text-body-secondary">Nombre</label>
-                    <input type="text" id="nuevo_nombre_cat" class="form-control border-0 bg-light"
+                    <input type="text" id="nuevo_nombre_cat" class="form-control  "
                         style="border-radius: 10px;" placeholder="Ej: Servicios">
                 </div>
 
             </div>
-            <div class="modal-footer border-0 pt-0">
+            <div class="modal-footer  pt-0">
                 <button type="button" class="btn btn-primary w-100 fw-bold" onclick="guardarNuevaCategoria()"
                     style="border-radius: 10px;">Agregar</button>
             </div>
@@ -180,42 +180,42 @@
 <div class="modal fade" id="modalNuevoInsumo" tabindex="-1" aria-hidden="true"
     style="background: rgba(0,0,0,0.4);">
     <div class="modal-dialog modal-sm modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
-            <div class="modal-header border-0">
+        <div class="modal-content  shadow-lg" style="border-radius: 20px;">
+            <div class="modal-header ">
                 <h6 class="modal-title fw-bold">Nuevo Insumo</h6>
                 <button type="button" class="btn-close" onclick="$('#modalNuevoInsumo').modal('hide')"></button>
             </div>
             <div class="modal-body pt-0">
                 <div class="mb-3">
                     <label class="small fw-bold text-body-secondary">Nombre y Marca</label>
-                    <input type="text" id="nuevo_nombre_insumo" class="form-control border-0 bg-light"
+                    <input type="text" id="nuevo_nombre_insumo" class="form-control  "
                         style="border-radius: 10px;" placeholder="Ej: Servicios">
                 </div>
                 <div class="mb-3">
                     <label class="small fw-bold text-body-secondary">Unidad maxima</label>
-                    <input type="text" id="nuevo_maximo_insumo" class="form-control border-0 bg-light"
+                    <input type="text" id="nuevo_maximo_insumo" class="form-control  "
                         style="border-radius: 10px;" placeholder="Ej: cubeta, tambo">
                 </div>
 
           
                 <div class="mb-3">
                     <label class="small fw-bold text-body-secondary">Unidad minima</label>
-                    <input type="text" id="nuevo_minimo_insumo" class="form-control border-0 bg-light"
+                    <input type="text" id="nuevo_minimo_insumo" class="form-control  "
                         style="border-radius: 10px;" placeholder="Ej:  litro ">
                 </div> 
                 <div class="mb-3">
                     <label class="small fw-bold text-body-secondary">FACTOR </label>
-                    <input type="number" id="factor" class="form-control border-0 bg-light"
+                    <input type="number" id="factor" class="form-control  "
                         style="border-radius: 10px;" placeholder="1">
                 </div>
                  <div class="mb-3">
                     <label class="small fw-bold text-body-secondary">Descripcion y modelo</label>
-                    <input type="text" id="nuevo_descripcion_insumo" class="form-control border-0 bg-light"
+                    <input type="text" id="nuevo_descripcion_insumo" class="form-control  "
                         style="border-radius: 10px;" placeholder="Ej: BARDAL MOD 1234">
                 </div> 
 
             </div>
-            <div class="modal-footer border-0 pt-0">
+            <div class="modal-footer  pt-0">
                 <button type="button" class="btn btn-primary w-100 fw-bold" onclick="guardarNuevoInsumo()"
                     style="border-radius: 10px;">Agregar</button>
             </div>
@@ -521,8 +521,8 @@ async function agregarFilaGasto() {
     const tbody = document.querySelector('#tablaConceptosGasto tbody');
     const fila = document.createElement('tr');
     fila.innerHTML = `
-        <td><input type="text" name="desc[]" class="form-control form-control-sm border-0 bg-light" style="border-radius: 8px;" required></td>
-        <td><input type="number" name="cant[]" class="form-control form-control-sm border-0 bg-light cant text-center" style="border-radius: 8px;" value="1" min="0" step="any"></td>
+        <td><input type="text" name="desc[]" class="form-control form-control-sm  " style="border-radius: 8px;" required></td>
+        <td><input type="number" name="cant[]" class="form-control form-control-sm   cant text-center" style="border-radius: 8px;" value="1" min="0" step="any"></td>
            <td>
                 <select 
                     name="items[]" 
@@ -537,7 +537,7 @@ async function agregarFilaGasto() {
                     ${insumos}
                 </select>
             </td>
-        <td><input type="number" name="precio[]" class="form-control form-control-sm border-0 bg-light precio" style="border-radius: 8px;" value="0.00" min="0" step="0.01"></td>
+        <td><input type="number" name="precio[]" class="form-control form-control-sm   precio" style="border-radius: 8px;" value="0.00" min="0" step="0.01"></td>
         <td class="text-end fw-bold subtotal_fila pe-3">$0.00</td>
         <td><button type="button" class="btn btn-sm text-danger" onclick="this.closest('tr').remove(); calcularGasto();">
             <i class="bi bi-trash"></i>

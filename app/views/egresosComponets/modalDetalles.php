@@ -3,7 +3,7 @@
     <div class="modal-dialog modal-xl"> 
         <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
             <div class="modal-body p-0" id="compraDetalle_contenedorContenido"></div>
-            <div class="modal-footer border-0 bg-light justify-content-center">
+            <div class="modal-footer border-0  justify-content-center">
                 <button type="button" class="btn btn-dark btn-sm px-4 rounded-pill" onclick="compraDetalle_ejecutarImpresion()">
                     <i class="bi bi-printer me-2"></i>IMPRIMIR COMPRA
                 </button>

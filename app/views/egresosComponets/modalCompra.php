@@ -108,7 +108,7 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
                                 <div class="col-md-3">
                                     <label class="form-label small fw-bold">Método de pago</label>
                                     <select name="metodo_pago" id="metodo_pago" class="form-select shadow-sm" required>
-                                        <option value="">Seleccione...</option>
+                                        
                                         <option value="Efectivo">Efectivo</option>
                                         <option value="Transferencia">Transferencia</option>
                                         <option value="Tarjeta">Tarjeta</option>
@@ -420,7 +420,7 @@ function agregarFilaCompra() {
                 <input type="number"
                     name="items[${idUnico}][precioUnitario]"
                     class="form-control form-control-sm border-success shadow-sm input-precioUnitario"
-                    value="0" min="0" step="0.01" lang="en-US"
+                    min="0" step="0.01" lang="en-US"
                     oninput="recalcularTotales(${idUnico}, 'precioUnitario')"
                     placeholder="0.00" required>
             </div>
@@ -436,7 +436,7 @@ function agregarFilaCompra() {
                         name="items[${idUnico}][total_item]"
                          oninput="recalcularTotales(${idUnico}, 'costoTotal')"
                         class="form-control input-costo-total"
-                        value="0" step="0.01"
+                        placeholder="0" step="0.01"
                       
                         required>
                 </div>

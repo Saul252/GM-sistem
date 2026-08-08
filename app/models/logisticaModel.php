@@ -124,19 +124,26 @@ public function obtenerViajesFiltrados(
     $stmt->execute();
 
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
-public function obtenerViajesFiltradosPago(
+}public function obtenerViajesFiltradosPago(
     $almacen = 0, 
     $fecha_inicio = null, 
     $fecha_fin = null,
     $chofer = '', 
     $ayudantes = '', 
     $estado = ''
+  
 ) {
-
+      $vehiculo = 999;
     $where = [];
     $params = [];
     $types = '';
+
+    // 🔹 FILTRO POR VEHÍCULO EXCLUIDO
+    if (!empty($vehiculo)) {
+        $where[] = "tv.id != ?";
+        $params[] = $vehiculo; // Corregido: se usaba $almacen por error
+        $types .= 'i';
+    }
 
     // 🔹 FILTRO POR ALMACÉN
     if (!empty($almacen) && $almacen > 0) {
@@ -156,13 +163,13 @@ public function obtenerViajesFiltradosPago(
         $params[] = $fecha_inicio;
         $types .= 's';
     }
- if (!empty($chofer) && $chofer > 0) {
+
+    // 🔹 FILTRO CHOFER
+    if (!empty($chofer) && $chofer > 0) {
         $where[] = "u_chofer.id = ?";
         $params[] = $chofer;
         $types .= 'i';
     }
-    // 🔹 FILTRO CHOFER
-   
 
     // 🔹 FILTRO AYUDANTES
     if (!empty($ayudantes)) {
@@ -178,11 +185,11 @@ public function obtenerViajesFiltradosPago(
         $types .= 's';
     }
 
-    // 🔥 SI NO HAY FILTROS → NO PONE WHERE (TRAE TODO)
+    // SI NO HAY FILTROS → NO PONE WHERE
     $where_sql = (!empty($where)) ? "WHERE " . implode(" AND ", $where) : "";
 
     $sql = "SELECT 
-        a.nombre as almacenOrigen,
+        a.nombre AS almacenOrigen,
         a.id,
         tc.viaje_folio AS folio_viaje,
         tc.fecha_creacion AS fecha_viaje,
@@ -190,18 +197,19 @@ public function obtenerViajesFiltradosPago(
         trm.estado_reparto AS estatus_logistico,
         tv.nombre AS unidad_nombre,
         u_chofer.nombre AS nombre_chofer,
-        u_chofer.id as chofer_id,
-         trp.descripcion_punto as direccion,
-         trp.reparto_id as viaje_id,
-         pv.monto as monto,
+        u_chofer.id AS chofer_id,
+        MAX(trp.descripcion_punto) AS direccion,
+        trp.reparto_id AS viaje_id,
+        MAX(pv.monto) AS monto,
         GROUP_CONCAT(DISTINCT u_ayu.nombre SEPARATOR ' / ') AS ayudantes
 
     FROM transporte_consolidacion tc
 
     LEFT JOIN transporte_repartos_maestro trm 
         ON tc.reparto_id = trm.id
-        LEFT JOIN transporte_rutas_puntos trp
-        ON trp.reparto_id=trm.id
+
+    LEFT JOIN transporte_rutas_puntos trp
+        ON trp.reparto_id = trm.id
 
     LEFT JOIN transporte_vehiculos tv 
         ON tc.vehiculo_id = tv.id
@@ -211,8 +219,9 @@ public function obtenerViajesFiltradosPago(
 
     LEFT JOIN trabajadores u_ayu 
         ON ttd.usuario_id = u_ayu.id
-        left join pagos_viaje pv
-        on trp.reparto_id= pv.id_viaje
+
+    LEFT JOIN pagos_viaje pv
+        ON trp.reparto_id = pv.id_viaje
 
     LEFT JOIN trabajadores u_chofer 
         ON trm.usuario_encargado_id = u_chofer.id
@@ -224,11 +233,14 @@ public function obtenerViajesFiltradosPago(
 
     GROUP BY 
         tc.viaje_folio,
+        tc.fecha_creacion,
         a.nombre,
         a.id,
         tv.nombre,
         u_chofer.nombre,
-        trm.estado_reparto
+        u_chofer.id,
+        trm.estado_reparto,
+        trp.reparto_id
 
     ORDER BY 
         tc.fecha_creacion DESC,

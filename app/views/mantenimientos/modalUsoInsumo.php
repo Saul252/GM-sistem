@@ -1,71 +1,86 @@
 <div class="modal fade" id="modalAsignarInsumoMantenimiento" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; background: #ffffff;">
+        <div class="modal-content shadow-lg border-0 rounded-4 bg-body text-body">
             <form id="formAsignarInsumoMantenimiento" enctype="multipart/form-data">
                 
                 <input type="hidden" name="action" value="asignarInsumos">
                 <input type="hidden" id="msign_almacen_id" name="almacen_id" value="1"> 
 
-                <div class="modal-header border-0 pt-4 px-4 pb-2">
-                    <h5 class="modal-title fw-bold text-dark d-flex align-items-center" style="letter-spacing: -0.5px;">
-                        <i class="bi bi-tools text-primary me-2 fs-4"></i> Asignar Insumos a Mantenimiento
-                    </h5>
-                    <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"></button>
+                <!-- Header -->
+                <div class="modal-header border-bottom border-translucent pt-4 px-4 pb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="p-2 bg-primary bg-opacity-10 text-primary rounded-3 d-flex align-items-center justify-content-center">
+                            <i class="bi bi-tools fs-5"></i>
+                        </div>
+                        <h5 class="modal-title fw-bold mb-0" style="letter-spacing: -0.3px;">
+                            Asignar Insumos a Mantenimiento
+                        </h5>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
-                <div class="modal-body px-4 py-3">
+                <!-- Body -->
+                <div class="modal-body px-4 py-4">
+                    <!-- Fila 1: Selectores Principales -->
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold text-secondary">Seleccionar Mantenimiento</label>
-                            <select id="msign_mantenimiento_id" name="mantenimiento_id" class="form-select border-0 bg-light" style="border-radius: 12px; height: 42px;" required>
+                            <label class="form-label fs-7 fw-semibold text-body-secondary mb-1">
+                                <i class="bi bi-wrench me-1"></i>Seleccionar Mantenimiento
+                            </label>
+                            <select id="msign_mantenimiento_id" name="mantenimiento_id" class="form-select rounded-3 py-2 shadow-sm" required>
                                 <option value="">Cargando mantenimientos...</option>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold text-secondary">Vehículo / Carro</label>
-                            <select id="msign_carro_id" name="carro_id" class="form-select border-0 bg-light" style="border-radius: 12px; height: 42px;" required>
+                            <label class="form-label fs-7 fw-semibold text-body-secondary mb-1">
+                                <i class="bi bi-truck me-1"></i>Vehículo / Carro
+                            </label>
+                            <select id="msign_carro_id" name="carro_id" class="form-select rounded-3 py-2 shadow-sm" required>
                                 <option value="">Seleccione uno...</option>  
                                 <?php foreach($vehiculos as $ve): ?>
-                                    <option value="<?= $ve['id'] ?>"><?= $ve['nombre'] ?></option>
+                                    <option value="<?= $ve['id'] ?>"><?= $ve['nombre'] ?>  (<?=  $ve['placas']  ?>)</option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
 
-                   
-
-                    <div class="d-flex justify-content-between align-items-center mb-3 pt-2">
-                        <h6 class="fw-bold mb-0 text-dark" style="letter-spacing: -0.3px;">Insumos a Utilizar</h6>
-                        <button type="button" class="btn btn-sm text-primary fw-bold bg-transparent border-0 d-flex align-items-center" onclick="msign_agregarFilaInsumo()">
-                            <i class="bi bi-plus-circle-fill me-1 fs-6"></i> Agregar Insumo
+                    <!-- Sección Header Insumos -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <h6 class="fw-bold mb-0" style="letter-spacing: -0.3px;">Insumos a Utilizar</h6>
+                            <small class="text-body-secondary">Agregue los componentes a extraer del almacén</small>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-3 fw-semibold d-inline-flex align-items-center gap-1 shadow-sm" onclick="msign_agregarFilaInsumo()">
+                            <i class="bi bi-plus-lg fs-6"></i> Agregar Insumo
                         </button>
                     </div>
 
-                    <div class="table-responsive mb-4" style="border-radius: 16px; background: #fafafa; padding: 10px;">
+                    <!-- Tabla de Insumos -->
+                    <div class="table-responsive rounded-3 border bg-body-tertiary p-2 mb-4">
                         <table class="table table-borderless align-middle mb-0" id="msign_tablaInsumosAsignados">
                             <thead>
-                                <tr class="text-secondary small fw-bold" style="font-size: 0.75rem;">
-                                    <th>INSUMO DISPONIBLE</th>
-                                    <th width="150" class="text-center">CANTIDAD DISPONIBLE</th>
-                                    <th width="150" class="text-center">CANTIDAD A RETIRAR</th>
-                                    <th width="40"></th>
+                                <tr class="text-body-secondary border-bottom" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+                                    <th class="fw-bold py-2">INSUMO DISPONIBLE</th>
+                                    <th width="170" class="text-center fw-bold py-2">CANT. DISPONIBLE</th>
+                                    <th width="200" class="text-center fw-bold py-2">CANT. A RETIRAR</th>
+                                    <th width="40" class="py-2"></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr class="bg-white">
+                                <tr>
                                     <td>
-                                        <select name="msign_items[]" class="form-select form-select-sm border-0 msign_items bg-light msign_select_item_dinamico" style="border-radius: 8px; height: 36px;" onchange="msign_manejarCambioInsumo(this)" required>
+                                        <select name="msign_items[]" class="form-select form-select-sm msign_items msign_select_item_dinamico rounded-2" onchange="msign_manejarCambioInsumo(this)" required>
                                             <option value="">Seleccione insumo...</option>
                                         </select>
                                     </td>
                                     <td>
-                                        <input type="text" name="msign_cantdisponible[]" class="form-control form-control-sm border-0 bg-light text-center" style="border-radius: 8px; height: 36px;" readonly>
-                                     
+                                        <input type="text" name="msign_cantdisponible[]" class="form-control form-control-sm text-center rounded-2 bg-body-secondary" readonly placeholder="-">
                                     </td>
                                     <td>
-                                        <input type="number" name="msign_cant[]" class="form-control form-control-sm msign_cant border-0 bg-light text-center" style="border-radius: 8px; height: 36px;" value="1" min="0.01" step="any" required>
-                                     <input type="text" name="unidad[]" class="form-control form-control-sm msign_cant border-0 bg-light text-center" readonly>
-                                  
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" name="msign_cant[]" class="form-control msign_cant text-center rounded-start-2" value="1" min="0.01" step="any" required>
+                                            <input type="text" name="unidad[]" class="form-control msign_cant text-center bg-body-secondary rounded-end-2 px-1" readonly style="max-width: 70px;" placeholder="U.M.">
+                                        </div>
                                     </td>
                                     <td class="text-center"></td>
                                 </tr>
@@ -73,17 +88,23 @@
                         </table>
                     </div>
 
+                    <!-- Notas / Observaciones -->
                     <div class="row g-3">
                         <div class="col-12">
-                            <label class="form-label small fw-semibold text-secondary">Notas u Observaciones del Ajuste</label>
-                            <textarea id="msign_observaciones" name="observaciones" class="form-control text-uppercase border-0 bg-light" style="border-radius: 12px;" rows="2" placeholder="Detalles de la asignación..."></textarea>
+                            <label class="form-label fs-7 fw-semibold text-body-secondary mb-1">
+                                <i class="bi bi-pencil-square me-1"></i>Notas u Observaciones
+                            </label>
+                            <textarea id="msign_observaciones" name="observaciones" class="form-control text-uppercase rounded-3" rows="2" placeholder="Detalles o justificación de la asignación..."></textarea>
                         </div>
                     </div>
                 </div>
 
-                <div class="modal-footer border-0 px-4 pb-4 pt-2">
-                    <button type="button" class="btn btn-light fw-semibold text-secondary border-0 me-2" data-bs-dismiss="modal" style="border-radius: 12px; padding: 10px 20px; background: #f0f0f2;">Cancelar</button>
-                    <button type="submit" id="msign_btnGuardar" class="btn btn-primary fw-bold px-4 shadow-sm" style="border-radius: 12px; padding: 10px 24px;">Asignar Recursos</button>
+                <!-- Footer -->
+                <div class="modal-footer border-top border-translucent px-4 py-3">
+                    <button type="button" class="btn btn-outline-secondary rounded-3 fw-semibold px-4" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" id="msign_btnGuardar" class="btn btn-primary rounded-3 fw-bold px-4 shadow-sm">
+                        <i class="bi bi-check-lg me-1"></i> Asignar Recursos
+                    </button>
                 </div>
             </form>
         </div>
@@ -91,32 +112,9 @@
 </div>
 
 <script>
-// Cache local para optimizar y no golpear constantemente la DB al agregar filas
+// Cache local para optimizar
 let msign_listaInsumosCache = [];
 
-document.addEventListener('DOMContentLoaded', function() {
-    const modalAsignar = document.getElementById('modalAsignarInsumoMantenimiento');
-    const formAsignar = document.getElementById('formAsignarInsumoMantenimiento');
-
-    if (!modalAsignar || !formAsignar) return;
-
-    // Se unificó el disparador en un solo evento consistente
-    modalAsignar.addEventListener('show.bs.modal', async function() {
-        formAsignar.reset();
-        msign_limpiarTabla();
-        
-        // Ejecución en paralelo de la carga de catálogos iniciales
-        await Promise.all([
-            msign_cargarMantenimientos(),
-            msign_cargarInsumosBase()
-        ]);
-    });
-
-    formAsignar.addEventListener('submit', function(e) {
-        e.preventDefault();
-        msign_guardarAsignacion();
-    });
-});
 
 // ==================== PETICIONES ASÍNCRONAS ====================
 
@@ -126,12 +124,8 @@ async function msign_cargarInsumosBase() {
         const resultado = await resp.json();
         
         if (resultado && Array.isArray(resultado.data)) {
-            msign_listaInsumosCache = resultado.data; // Guardamos en caché global
-            
-            // Llenamos el primer select de la tabla estática
+            msign_listaInsumosCache = resultado.data;
             const primerSelect = document.querySelector('.msign_select_item_dinamico');
-           
-            
             if (primerSelect) {
                 msign_inyectarOpciones(primerSelect);
             }
@@ -147,14 +141,13 @@ function msign_inyectarOpciones(selectElement) {
         const opcion = document.createElement('option');
         opcion.value = insumo.id;
         opcion.setAttribute('data-total', insumo.total_existencias || 0);
-        opcion.setAttribute('data-uma', insumo.u_ma|| '');
-        opcion.setAttribute('data-umi', insumo.u_mi|| '');
-        opcion.setAttribute('data-factor', insumo.factor|| '');
+        opcion.setAttribute('data-uma', insumo.u_ma || '');
+        opcion.setAttribute('data-umi', insumo.u_mi || '');
+        opcion.setAttribute('data-factor', insumo.factor || '');
         opcion.textContent = `${insumo.nombre} (${insumo.total_existencias} en existencia)`;
         selectElement.appendChild(opcion);
     });
 }
-
 async function msign_cargarMantenimientos() {
     try {
         $('#loader').removeClass('d-none');
@@ -173,7 +166,9 @@ async function msign_cargarMantenimientos() {
          
         let html = '<option value="">Seleccione mantenimiento...</option>';
         data.forEach(m => {
-            html += `<option value="${m.id_mantenimiento}">FOLIO: ${m.id_mantenimiento} - ${m.razon || m.tipo}</option>`;
+            // Se agrega el atributo data-vehiculo con el id_v
+            const idVehiculo = m.id_v || m.id_vehiculo || '';
+            html += `<option value="${m.id_mantenimiento}" data-vehiculo="${idVehiculo}">FOLIO: ${m.id_mantenimiento} - ${m.razon || m.tipo_mantenimiento}</option>`;
         });
        
         document.getElementById('msign_mantenimiento_id').innerHTML = html;
@@ -183,7 +178,40 @@ async function msign_cargarMantenimientos() {
         $('#loader').addClass('d-none');
     }
 }
+document.addEventListener('DOMContentLoaded', function() {
+    const modalAsignar = document.getElementById('modalAsignarInsumoMantenimiento');
+    const formAsignar = document.getElementById('formAsignarInsumoMantenimiento');
+    const selectMantenimiento = document.getElementById('msign_mantenimiento_id');
+    const selectVehiculo = document.getElementById('msign_carro_id');
 
+    if (!modalAsignar || !formAsignar) return;
+
+    modalAsignar.addEventListener('show.bs.modal', async function() {
+        formAsignar.reset();
+        msign_limpiarTabla();
+        
+        await Promise.all([
+            msign_cargarMantenimientos(),
+            msign_cargarInsumosBase()
+        ]);
+    });
+
+    // AUTO-SELECCIÓN DE VEHÍCULO AL CAMBIAR MANTENIMIENTO
+    if (selectMantenimiento && selectVehiculo) {
+        selectMantenimiento.addEventListener('change', function() {
+            const optionSeleccionada = this.options[this.selectedIndex];
+            const idVehiculo = optionSeleccionada ? optionSeleccionada.getAttribute('data-vehiculo') : '';
+
+            // Asigna el valor del vehículo si existe, de lo contrario reinicia el select
+            selectVehiculo.value = idVehiculo || '';
+        });
+    }
+
+    formAsignar.addEventListener('submit', function(e) {
+        e.preventDefault();
+        msign_guardarAsignacion();
+    });
+});
 // ==================== GESTIÓN DE FILAS DINÁMICAS ====================
 
 function msign_manejarCambioInsumo(selectElement) {
@@ -193,51 +221,50 @@ function msign_manejarCambioInsumo(selectElement) {
     const $inputunidad = $filaActual.find('input[name="unidad[]"]');
     
     if (idInsumoSeleccionado === "") {
-        $inputCantidad.val(''); $inputunidad.val('');
+        $inputCantidad.val(''); 
+        $inputunidad.val('');
         return;
     }
 
     const opcionSeleccionada = selectElement.options[selectElement.selectedIndex];
     const total = opcionSeleccionada.getAttribute('data-total') || 0;
-    const unidad = opcionSeleccionada.getAttribute('data-total')/opcionSeleccionada.getAttribute('data-factor')  || 0;
-   let unidadMAyor=(unidad>=1?unidad + opcionSeleccionada.getAttribute('data-uma'):'');
+    const factor = opcionSeleccionada.getAttribute('data-factor') || 1;
+    const unidad = total / factor;
+    let unidadMayor = (unidad >= 1 ? unidad + ' ' + opcionSeleccionada.getAttribute('data-uma') : '');
     
-    $inputunidad.val(opcionSeleccionada.getAttribute('data-umi'));total + opcionSeleccionada.getAttribute('data-umi')
-    $inputCantidad.val(total +' '+ unidadMAyor);
+    $inputunidad.val(opcionSeleccionada.getAttribute('data-umi'));
+    $inputCantidad.val( unidadMayor);
 }
 
 function msign_agregarFilaInsumo() {
     const tbody = document.querySelector('#msign_tablaInsumosAsignados tbody');
     const fila = document.createElement('tr');
-    fila.className = "border-bottom bg-white";
     
     fila.innerHTML = `
         <td>
-            <select name="msign_items[]" class="form-select form-select-sm border-0 bg-light msign_select_item_dinamico msign_items" style="border-radius: 8px; height: 36px;" onchange="msign_manejarCambioInsumo(this)" required>
-                </select>
+            <select name="msign_items[]" class="form-select form-select-sm msign_select_item_dinamico msign_items rounded-2" onchange="msign_manejarCambioInsumo(this)" required>
+            </select>
         </td>
         <td>
-            <input type="text" name="msign_cantdisponible[]" class="form-control form-control-sm border-0 bg-light text-center" style="border-radius: 8px; height: 36px;" readonly>
-                                   
-            </td>
+            <input type="text" name="msign_cantdisponible[]" class="form-control form-control-sm text-center rounded-2 bg-body-secondary" readonly placeholder="-">
+        </td>
         <td>
-            <input type="number" name="msign_cant[]" class="form-control msign_cant form-control-sm border-0 bg-light text-center" style="border-radius: 8px; height: 36px;" value="1" min="0.01" step="any" required>
-        <input type="text" name="unidad[]" class="form-control form-control-sm msign_cant border-0 bg-light text-center" readonly>
-        
-            </td>
+            <div class="input-group input-group-sm">
+                <input type="number" name="msign_cant[]" class="form-control msign_cant text-center rounded-start-2" value="1" min="0.01" step="any" required>
+                <input type="text" name="unidad[]" class="form-control msign_cant text-center bg-body-secondary rounded-end-2 px-1" readonly style="max-width: 70px;" placeholder="U.M.">
+            </div>
+        </td>
         <td class="text-center">
-            <button type="button" class="btn btn-sm text-danger border-0 bg-transparent" onclick="this.closest('tr').remove();">
-                <i class="bi bi-trash"></i>
+            <button type="button" class="btn btn-sm btn-link text-danger p-0 shadow-none" onclick="this.closest('tr').remove();">
+                <i class="bi bi-trash fs-6"></i>
             </button>
         </td>`;
         
     tbody.appendChild(fila);
-    // Inyectamos de golpe usando la variable local optimizada sin volver a hacer un fetch por cada click
     msign_inyectarOpciones(fila.querySelector('.msign_select_item_dinamico'));
 }
 
 function msign_limpiarTabla() {
-    // Elimina todas las filas excepto la primera
     document.querySelectorAll('#msign_tablaInsumosAsignados tbody tr:not(:first-child)').forEach(f => f.remove());
     const primeraFilaSelect = document.querySelector('.msign_select_item_dinamico');
     if (primeraFilaSelect) {
@@ -263,9 +290,7 @@ function msign_guardarAsignacion() {
         body: formData
     })
     .then(res => {
-        if (!res.ok) {
-            throw new Error('Error en la respuesta del servidor.');
-        }
+        if (!res.ok) throw new Error('Error en la respuesta del servidor.');
         return res.json();
     })
     .then(data => {
@@ -301,4 +326,5 @@ function msign_guardarAsignacion() {
         btn.disabled = false;
         btn.innerHTML = textoOriginal;
     });
-}</script>
+}
+</script>
