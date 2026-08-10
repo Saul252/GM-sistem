@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acceso Restringido | CF SISTEM</title>
+      <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
+
+    <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     

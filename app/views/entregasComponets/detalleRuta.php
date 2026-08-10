@@ -11,15 +11,7 @@
         text-shadow: none !important;
     }
     
-    body {
-        -webkit-print-color-adjust: exact;
-        color-adjust: exact;
-        font-size: 12pt;
-        line-height: 1.4;
-        margin: 0;
-        padding: 20px;
-    }
-
+   
     /* Mostrar SOLO el contenido del modal */
     #modalDetalleViaje, #modalDetalleViaje * {
         visibility: visible;

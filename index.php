@@ -6,6 +6,10 @@
     <meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>G-M SISTEM | Acceso</title>
+      <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
+
+    <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
+
     <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
 
     <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
@@ -111,10 +115,10 @@
         const formData = new FormData(e.target);
 
         try {
-            const response = await fetch('validar_login.php', {
-                method: 'POST',
-                body: formData
-            });
+            const response = await fetch('/cfsistem/app/controllers/authController.php?action=login', {
+    method: 'POST',
+    body: new FormData(document.getElementById('formLogin'))
+})
 
             const res = await response.json();
 

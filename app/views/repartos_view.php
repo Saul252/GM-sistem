@@ -11,7 +11,14 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
     <meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Logística | cfsistem</title>
-    
+      <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
+
+    <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
+
+      <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
+
+    <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -122,16 +129,17 @@ $mi_almacen = intval($_SESSION['almacen_id'] ?? 0);
                 <nav><ul class="pagination pagination-sm mb-0" id="paginationBootstrap"></ul></nav>
             </div>
         </div>
+         <?php require_once __DIR__ . '/entregasComponets/repartoModal.php'; ?>
+    <?php require_once __DIR__ . '/entregasComponets/editarRepartoModal.php'; ?>
+    <?php require_once __DIR__ . '/entregasComponets/minitordeHistorialDeReparto.php'; ?>
+    <?php require_once __DIR__ . '/entregasComponets/modalVerEntrega.php'; ?>
     </main>
 
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
-    <?php require_once __DIR__ . '/entregasComponets/repartoModal.php'; ?>
-    <?php require_once __DIR__ . '/entregasComponets/editarRepartoModal.php'; ?>
-    <?php require_once __DIR__ . '/entregasComponets/minitordeHistorialDeReparto.php'; ?>
-    <?php require_once __DIR__ . '/entregasComponets/modalVerEntrega.php'; ?>
+   
 
     <script>
     window.cargarMonitorViajes = async function() {

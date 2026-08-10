@@ -8,6 +8,10 @@ session_destroy();
 <head>
     <meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Saliendo del Sistema | G-M SISTEM</title>
+      <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
+
+    <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap" rel="stylesheet">
     
     <style>

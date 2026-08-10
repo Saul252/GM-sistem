@@ -112,6 +112,10 @@ $gruposModulos = [
     <meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Inicio - Sistema de Almacenes</title>
+      <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
+
+    <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
+
     
     <!-- Script Anti-Parpadeo (Carga la preferencia inmediatamente) -->
     <script>
@@ -133,15 +137,21 @@ $gruposModulos = [
         --navbar-height: 65px; 
         --card-radius: 18px;
         --transition-smooth: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-        --bg-gradient:  rgba(246, 245, 245, 0.87);;
+        --bg-gradient: linear-gradient(
+        135deg,
+        #f0fdf4, /* Verde menta/hoja muy claro y luminoso */
+        #f1f5f9, /* Gris perla neutro y limpio */
+        #e0f2fe, /* Azul cielo matutino */
+        #e2e8f0  /* Gris slate claro */
+    );
         
         /* Variables de Tarjeta Modo Claro */
-        --card-bg: #ffffff;
+        --card-bg: #ff000005;
         --card-border: rgba(226, 232, 240, 0.8);
         --card-border-hover: rgba(203, 213, 225, 1);
-        --card-header-bg: #ffffff;
+        --card-header-bg: #ffffff0a;
         --card-header-hover: #fafafa;
-        --card-body-bg: #f8fafc;
+        --card-body-bg: #f8fafc1f;
         --card-text-color: #1e293b;
         --btn-bg: #ffffff;
         --btn-border: #e2e8f0;
@@ -182,18 +192,16 @@ $gruposModulos = [
         transition: background 0.5s ease;
     }
 
-    @keyframes moverGradiente {
-        0%   { background-position: 0% 50%; }
-        50%  { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
-    }
-
+   
     .main-content { 
         margin-left: var(--sidebar-width); 
          background-color: var(--bg-gradient)!important;
         padding: 28px; 
         padding-top: calc(var(--navbar-height) + 18px); 
         min-height: 100vh;
+        background-size: 600% 600%;
+        animation: moverGradiente 12s ease infinite !important;
+        transition: background 0.5s ease;
     }
 
     /* Temas de iconos adaptados */
@@ -346,6 +354,11 @@ $gruposModulos = [
         .card-header-toggle { padding: 14px; }
         .btn-module { padding: 8px 10px; font-size: 0.78rem; }
     }
+    @keyframes moverGradiente {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
     </style>
 </head>
 <body>

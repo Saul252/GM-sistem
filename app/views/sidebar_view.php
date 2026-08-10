@@ -103,6 +103,7 @@ $modulos = [
         color:#000 !important;
     }
 </sytile>
+  <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 <nav class="navbar fixed-top navbar-expand navbar-dark navbar-premium shadow-sm">
     <div class="container-fluid px-2 px-md-4">
@@ -399,7 +400,7 @@ function verificarCancelacionesRecientes() {
                         if (typeof Toastify === "function") {
                             Toastify({
                                 text: `🗑️ VENTA ELIMINADA\nSe canceló la venta #${item.id_venta}\nMotivo: ${item.razon || 'Sin motivo especificado'}`,
-                                duration: 6000,
+                                duration: 1500,
                                 close: true,
                                 gravity: "top",
                                 position: "right",
@@ -438,7 +439,7 @@ function verificarSolicitudesCancelacion() {
                     const u = items[0] || {};
                     Toastify({
                         text: `⚠️ CANCELACIÓN SOLICITADA\nVenta #${u.id_venta || ''}\nMotivo: ${u.razon || 'Sin motivo'}`,
-                        duration: 6000,
+                        duration: 1500,
                         close: true,
                         gravity: "top",
                         position: "right",
@@ -483,7 +484,7 @@ function verificarNotificaciones() {
                     const u = items[0] || {};
                     Toastify({
                         text: `📦 TRASPASO RECIBIDO\n${u.emisor} envió ${u.cantidad_texto || u.cantidad} de ${u.producto}`,
-                        duration: 6000,
+                        duration: 1500,
                         close: true,
                         gravity: "top",
                         position: "right",
@@ -524,7 +525,7 @@ function verificarMantenimientos() {
                 const item = items[0];
                 Toastify({
                     text: `🚗 PRÓXIMO MANTENIMIENTO\n${item.estado}\n\n${item.vehiculo} ${item.placas}`,
-                    duration: 7000,
+                    duration: 1500,
                     gravity: "top",
                     position: "right",
                     style: { background: "#ffffff", color: "#111", borderLeft: "5px solid #ffc107", borderRadius: "15px", padding: "18px" },
@@ -569,7 +570,7 @@ function verificarVerificaciones() {
                 const item = items[0];
                 Toastify({
                     text: `📋 PRÓXIMA VERIFICACIÓN\n${item.estado}\n\n${item.vehiculo} ${item.placas}`,
-                    duration: 7000,
+                    duration: 1500,
                     gravity: "top",
                     position: "right",
                     style: { 
@@ -618,7 +619,7 @@ function verificarVentasEliminadasGlobales() {
                 
                 Toastify({
                     text: `🚨 ATENCIÓN GLOBAL\nSe ha cancelado/eliminado la Venta #${data.folio || data.id_venta}`,
-                    duration: 6000,
+                    duration: 1500,
                     close: true,
                     gravity: "top",
                     position: "right",

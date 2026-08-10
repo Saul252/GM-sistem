@@ -11,7 +11,7 @@
     }
     
     .card-ios {
-        background: #ffffff;
+       
         border-radius: 12px;
         border: none;
         box-shadow: 0 4px 12px rgba(0,0,0,0.05);
@@ -34,7 +34,7 @@
             color: #8e8e93;
             text-transform: uppercase;
             padding: 10px 5px;
-            background: #f9f9fb;
+           
         }
 
         .table-monitor tbody td {
