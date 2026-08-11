@@ -3,7 +3,6 @@
  * trabajadores_view.php
  * Vista de administración de personal: Filtros, CRUD por Modales y AJAX.
  */
-// Definimos los roles y estados que coinciden con el ENUM de la BD para validación visual
 $rolesEnum = ['administrador', 'vendedor', 'chofer', 'almacenista', 'cargador'];
 $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
 ?>
@@ -11,83 +10,81 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Personal | Sistema</title>
-      <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
-
+    
+    <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
     <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
 
+    <!-- Stylesheets -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-
-
-    <?php require_once __DIR__ . '/layout/icono.php' ?>
-    <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
+    <?php require_once __DIR__ . '/layout/icono.php'; ?>
+    <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
+
     <style>
-    :root {
-        --sidebar-width: 260px;
-        --navbar-height: 65px;
-    }
-
-    body {
-        background-color: #f4f7f6;
-    }
-
-    .main-content {
-        margin-left: var(--sidebar-width);
-        padding: 40px;
-        padding-top: calc(var(--navbar-height) + 20px);
-    }
-
-    .card-table {
-        
-        border-radius: 15px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-       
-    }
-
-    /* Estilo Micro-Widget iOS */
-    .ios-micro-card {
-
-        border-radius: 12px !important;
-        border: 1px solid rgba(0, 0, 0, 0.05) !important;
-        padding: 4px 10px !important;
-        min-width: 85px !important;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: center !important;
-        border-left: 3px solid #34c759 !important;
-        /* Verde iOS */
-    }
-
-    .ios-m-label {
-        color: #8e8e93;
-        font-size: 0.55rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        line-height: 1.1;
-        margin: 0;
-    }
-
-    .ios-m-value {
-        color: #1c1c1e;
-        font-size: 1rem;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        line-height: 1;
-        margin-top: 1px;
-    }
-
-    @media (max-width: 768px) {
-        .main-content {
-            margin-left: 0;
-            padding: 20px;
-            padding-top: 90px;
+        :root {
+            --sidebar-width: 260px;
+            --navbar-height: 65px;
         }
-    }
+
+        body {
+            background-color: #f4f7f6;
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 40px;
+            padding-top: calc(var(--navbar-height) + 20px);
+        }
+
+        .card-table {
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Estilo Micro-Widget iOS */
+        .ios-micro-card {
+            border-radius: 12px !important;
+            border: 1px solid rgba(0, 0, 0, 0.05) !important;
+            padding: 4px 10px !important;
+            min-width: 85px !important;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02) !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            border-left: 3px solid #34c759 !important;
+        }
+
+        .ios-m-label {
+            color: #8e8e93;
+            font-size: 0.55rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            line-height: 1.1;
+            margin: 0;
+        }
+
+        .ios-m-value {
+            color: #1c1c1e;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            line-height: 1;
+            margin-top: 1px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+                padding-top: 90px;
+            }
+        }
     </style>
 </head>
 
@@ -95,14 +92,14 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
     <?php if (function_exists('renderizarLayout')) { renderizarLayout($paginaActual); } ?>
 
     <main class="main-content">
-        <div class="d-flex justify-content-between align-items-center flex-wrap mb-4" style="gap: 15px; width: 100%;">
-            <div style="flex: 1; min-width: 200px;">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center flex-wrap mb-4 gap-3 w-100">
+            <div class="flex-grow-1" style="min-width: 200px;">
                 <h2 class="fw-bold m-0" style="letter-spacing: -0.02em;">Gestión de Personal</h2>
-                <p class="text-body-secondary mb-0" style="font-size: 0.85rem;">Control de trabajadores, roles y
-                    disponibilidad</p>
+                <p class="text-body-secondary mb-0" style="font-size: 0.85rem;">Control de trabajadores, roles y disponibilidad</p>
             </div>
 
-            <div class="d-flex align-items-center" style="gap: 12px;">
+            <div class="d-flex align-items-center gap-2">
                 <div class="ios-micro-card">
                     <p class="ios-m-label">Staff Total</p>
                     <div class="ios-m-value" id="conteoTrabajadores">
@@ -110,27 +107,34 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                     </div>
                 </div>
 
-                <button class="btn btn-primary rounded-pill px-4 shadow-sm" onclick="nuevoTrabajador()"
-                    style="height: 34px; font-weight: 600; font-size: 0.85rem;">
+                <button class="btn btn-primary rounded-pill px-4 shadow-sm d-flex align-items-center" onclick="nuevoTrabajador()" style="height: 34px; font-weight: 600; font-size: 0.85rem;">
                     <i class="bi bi-person-plus-fill me-1"></i> Agregar
                 </button>
             </div>
         </div>
 
+        <!-- Tabla & Filtros -->
         <div class="card card-table p-4">
             <div class="row mb-4 g-3">
                 <div class="col-md-6">
                     <div class="input-group">
-                        <span class="input-group-text "><i class="bi bi-search"></i></span>
-                        <input type="text" id="busquedaTrabajador" class="form-control border-start-0"
-                            placeholder="Buscar por nombre o teléfono...">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" id="busquedaTrabajador" class="form-control border-start-0" placeholder="Buscar por nombre o teléfono...">
                     </div>
                 </div>
-                <div class="col-md-3">
+               <div class="col-md-3">
+    <select id="filtroAlmacen" class="form-select">
+        <option value="">Todos los Almacenes</option>
+        <?php foreach($listaAlmacenes as $almacen): ?>
+            <option value="<?= htmlspecialchars($almacen['nombre']) ?>"><?= htmlspecialchars($almacen['nombre']) ?></option>
+        <?php endforeach; ?>
+    </select>
+</div>
+<div class="col-md-3">
                     <select id="filtroRol" class="form-select">
                         <option value="">Todos los Roles</option>
                         <?php foreach($rolesEnum as $rol): ?>
-                        <option value="<?= $rol ?>"><?= ucfirst($rol) ?></option>
+                            <option value="<?= $rol ?>"><?= ucfirst($rol) ?></option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -149,7 +153,7 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                             <th>Teléfono</th>
                             <th>Rol / Puesto</th>
                             <th>Almacén</th>
-                            <th>Documentos</th>
+                            <th class="text-center">Documentos</th>
                             <th>Estado</th>
                             <th class="text-end">Acciones</th>
                         </tr>
@@ -159,128 +163,69 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                         <tr class="fila-trabajador" data-rol="<?= $t['rol'] ?>">
                             <td><strong><?= htmlspecialchars($t['nombre']) ?></strong></td>
                             <td>
-                                <a href="https://wa.me/52<?= $t['telefono'] ?>" target="_blank"
-                                    class="text-decoration-none  small">
+                                <a href="https://wa.me/52<?= $t['telefono'] ?>" target="_blank" class="text-decoration-none small">
                                     <i class="bi bi-whatsapp text-success me-1"></i>
                                     <?= htmlspecialchars($t['telefono']) ?>
                                 </a>
                             </td>
                             <td>
-                                <span class="badge bg-light text-dark border fw-normal text-uppercase"
-                                    style="font-size: 0.7rem;">
+                                <span class="badge bg-light text-dark border fw-normal text-uppercase" style="font-size: 0.7rem;">
                                     <?= $t['rol'] ?>
                                 </span>
                             </td>
                             <td>
-                                <span class="small text-body-secondary"><i class="bi bi-geo-alt"></i>
-                                    <?= $t['nombreAlmacen'] ?></span>
+                                <span class="small text-body-secondary  text-uppercase">
+                                   <?= ($t['nombreAlmacen']) ?>
+                                </span>
                             </td>
                             <td class="text-center">
-
                                 <div class="d-flex justify-content-center align-items-center gap-1">
-
-                                    <?php if (!empty($t['documentos_url'])): ?>
-
-                                    <?php $documentos = explode(';;;', $t['documentos_url']); ?>
-
-                                    <div class="dropdown">
-
-                                        <button class="btn btn-sm btn-light border position-relative" type="button"
-                                            data-bs-toggle="dropdown">
-
-                                            <i class="bi bi-folder2-open "></i>
-
-
-                                            <span
-                                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success">
-                                                <?= count($documentos) ?>
-                                            </span>
-
+                                    <?php if (!empty($t['documentos_url'])): 
+                                        $documentos = explode(';;;', $t['documentos_url']);
+                                    ?>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-light border position-relative" type="button" data-bs-toggle="dropdown">
+                                                <i class="bi bi-folder2-open"></i>
+                                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-success">
+                                                    <?= count($documentos) ?>
+                                                </span>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end shadow" style="min-width:320px;">
+                                                <li>
+                                                    <h6 class="dropdown-header d-flex justify-content-between align-items-center">
+                                                        <span><i class="bi bi-files me-1"></i> Documentos</span>
+                                                        <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="subirDocumentoCompra(<?= $t['id'] ?>)">
+                                                            Cargar <i class="bi bi-upload"></i>
+                                                        </button>
+                                                    </h6>
+                                                </li>
+                                                <?php foreach ($documentos as $doc): 
+                                                    $partes = explode('|||', $doc);
+                                                    $nombre = $partes[0] ?? '';
+                                                    $direccion = $partes[1] ?? '';
+                                                    $idDoc = $partes[2] ?? 0;
+                                                    if (empty($direccion)) continue;
+                                                ?>
+                                                    <li>
+                                                        <div class="dropdown-item d-flex justify-content-between align-items-center py-2">
+                                                            <a href="../../<?= htmlspecialchars($direccion) ?>" target="_blank" class="text-decoration-none flex-grow-1 text-truncate me-2">
+                                                                <i class="bi bi-file-earmark-pdf text-danger me-1"></i>
+                                                                <span class="small"><?= htmlspecialchars($nombre) ?></span>
+                                                            </a>
+                                                            <button class="btn btn-sm btn-outline-danger" title="Eliminar documento" onclick="eliminarDocumento(<?= $idDoc ?>)">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </li>
+                                                <?php endforeach; ?>
+                                            </ul>
+                                        </div>
+                                    <?php else: ?>
+                                        <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="subirDocumentoCompra(<?= $t['id'] ?>)">
+                                            Agregar <i class="bi bi-upload"></i>
                                         </button>
-
-                                        <ul class="dropdown-menu dropdown-menu-end shadow "
-                                            style="min-width:320px;">
-
-                                            <li>
-                                                <h6 class="dropdown-header">
-                                                    <i class="bi bi-files me-1"></i>
-                                                    Documentos adjuntos
-                                                    <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="subirDocumentoCompra(
-        <?= $t['id'] ?>
-        
-    )">
-                                                        Cargar Nuevo <i class="bi bi-upload"></i>
-                                                    </button>
-                                                </h6>
-                                            </li>
-
-
-                                            <?php foreach ($documentos as $doc): ?>
-
-
-                                            <?php
-                        $partes = explode('|||', $doc);
-
-                        $nombre = $partes[0] ?? '';
-                        $direccion = $partes[1] ?? '';
-                        $idDoc = $partes[2] ?? 0;
-
-                        if (empty($direccion)) continue;
-                        ?>
-
-                                            <li>
-                                                <div
-                                                    class="dropdown-item d-flex justify-content-between align-items-center py-2">
-
-                                                    <a href="../../<?= $direccion ?>" target="_blank"
-                                                        class="text-decoration-none  flex-grow-1">
-
-                                                        <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
-
-                                                        <span class="small">
-                                                            <?= htmlspecialchars($nombre) ?>
-                                                        </span>
-
-                                                    </a>
-
-                                                    <button class="btn btn-sm btn-outline-danger "
-                                                        title="Eliminar documento"
-                                                        onclick="eliminarDocumento(<?= $idDoc ?>)">
-
-                                                        <i class="bi bi-trash"></i>
-
-                                                    </button>
-
-                                                </div>
-                                            </li>
-
-                                            <?php endforeach; ?>
-
-                                        </ul>
-
-                                    </div>
-
-
                                     <?php endif; ?>
-                                    <?php if (empty($t['documentos_url'])): ?>
-
-
-                                    <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="subirDocumentoCompra(
-        <?= $t['id'] ?>
-        
-    )">
-                                        Agregar <i class="bi bi-upload"></i>
-                                    </button>
-                                    <?php endif; ?>
-
-
-
-
-
-
-
                                 </div>
-
                             </td>
                             <td>
                                 <?php 
@@ -296,13 +241,11 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                             </td>
                             <td class="text-end">
                                 <div class="btn-group">
-                                    <button class="btn btn-sm btn-outline-primary "
-                                        onclick="editarTrabajador(<?= htmlspecialchars(json_encode($t)) ?>)">
-                                        <i class="bi bi-pencil-square fs-5"></i>
+                                    <button class="btn btn-sm btn-outline-primary" onclick="editarTrabajador(<?= htmlspecialchars(json_encode($t), ENT_QUOTES, 'UTF-8') ?>)">
+                                        <i class="bi bi-pencil-square"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-danger "
-                                        onclick="eliminarTrabajador(<?= $t['id'] ?>)">
-                                        <i class="bi bi-trash fs-5"></i>
+                                    <button class="btn btn-sm btn-outline-danger" onclick="eliminarTrabajador(<?= $t['id'] ?>)">
+                                        <i class="bi bi-trash"></i>
                                     </button>
                                 </div>
                             </td>
@@ -314,9 +257,10 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
         </div>
     </main>
 
+    <!-- Modal Formulario Trabajador -->
     <div class="modal fade" id="modalTrabajador" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content  shadow-lg">
+            <div class="modal-content shadow-lg">
                 <form id="formTrabajador">
                     <div class="modal-header bg-dark text-white">
                         <h5 class="modal-title" id="modalTitulo">Nuevo Trabajador</h5>
@@ -333,14 +277,13 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small">Teléfono</label>
-                                <input type="text" name="telefono" id="t_telefono" class="form-control" maxlength="10"
-                                    required>
+                                <input type="text" name="telefono" id="t_telefono" class="form-control" maxlength="10" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small">Puesto / Rol</label>
                                 <select name="rol" id="t_rol" class="form-select" required>
                                     <?php foreach($rolesEnum as $rol): ?>
-                                    <option value="<?= $rol ?>"><?= ucfirst($rol) ?></option>
+                                        <option value="<?= $rol ?>"><?= ucfirst($rol) ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -348,46 +291,41 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                             <div class="col-md-12">
                                 <label class="form-label fw-bold small">Almacén / Sucursal</label>
                                 <?php if ($_SESSION['almacen_id'] == 0): ?>
-                                <select name="almacen_id" id="t_almacen_id" class="form-select" required>
-                                    <option value="">Seleccionar Almacén...</option>
-                                    <?php foreach($listaAlmacenes as $alm): ?>
-                                    <option value="<?= $alm['id'] ?>"><?= htmlspecialchars($alm['nombre']) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
+                                    <select name="almacen_id" id="t_almacen_id" class="form-select" required>
+                                        <option value="">Seleccionar Almacén...</option>
+                                        <?php foreach($listaAlmacenes as $alm): ?>
+                                            <option value="<?= $alm['nombre'] ?>"><?= htmlspecialchars($alm['nombre']) ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
                                 <?php else: ?>
-                                <input type="text" class="form-control " value="Asignación Automática" readonly>
-                                <input type="hidden" name="almacen_id" id="t_almacen_id"
-                                    value="<?= $_SESSION['almacen_id'] ?>">
+                                    <input type="text" class="form-control" value="Asignación Automática" readonly>
+                                    <input type="hidden" name="almacen_id" id="t_almacen_id" value="<?= $_SESSION['almacen_id'] ?>">
                                 <?php endif; ?>
                             </div>
-
 
                             <div class="col-md-12">
                                 <label class="form-label fw-bold small">Estado Laboral</label>
                                 <select name="estado" id="t_estado" class="form-select">
                                     <?php foreach($estadosEnum as $est): ?>
-                                    <option value="<?= $est ?>"><?= ucfirst($est) ?></option>
+                                        <option value="<?= $est ?>"><?= ucfirst($est) ?></option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
-                            <div class="col-md-12 center">
-                                <label class="form-label fw-bold small">salario</label>
-                                <input type="money" name="salario" id="t_salario" class="form-control" maxlength="10"
-                                    required>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small">Salario</label>
+                                <input type="number" step="0.01" name="salario" id="t_salario" class="form-control" required>
                             </div> 
-                            <div class="col-md-12 center">
-                                <label class="form-label fw-bold small">fecha_ingreso</label>
-                                <input type="date" name="fecha_ingreso" id="t_fecha_ingreso" class="form-control" maxlength="10"
-                                    required>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small">Fecha de Ingreso</label>
+                                <input type="date" name="fecha_ingreso" id="t_fecha_ingreso" class="form-control" required>
                             </div>
-                            <div class="col-md-12 center">
+                            <div class="col-md-12">
                                 <label class="form-label fw-bold small">Complemento</label>
-                                <input type="money" name="complemento" id="t_complemento" class="form-control"
-                                    maxlength="10" required>
+                                <input type="number" step="0.01" name="complemento" id="t_complemento" class="form-control" required>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer  ">
+                    <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-primary px-4">Guardar Cambios</button>
                     </div>
@@ -396,33 +334,30 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-    // Selecciona todos los inputs de texto y también los textareas
-    document.querySelectorAll('input[type="text"], textarea').forEach(elemento => {
-        elemento.addEventListener('input', function() {
-            // Convierte el valor a mayúsculas en tiempo real
-            this.value = this.value.toUpperCase();
-        });
-    });
-    </script>
+
     <script>
     let tabla;
 
     $(document).ready(function() {
+        // Mayúsculas automáticas en inputs
+        $(document).on('input', 'input[type="text"], textarea', function() {
+            this.value = this.value.toUpperCase();
+        });
+
+        // DataTable Initialization
         tabla = $('#tablaTrabajadores').DataTable({
             "language": {
                 "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
             },
             "dom": 'rt<"row mt-3"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
             "pageLength": 10,
-            "order": [
-                [0, 'asc']
-            ]
+            "order": [[0, 'asc']]
         });
 
         $('#busquedaTrabajador').on('keyup', function() {
@@ -430,15 +365,30 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
         });
 
         $('#filtroRol').on('change', function() {
-            const val = $(this).val();
-            tabla.column(2).search(val ? `^${val}$` : '', true, false).draw();
-        });
+    const val = $(this).val();
+    
+    // ^\s* y \s*$ toleran los espacios y saltos de línea del <td>
+    // Parámetros: search(pattern, regex, smart, caseInsen)
+    tabla.column(2)
+         .search(val ? `^\\s*${val}\\s*$` : '', true, false, true)
+         .draw();
+}); 
+$('#filtroAlmacen').on('change', function() {
+    const val = $(this).val();
+
+    if (!val) {
+        tabla.column(3).search('').draw();
+    } else {
+        const valEscapado = $.fn.dataTable.util.escapeRegex(val);
+        // Busca el nombre del almacén tolerando el texto de la celda
+        tabla.column(3).search(valEscapado, true, false, true).draw();
+    }
+});
     });
 
     function nuevoTrabajador() {
         $('#formTrabajador')[0].reset();
         $('#trabajador_id').val('0');
-        // Si el select de almacén existe, resetearlo también
         if ($('#t_almacen_id').is('select')) $('#t_almacen_id').val('');
         $('#modalTitulo').text('Nuevo Trabajador');
         $('#modalTrabajador').modal('show');
@@ -453,8 +403,8 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
         $('#t_estado').val(t.estado);
         $('#t_salario').val(t.salario);
         $('#t_complemento').val(t.complemento_pago);
-         $('#fecha_ingreso').val(t.fecha_ingreso);
-        // Seteamos el almacén
+        $('#t_fecha_ingreso').val(t.fecha_ingreso);
+        
         if ($('#t_almacen_id').is('select')) {
             $('#t_almacen_id').val(t.almacen_id);
         }
@@ -471,19 +421,20 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                 body: formData
             });
             const res = await resp.json();
+            
             if (res.status === 'success') {
-                Swal.fire({
-                        icon: 'success',
-                        title: '¡Éxito!',
-                        showConfirmButton: false,
-                        timer: 1000
-                    })
-                    .then(() => location.reload());
+                await Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    showConfirmButton: false,
+                    timer: 1000
+                });
+                location.reload();
             } else {
-                Swal.fire('Error', res.message, 'error');
+                Swal.fire('Error', res.message || 'No se pudo procesar la solicitud', 'error');
             }
         } catch (e) {
-            Swal.fire('Error', 'No se pudo guardar', 'error');
+            Swal.fire('Error', 'Error de conexión con el servidor', 'error');
         }
     });
 
@@ -501,12 +452,21 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
             const fd = new FormData();
             fd.append('action', 'eliminar');
             fd.append('id', id);
-            const resp = await fetch('/cfsistem/app/controllers/trabajadoresController.php', {
-                method: 'POST',
-                body: fd
-            });
-            const res = await resp.json();
-            if (res.status === 'success') location.reload();
+
+            try {
+                const resp = await fetch('/cfsistem/app/controllers/trabajadoresController.php', {
+                    method: 'POST',
+                    body: fd
+                });
+                const res = await resp.json();
+                if (res.status === 'success') {
+                    location.reload();
+                } else {
+                    Swal.fire('Error', res.message || 'No se pudo eliminar', 'error');
+                }
+            } catch (e) {
+                Swal.fire('Error', 'Error en el servidor', 'error');
+            }
         }
     }
 
@@ -516,177 +476,122 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
         tabla.search('').column(2).search('').draw();
     }
 
-
-    function subirDocumentoCompra(trabajador_id) {
-
-
-
-
-        Swal.fire({
-            title: 'Documento de Vehiculo',
+    async function subirDocumentoCompra(trabajador_id) {
+        const result = await Swal.fire({
+            title: 'Documento del Trabajador',
             html: `
-            <div class="text-start">
-                <label class="fw-bold small mb-2">Subir / Reemplazar documento</label>
-                <input type="file" id="swal_file_doc" class="form-control mb-2" accept=".pdf,image/*">
-                
-                
-            </div>
-        `,
+                <div class="text-start">
+                    <label class="fw-bold small mb-2">Subir archivo (PDF o Imagen)</label>
+                    <input type="file" id="swal_file_doc" class="form-control mb-2" accept=".pdf,image/*">
+                </div>
+            `,
             icon: 'info',
             showCancelButton: true,
             confirmButtonText: 'Guardar',
             confirmButtonColor: '#198754',
             focusConfirm: false,
-
             preConfirm: async () => {
-
                 const fileInput = document.getElementById('swal_file_doc');
                 const file = fileInput?.files[0];
 
                 if (!file) {
-                    Swal.showValidationMessage('Selecciona un archivo');
+                    Swal.showValidationMessage('Selecciona un archivo antes de continuar');
                     return false;
                 }
 
                 const formData = new FormData();
-
                 formData.append('trabajador_id', trabajador_id);
-
                 formData.append('documento', file);
-                console.log(file, trabajador_id);
-
-
 
                 try {
-
-                    const response = await fetch(
-                        '/cfsistem/app/controllers/trabajadoresController.php?action=subirDocumento', {
-                            method: 'POST',
-                            body: formData
-                        }
-                    );
-
-                    console.log('Status:', response.status);
+                    const response = await fetch('/cfsistem/app/controllers/trabajadoresController.php?action=subirDocumento', {
+                        method: 'POST',
+                        body: formData
+                    });
 
                     const text = await response.text();
-
-                    console.log('Respuesta completa:', text);
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}`);
-                    }
-
                     let res;
-
                     try {
                         res = JSON.parse(text);
                     } catch {
-                        throw new Error('El servidor devolvió HTML o texto inválido');
+                        throw new Error('Respuesta inválida del servidor');
                     }
 
-                    if (!res.success) {
+                    if (!response.ok || !res.success) {
                         throw new Error(res.message || 'Error al subir archivo');
                     }
 
                     return res;
-
                 } catch (err) {
-                    console.error(err);
                     Swal.showValidationMessage(err.message);
                     return false;
                 }
             }
+        });
 
-        }).then(result => {
-
-            if (!result.isConfirmed || !result.value) return;
-
-            Swal.fire({
+        if (result.isConfirmed && result.value) {
+            await Swal.fire({
                 icon: 'success',
                 title: 'Guardado',
-                text: 'Documento actualizado correctamente',
-                timer: 1800,
+                text: 'Documento subido correctamente',
+                timer: 1500,
                 showConfirmButton: false
-            }).then(() => {
-                location.reload();
             });
-
-        });
+            location.reload();
+        }
     }
 
-    function eliminarDocumento(id) {
-
-        console.log('gasto');
-
-
-        Swal.fire({
-            title: 'Eliminar Documento',
-
-            icon: 'info',
+    async function eliminarDocumento(id) {
+        const result = await Swal.fire({
+            title: '¿Eliminar Documento?',
+            text: "El archivo será removido permanentemente.",
+            icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Guardar',
+            confirmButtonText: 'Sí, eliminar',
             confirmButtonColor: '#ed0909',
             focusConfirm: false,
-
             preConfirm: async () => {
-
-
-
                 const formData = new FormData();
-
                 formData.append('id', id);
 
-
                 try {
-                    const response = await fetch(
-                        '/cfsistem/app/controllers/trabajadoresController.php?action=eliminarDocumento', {
-                            method: 'POST',
-                            body: formData
-                        });
+                    const response = await fetch('/cfsistem/app/controllers/trabajadoresController.php?action=eliminarDocumento', {
+                        method: 'POST',
+                        body: formData
+                    });
 
-                    // 🔥 LEEMOS COMO TEXTO PRIMERO (ANTI "Unexpected token <")
                     const text = await response.text();
-                    console.log('RESPUESTA CRUDA:', text);
-
                     let res;
                     try {
                         res = JSON.parse(text);
-                    } catch (e) {
-                        throw new Error('El servidor no devolvió JSON válido');
+                    } catch {
+                        throw new Error('Respuesta inválida del servidor');
                     }
 
                     if (!res.success) {
-                        throw new Error(res.message || 'Error al subir archivo');
+                        throw new Error(res.message || 'Error al eliminar');
                     }
 
                     return res;
-
                 } catch (err) {
                     Swal.showValidationMessage(err.message);
                     return false;
                 }
             }
+        });
 
-        }).then(result => {
-
-            if (!result.isConfirmed || !result.value) return;
-
-            Swal.fire({
+        if (result.isConfirmed && result.value) {
+            await Swal.fire({
                 icon: 'success',
                 title: 'Eliminado',
                 text: 'Documento eliminado correctamente',
-                timer: 1800,
+                timer: 1500,
                 showConfirmButton: false
-            }).then(() => {
-                location.reload();
             });
-            if (typeof cargarCompras === 'function') {
-                cargarCompras();
-            }
-        });
+            location.reload();
+        }
     }
     </script>
-
 </body>
 
 </html>

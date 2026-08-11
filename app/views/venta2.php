@@ -318,7 +318,7 @@
                                                 class="input-group-text bg-success-subtle text-success border-0 fw-bold">$</span>
                                             <input type="number" id="monto_pagar"
                                                 class="form-control border-light-subtle  fw-bold fs-5 text-success"
-                                               step="0.01" min="0"  oninput=" calcularCambio()" required >
+                                            placeholder="0.0"   step="0.01" min="0"  oninput=" calcularCambio()" required >
                                         </div>
                                         
                                     </div>
