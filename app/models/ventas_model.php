@@ -86,7 +86,7 @@ public static function procesarVenta($conexion, $data, $id_usuario) {
         $id_cliente   = intval($data['id_cliente']);
         $vendedor_id  = intval($data['id_vendedor'] ?? 0);
         $descuento    = floatval($data['descuento'] ?? 0);
-        $obs          = '';
+        $obs          = ($data['observaciones'] ?? 0);
         $carrito      = $data['carrito'] ?? [];
         $monto_pagado = floatval($data['monto_pagado'] ?? 0);
 

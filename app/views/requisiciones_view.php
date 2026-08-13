@@ -1032,7 +1032,7 @@
 
         const tieneDeuda = payload.monto_pagado < payload.total_venta;
         const esEntregaTotal = (res.total_entregado ?? 0) >= (res.total_pedido ?? 0);
-        const iconoFinal = esEntregaTotal ? 'success' : 'warning';
+        const iconoFinal =  'success';
 
         // 🎨 Ajustado para modo oscuro: 'bg-body-secondary text-body border-secondary-subtle'
         let htmlExtra =
@@ -1047,7 +1047,7 @@
         }
 
         Swal.fire({
-            title: esEntregaTotal ? '¡Venta Exitosa!' : 'Entrega Parcial Registrada',
+            title: esEntregaTotal ? '¡Venta Exitosa!' : '¡Remision Exitosa!',
             html: `
             <!-- 🎨 Se remueve style="background:#f2f2f7" en favor de 'bg-body-secondary' -->
             <div class="alert bg-body-secondary text-body border-0 small text-start py-2 mb-3 rounded-3">
