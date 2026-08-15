@@ -215,8 +215,9 @@
                                 <th class="ps-4">Fecha</th>
                                 <th>Folio ID</th>
                                 <th>Trabajador</th>
-                                <th class="text-center">Días Disponibles</th>
+                                <th class="text-center">Días de vacaciones disponibles</th>
                                 <th class="text-center">Días a Tomar</th>
+                                <th class="text-center">Días por pagar</th>
                                 <th class="text-end">Monto Restante</th>
                                 <th class="text-end">Retenciones</th>
                                 <th class="text-center pe-4">Acciones</th>
@@ -518,6 +519,7 @@
                         <td><div class="fw-semibold">${v.trabajador || 'N/D'}</div></td>
                         <td class="text-center"><span class="badge bg-light text-dark border">${v.dias_disponibles} días</span></td>
                         <td class="text-center"><span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-20 px-3 py-1 fw-bold">${v.dias_a_tomar} días</span></td>
+                          <td class="text-center"><span class="badge bg-light text-dark border">${(v.dias_disponibles)-(v.dias_a_tomar)} días</span></td>
                         <td class="text-end fw-semibold text-success">$${parseFloat(v.monto_restante).toFixed(2)}</td>
                         <td class="text-end fw-semibold text-danger">$${parseFloat(v.retenciones).toFixed(2)}</td>
                         <td class="text-center pe-4">

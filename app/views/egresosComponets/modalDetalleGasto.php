@@ -6,6 +6,8 @@
                 <div class="modal-footer border-0 bg-light justify-content-center">
                     <button type="button" class="btn btn-dark btn-sm px-4 rounded-pill" onclick="gastoDetalle_ejecutarImpresion()">
                         <i class="bi bi-printer me-2"></i>IMPRIMIR GASTO 
+                    </button> <button type="button" class="btn btn-dark btn-sm px-4 rounded-pill" onclick="gastoDetalle_ejecutarImpresionIVA()">
+                        <i class="bi bi-printer me-2"></i>IMPRIMIR GASTO CON IVA 
                     </button>
                     <button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-pill" data-bs-dismiss="modal">Cerrar</button>
                 </div>
@@ -217,6 +219,7 @@
 
 <script>
     let observaciones='';
+    let filasHtmlGastoIVA = '';
 function gastoDetalle_cargarVista(gastoTipo, gastoId) {
     if (gastoTipo === 'compra') return;
 
@@ -234,6 +237,16 @@ function gastoDetalle_cargarVista(gastoTipo, gastoId) {
                     <td class="fw-bold" style="color: #0f172a;">${itemGasto.descripcion}</td>
                     <td class="text-end fw-bold" style="color: #0f172a;">${parseFloat(itemGasto.cantidad || 0).toFixed(4)}</td>
                     <td class="text-end" style="color: #475569;">$${parseFloat(itemGasto.precio_unitario).toFixed(2)}</td>
+                    <td class="text-end fw-bold" style="color: #1e3a8a;">$${parseFloat(itemGasto.subtotal).toFixed(2)}</td>
+                </tr>`;
+                 filasHtmlGastoIVA += `
+                <tr>
+                    <td style="font-family: monospace; color: #64748b; font-size: 9pt;">${itemGasto.sku || 'N/A'}</td>
+                    <td class="fw-bold" style="color: #475569; text-transform: uppercase;">UNIDAD</td>
+                    <td class="fw-bold" style="color: #0f172a;">${itemGasto.descripcion}</td>
+                    <td class="text-end fw-bold" style="color: #0f172a;">${parseFloat(itemGasto.cantidad || 0).toFixed(4)}</td>
+                    <td class="text-end" style="color: #475569;">$${parseFloat((itemGasto.precio_unitario)*(.84)).toFixed(2)}</td>
+                     <td class="text-end" style="color: #475569;">$${parseFloat((itemGasto.precio_unitario)*(.16)).toFixed(2)}</td>
                     <td class="text-end fw-bold" style="color: #1e3a8a;">$${parseFloat(itemGasto.subtotal).toFixed(2)}</td>
                 </tr>`;
         });
@@ -481,11 +494,186 @@ function gastoDetalle_ejecutarImpresion() {
                                 <th>DESCRIPCIÓN</th>
                                 <th class="text-end" style="width: 12%;">CANT.</th>
                                 <th class="text-end" style="width: 15%;">P. UNITARIO</th>
+                               
                                 <th class="text-end" style="width: 15%;">IMPORTE</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${filasTabla}
+                        </tbody>
+                    </table>
+                </div>
+${observaciones2}
+                <!-- VALIDEZ Y FIRMAS -->
+                <div class="row mt-4 pt-3">
+                    <div class="col-6">
+                        <div class="firma-linea">
+                            FIRMA / CONFORMIDAD DE ENTREGA
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="firma-linea">
+                            AUTORIZADO POR CONTROL INTERNO
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <script>
+                // Disparar la impresión nativa cuando todo cargue
+                window.onload = function() {
+                    window.print();
+                    // Cerrar la ventana secundaria tras imprimir o cancelar
+                    window.onafterprint = function() {
+                        window.close();
+                    };
+                };
+            <\/script>
+        </body>
+    </html>
+    `);
+
+    ventana.document.close();
+} 
+
+function gastoDetalle_ejecutarImpresionIVA() {
+    // 1. Extraer datos actuales dinámicamente del modal o respuesta
+    const folio = document.querySelector('.gasto-remision-badge span')?.innerText || '000';
+    const fecha = document.querySelector('.gasto-date-tile td.fw-bold')?.innerText || new Date().toLocaleDateString('es-MX');
+    const beneficiario = document.querySelector('.gasto-card-info td.fw-bold')?.innerText || 'N/A';
+    const usuario = document.querySelector('.gasto-card-info td[style*="color:#475569"]')?.innerText || 'N/A';
+    const totalMxn = document.querySelector('.gasto-total-highlight')?.innerText || '$0.00';
+   
+    
+    // Extraer filas de la tabla de productos/servicios
+    const filasTabla = document.querySelector('.gasto-items-table tbody')?.innerHTML || '';
+    const observaciones2=observaciones;
+    
+    // Detectar si el dispositivo es móvil para usar el visor nativo o PDF
+    const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (esMovil) {
+        const elemento = document.getElementById('gastoDetalle_areaCapturaPDF');
+        const opciones = {
+            margin:       [8, 8, 8, 8],
+            filename:     `Comprobante_Gasto_${folio}.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
+            jsPDF:        { unit: 'mm', format: 'a5', orientation: 'landscape' }
+        };
+        html2pdf().set(opciones).from(elemento).save();
+        return;
+    }
+
+    // 2. Abrir ventana emergente dedicada para impresión limpia
+    const ventana = window.open('', '_blank', 'height=700,width=900');
+
+    ventana.document.write(`
+    <!DOCTYPE html>
+    <html lang="es">
+        <head>
+            <meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>COMPROBANTE DE GASTO - ${folio}</title>
+      <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
+
+    <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
+
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+            <style>
+                @page { 
+                    margin: 0; /* Elimina encabezados/pies nativos del navegador */
+                }
+                body { 
+                    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+                    padding: 1.2cm;
+                    background-color: #ffffff;
+                    color: #1e293b;
+                }
+                .table-bordered th, .table-bordered td { 
+                    border: 1px solid #cbd5e1 !important; 
+                }
+                .marca-agua {
+                    position: fixed;
+                    top: 35%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    width: 240px;
+                    opacity: 0.06;
+                    z-index: -1;
+                    pointer-events: none;
+                }
+                .firma-linea {
+                    border-top: 1px solid #000;
+                    margin-top: 50px;
+                    text-align: center;
+                    padding-top: 5px;
+                    font-size: 11px;
+                }
+            </style>
+        </head>
+        <body>
+            <!-- Marca de agua -->
+            <img src="/cfsistem/public/assets/logo.ico" class="marca-agua" alt="Watermark">
+
+            <div id="areaImpresion" class="text-uppercase bg-white" style="font-size: 0.9rem;">
+
+                <!-- ENCABEZADO -->
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                    <div class="d-flex align-items-center">
+                        <img src="/cfsistem/public/assets/logo.ico" alt="Logo" width="50" height="50" class="me-3">
+                        <div>
+                            <h3 class="fw-bold text-uppercase mb-0" style="color:#0f172a; letter-spacing:1px;">
+                                COMPROBANTE DE GASTO
+                            </h3>
+                            <div class="text-body-secondary small mt-1 text-uppercase">
+                                Folio: <span class="fw-bold text-dark">${folio}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-end text-uppercase">
+                        <div class="fw-bold fs-5" style="color:#1e3a8a;">
+                            FORTALEZA CENTRO
+                        </div>
+                        <div class="text-body-secondary small">
+                            Fecha: ${fecha}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DATOS DEL BENEFICIARIO Y USUARIO -->
+                <div class="row g-2 mb-3">
+                    <div class="col-7">
+                        <div class="p-2 border rounded bg-light">
+                            <small class="text-body-secondary fw-bold d-block" style="font-size: 0.65rem;">BENEFICIARIO DE LA OPERACIÓN</small>
+                            <div class="fw-bold text-dark mt-1" style="font-size: 0.85rem;">${beneficiario}</div>
+                        </div>
+                    </div>
+                    <div class="col-5">
+                        <div class="p-2 border rounded bg-light">
+                            <small class="text-body-secondary fw-bold d-block" style="font-size: 0.65rem;">REGISTRADO POR</small>
+                            <div class="fw-bold text-dark mt-1" style="font-size: 0.85rem;">${usuario}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TABLA DE DETALLES -->
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm align-middle text-uppercase" style="font-size: 0.85rem;">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 15%;">CÓDIGO</th>
+                                <th style="width: 15%;">UNIDAD</th>
+                                <th>DESCRIPCIÓN</th>
+                                <th class="text-end" style="width: 12%;">CANT.</th>
+                                <th class="text-end" style="width: 15%;">P. UNITARIO</th>
+                                <th class="text-end" style="width: 15%;">IVA</th>
+                                <th class="text-end" style="width: 15%;">IMPORTE</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filasHtmlGastoIVA}
                         </tbody>
                     </table>
                 </div>

@@ -1433,8 +1433,13 @@ function recalcularFila(index) {
         excedente = 0;
     }
     if(llegado==totalBase){
+       
         fila.find('.s-faltantes-piezas').text('');
          fila.find('.s-exedentes-piezas').text('');
+          fila.find('.i-faltante').val(0);
+           fila.find('.i-excedente').val(0);
+          faltante = 0;
+           excedente = 0;
 
     }
 
@@ -1445,7 +1450,8 @@ function recalcularFila(index) {
         Number.isInteger(totalPiezasFinal/factor)
             ? totalPiezasFinal/factor
             : (totalPiezasFinal/factor).toFixed(2)
-    ):fila.find('.s-total-piezas').text(
+    ):
+    fila.find('.s-total-piezas').text(
         Number.isInteger(totalPiezasFinal)
             ? totalPiezasFinal
             : (totalPiezasFinal).toFixed(2)
@@ -1453,6 +1459,7 @@ function recalcularFila(index) {
      
 
     fila.find('.h-total-piezas').val(totalPiezasFinal);
+    console.log(totalPiezasFinal);
 
     let precioUnitario = totalBase > 0
         ? costoTotalRenglon / totalBase
@@ -1499,7 +1506,7 @@ function actualizarGranTotal() {
         const cantTotal = parseFloat(
             fila.find('.h-total-piezas').val()
         ) || 0;
-
+console.log(calcularTotal);
         const costoTotal = parseFloat(
             fila.find('.i-costo-total').val()
         ) || 0;
@@ -1556,6 +1563,7 @@ function actualizarGranTotal() {
             }
 
         });
+        console.log(detalle);
 
     });
 

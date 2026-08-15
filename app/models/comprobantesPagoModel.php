@@ -225,6 +225,7 @@ public function actualizar($id) {
         }
 
         $caplicadoActual = floatval($resultado['aplicado']);
+        
         $montoTotal      = floatval($resultado['monto']);
 
         // Validación: Si lo acumulado/aplicado ya es igual o mayor al monto total
@@ -240,7 +241,7 @@ public function actualizar($id) {
         ");
 
         // "d" = Double/Decimal/Float ($aplicado), "i" = Integer ($id)
-        $nuevoAplicado = floatval($aplicado);
+        $nuevoAplicado = floatval($aplicado+$caplicadoActual);
         $idComprobante = intval($id);
         
         $stmt->bind_param("di", $nuevoAplicado, $idComprobante);

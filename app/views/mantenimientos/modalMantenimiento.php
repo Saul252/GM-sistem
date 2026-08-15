@@ -36,7 +36,7 @@
                             <select class="form-select select2-modal" id="vehiculo_id" name="vehiculo_id" required>
                                 <option value="">Seleccione vehículo...</option>
                                 <?php foreach($vehiculos as $ve): ?>
-                                <option value="<?= $ve['id'] ?>"><?= htmlspecialchars($ve['nombre']) ?></option>
+                                <option value="<?= $ve['id'] ?>"><?= htmlspecialchars($ve['nombre']) ?> (<?= htmlspecialchars($ve['placas']) ?>) (<?= htmlspecialchars($ve['tipo']) ?>)</option>
                                 <?php endforeach; ?>
                             </select>
                         </div>

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Entregas | Sistema</title>
+    <title>Historial Pagos | Sistema</title>
       <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
 
     <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
@@ -14,39 +14,113 @@
     <?php require_once __DIR__ . '/layout/icono.php' ?>
     <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
 
-    <style>
+   <style>
+    /* Variables de tema dinámicas y adaptables */
+    :root {
+        --sidebar-width: 250px;
+        --card-bg: var(--bs-body-bg, #ffffff);
+        --card-border: var(--bs-border-color-translucent, rgba(0, 0, 0, 0.125));
+        --table-header-bg: #1e293b;
+        --table-header-color: #f8fafc;
+        --accent-glow: rgba(99, 102, 241, 0.15);
+    }
+
+    /* Soporte para Tema Oscuro Automático o Manual (Bootstrap 5 dark mode) */
+    [data-bs-theme="dark"] {
+        --table-header-bg: #0f172a;
+        --table-header-color: #f1f5f9;
+        --accent-glow: rgba(129, 140, 248, 0.25);
+    }
+
+    body {
+        background-color: var(--bs-body-bg, #f8f9fa);
+        color: var(--bs-body-color);
+        overflow-x: hidden;
+        padding-top: 20px;
+        text-transform: uppercase !important;
+    }
+
+    .main-content {
+        margin-left: var(--sidebar-width);
+        padding: 2rem;
+        min-height: 100vh;
+        transition: all 0.3s ease;
+    }
+
+    /* Cards y Contenedores */
+    .filter-card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        backdrop-filter: blur(8px);
+    }
+
+    .scroll-table {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    /* Tablas Modernas y Oscuras */
+    .table {
+        --bs-table-bg: transparent;
+        color: var(--bs-body-color);
+    }
+
+    .table thead th {
+        background-color: var(--table-header-bg) !important;
+        color: var(--table-header-color) !important;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        padding: 14px 12px;
+        border: none;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: var(--accent-glow) !important;
+    }
+
+    /* Modales */
+    .modal-content {
+        background-color: var(--bs-body-bg);
+        color: var(--bs-body-color);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+        background-color: var(--table-header-bg) !important;
+        color: var(--table-header-color);
+        border-bottom: 1px solid var(--card-border);
+    }
+
+    /* Botón Animado Neón (Adaptado a Modo Oscuro) */
     .btn-animado-entrega {
         position: relative;
         overflow: hidden;
-        color: #fff;
+        color: #fff !important;
         font-weight: 600;
-        letter-spacing: .3px;
+        letter-spacing: .5px;
+        border: none;
         transition: all .25s ease;
-
-        background: linear-gradient(270deg,
-                #7c3aed,
-                #ec4899,
-                #f97316,
-                #3b82f6,
-                #7c3aed);
-
-        background-size: 600% 600%;
+        background: linear-gradient(270deg, #6366f1, #ec4899, #f97316, #3b82f6, #6366f1);
+        background-size: 400% 400%;
         animation: moverGradiente 8s ease infinite;
-
-        box-shadow:
-            0 4px 18px rgba(124, 58, 237, .35),
-            0 2px 8px rgba(236, 72, 153, .25);
+        box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
     }
 
     .btn-animado-entrega:hover {
-        transform: translateY(-2px) scale(1.02);
-        box-shadow:
-            0 8px 24px rgba(124, 58, 237, .45),
-            0 4px 14px rgba(236, 72, 153, .35);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(236, 72, 153, 0.45);
     }
 
     .btn-animado-entrega:disabled {
-        opacity: .7;
+        opacity: .5;
         cursor: not-allowed;
     }
 
@@ -57,105 +131,42 @@
         left: -120%;
         width: 80%;
         height: 100%;
-
-        background: linear-gradient(120deg,
-                transparent,
-                rgba(255, 255, 255, .35),
-                transparent);
-
-        animation: brillo 2.8s linear infinite;
-    }
-
-    @keyframes moverGradiente {
-        0% {
-            background-position: 0% 50%;
-        }
-
-        50% {
-            background-position: 100% 50%;
-        }
-
-        100% {
-            background-position: 0% 50%;
-        }
-    }
-
-    @keyframes brillo {
-        0% {
-            left: -120%;
-        }
-
-        100% {
-            left: 140%;
-        }
-    }
-
-    :root {
-        --sidebar-width: 250px;
-        --primary-dark: #2c3e50;
-        --accent-color: #34495e;
-        --bg-body: #f8f9fa;
-    }
-
-    body {
-        background-color: var(--bg-body);
-        overflow-x: hidden;
-        padding-top: 20px;
-        text-transform: uppercase !important;
-    }
-
-    .main-content {
-        margin-left: var(--sidebar-width);
-        padding: 2rem;
-        min-height: 100vh;
-        transition: all 0.3s;
-    }
-
-    .scroll-table {
-        background: white;
-        border: 1px solid #e0e0e0;
-        border-radius: 8px;
-        overflow: hidden;
-    }
-
-    .table thead th {
-        background-color: var(--primary-dark);
-        color: white;
-        font-weight: 500;
-        text-transform: uppercase;
-        font-size: 0.75rem;
-        padding: 12px;
-        border: none;
+        background: linear-gradient(120deg, transparent, rgba(255, 255, 255, .4), transparent);
+        animation: brillo 3s linear infinite;
     }
 
     .btn-action {
-        background-color: var(--accent-color);
-        color: white;
+        background-color: #6366f1;
+        color: #ffffff;
         border: none;
+        border-radius: 8px;
+        transition: background-color 0.2s;
     }
 
     .btn-action:hover {
-        background-color: var(--primary-dark);
-        color: white;
-    }
-
-    .filter-card {
-        border: none;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        border-radius: 10px;
-    }
-
-    .modal-header {
-        background-color: var(--primary-dark)!important;
-        color: white;
-        border: none;
+        background-color: #4f46e5;
+        color: #ffffff;
     }
 
     .input-entrega {
-        border: 2px solid #28a745 !important;
+        border: 2px solid #10b981 !important;
+        background-color: var(--bs-body-bg);
+        color: var(--bs-body-color);
         max-width: 90px;
         text-align: center;
         font-weight: bold;
+        border-radius: 6px;
+    }
+
+    @keyframes moverGradiente {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    @keyframes brillo {
+        0% { left: -120%; }
+        100% { left: 140%; }
     }
 
     @media (max-width: 992px) {
@@ -165,11 +176,10 @@
         }
     }
 
-    /* Esto asegura que SweetAlert siempre esté por encima del modal de Bootstrap */
     .swal2-container {
         z-index: 9999 !important;
     }
-    </style>
+</style>
 </head>
 
 <body>
@@ -179,30 +189,10 @@
     <div class="main-content">
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="fw-bold card-title-text m-0">Historial de Ventas</h3>
+                <h3 class="fw-bold card-title-text m-0">Historial de Pagos</h3>
                 <div id="loader" class="spinner-border spinner-border-sm text-secondary d-none"></div>
             </div>
-            <div class="dropdown">
-                <button class="btn btn-add dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                    aria-expanded="false" style="border-radius: 10px; background: #123e77; color: #ffffff;">
-
-                    <i class="bi bi-gear me-2"></i> Mis repartos
-                </button>
-
-                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
-
-
-
-                    <li>
-                        <a class="dropdown-item d-flex align-items-center gap-2"
-                            href="/cfsistem/app/controllers/misRepartosController.php">
-                            <i class="bi bi-list-ul text-primary"></i>
-                            Gestionar mis repartos
-                        </a>
-                    </li>
-
-                </ul>
-            </div>
+            
             <div class="card filter-card mb-4">
                 <div class="card-body">
                     <div class="row g-3 align-items-end">
@@ -211,29 +201,20 @@
                             <input type="text" id="f_search" class="form-control form-control-sm"
                                 placeholder="Folio o Cliente..." onkeyup="getVentas()">
                         </div>
-                        <div class="col-md-2">
-                            <label class="form-label small fw-bold">Estatus Entrega</label>
-                            <select id="f_status" class="form-select form-select-sm" onchange="getVentas()">
-                                <option value="">Todos</option>
-                                <option value="pendiente">Pendiente</option>
-                                <option value="parcial">Parcial</option>
-                                <option value="entregado">Entregado</option>
-                            </select>
-                        </div>
+                       
                         <div class="col-md-2">
                             <label for="select-usuarios"
                                 class="form-label fw-bold small text-body-secondary text-uppercase">Vendedor</label>
                             <select class="form-select rounded-pill" id="select-usuarios" name="usuario_id"
                                 onchange="getVentas()">
-                                <option value=""> Seleccione vendedor</option>
+                                <option value=""> Seleccione receptor</option>
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label small fw-bold">Estatus Pago</label>
-                            <select id="f_pago" class="form-select form-select-sm" onchange="getVentas()">
+                            <label class="form-label small fw-bold">Cliente</label>
+                            <select id="cliente_id" class="form-select form-select-sm" onchange="getVentas()">
                                 <option value="">Todos</option>
-                                <option value="deuda">Con Deuda</option>
-                                <option value="pagado">Pagados</option>
+                               
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -267,15 +248,7 @@
                                 <?php endforeach; ?>
                             </select>
                         </div>
-                        <div class="col-md-2">
-                            <label class="form-label small fw-bold">Estatus Factura</label>
-                            <select id="estado_factura" class="form-select form-select-sm" onchange="getVentas()">
-                                <option value="">Todos</option>
-                                <option value="1">Facturada</option>
-                                <option value="0">No factuarada</option>
-
-                            </select>
-                        </div>
+                       
                     </div>
                 </div>
             </div>
@@ -286,15 +259,17 @@
                         <thead>
                             <tr>
 
+<th>ALMACEN</th>
                                 <th class="ps-3">Fecha</th>
+                                <th>ID PAGO</th>
                                 <th>Folio</th>
-                                <th>Almacén</th>
-                                <th>Vendedor</th>
                                 <th>Cliente</th>
-                                <th>Total</th>
-                                <th>Saldo Cobro</th>
-                                <th>Facturada</th>
-                                <th class="text-center">Estado Entrega</th>
+                                <th>Receptor</th>
+                                <th>METODO PAGO</th>
+                                <th>REFERENCIA</th>
+                                <th>Total RECIBIDO</th>
+                                <th>Total Compra</th>
+                               
                                 <th class="text-end pe-3">Acciones</th>
                             </tr>
                         </thead>
@@ -491,49 +466,7 @@
                 </div>
             </div>
         </div>
-        <div class="modal fade" id="modalAgregarFactura" tabindex="-1" aria-labelledby="modalAgregarFacturaLabel"
-            aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered modal-sm">
-                <div class="modal-content rounded-3 border-0 shadow">
-
-                    <div class="modal-header border-bottom-0 pb-0">
-                        <h5 class="modal-title fw-bold card-title-text fs-5" id="modalAgregarFacturaLabel">
-                            <i class="bi bi-file-earmark-plus text-primary me-2"></i>Nueva Factura
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-
-                    <div class="modal-body py-3">
-                        <form id="formFactura" onsubmit="event.preventDefault(); ">
-                            <div class="mb-2">
-                                <input type="hidden"
-                                    class="form-control rounded-pill border-secondary border-opacity-25"
-                                    id="id_venta_factura">
-
-                                <label for="folio-factura"
-                                    class="form-label fw-bold small text-body-secondary text-uppercase ls-wide">
-                                    Folio o Número de Factura
-                                </label>
-                                <input type="text" class="form-control rounded-pill border-secondary border-opacity-25"
-                                    id="folio-factura" placeholder="Ej. FACT-12345" required autocomplete="off">
-                            </div>
-                        </form>
-                    </div>
-
-                    <div class="modal-footer border-top-0 pt-0 d-flex gap-2">
-                        <button type="button" class="btn btn-sm btn-light rounded-pill flex-grow-1 fw-bold text-body-secondary"
-                            data-bs-dismiss="modal">
-                            Cancelar
-                        </button>
-                        <button type="button" class="btn btn-sm btn-primary rounded-pill flex-grow-1 fw-bold"
-                            onclick="agregarFactura ($('#id_venta_factura').val(),$('#folio-factura').val())">
-                            Guardar
-                        </button>
-                    </div>
-
-                </div>
-            </div>
-        </div>
+       
         <div class="modal fade" id="modalCancelarVenta" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -590,7 +523,62 @@
                 document.getElementById('modalCancelarVenta')
             );
         });
+        async function cargarClientes() {
+    console.log("cargo clientes");
+    
+    // Obtenemos el ID del almacén actual
+    const almacenId = $('#almacen_id').val();
+    const select = document.getElementById('cliente_id');
+    if (!select) return;
 
+    // Limpiamos el select antes de poblarlo
+    select.innerHTML = '<option value="">-- Seleccione un cliente --</option>';
+
+    try {
+        const url = '/cfsistem/app/controllers/accesoController.php?action=obtenerClientes';
+        const respuesta = await fetch(url);
+
+        if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
+
+        const resultado = await respuesta.json();
+        console.log(resultado);
+
+        if (resultado.success && Array.isArray(resultado.data)) {
+            
+            // FILTRADO APLICADO SOBRE resultado.data:
+            // 1. Conserva clientes cuyo nombre NO contenga "público en general".
+            // 2. Si contiene "público en general", solo lo conserva si su almacen_id coincide con el actual.
+            const clientesFiltrados = resultado.data.filter(cliente => {
+                const nombre = (cliente.nombre_comercial || '').toLowerCase();
+                const esPublicoGeneral = nombre.includes('público en general') || nombre.includes('publico en general');
+
+                if (!esPublicoGeneral) {
+                    return true;
+                }
+                
+                // Asumiendo que el objeto cliente tiene la propiedad 'almacen_id'
+                return String(cliente.almacen_id) === String(almacenId);
+            });
+            
+
+            // Llenamos el select con la lista filtrada
+            (resultado.data).forEach(cliente => {
+                const opcion = document.createElement('option');
+                opcion.value = cliente.id;
+                opcion.textContent = `${cliente.nombre_comercial}`;
+                select.appendChild(opcion);
+            });
+
+          
+
+        } else {
+            select.innerHTML = '<option value="">No se pudieron cargar los clientes</option>';
+        }
+    } catch (error) {
+        select.innerHTML = '<option value="">Error al cargar la lista</option>';
+        console.error('Error al ejecutar cargarClientes:', error);
+    }
+}
         function abrirModalCancelacion(idVenta, folio) {
 
             document.getElementById('cancelar_id_venta').value = idVenta;
@@ -674,26 +662,7 @@
             }
         }
         // PASO 1: Esta función se dispara al dar click al botón de la tabla (abre el modal)
-        function modalFactura(id, factura) {
-            const modalElement = document.getElementById('modalAgregarFactura');
-            const folioInput = document.getElementById("folio-factura");
-
-            // Limpiamos el input y errores previos por si acaso
-            folioInput.value = factura;
-            folioInput.classList.remove("is-invalid");
-
-            // Guardamos el ID de la venta/viaje en el modal para no perderlo
-            modalElement.setAttribute('data-id-actual', id);
-            document.getElementById('id_venta_factura').value = id;
-
-            // Abrimos el modal programáticamente con Bootstrap
-            const modalInstance = new bootstrap.Modal(modalElement);
-            modalInstance.show();
-        }
-
-        // PASO 2: Esta función se dispara al dar click en "Guardar" dentro del modal
-
-
+     
         // Tu// Función final encargada del backend
         async function agregarFactura(id, folio) {
             console.log(`Guardando en BD -> ID: ${id}, Folio Factura: ${folio}`);
@@ -803,7 +772,7 @@
         const modalObj = new bootstrap.Modal('#modalDetalle');
         let ventaActual = null;
         // La ruta al controlador (ajusta si el nombre del archivo varía)
-        const URL_CONTROLLER = '/cfsistem/app/controllers/ventasHistorialController.php';
+        const URL_CONTROLLER = '/cfsistem/app/controllers/historialPagosController.php';
 
         async function getVentas() {
             $('#loader').removeClass('d-none');
@@ -817,10 +786,10 @@
                 f_inicio: $('#f_ini').val(),
                 f_fin: $('#f_fin').val(),
                 f_almacen: $('#f_almacen').val(),
-                f_status: $('#f_status').val(),
-                f_pago: $('#f_pago').val(),
+                
+                f_cliente: $('#cliente_id').val(),
                 f_vendedor: $('#select-usuarios').val() ?? '',
-                f_factura: $('#estado_factura').val() ?? ''
+               
 
 
             });
@@ -828,187 +797,65 @@
             try {
                 const res = await fetch(`${URL_CONTROLLER}?${params.toString()}`);
                 const data = await res.json();
+                console.log(data);
                 //<td class="ps-3 small">${v.id}</td>
                 let totalVendido = 0;
                 let deuda = 0;
 
-                $('#tablaVentas tbody').html(data.map(v => {
-                    let total = 0;
-                    let pagado = 0;
-                    if (v.estado_general != 'cancelada') {
-                        total = parseFloat(v.total) || 0;
-                        pagado = parseFloat(v.pagado) || 0;
-                    }
-                    let saldo = total - pagado;
+               let totalMontoCobrado = 0;
 
-                    if (v.estado_general == 'activa') {
-                        totalVendido += total;
-                        deuda += (total - pagado);
-                    }
-
-                    let badgeCobro = (saldo <= 0) ?
-                        '<span class="text-success small fw-bold"><i class="bi bi-check-circle"></i> Pagado</span>' :
-                        `<span class="text-danger small fw-bold">Debe: $${saldo.toFixed(2)}</span>`;
-
-                    let entrega = (v.estado_general == 'activa') ?
-                        `<span class="badge ${v.estado_entrega=='entregado'?'bg-success':(v.estado_entrega=='parcial'?'bg-warning card-title-text':'bg-danger')}">
-            ${v.estado_entrega.toUpperCase()}
-        </span>` :
-                        '<span class="text-danger small fw-bold"><i class="bi bi-check-circle"></i> Cancelado</span>';
-
-                    let factura = (v.estado_general == 'activa') ?
-                        `${v.factura}
-        <button type="button" class="btn btn-link text-primary p-1 border-0" onclick="modalFactura(${v.id},${v.factura})" title="Agregar Factura">
-            <i class="bi bi-pencil-square me-2"></i>
-        </button>` : '';
-                    let rolAct = <?=  $rol ?>;
-                    let botonCancelar = rolAct == 1 ? `<button type="button" 
-        class="btn btn-glass-danger rounded-3 border-0 d-inline-flex align-items-center justify-content-center" 
-        onclick="abrirModalCancelacion('${v.id}','${v.folio}')" 
-        data-bs-toggle="tooltip" 
-        data-bs-placement="top" 
-        title="Cancelar Venta">
-    <i class="bi bi-x-circle-fill fs-6"></i>
-</button>
-
-<style>
-.btn-glass-danger {
-    width: 36px;
-    height: 36px;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #090356;
-    transition: all 0.2s ease-in-out;
-}
-
-.btn-glass-danger:hover {
-    background-color: rgba(220, 53, 69, 0.25);
-    color: #2a54b0;
-    transform: scale(1.08);
-}
-</style>` : `<button type="button" 
-        class="btn btn-glass-danger rounded-3 border-0 d-inline-flex align-items-center justify-content-center" 
-        onclick="abrirModalSolicitudCancelacion('${v.id}')" 
-        data-bs-toggle="tooltip" 
-        data-bs-placement="top" 
-        title="Cancelar Venta">
-    <i class="bi bi-x-circle-fill fs-6"></i>
-</button>
-
-<style>
-.btn-glass-danger {
-    width: 36px;
-    height: 36px;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #dc3545;
-    transition: all 0.2s ease-in-out;
-}
-
-.btn-glass-danger:hover {
-    background-color: rgba(220, 53, 69, 0.25);
-    color: #b02a37;
-    transform: scale(1.08);
-}
-</style>`;
-                    let cancelada = (v.estado_general == 'activa') ? `
-        
-
-        <div class="btn-group" role="group">
-            <button type="button" class="btn btn-link text-secondary btn-sm px-3 border-0 dropdown-toggle remove-caret" 
-                    data-bs-toggle="dropdown" 
-                    aria-expanded="false"
-                    data-bs-toggle="tooltip" 
-                    data-bs-placement="top" 
-                     title="Más opciones">
-                <i class="bi bi-three-dots fs-5"></i>
-            </button>
-           
-                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-2 mt-2 animated--fade-in" style="min-width: 220px;">
-    <li>
-        <button class="dropdown-item py-2 px-3 rounded-3 d-flex align-items-center fw-semibold card-title-text hover-bg-light" 
-                onclick="gestionarSolicitud(${v.id})">
-            <i class="bi bi-pencil-square me-2 text-primary fs-6"></i> Editar
-        </button>
-    </li>
+// Generar las filas de la tabla de pagos
+let filasHtml = data.map(p => {
+    let monto = parseFloat(p.monto) || 0;
+    let ventaTotal = parseFloat(p.venta_total) || 0;
     
-    <li><hr class="dropdown-divider my-2 opacity-25"></li>
-    
-    <li>
-        <a class="dropdown-item py-2 px-3 rounded-3 d-flex align-items-center text-secondary hover-primary" 
-           href="/cfsistem/app/backend/ventas/ticket_venta.php?id=${v.id}" target="_blank">
-            <i class="bi bi-receipt me-2 text-primary"></i> Imprimir Ticket
-        </a>
-    </li>
-    
-    <li>
-        <a class="dropdown-item py-2 px-3 rounded-3 d-flex align-items-center text-secondary hover-info" 
-           href="/cfsistem/app/backend/ventas/ticketFormal.php?id=${v.id}" target="_blank">
-            <i class="bi bi-file-earmark-check me-2 card-title-text"></i> Ticket Formal
-        </a>
-    </li>
+    // Acumulador de totales
+    totalMontoCobrado += monto;
 
-            </ul>
-        </div>${botonCancelar}` : ``;
+    // Formato de referencia y badge de método de pago
+    let referencia = p.referencia ? `<span class="fw-bold">${p.referencia}</span>` : '<span class="text-muted small">N/A</span>';
+    
+    let badgeMetodo = `<span class="badge ${p.metodo_pago === 'Efectivo' ? 'bg-success' : 'bg-info'} text-dark">
+        ${p.metodo_pago}
+    </span>`;
 
-                    return `<tr>
-        <td class="ps-3 small">${v.fecha}</td>
-        <td class="fw-bold">${v.folio}</td>
-        <td><span class="badge bg-light text-dark border fw-normal">${v.almacen_nombre}</span></td>
-        <td><div class="small fw-bold">${v.vendedor}</div></td>
-        <td><div class="small fw-bold">${v.cliente}</div></td>
-        <td class="fw-bold card-title-text">$${total.toFixed(2)}</td>
-        <td>${v.estado_general=='activa'? badgeCobro : '<span class="text-danger small fw-bold"><i class="bi bi-check-circle"></i> Cancelado</span>'}</td>
-        <td><div class="small fw-bold">${factura}</div></td>
-        <td class="text-center">${entrega}</td>
+    return `<tr>
+      <td class="ps-3 small">${p.almacen_nombre}</td>
+        <td class="ps-3 small">${p.fecha}</td>
+        <td class="fw-bold">#${p.id}</td>
+        <td class="fw-bold text-primary">${p.folio}</td>
+       
+        <td><div class="small">${p.cliente}</div></td>
+        <td><div class="small">${p.nombre}</div></td>
+         <td>${badgeMetodo}</td>
+        <td><div class="small">${referencia}</div></td>
+         <td class="fw-bold text-success">$${monto.toFixed(2)}</td>
+        <td class="fw-bold text-secondary">$${ventaTotal.toFixed(2)}</td>
+       
+
         <td class="text-end pe-3">
-            <div class="btn-group bg-white rounded-3 shadow-sm border p-1" role="group" aria-label="Acciones de venta">
-                <button type="button" 
-        class="btn btn-glass-eye rounded-3 border-0 d-inline-flex align-items-center justify-content-center" 
-        onclick="verDetalle(${v.id})" 
-        data-bs-toggle="tooltip" 
-        data-bs-placement="top" 
-        title="Gestionar Venta">
-    <i class="bi bi-eye fs-5"></i>
-</button>
-
-<style>
-.btn-glass-eye {
-    width: 36px;
-    height: 36px;
-    background-color: rgba(13, 110, 253, 0.08);
-    color: #0d6efd;
-    transition: all 0.2s ease-in-out;
-}
-
-.btn-glass-eye:hover {
-    background-color: rgba(13, 110, 253, 0.2);
-    color: #0a58ca;
-    transform: scale(1.08);
-}
-</style>
-                ${cancelada}
-            </div>
+            <button type="button" 
+                    class="btn btn-sm btn-outline-primary rounded-3 border-0" 
+                    onclick="verDetalle(${p.venta_id})" 
+                    data-bs-toggle="tooltip" 
+                    title="Ver detalle de la venta">
+                <i class="bi bi-eye-fill fs-6"></i>
+            </button>
         </td>
     </tr>`;
-                }).join(''));
+}).join('');
 
-                // Fila de totales corregida (Sin 'v.almacen_nombre' para evitar errores)
-                let totales = `<tr class="table-light fw-bold border-top border-dark">
-    <td class="ps-3 small"></td>
-    <td class="fw-bold">TOTALES</td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td class="card-title-text">Total: $${totalVendido.toFixed(2)}</td>
-    <td class="text-success">Cobrado: $${(totalVendido - deuda).toFixed(2)}</td>
-    <td class="text-danger">Por Cobrar: $${deuda.toFixed(2)}</td>
-    <td></td>
+// Insertar las filas principales
+$('#tablaVentas tbody').html(filasHtml);
+
+// Generar e insertar la fila de totales
+let filaTotales = `<tr class="table-light fw-bold border-top border-dark">
+    <td class="ps-3" colspan="6">TOTAL COBRADO EN HISTORIAL</td>
+    <td class="text-success">$${totalMontoCobrado.toFixed(2)}</td>
     <td></td>
 </tr>`;
 
-
-
-                // CORRECCIÓN AQUÍ: Agregamos la fila al final del tbody usando .append() sin .join()
-                $('#tablaVentas tbody').append(totales);
+$('#tablaVentas tbody').append(filaTotales);
             } catch (e) {
                 console.error("Error al cargar ventas:", e);
             } finally {
@@ -1443,6 +1290,7 @@
         $(document).ready(function() {
             // 1. Carga inicial de datos
             getVentas();
+            cargarClientes();
 
             // 2. Escuchadores para filtros (opcional, pero recomendado para centralizar)
             $('#f_rango').on('change', togglePerso);

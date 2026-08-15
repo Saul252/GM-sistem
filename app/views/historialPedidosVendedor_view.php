@@ -900,10 +900,9 @@ if (data.info.estado_general === 'cancelada') {
              <td>
             <span>
     ${
-        p.metodo_pago !== 'Efectivo' &&
-        p.metodo_pago !== 'Saldo a Favor'
-            ? (p.referencia ?? '')
-            : '-'
+       
+             (p.referencia ?? '')
+           
     }
 </span> 
             </td>

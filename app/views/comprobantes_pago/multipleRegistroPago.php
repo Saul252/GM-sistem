@@ -379,11 +379,18 @@ async function guardarDispersiónPagos() {
     if (!datosPagos) return; 
 
     // 2. Obtener la fecha de hoy en formato YYYY-MM-DD
-    const hoy = new Date();
-    const yyyy = hoy.getFullYear();
-    const mm = String(hoy.getMonth() + 1).padStart(2, '0');
-    const dd = String(hoy.getUTCDate()).padStart(2, '0');
-    const fechaHoy = `${yyyy}-${mm}-${dd}`;
+   const ahora = new Date();
+
+const yyyy = ahora.getFullYear();
+const mm = String(ahora.getMonth() + 1).padStart(2, '0');
+const dd = String(ahora.getDate()).padStart(2, '0');
+
+const hh = String(ahora.getHours()).padStart(2, '0');
+const min = String(ahora.getMinutes()).padStart(2, '0');
+const ss = String(ahora.getSeconds()).padStart(2, '0');
+
+// Formato AAAA-MM-DD HH:MM:SS (Ideal para Bases de Datos / MySQL)
+const fechaHoy = `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
 
     // Marcadores para el método de pago y la nota base
     const metodo = "Efectivo"; // Cambia este valor por el que use tu vista (ej. un select) o déjalo fijo
@@ -403,9 +410,9 @@ async function guardarDispersiónPagos() {
         for (let i = 0; i < datosPagos.ids.length; i++) {
             const Ventaid = datosPagos.ids[i];
             const monto = datosPagos.pagos[i];
-            
+            let idCom=  document.getElementById('idC').value;
             // Aquí puedes personalizar dinámicamente tu nota/referencia por cada iteración
-            const referencia = `Abono dispersado automáticamente. Ref Venta #${Ventaid}`;
+            const referencia = `Abono desde Comprobante #${idCom}`;
 
             // Creamos el contenedor idéntico al que requiere tu función original
             const fd = new FormData();
@@ -424,6 +431,8 @@ async function guardarDispersiónPagos() {
             });
              const fd2 = new FormData();
              let idC=$('#idC').val();
+            
+            
         fd2.append('id', idC);
         fd2.append('cantidadAplicada',monto)
        
@@ -439,7 +448,9 @@ async function guardarDispersiónPagos() {
             if (data.status !== 'success') {
                 throw new Error(data.message || `Error al procesar el abono para la venta ID: ${Ventaid}`);
             }
+             
         }
+       
 
         // Si el ciclo terminó de ejecutar todos los 'await' sin lanzar errores:
         Swal.fire({

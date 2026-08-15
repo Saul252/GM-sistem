@@ -284,83 +284,102 @@ async function verListaMedidas(idProducto, idAlmacen, nombreProducto, unidad_med
                 `prepararNuevaMedida(${idProducto}, ${idAlmacen}, '${nombreProducto}', '${unidad_medida}')`
             );
 
-           data.producto.medidas.forEach(m => {
-    const medidaData = encodeURIComponent(JSON.stringify(m));
+            // =========================================================
+            // 1. BUSCAR LA MEDIDA BASE (EQUIVALENCIA = 1)
+            // =========================================================
+            const medidaBase = data.producto.medidas.find(m => (parseFloat(m.equivalencia) || 0) === 1);
+            const idBase = medidaBase ? Number(medidaBase.id) : null;
 
-    // Convertir a número por seguridad
-    const equiv = parseFloat(m.equivalencia) || 0;
-    
-    // Cálculo de la relación inversa (1 / equivalencia)
-    const inversa = equiv > 0 ? (1 / equiv) : 0;
+            data.producto.medidas.forEach(m => {
+                const medidaData = encodeURIComponent(JSON.stringify(m));
 
-    // Formateo inteligente para limpiar ceros innecesarios a la derecha
-    const equivFormateada = Number(equiv.toFixed(6));
-    const inversaFormateada = Number(inversa.toFixed(6));
+                // Convertir a número por seguridad
+                const equiv = parseFloat(m.equivalencia) || 0;
+                const idActual = Number(m.id);
+                
+                // Cálculo de la relación inversa (1 / equivalencia)
+                const inversa = equiv > 0 ? (1 / equiv) : 0;
 
-    // Determinar la frase según el tipo de equivalencia para máxima claridad
-    let textoRelacion = '';
-    
-    if (equiv >= 1) {
-        // Caso: Unidad menor (Ej: 1 KG = 1000 Gramos)
-        textoRelacion = `
-            <span class="badge bg-body-tertiary text-body border border-translucent rounded-pill px-3 py-2 fw-normal d-inline-flex align-items-center gap-2 shadow-sm">
-                <span><strong class="text-primary">${equivFormateada}</strong> ${m.nombre}(s)= <strong>1</strong> ${unidad_medida} </span>
-            </span>
-        `;
-    } else {
-        // Caso: Unidad mayor (Ej: 1 Tonelada = 0.001 -> 1000 KG = 1 Tonelada)
-        textoRelacion = `
-            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2 fw-normal d-inline-flex align-items-center gap-2 shadow-sm">
-                <i class="bi bi-arrow-left-right opacity-75"></i>
-                <span> <strong>1</strong> ${m.nombre} = <strong>${inversaFormateada}</strong> ${unidad_medida}(s) </span>
-            </span>
-        `;
-    }
+                // Formateo inteligente para limpiar ceros innecesarios a la derecha
+                const equivFormateada = Number(equiv.toFixed(6));
+                const inversaFormateada = Number(inversa.toFixed(2));
 
-    const fila = `
-        <tr class="align-middle">
-            <!-- NOMBRE DE LA MEDIDA -->
-            <td class="ps-4 py-3">
-                <div class="d-flex align-items-center gap-2">
-                    <div class="p-2 bg-body-tertiary rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
-                        <i class="bi bi-rulers text-primary fs-6"></i>
-                    </div>
-                    <div>
-                        <div class="fw-bold text-body mb-0">${m.nombre}</div>
-                        <small class="text-body-secondary fs-7">
-                            Valor base: ${equivFormateada}
-                        </small>
-                    </div>
-                </div>
-            </td>
+                // =========================================================
+                // 2. REGLA DE PROTECCIÓN DE ELIMINACIÓN
+                // =========================================================
+                // Se protege si:
+                // - Su equivalencia es 1
+                // - Su nombre coincide con la unidad de medida principal
+                // - Su ID es menor o igual al ID de la medida base (idActual <= idBase)
+                const esEquivBase = (equivFormateada === 1);
+                const esUnidadBase = (m.nombre === unidad_medida);
+                const esMenorOIgualQueBase = (idBase !== null && idActual <= idBase);
 
-            <!-- RELACIÓN / EQUIVALENCIA ELEGANTE -->
-            <td>
-                ${textoRelacion}
-            </td>
+                const esProtegido = esEquivBase || esUnidadBase || esMenorOIgualQueBase;
 
-            <!-- ACCIONES -->
-            <td class="text-end pe-4">
-                <div class="d-inline-flex gap-1">
-                    <button class="btn btn-sm btn-light-hover text-primary rounded-circle border-0 p-2 d-inline-flex align-items-center justify-content-center"
-                            title="Editar medida"
-                            style="width: 34px; height: 34px;"
-                            onclick="abrirEditarMedida('${medidaData}')">
-                        <i class="bi bi-pencil-fill fs-6"></i>
-                    </button>
-                    <button class="btn btn-sm btn-light-hover text-danger rounded-circle border-0 p-2 d-inline-flex align-items-center justify-content-center"
-                            title="Eliminar medida"
-                            style="width: 34px; height: 34px;"
-                            onclick="eliminarMedida(${m.id})">
-                        <i class="bi bi-trash-fill fs-6"></i>
-                    </button>
-                </div>
-            </td>
-        </tr>
-    `;
+                let boton = esProtegido 
+                    ? '' 
+                    : `<button class="btn btn-sm btn-light-hover text-danger rounded-circle border-0 p-2 d-inline-flex align-items-center justify-content-center"
+                                title="Eliminar medida"
+                                style="width: 34px; height: 34px;"
+                                onclick="eliminarMedida(${m.id})">
+                            <i class="bi bi-trash-fill fs-6"></i>
+                        </button>`;
 
-    tbody.insertAdjacentHTML('beforeend', fila);
-});
+                // Determinar la frase según el tipo de equivalencia
+                let textoRelacion = '';
+                
+                if (equiv >= 1) {
+                    textoRelacion = `
+                        <span class="badge bg-body-tertiary text-body border border-translucent rounded-pill px-3 py-2 fw-normal d-inline-flex align-items-center gap-2 shadow-sm">
+                            <span><strong class="text-primary">${equivFormateada}</strong> ${m.nombre}(s)= <strong>1</strong> ${unidad_medida} </span>
+                        </span>
+                    `;
+                } else {
+                    textoRelacion = `
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2 fw-normal d-inline-flex align-items-center gap-2 shadow-sm">
+                            <i class="bi bi-arrow-left-right opacity-75"></i>
+                            <span> <strong>1</strong> ${m.nombre} = <strong>${inversaFormateada}</strong> ${unidad_medida}(s) </span>
+                        </span>
+                    `;
+                }
+
+                const fila = `
+                    <tr class="align-middle">
+                        <td class="ps-4 py-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="p-2 bg-body-tertiary rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                    <i class="bi bi-rulers text-primary fs-6"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-body mb-0">${m.nombre}</div>
+                                    <small class="text-body-secondary fs-7">
+                                        Valor base: ${equivFormateada}
+                                    </small>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            ${textoRelacion}
+                        </td>
+
+                        <td class="text-end pe-4">
+                            <div class="d-inline-flex gap-1">
+                                <button class="btn btn-sm btn-light-hover text-primary rounded-circle border-0 p-2 d-inline-flex align-items-center justify-content-center"
+                                        title="Editar medida"
+                                        style="width: 34px; height: 34px;"
+                                        onclick="abrirEditarMedida('${medidaData}')">
+                                    <i class="bi bi-pencil-fill fs-6"></i>
+                                </button>
+                                ${boton}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+
+                tbody.insertAdjacentHTML('beforeend', fila);
+            });
         } else {
             emptyState.classList.remove('d-none');
             $('#agregarMedida').attr(
@@ -381,7 +400,6 @@ async function verListaMedidas(idProducto, idAlmacen, nombreProducto, unidad_med
         `;
     }
 }
-
 function recargarModalMedidas() {
     verListaMedidas(
         ultimaMedidaProductoId,
@@ -395,23 +413,36 @@ function recargarModalMedidas() {
 // ABRIR EDITAR
 // =========================================
 function abrirEditarMedida(data) {
+    // 1. Primero parseamos los datos
     const medida = JSON.parse(decodeURIComponent(data));
 
+    // 2. Calculamos la equivalencia de forma segura
+    let equi = 0;
+    if (medida.equivalencia && Number(medida.equivalencia) !== 0) {
+        const calculo = 1 / parseFloat(medida.equivalencia);
+        equi = calculo < 1 ? calculo : calculo.toFixed(2);
+    }
+
+    // 3. Obtenemos las referencias del DOM
     const inputId = document.getElementById('edit_medida_id');
     const inputProdId = document.getElementById('edit_producto_id');
     const inputNombre = document.getElementById('edit_nombre_medida');
     const inputEquiv = document.getElementById('edit_equivalencia');
     const textUnidad = document.getElementById('edit_unidad_text');
 
+    // 4. Asignamos valores
     if (inputId) inputId.value = medida.id;
     if (inputProdId) inputProdId.value = medida.producto_id;
-    if (inputEquiv) inputEquiv.value = medida.equivalencia;
+    if (inputEquiv) inputEquiv.value = equi;
     if (textUnidad) textUnidad.innerText = medida.nombre;
     if (inputNombre) inputNombre.value = medida.nombre;
 
+    // 5. Mostramos el modal de Bootstrap
     const modalEl = document.getElementById('modalEditarMedida');
-    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-    modal.show();
+    if (modalEl) {
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+    }
 }
 
 // =========================================

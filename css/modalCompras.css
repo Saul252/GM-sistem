@@ -111,9 +111,6 @@
 /* 4. Ajuste de jerarquía para el segundo modal (El de Producto/Proveedor) */
 /* nth-of-type(even) detecta si es el segundo modal abierto */
 
-.modal.show:nth-of-type(even) {
-    z-index: 1060 !important;
-}
 
 .modal-backdrop.show:nth-of-type(even) {
     z-index: 1059 !important;

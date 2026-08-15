@@ -260,7 +260,8 @@ $pdi  = $p_distribuidor > 0 ? ($p_distribuidor / $factor_conversion) : 0;
             $id            = intval($_POST['id'] ?? 0);
             $producto_id   = intval($_POST['producto_id'] ?? 0);
             $nombre        = trim($_POST['nombre_edit'] ?? '');
-            $equivalencia  = floatval($_POST['equivalencia'] ?? 0);
+           $rawEquiv = floatval($_POST['equivalencia'] ?? 0);
+$equivalencia = ($rawEquiv != 0) ? (1 / $rawEquiv) : 0;
 
             if ($id <= 0) {
                 throw new Exception("ID inválido");

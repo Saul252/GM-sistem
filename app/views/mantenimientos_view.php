@@ -360,9 +360,10 @@ $estadosUnidad = [
                     <th>ID</th>
                     <th>Almacén</th>
                     <th>Vehículo</th>
+                     <th class="text-center">Placas</th>
                     <th>Tipo</th>
                     <th>Razón</th>
-                    <th class="text-center">Placas</th>
+                   
                     <th class="text-center">Kilometraje</th>
                     <th class="text-center">Acciones</th>
 
@@ -535,9 +536,10 @@ $('#tablaMantenimientos tbody').html(data.map(m => {
         <td class="fw-bold">${m.id_vehiculo}</td>
         <td><span class="badge bg-light text-dark border fw-normal">${m.almacen}</span></td>
         <td><div class="small fw-bold">${m.vehiculo}</div></td>
+         <td><div class="small fw-bold">${m.placas}</div></td>
         <td><div class="small fw-bold">${m.tipo_mantenimiento}</div></td>
         <td class="fw-bold k">${m.razon}</td>
-          <td><div class="small fw-bold">${m.placas}</div></td>
+         
            <td><div class="small fw-bold">${m.kilometraje}</div></td>
         
         <td class="text-end pe-3">

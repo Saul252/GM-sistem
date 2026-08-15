@@ -74,6 +74,58 @@ class VentaHistorialModel {
         $res = $this->db->query($sql);
         return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
     }
+    public function obtenerPagos($filtros, $rol_id = null, $almacen_sesion = null) {
+    $where = " WHERE 1=1 ";
+if ($rol_id != 1) { 
+            $where .= " AND v.almacen_id = $almacen_sesion "; 
+        } elseif (!empty($filtros['almacen'])) { 
+            $where .= " AND v.almacen_id = " . intval($filtros['almacen']); 
+        }
+    // Buscador general (Folio de venta, Referencia, ID de pago o ID de venta)
+    if (!empty($filtros['search'])) {
+        $s = $this->db->real_escape_string($filtros['search']);
+        $where .= " AND (v.folio LIKE '%$s%' OR hit.referencia LIKE '%$s%' OR hit.id LIKE '%$s%' OR hit.venta_id LIKE '%$s%') ";
+    }
+
+    // Filtro por Método de Pago
+    if (!empty($filtros['metodo_pago'])) {
+        $mp = $this->db->real_escape_string($filtros['metodo_pago']);
+        $where .= " AND hit.metodo_pago = '$mp' ";
+    }
+
+    // Filtro por Usuario que registró el pago
+    if (!empty($filtros['vendedor'])) {
+        $uid = intval($filtros['vendedor']);
+        $where .= " AND hit.usuario_id = $uid ";
+    }
+     if (!empty($filtros['cliente'])) {
+        $cid = intval($filtros['cliente']);
+        $where .= " AND v.id_cliente = $cid";
+    }
+
+    // Rango de Fechas (Asegúrate de que 'construirFiltroFecha' evalúe 'hit.fecha')
+    if (!empty($filtros['rango']) && $filtros['rango'] !== 'todos') {
+        $where .= $this->construirFiltroFecha($filtros);
+    }
+
+    // Consulta limpia: Únicamente historial_pagos y ventas
+    $sql = "SELECT hit.*, 
+                   v.folio, 
+                   c.nombre_comercial as cliente,
+                   v.total as venta_total,
+                   u.nombre,
+                   a.nombre as almacen_nombre
+            FROM historial_pagos hit
+            JOIN ventas v ON v.id = hit.venta_id
+            join clientes c on c.id=v.id_cliente
+             JOIN almacenes a ON v.almacen_id = a.id 
+            join usuarios u on u.id=hit.usuario_id
+            $where 
+            ORDER BY hit.fecha DESC, hit.id DESC";
+
+    $res = $this->db->query($sql);
+    return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+}
 
     public function obtenerVentasDeuda($filtros, $rol_id, $almacen_sesion) {
         $where = " WHERE v.id>1";
