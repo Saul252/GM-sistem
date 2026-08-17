@@ -265,7 +265,7 @@ let recalculandoFilaEditar = false;
                     const id = $('#almacen_id_editar').val();
                    
 
-                    cargarClientes();
+                    cargarClienteseditar();
 
                     // 🚀 Coloca aquí la función o lógica que deseas ejecutar
                     // Ejemplo: cargarProductosPorAlmacen(almacenId);
@@ -323,7 +323,7 @@ async function cargarClienteseditar() {
                 opcion.textContent = `${cliente.nombre_comercial}`;
                 select.appendChild(opcion);
             });
-
+$('#cliente_id_editar').val(cliente_id_edi).trigger('change.select2');;
         } else {
             select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
         }
@@ -699,7 +699,7 @@ function quitarFilaEditar(id) {
 // =====================================================
 // INICIALIZAR MODAL EDITAR CON DATOS DE LA DB
 // ========
-
+let cliente_id_edi=0
 async function gestionarSolicitud(id) {
     try {
         // 1. Limpiar la tabla de edición por si tenía datos anteriores
@@ -725,8 +725,10 @@ async function gestionarSolicitud(id) {
 
         $('#editar_cotizacion_id').val(infoBase.cotizacion_id);
         $('#almacen_id_editar').val(infoBase.almacen_origen_id);
+        cliente_id_edi=infoBase.cliente_id;
         $('#cliente_id_editar').val(infoBase.cliente_id).trigger('change.select2');
         cargarVendedores3(infoBase.vendedor_id);
+        cargarClienteseditar();
 
         // Ocultar el estado vacío porque vamos a meter filas
         $('#emptyStateEditar').addClass('d-none');
