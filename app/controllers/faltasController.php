@@ -14,7 +14,7 @@ require_once __DIR__ . '/../models/tesoreriaModel.php';
 require_once __DIR__ . '/../models/corteCajaModel.php';
 require_once __DIR__ . '/../models/egresos_model.php';
 require_once __DIR__ . '/../models/egresos/gastosModel.php';
-protegerPagina('prestamos');
+protegerPagina('faltas');
 
 $usuario_id = $_SESSION['usuario_id'] ?? 0;
 

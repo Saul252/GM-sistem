@@ -25,7 +25,7 @@ $gruposModulos = [
             ['id' => 'ventashistorial', 'url' => '/cfsistem/app/controllers/ventasHistorialController.php', 'icon' => 'bi-receipt', 'class' => 'text-secondary', 'label' => 'Historial Ventas'],
             ['id' => 'comprobantes', 'url' => '/cfsistem/app/controllers/comprobantesPagoController.php', 'icon' => 'bi-file-earmark-check', 'class' => 'text-info', 'label' => 'Comprobantes'],
             ['id' => 'registrarPagos', 'url' => '/cfsistem/app/controllers/registrarPagosController.php', 'icon' => 'bi-credit-card-2-front-fill', 'class' => 'text-success', 'label' => 'Registrar Pagos'],
-         ['id' => 'historialPagos', 'url' => '/cfsistem/app/controllers/historialPagosController.php', 'icon' => 'bi-credit-card-2-front-fill', 'class' => 'text-success', 'label' => 'historial Pagos'],
+         ['id' => 'historialPagos', 'url' => '/cfsistem/app/controllers/historialPagosController.php', 'icon' => 'bi-coin', 'class' => 'text-success', 'label' => 'historial Pagos'],
         ]
     ],
     [
