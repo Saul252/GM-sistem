@@ -333,7 +333,7 @@ if (resDetalle.success && resRecursos.success) {
 
     (resRecursos.unidades || []).forEach(u => {
         selectV.append(
-            `<option value="${String(u.id)}">${u.nombre} [${u.placas || 'S/P'}]</option>`);
+            `<option value="${String(u.id)}">${u.nombre} [${u.placas || 'S/P'}](${u.tipo || 'S/P'})</option>`);
     });
 
     // 3. PERSONAL BASE (CHOFERES Y TRIPULANTE)
