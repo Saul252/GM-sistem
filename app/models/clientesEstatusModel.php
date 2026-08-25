@@ -23,6 +23,7 @@ class ClientesEstatusModel {
             c.nombre_comercial AS nombre, 
             c.rfc,
             c.almacen_id, 
+            a.nombre as almacen,
             IFNULL(cp.saldo_en_contra, 0) AS saldo_en_contra,
             IFNULL(cp.saldo_a_favor, 0) AS saldo_a_favor,
             -- Subconsulta 1: Total de ventas activas
@@ -50,6 +51,7 @@ class ClientesEstatusModel {
         FROM clientes c
         -- El JOIN debe ir después del FROM y antes del WHERE
         LEFT JOIN clientes_saldos cp ON c.id = cp.cliente_id 
+        join almacenes a on c.almacen_id=a.id
         WHERE c.activo = 1 
           AND (? = 0 OR c.almacen_id = ?) 
         ORDER BY total_ventas DESC, saldo_deuda DESC, nombre ASC";

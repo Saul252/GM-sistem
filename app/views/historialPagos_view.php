@@ -190,6 +190,9 @@
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h3 class="fw-bold card-title-text m-0">Historial de Pagos</h3>
+                <button type="button" class="btn btn-secondary" onclick="imprimirTabla()">
+    <i class="bi bi-printer-fill me-1"></i> Imprimir Tabla
+</button>
                 <div id="loader" class="spinner-border spinner-border-sm text-secondary d-none"></div>
             </div>
             
@@ -815,7 +818,7 @@ let filasHtml = data.map(p => {
     // Formato de referencia y badge de método de pago
     let referencia = p.referencia ? `<span class="fw-bold">${p.referencia}</span>` : '<span class="text-muted small">N/A</span>';
     
-    let badgeMetodo = `<span class="badge ${p.metodo_pago === 'Efectivo' ? 'bg-success' : 'bg-info'} text-dark">
+    let badgeMetodo = `<span class="badge text-white ${p.metodo_pago === 'Efectivo' ? 'bg-success' : 'bg-dark'}">
         ${p.metodo_pago}
     </span>`;
 
@@ -1383,6 +1386,278 @@ $('#tablaVentas tbody').append(filaTotales);
                 this.value = this.value.toUpperCase();
             });
         });
+        function imprimirTabla() {
+    // 1. Obtener y clonar la tabla desde el DOM por su ID
+    const $tablaOriginal = $('#tablaVentas');
+
+    if ($tablaOriginal.length === 0) {
+        console.warn("No se encontró la tabla con el ID 'tablaVentas'");
+        return;
+    }
+
+    let $tablaClon = $tablaOriginal.clone();
+
+    // 2. Limpiar botones, iconos y la columna de acciones
+    $tablaClon.find('button, i').remove();
+    $tablaClon.find('tr').each(function() {
+        $(this).find('th:last-child, td:last-child').remove();
+    });
+
+    const tablaLimpiaHTML = $tablaClon.prop('outerHTML');
+
+    // 3. Abrir ventana de impresión con diseño ejecutivo sin fondos oscuros
+    const ventanaImpresion = window.open('', '_blank');
+
+    ventanaImpresion.document.write(`
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Reporte de Ventas</title>
+        <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
+        <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&display=swap');
+
+            * {
+                box-sizing: border-box;
+                -webkit-font-smoothing: antialiased;
+            }
+
+            body { 
+                font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif; 
+                padding: 20px; 
+                background-color: #ffffff !important;
+                color: #111827;
+                position: relative;
+                min-height: 100vh;
+            }
+
+            /* --- LOGO MARCA DE AGUA CENTRADO --- */
+            .watermark-bg {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                width: 420px;
+                max-width: 65vw;
+                opacity: 0.06;
+                z-index: 0;
+                pointer-events: none;
+            }
+
+            #areaImpresion {
+                position: relative;
+                z-index: 1;
+                background: transparent !important;
+                width: 100%;
+            }
+
+            /* --- ENCABEZADO EJECUTIVO LIMPIO --- */
+            .header-reporte {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-end;
+                border-bottom: 2px solid #1e293b;
+                padding-bottom: 10px;
+                margin-bottom: 20px;
+                background: transparent !important;
+            }
+
+            .logo-header {
+                max-height: 44px;
+                width: auto;
+                object-fit: contain;
+            }
+
+            .titulo-reporte h1 {
+                font-size: 20px;
+                font-weight: 700;
+                color: #0f172a;
+                margin: 0;
+                letter-spacing: -0.01em;
+                text-transform: uppercase;
+            }
+
+            .titulo-reporte p {
+                font-size: 12px;
+                color: #475569;
+                margin: 2px 0 0 0;
+            }
+
+            .meta-datos {
+                font-size: 11px;
+                color: #334155;
+                text-align: right;
+                line-height: 1.5;
+            }
+
+            .meta-datos strong {
+                color: #0f172a;
+            }
+
+            /* --- TABLA CLARA Y LEGIBLE --- */
+            .tabla-contenedor {
+                width: 100%;
+                overflow: hidden;
+            }
+
+            .table {
+                font-size: 11px !important;
+                width: 100% !important;
+                margin-bottom: 0 !important;
+                border-collapse: collapse !important;
+                background-color: transparent !important;
+            }
+
+            .table th, .table td {
+                padding: 8px 10px !important;
+                vertical-align: middle;
+                border-bottom: 1px solid #cbd5e1 !important;
+                color: #1e293b !important;
+                background: transparent !important;
+            }
+
+            /* Encabezados claros en blanco con borde inferior grueso */
+            .table thead th {
+                background-color: #ffffff !important;
+                color: #0f172a !important;
+                font-weight: 700;
+                text-transform: uppercase;
+                font-size: 10px;
+                letter-spacing: 0.04em;
+                border-bottom: 2px solid #0f172a !important;
+                border-top: none !important;
+            }
+
+            /* Fila de Totales */
+            .table tbody tr.table-light, 
+            .table tbody tr:last-child {
+                font-weight: 700;
+            }
+
+            .table tbody tr.table-light td {
+                border-top: 2px solid #0f172a !important;
+                border-bottom: 2px solid #0f172a !important;
+                font-size: 12px !important;
+                color: #0f172a !important;
+            }
+
+            /* Badges sobrios sin fondos chillones */
+            .badge {
+                padding: 0;
+                font-size: 11px;
+                font-weight: 600;
+                color: #0f172a !important;
+                background: transparent !important;
+            }
+
+            /* Pie de página */
+            .footer-reporte {
+                margin-top: 25px;
+                padding-top: 10px;
+                border-top: 1px solid #94a3b8;
+                font-size: 10px;
+                color: #64748b;
+                display: flex;
+                justify-content: space-between;
+                background: transparent !important;
+            }
+
+            /* --- CONTROL PARA IMPRESIÓN Y PDF --- */
+            @media print {
+                * {
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                }
+
+                body { 
+                    padding: 0; 
+                    background-color: #ffffff !important;
+                }
+
+                .watermark-bg {
+                    opacity: 0.08 !important;
+                    display: block !important;
+                }
+
+                .table, .table tr, .table th, .table td {
+                    background-color: transparent !important;
+                }
+
+                tr { 
+                    page-break-inside: avoid; 
+                }
+            }
+
+            @page { 
+                margin: 0.8cm; 
+            }
+        </style>
+    </head>
+    <body>
+        <!-- LOGO MARCA DE AGUA EN EL FONDO -->
+        <img src="/cfsistem/public/assets/logo.ico" class="watermark-bg" alt="Marca de Agua">
+
+        <div id="areaImpresion">
+            <!-- Encabezado Limpio -->
+            <div class="header-reporte">
+                <div class="d-flex align-items-center gap-3">
+                    <img src="/cfsistem/public/assets/logo.png" alt="Logo" class="logo-header" onerror="this.style.display='none'">
+                    <div class="titulo-reporte">
+                        <h1>Reporte de Ventas</h1>
+                        <p>Consolidado oficial de transacciones</p>
+                    </div>
+                </div>
+
+                <div class="meta-datos">
+                    <div><strong>Fecha:</strong> ${new Date().toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+                    <div><strong>Hora:</strong> ${new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}</div>
+                </div>
+            </div>
+
+            <!-- Tabla -->
+            <div class="tabla-contenedor">
+                ${tablaLimpiaHTML}
+            </div>
+
+            <!-- Pie de página -->
+            <div class="footer-reporte">
+                <span><strong>CFSistem</strong> — Control & Gestión</span>
+                <span>Documento generado automáticamente</span>
+            </div>
+        </div>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
+        <script>
+            window.addEventListener('DOMContentLoaded', () => {
+                const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+                setTimeout(() => {
+                    if (esMovil) {
+                        const elementoParaConvertir = document.body;
+                        const opciones = {
+                            margin: [0.4, 0.4, 0.4, 0.4],
+                            filename: 'Reporte_Ventas_${new Date().toISOString().slice(0,10)}.pdf',
+                            image: { type: 'jpeg', quality: 0.98 },
+                            html2canvas: { scale: 2, useCORS: true },
+                            jsPDF: { unit: 'cm', format: 'letter', orientation: 'landscape' }
+                        };
+                        html2pdf().set(opciones).from(elementoParaConvertir).save();
+                    } else {
+                        window.print();
+                    }
+                }, 800);
+            });
+        <\/script>
+    </body>
+    </html>
+    `);
+
+    ventanaImpresion.document.close();
+}
         </script>
 </body>
 

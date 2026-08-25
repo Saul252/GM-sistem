@@ -970,7 +970,7 @@
         if (!contenedor || !input) return;
 
         if (metodo === 'Tarjeta' || metodo === 'Transferencia') {
-            if (metodo === 'Tarjeta' )
+            if (metodo == 'Tarjeta' )
             {
                  contenedor.style.display = 'block';
             input.required = false;
@@ -980,13 +980,15 @@
       calcularCambio();
 
             }
+            else
+            {
             contenedor.style.display = 'block';
             input.required = true;
             const totalVenta = parseFloat($('#totalCotizacionEditar').val()) || 0;
     $('#monto_pagar').val(totalVenta);
       contenedorcambio.classList.add('d-none');
       calcularCambio();
-      
+}
 
         } else {
             contenedor.style.display = 'none';

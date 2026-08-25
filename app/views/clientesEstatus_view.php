@@ -59,7 +59,7 @@
                         </div>
                     </div>
                    
-    <div class="card card-expediente p-3 mb-4">
+    <!-- <div class="card card-expediente p-3 mb-4">
         <div class="row align-items-center">
            <div class="mb-3">
     <label class="form-label fw-bold">Filtrar por Almacén:</label>
@@ -68,7 +68,7 @@
     </select>
 </div>
         </div>
-    </div>
+    </div> -->
 
                 </div>
             </div>
@@ -195,7 +195,7 @@ console.log(clientes);
                             html += `
                             <tr>
                                 <td>
-                                    <div class="fw-bold card-title-text">${c.nombre}</div>
+                                    <div class="fw-bold card-title-text">${c.nombre=='PÚBLICO EN GENERAL'? c.nombre+' ('+c.almacen+')' : c.nombre}</div>
                                     <small class="text-body-secondary font-monospace">${c.rfc}</small>
                                 </td>
                                 <td class="text-center">${badgePago}</td>
