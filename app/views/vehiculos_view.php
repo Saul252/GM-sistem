@@ -162,6 +162,29 @@ $estadosUnidad = [
                         <?php endforeach; ?>
                     </select>
                 </div>
+                 <div class="col-md-3">
+                    <label class="form-label">Almacén</label>
+
+                    <select name="almacen_id" id="almacen_id"
+                        class="form-select <?= $_SESSION['almacen_id']==0 ? '' : '' ?>"
+                        <?= $_SESSION['almacen_id'] != 0 ? 'disabled' : '' ?>>
+
+                        <?php if ($_SESSION['almacen_id']==0): ?>
+                        <option value="">Seleccionar ubicación...</option>
+                        <?php endif; ?>
+
+                        <?php foreach($listaAlmacenes as $a): ?>
+                        <option value="<?= $a['id'] ?>" <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
+                            <?= $a['nombre'] ?>
+                        </option>
+                        <?php endforeach; ?>
+
+                    </select>
+
+                    <?php if ($_SESSION['almacen_id'] != 0): ?>
+                    <input type="hidden" name="almacen_id" value="<?= $_SESSION['almacen_id'] ?>">
+                    <?php endif; ?>
+                </div>
                 <div class="col text-end">
                     <button class="btn btn-light rounded-4 p-3 border shadow-sm fw-bold" onclick="limpiarFiltros()">
                         <i class="bi bi-arrow-counterclockwise me-2"></i>Reset
@@ -169,25 +192,27 @@ $estadosUnidad = [
                 </div>
             </div>
 
-            <div class="table-responsive">
+             <div class="table-responsive">
                 <table id="tablaVehiculos" class="table align-middle">
                     <thead>
                         <tr>
                             <th>Unidad</th>
                             <th>Identificación</th>
+
+                            <th>Capacidad</th>
+                            <th>Almacén</th>
                             <th>
                                 Tipo
                             </th>
-                            <th>Capacidad</th>
-                            <?php if ($_SESSION['almacen_id'] == 0): ?><th>Almacén</th><?php endif; ?>
-                                <th>Documentos</th>
+                            <th>Documentos</th>
                             <th>Estado</th>
                             <th class="text-end">Opciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($vehiculos as $v): ?>
-                        <tr data-estado="<?= $v['estado_unidad'] ?>">
+
+                        <tr data-estado="<?= $v['estado_unidad'] ?>" data-almacen="<?= $v['almacen_id'] ?>">
                             <td class="py-4">
                                 <div class="d-flex align-items-center">
                                     <div class="p-3  rounded-4 shadow-sm me-3">
@@ -195,15 +220,18 @@ $estadosUnidad = [
                                     </div>
                                     <div>
                                         <div class="fw-bold  fs-6"><?= htmlspecialchars($v['nombre']) ?></div>
-                                        <span class="text-body-secondary small">Mod. <?= $v['modelo_año'] ?: 'N/A' ?></span>
+                                        <span class="text-body-secondary small">Mod.
+                                            <?= $v['modelo_año'] ?: 'N/A' ?></span>
                                     </div>
                                 </div>
                             </td>
                             <td>
                                 <div class="   border px-3 py-2 rounded-pill shadow-xs mb-1">
-                                    <i class="bi bi-card-text me-2 text-primary"></i><strong><?= htmlspecialchars($v['placas']) ?></strong>
+                                    <i
+                                        class="bi bi-card-text me-2 text-primary"></i><strong><?= htmlspecialchars($v['placas']) ?></strong>
                                 </div>
-                                <div class="text-body-secondary small ps-2">VIN: <?= htmlspecialchars($v['serie_vin'] ?: '---') ?></div>
+                                <div class="text-body-secondary small ps-2">VIN:
+                                    <?= htmlspecialchars($v['serie_vin'] ?: '---') ?></div>
                             </td>
                             <td>
                                 <div class="fw-bold">
@@ -211,66 +239,65 @@ $estadosUnidad = [
                                     <small class="text-body-secondary fw-normal">kg</small>
                                 </div>
                             </td>
-                            <?php if ($_SESSION['almacen_id'] == 0): ?>
+
                             <td>
-                                <span class="small text-body-secondary"><i class="bi bi-geo-alt"></i> ID: <?= $v['almacen_id'] ?></span>
+                                <span class="small text-body-secondary"><i class="bi bi-geo-alt"></i>
+                                    <?= $v['nombre_almacen'] ?></span>
                             </td>
-                            <?php endif; ?>
-                             <td>
+
+                            <td>
                                 <span class="small text-body-secondary"><?= $v['tipo'] ?></span>
                             </td>
-                             <td class="text-center">
-                                
-
-    <div class="d-flex justify-content-center align-items-center gap-1">
-
-        <?php if (!empty($v['documentos_url'])): ?>
-
-            <?php $documentos = explode(';;;', $v['documentos_url']); ?>
-
-            <div class="dropdown">
-
-                <button
-                    class="btn btn-sm btn-light border position-relative"
-                    type="button"
-                    data-bs-toggle="dropdown">
-
-                    <i class="bi bi-folder2-open text-success"></i>
-
-                   
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">
-                        <?= count($documentos) ?>
-                    </span>
+                            <td class="text-center">
 
 
-                </button>
+                                <div class="d-flex justify-content-center align-items-center gap-1">
 
-                <ul class="dropdown-menu dropdown-menu-end shadow " style="min-width:320px;">
+                                    <?php if (!empty($v['documentos_url'])): ?>
 
-                    <li>
-                        <h6 class="dropdown-header">
-                            <i class="bi bi-files me-1"></i>
-                            Documentos adjuntos
-                             <button class="btn btn-sm btn-outline-primary rounded-pill"
-    onclick="subirDocumentoCompra(
+                                    <?php $documentos = explode(';;;', $v['documentos_url']); ?>
+
+                                    <div class="dropdown">
+
+                                        <button class="btn btn-sm btn-light border position-relative" type="button"
+                                            data-bs-toggle="dropdown">
+
+                                            <i class="bi bi-folder2-open text-success"></i>
+
+
+                                            <span
+                                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary">
+                                                <?= count($documentos) ?>
+                                            </span>
+
+
+                                        </button>
+
+                                        <ul class="dropdown-menu dropdown-menu-end shadow " style="min-width:320px;">
+
+                                            <li>
+                                                <h6 class="dropdown-header">
+                                                    <i class="bi bi-files me-1"></i>
+                                                    Documentos adjuntos
+                                                    <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="subirDocumentoCompra(
         <?= $v['id'] ?>
         
     )">
-    Agregar <i class="bi bi-upload"></i>
-</button>
-               
-                        </h6>
+                                                        Agregar <i class="bi bi-upload"></i>
+                                                    </button>
 
-               </li>
-                     
-                    
+                                                </h6>
 
-                    <?php foreach ($documentos as $doc): ?>
-                        <script>
-                             console.log(<?= json_encode($doc) ?>);
-                        </script>
+                                            </li>
 
-                        <?php
+
+
+                                            <?php foreach ($documentos as $doc): ?>
+                                            <script>
+                                            console.log(<?= json_encode($doc) ?>);
+                                            </script>
+
+                                            <?php
                         $partes = explode('|||', $doc);
 
                         $nombre = $partes[0] ?? '';
@@ -280,70 +307,71 @@ $estadosUnidad = [
                         if (empty($direccion)) continue;
                         ?>
 
-                        <li>
-                            <div class="dropdown-item d-flex justify-content-between align-items-center py-2">
+                                            <li>
+                                                <div
+                                                    class="dropdown-item d-flex justify-content-between align-items-center py-2">
 
-                                <a href="../../<?= $direccion ?>"
-                                   target="_blank"
-                                   class="text-decoration-none  flex-grow-1">
+                                                    <a href="../../<?= $direccion ?>" target="_blank"
+                                                        class="text-decoration-none  flex-grow-1">
 
-                                    <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                                                        <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
 
-                                    <span class="small">
-                                        <?= htmlspecialchars($nombre) ?>
-                                    </span>
+                                                        <span class="small">
+                                                            <?= htmlspecialchars($nombre) ?>
+                                                        </span>
 
-                                </a>
+                                                    </a>
 
-                                <button
-                                    class="btn btn-sm btn-outline-danger "
-                                    title="Eliminar documento"
-                                    onclick="eliminarDocumento(<?= $idDoc ?>)">
+                                                    <button class="btn btn-sm btn-outline-danger "
+                                                        title="Eliminar documento"
+                                                        onclick="eliminarDocumento(<?= $idDoc ?>)">
 
-                                    <i class="bi bi-trash"></i>
+                                                        <i class="bi bi-trash"></i>
 
-                                </button>
+                                                    </button>
 
-                            </div>
-                        </li>
+                                                </div>
+                                            </li>
 
-                    <?php endforeach; ?>
+                                            <?php endforeach; ?>
 
-                </ul>
+                                        </ul>
 
-            </div>
+                                    </div>
 
-        <?php endif; ?>
-      
-           <?php if (empty($v['documentos_url'])): ?>
+                                    <?php endif; ?>
 
-       
+                                    <?php if (empty($v['documentos_url'])): ?>
 
-           <button class="btn btn-sm btn-outline-primary rounded-pill"
-    onclick="subirDocumentoCompra(
+
+
+                                    <button class="btn btn-sm btn-outline-primary rounded-pill" onclick="subirDocumentoCompra(
         <?= $v['id'] ?>
         
     )">
-    <i class="bi bi-upload"></i>
-</button>
-  <?php endif; ?>
+                                        <i class="bi bi-upload"></i>
+                                    </button>
+                                    <?php endif; ?>
 
-        
 
-    </div>
 
-</td>
+                                </div>
+
+                            </td>
                             <td>
                                 <span class="badge-premium <?= $estadosUnidad[$v['estado_unidad']]['class'] ?>">
-                                    <span style="height: 8px; width: 8px; background:<?= $estadosUnidad[$v['estado_unidad']]['dot'] ?>; border-radius:50%"></span>
+                                    <span
+                                        style="height: 8px; width: 8px; background:<?= $estadosUnidad[$v['estado_unidad']]['dot'] ?>; border-radius:50%"></span>
                                     <?= strtoupper($estadosUnidad[$v['estado_unidad']]['label']) ?>
                                 </span>
                             </td>
                             <td class="text-end">
-                                <button class="btn btn-white btn-sm rounded-3 shadow-sm border me-2" onclick='editarVehiculo(<?= json_encode($v) ?>)'>
+                                <button class="btn btn-white btn-sm rounded-3 shadow-sm border me-2"
+                                    onclick='editarVehiculo(<?= json_encode($v) ?>)'>
                                     <i class="bi bi-pencil-fill text-primary"></i>
                                 </button>
-                                <button class="btn btn-white btn-sm rounded-3 shadow-sm border" onclick="eliminarVehiculo(<?= $v['id'] ?>)">
+                                <button class="btn btn-white btn-sm rounded-3 shadow-sm border"
+                                    onclick="eliminarVehiculo(<?= $v['id'] ?>)">
                                     <i class="bi bi-trash-fill text-danger"></i>
                                 </button>
                             </td>
@@ -443,31 +471,53 @@ $estadosUnidad = [
   
 let tabla;
 
-$(document).ready(function() {
-    tabla = $('#tablaVehiculos').DataTable({
-        "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
-        "dom": 'rt<"d-flex justify-content-between align-items-center mt-4 px-2"ip>',
-        "pageLength": 8,
-        "responsive": true,
-        "columnDefs": [
-            { "orderable": false, "targets": <?php echo ($_SESSION['almacen_id'] == 0) ? '5' : '4'; ?> }
-        ]
-    });
+    $(document).ready(function() {
+        // 1. Registro del filtro combinado global para DataTables
+        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
+            // Verificar que el filtro aplique solo a esta tabla
+            if (settings.nTable.id !== 'tablaVehiculos') return true;
 
-    $('#busquedaVehiculo').on('keyup', function() { tabla.search(this.value).draw(); });
+            const estadoFiltro = $('#filtroEstado').val();
+            const almacenFiltro = $('#almacen_id').val();
 
-    $('#filtroEstado').on('change', function() {
-        const val = $(this).val();
-        $.fn.dataTable.ext.search.pop();
-        if (val !== "") {
-            $.fn.dataTable.ext.search.push(function(settings, data, dataIndex) {
-                const rowEstado = $(tabla.row(dataIndex).node()).attr('data-estado');
-                return rowEstado === val;
-            });
+            const $row = $(tabla.row(dataIndex).node());
+            const rowEstado = $row.attr('data-estado');
+            const rowAlmacen = $row.attr('data-almacen');
+
+            const coincideEstado = (!estadoFiltro || rowEstado === estadoFiltro);
+            const coincideAlmacen = (!almacenFiltro || rowAlmacen === almacenFiltro);
+
+            return coincideEstado && coincideAlmacen;
+        });
+
+        // 2. Inicialización de DataTables
+        tabla = $('#tablaVehiculos').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
+            },
+            "dom": 'rt<"d-flex justify-content-between align-items-center mt-4 px-2"ip>',
+            "pageLength": 8,
+            "responsive": true,
+            "columnDefs": [{
+                "orderable": false,
+                "targets": <?php echo ($_SESSION['almacen_id'] == 0) ? '5' : '4'; ?>
+            }]
+        });
+
+        // 3. Eventos de búsqueda y filtros
+        $('#busquedaVehiculo').on('keyup', function() {
+            tabla.search(this.value).draw();
+        });
+
+        $('#filtroEstado, #almacen_id').on('change', function() {
+            tabla.draw();
+        });
+
+        // 4. Si el almacén viene preseleccionado desde el servidor
+        if ($('#almacen_id').val() !== "") {
+            tabla.draw();
         }
-        tabla.draw();
     });
-});
 
 function nuevoVehiculo() {
     $('#formVehiculo')[0].reset();

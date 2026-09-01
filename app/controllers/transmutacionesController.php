@@ -19,8 +19,9 @@ require_once __DIR__ . '/../models/almacen/productosModel.php';
 require_once __DIR__ . '/../controllers/LayoutController.php';
 
 protegerPagina('transmutaciones'); 
-$paginaActual='transmutaciones';
+$paginaActual = 'transmutaciones';
 $usuario_id = $_SESSION['id'] ?? $_SESSION['usuario_id'] ?? null;
+
 if (!$usuario_id) {
     if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['action'])) {
         ob_clean();
@@ -32,9 +33,9 @@ if (!$usuario_id) {
     exit;
 }
 
-$transModel = new TransmutacionesModel($conexion);
+$transModel   = new TransmutacionesModel($conexion);
 $almacenModel = new AlmacenModel($conexion);
-$mermasModel = new MermasModel($conexion);
+$mermasModel  = new MermasModel($conexion);
 $productoModel = new ProductoModel($conexion);
         
 $action = $_GET['action'] ?? 'index';
@@ -76,19 +77,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'guardar') {
 }
 
 // ============================================
-// 🔍 AJAX: LISTAR HISTORIAL (Para DataTables)
+// 🔍 AJAX: LISTAR HISTORIAL CON FILTROS (Para DataTables / Fetch)
 // ============================================
 if ($action === 'listar') {
     ob_clean();
     header('Content-Type: application/json');
     
-    // Prioridad: 1. El ID que venga por GET, 2. El de la SESIÓN
-    $almacen_id = intval($_GET['almacen_id'] ?? $_SESSION['almacen_id'] ?? 0);
-    
-    $data = ($almacen_id > 0) ? $transModel->listarTransmutaciones($almacen_id) : [];
-    
-    // Importante: DataTables espera un array de objetos o un objeto con la propiedad "data"
-    echo json_encode($data);
+    try {
+        $filtros = [
+            'search'   => $_GET['f_search']   ?? $_GET['search'] ?? '',
+            'producto' => $_GET['f_producto'] ?? $_GET['producto'] ?? 0,
+            'almacen'  => $_GET['f_almacen']  ?? $_GET['almacen_id'] ?? 0,
+            'rango'    => $_GET['f_rango']    ?? $_GET['rango'] ?? 'todos',
+            'inicio'   => $_GET['f_inicio']   ?? $_GET['inicio'] ?? '',
+            'fin'      => $_GET['f_fin']      ?? $_GET['fin'] ?? ''
+        ];
+        
+        $rol_id = $_SESSION['rol_id'] ?? 2;
+        $id_almacen_usuario = $_SESSION['almacen_id'] ?? 0;
+
+        if (isset($_SESSION['rol_id']) && ($_SESSION['rol_id'] == 1 || $_SESSION['rol_id'] == 3)) {
+            $id_almacen_usuario = 0; // Rol 1 y 3 ven todos los almacenes
+            $rol_id = 1;
+        }
+
+        $data = $transModel->listarTransmutaciones($filtros, $rol_id, $id_almacen_usuario);
+        echo json_encode($data);
+
+    } catch (Throwable $e) {
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
     exit;
 }
 
@@ -113,21 +131,8 @@ if ($action === 'obtenerDestinosCompatibles') {
 }
 
 // ============================================
-// 🔍 AJAX: LISTAR HISTORIAL (Para DataTables)
+// 💾 POST: GUARDAR EQUIVALENCIA
 // ============================================
-if ($action === 'listar') {
-    ob_clean();
-    header('Content-Type: application/json');
-    
-    // Si viene por GET (filtro manual) usamos ese, sino el de la sesión
-    $almacen_id = isset($_GET['almacen_id']) ? intval($_GET['almacen_id']) : intval($_SESSION['almacen_id'] ?? 0);
-    
-    // Llamamos al modelo. El modelo ya sabe que si recibe 0, trae todo.
-    $data = $transModel->listarTransmutaciones($almacen_id);
-    
-    echo json_encode($data);
-    exit;
-}
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'guardarEquivalencia') {
     ob_clean();
     header('Content-Type: application/json');
@@ -149,25 +154,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'guardarEquivalencia') 
     }
     exit;
 }
-// ... (otros bloques) ...
 
 // ============================================
 // 📄 VISTA PRINCIPAL
 // ============================================
 if ($action === 'index') {
     try {
-        // Obtenemos el almacén de la sesión (0 para admin)
         $almacen_sesion = intval($_SESSION['almacen_id'] ?? 0);
+        $rol_id = $_SESSION['rol_id'] ?? 2;
+
+        if (isset($_SESSION['rol_id']) && ($_SESSION['rol_id'] == 1 || $_SESSION['rol_id'] == 3)) {
+            $almacen_sesion = 0;
+            $rol_id = 1;
+        }
         
-        // El admin ve todos los almacenes en los select, el usuario solo el suyo
         $almacenes = $almacenModel->getAlmacenes($almacen_sesion);
         $todosLosProductos = $productoModel->getProductos() ?: []; 
         
-        // CARGA INICIAL:
-        // Pasamos el ID de la sesión. Si es 0, el modelo traerá todo el historial global.
-        $historial = $transModel->listarTransmutaciones($almacen_sesion);
-   $almacen_param = (int)($_SESSION['almacen_id'] ?? 0);
-$listaConversiones = $transModel->listarConfiguraciones($almacen_param);
+        // Carga inicial (trae el historial con filtro por defecto 'todos')
+        $filtrosIniciales = ['rango' => 'todos'];
+        $historial = $transModel->listarTransmutaciones($filtrosIniciales, $rol_id, $almacen_sesion);
+        
+        $almacen_param = (int)($_SESSION['almacen_id'] ?? 0);
+        $listaConversiones = $transModel->listarConfiguraciones($almacen_param);
 
         include __DIR__ . '/../views/transmutaciones.php';
     } catch (Exception $e) {

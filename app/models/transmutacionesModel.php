@@ -184,10 +184,87 @@ public function registrarTransmutacion($datos) {
 /**
      * Obtiene el historial de transmutaciones con nombres de productos
      */
-public function listarTransmutaciones($almacen_id) {
-    // Si el almacen_id es 0, es admin y ve todo (1=1)
-    $where = ($almacen_id > 0) ? "WHERE t.almacen_id = ?" : "WHERE 1=1";
+// public function listarTransmutaciones($almacen_id) {
+//     // Si el almacen_id es 0, es admin y ve todo (1=1)
+//     $where = ($almacen_id > 0) ? "WHERE t.almacen_id = ?" : "WHERE 1=1";
     
+//     $sql = "SELECT 
+//                 t.id, 
+//                 t.fecha as fecha_registro,
+//                 t.observaciones,
+//                 u.nombre as usuario_nombre,
+                
+//                 -- Producto de salida (origen)
+//                 p1.nombre as producto_origen,
+//                 p1.unidad_medida as unidad_origen,
+//                 td1.cantidad as cant_origen,
+                
+//                 -- Producto de entrada (destino)
+//                 p2.nombre as producto_destino,
+//                 p2.unidad_medida as unidad_destino,
+//                 td2.cantidad as cant_destino,
+//                 a.nombre as almacen
+
+//             FROM transmutaciones t
+//             LEFT JOIN usuarios u ON t.usuario_id = u.id
+            
+//             -- Unión para obtener el producto que SALE (origen)
+//             LEFT JOIN transmutacion_detalle td1 ON t.id = td1.transmutacion_id AND td1.tipo = 'salida'
+//             LEFT JOIN productos p1 ON td1.producto_id = p1.id
+            
+//             -- Unión para obtener el producto que ENTRA (destino)
+//             LEFT JOIN transmutacion_detalle td2 ON t.id = td2.transmutacion_id AND td2.tipo = 'entrada'
+//             LEFT JOIN productos p2 ON td2.producto_id = p2.id
+//             join almacenes a on a.id=t.almacen_id
+            
+//             $where
+            
+//             -- Agrupamos por el ID de transmutación para asegurar una fila por registro
+//             GROUP BY t.id
+//             ORDER BY t.fecha DESC 
+//             LIMIT 100";
+    
+//     $stmt = $this->db->prepare($sql);
+    
+//     if ($almacen_id > 0) {
+//         $stmt->bind_param("i", $almacen_id);
+//     }
+    
+//     $stmt->execute();
+//     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+// }
+public function listarTransmutaciones($filtros = [], $rol_id = 1, $almacen_sesion = 0) {
+    $where = " WHERE 1=1 ";
+
+    // 1. Seguridad por Almacén / Filtro de Almacén
+    if ($rol_id != 1) { 
+        // Si no es admin, restringe al almacén de su sesión
+        $where .= " AND t.almacen_id = " . intval($almacen_sesion) . " "; 
+    } elseif (!empty($filtros['almacen'])) { 
+        // Si es admin y seleccionó un almacén específico
+        $where .= " AND t.almacen_id = " . intval($filtros['almacen']) . " "; 
+    }
+
+    // 2. Filtro por Producto (ID de Producto en Origen o Destino)
+    if (!empty($filtros['producto'])) {
+        $prod_id = intval($filtros['producto']);
+        $where .= " AND (td1.producto_id = $prod_id OR td2.producto_id = $prod_id) ";
+    }
+
+    // 3. Buscador General (ID, Observaciones o Nombres de Productos)
+    if (!empty($filtros['search'])) {
+        $s = $this->db->real_escape_string($filtros['search']);
+        $where .= " AND (t.id LIKE '%$s%' 
+                    OR t.observaciones LIKE '%$s%' 
+                    OR p1.nombre LIKE '%$s%' 
+                    OR p2.nombre LIKE '%$s%') ";
+    }
+
+    // 4. Rango de Fechas
+    if (!empty($filtros['rango']) && $filtros['rango'] !== 'todos') {
+        $where .= $this->construirFiltroFecha($filtros, 't.fecha');
+    }
+
     $sql = "SELECT 
                 t.id, 
                 t.fecha as fecha_registro,
@@ -202,7 +279,8 @@ public function listarTransmutaciones($almacen_id) {
                 -- Producto de entrada (destino)
                 p2.nombre as producto_destino,
                 p2.unidad_medida as unidad_destino,
-                td2.cantidad as cant_destino
+                td2.cantidad as cant_destino,
+                a.nombre as almacen
 
             FROM transmutaciones t
             LEFT JOIN usuarios u ON t.usuario_id = u.id
@@ -214,22 +292,40 @@ public function listarTransmutaciones($almacen_id) {
             -- Unión para obtener el producto que ENTRA (destino)
             LEFT JOIN transmutacion_detalle td2 ON t.id = td2.transmutacion_id AND td2.tipo = 'entrada'
             LEFT JOIN productos p2 ON td2.producto_id = p2.id
+            JOIN almacenes a ON a.id = t.almacen_id
             
             $where
             
-            -- Agrupamos por el ID de transmutación para asegurar una fila por registro
             GROUP BY t.id
-            ORDER BY t.fecha DESC 
-            LIMIT 100";
-    
-    $stmt = $this->db->prepare($sql);
-    
-    if ($almacen_id > 0) {
-        $stmt->bind_param("i", $almacen_id);
+            ORDER BY t.fecha DESC";
+
+    $res = $this->db->query($sql);
+    return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+}
+private function construirFiltroFecha($f, $campoFecha = 't.fecha') {
+    if (empty($f['rango']) || $f['rango'] === 'todos') {
+        return "";
     }
     
-    $stmt->execute();
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    switch ($f['rango']) {
+        case 'hoy': 
+            return " AND DATE($campoFecha) = CURDATE() ";
+        case 'ayer': 
+            return " AND DATE($campoFecha) = SUBDATE(CURDATE(), 1) ";
+        case 'semana': 
+            return " AND YEARWEEK($campoFecha, 1) = YEARWEEK(CURDATE(), 1) ";
+        case 'mes': 
+            return " AND MONTH($campoFecha) = MONTH(CURDATE()) AND YEAR($campoFecha) = YEAR(CURDATE()) ";
+        case 'personalizado':
+            if (!empty($f['inicio']) && !empty($f['fin'])) {
+                $ini = $this->db->real_escape_string($f['inicio']);
+                $fin = $this->db->real_escape_string($f['fin']);
+                return " AND DATE($campoFecha) BETWEEN '$ini' AND '$fin' ";
+            }
+            return "";
+        default: 
+            return "";
+    }
 }
 /**
  * Obtiene las reglas de transmutación configuradas.

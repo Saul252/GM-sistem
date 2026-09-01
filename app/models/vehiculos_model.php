@@ -7,8 +7,8 @@ class VehiculoModel {
     }
 
     // Listar todos (Para Admin Global)
-    public function listar() {
-        $sql = "SELECT tvh.*,
+     public function listar() {
+        $sql = "SELECT tvh.*,a.nombre as nombre_almacen,
        ( SELECT GROUP_CONCAT(
         CONCAT(
             IFNULL(nombre, ''),
@@ -23,11 +23,13 @@ class VehiculoModel {
     WHERE dvh.vehiculo_id = tvh.id and dvh.activo=1
 ) AS documentos_url
 FROM transporte_vehiculos tvh
-                WHERE activo = 1 
+join almacenes a on tvh.almacen_id=a.id
+                WHERE tvh.activo = 1 
                 ORDER BY nombre ASC";
         $res = $this->db->query($sql);
         return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
     }
+
     public function subirDocumentoCompra($id, $nombre_evidencia, $documento_url)
 {
     $sql = "INSERT INTO documentos_vehiculos
@@ -77,7 +79,7 @@ public function eliminarDocumento( $id_documento) {
     // NUEVO: Listar vehículos por almacén específico
     public function listarPorAlmacen($almacen_id) {
         $id = intval($almacen_id);
-        $sql = "SELECT tvh.*,
+        $sql = "SELECT tvh.*,a.nombre as nombre_almacen,
        ( SELECT GROUP_CONCAT(
         CONCAT(
             IFNULL(nombre, ''),
@@ -92,7 +94,10 @@ public function eliminarDocumento( $id_documento) {
     WHERE dvh.vehiculo_id = tvh.id and dvh.activo=1
 ) AS documentos_url
 FROM transporte_vehiculos tvh
-                WHERE activo = 1 AND almacen_id = $id
+               
+join almacenes a on tvh.almacen_id=a.id
+                WHERE tvh.activo = 1 
+                AND almacen_id = $id
                 ORDER BY nombre ASC";
         $res = $this->db->query($sql);
         return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
