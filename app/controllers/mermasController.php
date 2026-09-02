@@ -4,35 +4,90 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Iniciar almacenamiento en búfer para evitar espacios o advertencias antes del JSON
 ob_start();
 
+// Configuración de blindaje: Registrar errores en logs de servidor pero desactivar impresión en pantalla
+error_reporting(E_ALL);
+ini_set('display_errors', 0);
+
+// Requerir dependencias principales y middlewares
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../models/mermasModel.php';
 require_once __DIR__ . '/../models/almacen_model.php';
-protegerPagina('Mermas'); 
-// ❌ QUITAR: LayoutController no se necesita aquí
- require_once __DIR__ . '/../controllers/LayoutController.php';
+require_once __DIR__ . '/../controllers/LayoutController.php';
 
-// Verificar sesión ANTES de instanciar modelos
+// Validar que el usuario tenga permisos para acceder al módulo de Mermas
+protegerPagina('Mermas'); 
+
+// Validar presencia de sesión de usuario activa
 if (!isset($_SESSION['id']) && !isset($_SESSION['usuario_id'])) {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' || isset($_GET['action'])) {
+        ob_clean();
         header('Content-Type: application/json');
         echo json_encode(['status' => 'error', 'message' => '❌ Sesión requerida']);
         exit;
     }
-    // Para GET redirigir
     header('Location: /cfsistem/login.php');
     exit;
 }
+
 $paginaActual = 'Mermas';
-$mermasModel = new MermasModel($conexion);
+
+// Instanciar modelos
+$mermasModel  = new MermasModel($conexion);
 $almacenModel = new AlmacenModel($conexion);
 
-// ============================
-// 🔍 AJAX: OBTENER PRODUCTOS
-// ============================
-if (isset($_GET['action']) && $_GET['action'] === 'obtenerProductosAlmacen') {
+// Detectar la acción enviada por GET (por defecto 'index')
+$action = $_GET['action'] ?? 'index';
+
+// =========================================================================
+// 🔍 ACCIÓN AJAX: LISTAR MERMAS CON FILTROS (Para DataTables / Fetch)
+// =========================================================================
+if ($action === 'listar') {
+    ob_clean(); // Limpiar cualquier salida previa del búfer
+    header('Content-Type: application/json'); // Respuesta JSON estricta
+    
+    try {
+        // Capturar filtros enviados por la petición GET
+        $filtros = [
+            'search'     => $_GET['f_search']     ?? $_GET['search'] ?? '',
+            'producto'   => $_GET['f_producto']   ?? $_GET['producto'] ?? 0,
+            'almacen'    => $_GET['f_almacen']    ?? $_GET['almacen_id'] ?? 0,
+            'tipo_merma' => $_GET['f_tipo_merma'] ?? $_GET['tipo_merma'] ?? '',
+            'rango'      => $_GET['f_rango']      ?? $_GET['rango'] ?? 'todos',
+            'inicio'     => $_GET['f_inicio']     ?? $_GET['inicio'] ?? '',
+            'fin'        => $_GET['f_fin']        ?? $_GET['fin'] ?? ''
+        ];
+        
+        // Obtener credenciales de la sesión
+        $rol_id = $_SESSION['rol_id'] ?? 2;
+        $id_almacen_usuario = $_SESSION['almacen_id'] ?? 0;
+
+        // Si es Admin (1) o Supervisor (3), permitimos consultar almacén 0 (todos)
+        if (isset($_SESSION['rol_id']) && ($_SESSION['rol_id'] == 1 || $_SESSION['rol_id'] == 3)) {
+            $id_almacen_usuario = 0; 
+            $rol_id = 1;
+        }
+
+        // Consultar los datos filtrados en el modelo
+        $data = $mermasModel->obtenerMermasFiltradas($filtros, $rol_id, $id_almacen_usuario);
+        
+        // Devolver respuesta como arreglo JSON
+        echo json_encode($data);
+
+    } catch (Throwable $e) {
+        // En caso de error inesperado de PHP 7+, devolver objeto con mensaje de error
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// =========================================================================
+// 🔍 ACCIÓN AJAX: OBTENER PRODUCTOS POR ALMACÉN
+// =========================================================================
+if ($action === 'obtenerProductosAlmacen') {
     ob_clean();
     header('Content-Type: application/json');
     $almacen_id = intval($_GET['almacen_id'] ?? 0);
@@ -41,10 +96,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerProductosAlmacen') {
     exit;
 }
 
-// ============================
-// 🔍 AJAX: OBTENER LOTES
-// ============================
-if (isset($_GET['action']) && $_GET['action'] === 'obtenerLotes') {
+// =========================================================================
+// 🔍 ACCIÓN AJAX: OBTENER LOTES POR PRODUCTO Y ALMACÉN
+// =========================================================================
+if ($action === 'obtenerLotes') {
     ob_clean();
     header('Content-Type: application/json');
     $producto_id = intval($_GET['producto_id'] ?? 0);
@@ -56,10 +111,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerLotes') {
     exit;
 }
 
-// ============================
-// 💾 POST: GUARDAR MERMA (MEJORADO)
-// ============================
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['action'] === 'guardarMerma') {
+// =========================================================================
+// 💾 ACCIÓN POST: REGISTRAR NUEVA MERMA
+// =========================================================================
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'guardarMerma') {
     ob_clean();
     header('Content-Type: application/json');
     
@@ -67,15 +122,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['ac
         $usuario_id = $_SESSION['id'] ?? $_SESSION['usuario_id'];
         $responsable = $_SESSION['nombre'] ?? 'Usuario #' . $usuario_id;
 
-        // 🔍 VALIDACIÓN DETALLADA
+        // Sanitización y parseo de datos enviados por POST
         $producto_id = intval($_POST['producto_id'] ?? 0);
-        $almacen_id = intval($_POST['almacen_id'] ?? 0);
-        $lote_id = intval($_POST['lote_id'] ?? 0);
-        $cantidad = floatval($_POST['cantidad'] ?? 0);
-        $tipo_merma = trim($_POST['tipo_merma'] ?? 'otro');
-        $motivo = trim($_POST['observaciones'] ?? '');
+        $almacen_id  = intval($_POST['almacen_id'] ?? 0);
+        $lote_id     = intval($_POST['lote_id'] ?? 0);
+        $cantidad    = floatval($_POST['cantidad'] ?? 0);
+        $tipo_merma  = trim($_POST['tipo_merma'] ?? 'otro');
+        $motivo      = trim($_POST['observaciones'] ?? '');
 
-        // Validaciones específicas
+        // Validar requerimientos obligatorios
         if ($producto_id <= 0) throw new Exception("Producto inválido (ID: $producto_id)");
         if ($almacen_id <= 0) throw new Exception("Almacén inválido (ID: $almacen_id)");
         if ($lote_id <= 0) throw new Exception("Lote inválido (ID: $lote_id)");
@@ -84,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['ac
             throw new Exception("Tipo de merma inválido: $tipo_merma");
         }
 
-        // 🔍 VERIFICAR STOCK SUFICIENTE
+        // Verificar disponibilidad en el lote
         $stmt = $conexion->prepare("SELECT cantidad_actual FROM lotes_stock WHERE id = ?");
         $stmt->bind_param("i", $lote_id);
         $stmt->execute();
@@ -95,22 +150,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['ac
             throw new Exception("Stock insuficiente. Disponible: " . $resultado['cantidad_actual']);
         }
 
+        // Preparar arreglo de datos para inserción en DB
         $datos = [
             'producto_id' => $producto_id,
-            'almacen_id' => $almacen_id,
-            'lote_id' => $lote_id,
-            'cantidad' => $cantidad,
-            'tipo_merma' => $tipo_merma,
-            'motivo' => $motivo,
-            'usuario_id' => $usuario_id,
+            'almacen_id'  => $almacen_id,
+            'lote_id'     => $lote_id,
+            'cantidad'    => $cantidad,
+            'tipo_merma'  => $tipo_merma,
+            'motivo'      => $motivo,
+            'usuario_id'  => $usuario_id,
             'responsable' => $responsable
         ];
 
+        // Ejecutar inserción en el modelo
         $resultado = $mermasModel->registrarMerma($datos);
 
         if ($resultado === true) {
             echo json_encode([
-                'status' => 'success', 
+                'status'  => 'success', 
                 'message' => '✅ Merma registrada correctamente'
             ]);
         } else {
@@ -120,33 +177,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['ac
     } catch (Exception $e) {
         http_response_code(400);
         echo json_encode([
-            'status' => 'error', 
+            'status'  => 'error', 
             'message' => $e->getMessage()
         ]);
     }
     exit;
 }
 
-// ============================
-// 📄 VISTA PRINCIPAL (GET)
-// ============================
+// =========================================================================
+// 📄 VISTA PRINCIPAL (Renderizado HTML inicial)
+// =========================================================================
 try {
-    // 1. Identificar Almacén (0 si es admin)
     $almacen_sesion = $_SESSION['almacen_id'] ?? 0;
-    
-    // 2. Lógica de Paginación
-    $limit = 15; 
-    $pagina = isset($_GET['p']) ? max(1, intval($_GET['p'])) : 1;
-    $offset = ($pagina - 1) * $limit;
+    $rol_id = $_SESSION['rol_id'] ?? 2;
 
-    // 3. Obtener Datos
+    if (isset($_SESSION['rol_id']) && ($_SESSION['rol_id'] == 1 || $_SESSION['rol_id'] == 3)) {
+        $almacen_sesion = 0;
+        $rol_id = 1;
+    }
+    
+    // Cargar la lista de almacenes permitidos para los selectores de la vista
     $almacenes = $almacenModel->getAlmacenes($almacen_sesion);
     
-    // Para la tabla, usamos el almacen_sesion para filtrar (Admin ve todo si es 0)
-    $mermas = $mermasModel->obtenerMermasPaginadas($almacen_sesion, $limit, $offset);
-    $totalMermas = $mermasModel->contarTotalMermas($almacen_sesion);
-    $totalPaginas = ceil($totalMermas / $limit);
+    // Cargar el historial inicial respetando la seguridad del almacén del usuario
+    $filtrosIniciales = ['rango' => 'todos'];
+    $mermas = $mermasModel->obtenerMermasFiltradas($filtrosIniciales, $rol_id, $almacen_sesion);
 
+    // Incluir la vista HTML
     include __DIR__ . '/../views/mermas_view.php';
 } catch (Exception $e) {
     die("Error crítico en el sistema de mermas: " . $e->getMessage());

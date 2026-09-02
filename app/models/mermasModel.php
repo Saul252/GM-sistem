@@ -111,7 +111,89 @@ public function registrarMerma($datos) {
     $stmt->execute();
     return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 }
+public function obtenerMermasFiltradas($filtros = [], $rol_id = 1, $almacen_sesion = 0) {
+    $where = " WHERE 1=1 ";
 
+    // 1. Seguridad por Almacén / Filtro por Almacén
+    if ($rol_id != 1) { 
+        $where .= " AND m.almacen_id = " . intval($almacen_sesion) . " "; 
+    } elseif (!empty($filtros['almacen'])) { 
+        $where .= " AND m.almacen_id = " . intval($filtros['almacen']) . " "; 
+    }
+
+    // 2. Filtro por Producto
+    if (!empty($filtros['producto'])) {
+        $prod_id = intval($filtros['producto']);
+        $where .= " AND m.producto_id = $prod_id ";
+    }
+
+    // 3. Filtro por Tipo de Merma
+    if (!empty($filtros['tipo_merma'])) {
+        $tipo = $this->db->real_escape_string($filtros['tipo_merma']);
+        $where .= " AND m.tipo_merma = '$tipo' ";
+    }
+
+    // 4. Buscador General (ID, producto, código de lote, tipo merma o responsable)
+    if (!empty($filtros['search'])) {
+        $s = $this->db->real_escape_string($filtros['search']);
+        $where .= " AND (m.id LIKE '%$s%' 
+                    OR p.nombre LIKE '%$s%' 
+                    OR l.codigo_lote LIKE '%$s%' 
+                    OR m.tipo_merma LIKE '%$s%' 
+                    OR mov.origen_movimiento LIKE '%$s%') ";
+    }
+
+    // 5. Rango de Fechas (Evaluado sobre m.fecha_reporte)
+    if (!empty($filtros['rango']) && $filtros['rango'] !== 'todos') {
+        $where .= $this->construirFiltroFecha($filtros, 'm.fecha_reporte');
+    }
+
+    $sql = "SELECT 
+                m.id,
+                m.fecha_reporte,
+                m.cantidad,
+                m.tipo_merma,
+                mov.origen_movimiento as responsable,
+                a.nombre as almacen_nombre,
+                p.nombre as producto_nombre,
+                p.unidad_medida,
+                l.codigo_lote
+            FROM mermas m
+            JOIN movimientos mov ON m.movimiento_id = mov.id
+            JOIN almacenes a ON m.almacen_id = a.id
+            JOIN productos p ON m.producto_id = p.id
+            LEFT JOIN lotes_stock l ON m.lote_id = l.id
+            $where
+            ORDER BY m.fecha_reporte DESC, m.id DESC";
+
+    $res = $this->db->query($sql);
+    return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+}
+private function construirFiltroFecha($f, $campoFecha = 'm.fecha_reporte') {
+    if (empty($f['rango']) || $f['rango'] === 'todos') {
+        return "";
+    }
+    
+    switch ($f['rango']) {
+        case 'hoy': 
+            return " AND DATE($campoFecha) = CURDATE() ";
+        case 'ayer': 
+            return " AND DATE($campoFecha) = SUBDATE(CURDATE(), 1) ";
+        case 'semana': 
+            return " AND YEARWEEK($campoFecha, 1) = YEARWEEK(CURDATE(), 1) ";
+        case 'mes': 
+            return " AND MONTH($campoFecha) = MONTH(CURDATE()) AND YEAR($campoFecha) = YEAR(CURDATE()) ";
+        case 'personalizado':
+            if (!empty($f['inicio']) && !empty($f['fin'])) {
+                $ini = $this->db->real_escape_string($f['inicio']);
+                $fin = $this->db->real_escape_string($f['fin']);
+                return " AND DATE($campoFecha) BETWEEN '$ini' AND '$fin' ";
+            }
+            return "";
+        default: 
+            return "";
+    }
+}
 // Método auxiliar para contar el total y saber cuántas páginas hay
 public function contarTotalMermas($almacen_id) {
     $sql = "SELECT COUNT(*) as total FROM mermas";
