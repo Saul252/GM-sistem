@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transmutaciones | CF Sistem</title>
+    <title>Transmutaciones | JSEA Sistem</title>
     <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
     <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
 
@@ -379,6 +379,7 @@ let tablaHistorial;
 $(document).ready(function() {
     // Inicializar DataTable con AJAX dinámico y Filtros
     tablaHistorial = $('#tablaHistorial').DataTable({
+    "destroy": true, 
         "language": {
             "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
         },
@@ -510,6 +511,7 @@ $(document).ready(function() {
 
         // Inicializar DataTable
         $('#tablaHistorial').DataTable({
+        "destroy": true, 
             "language": {
                 "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
             },
