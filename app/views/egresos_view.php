@@ -182,17 +182,125 @@
 
 </div>
                      
-                        <button class="btn btn-warning fw-bold px-3 shadow-sm border-0" onclick="abrirModalGasto()"
-                            style="border-radius: 10px; background: #ffc107; color: #000;">
-                            <i class="bi bi-cash-stack me-1"></i> Nuevo Gasto
-                        </button>
-                          
+                        <style>
+    /* 1. ESTILOS BASE (Tema Claro por Defecto) */
+    .action-bar {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
 
-                        <button class="btn btn-primary fw-bold px-3 shadow-sm border-0" onclick="abrirModalCompra()"
-                            style="border-radius: 10px; background: #0d6efd;">
-                            <i class="bi bi-cart-plus me-1"></i> Nueva Compra
-                        </button>
-                       
+    .btn-action-slate {
+        background: #f8fafc;
+        border: 1px solid #cbd5e1;
+        color: #475569;
+        font-weight: 500;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+    }
+
+    .btn-action-slate:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+        border-color: #94a3b8;
+    }
+
+    /* Variantes claras para botones de acción */
+    .btn-action-warning {
+        background: #fffbebf5;
+        border: 1px solid #fde68a;
+        color: #b45309;
+        font-weight: 600;
+    }
+    .btn-action-warning:hover {
+        background: #fef3c7;
+        border-color: #fcd34d;
+        color: #92400e;
+    }
+
+    .btn-action-primary {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1d4ed8;
+        font-weight: 600;
+    }
+    .btn-action-primary:hover {
+        background: #dbeafe;
+        border-color: #93c5fd;
+        color: #1e40af;
+    }
+
+    /* 2. COMPATIBILIDAD CON TEMA OSCURO */
+    /* Soporta Bootstrap 5 (data-bs-theme="dark"), preferencia del sistema (@media) y clase manual (.dark) */
+    [data-bs-theme="dark"] .action-bar,
+    .dark .action-bar,
+    @media (prefers-color-scheme: dark) {
+        body:not([data-bs-theme="light"]) .action-bar {
+            background: #0f172a;
+            border-color: #1e293b;
+            box-shadow: none;
+        }
+
+        body:not([data-bs-theme="light"]) .btn-action-slate {
+            background: #1e293b;
+            border-color: #334155;
+            color: #94a3b8;
+        }
+
+        body:not([data-bs-theme="light"]) .btn-action-slate:hover {
+            background: #334155;
+            color: #f8fafc;
+            border-color: #475569;
+        }
+
+        body:not([data-bs-theme="light"]) .btn-action-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.3);
+            color: #fbbf24;
+        }
+        body:not([data-bs-theme="light"]) .btn-action-warning:hover {
+            background: rgba(245, 158, 11, 0.25);
+            color: #fef08a;
+        }
+
+        body:not([data-bs-theme="light"]) .btn-action-primary {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.3);
+            color: #60a5fa;
+        }
+        body:not([data-bs-theme="light"]) .btn-action-primary:hover {
+            background: rgba(59, 130, 246, 0.25);
+            color: #93c5fd;
+        }
+    }
+</style>
+
+<!-- Barra de Herramientas con Clases Neutras -->
+<div class="d-flex align-items-center justify-content-between gap-3 p-2.5 action-bar">
+    <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-sm btn-action-slate px-3 py-2 d-inline-flex align-items-center gap-2" onclick="imprimirTablaPDF('egresosTabla')">
+            <i class="bi bi-printer-fill text-danger fs-6"></i>
+            <span>PDF</span>
+        </button>
+        <button type="button" class="btn btn-sm btn-action-slate px-3 py-2 d-inline-flex align-items-center gap-2" onclick="exportarTablaCSV('egresosTabla','')">
+            <i class="bi bi-filetype-csv text-success fs-6"></i>
+            <span>CSV</span>
+        </button>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-sm btn-action-warning px-3 py-2 d-inline-flex align-items-center gap-2" onclick="abrirModalGasto()">
+            <i class="bi bi-cash-stack fs-6"></i>
+            <span>Nuevo Gasto</span>
+        </button>
+        <button type="button" class="btn btn-sm btn-action-primary px-3 py-2 d-inline-flex align-items-center gap-2" onclick="abrirModalCompra()">
+            <i class="bi bi-cart-plus-fill fs-6"></i>
+            <span>Nueva Compra</span>
+        </button>
+    </div>
+</div>
                     </div>
                    
                 </div>
@@ -349,7 +457,7 @@
         
            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
     <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
+        <table class="table table-hover align-middle mb-0" id="egresosTabla">
             <thead style="background-color: #f8f9fa; border-bottom: 2px solid #f1f3f5;">
                 <tr class="text-secondary">
                     <th class="ps-4 py-3 fw-bold text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.5px;">ID</th>
@@ -677,6 +785,253 @@ require_once $ruta;
     console.log("Productos cargados:", window.DATA_COMPRAS.productos);
     </script>
 <script>
+    
+function imprimirTablaPDF(tablaId = 'egresosTabla') {
+    const tablaOriginal = document.getElementById(tablaId);
+    
+    if (!tablaOriginal) {
+        console.error(`No se encontró la tabla con el ID: ${tablaId}`);
+        return;
+    }
+
+    // Clonar la tabla para no modificar el DOM activo
+    const tablaClonada = tablaOriginal.cloneNode(true);
+
+    // 1. Remover la columna de "Acciones" (última columna)
+    tablaClonada.querySelectorAll('tr').forEach(row => {
+        if (row.lastElementChild) {
+            row.lastElementChild.remove();
+        }
+    });
+
+    // 2. Limpiar elementos innecesarios dentro de las celdas clonadas (iconos sobrantes, botones de docs, etc.)
+    tablaClonada.querySelectorAll('button, .dropdown-menu, script').forEach(el => el.remove());
+
+    const ventanaImpresion = window.open('', '_blank', 'width=1000,height=750');
+
+    const contenidoHTML = `
+        <!DOCTYPE html>
+        <html lang="es">
+        <head>
+            <meta charset="UTF-8">
+            <title>Reporte de Egresos</title>
+            <style>
+                /* Configuración de Hoja A4 Horizontal */
+                @page {
+                    size: A4 landscape;
+                    margin: 8mm; /* Margen estrecho para maximizar área de impresión */
+                }
+
+                * {
+                    box-sizing: border-box;
+                    -webkit-print-color-adjust: exact !important;
+                    print-color-adjust: exact !important;
+                }
+
+                body {
+                    font-family: Arial, Helvetica, sans-serif;
+                    color: #111;
+                    margin: 0;
+                    padding: 0;
+                    font-size: 8.5pt; /* Tamaño de fuente compacto */
+                    line-height: 1.1;
+                }
+
+                /* Encabezado compacto */
+                .header-reporte {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: flex-end;
+                    border-bottom: 1.5pt solid #2c3e50;
+                    padding-bottom: 4px;
+                    margin-bottom: 8px;
+                }
+
+                .header-reporte h2 {
+                    margin: 0;
+                    color: #2c3e50;
+                    font-size: 13pt;
+                    text-transform: uppercase;
+                    letter-spacing: -0.3px;
+                }
+
+                .header-reporte .meta-info {
+                    font-size: 8pt;
+                    color: #555;
+                }
+
+                /* Control estricto del ancho de la tabla */
+                table {
+                    width: 100% !important;
+                    max-width: 100% !important;
+                    table-layout: fixed; /* Fuerza a las columnas a respetar el ancho disponible */
+                    border-collapse: collapse;
+                    word-wrap: break-word;
+                    overflow-wrap: break-word;
+                }
+
+                th, td {
+                    padding: 4px 3px !important; /* Contexto ultra-compacto */
+                    vertical-align: middle;
+                    border-bottom: 1px solid #d1d5db;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap; /* Evita saltos de línea innecesarios */
+                }
+
+                th {
+                    background-color: #f1f5f9 !important;
+                    color: #1e293b;
+                    font-size: 7.5pt;
+                    font-weight: bold;
+                    text-transform: uppercase;
+                    border-bottom: 1.5pt solid #94a3b8;
+                }
+
+                /* Anchos proporcionales asignados por columna para encajar perfecto */
+                th:nth-child(1), td:nth-child(1) { width: 4%; text-align: center; } /* ID */
+                th:nth-child(2), td:nth-child(2) { width: 12%; }                   /* Almacén */
+                th:nth-child(3), td:nth-child(3) { width: 8%; text-align: center; } /* Fecha */
+                th:nth-child(4), td:nth-child(4) { width: 9%; }                   /* Folio */
+                th:nth-child(5), td:nth-child(5) { width: 8%; text-align: center; } /* Tipo */
+                th:nth-child(6), td:nth-child(6) { width: 22%; }                  /* Entidad / Proveedor */
+                th:nth-child(7), td:nth-child(7) { width: 5%; text-align: center; } /* Deuda */
+                th:nth-child(8), td:nth-child(8) { width: 10%; text-align: right; } /* Total */
+                th:nth-child(9), td:nth-child(9) { width: 9%; text-align: center; } /* Método */
+                th:nth-child(10), td:nth-child(10) { width: 7%; text-align: center; }/* Faltantes */
+                th:nth-child(11), td:nth-child(11) { width: 6%; text-align: center; }/* Docs */
+
+                /* Filas alternadas */
+                tbody tr:nth-child(even) {
+                    background-color: #f8fafc !important;
+                }
+
+                /* Utilidades de alineación */
+                .text-center { text-align: center !important; }
+                .text-end { text-align: right !important; }
+                .fw-bold { font-weight: bold !important; }
+
+                /* Ocultar cualquier elemento interactivo restante */
+                .btn, .dropdown, button, i.bi-folder2-open {
+                    display: none !important;
+                }
+
+                /* Pie de página dinámico */
+                .footer-reporte {
+                    margin-top: 10px;
+                    display: flex;
+                    justify-content: space-between;
+                    font-size: 7.5pt;
+                    color: #64748b;
+                }
+
+                /* Optimización para diálogo de impresión */
+                @media print {
+                    html, body {
+                        width: 100%;
+                        height: 100%;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="header-reporte">
+                <div>
+                    <h2>Reporte de Movimientos de Egreso</h2>
+                </div>
+                <div class="meta-info">
+                    Impreso el: ${new Date().toLocaleDateString('es-MX')} ${new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+                </div>
+            </div>
+
+            ${tablaClonada.outerHTML}
+
+            <div class="footer-reporte">
+                <span>cfsistem - Control Financiero</span>
+                <span>Página 1 de 1</span>
+            </div>
+
+            <script>
+                window.onload = function() {
+                    window.print();
+                    setTimeout(function() {
+                        window.close();
+                    }, 300);
+                };
+            <\/script>
+        </body>
+        </html>
+    `;
+
+    ventanaImpresion.document.open();
+    ventanaImpresion.document.write(contenidoHTML);
+    ventanaImpresion.document.close();
+}
+/**
+ * Exporta el contenido de una tabla HTML a un archivo .csv
+ * @param {string} tablaId - ID de la tabla (ej. 'egresosTabla')
+ * @param {string} nombreArchivo - Nombre base del archivo a descargar
+ */
+function exportarTablaCSV(tablaId = 'egresosTabla', nombreArchivo = 'Reporte_Egresos') {
+    const tablaOriginal = document.getElementById(tablaId);
+
+    if (!tablaOriginal) {
+        console.error(`No se encontró la tabla con el ID: ${tablaId}`);
+        return;
+    }
+
+    const filas = tablaOriginal.querySelectorAll('tr');
+    const lineasCSV = [];
+
+    filas.forEach(fila => {
+        const celdas = fila.querySelectorAll('th, td');
+        
+        // Si no hay celdas (fila vacía), ignorar
+        if (celdas.length === 0) return;
+
+        const valoresFila = [];
+
+        // Recorrer todas las celdas EXCEPTO la última (Columna de Acciones)
+        for (let i = 0; i < celdas.length - 1; i++) {
+            let texto = celdas[i].innerText || celdas[i].textContent || '';
+
+            // 1. Limpieza de caracteres: eliminar saltos de línea y tabulaciones innecesarias
+            texto = texto.replace(/\r?\n|\r/g, ' ').replace(/\s+/g, ' ').trim();
+
+            // 2. Escapar comillas dobles internas duplicándolas ("" -> """")
+            texto = texto.replace(/"/g, '""');
+
+            // 3. Envolver entre comillas dobles para proteger comas y caracteres especiales
+            valoresFila.push(`"${texto}"`);
+        }
+
+        // Unir las celdas de la fila separadas por coma
+        lineasCSV.push(valoresFila.join(','));
+    });
+
+    // Unir todas las filas con salto de línea
+    const contenidoCSV = lineasCSV.join('\n');
+
+    // Crear el Blob con el BOM UTF-8 (\uFEFF) para que Excel reconozca acentos y caracteres especiales
+    const blob = new Blob(['\uFEFF' + contenidoCSV], {
+        type: 'text/csv;charset=utf-8;'
+    });
+
+    // Descargar el archivo dinámicamente
+    const url = URL.createObjectURL(blob);
+    const enlace = document.createElement('a');
+    const fecha = new Date().toISOString().slice(0, 10);
+    
+    enlace.href = url;
+    enlace.download = `${nombreArchivo}_${fecha}.csv`;
+    
+    document.body.appendChild(enlace);
+    enlace.click();
+
+    // Limpiar memoria
+    document.body.removeChild(enlace);
+    URL.revokeObjectURL(url);
+}
 /**
  * SISTEMA DE FILTROS Y UI
  * Gestiona el envío automático, visibilidad de fechas y categorías.

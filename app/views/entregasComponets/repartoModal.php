@@ -1,3 +1,8 @@
+<!-- Carga de librerías mediante CDN (jQuery, Bootstrap y SweetAlert2) -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <style>
     /* Soporte adicional para gradientes e inputs en modo claro/oscuro */
     .btn-gradient {
@@ -110,7 +115,9 @@
         </div>
     </div>
 </div>
-<script>$(document).ready(function() {
+
+<script>
+$(document).ready(function() {
     // 1. Configuración de Ruta
     const URL_ENTREGAS = '/cfsistem/app/controllers/entregasController.php';
 
@@ -205,103 +212,97 @@
                 } else {
                     selectU.append('<option disabled>❌ Sin camiones disponibles</option>');
                 }
-           $('#v_vehiculo_id').off('change').on('change', function () {
-    const vehiculo_id = $(this).val();
-    console.log('Vehiculo ID:', vehiculo_id);
 
-    if (!vehiculo_id) return;
+                $('#v_vehiculo_id').off('change').on('change', function () {
+                    const vehiculo_id = $(this).val();
+                    console.log('Vehiculo ID:', vehiculo_id);
 
-    fetch(`${URL_ENTREGAS}?ajax=get_datos_vehiculo&vehiculo_id=${vehiculo_id}`)
-        .then(res => res.json())
-        .then(res => {
-            console.log('Respuesta del controller:', res);
+                    if (!vehiculo_id) return;
 
-            // LIMPIAR SIEMPRE ANTES DE ASIGNAR
-            $('#v_chofer_id').val('');
-            $('#v_tripulantes').val([]);
+                    fetch(`${URL_ENTREGAS}?ajax=get_datos_vehiculo&vehiculo_id=${vehiculo_id}`)
+                        .then(res => res.json())
+                        .then(res => {
+                            console.log('Respuesta del controller:', res);
 
-            // =========================
-            // 🟢 CASO 1: VEHÍCULO TIENE DATOS
-            // =========================
-            if (res.success && res.data && 
-               (res.data.encargado || (res.data.tripulantes && res.data.tripulantes.length))
-            ) {
-                const data = res.data;
+                            // LIMPIAR SIEMPRE ANTES DE ASIGNAR
+                            $('#v_chofer_id').val('');
+                            $('#v_tripulantes').val([]);
 
-                // 🔹 ASIGNAR CHOFER
-                if (data.encargado && data.encargado.id) {
-                    const idChofer = String(data.encargado.id);
-                    // Verificar si existe la opción en el select antes de asignar
-                    if ($(`#v_chofer_id option[value="${idChofer}"]`).length) {
-                        $('#v_chofer_id').val(idChofer).trigger('change');
-                    }
-                }
+                            // =========================
+                            // 🟢 CASO 1: VEHÍCULO TIENE DATOS
+                            // =========================
+                            if (res.success && res.data && 
+                               (res.data.encargado || (res.data.tripulantes && res.data.tripulantes.length))
+                            ) {
+                                const data = res.data;
 
-                // 🔹 ASIGNAR TRIPULANTES
-                if (Array.isArray(data.tripulantes)) {
-                    const ids = data.tripulantes.map(t => String(t.id));
-                    const validos = ids.filter(id => 
-                        $(`#v_tripulantes option[value="${id}"]`).length
-                    );
-                    $('#v_tripulantes').val(validos).trigger('change');
-                }
+                                // 🔹 ASIGNAR CHOFER
+                                if (data.encargado && data.encargado.id) {
+                                    const idChofer = String(data.encargado.id);
+                                    if ($(`#v_chofer_id option[value="${idChofer}"]`).length) {
+                                        $('#v_chofer_id').val(idChofer).trigger('change');
+                                    }
+                                }
 
-                console.log('✔ Personal asignado desde el vehículo');
-            } 
-            // =========================
-            // 🔵 CASO 2: FALLBACK (TRABAJADORES DISPONIBLES)
-            // =========================
-            else {
-                console.log('⚠ Vehículo sin personal asignado → Usando trabajadores disponibles');
+                                // 🔹 ASIGNAR TRIPULANTES
+                                if (Array.isArray(data.tripulantes)) {
+                                    const ids = data.tripulantes.map(t => String(t.id));
+                                    const validos = ids.filter(id => 
+                                        $(`#v_tripulantes option[value="${id}"]`).length
+                                    );
+                                    $('#v_tripulantes').val(validos).trigger('change');
+                                }
 
-                // Vaciamos y rellenamos los selects con la lista global de disponibles
+                                console.log('✔ Personal asignado desde el vehículo');
+                            } 
+                            // =========================
+                            // 🔵 CASO 2: FALLBACK (TRABAJADORES DISPONIBLES)
+                            // =========================
+                            else {
+                                console.log('⚠ Vehículo sin personal asignado → Usando trabajadores disponibles');
+
+                                const selectC = $('#v_chofer_id')
+                                    .empty()
+                                    .append('<option value="">Seleccione chofer...</option>');
+
+                                const selectT = $('#v_tripulantes').empty();
+
+                                if (resRecursos.trabajadoresDisponibles && resRecursos.trabajadoresDisponibles.length > 0) {
+                                    resRecursos.trabajadoresDisponibles.forEach(t => {
+                                        const id = String(t.id);
+                                        const opt = `<option value="${id}">${t.nombre}</option>`;
+                                        selectC.append(opt);
+                                        selectT.append(opt);
+                                    });
+                                }
+
+                                $('#v_chofer_id').val('').trigger('change');
+                                $('#v_tripulantes').val([]).trigger('change');
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Error en fetch:', err);
+                        });
+                });
+
+                // Llenar Choferes y Ayudantes con la respuesta inicial de recursos
                 const selectC = $('#v_chofer_id')
                     .empty()
                     .append('<option value="">Seleccione chofer...</option>');
 
                 const selectT = $('#v_tripulantes').empty();
 
-                // Usamos resRecursos (asegúrate de que esta variable sea accesible en este scope)
-                if (resRecursos.trabajadoresDisponibles && resRecursos.trabajadoresDisponibles.length > 0) {
-                    resRecursos.trabajadoresDisponibles.forEach(t => {
-                        const id = String(t.id);
-                        const opt = `<option value="${id}">${t.nombre}</option>`;
-                        selectC.append(opt);
-                        selectT.append(opt);
+                if (resRecursos.choferes && resRecursos.choferes.length > 0) {
+                    resRecursos.choferes.forEach(c => {
+                        selectC.append(`<option value="${c.id}">${c.nombre}</option>`);
+                        selectT.append(`<option value="${c.id}">${c.nombre}</option>`);
                     });
                 }
 
-                // Forzar el trigger para limpiar cualquier selección visual previa
-                $('#v_chofer_id').val('').trigger('change');
-                $('#v_tripulantes').val([]).trigger('change');
-            }
-        })
-        .catch(err => {
-            console.error('Error en fetch:', err);
-        });
+                $('#v_chofer_id').trigger('change');
 
-});
-
-
-// 🔹 Llenar Choferes y Ayudantes (ESTO DEBE ESTAR FUERA DEL CHANGE)
-const selectC = $('#v_chofer_id')
-    .empty()
-    .append('<option value="">Seleccione chofer...</option>');
-
-const selectT = $('#v_tripulantes').empty();
-
-if (resRecursos.choferes && resRecursos.choferes.length > 0) {
-    resRecursos.choferes.forEach(c => {
-        selectC.append(`<option value="${c.id}">${c.nombre}</option>`);
-        selectT.append(`<option value="${c.id}">${c.nombre}</option>`);
-    });
-}
-
-// 🔹 reset visual de dependencias
-$('#v_chofer_id').trigger('change');
-
-if (typeof Swal !== 'undefined') Swal.close();
-$('#modalVehiculo').modal('show');
+                if (typeof Swal !== 'undefined') Swal.close();
+                $('#modalVehiculo').modal('show');
             } else {
                 throw new Error("No se pudieron cargar los datos del servidor.");
             }
@@ -331,16 +332,14 @@ $('#modalVehiculo').modal('show');
             if (res.success) {
                 $('#modalVehiculo').modal('hide');
                 Swal.fire({
-        icon: 'success',
-        title: 'Salida Autorizada',
-        text: res.message,
-        timer: 2000,
-        showConfirmButton: false
-    }).then(() => {
-        location.reload(); // 🔄 recarga la página
-    });
-               
-                
+                    icon: 'success',
+                    title: 'Salida Autorizada',
+                    text: res.message,
+                    timer: 2000,
+                    showConfirmButton: false
+                }).then(() => {
+                    location.reload();
+                });
             } else {
                 Swal.fire('Atención', res.message, 'warning');
             }
@@ -350,4 +349,5 @@ $('#modalVehiculo').modal('show');
             btn.prop('disabled', false).html(originalHtml);
         }
     });
-});</script>
+});
+</script>

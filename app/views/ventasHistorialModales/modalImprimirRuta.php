@@ -18,7 +18,7 @@
             </div>
 
             <div class="modal-body p-0" id="contenidoRutaPrint">
-                <!-- AQUÍ SE RENDERIZA TODO -->
+                <!-- AQUÍ SE RENDERIZA TODO EL CONTENIDO DINÁMICO -->
             </div>
 
         </div>
@@ -42,6 +42,15 @@ async function imprimirRuta(entrega_ida, folioViaje) {
 
     const cont = document.getElementById('contenidoRutaPrint');
     const datos = data.data;
+
+    // =========================================
+    // DETECTAR PREFIJO 'EN_PAT' DENTRO DEL FOLIO
+    // =========================================
+    const stringEntrega = String(entrega_ida || '').toUpperCase();
+    const stringFolio = String(datos[0]?.folio_viaje || '').toUpperCase();
+    
+    // Evalúa si alguno de los folios contiene el prefijo EN_PAT (ej: EN_PAT26082, EN_PAT1, etc.)
+    const esEntregaPatio = stringEntrega.includes('EN_PAT') || stringFolio.includes('EN_PAT');
 
     // =========================================
     // AGRUPAR PRODUCTOS
@@ -92,6 +101,99 @@ async function imprimirRuta(entrega_ida, folioViaje) {
     });
 
     // =========================================
+    // SECCIONES ADAPTATIVAS SEGÚN EL TIPO
+    // =========================================
+    const tituloDoc = esEntregaPatio ? '🏬 Venta ' + datos[0].folio_venta + ': Vales / Entrega en Patio' : '🚚 Venta ' + datos[0].folio_venta + ': Hoja de Ruta';
+
+    const bloqueOperador = esEntregaPatio ? `
+        <div class="info-card">
+            <div class="info-card-body">
+                <span class="info-label">Punto de Entrega</span>
+                <div class="info-value-main">ENTREGA EN PATIO / MOSTRADOR</div>
+                <div class="info-meta">
+                    <span class="meta-title">Entrego :</span>
+                    <span class="meta-value">${datos[0].nombre_chofer ?? '-'}</span>
+                </div>
+            </div>
+        </div>
+    ` : `
+        <div class="info-card">
+            <div class="info-card-body info-split">
+                <div class="info-col">
+                    <span class="info-label">Operador / Chofer</span>
+                    <div class="info-value">${datos[0].nombre_chofer ?? '-'}</div>
+                    <div class="info-meta">
+                        <span class="meta-tag">Asignado de ruta</span>
+                    </div>
+                </div>
+                <div class="info-divider-v"></div>
+                <div class="info-col">
+                    <span class="info-label">Unidad de Transporte</span>
+                    <div class="info-value">${datos[0].unidad_nombre ?? '-'}</div>
+                    <div class="info-meta">
+                        <span class="meta-title">Placas</span>
+                        <span class="meta-badge">${datos[0].unidad_placas ?? '-'}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const fechasHeader = esEntregaPatio ? `
+        <div class="small text-body-secondary mb-1">Fecha Despacho:____________________</div>
+        <div class="small text-body-secondary mb-1">Hora Entrega:____________________</div>
+    ` : `
+        <div class="small text-body-secondary mb-1">Fecha de Salida:____________________</div>
+        <div class="small text-body-secondary mb-1">Fecha de llegada:____________________</div>
+    `;
+
+    const firmasSeccion = esEntregaPatio ? `
+        <div class="row g-5">
+            <div class="col-4">
+                <div class="firma-box text-center">
+                    <div class="firma-linea"></div>
+                    <div class="firma-nombre">Firma Despachador / Patio</div>
+                    <div class="text-body-secondary small">Entrega Material</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="firma-box text-center">
+                    <div class="firma-linea"></div>
+                    <div class="firma-nombre">Firma Cliente / Recibe</div>
+                    <div class="text-body-secondary small">Sello y Firma de conformidad</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="info-box">
+                    <div class="info-sub mt-1">Observaciones / Check Patio:</div>
+                </div>
+            </div>
+        </div>
+    ` : `
+        <div class="row g-5">
+            <div class="col-4">
+                <div class="firma-box text-center">
+                    <div class="firma-linea"></div>
+                    <div class="firma-nombre">Firma Chofer / Transportista</div>
+                    <div class="text-body-secondary small">Nombre y Fecha</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="firma-box text-center">
+                    <div class="firma-linea"></div>
+                    <div class="firma-nombre">Firma Cliente / Recibe</div>
+                    <div class="text-body-secondary small">Sello y Firma de conformidad</div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="info-box">
+                    <div class="info-sub mt-1">Observaciones y Comentarios:</div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    // =========================================
     // HTML GENERADO CON VARIABLES DE TEMA
     // =========================================
     let html = `
@@ -101,20 +203,19 @@ async function imprimirRuta(entrega_ida, folioViaje) {
             <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
                 <div>
                     <h4 class="fw-bold text-body m-0 d-flex align-items-center gap-2">
-                        <span>🚚</span> Venta ${data.data[0].folio_venta}: Hoja de Ruta
+                        ${tituloDoc}
                     </h4>
 
                     <div class="text-body-secondary small mt-1">
-                        Folio de viaje: <span class="fw-bold text-body font-monospace">${data.data[0].folio_viaje}</span>
+                        Folio de viaje / Folio despacho: <span class="fw-bold text-body font-monospace">${datos[0].folio_viaje}</span>
                     </div>
                     <div class="text-body-secondary small mt-1">
-                        Registro de viaje: <span class="fw-bold text-body font-monospace">${data.data[0].fecha_viaje ?? '-'}</span>
+                        Registro: <span class="fw-bold text-body font-monospace">${datos[0].fecha_viaje ?? '-'}</span>
                     </div>
                 </div>
 
                 <div class="text-end">
-                    <div class="small text-body-secondary mb-1">Fecha de Salida:____________________</div>
-                    <div class="small text-body-secondary mb-1">Fecha de llegada:____________________</div>
+                    ${fechasHeader}
                 </div>
             </div>
 
@@ -124,12 +225,11 @@ async function imprimirRuta(entrega_ida, folioViaje) {
                 }
                 .info-grid {
                     display: grid;
-                    grid-template-columns: repeat(3, minmax(0, 1fr));
+                    grid-template-columns: repeat(2, minmax(0, 1fr));
                     gap: 12px;
                     width: 100%;
                 }
 
-                /* Tarjeta adaptativa al modo oscuro */
                 .info-box {
                     border: 1px solid var(--bs-border-color);
                     border-radius: 8px;
@@ -138,7 +238,6 @@ async function imprimirRuta(entrega_ida, folioViaje) {
                     min-width: 0;
                 }
 
-                /* Títulos */
                 .info-title {
                     font-size: 10.5px;
                     color: var(--bs-secondary-color);
@@ -147,7 +246,6 @@ async function imprimirRuta(entrega_ida, folioViaje) {
                     margin-bottom: 4px;
                 }
 
-                /* Valor */
                 .info-value {
                     font-size: 13px;
                     font-weight: 600;
@@ -157,7 +255,6 @@ async function imprimirRuta(entrega_ida, folioViaje) {
                     word-break: break-word;
                 }
 
-                /* Subtítulo */
                 .info-sub {
                     font-size: 11.5px;
                     color: var(--bs-secondary-color);
@@ -174,176 +271,146 @@ async function imprimirRuta(entrega_ida, folioViaje) {
                     font-weight: 600;
                     color: var(--bs-body-color);
                 }
-                    :root {
-    --card-bg: #ffffff;
-    --text-primary: #1e2022;
-    --text-secondary: #8c98a4;
-    --text-muted: #b0b7c0;
-    --border-color: rgba(0, 0, 0, 0.05);
-    --accent-bg: #f8fafc;
-}
 
-.info-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 1.5rem;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-}
+                :root {
+                    --card-bg: #ffffff;
+                    --text-primary: #1e2022;
+                    --text-secondary: #8c98a4;
+                    --text-muted: #b0b7c0;
+                    --border-color: rgba(0, 0, 0, 0.05);
+                    --accent-bg: #f8fafc;
+                }
 
-/* Tarjetas flotantes y estilizadas */
-.info-card {
-    background: var(--card-bg);
-    border-radius: 16px;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04), 
-                0 4px 12px -2px rgba(0, 0, 0, 0.02);
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    backdrop-filter: blur(10px);
-}
+                .info-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+                    gap: 1.5rem;
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+                    -webkit-font-smoothing: antialiased;
+                }
 
-.info-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.07);
-}
+                .info-card {
+                    background: var(--card-bg);
+                    border-radius: 16px;
+                    border: 1px solid var(--border-color);
+                    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04), 
+                                0 4px 12px -2px rgba(0, 0, 0, 0.02);
+                    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+                    backdrop-filter: blur(10px);
+                }
 
-.info-card-body {
-    padding: 1.5rem 1.75rem;
-}
+                .info-card:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.07);
+                }
 
-/* Distribución 50/50 elegante */
-.info-split {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
+                .info-card-body {
+                    padding: 1.5rem 1.75rem;
+                }
 
-.info-col {
-    flex: 1;
-}
+                .info-split {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                }
 
-/* Separador ultrafino entre columnas */
-.info-divider-v {
-    width: 1px;
-    height: 48px;
-    background: linear-gradient(
-        180deg, 
-        rgba(0,0,0,0) 0%, 
-        rgba(0,0,0,0.07) 50%, 
-        rgba(0,0,0,0) 100%
-    );
-    margin: 0 1.5rem;
-}
+                .info-col {
+                    flex: 1;
+                }
 
-/* Títulos sutiles */
-.info-label {
-    display: block;
-    font-size: 0.6875rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-secondary);
-    margin-bottom: 0.35rem;
-}
+                .info-divider-v {
+                    width: 1px;
+                    height: 48px;
+                    background: linear-gradient(
+                        180deg, 
+                        rgba(0,0,0,0) 0%, 
+                        rgba(0,0,0,0.07) 50%, 
+                        rgba(0,0,0,0) 100%
+                    );
+                    margin: 0 1.5rem;
+                }
 
-/* Valores principales */
-.info-value-main {
-    font-size: 1.25rem;
-    font-weight: 400;
-    color: var(--text-primary);
-    letter-spacing: -0.01em;
-    line-height: 1.2;
-}
+                .info-label {
+                    display: block;
+                    font-size: 0.6875rem;
+                    font-weight: 600;
+                    text-transform: uppercase;
+                    letter-spacing: 0.08em;
+                    color: var(--text-secondary);
+                    margin-bottom: 0.35rem;
+                }
 
-.info-value {
-    font-size: 1rem;
-    font-weight: 500;
-    color: var(--text-primary);
-    letter-spacing: -0.01em;
-    line-height: 1.2;
-}
+                .info-value-main {
+                    font-size: 1.25rem;
+                    font-weight: 400;
+                    color: var(--text-primary);
+                    letter-spacing: -0.01em;
+                    line-height: 1.2;
+                }
 
-/* Metadatos y etiquetas secundarias */
-.info-meta {
-    margin-top: 0.6rem;
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.8125rem;
-}
+                .info-value {
+                    font-size: 1rem;
+                    font-weight: 500;
+                    color: var(--text-primary);
+                    letter-spacing: -0.01em;
+                    line-height: 1.2;
+                }
 
-.meta-title {
-    color: var(--text-muted);
-    font-weight: 400;
-}
+                .info-meta {
+                    margin-top: 0.6rem;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.4rem;
+                    font-size: 0.8125rem;
+                }
 
-.meta-value {
-    color: var(--text-primary);
-    font-weight: 500;
-}
+                .meta-title {
+                    color: var(--text-muted);
+                    font-weight: 400;
+                }
 
-.meta-tag {
-    color: var(--text-secondary);
-    font-size: 0.75rem;
-    font-weight: 400;
-    font-style: italic;
-}
+                .meta-value {
+                    color: var(--text-primary);
+                    font-weight: 500;
+                }
 
-/* Badge de placas tipo joyería/relojería */
-.meta-badge {
-    color: #475569;
-    background: var(--accent-bg);
-    border: 1px solid rgba(0, 0, 0, 0.04);
-    padding: 0.15rem 0.5rem;
-    border-radius: 6px;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 0.75rem;
-    letter-spacing: 0.05em;
-    font-weight: 600;
-}
+                .meta-tag {
+                    color: var(--text-secondary);
+                    font-size: 0.75rem;
+                    font-weight: 400;
+                    font-style: italic;
+                }
+
+                .meta-badge {
+                    color: #475569;
+                    background: var(--accent-bg);
+                    border: 1px solid rgba(0, 0, 0, 0.04);
+                    padding: 0.15rem 0.5rem;
+                    border-radius: 6px;
+                    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+                    font-size: 0.75rem;
+                    letter-spacing: 0.05em;
+                    font-weight: 600;
+                }
             </style>
 
             <!-- BLOQUES DE INFORMACIÓN PRINCIPAL -->
-           <div class="info-grid">
-    <!-- Tarjeta 1: Cliente -->
-    <div class="info-card">
-        <div class="info-card-body">
-            <span class="info-label">Cliente Destino</span>
-            <div class="info-value-main">${data.data[0].cliente ?? '-'}</div>
-            <div class="info-meta">
-                <span class="meta-title">Teléfono</span>
-                <span class="meta-value">${data.data[0].tel_cliente ?? 'Sin teléfono'}</span>
-            </div>
-        </div>
-    </div>
-   
-    <!-- Tarjeta 2: Operador (Izq) / Unidad (Der) -->
-    <div class="info-card">
-        <div class="info-card-body info-split">
-            <!-- Operador -->
-            <div class="info-col">
-                <span class="info-label">Operador / Chofer</span>
-                <div class="info-value">${data.data[0].nombre_chofer ?? '-'}</div>
-                <div class="info-meta">
-                    <span class="meta-tag">Asignado de ruta</span>
+            <div class="info-grid">
+                <!-- Tarjeta 1: Cliente -->
+                <div class="info-card">
+                    <div class="info-card-body">
+                        <span class="info-label">Cliente Destino</span>
+                        <div class="info-value-main">${datos[0].cliente ?? '-'}</div>
+                        <div class="info-meta">
+                            <span class="meta-title">Teléfono</span>
+                            <span class="meta-value">${datos[0].tel_cliente ?? 'Sin teléfono'}</span>
+                        </div>
+                    </div>
                 </div>
+               
+                <!-- Tarjeta 2: Dinámica (Chofer o Patio) -->
+                ${bloqueOperador}
             </div>
-
-            <!-- Separador vertical delicado -->
-            <div class="info-divider-v"></div>
-
-            <!-- Unidad -->
-            <div class="info-col">
-                <span class="info-label">Unidad de Transporte</span>
-                <div class="info-value">${data.data[0].unidad_nombre ?? '-'}</div>
-                <div class="info-meta">
-                    <span class="meta-title">Placas</span>
-                    <span class="meta-badge">${data.data[0].unidad_placas ?? '-'}</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
 
             <!-- SECCIÓN DE DETALLES / TABLA -->
             <div class="table-responsive border rounded mb-4 mt-3">
@@ -353,7 +420,7 @@ async function imprimirRuta(entrega_ida, folioViaje) {
                             <th style="width: 5%">#</th>
                             <th style="width: 40%">Producto descripción</th>
                             <th style="width: 20%">Cantidad total</th>
-                            <th style="width: 23%">Dirección de entrega</th>
+                            <th style="width: 23%">Ubicación / Dirección</th>
                             <th style="width: 12%" class="text-center">Estado</th>
                         </tr>
                     </thead>
@@ -365,27 +432,7 @@ async function imprimirRuta(entrega_ida, folioViaje) {
 
             <!-- ÁREA DE FIRMAS FORMALIZADA -->
             <div class="firmas-container pt-4">
-                <div class="row g-5">
-                    <div class="col-4">
-                        <div class="firma-box text-center">
-                            <div class="firma-linea"></div>
-                            <div class="firma-nombre">Firma Chofer / Transportista</div>
-                            <div class="text-body-secondary small">Nombre y Fecha</div>
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <div class="firma-box text-center">
-                            <div class="firma-linea"></div>
-                            <div class="firma-nombre">Firma Cliente / Recibe</div>
-                            <div class="text-body-secondary small">Sello y Firma de conformidad</div>
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <div class="info-box">
-                            <div class="info-sub mt-1">Observaciones y Comentarios:</div>
-                        </div>
-                    </div>
-                </div>
+                ${firmasSeccion}
             </div>
 
         </div>
@@ -405,12 +452,11 @@ function imprimirModalRuta() {
         <!DOCTYPE html>
         <html lang="es">
         <head>
-            <meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Hoja de Ruta</title>
-      <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
-
-    <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
-
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Hoja de Entrega / Ruta</title>
+            <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
+            <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
             <style>
                 body {
@@ -508,7 +554,7 @@ function imprimirModalRuta() {
                 @media print {
                     .info-grid {
                         display: grid !important;
-                        grid-template-columns: repeat(3, 1fr) !important;
+                        grid-template-columns: repeat(2, 1fr) !important;
                         gap: 10px !important;
                     }
                     body {
