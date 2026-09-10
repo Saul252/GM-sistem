@@ -4,7 +4,8 @@
 
 :root {
     --mac-border: #d1d1d6;
-    --mac-accent: #007aff; /* Azul clásico de Apple */
+    --mac-accent: #007aff;
+    /* Azul clásico de Apple */
     --mac-bg: #ffffff;
     --mac-shadow: rgba(0, 0, 0, 0.1);
 }
@@ -95,7 +96,8 @@
 /* 1. Evitamos que el contenedor del modal bloquee clics accidentales */
 .modal {
     background-color: transparent !important;
-    pointer-events: none; /* Los clics pasan a través del área vacía */
+    pointer-events: none;
+    /* Los clics pasan a través del área vacía */
 }
 
 /* 2. Permitimos clics solo en el contenido real del modal */
@@ -112,14 +114,12 @@
 /* nth-of-type(even) detecta si es el segundo modal abierto */
 
 
-.modal-backdrop.show:nth-of-type(even) {
-    z-index: 1059 !important;
-    opacity: 0.4 !important; /* Un poco más claro para ver el modal de atrás */
-}
+
 
 /* 5. Corrección para Select2 dentro de modales */
 .select2-container--open {
-    z-index: 9999 !important; /* Siempre al frente de todo */
+    z-index: 9999 !important;
+    /* Siempre al frente de todo */
 }
 
 /* 6. Mantener scroll cuando se cierra el modal superior */
