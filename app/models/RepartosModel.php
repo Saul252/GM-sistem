@@ -1,74 +1,78 @@
 <?php
-class RepartoModel {
+class RepartoModel
+{
     private $db;
 
-    public function __construct($conexion) {
+    public function __construct($conexion)
+    {
         $this->db = $conexion;
     }
 
-   /**
- * Procesa la asignación de una ruta de logística completa.
- * @param array $datos Provienen directamente del $_POST del formulario.
- * @return int ID del reparto generado.
- * @throws Exception Si ocurre un error en la base de datos.
- */public function iniciarReparto($datos) {
-    try {
-        $vehiculo_id   = intval($datos['vehiculo_id']);
-        $chofer_id     = intval($datos['chofer_id']);
-        $movimiento_id = intval($datos['movimiento_id']);
-        $direccion     = !empty($datos['direccion_entrega']) ? $datos['direccion_entrega'] : 'Entrega en Obra';
-        
-        // 🔹 CORRECCIÓN: Verifica 'tripulante_id' primero (enviado por el controlador) y 'tripulantes' como respaldo
-       
-        // Recuperamos el folio que viene desde el controlador
-        $folio_viaje   = $datos['folio_viaje'] ?? ''; 
+    /**
+     * Procesa la asignación de una ruta de logística completa.
+     * @param array $datos Provienen directamente del $_POST del formulario.
+     * @return int ID del reparto generado.
+     * @throws Exception Si ocurre un error en la base de datos.
+     */
+    public function iniciarReparto($datos)
+    {
+        try {
+            $vehiculo_id = intval($datos['vehiculo_id']);
+            $chofer_id = intval($datos['chofer_id']);
+            $movimiento_id = intval($datos['movimiento_id']);
+            $direccion = !empty($datos['direccion_entrega']) ? $datos['direccion_entrega'] : 'Entrega en Obra';
 
-        // --- VALIDACIÓN DE INTEGRIDAD EN TRANSPORTE ---
-        $sqlCheck = "SELECT rp.id FROM transporte_rutas_puntos rp
+            // 🔹 CORRECCIÓN: Verifica 'tripulante_id' primero (enviado por el controlador) y 'tripulantes' como respaldo
+
+            // Recuperamos el folio que viene desde el controlador
+            $folio_viaje = $datos['folio_viaje'] ?? '';
+
+            // --- VALIDACIÓN DE INTEGRIDAD EN TRANSPORTE ---
+            $sqlCheck = "SELECT rp.id FROM transporte_rutas_puntos rp
                      INNER JOIN transporte_repartos_maestro trm ON rp.reparto_id = trm.id
                      WHERE trm.entrega_venta_id = ? 
                      AND trm.estado_reparto != 'cancelado' LIMIT 1";
-        
-        $stmtCheck = $this->db->prepare($sqlCheck);
-        $stmtCheck->bind_param("i", $movimiento_id);
-        $stmtCheck->execute();
-        
-        if ($stmtCheck->get_result()->num_rows > 0) {
-            throw new Exception("Ya existe una ruta programada para este despacho.");
-        }
 
-        $this->db->begin_transaction();
+            $stmtCheck = $this->db->prepare($sqlCheck);
+            $stmtCheck->bind_param("i", $movimiento_id);
+            $stmtCheck->execute();
 
-        // 1. Crear el Maestro del Reparto
-        $sqlM = "INSERT INTO transporte_repartos_maestro (
+            if ($stmtCheck->get_result()->num_rows > 0) {
+                throw new Exception("Ya existe una ruta programada para este despacho.");
+            }
+
+            $this->db->begin_transaction();
+
+            // 1. Crear el Maestro del Reparto
+            $sqlM = "INSERT INTO transporte_repartos_maestro (
                     vehiculo_id, 
                     usuario_encargado_id, 
                     entrega_venta_id, 
                     fecha_programada, 
                     estado_reparto
                 ) VALUES (?, ?, ?, CURDATE(), 'en_transito')";
-        
-        $stmtM = $this->db->prepare($sqlM);
-        $stmtM->bind_param("iii", $vehiculo_id, $chofer_id, $movimiento_id);
-        $stmtM->execute();
-        $reparto_id = $this->db->insert_id;
 
-        // Obtener el entrega_id correspondiente al movimiento
-        $sqlmov = "SELECT entrega_id
+            $stmtM = $this->db->prepare($sqlM);
+            $stmtM->bind_param("iii", $vehiculo_id, $chofer_id, $movimiento_id);
+            $stmtM->execute();
+            $reparto_id = $this->db->insert_id;
+
+            // Obtener el entrega_id correspondiente al movimiento
+            $sqlmov = "SELECT entrega_id
                    FROM movimientos m
                    WHERE m.id = ?
                    LIMIT 1";
 
-        $stmtmov = $this->db->prepare($sqlmov);
-        $stmtmov->bind_param("i", $movimiento_id);
-        $stmtmov->execute();
+            $stmtmov = $this->db->prepare($sqlmov);
+            $stmtmov->bind_param("i", $movimiento_id);
+            $stmtmov->execute();
 
-        $result = $stmtmov->get_result();
-        $row = $result->fetch_assoc();
-        $entrega_id = $row['entrega_id'] ?? null;
+            $result = $stmtmov->get_result();
+            $row = $result->fetch_assoc();
+            $entrega_id = $row['entrega_id'] ?? null;
 
-        // 1.1 Registro en la tabla de consolidación
-        $sqlC = "INSERT INTO transporte_consolidacion (
+            // 1.1 Registro en la tabla de consolidación
+            $sqlC = "INSERT INTO transporte_consolidacion (
                     viaje_folio, 
                     vehiculo_id, 
                     reparto_id, 
@@ -76,12 +80,12 @@ class RepartoModel {
                     entrega_id
                 ) VALUES (?, ?, ?, 'abierto', ?)";
 
-        $stmtC = $this->db->prepare($sqlC);
-        $stmtC->bind_param("siii", $folio_viaje, $vehiculo_id, $reparto_id, $entrega_id);
-        $stmtC->execute();
+            $stmtC = $this->db->prepare($sqlC);
+            $stmtC->bind_param("siii", $folio_viaje, $vehiculo_id, $reparto_id, $entrega_id);
+            $stmtC->execute();
 
-        // 2. Insertar el Punto de Ruta
-        $sqlP = "INSERT INTO transporte_rutas_puntos (
+            // 2. Insertar el Punto de Ruta
+            $sqlP = "INSERT INTO transporte_rutas_puntos (
                     reparto_id, 
                     orden_visita, 
                     descripcion_punto, 
@@ -89,90 +93,94 @@ class RepartoModel {
                     entrega_id
                 ) VALUES (?, 1, ?, 'pendiente', ?)";
 
-        $stmtP = $this->db->prepare($sqlP);
-        $stmtP->bind_param("isi", $reparto_id, $direccion, $entrega_id);
-        $stmtP->execute();
+            $stmtP = $this->db->prepare($sqlP);
+            $stmtP->bind_param("isi", $reparto_id, $direccion, $entrega_id);
+            $stmtP->execute();
 
-        // 3. Registrar Tripulación (Solo 1 tripulante válido y distinto al chofer)
-        
+            // 3. Registrar Tripulación (Solo 1 tripulante válido y distinto al chofer)
 
-        $this->db->commit();
-        return $reparto_id;
 
-    } catch (Exception $e) {
-        if (isset($this->db)) {
-            try { $this->db->rollback(); } catch (Throwable $t) {}
+            $this->db->commit();
+            return $reparto_id;
+
+        } catch (Exception $e) {
+            if (isset($this->db)) {
+                try {
+                    $this->db->rollback();
+                } catch (Throwable $t) {
+                }
+            }
+            throw $e;
         }
-        throw $e;
     }
-}
-/**
- * Guarda un tripulante asignado a un reparto específico.
- * 
- * @param int $reparto_id ID del reparto maestro
- * @param int $usuario_id ID del usuario/tripulante
- * @param int $chofer_id  (Opcional) ID del chofer para evitar duplicidad de rol
- * @return bool Devuelve true si se insertó con éxito, false si no
- */
+    /**
+     * Guarda un tripulante asignado a un reparto específico.
+     * 
+     * @param int $reparto_id ID del reparto maestro
+     * @param int $usuario_id ID del usuario/tripulante
+     * @param int $chofer_id  (Opcional) ID del chofer para evitar duplicidad de rol
+     * @return bool Devuelve true si se insertó con éxito, false si no
+     */
 
- public function iniciarRepartoPatio($datos) {
-    try {
-        $vehiculo_id   = intval($datos['vehiculo_id']);
-        $chofer_id     = intval($datos['chofer_id']);
-        $movimiento_id = intval($datos['movimiento_id']);
-        $direccion     = !empty($datos['direccion_entrega']) ? $datos['direccion_entrega'] : 'Entrega en Obra';
-        
-        // 🔹 CORRECCIÓN: Verifica 'tripulante_id' primero (enviado por el controlador) y 'tripulantes' como respaldo
-       
-        // Recuperamos el folio que viene desde el controlador
-        $folio_viaje   = $datos['folio_viaje'] ?? ''; 
+    public function iniciarRepartoPatio($datos)
+    {
+        try {
+            $vehiculo_id = intval($datos['vehiculo_id']);
+            $chofer_id = intval($datos['chofer_id']);
+            $movimiento_id = intval($datos['movimiento_id']);
+            $direccion = !empty($datos['direccion_entrega']) ? $datos['direccion_entrega'] : 'Entrega en Obra';
 
-        // --- VALIDACIÓN DE INTEGRIDAD EN TRANSPORTE ---
-        $sqlCheck = "SELECT rp.id FROM transporte_rutas_puntos rp
+            // 🔹 CORRECCIÓN: Verifica 'tripulante_id' primero (enviado por el controlador) y 'tripulantes' como respaldo
+
+            // Recuperamos el folio que viene desde el controlador
+            $folio_viaje = $datos['folio_viaje'] ?? '';
+
+            // --- VALIDACIÓN DE INTEGRIDAD EN TRANSPORTE ---
+            $sqlCheck = "SELECT rp.id FROM transporte_rutas_puntos rp
                      INNER JOIN transporte_repartos_maestro trm ON rp.reparto_id = trm.id
                      WHERE trm.entrega_venta_id = ? 
                      AND trm.estado_reparto != 'cancelado' LIMIT 1";
-        
-        $stmtCheck = $this->db->prepare($sqlCheck);
-        $stmtCheck->bind_param("i", $movimiento_id);
-        $stmtCheck->execute();
-        
-        if ($stmtCheck->get_result()->num_rows > 0) {
-            throw new Exception("Ya existe una ruta programada para este despacho.");
-        }
 
-        $this->db->begin_transaction();
+            $stmtCheck = $this->db->prepare($sqlCheck);
+            $stmtCheck->bind_param("i", $movimiento_id);
+            $stmtCheck->execute();
 
-        // 1. Crear el Maestro del Reparto
-        $sqlM = "INSERT INTO transporte_repartos_maestro (
+            if ($stmtCheck->get_result()->num_rows > 0) {
+                throw new Exception("Ya existe una ruta programada para este despacho.");
+            }
+
+            $this->db->begin_transaction();
+
+            // 1. Crear el Maestro del Reparto
+            $sqlM = "INSERT INTO transporte_repartos_maestro (
                     vehiculo_id, 
                     usuario_encargado_id, 
                     entrega_venta_id, 
                     fecha_programada, 
                     estado_reparto
                 ) VALUES (?, ?, ?, CURDATE(), 'completado')";
-        
-        $stmtM = $this->db->prepare($sqlM);
-        $stmtM->bind_param("iii", $vehiculo_id, $chofer_id, $movimiento_id);
-        $stmtM->execute();
-        $reparto_id = $this->db->insert_id;
 
-        // Obtener el entrega_id correspondiente al movimiento
-        $sqlmov = "SELECT entrega_id
+            $stmtM = $this->db->prepare($sqlM);
+            $stmtM->bind_param("iii", $vehiculo_id, $chofer_id, $movimiento_id);
+            $stmtM->execute();
+            $reparto_id = $this->db->insert_id;
+
+            // Obtener el entrega_id correspondiente al movimiento
+            $sqlmov = "SELECT entrega_id
                    FROM movimientos m
                    WHERE m.id = ?
                    LIMIT 1";
 
-        $stmtmov = $this->db->prepare($sqlmov);
-        $stmtmov->bind_param("i", $movimiento_id);
-        $stmtmov->execute();
+            $stmtmov = $this->db->prepare($sqlmov);
+            $stmtmov->bind_param("i", $movimiento_id);
+            $stmtmov->execute();
 
-        $result = $stmtmov->get_result();
-        $row = $result->fetch_assoc();
-        $entrega_id = $row['entrega_id'] ?? null;
+            $result = $stmtmov->get_result();
+            $row = $result->fetch_assoc();
+            $entrega_id = $row['entrega_id'] ?? null;
 
-        // 1.1 Registro en la tabla de consolidación
-        $sqlC = "INSERT INTO transporte_consolidacion (
+            // 1.1 Registro en la tabla de consolidación
+            $sqlC = "INSERT INTO transporte_consolidacion (
                     viaje_folio, 
                     vehiculo_id, 
                     reparto_id, 
@@ -180,12 +188,12 @@ class RepartoModel {
                     entrega_id
                 ) VALUES (?, ?, ?, 'cerrado', ?)";
 
-        $stmtC = $this->db->prepare($sqlC);
-        $stmtC->bind_param("siii", $folio_viaje, $vehiculo_id, $reparto_id, $entrega_id);
-        $stmtC->execute();
+            $stmtC = $this->db->prepare($sqlC);
+            $stmtC->bind_param("siii", $folio_viaje, $vehiculo_id, $reparto_id, $entrega_id);
+            $stmtC->execute();
 
-        // 2. Insertar el Punto de Ruta
-        $sqlP = "INSERT INTO transporte_rutas_puntos (
+            // 2. Insertar el Punto de Ruta
+            $sqlP = "INSERT INTO transporte_rutas_puntos (
                     reparto_id, 
                     orden_visita, 
                     descripcion_punto, 
@@ -193,104 +201,109 @@ class RepartoModel {
                     entrega_id
                 ) VALUES (?, 1, ?, 'visitado', ?)";
 
-        $stmtP = $this->db->prepare($sqlP);
-        $stmtP->bind_param("isi", $reparto_id, $direccion, $entrega_id);
-        $stmtP->execute();
+            $stmtP = $this->db->prepare($sqlP);
+            $stmtP->bind_param("isi", $reparto_id, $direccion, $entrega_id);
+            $stmtP->execute();
 
-        // 3. Registrar Tripulación (Solo 1 tripulante válido y distinto al chofer)
-        
+            // 3. Registrar Tripulación (Solo 1 tripulante válido y distinto al chofer)
 
-        $this->db->commit();
-        return $reparto_id;
 
-    } catch (Exception $e) {
-        if (isset($this->db)) {
-            try { $this->db->rollback(); } catch (Throwable $t) {}
+            $this->db->commit();
+            return $reparto_id;
+
+        } catch (Exception $e) {
+            if (isset($this->db)) {
+                try {
+                    $this->db->rollback();
+                } catch (Throwable $t) {
+                }
+            }
+            throw $e;
         }
-        throw $e;
     }
-}
-/**
- * Guarda un tripulante asignado a un reparto específico.
- * 
- * @param int $reparto_id ID del reparto maestro
- * @param int $usuario_id ID del usuario/tripulante
- * @param int $chofer_id  (Opcional) ID del chofer para evitar duplicidad de rol
- * @return bool Devuelve true si se insertó con éxito, false si no
- */
-public function guardarTripulante($reparto_id, $usuario_id, $chofer_id = 0) {
-    // Validar que ambos IDs sean enteros válidos, mayores a 0 y que no sea el mismo chofer
-    if (intval($reparto_id) <= 0 || intval($usuario_id) <= 0 || intval($usuario_id) === intval($chofer_id)) {
-        return false;
+    /**
+     * Guarda un tripulante asignado a un reparto específico.
+     * 
+     * @param int $reparto_id ID del reparto maestro
+     * @param int $usuario_id ID del usuario/tripulante
+     * @param int $chofer_id  (Opcional) ID del chofer para evitar duplicidad de rol
+     * @return bool Devuelve true si se insertó con éxito, false si no
+     */
+    public function guardarTripulante($reparto_id, $usuario_id, $chofer_id = 0)
+    {
+        // Validar que ambos IDs sean enteros válidos, mayores a 0 y que no sea el mismo chofer
+        if (intval($reparto_id) <= 0 || intval($usuario_id) <= 0 || intval($usuario_id) === intval($chofer_id)) {
+            return false;
+        }
+
+        try {
+            // Usamos INSERT IGNORE por si ya existe el registro no rompa la ejecución
+            $sqlT = "INSERT IGNORE INTO transporte_tripulantes_detalle (reparto_id, usuario_id) VALUES (?, ?)";
+            $stmtT = $this->db->prepare($sqlT);
+
+            if (!$stmtT) {
+                throw new Exception("Error al preparar consulta: " . $this->db->error);
+            }
+
+            // "ii" -> ambos son enteros (reparto_id, usuario_id)
+            $stmtT->bind_param("ii", $reparto_id, $usuario_id);
+
+            return $stmtT->execute();
+
+        } catch (Exception $e) {
+            error_log("Error al guardar tripulante (Reparto: {$reparto_id}, Usuario: {$usuario_id}): " . $e->getMessage());
+            return false;
+        }
     }
+    public function entregarEnPatioCliente($datos)
+    {
+        mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
-    try {
-        // Usamos INSERT IGNORE por si ya existe el registro no rompa la ejecución
-        $sqlT = "INSERT IGNORE INTO transporte_tripulantes_detalle (reparto_id, usuario_id) VALUES (?, ?)";
-        $stmtT = $this->db->prepare($sqlT);
-        
-        if (!$stmtT) {
-            throw new Exception("Error al preparar consulta: " . $this->db->error);
-        }
+        try {
+            $vehiculo_virtual_id = 999;
 
-        // "ii" -> ambos son enteros (reparto_id, usuario_id)
-        $stmtT->bind_param("ii", $reparto_id, $usuario_id);
-        
-        return $stmtT->execute();
+            $movimiento_id = intval($datos['movimiento_id'] ?? 0);
+            $trabajador_id = intval($datos['chofer_id'] ?? 0);
+            $usuario_operador_id = intval($datos['usuario_sistema_id'] ?? 0);
 
-    } catch (Exception $e) {
-        error_log("Error al guardar tripulante (Reparto: {$reparto_id}, Usuario: {$usuario_id}): " . $e->getMessage());
-        return false;
-    }
-}
-public function entregarEnPatioCliente($datos) {
-    mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+            $observaciones = !empty($datos['observaciones'])
+                ? trim($datos['observaciones'])
+                : 'Entrega Directa en Patio';
 
-    try {
-        $vehiculo_virtual_id = 999;
+            $tripulantes = (
+                isset($datos['tripulantes']) &&
+                is_array($datos['tripulantes'])
+            ) ? $datos['tripulantes'] : [];
 
-        $movimiento_id       = intval($datos['movimiento_id'] ?? 0);
-        $trabajador_id       = intval($datos['chofer_id'] ?? 0);
-        $usuario_operador_id = intval($datos['usuario_sistema_id'] ?? 0);
+            if ($movimiento_id <= 0) {
+                throw new Exception("Movimiento inválido.");
+            }
 
-        $observaciones = !empty($datos['observaciones'])
-            ? trim($datos['observaciones'])
-            : 'Entrega Directa en Patio';
+            if ($usuario_operador_id <= 0) {
+                throw new Exception("Usuario operador inválido.");
+            }
 
-        $tripulantes = (
-            isset($datos['tripulantes']) &&
-            is_array($datos['tripulantes'])
-        ) ? $datos['tripulantes'] : [];
+            // =====================================================
+            // VALIDAR VEHÍCULO
+            // =====================================================
+            $sqlVeh = "SELECT id FROM transporte_vehiculos WHERE id = ? LIMIT 1";
+            $stmtVeh = $this->db->prepare($sqlVeh);
+            if (!$stmtVeh) {
+                throw new Exception("Error prepare vehículo: " . $this->db->error);
+            }
+            $stmtVeh->bind_param("i", $vehiculo_virtual_id);
+            $stmtVeh->execute();
+            $stmtVeh->store_result();
 
-        if ($movimiento_id <= 0) {
-            throw new Exception("Movimiento inválido.");
-        }
+            if ($stmtVeh->num_rows <= 0) {
+                throw new Exception("El vehículo virtual {$vehiculo_virtual_id} no existe.");
+            }
+            $stmtVeh->close();
 
-        if ($usuario_operador_id <= 0) {
-            throw new Exception("Usuario operador inválido.");
-        }
-
-        // =====================================================
-        // VALIDAR VEHÍCULO
-        // =====================================================
-        $sqlVeh = "SELECT id FROM transporte_vehiculos WHERE id = ? LIMIT 1";
-        $stmtVeh = $this->db->prepare($sqlVeh);
-        if (!$stmtVeh) {
-            throw new Exception("Error prepare vehículo: " . $this->db->error);
-        }
-        $stmtVeh->bind_param("i", $vehiculo_virtual_id);
-        $stmtVeh->execute();
-        $stmtVeh->store_result();
-
-        if ($stmtVeh->num_rows <= 0) {
-            throw new Exception("El vehículo virtual {$vehiculo_virtual_id} no existe.");
-        }
-        $stmtVeh->close();
-
-        // =====================================================
-        // VALIDAR DUPLICADOS
-        // =====================================================
-        $sqlCheck = "
+            // =====================================================
+            // VALIDAR DUPLICADOS
+            // =====================================================
+            $sqlCheck = "
             SELECT rp.id
             FROM transporte_rutas_puntos rp
             INNER JOIN transporte_repartos_maestro trm
@@ -299,158 +312,161 @@ public function entregarEnPatioCliente($datos) {
             AND trm.estado_reparto != 'cancelado'
             LIMIT 1
         ";
-        $stmtCheck = $this->db->prepare($sqlCheck);
-        if (!$stmtCheck) {
-            throw new Exception("Error prepare check: " . $this->db->error);
-        }
-        $stmtCheck->bind_param("i", $movimiento_id);
-        $stmtCheck->execute();
-        $stmtCheck->store_result();
+            $stmtCheck = $this->db->prepare($sqlCheck);
+            if (!$stmtCheck) {
+                throw new Exception("Error prepare check: " . $this->db->error);
+            }
+            $stmtCheck->bind_param("i", $movimiento_id);
+            $stmtCheck->execute();
+            $stmtCheck->store_result();
 
-        if ($stmtCheck->num_rows > 0) {
-            throw new Exception("Ya existe un proceso de entrega activo para este despacho.");
-        }
-        $stmtCheck->close();
+            if ($stmtCheck->num_rows > 0) {
+                throw new Exception("Ya existe un proceso de entrega activo para este despacho.");
+            }
+            $stmtCheck->close();
 
-        // =====================================================
-        // ARMAR TRIPULACIÓN
-        // =====================================================
-        if ($trabajador_id > 0) {
-            array_unshift($tripulantes, $trabajador_id);
-        }
+            // =====================================================
+            // ARMAR TRIPULACIÓN
+            // =====================================================
+            if ($trabajador_id > 0) {
+                array_unshift($tripulantes, $trabajador_id);
+            }
 
-        $tripulantes = array_unique(
-            array_map('intval', $tripulantes)
-        );
+            $tripulantes = array_unique(
+                array_map('intval', $tripulantes)
+            );
 
-        // =====================================================
-        // INICIAR TRANSACCIÓN
-        // =====================================================
-        $this->db->begin_transaction();
+            // =====================================================
+            // INICIAR TRANSACCIÓN
+            // =====================================================
+            $this->db->begin_transaction();
 
-        // =====================================================
-        // INSERT MAESTRO
-        // =====================================================
-        $estado_maestro = 'completado';
-        $sqlM = "
+            // =====================================================
+            // INSERT MAESTRO
+            // =====================================================
+            $estado_maestro = 'completado';
+            $sqlM = "
             INSERT INTO transporte_repartos_maestro (
                 vehiculo_id, usuario_encargado_id, entrega_venta_id, fecha_programada, estado_reparto, hora_llegada_real
             ) VALUES (?, ?, ?, CURDATE(), ?, NOW())
         ";
-        $stmtM = $this->db->prepare($sqlM);
-        if (!$stmtM) {
-            throw new Exception("Error prepare maestro: " . $this->db->error);
-        }
-        $stmtM->bind_param("iiis", $vehiculo_virtual_id, $usuario_operador_id, $movimiento_id, $estado_maestro);
-        $stmtM->execute();
-        
-        $reparto_id = intval($this->db->insert_id);
-        if ($reparto_id <= 0) {
-            throw new Exception("No se generó reparto_id.");
-        }
-        $stmtM->close();
+            $stmtM = $this->db->prepare($sqlM);
+            if (!$stmtM) {
+                throw new Exception("Error prepare maestro: " . $this->db->error);
+            }
+            $stmtM->bind_param("iiis", $vehiculo_virtual_id, $usuario_operador_id, $movimiento_id, $estado_maestro);
+            $stmtM->execute();
 
-        // =====================================================
-        // INSERT PUNTO RUTA
-        // =====================================================
-        // Obtener el entrega_id correspondiente al movimiento
-        $sqlmov = "SELECT entrega_id
+            $reparto_id = intval($this->db->insert_id);
+            if ($reparto_id <= 0) {
+                throw new Exception("No se generó reparto_id.");
+            }
+            $stmtM->close();
+
+            // =====================================================
+            // INSERT PUNTO RUTA
+            // =====================================================
+            // Obtener el entrega_id correspondiente al movimiento
+            $sqlmov = "SELECT entrega_id
                    FROM movimientos m
                    WHERE m.id = ?
                    LIMIT 1";
-                   
 
-        $stmtmov = $this->db->prepare($sqlmov);
-        $stmtmov->bind_param("i", $movimiento_id);
-        $stmtmov->execute();
-        $result = $stmtmov->get_result();
-        $row = $result->fetch_assoc();
-        $entrega_id = $row['entrega_id'] ?? null;
-        $estado_punto = 'visitado';
-        $descripcion = "ENTREGA EN PATIO: " . $observaciones;
-        $sqlP = "
+
+            $stmtmov = $this->db->prepare($sqlmov);
+            $stmtmov->bind_param("i", $movimiento_id);
+            $stmtmov->execute();
+            $result = $stmtmov->get_result();
+            $row = $result->fetch_assoc();
+            $entrega_id = $row['entrega_id'] ?? null;
+            $estado_punto = 'visitado';
+            $descripcion = "ENTREGA EN PATIO: " . $observaciones;
+            $sqlP = "
             INSERT INTO transporte_rutas_puntos (
                 reparto_id, orden_visita, descripcion_punto, estado_punto, entrega_id
             ) VALUES (?, 1, ?, ?, ?)
         ";
-        $stmtP = $this->db->prepare($sqlP);
-        if (!$stmtP) {
-            throw new Exception("Error prepare punto: " . $this->db->error);
-        }
-        $stmtP->bind_param("issi", $reparto_id, $descripcion, $estado_punto, $entrega_id);
-        $stmtP->execute();
-        $stmtP->close();
+            $stmtP = $this->db->prepare($sqlP);
+            if (!$stmtP) {
+                throw new Exception("Error prepare punto: " . $this->db->error);
+            }
+            $stmtP->bind_param("issi", $reparto_id, $descripcion, $estado_punto, $entrega_id);
+            $stmtP->execute();
+            $stmtP->close();
 
-        // =====================================================
-        // INSERT TRIPULANTES
-        // =====================================================
-        if (!empty($tripulantes)) {
-            $sqlT = "INSERT INTO transporte_tripulantes_detalle (reparto_id, usuario_id) VALUES (?, ?)";
-            $stmtT = $this->db->prepare($sqlT);
-            if (!$stmtT) {
-                throw new Exception("Error prepare tripulantes: " . $this->db->error);
+            // =====================================================
+            // INSERT TRIPULANTES
+            // =====================================================
+            if (!empty($tripulantes)) {
+                $sqlT = "INSERT INTO transporte_tripulantes_detalle (reparto_id, usuario_id) VALUES (?, ?)";
+                $stmtT = $this->db->prepare($sqlT);
+                if (!$stmtT) {
+                    throw new Exception("Error prepare tripulantes: " . $this->db->error);
+                }
+
+                foreach ($tripulantes as $uid) {
+                    $uid = intval($uid);
+                    if ($uid <= 0)
+                        continue;
+
+                    $stmtT->bind_param("ii", $reparto_id, $uid);
+                    $stmtT->execute();
+                }
+                $stmtT->close();
             }
 
-            foreach ($tripulantes as $uid) {
-                $uid = intval($uid);
-                if ($uid <= 0) continue;
-
-                $stmtT->bind_param("ii", $reparto_id, $uid);
-                $stmtT->execute();
+            // =====================================================
+            // LIBERAR VEHÍCULO
+            // =====================================================
+            $sqlV = "UPDATE transporte_vehiculos SET estado_unidad = 'disponible' WHERE id = ?";
+            $stmtV = $this->db->prepare($sqlV);
+            if (!$stmtV) {
+                throw new Exception("Error prepare vehículo update: " . $this->db->error);
             }
-            $stmtT->close();
+            $stmtV->bind_param("i", $vehiculo_virtual_id);
+            $stmtV->execute();
+            $stmtV->close();
+
+            // =====================================================
+            // COMMIT
+            // =====================================================
+            $this->db->commit();
+
+            return [
+                'success' => true,
+                'reparto_id' => $reparto_id,
+                'message' => 'Entrega finalizada correctamente.'
+            ];
+
+        } catch (Exception $e) {
+            // Rollback seguro comprobando únicamente si la transacción está activa
+            if (isset($this->db) && method_exists($this->db, 'rollback')) {
+                @$this->db->rollback();
+            }
+
+            error_log("ERROR entregarEnPatioCliente: " . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
         }
-
-        // =====================================================
-        // LIBERAR VEHÍCULO
-        // =====================================================
-        $sqlV = "UPDATE transporte_vehiculos SET estado_unidad = 'disponible' WHERE id = ?";
-        $stmtV = $this->db->prepare($sqlV);
-        if (!$stmtV) {
-            throw new Exception("Error prepare vehículo update: " . $this->db->error);
-        }
-        $stmtV->bind_param("i", $vehiculo_virtual_id);
-        $stmtV->execute();
-        $stmtV->close();
-
-        // =====================================================
-        // COMMIT
-        // =====================================================
-        $this->db->commit();
-
-        return [
-            'success'    => true,
-            'reparto_id' => $reparto_id,
-            'message'    => 'Entrega finalizada correctamente.'
-        ];
-
-    } catch (Exception $e) {
-        // Rollback seguro comprobando únicamente si la transacción está activa
-        if (isset($this->db) && method_exists($this->db, 'rollback')) {
-            @$this->db->rollback();
-        }
-
-        error_log("ERROR entregarEnPatioCliente: " . $e->getMessage());
-
-        return [
-            'success' => false,
-            'message' => $e->getMessage()
-        ];
     }
-}
-// Función auxiliar para el controlador
-public function buscarRutaAbierta($vehiculo_id) {
-    $sql = "SELECT viaje_folio FROM transporte_consolidacion 
+    // Función auxiliar para el controlador
+    public function buscarRutaAbierta($vehiculo_id)
+    {
+        $sql = "SELECT viaje_folio FROM transporte_consolidacion 
             WHERE vehiculo_id = ? AND estatus_consolidado = 'abierto' LIMIT 1";
-    $stmt = $this->db->prepare($sql);
-    $stmt->bind_param("i", $vehiculo_id);
-    $stmt->execute();
-    return $stmt->get_result()->fetch_assoc();
-}
-public function listarViajesActivos($almacen_id = 0) {
-    $almacen_id = intval($almacen_id);
-    
-    $sql = "SELECT 
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("i", $vehiculo_id);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_assoc();
+    }
+    public function listarViajesActivos($almacen_id = 0)
+    {
+        $almacen_id = intval($almacen_id);
+
+        $sql = "SELECT 
                 tc.viaje_folio,
                 tc.vehiculo_id,
                 tv.nombre as unidad,
@@ -480,23 +496,24 @@ public function listarViajesActivos($almacen_id = 0) {
             LEFT JOIN ventas v ON m.referencia_id = v.id -- Unimos con ventas para sacar el almacén
             WHERE tc.estatus_consolidado = 'abierto'";
 
-    // FILTRO DINÁMICO POR ALMACÉN
-    if ($almacen_id > 0) {
-        // Filtramos por el almacén de la venta original
-        $sql .= " AND v.almacen_id = $almacen_id";
+        // FILTRO DINÁMICO POR ALMACÉN
+        if ($almacen_id > 0) {
+            // Filtramos por el almacén de la venta original
+            $sql .= " AND v.almacen_id = $almacen_id";
+        }
+
+        $sql .= " GROUP BY tc.viaje_folio, tc.vehiculo_id, tv.nombre, tv.placas";
+        $sql .= " ORDER BY tc.viaje_folio DESC";
+
+        $res = $this->db->query($sql);
+        return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
     }
+    public function listarViajesActivosRepartos($almacen_id = 0, $fecha_inicio = null, $fecha_fin = null)
+    {
 
-    $sql .= " GROUP BY tc.viaje_folio, tc.vehiculo_id, tv.nombre, tv.placas";
-    $sql .= " ORDER BY tc.viaje_folio DESC";
-            
-    $res = $this->db->query($sql);
-    return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
-}
-public function listarViajesActivosRepartos($almacen_id = 0, $fecha_inicio = null, $fecha_fin = null) {
+        $almacen_id = intval($almacen_id);
 
-    $almacen_id = intval($almacen_id);
-
-    $sql = "SELECT 
+        $sql = "SELECT 
                 tc.viaje_folio,
                 tc.vehiculo_id,
                 tv.nombre as unidad,
@@ -534,44 +551,45 @@ public function listarViajesActivosRepartos($almacen_id = 0, $fecha_inicio = nul
 
             WHERE tc.estatus_consolidado = 'abierto'";
 
-    $params = [];
-    $types = '';
+        $params = [];
+        $types = '';
 
-    if ($almacen_id > 0) {
-        $sql .= " AND v.almacen_id = ?";
-        $params[] = $almacen_id;
-        $types .= 'i';
+        if ($almacen_id > 0) {
+            $sql .= " AND v.almacen_id = ?";
+            $params[] = $almacen_id;
+            $types .= 'i';
+        }
+
+        if (!empty($fecha_inicio)) {
+            $sql .= " AND DATE(tc.fecha_creacion) >= ?";
+            $params[] = $fecha_inicio;
+            $types .= 's';
+        }
+
+        if (!empty($fecha_fin)) {
+            $sql .= " AND DATE(tc.fecha_creacion) <= ?";
+            $params[] = $fecha_fin;
+            $types .= 's';
+        }
+
+        $sql .= " GROUP BY tc.viaje_folio, tc.vehiculo_id, tv.nombre, tv.placas";
+        $sql .= " ORDER BY tc.viaje_folio DESC";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+
+        $stmt->execute();
+
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
+    public function listarHistorialDeRepartos($almacen_id = 0)
+    {
+        $almacen_id = intval($almacen_id);
 
-    if (!empty($fecha_inicio)) {
-        $sql .= " AND DATE(tc.fecha_creacion) >= ?";
-        $params[] = $fecha_inicio;
-        $types .= 's';
-    }
-
-    if (!empty($fecha_fin)) {
-        $sql .= " AND DATE(tc.fecha_creacion) <= ?";
-        $params[] = $fecha_fin;
-        $types .= 's';
-    }
-
-    $sql .= " GROUP BY tc.viaje_folio, tc.vehiculo_id, tv.nombre, tv.placas";
-    $sql .= " ORDER BY tc.viaje_folio DESC";
-
-    $stmt = $this->db->prepare($sql);
-
-    if (!empty($params)) {
-        $stmt->bind_param($types, ...$params);
-    }
-
-    $stmt->execute();
-
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
-public function listarHistorialDeRepartos($almacen_id = 0) {
-    $almacen_id = intval($almacen_id);
-    
-    $sql = "SELECT 
+        $sql = "SELECT 
                 tc.viaje_folio,
                 tc.vehiculo_id,
                 tc.estatus_consolidado AS estado_final,
@@ -613,192 +631,201 @@ public function listarHistorialDeRepartos($almacen_id = 0) {
             LEFT JOIN ventas v ON m.referencia_id = v.id 
             WHERE tc.estatus_consolidado != 'abierto'";
 
-    if ($almacen_id > 0) {
-        $sql .= " AND v.almacen_id = $almacen_id";
+        if ($almacen_id > 0) {
+            $sql .= " AND v.almacen_id = $almacen_id";
+        }
+
+        $sql .= " GROUP BY tc.viaje_folio, tc.vehiculo_id, tv.nombre, tv.placas, tc.estatus_consolidado";
+        $sql .= " ORDER BY tc.viaje_folio DESC";
+
+        $res = $this->db->query($sql);
+        return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
     }
+    public function finalizarViajeVehiculo($vehiculo_id)
+    {
+        try {
+            $this->db->begin_transaction();
 
-    $sql .= " GROUP BY tc.viaje_folio, tc.vehiculo_id, tv.nombre, tv.placas, tc.estatus_consolidado";
-    $sql .= " ORDER BY tc.viaje_folio DESC";
-            
-    $res = $this->db->query($sql);
-    return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
-}
-public function finalizarViajeVehiculo($vehiculo_id) {
-    try {
-        $this->db->begin_transaction();
-
-        // 1. Actualizar Maestro de Repartos
-        $sqlM = "UPDATE transporte_repartos_maestro 
+            // 1. Actualizar Maestro de Repartos
+            $sqlM = "UPDATE transporte_repartos_maestro 
                  SET estado_reparto = 'completado', 
                      fecha_entrega = NOW() 
                  WHERE vehiculo_id = ? AND estado_reparto = 'en_transito'";
-        $stmtM = $this->db->prepare($sqlM);
-        $stmtM->bind_param("i", $vehiculo_id);
-        $stmtM->execute();
+            $stmtM = $this->db->prepare($sqlM);
+            $stmtM->bind_param("i", $vehiculo_id);
+            $stmtM->execute();
 
-        // 2. Actualizar Puntos de Ruta (Opcional, para que queden como completados)
-        $sqlP = "UPDATE transporte_rutas_puntos rp
+            // 2. Actualizar Puntos de Ruta (Opcional, para que queden como completados)
+            $sqlP = "UPDATE transporte_rutas_puntos rp
                  INNER JOIN transporte_repartos_maestro trm ON rp.reparto_id = trm.id
                  SET rp.estado_punto = 'visitado'
                  WHERE trm.vehiculo_id = ? AND trm.estado_reparto = 'completado'";
-        $stmtP = $this->db->prepare($sqlP);
-        $stmtP->bind_param("i", $vehiculo_id);
-        $stmtP->execute();
+            $stmtP = $this->db->prepare($sqlP);
+            $stmtP->bind_param("i", $vehiculo_id);
+            $stmtP->execute();
 
-        $this->db->commit();
-        return true;
-    } catch (Exception $e) {
-        $this->db->rollback();
-        throw $e;
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollback();
+            throw $e;
+        }
     }
-}
-public function finalizarViajeLogistica($vehiculo_id, $viaje_folio) {
-    try {
-        $this->db->begin_transaction();
+    public function finalizarViajeLogistica($vehiculo_id, $viaje_folio)
+    {
+        try {
+            $this->db->begin_transaction();
 
-        // 1. Cerramos la tabla de consolidación (la que creamos para agrupar)
-        $sqlC = "UPDATE transporte_consolidacion 
+            // 1. Cerramos la tabla de consolidación (la que creamos para agrupar)
+            $sqlC = "UPDATE transporte_consolidacion 
                  SET estatus_consolidado = 'cerrado' 
                  WHERE viaje_folio = ? AND vehiculo_id = ?";
-        $stmtC = $this->db->prepare($sqlC);
-        $stmtC->bind_param("si", $viaje_folio, $vehiculo_id);
-        $stmtC->execute();
+            $stmtC = $this->db->prepare($sqlC);
+            $stmtC->bind_param("si", $viaje_folio, $vehiculo_id);
+            $stmtC->execute();
 
-        // 2. Actualizamos los repartos maestros
-        // Usamos 'completado' (que es el valor de tu ENUM) y 'hora_llegada_real' (que sí existe)
-        $sqlR = "UPDATE transporte_repartos_maestro trm
+            // 2. Actualizamos los repartos maestros
+            // Usamos 'completado' (que es el valor de tu ENUM) y 'hora_llegada_real' (que sí existe)
+            $sqlR = "UPDATE transporte_repartos_maestro trm
                  INNER JOIN transporte_consolidacion tc ON trm.id = tc.reparto_id
                  SET trm.estado_reparto = 'completado', 
                      trm.hora_llegada_real = NOW() 
                  WHERE tc.viaje_folio = ?";
-        
-        $stmtR = $this->db->prepare($sqlR);
-        $stmtR->bind_param("s", $viaje_folio);
-        $stmtR->execute();
 
-        $this->db->commit();
-        return true;
-    } catch (Exception $e) {
-        $this->db->rollback();
-        throw $e;
+            $stmtR = $this->db->prepare($sqlR);
+            $stmtR->bind_param("s", $viaje_folio);
+            $stmtR->execute();
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollback();
+            throw $e;
+        }
     }
-}
-public function cancelarViajeCompleto($folio_viaje, $vehiculo_id,$usuario) {
-    try {
-        // 1. Mapear qué entregas existen en este folio de viaje
-        $sqlActuales = "SELECT trm.entrega_venta_id, trm.id as reparto_id 
+    public function cancelarViajeCompleto($folio_viaje, $vehiculo_id, $usuario)
+    {
+        try {
+            // 1. Mapear qué entregas existen en este folio de viaje
+            $sqlActuales = "SELECT trm.entrega_venta_id, trm.id as reparto_id 
                         FROM transporte_consolidacion tc
                         JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
                         WHERE tc.viaje_folio = ?";
-        $stmtA = $this->db->prepare($sqlActuales);
-        $stmtA->bind_param("s", $folio_viaje);
-        $stmtA->execute();
-        $resA = $stmtA->get_result();
+            $stmtA = $this->db->prepare($sqlActuales);
+            $stmtA->bind_param("s", $folio_viaje);
+            $stmtA->execute();
+            $resA = $stmtA->get_result();
 
-        $mapeo_bd = []; 
-        while($row = $resA->fetch_assoc()){
-            $mapeo_bd[$row['entrega_venta_id']] = $row['reparto_id'];
-        }
+            $mapeo_bd = [];
+            while ($row = $resA->fetch_assoc()) {
+                $mapeo_bd[$row['entrega_venta_id']] = $row['reparto_id'];
+            }
 
-        // 2. Sincronización: Quitar los que ya no vienen en el JSON
-        foreach ($mapeo_bd as $mov_id_bd => $reparto_id) {
-           
-                $this->quitarEntregaDeRuta($mov_id_bd,$mov_id_bd,$usuario);
-               
+            // 2. Sincronización: Quitar los que ya no vienen en el JSON
+            foreach ($mapeo_bd as $mov_id_bd => $reparto_id) {
 
-          
-        }
+                $this->quitarEntregaDeRuta($mov_id_bd, $mov_id_bd, $usuario);
 
-        $vehiculo_id = intval($vehiculo_id);
-        
-        // 1. Buscamos todos los repartos asociados a este folio y vehículo
-        $sqlBusqueda = "SELECT reparto_id FROM transporte_consolidacion 
+
+
+            }
+
+            $vehiculo_id = intval($vehiculo_id);
+
+            // 1. Buscamos todos los repartos asociados a este folio y vehículo
+            $sqlBusqueda = "SELECT reparto_id FROM transporte_consolidacion 
                         WHERE viaje_folio = ? AND vehiculo_id = ?";
-        
-        $stmtB = $this->db->prepare($sqlBusqueda);
-        $stmtB->bind_param("si", $folio_viaje, $vehiculo_id);
-        $stmtB->execute();
-        $resB = $stmtB->get_result();
-        return true;
+
+            $stmtB = $this->db->prepare($sqlBusqueda);
+            $stmtB->bind_param("si", $folio_viaje, $vehiculo_id);
+            $stmtB->execute();
+            $resB = $stmtB->get_result();
+            return true;
 
 
-    } catch (Exception $e) {
-        if (isset($this->db) && $this->db->in_transaction) $this->db->rollback();
-        throw $e;
+        } catch (Exception $e) {
+            if (isset($this->db) && $this->db->in_transaction)
+                $this->db->rollback();
+            throw $e;
+        }
     }
-}
-public function cancelarEntregaIndividual() {
-   
-}
-public function actualizarLogisticaCompleta($datos) {
-    try {
-        $this->db->begin_transaction();
+    public function cancelarEntregaIndividual()
+    {
 
-        $folio_viaje     = $datos['viaje_folio'];
-        $vehiculo_id     = intval($datos['vehiculo_id']);
-        $nuevo_chofer_id = intval($datos['chofer_id']);
-        $nuevos_trip     = isset($datos['tripulantes']) ? $datos['tripulantes'] : [];
-        // 'destinos' debe ser un array: [ ['movimiento_id' => 10, 'destino' => 'Calle Falsa 123'], ... ]
-        $destinos_editados = isset($datos['destinos']) ? $datos['destinos'] : [];
+    }
+    public function actualizarLogisticaCompleta($datos)
+    {
+        try {
+            $this->db->begin_transaction();
 
-        // 1. ACTUALIZAR CHOFER (Responsable)
-        $sqlU = "UPDATE transporte_repartos_maestro trm
+            $folio_viaje = $datos['viaje_folio'];
+            $vehiculo_id = intval($datos['vehiculo_id']);
+            $nuevo_chofer_id = intval($datos['chofer_id']);
+            $nuevos_trip = isset($datos['tripulantes']) ? $datos['tripulantes'] : [];
+            // 'destinos' debe ser un array: [ ['movimiento_id' => 10, 'destino' => 'Calle Falsa 123'], ... ]
+            $destinos_editados = isset($datos['destinos']) ? $datos['destinos'] : [];
+
+            // 1. ACTUALIZAR CHOFER (Responsable)
+            $sqlU = "UPDATE transporte_repartos_maestro trm
                  INNER JOIN transporte_consolidacion tc ON trm.id = tc.reparto_id
                  SET trm.usuario_encargado_id = ?
                  WHERE tc.viaje_folio = ? AND tc.vehiculo_id = ?";
-        $stmtU = $this->db->prepare($sqlU);
-        $stmtU->bind_param("isi", $nuevo_chofer_id, $folio_viaje, $vehiculo_id);
-        $stmtU->execute();
+            $stmtU = $this->db->prepare($sqlU);
+            $stmtU->bind_param("isi", $nuevo_chofer_id, $folio_viaje, $vehiculo_id);
+            $stmtU->execute();
 
-        // 2. OBTENER REPARTOS PARA TRIPULACIÓN Y DESTINOS
-        $sqlR = "SELECT tc.reparto_id, trm.entrega_venta_id 
+            // 2. OBTENER REPARTOS PARA TRIPULACIÓN Y DESTINOS
+            $sqlR = "SELECT tc.reparto_id, trm.entrega_venta_id 
                  FROM transporte_consolidacion tc
                  INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
                  WHERE tc.viaje_folio = ?";
-        $stmtR = $this->db->prepare($sqlR);
-        $stmtR->bind_param("s", $folio_viaje);
-        $stmtR->execute();
-        $repartos = $stmtR->get_result()->fetch_all(MYSQLI_ASSOC);
+            $stmtR = $this->db->prepare($sqlR);
+            $stmtR->bind_param("s", $folio_viaje);
+            $stmtR->execute();
+            $repartos = $stmtR->get_result()->fetch_all(MYSQLI_ASSOC);
 
-        foreach ($repartos as $r) {
-            $rid = $r['reparto_id'];
-            $mov_id = $r['entrega_venta_id'];
+            foreach ($repartos as $r) {
+                $rid = $r['reparto_id'];
+                $mov_id = $r['entrega_venta_id'];
 
-            // 2.1 REFRESCAR TRIPULACIÓN (Ayudantes)
-            $this->db->query("DELETE FROM transporte_tripulantes_detalle WHERE reparto_id = $rid");
-            if (!empty($nuevos_trip)) {
-                $stmtT = $this->db->prepare("INSERT INTO transporte_tripulantes_detalle (reparto_id, usuario_id) VALUES (?, ?)");
-                foreach ($nuevos_trip as $u_id) {
-                    if (intval($u_id) === $nuevo_chofer_id) continue;
-                    $uid = intval($u_id);
-                    $stmtT->bind_param("ii", $rid, $uid);
-                    $stmtT->execute();
+                // 2.1 REFRESCAR TRIPULACIÓN (Ayudantes)
+                $this->db->query("DELETE FROM transporte_tripulantes_detalle WHERE reparto_id = $rid");
+                if (!empty($nuevos_trip)) {
+                    $stmtT = $this->db->prepare("INSERT INTO transporte_tripulantes_detalle (reparto_id, usuario_id) VALUES (?, ?)");
+                    foreach ($nuevos_trip as $u_id) {
+                        if (intval($u_id) === $nuevo_chofer_id)
+                            continue;
+                        $uid = intval($u_id);
+                        $stmtT->bind_param("ii", $rid, $uid);
+                        $stmtT->execute();
+                    }
+                }
+
+                // 2.2 ACTUALIZAR DESTINO INDIVIDUAL
+                // Buscamos si en los datos recibidos hay un nuevo destino para este movimiento específico
+                foreach ($destinos_editados as $edit) {
+                    if (intval($edit['movimiento_id']) === intval($mov_id)) {
+                        $nuevo_destino = $edit['destino'];
+                        $stmtD = $this->db->prepare("UPDATE transporte_rutas_puntos SET descripcion_punto = ? WHERE reparto_id = ?");
+                        $stmtD->bind_param("si", $nuevo_destino, $rid);
+                        $stmtD->execute();
+                        break;
+                    }
                 }
             }
 
-            // 2.2 ACTUALIZAR DESTINO INDIVIDUAL
-            // Buscamos si en los datos recibidos hay un nuevo destino para este movimiento específico
-            foreach ($destinos_editados as $edit) {
-                if (intval($edit['movimiento_id']) === intval($mov_id)) {
-                    $nuevo_destino = $edit['destino'];
-                    $stmtD = $this->db->prepare("UPDATE transporte_rutas_puntos SET descripcion_punto = ? WHERE reparto_id = ?");
-                    $stmtD->bind_param("si", $nuevo_destino, $rid);
-                    $stmtD->execute();
-                    break; 
-                }
-            }
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            if ($this->db->in_transaction)
+                $this->db->rollback();
+            throw $e;
         }
-
-        $this->db->commit();
-        return true;
-    } catch (Exception $e) {
-        if ($this->db->in_transaction) $this->db->rollback();
-        throw $e;
     }
-}
-public function getDetallesViaje($folio_viaje) {
-    // 1. Cabecera Detallada (Unidad, Chofer y Almacén)
-    $sqlHeader = "SELECT 
+    public function getDetallesViaje($folio_viaje)
+    {
+        // 1. Cabecera Detallada (Unidad, Chofer y Almacén)
+        $sqlHeader = "SELECT 
                     tc.viaje_folio,
                     tc.vehiculo_id,
                     tv.nombre AS unidad_nombre,
@@ -815,30 +842,31 @@ public function getDetallesViaje($folio_viaje) {
                   LEFT JOIN ventas v ON m.referencia_id = v.id
                   WHERE tc.viaje_folio = ? 
                   LIMIT 1";
-    
-    $stmtH = $this->db->prepare($sqlHeader);
-    $stmtH->bind_param("s", $folio_viaje);
-    $stmtH->execute();
-    $header = $stmtH->get_result()->fetch_assoc();
 
-    if (!$header) return null;
+        $stmtH = $this->db->prepare($sqlHeader);
+        $stmtH->bind_param("s", $folio_viaje);
+        $stmtH->execute();
+        $header = $stmtH->get_result()->fetch_assoc();
 
-    // 2. IDs de Tripulantes (Para el Select2 o múltiple en el formulario)
-    $sqlT = "SELECT DISTINCT ttd.usuario_id 
+        if (!$header)
+            return null;
+
+        // 2. IDs de Tripulantes (Para el Select2 o múltiple en el formulario)
+        $sqlT = "SELECT DISTINCT ttd.usuario_id 
          FROM transporte_tripulantes_detalle ttd
          INNER JOIN transporte_consolidacion tc ON ttd.reparto_id = tc.reparto_id
          WHERE tc.viaje_folio = ?";
-    $stmtT = $this->db->prepare($sqlT);
-    $stmtT->bind_param("s", $folio_viaje); // Ajustado para usar el mismo parámetro
-    $stmtT->execute();
-    $resT = $stmtT->get_result();
-    $header['tripulantes_ids'] = [];
-    while($r = $resT->fetch_assoc()) {
-        $header['tripulantes_ids'][] = $r['usuario_id'];
-    }
+        $stmtT = $this->db->prepare($sqlT);
+        $stmtT->bind_param("s", $folio_viaje); // Ajustado para usar el mismo parámetro
+        $stmtT->execute();
+        $resT = $stmtT->get_result();
+        $header['tripulantes_ids'] = [];
+        while ($r = $resT->fetch_assoc()) {
+            $header['tripulantes_ids'][] = $r['usuario_id'];
+        }
 
-    // 3. Materiales, Destinos y Especificaciones Técnicas
-    $sqlMat = "SELECT 
+        // 3. Materiales, Destinos y Especificaciones Técnicas
+        $sqlMat = "SELECT 
                     m.id AS movimiento_id, 
                     p.nombre AS producto, 
                     p.sku AS sku,
@@ -859,16 +887,17 @@ public function getDetallesViaje($folio_viaje) {
                LEFT JOIN transporte_rutas_puntos rp ON trm.id = rp.reparto_id
                WHERE tc.viaje_folio = ?
                ORDER BY rp.orden_visita ASC";
-               
-    $stmtM = $this->db->prepare($sqlMat);
-    $stmtM->bind_param("s", $folio_viaje);
-    $stmtM->execute();
-    $header['materiales'] = $stmtM->get_result()->fetch_all(MYSQLI_ASSOC);
 
-    return $header;
-}
-public function getResumenDespacho($movimiento_id) {
-    $sql = "SELECT 
+        $stmtM = $this->db->prepare($sqlMat);
+        $stmtM->bind_param("s", $folio_viaje);
+        $stmtM->execute();
+        $header['materiales'] = $stmtM->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        return $header;
+    }
+    public function getResumenDespacho($movimiento_id)
+    {
+        $sql = "SELECT 
                 m.id as movimiento_id,
                 m.cantidad,
                 p.nombre as producto_nombre,
@@ -908,31 +937,33 @@ public function getResumenDespacho($movimiento_id) {
             
             WHERE m.id = ? LIMIT 1";
 
-    $stmt = $this->db->prepare($sql);
-    $stmt->bind_param("i", $movimiento_id);
-    $stmt->execute();
-    $res = $stmt->get_result()->fetch_assoc();
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("i", $movimiento_id);
+        $stmt->execute();
+        $res = $stmt->get_result()->fetch_assoc();
 
-    if (!$res) return null;
+        if (!$res)
+            return null;
 
-    // Tripulantes: transporte_tripulantes_detalle.usuario_id -> usuarios
-    $res['tripulantes'] = [];
-    if ($res['reparto_id']) {
-        $sqlT = "SELECT t.nombre 
+        // Tripulantes: transporte_tripulantes_detalle.usuario_id -> usuarios
+        $res['tripulantes'] = [];
+        if ($res['reparto_id']) {
+            $sqlT = "SELECT t.nombre 
                  FROM transporte_tripulantes_detalle ttd
                 LEFT JOIN trabajadores t ON tttd.usuario_encargado_id = t.id
                  WHERE ttd.reparto_id = ?";
-        $stmtT = $this->db->prepare($sqlT);
-        $stmtT->bind_param("i", $res['reparto_id']);
-        $stmtT->execute();
-        $res['tripulantes'] = $stmtT->get_result()->fetch_all(MYSQLI_ASSOC);
+            $stmtT = $this->db->prepare($sqlT);
+            $stmtT->bind_param("i", $res['reparto_id']);
+            $stmtT->execute();
+            $res['tripulantes'] = $stmtT->get_result()->fetch_all(MYSQLI_ASSOC);
+        }
+
+        return $res;
     }
 
-    return $res;
-}
-
-public function obtenerHistorialFisico($movimiento_id) {
-    $sql = "SELECT 
+    public function obtenerHistorialFisico($movimiento_id)
+    {
+        $sql = "SELECT 
                 m.id as movimiento_id,
                 m.cantidad,
                 m.fecha as fecha_movimiento,
@@ -991,53 +1022,60 @@ public function obtenerHistorialFisico($movimiento_id) {
             
             WHERE m.id = ? LIMIT 1";
 
-    $stmt = $this->db->prepare($sql);
-    $stmt->bind_param("i", $movimiento_id);
-    $stmt->execute();
-    $res = $stmt->get_result()->fetch_assoc();
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("i", $movimiento_id);
+        $stmt->execute();
+        $res = $stmt->get_result()->fetch_assoc();
 
-    if (!$res) return null;
+        if (!$res)
+            return null;
 
-    // Tripulantes/Ayudantes (Siempre de la tabla trabajadores)
-    $res['tripulantes'] = [];
-    if ($res['reparto_id']) {
-        $sqlT = "SELECT t.nombre 
+        // Tripulantes/Ayudantes (Siempre de la tabla trabajadores)
+        $res['tripulantes'] = [];
+        if ($res['reparto_id']) {
+            $sqlT = "SELECT t.nombre 
                  FROM transporte_tripulantes_detalle ttd
                  INNER JOIN trabajadores t ON ttd.usuario_id = t.id
                  WHERE ttd.reparto_id = ?";
-        $stmtT = $this->db->prepare($sqlT);
-        $stmtT->bind_param("i", $res['reparto_id']);
-        $stmtT->execute();
-        $res['tripulantes'] = $stmtT->get_result()->fetch_all(MYSQLI_ASSOC);
+            $stmtT = $this->db->prepare($sqlT);
+            $stmtT->bind_param("i", $res['reparto_id']);
+            $stmtT->execute();
+            $res['tripulantes'] = $stmtT->get_result()->fetch_all(MYSQLI_ASSOC);
+        }
+
+        return $res;
     }
 
-    return $res;
-}
-
-public function getTripulantesPorReparto($reparto_id) {
-    $sql = "SELECT t.nombre 
+    public function getTripulantesPorReparto($reparto_id)
+    {
+        $sql = "SELECT t.nombre 
             FROM transporte_tripulantes_detalle ttd
             LEFT JOIN trabajadores t ON ttd.usuario_id = t.id
             WHERE ttd.reparto_id = ?";
-    
-    $stmt = $this->db->prepare($sql);
-    $stmt->bind_param("i", $reparto_id);
-    $stmt->execute();
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}public function getMonitorEntregas($almacen_id = 0, $inicio = 0, $limite = 25, $fecha_inicio = null, $fecha_fin = null) {
-    if (ob_get_level()) ob_clean();
 
-    // ✅ 2. Asignamos las fechas dinámicas dentro de la función si no se enviaron
-    if (!$fecha_inicio) {
-        $fecha_inicio = date('Y-m-01'); // 'Y' mayúscula para 4 dígitos (Ej. 2026-06-01)
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("i", $reparto_id);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
-    if (!$fecha_fin) {
-        $fecha_fin = date('Y-m-t'); // 'Y' mayúscula para 4 dígitos (Ej. 2026-06-30)
-    }if (ob_get_level()) ob_clean();
+    public function getMonitorEntregas($almacen_id = 0, $inicio = 0, $limite = 25, $fecha_inicio = null, $fecha_fin = null)
+    {
+        if (ob_get_level())
+            ob_clean();
 
-    $where_almacen = ($almacen_id > 0) ? " AND m.almacen_origen_id = ? " : "";
+        // ✅ 2. Asignamos las fechas dinámicas dentro de la función si no se enviaron
+        if (!$fecha_inicio) {
+            $fecha_inicio = date('Y-m-01'); // 'Y' mayúscula para 4 dígitos (Ej. 2026-06-01)
+        }
+        if (!$fecha_fin) {
+            $fecha_fin = date('Y-m-t'); // 'Y' mayúscula para 4 dígitos (Ej. 2026-06-30)
+        }
+        if (ob_get_level())
+            ob_clean();
 
-    $sql = "SELECT 
+        $where_almacen = ($almacen_id > 0) ? " AND m.almacen_origen_id = ? " : "";
+
+        $sql = "SELECT 
                 m.id AS movimiento_id, 
                 trm.id AS reparto_id,
                 IFNULL(tc.viaje_folio, CONCAT('MOV-', m.id)) AS grupo_id,
@@ -1093,53 +1131,56 @@ public function getTripulantesPorReparto($reparto_id) {
             ORDER BY MAX(m.fecha) DESC 
             LIMIT ?, ?";
 
-    $stmt = $this->db->prepare($sql);
-    
-    // CORRECCIÓN: Agregar las fechas al bind_param de forma dinámica
-    if ($almacen_id > 0) {
-        // "ssiii" -> String (fecha_ini), String (fecha_fin), Int (almacen), Int (inicio), Int (limite)
-        $stmt->bind_param("ssiii", $fecha_inicio, $fecha_fin, $almacen_id, $inicio, $limite);
-    } else {
-        // "ssii" -> String (fecha_ini), String (fecha_fin), Int (inicio), Int (limite)
-        $stmt->bind_param("ssii", $fecha_inicio, $fecha_fin, $inicio, $limite);
-    }
+        $stmt = $this->db->prepare($sql);
 
-    $stmt->execute();
-    $result = $stmt->get_result();
-    $data = [];
-
-    while ($row = $result->fetch_assoc()) {
-        if ($row['numero_ruta'] != null) {
-            $row['lectura_fisica'] = "CARGA CONSOLIDADA";
+        // CORRECCIÓN: Agregar las fechas al bind_param de forma dinámica
+        if ($almacen_id > 0) {
+            // "ssiii" -> String (fecha_ini), String (fecha_fin), Int (almacen), Int (inicio), Int (limite)
+            $stmt->bind_param("ssiii", $fecha_inicio, $fecha_fin, $almacen_id, $inicio, $limite);
         } else {
-            $txt = "";
-            $f = (float)$row['factor_conversion'];
-            $val = (float)$row['total_bultos'];
-            
-            if ($f > 1) {
-                $entero = floor($val / $f);
-                $resto = fmod($val, $f);
-                if ($entero > 0) $txt .= (int)$entero . " " . $row['unidad_reporte'];
-                if ($resto > 0) $txt .= ($txt !== "" ? " y " : "") . $resto . " " . $row['unidad_medida'];
-            } else {
-                $txt = $val . " " . $row['unidad_medida'];
-            }
-            $row['lectura_fisica'] = ($txt === "") ? "0" : $txt;
+            // "ssii" -> String (fecha_ini), String (fecha_fin), Int (inicio), Int (limite)
+            $stmt->bind_param("ssii", $fecha_inicio, $fecha_fin, $inicio, $limite);
         }
 
-        $row['lotes_involucrados'] = $row['lotes_involucrados'] ?? 'SIN LOTE';
-        $data[] = $row;
-    }
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $data = [];
 
-    return $data;
-}
-/**
- * Detalle de un movimiento simple (sin ruta/reparto)
- * Trae: cliente, producto, cantidad, quién despachó en sistema,
- * quién entregó físicamente, cuándo se entregó.
- */
-public function getDetalleMovimientoNormal($movimiento_id) {
-    $sql = "SELECT 
+        while ($row = $result->fetch_assoc()) {
+            if ($row['numero_ruta'] != null) {
+                $row['lectura_fisica'] = "CARGA CONSOLIDADA";
+            } else {
+                $txt = "";
+                $f = (float) $row['factor_conversion'];
+                $val = (float) $row['total_bultos'];
+
+                if ($f > 1) {
+                    $entero = floor($val / $f);
+                    $resto = fmod($val, $f);
+                    if ($entero > 0)
+                        $txt .= (int) $entero . " " . $row['unidad_reporte'];
+                    if ($resto > 0)
+                        $txt .= ($txt !== "" ? " y " : "") . $resto . " " . $row['unidad_medida'];
+                } else {
+                    $txt = $val . " " . $row['unidad_medida'];
+                }
+                $row['lectura_fisica'] = ($txt === "") ? "0" : $txt;
+            }
+
+            $row['lotes_involucrados'] = $row['lotes_involucrados'] ?? 'SIN LOTE';
+            $data[] = $row;
+        }
+
+        return $data;
+    }
+    /**
+     * Detalle de un movimiento simple (sin ruta/reparto)
+     * Trae: cliente, producto, cantidad, quién despachó en sistema,
+     * quién entregó físicamente, cuándo se entregó.
+     */
+    public function getDetalleMovimientoNormal($movimiento_id)
+    {
+        $sql = "SELECT 
                 m.id AS movimiento_id,
                 m.cantidad,
                 p.nombre AS producto,
@@ -1177,49 +1218,51 @@ public function getDetalleMovimientoNormal($movimiento_id) {
             WHERE m.id = ?
             LIMIT 1";
 
-    $stmt = $this->db->prepare($sql);
-    $stmt->bind_param("i", $movimiento_id);
-    $stmt->execute();
-    $res = $stmt->get_result()->fetch_assoc();
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("i", $movimiento_id);
+        $stmt->execute();
+        $res = $stmt->get_result()->fetch_assoc();
 
-    if (!$res) return null;
+        if (!$res)
+            return null;
 
-    // Formateo de cantidad con factor de conversión
-    $cantidad = floatval($res['cantidad']);
-    $factor   = floatval($res['factor_conversion'] ?? 1);
+        // Formateo de cantidad con factor de conversión
+        $cantidad = floatval($res['cantidad']);
+        $factor = floatval($res['factor_conversion'] ?? 1);
 
-    if ($factor > 1) {
-        $enteros   = (int) floor($cantidad / $factor);
-        $sobrantes = fmod($cantidad, $factor);
-        $res['cantidad_display'] = $sobrantes > 0
-            ? "{$enteros} {$res['unidad_reporte']} + {$sobrantes} {$res['unidad_medida']}"
-            : "{$enteros} {$res['unidad_reporte']}";
-    } else {
-        $res['cantidad_display'] = "{$cantidad} {$res['unidad_medida']}";
+        if ($factor > 1) {
+            $enteros = (int) floor($cantidad / $factor);
+            $sobrantes = fmod($cantidad, $factor);
+            $res['cantidad_display'] = $sobrantes > 0
+                ? "{$enteros} {$res['unidad_reporte']} + {$sobrantes} {$res['unidad_medida']}"
+                : "{$enteros} {$res['unidad_reporte']}";
+        } else {
+            $res['cantidad_display'] = "{$cantidad} {$res['unidad_medida']}";
+        }
+
+        return $res;
     }
 
-    return $res;
-}
-
-/**
- * Obtiene el listado completo de viajes con detalle de rutas, 
- * productos, conductores y ayudantes.
- * * @param PDO $db Conexión a la base de datos sistema_almacenes
- * @return array Lista de movimientos logísticos
- */
-/**
- * Obtiene el reporte de viajes. 
- * Si se envía un folio, filtra por ese específico; si no, trae todos.
- */
-/**
- * Obtiene el reporte detallado de un viaje por su folio o el listado general.
- * Adaptado para el sistema cfsistem.
- * * @param string|null $folio_folio El folio del viaje (ej: RUT-260324-02-25)
- * @return array Arreglo asociativo con los datos para el modal
- */
-public function obtenerViajesLogistica($folio_folio = null) {
-    try {
-        $sql = "SELECT 
+    /**
+     * Obtiene el listado completo de viajes con detalle de rutas, 
+     * productos, conductores y ayudantes.
+     * * @param PDO $db Conexión a la base de datos sistema_almacenes
+     * @return array Lista de movimientos logísticos
+     */
+    /**
+     * Obtiene el reporte de viajes. 
+     * Si se envía un folio, filtra por ese específico; si no, trae todos.
+     */
+    /**
+     * Obtiene el reporte detallado de un viaje por su folio o el listado general.
+     * Adaptado para el sistema cfsistem.
+     * * @param string|null $folio_folio El folio del viaje (ej: RUT-260324-02-25)
+     * @return array Arreglo asociativo con los datos para el modal
+     */
+    public function obtenerViajesLogistica($folio_folio = null)
+    {
+        try {
+            $sql = "SELECT 
                     tc.viaje_folio AS folio_viaje,
                     tc.fecha_creacion AS fecha_viaje,
                     trm.hora_llegada_real AS fecha_llegada,
@@ -1257,28 +1300,29 @@ public function obtenerViajesLogistica($folio_folio = null) {
                 LEFT JOIN clientes c ON v.id_cliente = c.id
                 LEFT JOIN trabajadores u_chofer ON trm.usuario_encargado_id = u_chofer.id";
 
-        if (!empty($folio_folio)) {
-            $sql .= " WHERE tc.viaje_folio = ?";
+            if (!empty($folio_folio)) {
+                $sql .= " WHERE tc.viaje_folio = ?";
+            }
+
+            $sql .= " ORDER BY tc.fecha_creacion DESC, tc.viaje_folio ASC, trp.orden_visita ASC";
+
+            $stmt = $this->db->prepare($sql);
+
+            if (!empty($folio_folio)) {
+                $stmt->bind_param("s", $folio_folio);
+            }
+
+            $stmt->execute();
+            return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        } catch (Exception $e) {
+            throw new Exception("Error en la base de datos: " . $e->getMessage());
         }
-
-        $sql .= " ORDER BY tc.fecha_creacion DESC, tc.viaje_folio ASC, trp.orden_visita ASC";
-
-        $stmt = $this->db->prepare($sql);
-
-        if (!empty($folio_folio)) {
-            $stmt->bind_param("s", $folio_folio);
-        }
-
-        $stmt->execute();
-        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-
-    } catch (Exception $e) {
-        throw new Exception("Error en la base de datos: " . $e->getMessage());
     }
-}
-public function obtenerEntregasPorVenta($idVenta){
+    public function obtenerEntregasPorVenta($idVenta)
+    {
 
-    $sql = "SELECT 
+        $sql = "SELECT 
                 tc.viaje_folio AS folio_viaje,
                 tc.fecha_creacion AS fecha_viaje,
                 trm.hora_llegada_real AS fecha_llegada,
@@ -1350,26 +1394,27 @@ public function obtenerEntregasPorVenta($idVenta){
 
             ORDER BY tc.fecha_creacion DESC";
 
-    $stmt = $this->db->prepare($sql);
+        $stmt = $this->db->prepare($sql);
 
-    $stmt->bind_param("i",$idVenta);
+        $stmt->bind_param("i", $idVenta);
 
-    $stmt->execute();
+        $stmt->execute();
 
-    $resultado = $stmt->get_result();
+        $resultado = $stmt->get_result();
 
-    $data = [];
+        $data = [];
 
-    while($row = $resultado->fetch_assoc()){
-        $data[] = $row;
+        while ($row = $resultado->fetch_assoc()) {
+            $data[] = $row;
+        }
+
+        return $data;
     }
 
-    return $data;
-}
-
-public function obtenerEntregas($idVenta){
-    // Añadimos GROUP BY en.id para que no se dupliquen por los productos
-    $sql = "SELECT 
+    public function obtenerEntregas($idVenta)
+    {
+        // Añadimos GROUP BY en.id para que no se dupliquen por los productos
+        $sql = "SELECT 
     ROW_NUMBER() OVER (ORDER BY en.id ASC) AS num_registro,
     en.id AS entrega_id,
     en.venta_id,
@@ -1400,22 +1445,23 @@ INNER JOIN transporte_consolidacion tc
 WHERE en.venta_id = ?
 GROUP BY en.id";
 
-    $stmt = $this->db->prepare($sql);
-    $stmt->bind_param("i", $idVenta);
-    $stmt->execute();
-    $resultado = $stmt->get_result();
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("i", $idVenta);
+        $stmt->execute();
+        $resultado = $stmt->get_result();
 
-    $data = [];
-    while($row = $resultado->fetch_assoc()){
-        $data[] = $row;
+        $data = [];
+        while ($row = $resultado->fetch_assoc()) {
+            $data[] = $row;
+        }
+
+        return $data;
     }
 
-    return $data;
-}
+    public function obtenerRutaDeEntregaDeVenta($idVenta, $idRuta)
+    {
 
-public function obtenerRutaDeEntregaDeVenta($idVenta, $idRuta){
-
-    $sql = "SELECT 
+        $sql = "SELECT 
     t.folio_viaje,
     t.fecha_viaje,
     t.fecha_llegada,
@@ -1522,29 +1568,30 @@ FROM (
 
 ORDER BY t.fecha_viaje DESC";
 
-    $stmt = $this->db->prepare($sql);
+        $stmt = $this->db->prepare($sql);
 
-    if(!$stmt){
-        die($this->db->error);
+        if (!$stmt) {
+            die($this->db->error);
+        }
+
+        $stmt->bind_param("is", $idVenta, $idRuta);
+
+        $stmt->execute();
+
+        $resultado = $stmt->get_result();
+
+        $data = [];
+
+        while ($row = $resultado->fetch_assoc()) {
+            $data[] = $row;
+        }
+
+        return $data;
     }
+    public function obtenerRutaDeEntregaPorEntrega($entrega_id, $idRuta)
+    {
 
-    $stmt->bind_param("is", $idVenta, $idRuta);
-
-    $stmt->execute();
-
-    $resultado = $stmt->get_result();
-
-    $data = [];
-
-    while($row = $resultado->fetch_assoc()){
-        $data[] = $row;
-    }
-
-    return $data;
-}
-public function obtenerRutaDeEntregaPorEntrega($entrega_id, $idRuta){
-
-    $sql = "SELECT 
+        $sql = "SELECT 
     t.folio_viaje,
     t.fecha_viaje,
     t.fecha_llegada,
@@ -1663,63 +1710,64 @@ FROM (
 
 ORDER BY t.fecha_viaje DESC";
 
-    $stmt = $this->db->prepare($sql);
+        $stmt = $this->db->prepare($sql);
 
-    if(!$stmt){
-        die($this->db->error);
-    }
-
-    $stmt->bind_param("ii", $entrega_id, $entrega_id);
-
-    $stmt->execute();
-
-    $resultado = $stmt->get_result();
-
-    $data = [];
-
-    while($row = $resultado->fetch_assoc()){
-        $data[] = $row;
-    }
-
-    return $data;
-}
-public function quitarEntregaDeRuta($entrega_venta_id,$movimiento_id = 0, $id_usuario=0) {
-    try {
-        // Iniciamos la transacción para asegurar que si algo falla, no se borre nada a medias
-        $this->db->begin_transaction();
-
-        // ==========================================
-        // PARTE 1. LOGÍSTICA DE TRANSPORTE Y REPARTOS
-        // ==========================================
-        $motivo = "CANCELACIÓN DE RUTA";
-        // 1. Buscamos el reparto_id en el maestro de transporte
-        $sqlTrans = "SELECT id FROM transporte_repartos_maestro WHERE entrega_venta_id = ? LIMIT 1";
-        $stmtTrans = $this->db->prepare($sqlTrans);
-        $stmtTrans->bind_param("i", $entrega_venta_id);
-        $stmtTrans->execute();
-        $resTrans = $stmtTrans->get_result()->fetch_assoc();
-        $stmtTrans->close();
-         $this->cancelarDespachoFisico($movimiento_id);
-
-        if ($resTrans) {
-            $rid = $resTrans['id'];
-
-            // Limpieza física de las tablas de logística asociadas al reparto
-            $this->db->query("DELETE FROM transporte_rutas_puntos WHERE reparto_id = $rid");
-            $this->db->query("DELETE FROM transporte_tripulantes_detalle WHERE reparto_id = $rid");
-            $this->db->query("DELETE FROM transporte_consolidacion WHERE reparto_id = $rid");
-            
-            // Borramos el maestro de reparto de transporte
-            $this->db->query("DELETE FROM transporte_repartos_maestro WHERE id = $rid");
+        if (!$stmt) {
+            die($this->db->error);
         }
 
+        $stmt->bind_param("ii", $entrega_id, $entrega_id);
 
-        // ==========================================
-        // PARTE 2. CONTROL DE ENTREGAS, KARDEX E INVENTARIO
-        // ==========================================
+        $stmt->execute();
 
-        // 2. Extraemos los datos del movimiento origen (Cambié m.id a dinámico si lo requieres, o lo dejas en 1200)
-        $sqlMov = "SELECT 
+        $resultado = $stmt->get_result();
+
+        $data = [];
+
+        while ($row = $resultado->fetch_assoc()) {
+            $data[] = $row;
+        }
+
+        return $data;
+    }
+    public function quitarEntregaDeRuta($entrega_venta_id, $movimiento_id = 0, $id_usuario = 0)
+    {
+        try {
+            // Iniciamos la transacción para asegurar que si algo falla, no se borre nada a medias
+            $this->db->begin_transaction();
+
+            // ==========================================
+            // PARTE 1. LOGÍSTICA DE TRANSPORTE Y REPARTOS
+            // ==========================================
+            $motivo = "CANCELACIÓN DE RUTA";
+            // 1. Buscamos el reparto_id en el maestro de transporte
+            $sqlTrans = "SELECT id FROM transporte_repartos_maestro WHERE entrega_venta_id = ? LIMIT 1";
+            $stmtTrans = $this->db->prepare($sqlTrans);
+            $stmtTrans->bind_param("i", $entrega_venta_id);
+            $stmtTrans->execute();
+            $resTrans = $stmtTrans->get_result()->fetch_assoc();
+            $stmtTrans->close();
+            $this->cancelarDespachoFisico($movimiento_id);
+
+            if ($resTrans) {
+                $rid = $resTrans['id'];
+
+                // Limpieza física de las tablas de logística asociadas al reparto
+                $this->db->query("DELETE FROM transporte_rutas_puntos WHERE reparto_id = $rid");
+                $this->db->query("DELETE FROM transporte_tripulantes_detalle WHERE reparto_id = $rid");
+                $this->db->query("DELETE FROM transporte_consolidacion WHERE reparto_id = $rid");
+
+                // Borramos el maestro de reparto de transporte
+                $this->db->query("DELETE FROM transporte_repartos_maestro WHERE id = $rid");
+            }
+
+
+            // ==========================================
+            // PARTE 2. CONTROL DE ENTREGAS, KARDEX E INVENTARIO
+            // ==========================================
+
+            // 2. Extraemos los datos del movimiento origen (Cambié m.id a dinámico si lo requieres, o lo dejas en 1200)
+            $sqlMov = "SELECT 
                         m.producto_id AS p_id, 
                         m.cantidad AS cantidad_entregada, 
                         m.referencia_id AS id_venta, 
@@ -1727,196 +1775,198 @@ public function quitarEntregaDeRuta($entrega_venta_id,$movimiento_id = 0, $id_us
                         m.entrega_id AS entrega_id
                    FROM movimientos m 
                    WHERE m.id = ?";
-                   
-        $stmtMovData = $this->db->prepare($sqlMov);
-        $stmtMovData->bind_param("i", $movimiento_id);
-        $stmtMovData->execute();
-        $movimientoData = $stmtMovData->get_result()->fetch_assoc();
-        $stmtMovData->close();
 
-        if ($movimientoData) {
-            $p_id           = $movimientoData['p_id'];
-            $cant_entregada = $movimientoData['cantidad_entregada'];
-            $id_venta       = $movimientoData['id_venta'];
-            $id_almacen     = $movimientoData['id_almacen'];
-            $id_entrega     = $movimientoData['entrega_id'];
-            
-            // Evaluamos el detalle de la entrega vinculada para saber si eliminamos cabecera o sólo el ítem
-            $sqlCant = "SELECT ie.id, ie.detalle_venta_id FROM detalle_entrega ie WHERE ie.entrega_id = ?";
-            $stmtCant = $this->db->prepare($sqlCant);
-            $stmtCant->bind_param("i", $id_entrega);
-            $stmtCant->execute();
-            $resentrega = $stmtCant->get_result();
-            $detalleData = $resentrega->fetch_assoc();
+            $stmtMovData = $this->db->prepare($sqlMov);
+            $stmtMovData->bind_param("i", $movimiento_id);
+            $stmtMovData->execute();
+            $movimientoData = $stmtMovData->get_result()->fetch_assoc();
+            $stmtMovData->close();
 
-            if ($detalleData) {
-                $detalle_venta_id = $detalleData['detalle_venta_id'];
+            if ($movimientoData) {
+                $p_id = $movimientoData['p_id'];
+                $cant_entregada = $movimientoData['cantidad_entregada'];
+                $id_venta = $movimientoData['id_venta'];
+                $id_almacen = $movimientoData['id_almacen'];
+                $id_entrega = $movimientoData['entrega_id'];
 
-                // ACTUALIZACIÓN EN DETALLE_VENTA: Restamos la cantidad del movimiento cancelado
-                // (Ajusta el nombre de la columna 'cantidad_entregada' si en tu tabla se llama distinto)
-                $sqlUpdVenta = "UPDATE detalle_venta 
+                // Evaluamos el detalle de la entrega vinculada para saber si eliminamos cabecera o sólo el ítem
+                $sqlCant = "SELECT ie.id, ie.detalle_venta_id FROM detalle_entrega ie WHERE ie.entrega_id = ?";
+                $stmtCant = $this->db->prepare($sqlCant);
+                $stmtCant->bind_param("i", $id_entrega);
+                $stmtCant->execute();
+                $resentrega = $stmtCant->get_result();
+                $detalleData = $resentrega->fetch_assoc();
+
+                if ($detalleData) {
+                    $detalle_venta_id = $detalleData['detalle_venta_id'];
+
+                    // ACTUALIZACIÓN EN DETALLE_VENTA: Restamos la cantidad del movimiento cancelado
+                    // (Ajusta el nombre de la columna 'cantidad_entregada' si en tu tabla se llama distinto)
+                    $sqlUpdVenta = "UPDATE detalle_venta 
                                 SET cantidad_entregada = cantidad_entregada - ? 
                                 WHERE id = ?";
-                $stmtUpdVenta = $this->db->prepare($sqlUpdVenta);
-                $stmtUpdVenta->bind_param("di", $cant_entregada, $detalle_venta_id);
-                $stmtUpdVenta->execute();
-                $stmtUpdVenta->close();
-                 $sqlUpdRealVenta = "UPDATE ventas 
+                    $stmtUpdVenta = $this->db->prepare($sqlUpdVenta);
+                    $stmtUpdVenta->bind_param("di", $cant_entregada, $detalle_venta_id);
+                    $stmtUpdVenta->execute();
+                    $stmtUpdVenta->close();
+                    $sqlUpdRealVenta = "UPDATE ventas 
                                 SET estado_entrega = 'parcial' 
                                 WHERE id = ?";
-                $stmtUpdRealVenta = $this->db->prepare($sqlUpdRealVenta);
-                $stmtUpdRealVenta->bind_param("i", $id_venta);
-                $stmtUpdRealVenta->execute();
-                $stmtUpdRealVenta->close();
-            }
-            if ($resentrega->num_rows <= 1) {
-                // Si sólo queda este registro o ninguno, eliminamos tanto cabecera como el detalle
-                if ($id_entrega) {
-                    $stmtDelCab = $this->db->prepare("DELETE FROM entregas_venta WHERE id = ?");
-                    $stmtDelCab->bind_param("i", $id_entrega);
-                    $stmtDelCab->execute();
-                    $stmtDelCab->close();
+                    $stmtUpdRealVenta = $this->db->prepare($sqlUpdRealVenta);
+                    $stmtUpdRealVenta->bind_param("i", $id_venta);
+                    $stmtUpdRealVenta->execute();
+                    $stmtUpdRealVenta->close();
                 }
-                if ($detalleData) {
-                    $stmtDelDet = $this->db->prepare("DELETE FROM detalle_entrega WHERE id = ?");
-                    $stmtDelDet->bind_param("i", $detalleData['id']);
-                    $stmtDelDet->execute();
-                    $stmtDelDet->close();
+                if ($resentrega->num_rows <= 1) {
+                    // Si sólo queda este registro o ninguno, eliminamos tanto cabecera como el detalle
+                    if ($id_entrega) {
+                        $stmtDelCab = $this->db->prepare("DELETE FROM entregas_venta WHERE id = ?");
+                        $stmtDelCab->bind_param("i", $id_entrega);
+                        $stmtDelCab->execute();
+                        $stmtDelCab->close();
+                    }
+                    if ($detalleData) {
+                        $stmtDelDet = $this->db->prepare("DELETE FROM detalle_entrega WHERE id = ?");
+                        $stmtDelDet->bind_param("i", $detalleData['id']);
+                        $stmtDelDet->execute();
+                        $stmtDelDet->close();
+                    }
+                } else {
+                    // Si la entrega contiene más artículos, únicamente removemos el renglón correspondiente
+                    if ($detalleData) {
+                        $stmtDelDet = $this->db->prepare("DELETE FROM detalle_entrega WHERE id = ?");
+                        $stmtDelDet->bind_param("i", $detalleData['id']);
+                        $stmtDelDet->execute();
+                        $stmtDelDet->close();
+                    }
                 }
-            } else {
-                // Si la entrega contiene más artículos, únicamente removemos el renglón correspondiente
-                if ($detalleData) {
-                    $stmtDelDet = $this->db->prepare("DELETE FROM detalle_entrega WHERE id = ?");
-                    $stmtDelDet->bind_param("i", $detalleData['id']);
-                    $stmtDelDet->execute();
-                    $stmtDelDet->close();
-                }
-            }
-            $stmtCant->close();
+                $stmtCant->close();
 
-            // 3. Reingreso físico de las existencias recuperadas al Inventario por Almacén
-            $stmtInv = $this->db->prepare("UPDATE inventario SET stock = stock + ? WHERE producto_id = ? AND almacen_id = ?");
-            $stmtInv->bind_param("dii", $cant_entregada, $p_id, $id_almacen);
-            $stmtInv->execute();
-            $stmtInv->close();
+                // 3. Reingreso físico de las existencias recuperadas al Inventario por Almacén
+                $stmtInv = $this->db->prepare("UPDATE inventario SET stock = stock + ? WHERE producto_id = ? AND almacen_id = ?");
+                $stmtInv->bind_param("dii", $cant_entregada, $p_id, $id_almacen);
+                $stmtInv->execute();
+                $stmtInv->close();
 
-            // 4. Registro de reversión en el Kardex de Movimientos
-            $mov_obs = "REINGRESO POR CANCELACIÓN - FOLIO: $id_venta. MOTIVO: $motivo";
-            $stmtKardex = $this->db->prepare("INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_origen_id, usuario_registra_id, referencia_id, observaciones) 
+                // 4. Registro de reversión en el Kardex de Movimientos
+                $mov_obs = "REINGRESO POR CANCELACIÓN - FOLIO: $id_venta. MOTIVO: $motivo";
+                $stmtKardex = $this->db->prepare("INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_origen_id, usuario_registra_id, referencia_id, observaciones) 
                                            VALUES (?, 'ENTRADA', ?, ?, ?, ?, ?)");
-            $stmtKardex->bind_param("idiiss", $p_id, $cant_entregada, $id_almacen, $id_usuario, $id_venta, $mov_obs);
-            $stmtKardex->execute();
-            $stmtKardex->close();
-        }
+                $stmtKardex->bind_param("idiiss", $p_id, $cant_entregada, $id_almacen, $id_usuario, $id_venta, $mov_obs);
+                $stmtKardex->execute();
+                $stmtKardex->close();
+            }
 
-        // Si todos los bloques de código SQL corrieron con éxito, guardamos definitivamente
-        $this->db->commit();
-        return true;
+            // Si todos los bloques de código SQL corrieron con éxito, guardamos definitivamente
+            $this->db->commit();
+            return true;
 
-    } catch (Exception $e) {
-        // En caso de fallas de red, FK o bloqueos, hacemos Rollback inmediato para proteger los almacenes
-        if ($this->db->connect_errno == 0 && $this->db->ping()) {
-            $this->db->rollback();
+        } catch (Exception $e) {
+            // En caso de fallas de red, FK o bloqueos, hacemos Rollback inmediato para proteger los almacenes
+            if ($this->db->connect_errno == 0 && $this->db->ping()) {
+                $this->db->rollback();
+            }
+            throw $e;
         }
-        throw $e;
     }
-}
-public function guardarCambiosViaje($datos) {
-    try {
-        $this->db->begin_transaction();
+    public function guardarCambiosViaje($datos)
+    {
+        try {
+            $this->db->begin_transaction();
 
-        $folio       = $datos['viaje_folio'];
-        $chofer_id   = intval($datos['chofer_id']);
-         $usuario   = intval($datos['usuario']);
-        $vehiculo_id = intval($datos['vehiculo_id']);
-        $tripulantes = intval($datos['tripulantes']) ??0;
-        $destinos    = isset($datos['destinos']) ? $datos['destinos'] : [];
+            $folio = $datos['viaje_folio'];
+            $chofer_id = intval($datos['chofer_id']);
+            $usuario = intval($datos['usuario']);
+            $vehiculo_id = intval($datos['vehiculo_id']);
+            $tripulantes = intval($datos['tripulantes']) ?? 0;
+            $destinos = isset($datos['destinos']) ? $datos['destinos'] : [];
 
-        // 1. Mapear qué entregas existen en este folio de viaje
-        $sqlActuales = "SELECT trm.entrega_venta_id, trm.id as reparto_id 
+            // 1. Mapear qué entregas existen en este folio de viaje
+            $sqlActuales = "SELECT trm.entrega_venta_id, trm.id as reparto_id 
                         FROM transporte_consolidacion tc
                         JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
                         WHERE tc.viaje_folio = ?";
-        $stmtA = $this->db->prepare($sqlActuales);
-        $stmtA->bind_param("s", $folio);
-        $stmtA->execute();
-        $resA = $stmtA->get_result();
+            $stmtA = $this->db->prepare($sqlActuales);
+            $stmtA->bind_param("s", $folio);
+            $stmtA->execute();
+            $resA = $stmtA->get_result();
 
-        $mapeo_bd = []; 
-        while($row = $resA->fetch_assoc()){
-            $mapeo_bd[$row['entrega_venta_id']] = $row['reparto_id'];
-        }
-
-        // 2. Sincronización: Quitar los que ya no vienen en el JSON
-        foreach ($mapeo_bd as $mov_id_bd => $reparto_id) {
-            if (!isset($destinos[$mov_id_bd])) {
-                $this->quitarEntregaDeRuta($mov_id_bd,$mov_id_bd,$usuario);
-            }
-        }
-
-        // 3. Actualizar los que permanecen en la ruta
-        $ids_vivos = [];
-        foreach ($destinos as $mov_id => $dir) {
-            if (isset($mapeo_bd[$mov_id])) {
-                $ids_vivos[] = $mapeo_bd[$mov_id];
-            }
-        }
-
-        if (!empty($ids_vivos)) {
-            $in_repartos = implode(',', array_map('intval', $ids_vivos));
-
-            // A. Actualizar Maestro (Chofer y Vehículo)
-            // Usamos los campos correctos: usuario_encargado_id y vehiculo_id
-            $sqlM = "UPDATE transporte_repartos_maestro 
-                     SET usuario_encargado_id = ?, vehiculo_id = ? 
-                     WHERE id IN ($in_repartos)";
-            $stmtM = $this->db->prepare($sqlM);
-            $stmtM->bind_param("ii", $chofer_id, $vehiculo_id);
-            $stmtM->execute();
-
-            // B. Actualizar Ayudantes
-            $this->db->query("DELETE FROM transporte_tripulantes_detalle WHERE reparto_id IN ($in_repartos)");
-            
-            $sqlT = "INSERT INTO transporte_tripulantes_detalle (reparto_id, usuario_id) VALUES (?, ?)";
-            $stmtT = $this->db->prepare($sqlT);
-           
-            foreach ($ids_vivos as $rid) {
-                
-                   
-                    if ($tripulantes != $chofer_id && $tripulantes>0)
-                    $stmtT->bind_param("ii", $rid, $tripulantes);
-                    $stmtT->execute();
-               
+            $mapeo_bd = [];
+            while ($row = $resA->fetch_assoc()) {
+                $mapeo_bd[$row['entrega_venta_id']] = $row['reparto_id'];
             }
 
-            // C. Actualizar Direcciones (Puntos de Ruta)
-            $sqlP = "UPDATE transporte_rutas_puntos SET descripcion_punto = ? WHERE reparto_id = ?";
-            $stmtP = $this->db->prepare($sqlP);
-            foreach ($destinos as $mov_id => $dir) {
-                if (isset($mapeo_bd[$mov_id])) {
-                    $dir_txt = substr($dir, 0, 255);
-                    $stmtP->bind_param("si", $dir_txt, $mapeo_bd[$mov_id]);
-                    $stmtP->execute();
+            // 2. Sincronización: Quitar los que ya no vienen en el JSON
+            foreach ($mapeo_bd as $mov_id_bd => $reparto_id) {
+                if (!isset($destinos[$mov_id_bd])) {
+                    $this->quitarEntregaDeRuta($mov_id_bd, $mov_id_bd, $usuario);
                 }
             }
+
+            // 3. Actualizar los que permanecen en la ruta
+            $ids_vivos = [];
+            foreach ($destinos as $mov_id => $dir) {
+                if (isset($mapeo_bd[$mov_id])) {
+                    $ids_vivos[] = $mapeo_bd[$mov_id];
+                }
+            }
+
+            if (!empty($ids_vivos)) {
+                $in_repartos = implode(',', array_map('intval', $ids_vivos));
+
+                // A. Actualizar Maestro (Chofer y Vehículo)
+                // Usamos los campos correctos: usuario_encargado_id y vehiculo_id
+                $sqlM = "UPDATE transporte_repartos_maestro 
+                     SET usuario_encargado_id = ?, vehiculo_id = ? 
+                     WHERE id IN ($in_repartos)";
+                $stmtM = $this->db->prepare($sqlM);
+                $stmtM->bind_param("ii", $chofer_id, $vehiculo_id);
+                $stmtM->execute();
+
+                // B. Actualizar Ayudantes
+                $this->db->query("DELETE FROM transporte_tripulantes_detalle WHERE reparto_id IN ($in_repartos)");
+
+                $sqlT = "INSERT INTO transporte_tripulantes_detalle (reparto_id, usuario_id) VALUES (?, ?)";
+                $stmtT = $this->db->prepare($sqlT);
+
+                foreach ($ids_vivos as $rid) {
+
+
+                    if ($tripulantes != $chofer_id && $tripulantes > 0)
+                        $stmtT->bind_param("ii", $rid, $tripulantes);
+                    $stmtT->execute();
+
+                }
+
+                // C. Actualizar Direcciones (Puntos de Ruta)
+                $sqlP = "UPDATE transporte_rutas_puntos SET descripcion_punto = ? WHERE reparto_id = ?";
+                $stmtP = $this->db->prepare($sqlP);
+                foreach ($destinos as $mov_id => $dir) {
+                    if (isset($mapeo_bd[$mov_id])) {
+                        $dir_txt = substr($dir, 0, 255);
+                        $stmtP->bind_param("si", $dir_txt, $mapeo_bd[$mov_id]);
+                        $stmtP->execute();
+                    }
+                }
+            }
+
+            $this->db->commit();
+            return true;
+        } catch (Exception $e) {
+            $this->db->rollback();
+            throw $e;
         }
-
-        $this->db->commit();
-        return true;
-    } catch (Exception $e) {
-        $this->db->rollback();
-        throw $e;
     }
-}
 
-public function cancelarDespachoFisico($idMovimiento) {
-    $this->db->begin_transaction();
-    $idMov = intval($idMovimiento);
+    public function cancelarDespachoFisico($idMovimiento)
+    {
+        $this->db->begin_transaction();
+        $idMov = intval($idMovimiento);
 
-    try {
-        // Buscamos los lotes que salieron asociados a este movimiento específico
-        // a través de la tabla registro_salida_lotes
-        $sqlLotes = "SELECT lms.id, lms.lote_id, lms.cantidad_salida 
+        try {
+            // Buscamos los lotes que salieron asociados a este movimiento específico
+            // a través de la tabla registro_salida_lotes
+            $sqlLotes = "SELECT lms.id, lms.lote_id, lms.cantidad_salida 
                      FROM lotes_movimientos_salida lms
                      INNER JOIN registro_salida_lotes rsl ON lms.entrega_venta_id = (
                          SELECT ev.id FROM entregas_venta ev 
@@ -1924,140 +1974,146 @@ public function cancelarDespachoFisico($idMovimiento) {
                          WHERE m.id = $idMov LIMIT 1
                      )
                      WHERE rsl.movimiento_id = $idMov";
-        
-        $res = $this->db->query($sqlLotes);
 
-        while ($row = $res->fetch_assoc()) {
-            // 1. Devolver cantidad al stock real
-            $this->db->query("UPDATE lotes_stock 
+            $res = $this->db->query($sqlLotes);
+
+            while ($row = $res->fetch_assoc()) {
+                // 1. Devolver cantidad al stock real
+                $this->db->query("UPDATE lotes_stock 
                              SET cantidad_actual = cantidad_actual + {$row['cantidad_salida']}, 
                                  estado_lote = 'activo' 
                              WHERE id = {$row['lote_id']}");
 
-            // 2. Eliminar el desglose de salida de ese lote
-            $this->db->query("DELETE FROM lotes_movimientos_salida WHERE id = {$row['id']}");
+                // 2. Eliminar el desglose de salida de ese lote
+                $this->db->query("DELETE FROM lotes_movimientos_salida WHERE id = {$row['id']}");
+            }
+
+            // 3. Eliminar el registro que confirma que el despacho se hizo
+            $this->db->query("DELETE FROM registro_salida_lotes WHERE movimiento_id = $idMov");
+
+            $this->db->commit();
+            return ['success' => true, 'message' => 'Inventario restaurado con éxito.'];
+
+        } catch (Exception $e) {
+            $this->db->rollback();
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
+    }
+    public function procesarDespachoFisicoMasivo($idsMovimientos)
+    {
+        if (empty($idsMovimientos)) {
+            return ['success' => false, 'message' => 'No se proporcionaron IDs para procesar.'];
         }
 
-        // 3. Eliminar el registro que confirma que el despacho se hizo
-        $this->db->query("DELETE FROM registro_salida_lotes WHERE movimiento_id = $idMov");
+        $this->db->begin_transaction();
 
-        $this->db->commit();
-        return ['success' => true, 'message' => 'Inventario restaurado con éxito.'];
+        try {
+            $id_usuario = $_SESSION['usuario_id'] ?? 0;
+            if ($id_usuario <= 0)
+                throw new Exception("Error: Sesión de usuario no válida.");
 
-    } catch (Exception $e) {
-        $this->db->rollback();
-        return ['success' => false, 'message' => $e->getMessage()];
-    }
-}
-public function procesarDespachoFisicoMasivo($idsMovimientos) {
-    if (empty($idsMovimientos)) {
-        return ['success' => false, 'message' => 'No se proporcionaron IDs para procesar.'];
-    }
+            foreach ($idsMovimientos as $idMovimiento) {
+                $idMovimiento = intval($idMovimiento);
 
-    $this->db->begin_transaction();
-
-    try {
-        $id_usuario = $_SESSION['usuario_id'] ?? 0;
-        if ($id_usuario <= 0) throw new Exception("Error: Sesión de usuario no válida.");
-
-        foreach ($idsMovimientos as $idMovimiento) {
-            $idMovimiento = intval($idMovimiento);
-
-            // 1. Obtener info del movimiento y su relación con la venta
-            $sqlMov = "SELECT m.id, m.producto_id, m.almacen_origen_id, m.cantidad,
+                // 1. Obtener info del movimiento y su relación con la venta
+                $sqlMov = "SELECT m.id, m.producto_id, m.almacen_origen_id, m.cantidad,
                               dv.id as det_venta_id, dv.precio_unitario as precio_pactado,
                               ev.id as entrega_id
                        FROM movimientos m
                        LEFT JOIN detalle_venta dv ON m.referencia_id = dv.venta_id AND m.producto_id = dv.producto_id
                        LEFT JOIN entregas_venta ev ON dv.venta_id = ev.venta_id
                        WHERE m.id = $idMovimiento LIMIT 1";
-            
-            $resMov = $this->db->query($sqlMov);
-            $mov = $resMov->fetch_assoc();
 
-            if (!$mov) throw new Exception("Movimiento ID $idMovimiento no encontrado.");
+                $resMov = $this->db->query($sqlMov);
+                $mov = $resMov->fetch_assoc();
 
-            $prod_id           = $mov['producto_id'];
-            $alm_id            = $mov['almacen_origen_id'];
-            $cantidad_restante = floatval($mov['cantidad']);
-            $entrega_id        = intval($mov['entrega_id'] ?? 0);
-            $det_venta_id      = intval($mov['det_venta_id'] ?? 0);
-            $precio_pactado    = floatval($mov['precio_pactado'] ?? 0);
+                if (!$mov)
+                    throw new Exception("Movimiento ID $idMovimiento no encontrado.");
 
-            // 2. Buscar lotes disponibles (FIFO: El más viejo primero)
-            $sqlLotes = "SELECT id, cantidad_actual, precio_compra_unitario 
+                $prod_id = $mov['producto_id'];
+                $alm_id = $mov['almacen_origen_id'];
+                $cantidad_restante = floatval($mov['cantidad']);
+                $entrega_id = intval($mov['entrega_id'] ?? 0);
+                $det_venta_id = intval($mov['det_venta_id'] ?? 0);
+                $precio_pactado = floatval($mov['precio_pactado'] ?? 0);
+
+                // 2. Buscar lotes disponibles (FIFO: El más viejo primero)
+                $sqlLotes = "SELECT id, cantidad_actual, precio_compra_unitario 
                          FROM lotes_stock 
                          WHERE producto_id = $prod_id 
                            AND almacen_id = $alm_id 
                            AND cantidad_actual > 0 
                            AND estado_lote = 'activo'
                          ORDER BY fecha_ingreso ASC, id ASC";
-            
-            $resLotes = $this->db->query($sqlLotes);
 
-            if ($resLotes->num_rows == 0 && $cantidad_restante > 0) {
-                throw new Exception("Sin stock en lotes para el producto ID: $prod_id");
-            }
+                $resLotes = $this->db->query($sqlLotes);
 
-            // 3. Descontar de lotes hasta agotar la cantidad del movimiento
-            while ($cantidad_restante > 0 && $lote = $resLotes->fetch_assoc()) {
-                $lote_id         = $lote['id'];
-                $stock_lote      = floatval($lote['cantidad_actual']);
-                $costo_historico = $lote['precio_compra_unitario'];
+                if ($resLotes->num_rows == 0 && $cantidad_restante > 0) {
+                    throw new Exception("Sin stock en lotes para el producto ID: $prod_id");
+                }
 
-                $a_tomar          = min($cantidad_restante, $stock_lote);
-                $nuevo_stock_lote = $stock_lote - $a_tomar;
-                $nuevo_estado     = ($nuevo_stock_lote <= 0) ? 'agotado' : 'activo';
+                // 3. Descontar de lotes hasta agotar la cantidad del movimiento
+                while ($cantidad_restante > 0 && $lote = $resLotes->fetch_assoc()) {
+                    $lote_id = $lote['id'];
+                    $stock_lote = floatval($lote['cantidad_actual']);
+                    $costo_historico = $lote['precio_compra_unitario'];
 
-                // Actualizar el lote
-                $this->db->query("UPDATE lotes_stock 
+                    $a_tomar = min($cantidad_restante, $stock_lote);
+                    $nuevo_stock_lote = $stock_lote - $a_tomar;
+                    $nuevo_estado = ($nuevo_stock_lote <= 0) ? 'agotado' : 'activo';
+
+                    // Actualizar el lote
+                    $this->db->query("UPDATE lotes_stock 
                                  SET cantidad_actual = $nuevo_stock_lote, estado_lote = '$nuevo_estado' 
                                  WHERE id = $lote_id");
 
-                // Registrar la salida específica del lote
-                $sqlSalida = "INSERT INTO lotes_movimientos_salida 
+                    // Registrar la salida específica del lote
+                    $sqlSalida = "INSERT INTO lotes_movimientos_salida 
                               (lote_id, entrega_venta_id, detalle_venta_id, cantidad_salida, costo_compra_historico, precio_venta_pactado) 
                               VALUES ($lote_id, $entrega_id, $det_venta_id, $a_tomar, $costo_historico, $precio_pactado)";
-                
-                if (!$this->db->query($sqlSalida)) throw new Exception("Error al insertar salida de lote.");
 
-                $cantidad_restante -= $a_tomar;
-            }
+                    if (!$this->db->query($sqlSalida))
+                        throw new Exception("Error al insertar salida de lote.");
 
-            // 4. Insertar en el "Puente" para marcar que el bodeguero ya lo entregó físicamente
-            // Esto es lo que hace que desaparezca de la lista de pendientes
-            $sqlPuente = "INSERT INTO registro_salida_lotes (movimiento_id, usuario_patio_id, usuario_despacho_id) 
+                    $cantidad_restante -= $a_tomar;
+                }
+
+                // 4. Insertar en el "Puente" para marcar que el bodeguero ya lo entregó físicamente
+                // Esto es lo que hace que desaparezca de la lista de pendientes
+                $sqlPuente = "INSERT INTO registro_salida_lotes (movimiento_id, usuario_patio_id, usuario_despacho_id) 
                           VALUES ($idMovimiento, $id_usuario, $id_usuario)";
 
-            if (!$this->db->query($sqlPuente)) throw new Exception("Error en registro físico: " . $this->db->error);
+                if (!$this->db->query($sqlPuente))
+                    throw new Exception("Error en registro físico: " . $this->db->error);
+            }
+
+            $this->db->commit();
+            return ['success' => true, 'message' => count($idsMovimientos) . ' productos despachados correctamente.'];
+
+        } catch (Exception $e) {
+            $this->db->rollback();
+            return ['success' => false, 'message' => "Error: " . $e->getMessage()];
+        }
+    }
+    public function procesarDespachoFisicoMasivoConlotes($idsMovimientos, $lotes)
+    {
+        if (empty($idsMovimientos)) {
+            return ['success' => false, 'message' => 'No se proporcionaron IDs para procesar.'];
         }
 
-        $this->db->commit();
-        return ['success' => true, 'message' => count($idsMovimientos) . ' productos despachados correctamente.'];
+        $this->db->begin_transaction();
 
-    } catch (Exception $e) {
-        $this->db->rollback();
-        return ['success' => false, 'message' => "Error: " . $e->getMessage()];
-    }
-}
-public function procesarDespachoFisicoMasivoConlotes($idsMovimientos, $lotes) {
-    if (empty($idsMovimientos)) {
-        return ['success' => false, 'message' => 'No se proporcionaron IDs para procesar.'];
-    }
+        try {
+            $id_usuario = $_SESSION['usuario_id'] ?? 0;
+            if ($id_usuario <= 0) {
+                throw new Exception("Error: Sesión de usuario no válida.");
+            }
 
-    $this->db->begin_transaction();
+            foreach ($idsMovimientos as $index => $idMovimiento) {
+                $idMovimiento = intval($idMovimiento);
 
-    try {
-        $id_usuario = $_SESSION['usuario_id'] ?? 0;
-        if ($id_usuario <= 0) {
-            throw new Exception("Error: Sesión de usuario no válida.");
-        }
-
-        foreach ($idsMovimientos as $index => $idMovimiento) {
-            $idMovimiento = intval($idMovimiento);
-
-            // 1. Obtener movimiento
-            $sqlMov = "SELECT m.id, m.producto_id, m.almacen_origen_id, m.cantidad,
+                // 1. Obtener movimiento
+                $sqlMov = "SELECT m.id, m.producto_id, m.almacen_origen_id, m.cantidad,
                               dv.id as det_venta_id, dv.precio_unitario as precio_pactado,
                               ev.id as entrega_id
                        FROM movimientos m
@@ -2069,117 +2125,118 @@ public function procesarDespachoFisicoMasivoConlotes($idsMovimientos, $lotes) {
                        WHERE m.id = $idMovimiento 
                        LIMIT 1";
 
-            $resMov = $this->db->query($sqlMov);
-            $mov = $resMov->fetch_assoc();
+                $resMov = $this->db->query($sqlMov);
+                $mov = $resMov->fetch_assoc();
 
-            if (!$mov) {
-                throw new Exception("Movimiento ID $idMovimiento no encontrado.");
-            }
+                if (!$mov) {
+                    throw new Exception("Movimiento ID $idMovimiento no encontrado.");
+                }
 
-            $prod_id           = intval($mov['producto_id']);
-            $alm_id            = intval($mov['almacen_origen_id']);
-            $cantidad_restante = floatval($mov['cantidad']);
-            $entrega_id        = intval($mov['entrega_id'] ?? 0);
-            $det_venta_id      = intval($mov['det_venta_id'] ?? 0);
-            $precio_pactado    = floatval($mov['precio_pactado'] ?? 0);
+                $prod_id = intval($mov['producto_id']);
+                $alm_id = intval($mov['almacen_origen_id']);
+                $cantidad_restante = floatval($mov['cantidad']);
+                $entrega_id = intval($mov['entrega_id'] ?? 0);
+                $det_venta_id = intval($mov['det_venta_id'] ?? 0);
+                $precio_pactado = floatval($mov['precio_pactado'] ?? 0);
 
-            // ===================================================
-            // SI EXISTE LOTE ESPECÍFICO -> USAR ESE
-            // SI NO -> FIFO NORMAL
-            // ===================================================
-            $loteSeleccionado = isset($lotes[$index]) ? intval($lotes[$index]) : 0;
+                // ===================================================
+                // SI EXISTE LOTE ESPECÍFICO -> USAR ESE
+                // SI NO -> FIFO NORMAL
+                // ===================================================
+                $loteSeleccionado = isset($lotes[$index]) ? intval($lotes[$index]) : 0;
 
-            if ($loteSeleccionado > 0) {
-                $sqlLotes = "SELECT id, cantidad_actual, precio_compra_unitario
+                if ($loteSeleccionado > 0) {
+                    $sqlLotes = "SELECT id, cantidad_actual, precio_compra_unitario
                              FROM lotes_stock
                              WHERE id = $loteSeleccionado
                                AND producto_id = $prod_id
                                AND almacen_id = $alm_id
                                AND cantidad_actual > 0";
-            } else {
-                $sqlLotes = "SELECT id, cantidad_actual, precio_compra_unitario
+                } else {
+                    $sqlLotes = "SELECT id, cantidad_actual, precio_compra_unitario
                              FROM lotes_stock
                              WHERE producto_id = $prod_id
                                AND almacen_id = $alm_id
                                AND cantidad_actual > 0
                                AND estado_lote = 'activo'
                              ORDER BY fecha_ingreso ASC, id ASC";
-            }
+                }
 
-            $resLotes = $this->db->query($sqlLotes);
+                $resLotes = $this->db->query($sqlLotes);
 
-            if ($resLotes->num_rows == 0 && $cantidad_restante > 0) {
-                throw new Exception("Sin stock en lotes para producto ID: $prod_id");
-            }
+                if ($resLotes->num_rows == 0 && $cantidad_restante > 0) {
+                    throw new Exception("Sin stock en lotes para producto ID: $prod_id");
+                }
 
-            // 3. Descontar
-            while ($cantidad_restante > 0 && $lote = $resLotes->fetch_assoc()) {
+                // 3. Descontar
+                while ($cantidad_restante > 0 && $lote = $resLotes->fetch_assoc()) {
 
-                $lote_id         = intval($lote['id']);
-                $stock_lote      = floatval($lote['cantidad_actual']);
-                $costo_historico = floatval($lote['precio_compra_unitario']);
+                    $lote_id = intval($lote['id']);
+                    $stock_lote = floatval($lote['cantidad_actual']);
+                    $costo_historico = floatval($lote['precio_compra_unitario']);
 
-                $a_tomar          = min($cantidad_restante, $stock_lote);
-                $nuevo_stock_lote = $stock_lote - $a_tomar;
-                $nuevo_estado     = ($nuevo_stock_lote <= 0) ? 'agotado' : 'activo';
+                    $a_tomar = min($cantidad_restante, $stock_lote);
+                    $nuevo_stock_lote = $stock_lote - $a_tomar;
+                    $nuevo_estado = ($nuevo_stock_lote <= 0) ? 'agotado' : 'activo';
 
-                $this->db->query("
+                    $this->db->query("
                     UPDATE lotes_stock
                     SET cantidad_actual = $nuevo_stock_lote,
                         estado_lote = '$nuevo_estado'
                     WHERE id = $lote_id
                 ");
 
-                $sqlSalida = "INSERT INTO lotes_movimientos_salida
+                    $sqlSalida = "INSERT INTO lotes_movimientos_salida
                               (lote_id, entrega_venta_id, detalle_venta_id,
                                cantidad_salida, costo_compra_historico, precio_venta_pactado)
                               VALUES
                               ($lote_id, $entrega_id, $det_venta_id,
                                $a_tomar, $costo_historico, $precio_pactado)";
 
-                if (!$this->db->query($sqlSalida)) {
-                    throw new Exception("Error al insertar salida de lote.");
+                    if (!$this->db->query($sqlSalida)) {
+                        throw new Exception("Error al insertar salida de lote.");
+                    }
+
+                    $cantidad_restante -= $a_tomar;
                 }
 
-                $cantidad_restante -= $a_tomar;
-            }
+                if ($cantidad_restante > 0) {
+                    throw new Exception("Stock insuficiente para movimiento $idMovimiento");
+                }
 
-            if ($cantidad_restante > 0) {
-                throw new Exception("Stock insuficiente para movimiento $idMovimiento");
-            }
-
-            // 4. Registrar salida física
-            $sqlPuente = "INSERT INTO registro_salida_lotes
+                // 4. Registrar salida física
+                $sqlPuente = "INSERT INTO registro_salida_lotes
                          (movimiento_id, usuario_patio_id, usuario_despacho_id)
                          VALUES
                          ($idMovimiento, $id_usuario, $id_usuario)";
 
-            if (!$this->db->query($sqlPuente)) {
-                throw new Exception("Error en registro físico: " . $this->db->error);
+                if (!$this->db->query($sqlPuente)) {
+                    throw new Exception("Error en registro físico: " . $this->db->error);
+                }
             }
+
+            $this->db->commit();
+
+            return [
+                'success' => true,
+                'message' => count($idsMovimientos) . ' productos despachados correctamente.'
+            ];
+
+        } catch (Exception $e) {
+            $this->db->rollback();
+
+            return [
+                'success' => false,
+                'message' => "Error: " . $e->getMessage()
+            ];
         }
-
-        $this->db->commit();
-
-        return [
-            'success' => true,
-            'message' => count($idsMovimientos) . ' productos despachados correctamente.'
-        ];
-
-    } catch (Exception $e) {
-        $this->db->rollback();
-
-        return [
-            'success' => false,
-            'message' => "Error: " . $e->getMessage()
-        ];
     }
-}
-public function listarIdsPendientesPorVenta($venta_id) {
-    $venta_id = intval($venta_id);
+    public function listarIdsPendientesPorVenta($venta_id)
+    {
+        $venta_id = intval($venta_id);
 
-    // Solo pedimos m.id para optimizar la consulta
-    $sql = "SELECT m.id 
+        // Solo pedimos m.id para optimizar la consulta
+        $sql = "SELECT m.id 
             FROM movimientos m
             LEFT JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
             LEFT JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id
@@ -2189,24 +2246,25 @@ public function listarIdsPendientesPorVenta($venta_id) {
               AND (trm.id IS NULL OR trm.estado_reparto = 'cancelado')
             ORDER BY m.id ASC";
 
-    $resultado = $this->db->query($sql);
-    $ids = [];
+        $resultado = $this->db->query($sql);
+        $ids = [];
 
-    if ($resultado) {
-        while ($row = $resultado->fetch_assoc()) {
-            // Guardamos solo el ID como entero
-            $ids[] = intval($row['id']);
+        if ($resultado) {
+            while ($row = $resultado->fetch_assoc()) {
+                // Guardamos solo el ID como entero
+                $ids[] = intval($row['id']);
+            }
         }
-    }
-    
-    // Retorna algo como: [193, 194, 198]
-    return $ids;
-}
 
-public function listarProductos($venta_id) {
-    $venta_id = intval($venta_id);
- 
-    $sqlP = "
+        // Retorna algo como: [193, 194, 198]
+        return $ids;
+    }
+
+    public function listarProductos($venta_id)
+    {
+        $venta_id = intval($venta_id);
+
+        $sqlP = "
     SELECT 
         dv.*,
         dv.id AS dvid,
@@ -2251,21 +2309,22 @@ public function listarProductos($venta_id) {
     WHERE dv.venta_id = $venta_id
     ";
 
-    $res = $this->db->query($sqlP);
+        $res = $this->db->query($sqlP);
 
-    $productos = [];
+        $productos = [];
 
-    while ($row = $res->fetch_assoc()) {
-        $productos[] = $row;
+        while ($row = $res->fetch_assoc()) {
+            $productos[] = $row;
+        }
+
+        return $productos;
     }
+    public function contarEntregasActivasPorVenta($venta_id)
+    {
+        // Forzamos entero para seguridad extra
+        $venta_id = intval($venta_id);
 
-    return $productos;
-}
-public function contarEntregasActivasPorVenta($venta_id) {
-    // Forzamos entero para seguridad extra
-    $venta_id = intval($venta_id);
-
-    $sql = "SELECT COUNT(DISTINCT m.id) AS total_entregas_activas
+        $sql = "SELECT COUNT(DISTINCT m.id) AS total_entregas_activas
             FROM movimientos m
             INNER JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id
             WHERE m.referencia_id = ? 
@@ -2274,99 +2333,102 @@ public function contarEntregasActivasPorVenta($venta_id) {
               AND trm.id IS NOT NULL 
               AND trm.estado_reparto != 'cancelado'";
 
-    try {
-        $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("i", $venta_id);
-        $stmt->execute();
-        $resultado = $stmt->get_result()->fetch_assoc();
+        try {
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("i", $venta_id);
+            $stmt->execute();
+            $resultado = $stmt->get_result()->fetch_assoc();
 
-        return intval($resultado['total_entregas_activas'] ?? 0);
+            return intval($resultado['total_entregas_activas'] ?? 0);
 
-    } catch (Exception $e) {
-        error_log("CF_SYSTEM_LOG: Error al contar entregas activas: " . $e->getMessage());
-        return 0;
+        } catch (Exception $e) {
+            error_log("CF_SYSTEM_LOG: Error al contar entregas activas: " . $e->getMessage());
+            return 0;
+        }
     }
-}
-public function simularDespachoLotesMasivo($idsMovimientos) {
-    try {
-        if (empty($idsMovimientos)) throw new Exception("No hay IDs para procesar.");
-        
-        // Limpiamos los IDs para evitar inyecciones
-        $idsClean = array_map('intval', $idsMovimientos);
-        $idsString = implode(',', $idsClean);
+    public function simularDespachoLotesMasivo($idsMovimientos)
+    {
+        try {
+            if (empty($idsMovimientos))
+                throw new Exception("No hay IDs para procesar.");
 
-        // 1. Obtenemos todos los movimientos de una sola vez
-        $sqlMovs = "SELECT m.id, m.producto_id, m.almacen_origen_id, m.cantidad, p.id as producto_id,
+            // Limpiamos los IDs para evitar inyecciones
+            $idsClean = array_map('intval', $idsMovimientos);
+            $idsString = implode(',', $idsClean);
+
+            // 1. Obtenemos todos los movimientos de una sola vez
+            $sqlMovs = "SELECT m.id, m.producto_id, m.almacen_origen_id, m.cantidad, p.id as producto_id,
                            p.nombre as prod_nombre, p.factor_conversion, p.unidad_reporte 
                     FROM movimientos m 
                     INNER JOIN productos p ON m.producto_id = p.id 
                     WHERE m.id IN ($idsString)";
-        
-        $resMovs = $this->db->query($sqlMovs);
-        $resultados = [];
 
-        while ($mov = $resMovs->fetch_assoc()) {
-            $movId    = $mov['id'];
-            $prodId   = $mov['producto_id'];
-            $almId    = $mov['almacen_origen_id'];
-            $restante = floatval($mov['cantidad']);
-            $factor   = floatval($mov['factor_conversion'] ?: 1);
+            $resMovs = $this->db->query($sqlMovs);
+            $resultados = [];
 
-            // 2. Buscamos lotes para ESTE producto y almacén (FIFO)
-            $sqlLotes = "SELECT id, codigo_lote, cantidad_actual, fecha_ingreso 
+            while ($mov = $resMovs->fetch_assoc()) {
+                $movId = $mov['id'];
+                $prodId = $mov['producto_id'];
+                $almId = $mov['almacen_origen_id'];
+                $restante = floatval($mov['cantidad']);
+                $factor = floatval($mov['factor_conversion'] ?: 1);
+
+                // 2. Buscamos lotes para ESTE producto y almacén (FIFO)
+                $sqlLotes = "SELECT id, codigo_lote, cantidad_actual, fecha_ingreso 
                          FROM lotes_stock 
                          WHERE producto_id = $prodId AND almacen_id = $almId 
                          AND cantidad_actual > 0 AND estado_lote = 'activo' 
                          ORDER BY fecha_ingreso ASC";
-            
-            $resLotes = $this->db->query($sqlLotes);
-            $lotesParaEsteMov = [];
 
-            while ($restante > 0 && $lote = $resLotes->fetch_assoc()) {
-                $cantidadEnLote = floatval($lote['cantidad_actual']);
-                $tomar = min($restante, $cantidadEnLote);
+                $resLotes = $this->db->query($sqlLotes);
+                $lotesParaEsteMov = [];
 
-                $lotesParaEsteMov[] = [
-                    'lote_id'            => $lote['id'],
-                    'codigo'             => $lote['codigo_lote'],
-                    'fecha_entrada'      => date('d/m/Y', strtotime($lote['fecha_ingreso'])),
-                    'cantidad_en_lote'   => $cantidadEnLote,
-                    'cantidad_a_extraer' => $tomar,
-                    'saldo_final'        => $cantidadEnLote - $tomar
+                while ($restante > 0 && $lote = $resLotes->fetch_assoc()) {
+                    $cantidadEnLote = floatval($lote['cantidad_actual']);
+                    $tomar = min($restante, $cantidadEnLote);
+
+                    $lotesParaEsteMov[] = [
+                        'lote_id' => $lote['id'],
+                        'codigo' => $lote['codigo_lote'],
+                        'fecha_entrada' => date('d/m/Y', strtotime($lote['fecha_ingreso'])),
+                        'cantidad_en_lote' => $cantidadEnLote,
+                        'cantidad_a_extraer' => $tomar,
+                        'saldo_final' => $cantidadEnLote - $tomar
+                    ];
+                    $restante -= $tomar;
+                }
+
+                // 3. Agrupamos el resultado por ID de movimiento
+                $resultados[] = [
+                    'movimiento_id' => $movId,
+                    'producto_id' => $mov['producto_id'],
+                    'almacen_id' => $mov['almacen_origen_id'],
+                    'producto' => $mov['prod_nombre'],
+                    'total_solicitado' => $mov['cantidad'],
+                    'unidad_reporte' => $mov['unidad_reporte'],
+                    'factor_conversion' => $factor,
+                    'lotes' => $lotesParaEsteMov,
+                    'pendiente' => $restante // Si es > 0, falta stock
                 ];
-                $restante -= $tomar;
             }
 
-            // 3. Agrupamos el resultado por ID de movimiento
-            $resultados[] = [
-                'movimiento_id'     => $movId,
-                'producto_id'       =>$mov['producto_id'],
-                'almacen_id'=>$mov['almacen_origen_id'],
-                'producto'          => $mov['prod_nombre'],
-                'total_solicitado'  => $mov['cantidad'],
-                'unidad_reporte'    => $mov['unidad_reporte'],
-                'factor_conversion' => $factor,
-                'lotes'             => $lotesParaEsteMov,
-                'pendiente'         => $restante // Si es > 0, falta stock
+            return [
+                'success' => true,
+                'data' => $resultados
             ];
+
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
         }
-
-        return [
-            'success' => true,
-            'data'    => $resultados
-        ];
-
-    } catch (Exception $e) {
-        return ['success' => false, 'message' => $e->getMessage()];
     }
-}
-public function DespachoLotesMasivo($prodId, $almId) {
-    try {
+    public function DespachoLotesMasivo($prodId, $almId)
+    {
+        try {
 
-        $prodId = intval($prodId);
-        $almId  = intval($almId);
+            $prodId = intval($prodId);
+            $almId = intval($almId);
 
-        $sqlLotes = "
+            $sqlLotes = "
             SELECT id, codigo_lote, cantidad_actual, fecha_ingreso,producto_id
             FROM lotes_stock 
             WHERE producto_id = $prodId
@@ -2376,30 +2438,31 @@ public function DespachoLotesMasivo($prodId, $almId) {
             ORDER BY fecha_ingreso ASC
         ";
 
-        $resLotes = $this->db->query($sqlLotes);
+            $resLotes = $this->db->query($sqlLotes);
 
-        $lotes = [];
+            $lotes = [];
 
-        while ($row = $resLotes->fetch_assoc()) {
-            $lotes[] = $row;
+            while ($row = $resLotes->fetch_assoc()) {
+                $lotes[] = $row;
+            }
+
+            return [
+                'success' => true,
+                'data' => $lotes
+            ];
+
+        } catch (Exception $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
         }
-
-        return [
-            'success' => true,
-            'data'    => $lotes
-        ];
-
-    } catch (Exception $e) {
-        return [
-            'success' => false,
-            'message' => $e->getMessage()
-        ];
     }
-}
-public function listarDespachosPendientesPorVenta($venta_id) {
-    $venta_id = intval($venta_id);
+    public function listarDespachosPendientesPorVenta($venta_id)
+    {
+        $venta_id = intval($venta_id);
 
-    $sql = "SELECT m.id 
+        $sql = "SELECT m.id 
 FROM movimientos m
 -- Unimos con patio (rsl) para saber que YA salieron de bodega
 INNER JOIN registro_salida_lotes rsl ON m.id = rsl.movimiento_id
@@ -2411,24 +2474,25 @@ WHERE m.referencia_id = $venta_id
   AND trm.id IS NULL
 ORDER BY m.id ASC;";
 
-    $resultado = $this->db->query($sql);
-    $pendientes = [];
+        $resultado = $this->db->query($sql);
+        $pendientes = [];
 
-    if ($resultado) {
-        while ($row = $resultado->fetch_assoc()) {
-            $pendientes[] = $row;
+        if ($resultado) {
+            while ($row = $resultado->fetch_assoc()) {
+                $pendientes[] = $row;
+            }
         }
-    }
-    
-    return $pendientes;
-}
-public function getViajesLogistica($trabajador_id = null) {
-    // Si hay ID, filtramos. Si no (Admin), 1=1 para traer todo.
-    $where = ($trabajador_id !== null) 
-        ? "WHERE (rm.usuario_encargado_id = ? OR td.usuario_id = ?)" 
-        : "WHERE 1=1";
 
-    $sql = "SELECT 
+        return $pendientes;
+    }
+    public function getViajesLogistica($trabajador_id = null)
+    {
+        // Si hay ID, filtramos. Si no (Admin), 1=1 para traer todo.
+        $where = ($trabajador_id !== null)
+            ? "WHERE (rm.usuario_encargado_id = ? OR td.usuario_id = ?)"
+            : "WHERE 1=1";
+
+        $sql = "SELECT 
                 rm.id, 
                 tc.viaje_folio, 
                 rm.fecha_programada, 
@@ -2448,31 +2512,32 @@ public function getViajesLogistica($trabajador_id = null) {
             GROUP BY rm.id
             ORDER BY rm.fecha_programada DESC, rm.id DESC";
 
-    $stmt = $this->db->prepare($sql);
-    
-    // Pasamos los parámetros para el CASE y el WHERE
-    if ($trabajador_id !== null) {
-        $stmt->bind_param("iiii", $trabajador_id, $trabajador_id, $trabajador_id, $trabajador_id);
-    } else {
-        // Para Admin, solo pasamos ceros o valores nulos al CASE
-        $zero = 0;
-        $stmt->bind_param("ii", $zero, $zero);
-    }
-    
-    $stmt->execute();
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
-public function getCargaPendienteChofer($trabajador_id = null, $reparto_id_especifico = null) {
-    // Filtro dinámico: Por trabajador (Chofer/Ayudante) o por ID de viaje directo (Admin)
-    $where = "WHERE tc.estatus_consolidado = 'abierto'";
-    
-    if ($reparto_id_especifico) {
-        $where .= " AND rm.id = " . intval($reparto_id_especifico);
-    } elseif ($trabajador_id) {
-        $where .= " AND (rm.usuario_encargado_id = $trabajador_id OR td.usuario_id = $trabajador_id)";
-    }
+        $stmt = $this->db->prepare($sql);
 
-    $sql = "SELECT 
+        // Pasamos los parámetros para el CASE y el WHERE
+        if ($trabajador_id !== null) {
+            $stmt->bind_param("iiii", $trabajador_id, $trabajador_id, $trabajador_id, $trabajador_id);
+        } else {
+            // Para Admin, solo pasamos ceros o valores nulos al CASE
+            $zero = 0;
+            $stmt->bind_param("ii", $zero, $zero);
+        }
+
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+    }
+    public function getCargaPendienteChofer($trabajador_id = null, $reparto_id_especifico = null)
+    {
+        // Filtro dinámico: Por trabajador (Chofer/Ayudante) o por ID de viaje directo (Admin)
+        $where = "WHERE tc.estatus_consolidado = 'abierto'";
+
+        if ($reparto_id_especifico) {
+            $where .= " AND rm.id = " . intval($reparto_id_especifico);
+        } elseif ($trabajador_id) {
+            $where .= " AND (rm.usuario_encargado_id = $trabajador_id OR td.usuario_id = $trabajador_id)";
+        }
+
+        $sql = "SELECT 
                 tc.viaje_folio,
                 rm.id AS reparto_id,
                 v.id AS venta_id,
@@ -2497,37 +2562,37 @@ public function getCargaPendienteChofer($trabajador_id = null, $reparto_id_espec
             GROUP BY m.id
             ORDER BY rp.orden_visita ASC";
 
-    return $this->db->query($sql)->fetch_all(MYSQLI_ASSOC);
-}
-public function registrarEntregaMovimiento($datos)
-{
-    try {
+        return $this->db->query($sql)->fetch_all(MYSQLI_ASSOC);
+    }
+    public function registrarEntregaMovimiento($datos)
+    {
+        try {
 
-        $this->db->begin_transaction();
+            $this->db->begin_transaction();
 
-        $id_mov   = intval($datos['id_movimiento']);
-        
-        $id_ven   = intval($datos['id_venta']);
-        $id_tra   = intval($datos['trabajador_id'] ?? 0);
-        $id_veh   = intval($datos['vehiculo_id']);
+            $id_mov = intval($datos['id_movimiento']);
 
-        $foto_ent = !empty($datos['fotografia_entrega'])
-            ? $datos['fotografia_entrega']
-            : null;
+            $id_ven = intval($datos['id_venta']);
+            $id_tra = intval($datos['trabajador_id'] ?? 0);
+            $id_veh = intval($datos['vehiculo_id']);
 
-        $foto_not = !empty($datos['fotografia_nota'])
-            ? $datos['fotografia_nota']
-            : null;
+            $foto_ent = !empty($datos['fotografia_entrega'])
+                ? $datos['fotografia_entrega']
+                : null;
 
-        $estatus = $datos['estatus_entrega'];
-        $coment  = $datos['comentario'] ?? '';
-        $folio   = $datos['folio'] ?? '';
+            $foto_not = !empty($datos['fotografia_nota'])
+                ? $datos['fotografia_nota']
+                : null;
 
-        // ==========================================
-        // VERIFICAR SI YA EXISTE
-        // ==========================================
+            $estatus = $datos['estatus_entrega'];
+            $coment = $datos['comentario'] ?? '';
+            $folio = $datos['folio'] ?? '';
 
-        $sqlR = "
+            // ==========================================
+            // VERIFICAR SI YA EXISTE
+            // ==========================================
+
+            $sqlR = "
             SELECT id
             FROM confirmacion_reparto_viaje
             WHERE id_venta = ?
@@ -2535,19 +2600,19 @@ public function registrarEntregaMovimiento($datos)
             LIMIT 1
         ";
 
-        $stmtR = $this->db->prepare($sqlR);
-        $stmtR->bind_param("is", $id_ven, $folio);
-        $stmtR->execute();
+            $stmtR = $this->db->prepare($sqlR);
+            $stmtR->bind_param("is", $id_ven, $folio);
+            $stmtR->execute();
 
-        $registro = $stmtR->get_result()->fetch_assoc();
+            $registro = $stmtR->get_result()->fetch_assoc();
 
-        // ==========================================
-        // UPDATE
-        // ==========================================
+            // ==========================================
+            // UPDATE
+            // ==========================================
 
-        if ($registro) {
+            if ($registro) {
 
-            $sqlUP = "
+                $sqlUP = "
                 UPDATE confirmacion_reparto_viaje
                 SET
                     comentario = ?,
@@ -2555,55 +2620,55 @@ public function registrarEntregaMovimiento($datos)
                     hora = CURTIME()
             ";
 
-            $params = [$coment, $estatus];
-            $types  = "ss";
+                $params = [$coment, $estatus];
+                $types = "ss";
 
-            if ($foto_ent !== null) {
-                $sqlUP .= ", fotografia_entrega = ?";
-                $params[] = $foto_ent;
-                $types .= "s";
-            }
+                if ($foto_ent !== null) {
+                    $sqlUP .= ", fotografia_entrega = ?";
+                    $params[] = $foto_ent;
+                    $types .= "s";
+                }
 
-            if ($foto_not !== null) {
-                $sqlUP .= ", fotografia_nota = ?";
-                $params[] = $foto_not;
-                $types .= "s";
-            }
+                if ($foto_not !== null) {
+                    $sqlUP .= ", fotografia_nota = ?";
+                    $params[] = $foto_not;
+                    $types .= "s";
+                }
 
-            $sqlUP .= "
+                $sqlUP .= "
                 WHERE id_venta = ?
                 AND reparto_folio = ?
             ";
 
-            $params[] = $id_ven;
-            $params[] = $folio;
-            $types .= "is";
+                $params[] = $id_ven;
+                $params[] = $folio;
+                $types .= "is";
 
-            $stmtUP = $this->db->prepare($sqlUP);
+                $stmtUP = $this->db->prepare($sqlUP);
 
-            if (!$stmtUP) {
-                throw new Exception($this->db->error);
-            }
+                if (!$stmtUP) {
+                    throw new Exception($this->db->error);
+                }
 
-            $stmtUP->bind_param($types, ...$params);
+                $stmtUP->bind_param($types, ...$params);
 
-            if (!$stmtUP->execute()) {
-                throw new Exception($stmtUP->error);
-            }
+                if (!$stmtUP->execute()) {
+                    throw new Exception($stmtUP->error);
+                }
 
-        } else {
-               $result_entrega = $this->db->query("SELECT entrega_id FROM movimientos m WHERE m.id = $id_mov");
-$row_entrega = $result_entrega->fetch_assoc();
-// Si encuentra el registro toma el ID, si no, asigna 0 o null según permita tu base de datos
-$entrega_id = intval($datos['id_movimiento']) ;  
-           
+            } else {
+                $result_entrega = $this->db->query("SELECT entrega_id FROM movimientos m WHERE m.id = $id_mov");
+                $row_entrega = $result_entrega->fetch_assoc();
+                // Si encuentra el registro toma el ID, si no, asigna 0 o null según permita tu base de datos
+                $entrega_id = intval($datos['id_movimiento']);
 
 
-            // ==========================================
-            // INSERT
-            // ==========================================
 
-            $sqlEv = "
+                // ==========================================
+                // INSERT
+                // ==========================================
+
+                $sqlEv = "
                 INSERT INTO confirmacion_reparto_viaje (
                     id_movimiento,
                     id_venta,
@@ -2626,109 +2691,109 @@ $entrega_id = intval($datos['id_movimiento']) ;
                 )
             ";
 
-            $stmtEv = $this->db->prepare($sqlEv);
+                $stmtEv = $this->db->prepare($sqlEv);
 
-            if (!$stmtEv) {
-                throw new Exception($this->db->error);
+                if (!$stmtEv) {
+                    throw new Exception($this->db->error);
+                }
+
+                $stmtEv->bind_param(
+                    "iisiissssi",
+                    $id_mov,
+                    $id_ven,
+                    $folio,
+                    $id_tra,
+                    $id_veh,
+                    $foto_ent,
+                    $foto_not,
+                    $estatus,
+                    $coment,
+                    $entrega_id
+                );
+
+                if (!$stmtEv->execute()) {
+                    throw new Exception("Error al guardar evidencia: " . $stmtEv->error);
+                }
             }
 
-            $stmtEv->bind_param(
-                "iisiissssi",
-                $id_mov,
-                $id_ven,
-                $folio,
-                $id_tra,
-                $id_veh,
-                $foto_ent,
-                $foto_not,
-                $estatus,
-                $coment,
-                $entrega_id
-            );
+            // ==========================================
+            // ACTUALIZAR PUNTO DE RUTA
+            // ==========================================
 
-            if (!$stmtEv->execute()) {
-                throw new Exception("Error al guardar evidencia: " . $stmtEv->error);
-            }
-        }
-
-        // ==========================================
-        // ACTUALIZAR PUNTO DE RUTA
-        // ==========================================
-
-        $sqlPunto = "
+            $sqlPunto = "
             UPDATE transporte_rutas_puntos
             SET estado_punto = 'visitado',
                 llegada_real = NOW()
             WHERE id = ?
         ";
 
-        $stmtP = $this->db->prepare($sqlPunto);
-        $stmtP->bind_param("i", $id_mov);
+            $stmtP = $this->db->prepare($sqlPunto);
+            $stmtP->bind_param("i", $id_mov);
 
-        if (!$stmtP->execute()) {
-            throw new Exception($stmtP->error);
+            if (!$stmtP->execute()) {
+                throw new Exception($stmtP->error);
+            }
+
+            $this->db->commit();
+
+            return true;
+
+        } catch (Exception $e) {
+
+            $this->db->rollback();
+
+            error_log(
+                "Error registrarEntregaMovimiento: " .
+                $e->getMessage()
+            );
+
+            throw $e;
+        }
+    }
+    public function getMonitorEntregasRuta(
+        $almacen_id = 0,
+        $fecha_inicio = null,
+        $fecha_fin = null,
+        $inicio = 0,
+        $limite = 25
+    ) {
+
+        $where = [];
+        $params = [];
+        $types = '';
+
+        // 🔹 BASE
+        $where[] = "m.tipo = 'salida'";
+        $where[] = "tc.viaje_folio IS NOT NULL";
+        $where[] = "trm.estado_reparto != 'cancelado'";
+
+        // 🔹 ALMACÉN
+        if (!empty($almacen_id) && $almacen_id > 0) {
+            $where[] = "m.almacen_origen_id = ?";
+            $params[] = $almacen_id;
+            $types .= 'i';
         }
 
-        $this->db->commit();
+        // 🔥 FECHAS (LÓGICA NUEVA)
+        if (!empty($fecha_inicio) && !empty($fecha_fin)) {
 
-        return true;
+            // 👉 RANGO COMPLETO
+            $where[] = "DATE(m.fecha) BETWEEN ? AND ?";
+            $params[] = $fecha_inicio;
+            $params[] = $fecha_fin;
+            $types .= 'ss';
 
-    } catch (Exception $e) {
+        } else {
 
-        $this->db->rollback();
+            // 👉 SI NO VIENEN O VIENE SOLO UNA → HOY
+            $where[] = "DATE(m.fecha) = CURDATE()";
+        }
 
-        error_log(
-            "Error registrarEntregaMovimiento: " .
-            $e->getMessage()
-        );
+        // 🔹 ARMAR WHERE
+        $where_sql = "WHERE " . implode(" AND ", $where);
 
-        throw $e;
-    }
-}
-public function getMonitorEntregasRuta(
-    $almacen_id = 0, 
-    $fecha_inicio = null, 
-    $fecha_fin = null,
-    $inicio = 0, 
-    $limite = 25
-) {
-
-    $where = [];
-    $params = [];
-    $types = '';
-
-    // 🔹 BASE
-    $where[] = "m.tipo = 'salida'";
-    $where[] = "tc.viaje_folio IS NOT NULL";
-    $where[] = "trm.estado_reparto != 'cancelado'";
-
-    // 🔹 ALMACÉN
-    if (!empty($almacen_id) && $almacen_id > 0) {
-        $where[] = "m.almacen_origen_id = ?";
-        $params[] = $almacen_id;
-        $types .= 'i';
-    }
-
-    // 🔥 FECHAS (LÓGICA NUEVA)
-    if (!empty($fecha_inicio) && !empty($fecha_fin)) {
-
-        // 👉 RANGO COMPLETO
-        $where[] = "DATE(m.fecha) BETWEEN ? AND ?";
-        $params[] = $fecha_inicio;
-        $params[] = $fecha_fin;
-        $types .= 'ss';
-
-    } else {
-
-        // 👉 SI NO VIENEN O VIENE SOLO UNA → HOY
-        $where[] = "DATE(m.fecha) = CURDATE()";
-    }
-
-    // 🔹 ARMAR WHERE
-    $where_sql = "WHERE " . implode(" AND ", $where);
-
-    // 🔥 SQL
-    $sql = "SELECT 
+        // 🔥 SQL
+        $sql = "SELECT 
                 m.id AS movimiento_id, 
                 trm.id AS reparto_id,
                 trm.estado_reparto AS estado_reparto,
@@ -2756,92 +2821,93 @@ public function getMonitorEntregasRuta(
                 MAX(m.fecha) DESC
             LIMIT ?, ?";
 
-    $stmt = $this->db->prepare($sql);
+        $stmt = $this->db->prepare($sql);
 
-    // 🔥 LIMIT siempre al final
-    $params[] = $inicio;
-    $params[] = $limite;
-    $types .= 'ii';
+        // 🔥 LIMIT siempre al final
+        $params[] = $inicio;
+        $params[] = $limite;
+        $types .= 'ii';
 
-    $stmt->bind_param($types, ...$params);
+        $stmt->bind_param($types, ...$params);
 
-    $stmt->execute();
+        $stmt->execute();
 
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
-public function contarTotalEntregasRuta($almacen_id = 0, $fecha_inicio = null, $fecha_fin = null) {
-
-    $where = " WHERE m.tipo = 'salida' AND tc.viaje_folio IS NOT NULL ";
-    $params = [];
-    $types = '';
-
-    // 🔹 FILTRO ALMACÉN
-    if ($almacen_id > 0) {
-        $where .= " AND m.almacen_origen_id = ? ";
-        $params[] = $almacen_id;
-        $types .= 'i';
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
+    public function contarTotalEntregasRuta($almacen_id = 0, $fecha_inicio = null, $fecha_fin = null)
+    {
 
-    // 🔹 FILTRO FECHAS
-    if (!empty($fecha_inicio) && !empty($fecha_fin)) {
-        $where .= " AND DATE(m.fecha) BETWEEN ? AND ? ";
-        $params[] = $fecha_inicio;
-        $params[] = $fecha_fin;
-        $types .= 'ss';
+        $where = " WHERE m.tipo = 'salida' AND tc.viaje_folio IS NOT NULL ";
+        $params = [];
+        $types = '';
 
-    } elseif (!empty($fecha_inicio)) {
-        $where .= " AND DATE(m.fecha) >= ? ";
-        $params[] = $fecha_inicio;
-        $types .= 's';
+        // 🔹 FILTRO ALMACÉN
+        if ($almacen_id > 0) {
+            $where .= " AND m.almacen_origen_id = ? ";
+            $params[] = $almacen_id;
+            $types .= 'i';
+        }
 
-    } elseif (!empty($fecha_fin)) {
-        $where .= " AND DATE(m.fecha) <= ? ";
-        $params[] = $fecha_fin;
-        $types .= 's';
+        // 🔹 FILTRO FECHAS
+        if (!empty($fecha_inicio) && !empty($fecha_fin)) {
+            $where .= " AND DATE(m.fecha) BETWEEN ? AND ? ";
+            $params[] = $fecha_inicio;
+            $params[] = $fecha_fin;
+            $types .= 'ss';
 
-    } else {
-        // 🔥 SI NO HAY FECHAS → SOLO HOY
-        $where .= " AND DATE(m.fecha) = CURDATE() ";
-    }
+        } elseif (!empty($fecha_inicio)) {
+            $where .= " AND DATE(m.fecha) >= ? ";
+            $params[] = $fecha_inicio;
+            $types .= 's';
 
-    // 🔹 QUERY
-    $sql = "SELECT COUNT(DISTINCT tc.viaje_folio) as total 
+        } elseif (!empty($fecha_fin)) {
+            $where .= " AND DATE(m.fecha) <= ? ";
+            $params[] = $fecha_fin;
+            $types .= 's';
+
+        } else {
+            // 🔥 SI NO HAY FECHAS → SOLO HOY
+            $where .= " AND DATE(m.fecha) = CURDATE() ";
+        }
+
+        // 🔹 QUERY
+        $sql = "SELECT COUNT(DISTINCT tc.viaje_folio) as total 
             FROM movimientos m
             INNER JOIN transporte_repartos_maestro trm ON m.id = trm.entrega_venta_id 
             INNER JOIN transporte_consolidacion tc ON trm.id = tc.reparto_id
             $where
             AND trm.estado_reparto != 'cancelado'";
 
-    $stmt = $this->db->prepare($sql);
+        $stmt = $this->db->prepare($sql);
 
-    // 🔹 BIND DINÁMICO
-    if (!empty($params)) {
-        $stmt->bind_param($types, ...$params);
-    }
+        // 🔹 BIND DINÁMICO
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
 
-    $stmt->execute();
+        $stmt->execute();
 
-    $result = $stmt->get_result()->fetch_assoc();
+        $result = $stmt->get_result()->fetch_assoc();
 
-    return intval($result['total'] ?? 0);
+        return intval($result['total'] ?? 0);
 
     }
     /**
- * Obtiene la información detallada de una entrega específica para el reparto
- *
- * @param int $entrega_id ID de la entrega a consultar
- * @param string $base_path Ruta base para la construcción de URLs de imágenes (opcional)
- * @return array|object|null Devuelve el registro resultante o null si no existe
- *//**
- * Obtiene la información detallada de los viajes/repartos para una entrega específica
- *
- * @param int $entrega_id ID de la entrega a consultar
- * @param string $base_path Ruta base para la construcción de URLs de imágenes (opcional)
- * @return array Devuelve un listado (array de arrays asociativos) o un array vacío si no hay registros
- */
-public function obtenerViajesLogisticaParaEntrega($folioViaje, $base_path = '') 
-{
-    $sql = "SELECT
+     * Obtiene la información detallada de una entrega específica para el reparto
+     *
+     * @param int $entrega_id ID de la entrega a consultar
+     * @param string $base_path Ruta base para la construcción de URLs de imágenes (opcional)
+     * @return array|object|null Devuelve el registro resultante o null si no existe
+     *//**
+     * Obtiene la información detallada de los viajes/repartos para una entrega específica
+     *
+     * @param int $entrega_id ID de la entrega a consultar
+     * @param string $base_path Ruta base para la construcción de URLs de imágenes (opcional)
+     * @return array Devuelve un listado (array de arrays asociativos) o un array vacío si no hay registros
+     */
+    public function obtenerViajesLogisticaParaEntrega($folioViaje, $base_path = '')
+    {
+        $sql = "SELECT
                 ROW_NUMBER() OVER (ORDER BY en.id) AS num_registro,
                 MAX(v.folio) AS folio_venta,
                 en.id AS entrega_id,
@@ -2913,25 +2979,26 @@ public function obtenerViajesLogisticaParaEntrega($folioViaje, $base_path = '')
                 en.fecha,
                 trp.descripcion_punto";
 
-    $stmt = $this->db->prepare($sql);
+        $stmt = $this->db->prepare($sql);
 
-    // Corregido: Solo 1 parámetro tipo string ('s')
-    $types = 's';
-    $stmt->bind_param($types, $folioViaje);
+        // Corregido: Solo 1 parámetro tipo string ('s')
+        $types = 's';
+        $stmt->bind_param($types, $folioViaje);
 
-    $stmt->execute();
+        $stmt->execute();
 
-    $result = $stmt->get_result();
+        $result = $stmt->get_result();
 
-    return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
-}
-public function a($entrega_id = null) {
-    try {
-        // Ruta base para tus imágenes
-        $base_path = "/cfsistem/"; 
+        return $result ? $result->fetch_all(MYSQLI_ASSOC) : [];
+    }
+    public function a($entrega_id = null)
+    {
+        try {
+            // Ruta base para tus imágenes
+            $base_path = "/cfsistem/";
 
-       // 1. Definimos la base del SELECT (SIN el GROUP BY al final)
-$sql = "SELECT
+            // 1. Definimos la base del SELECT (SIN el GROUP BY al final)
+            $sql = "SELECT
     ROW_NUMBER() OVER (ORDER BY en.id) AS num_registro,
     MAX(v.folio) AS folio_venta,
     en.id AS entrega_id,
@@ -2979,52 +3046,117 @@ LEFT JOIN ventas v
 LEFT JOIN clientes c
     ON c.id = v.id_cliente
 ";
-// Inicializamos los parámetros para los 3 '?' del SELECT
-$types = "iii"; 
-$params = [$entrega_id, $entrega_id, $entrega_id]; 
+            // Inicializamos los parámetros para los 3 '?' del SELECT
+            $types = "iii";
+            $params = [$entrega_id, $entrega_id, $entrega_id];
 
-// Si el filtro de búsqueda no está vacío, agregamos el WHERE antes del GROUP BY
-if (!empty($entrega_id)) {
-    $sql .= " WHERE tc.entrega_id";
-    $types .= "i";             // Agrega un tipo 'string' más
-    $params[] = $entrega_id;  // Agrega el valor para el WHERE
-}
+            // Si el filtro de búsqueda no está vacío, agregamos el WHERE antes del GROUP BY
+            if (!empty($entrega_id)) {
+                $sql .= " WHERE tc.entrega_id";
+                $types .= "i";             // Agrega un tipo 'string' más
+                $params[] = $entrega_id;  // Agrega el valor para el WHERE
+            }
 
-// Cerramos con el agrupamiento obligatorio
-$sql .= " GROUP BY
+            // Cerramos con el agrupamiento obligatorio
+            $sql .= " GROUP BY
     en.id,
     trp.descripcion_punto";
 
-$stmt = $this->db->prepare($sql);
+            $stmt = $this->db->prepare($sql);
 
-if (!$stmt) {
-    throw new Exception("Error en la preparación: " . $this->db->error);
-}
+            if (!$stmt) {
+                throw new Exception("Error en la preparación: " . $this->db->error);
+            }
 
-// Desempaquetamos los parámetros dinámicamente con ...
-$stmt->bind_param($types, ...$params);
+            // Desempaquetamos los parámetros dinámicamente con ...
+            $stmt->bind_param($types, ...$params);
 
-$stmt->execute();
-$res = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $stmt->execute();
+            $res = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-return $res;
-    } catch (Exception $e) {
-        error_log("Error CF System: " . $e->getMessage());
-        return [];
+            return $res;
+        } catch (Exception $e) {
+            error_log("Error CF System: " . $e->getMessage());
+            return [];
+        }
     }
-}
-public function evidenciaEntregaVenta($folio_viaje = null) {
-    try {
-        // Ruta base para tus imágenes
-        $base_path = "/cfsistem/"; 
+    public function evidenciaEntregaPorid($entrega_id = null)
+    {
+        try {
+            $base_path = "/cfsistem/";
 
-        // 1. Definimos la base del SELECT con agrupaciones estrictas
-        $sql = "SELECT 
+            $sql = "SELECT 
                     v.id AS id_venta,
                     MAX(v.folio) AS folio_venta,
                     MAX(c.nombre_comercial) AS cliente,
                     MAX(trm.vehiculo_id) AS vehiculo_id,
                     MAX(tc.viaje_folio) AS folio_viaje,
+                    MAX(trp.descripcion_punto) AS direccion_entrega,
+                    MAX(trp.estado_punto) AS estatus_parada,
+                    MAX(crv.id) AS id_evidencia,
+                    MAX(crv.estatus) AS estatus_evidencia,
+                    MAX(crv.comentario) AS comentario_evidencia,
+                    IF(MAX(crv.id) IS NOT NULL, 1, 0) AS ya_entregado,
+                    
+                    MAX(trp.id) AS ids_movimientos_grupo,
+                    
+                    MAX(IF(crv.fotografia_entrega IS NOT NULL AND crv.fotografia_entrega != '', CONCAT('" . $base_path . "', crv.fotografia_entrega), NULL)) AS foto_registrada,
+                    MAX(IF(crv.fotografia_nota IS NOT NULL AND crv.fotografia_nota != '', CONCAT('" . $base_path . "', crv.fotografia_nota), NULL)) AS nota_registrada,
+                    
+                    GROUP_CONCAT(DISTINCT p.nombre SEPARATOR ', ') AS productos,
+                    GROUP_CONCAT(CONCAT(m.cantidad, ' ', p.unidad_medida) SEPARATOR ', ') AS cantidades_detalladas,
+                    SUM(m.cantidad) AS total_piezas_venta
+
+                FROM transporte_consolidacion tc
+                INNER JOIN transporte_repartos_maestro trm ON tc.reparto_id = trm.id
+                INNER JOIN transporte_rutas_puntos trp ON trm.id = trp.reparto_id 
+                INNER JOIN movimientos m ON trm.entrega_venta_id = m.id
+                INNER JOIN productos p ON m.producto_id = p.id
+                LEFT JOIN ventas v ON m.referencia_id = v.id
+                LEFT JOIN clientes c ON v.id_cliente = c.id
+                LEFT JOIN confirmacion_reparto_viaje crv ON tc.entrega_id = crv.entrega_id";
+
+            // 1. Filtrado en WHERE antes del GROUP BY
+            if (!empty($entrega_id)) {
+                $sql .= " WHERE tc.entrega_id = ?";
+            }
+
+            // 2. Agrupamiento
+            $sql .= " GROUP BY v.id, tc.entrega_id";
+
+            $stmt = $this->db->prepare($sql);
+
+            // 3. Solo necesitamos enlazar 1 solo parámetro en el WHERE
+            if (!empty($entrega_id)) {
+                $stmt->bind_param("s", $entrega_id);
+            }
+
+            $stmt->execute();
+            $res = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+            if (ob_get_level())
+                ob_clean();
+            return $res;
+
+        } catch (Exception $e) {
+            error_log("Error CF System: " . $e->getMessage());
+            return [];
+        }
+    }
+    public function evidenciaEntregaVenta($folio_viaje = null)
+    {
+        try {
+            // Ruta base para tus imágenes
+            $base_path = "/cfsistem/";
+
+            // 1. Definimos la base del SELECT con agrupaciones estrictas
+            $sql = "SELECT 
+                    v.id AS id_venta,
+                    MAX(v.folio) AS folio_venta,
+                    MAX(c.nombre_comercial) AS cliente,
+                    MAX(trm.vehiculo_id) AS vehiculo_id,
+                    MAX(tc.viaje_folio) AS folio_viaje,
+                    MAX(tc.entrega_id) AS entrega_id,
                     MAX(trp.descripcion_punto) AS direccion_entrega,
                     MAX(trp.estado_punto) AS estatus_parada,
                     MAX(crv.id) AS id_evidencia,
@@ -3056,34 +3188,35 @@ public function evidenciaEntregaVenta($folio_viaje = null) {
     ON v.id = crv.id_venta
     AND crv.reparto_folio = tc.viaje_folio";
 
-        // 2. El WHERE siempre debe ir ANTES del GROUP BY en SQL
-        if (!empty($folio_viaje)) {
-            $sql .= " WHERE tc.viaje_folio = ?";
+            // 2. El WHERE siempre debe ir ANTES del GROUP BY en SQL
+            if (!empty($folio_viaje)) {
+                $sql .= " WHERE tc.viaje_folio = ?";
+            }
+
+            // 3. Añadimos el agrupamiento por venta al final con espacio preventivo
+            $sql .= " GROUP BY v.id";
+
+            $stmt = $this->db->prepare($sql);
+
+            if (!empty($folio_viaje)) {
+                $stmt->bind_param("ssss", $folio_viaje, $folio_viaje, $folio_viaje, $folio_viaje);
+            }
+
+            $stmt->execute();
+            $res = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+            if (ob_get_level())
+                ob_clean();
+            return $res;
+
+        } catch (Exception $e) {
+            error_log("Error CF System: " . $e->getMessage());
+            return [];
         }
-
-        // 3. Añadimos el agrupamiento por venta al final con espacio preventivo
-        $sql .= " GROUP BY v.id";
-
-        $stmt = $this->db->prepare($sql);
-        
-        if (!empty($folio_viaje)) {
-            $stmt->bind_param("ssss", $folio_viaje,$folio_viaje,$folio_viaje,$folio_viaje);
-        }
-
-        $stmt->execute();
-        $res = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-        
-        if (ob_get_level()) ob_clean();
-        return $res;
-        
-    } catch (Exception $e) {
-        error_log("Error CF System: " . $e->getMessage());
-        return [];
     }
-}
-public function getEvidenciasPorFolioRuta($idRuta)
-{
-    $sql = "        SELECT 
+    public function getEvidenciasPorFolioRuta($idRuta)
+    {
+        $sql = "        SELECT 
             t.folio_viaje,
             t.fecha_viaje,
             t.fecha_llegada,
@@ -3223,92 +3356,98 @@ public function getEvidenciasPorFolioRuta($idRuta)
         ORDER BY t.orden_visita ASC
     ";
 
-    $stmt = $this->db->prepare($sql);
+        $stmt = $this->db->prepare($sql);
 
-    if (!$stmt) {
-        die($this->db->error);
-    }
-
-    $stmt->bind_param("s",  $idRuta);
-
-    $stmt->execute();
-
-    $resultado = $stmt->get_result();
-
-    $data = [];
-
-    while ($row = $resultado->fetch_assoc()) {
-        $data[] = $row;
-    }
-
-    return $data;
-}public function actualizarEvidencia($id, $comentario, $foto_entrega = null, $foto_nota = null) {
-    $set = "comentario = ?";
-    $params = [$comentario];
-    $types = "s";
-
-    if ($foto_entrega) {
-        $set .= ", fotografia_entrega = ?";
-        $params[] = $foto_entrega;
-        $types .= "s";
-    }
-    if ($foto_nota) {
-        $set .= ", fotografia_nota = ?";
-        $params[] = $foto_nota;
-        $types .= "s";
-    }
-
-    $params[] = $id;
-    $types .= "i";
-
-    $sql = "UPDATE confirmacion_reparto_viaje SET $set WHERE id = ?";
-    $stmt = $this->db->prepare($sql);
-    $stmt->bind_param($types, ...$params);
-    return $stmt->execute();
-}
-public function eliminarEvidencia($id_movimiento) { // Cambiamos el nombre conceptual de la variable
-    try {
-        $this->db->begin_transaction();
-
-        // 1. Opcional: Borrar archivos físicos antes de borrar el registro
-        $sqlFotos = "SELECT fotografia_entrega, fotografia_nota FROM confirmacion_reparto_viaje WHERE id_movimiento = ?";
-        $stmtF = $this->db->prepare($sqlFotos);
-        $stmtF->bind_param("i", $id_movimiento);
-        $stmtF->execute();
-        $fotos = $stmtF->get_result()->fetch_assoc();
-
-        if ($fotos) {
-            $base = $_SERVER['DOCUMENT_ROOT'] . "/cfsistem/";
-            if (!empty($fotos['fotografia_entrega'])) @unlink($base . $fotos['fotografia_entrega']);
-            if (!empty($fotos['fotografia_nota'])) @unlink($base . $fotos['fotografia_nota']);
+        if (!$stmt) {
+            die($this->db->error);
         }
 
-        // 2. Borramos la evidencia usando el id_movimiento
-        $sqlDel = "DELETE FROM confirmacion_reparto_viaje WHERE id_movimiento = ?";
-        $stmtDel = $this->db->prepare($sqlDel);
-        $stmtDel->bind_param("i", $id_movimiento);
-        $stmtDel->execute();
+        $stmt->bind_param("s", $idRuta);
 
-        // 3. Regresamos el punto de ruta a 'pendiente'
-        // Esto es lo que habilitará el botón "SUBIR" nuevamente
-        $sqlPunto = "UPDATE transporte_rutas_puntos 
+        $stmt->execute();
+
+        $resultado = $stmt->get_result();
+
+        $data = [];
+
+        while ($row = $resultado->fetch_assoc()) {
+            $data[] = $row;
+        }
+
+        return $data;
+    }
+    public function actualizarEvidencia($id, $comentario, $foto_entrega = null, $foto_nota = null)
+    {
+        $set = "comentario = ?";
+        $params = [$comentario];
+        $types = "s";
+
+        if ($foto_entrega) {
+            $set .= ", fotografia_entrega = ?";
+            $params[] = $foto_entrega;
+            $types .= "s";
+        }
+        if ($foto_nota) {
+            $set .= ", fotografia_nota = ?";
+            $params[] = $foto_nota;
+            $types .= "s";
+        }
+
+        $params[] = $id;
+        $types .= "i";
+
+        $sql = "UPDATE confirmacion_reparto_viaje SET $set WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param($types, ...$params);
+        return $stmt->execute();
+    }
+    public function eliminarEvidencia($id_movimiento)
+    { // Cambiamos el nombre conceptual de la variable
+        try {
+            $this->db->begin_transaction();
+
+            // 1. Opcional: Borrar archivos físicos antes de borrar el registro
+            $sqlFotos = "SELECT fotografia_entrega, fotografia_nota FROM confirmacion_reparto_viaje WHERE id_movimiento = ?";
+            $stmtF = $this->db->prepare($sqlFotos);
+            $stmtF->bind_param("i", $id_movimiento);
+            $stmtF->execute();
+            $fotos = $stmtF->get_result()->fetch_assoc();
+
+            if ($fotos) {
+                $base = $_SERVER['DOCUMENT_ROOT'] . "/cfsistem/";
+                if (!empty($fotos['fotografia_entrega']))
+                    @unlink($base . $fotos['fotografia_entrega']);
+                if (!empty($fotos['fotografia_nota']))
+                    @unlink($base . $fotos['fotografia_nota']);
+            }
+
+            // 2. Borramos la evidencia usando el id_movimiento
+            $sqlDel = "DELETE FROM confirmacion_reparto_viaje WHERE id_movimiento = ?";
+            $stmtDel = $this->db->prepare($sqlDel);
+            $stmtDel->bind_param("i", $id_movimiento);
+            $stmtDel->execute();
+
+            // 3. Regresamos el punto de ruta a 'pendiente'
+            // Esto es lo que habilitará el botón "SUBIR" nuevamente
+            $sqlPunto = "UPDATE transporte_rutas_puntos 
                      SET estado_punto = 'pendiente', 
                          llegada_real = NULL 
                      WHERE id = ?";
-        $stmtP = $this->db->prepare($sqlPunto);
-        $stmtP->bind_param("i", $id_movimiento);
-        $stmtP->execute();
+            $stmtP = $this->db->prepare($sqlPunto);
+            $stmtP->bind_param("i", $id_movimiento);
+            $stmtP->execute();
 
-        $this->db->commit();
-        return true;
+            $this->db->commit();
+            return true;
 
-    } catch (Exception $e) {
-        if ($this->db->connect_errno) { // Verificación de conexión
-            error_log("Error de conexión: " . $this->db->connect_error);
+        } catch (Exception $e) {
+            if ($this->db->connect_errno) { // Verificación de conexión
+                error_log("Error de conexión: " . $this->db->connect_error);
+            }
+            if ($this->db->in_transaction)
+                $this->db->rollback();
+            error_log("Error al eliminar evidencia: " . $e->getMessage());
+            return false;
         }
-        if ($this->db->in_transaction) $this->db->rollback();
-        error_log("Error al eliminar evidencia: " . $e->getMessage());
-        return false;
     }
-}
 }
