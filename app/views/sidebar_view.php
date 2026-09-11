@@ -99,11 +99,7 @@ $modulos = [
     ]
 ];
 ?>
-<sytile>
-    .texto{
-        color:#000 !important;
-    }
-</sytile>
+
   <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
 <nav class="navbar fixed-top navbar-expand navbar-dark navbar-premium shadow-sm">
