@@ -12,15 +12,15 @@ require_once __DIR__ . '/../models/ventas_model.php';
 require_once __DIR__ . '/../models/clientesModel.php';
 require_once __DIR__ . '/../models/RepartosModel.php';
 require_once __DIR__ . '/../models/usuariosModel.php';
-require_once __DIR__ . '/../models/almacen_model.php'; 
-require_once __DIR__ . '/../models/entregasModel.php'; 
+require_once __DIR__ . '/../models/almacen_model.php';
+require_once __DIR__ . '/../models/entregasModel.php';
 
 require_once __DIR__ . '/../models/almacen/productosModel.php';
 // Instancias de Modelos
-$sendModelo    = new EntregaModel($conexion);
-$almacenModel  = new AlmacenModel($conexion);
-$modelo        = new UsuarioModel($conexion);
-$ventasModel   = new VentaHistorialModel($conexion);
+$sendModelo = new EntregaModel($conexion);
+$almacenModel = new AlmacenModel($conexion);
+$modelo = new UsuarioModel($conexion);
+$ventasModel = new VentaHistorialModel($conexion);
 $clientesModel = new ClientesModel($conexion);
 $repartosModel = new RepartoModel($conexion); // <-- Nombre correcto e inicializado
 
@@ -31,19 +31,20 @@ $productosModel = new ProductoModel($conexion);
 // ==========================================
 
 if (isset($_GET['action']) && $_GET['action'] === 'obtenerUsuarios') {
-    if (ob_get_level()) ob_clean();
+    if (ob_get_level())
+        ob_clean();
     header('Content-Type: application/json');
-    
+
     try {
         $rol = $_SESSION['rol_id'] ?? 0;
         $id = intval($_SESSION['usuario_id'] ?? 0);
-        
+
         if ($rol < 4) {
             $usuarios = $modelo->listarUsuarios(0);
         } else {
             $usuarios = $modelo->listarUsuarios($id);
         }
-        
+
         if ($usuarios) {
             echo json_encode(['success' => true, 'data' => $usuarios]);
         } else {
@@ -55,18 +56,19 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerUsuarios') {
     exit;
 }
 if (isset($_GET['action']) && $_GET['action'] === 'getAlmacenesJSON') {
-    if (ob_get_level()) ob_clean();
+    if (ob_get_level())
+        ob_clean();
     header('Content-Type: application/json');
-    
-    try {
-        
 
-    // 1. Limpiamos cualquier salida previa (espacios, warnings, etc)
-    
-    
+    try {
+
+
+        // 1. Limpiamos cualquier salida previa (espacios, warnings, etc)
+
+
         // Llamamos a tu modelo con 0 para traer todos
-        $almacenes =$almacenModel->getAlmacenes(0); 
-        
+        $almacenes = $almacenModel->getAlmacenes(0);
+
         if (!$almacenes) {
             echo json_encode([]);
         } else {
@@ -76,20 +78,21 @@ if (isset($_GET['action']) && $_GET['action'] === 'getAlmacenesJSON') {
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }
     // 3. Terminamos la ejecución para que no se pegue el HTML del Layout
-    exit; 
+    exit;
 }
-   
+
 if (isset($_GET['action']) && $_GET['action'] === 'obtenerClientes') {
-    if (ob_get_level()) ob_clean();
+    if (ob_get_level())
+        ob_clean();
     header('Content-Type: application/json');
-    
+
     try {
         $rol = $_SESSION['rol_id'] ?? 0;
         $id = intval($_SESSION['usuario_id'] ?? 0);
-        
-        $clientes_res = $clientesModel->listarTodosCF(0); 
-$clientes = ($clientes_res) ? $clientes_res->fetch_all(MYSQLI_ASSOC) : [];
-        
+
+        $clientes_res = $clientesModel->listarTodosCF(0);
+        $clientes = ($clientes_res) ? $clientes_res->fetch_all(MYSQLI_ASSOC) : [];
+
         if ($clientes) {
             echo json_encode(['success' => true, 'data' => $clientes]);
         } else {
@@ -105,18 +108,19 @@ $clientes = ($clientes_res) ? $clientes_res->fetch_all(MYSQLI_ASSOC) : [];
 // ACCIÓN: Obtener IDs Pendientes Venta
 // ==========================================
 if (isset($_GET['action']) && $_GET['action'] === 'get_ids_pendientes_venta') {
-    if (ob_get_level()) ob_clean();
+    if (ob_get_level())
+        ob_clean();
     header('Content-Type: application/json');
-    
+
     try {
         $venta_id = intval($_GET['venta_id'] ?? 0);
         if ($venta_id <= 0) {
             throw new Exception('ID de venta no válido.');
         }
-        
+
         // CORREGIDO: Se cambió $repartoM por $repartosModel
         $ids = $repartosModel->listarIdsPendientesPorVenta($venta_id);
-        
+
         echo json_encode(['success' => true, 'ids' => $ids ?? []]);
     } catch (Throwable $e) {
         echo json_encode(['success' => false, 'message' => $e->getMessage()]);
@@ -128,18 +132,19 @@ if (isset($_GET['action']) && $_GET['action'] === 'get_ids_pendientes_venta') {
 // ACCIÓN: Obtener ID Almacén
 // ==========================================
 if (isset($_GET['action']) && $_GET['action'] === 'obtener_id_almacen') {
-    if (ob_get_level()) ob_clean();
+    if (ob_get_level())
+        ob_clean();
     header('Content-Type: application/json');
-    
+
     try {
         $id = intval($_GET['id'] ?? 0);
         if ($id <= 0) {
             throw new Exception('ID no válido.');
         }
-        
+
         // OJO: Verifica si en tu EntregaModel el método se escribe "obtener_almecen_id" o "obtener_almacen_id"
-        $almacen = $sendModelo->obtener_almecen_id($id); 
-        
+        $almacen = $sendModelo->obtener_almecen_id($id);
+
         echo json_encode([
             "success" => true,
             "almacen" => $almacen
@@ -187,9 +192,9 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerProductos') {
 }
 if (isset($_GET['action']) && $_GET['action'] === 'obtenerProductosAlmacen') {
     header('Content-Type: application/json');
-$almacen_usuario = !empty($_GET['id']) 
-        ? intval($_GET['id']) 
-        : (int)($_SESSION['almacen_id'] ?? 0);
+    $almacen_usuario = !empty($_GET['id'])
+        ? intval($_GET['id'])
+        : (int) ($_SESSION['almacen_id'] ?? 0);
     $productos = $productosModel->obtenerTodosProductosAlmacen($almacen_usuario);
     $medidasAdicionales = $productosModel->obtenerMedidas();
 

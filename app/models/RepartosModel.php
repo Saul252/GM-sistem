@@ -1422,7 +1422,8 @@ class RepartoModel
     en.fecha,tc.id as folio,
      MAX(trp.descripcion_punto) AS direccion_entrega,
     -- Traemos el folio del viaje real de ese reparto
-    IFNULL(tc.viaje_folio, 'Sin Viaje Asignado') AS viaje_folio
+    IFNULL(tc.viaje_folio, 'Sin Viaje Asignado') AS viaje_folio,
+    IFNULL(tc.vehiculo_id, 999) AS vehiculo
 FROM entregas_venta en
 -- 1. Vamos directo a los repartos que se hicieron para esta venta
 INNER JOIN transporte_repartos_maestro trm 

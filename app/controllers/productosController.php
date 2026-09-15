@@ -14,15 +14,15 @@ require_once __DIR__ . '/../models/almacen_model.php';
 require_once __DIR__ . '/../models/almacen/productosModel.php';
 
 $productosModel = new ProductoModel($conexion);
-$mermasModel    = new MermasModel($conexion);
-$almacenModel   = new AlmacenModel($conexion);
+$mermasModel = new MermasModel($conexion);
+$almacenModel = new AlmacenModel($conexion);
 
 
 // ========================================
 // ACTION
 // ========================================
 
-$action = $_GET['action'] ?? $_POST['action'] ??'';
+$action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 switch ($action) {
 
@@ -32,15 +32,16 @@ switch ($action) {
 
     case 'guardarOpcionMedida':
 
-        while (ob_get_level()) ob_end_clean();
+        while (ob_get_level())
+            ob_end_clean();
 
         header('Content-Type: application/json; charset=utf-8');
 
         try {
 
             $data = [
-                'producto_id'  => intval($_POST['producto_id'] ?? 0),
-                'nombre'       => trim($_POST['nombre'] ?? ''),
+                'producto_id' => intval($_POST['producto_id'] ?? 0),
+                'nombre' => trim($_POST['nombre'] ?? ''),
                 'equivalencia' => floatval($_POST['equivalencia'] ?? 0)
             ];
 
@@ -68,7 +69,7 @@ switch ($action) {
             ]);
         }
 
-    exit;
+        exit;
 
 
 
@@ -78,19 +79,20 @@ switch ($action) {
 
     case 'obtenerProductoDetalle':
 
-        while (ob_get_level()) ob_end_clean();
+        while (ob_get_level())
+            ob_end_clean();
 
         header('Content-Type: application/json');
 
         try {
 
-            $id         = intval($_GET['id'] ?? 0);
+            $id = intval($_GET['id'] ?? 0);
             $almacen_id = intval($_GET['almacen_id'] ?? 0);
 
             if ($id <= 0 || $almacen_id <= 0) {
 
                 echo json_encode([
-                    'status'  => 'error',
+                    'status' => 'error',
                     'message' => 'Parámetros incompletos'
                 ]);
 
@@ -103,14 +105,14 @@ switch ($action) {
             if ($resultado['status']) {
 
                 echo json_encode([
-                    'status'   => 'success',
+                    'status' => 'success',
                     'producto' => $resultado['data']
                 ]);
 
             } else {
 
                 echo json_encode([
-                    'status'  => 'error',
+                    'status' => 'error',
                     'message' => $resultado['msg']
                 ]);
             }
@@ -118,43 +120,45 @@ switch ($action) {
         } catch (Exception $e) {
 
             echo json_encode([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => $e->getMessage()
             ]);
         }
 
-    exit;
+        exit;
 
-   case 'guardarProducto' :
-        while (ob_get_level()) ob_end_clean(); // Asegurar respuesta limpia, quitar despues para un solo almacen ya que este es para cf
+    case 'guardarProducto':
+        while (ob_get_level())
+            ob_end_clean(); // Asegurar respuesta limpia, quitar despues para un solo almacen ya que este es para cf
         header('Content-Type: application/json');
         $factor_conversion = floatval($_POST['factor_conversion'] ?? 1);
-if ($factor_conversion <= 0) $factor_conversion = 1;
+        if ($factor_conversion <= 0)
+            $factor_conversion = 1;
 
-$p_minorista = floatval($_POST['precio_minorista'] ?? 0);
-$p_mayorista = floatval($_POST['precio_mayorista'] ?? 0);
-$p_distribuidor = floatval($_POST['precio_distribuidor'] ?? 0);
+        $p_minorista = floatval($_POST['precio_minorista'] ?? 0);
+        $p_mayorista = floatval($_POST['precio_mayorista'] ?? 0);
+        $p_distribuidor = floatval($_POST['precio_distribuidor'] ?? 0);
 
-$pmin = $p_minorista > 0 ? ($p_minorista / $factor_conversion) : 0;
-$pmay = $p_mayorista > 0 ? ($p_mayorista / $factor_conversion) : 0;
-$pdi  = $p_distribuidor > 0 ? ($p_distribuidor / $factor_conversion) : 0;
+        $pmin = $p_minorista > 0 ? ($p_minorista / $factor_conversion) : 0;
+        $pmay = $p_mayorista > 0 ? ($p_mayorista / $factor_conversion) : 0;
+        $pdi = $p_distribuidor > 0 ? ($p_distribuidor / $factor_conversion) : 0;
 
 
 
         $datos = [
-            'sku'                 => trim($_POST['sku'] ?? ''),
-            'nombre'              => trim($_POST['nombre'] ?? ''),
-            'categoria_id'        => $_POST['categoria_id'] ?? null,
-            'unidad_medida'       => $_POST['unidad_medida'] ?? 'PZA',
-            'unidad_reporte'      => $_POST['unidad_reporte'] ?? '',
-            'factor_conversion'   => floatval($_POST['factor_conversion'] ?? 1),
-            'precio_adquisicion'  => 0,
-            'impuesto_iva'        => floatval($_POST['impuesto_iva'] ?? 16.00),
-            'descripcion'         => $_POST['description'] ?? '',
-            'fiscal_clave_prod'   => $_POST['fiscal_clave_prod'] ?? '',
-            'fiscal_clave_unidad'   => $_POST['fiscal_clave_unidad'] ?? '',
-            'precio_minorista'    => $pmin,
-            'precio_mayorista'    => $pmay,
+            'sku' => trim($_POST['sku'] ?? ''),
+            'nombre' => trim($_POST['nombre'] ?? ''),
+            'categoria_id' => $_POST['categoria_id'] ?? null,
+            'unidad_medida' => $_POST['unidad_medida'] ?? 'PZA',
+            'unidad_reporte' => $_POST['unidad_reporte'] ?? '',
+            'factor_conversion' => floatval($_POST['factor_conversion'] ?? 1),
+            'precio_adquisicion' => 0,
+            'impuesto_iva' => floatval($_POST['impuesto_iva'] ?? 16.00),
+            'descripcion' => $_POST['description'] ?? '',
+            'fiscal_clave_prod' => $_POST['fiscal_clave_prod'] ?? '',
+            'fiscal_clave_unidad' => $_POST['fiscal_clave_unidad'] ?? '',
+            'precio_minorista' => $pmin,
+            'precio_mayorista' => $pmay,
             'precio_distribuidor' => $pdi
         ];
 
@@ -162,7 +166,7 @@ $pdi  = $p_distribuidor > 0 ? ($p_distribuidor / $factor_conversion) : 0;
             echo json_encode(['status' => 'error', 'message' => 'SKU y Nombre son obligatorios']);
             exit;
         }
- //$nuevoId = $this->productoModel->guardarCompleto($datos);//este es el original para un solo almacen
+        //$nuevoId = $this->productoModel->guardarCompleto($datos);//este es el original para un solo almacen
         $nuevoId = $productosModel->guardarCompletoMultiALmacen($datos);
 
         if ($nuevoId) {
@@ -171,9 +175,10 @@ $pdi  = $p_distribuidor > 0 ? ($p_distribuidor / $factor_conversion) : 0;
             echo json_encode(['status' => 'error', 'message' => 'Error al guardar el producto.']);
         }
         exit;
-    
-    case 'getCategoriasJSON' :
-        while (ob_get_level()) ob_end_clean(); 
+
+    case 'getCategoriasJSON':
+        while (ob_get_level())
+            ob_end_clean();
         header('Content-Type: application/json; charset=utf-8');
         try {
             $categorias = $almacenModel->getCategorias();
@@ -182,9 +187,10 @@ $pdi  = $p_distribuidor > 0 ? ($p_distribuidor / $factor_conversion) : 0;
             echo json_encode(['error' => $e->getMessage()]);
         }
         exit;
-    
-     case 'getUnidadesMedidaJSON':
-        while (ob_get_level()) ob_end_clean(); 
+
+    case 'getUnidadesMedidaJSON':
+        while (ob_get_level())
+            ob_end_clean();
         header('Content-Type: application/json; charset=utf-8');
         try {
             $unidadesMedida = $almacenModel->getUnidadesMedida();
@@ -193,24 +199,25 @@ $pdi  = $p_distribuidor > 0 ? ($p_distribuidor / $factor_conversion) : 0;
             echo json_encode(['error' => $e->getMessage()]);
         }
         exit;
-    
+
     // Añade este método antes del final de la llave de la clase }
 
 
-  case 'obtnerMedidas':
+    case 'obtnerMedidas':
 
-        while (ob_get_level()) ob_end_clean();
+        while (ob_get_level())
+            ob_end_clean();
 
         header('Content-Type: application/json');
 
         try {
 
-            $id= intval($_GET['id'] ?? 0);
-           
-            if ($id <= 0 ) {
+            $id = intval($_GET['id'] ?? 0);
+
+            if ($id <= 0) {
 
                 echo json_encode([
-                    'status'  => 'error',
+                    'status' => 'error',
                     'message' => 'Parámetros incompletos'
                 ]);
 
@@ -223,14 +230,14 @@ $pdi  = $p_distribuidor > 0 ? ($p_distribuidor / $factor_conversion) : 0;
             if ($medidas['status']) {
 
                 echo json_encode([
-                    'status'   => 'success',
+                    'status' => 'success',
                     'producto' => $medidas
                 ]);
 
             } else {
 
                 echo json_encode([
-                    'status'  => 'error',
+                    'status' => 'error',
                     'message' => $medidas['msg']
                 ]);
             }
@@ -238,12 +245,12 @@ $pdi  = $p_distribuidor > 0 ? ($p_distribuidor / $factor_conversion) : 0;
         } catch (Exception $e) {
 
             echo json_encode([
-                'status'  => 'error',
+                'status' => 'error',
                 'message' => $e->getMessage()
             ]);
         }
 
-    exit;
+        exit;
 
     // ========================================
     // ACTUALIZAR MEDIDA
@@ -251,17 +258,19 @@ $pdi  = $p_distribuidor > 0 ? ($p_distribuidor / $factor_conversion) : 0;
 
     case 'actualizarMedidaAdicional':
 
-        while (ob_get_level()) ob_end_clean();
+        while (ob_get_level())
+            ob_end_clean();
 
         header('Content-Type: application/json');
 
         try {
 
-            $id            = intval($_POST['id'] ?? 0);
-            $producto_id   = intval($_POST['producto_id'] ?? 0);
-            $nombre        = trim($_POST['nombre_edit'] ?? '');
-           $rawEquiv = floatval($_POST['equivalencia'] ?? 0);
-$equivalencia = ($rawEquiv != 0) ? (1 / $rawEquiv) : 0;
+            $id = intval($_POST['id'] ?? 0);
+            $producto_id = intval($_POST['producto_id'] ?? 0);
+            $nombre = trim($_POST['nombre_edit'] ?? '');
+            $rawEquiv = floatval($_POST['equivalencia'] ?? 0);
+            $base = floatval($_POST['base'] ?? 0);
+            $equivalencia = ($rawEquiv != 0) ? (1 / $rawEquiv) : 0;
 
             if ($id <= 0) {
                 throw new Exception("ID inválido");
@@ -278,12 +287,19 @@ $equivalencia = ($rawEquiv != 0) ? (1 / $rawEquiv) : 0;
             if ($equivalencia <= 0) {
                 throw new Exception("Equivalencia inválida");
             }
+            if ($base > 1) {
+                $equivalenciaFinal = 1 / $base;
+
+            } else {
+                $equivalenciaFinal = 1 / $equivalencia;
+
+            }
 
             $resultado = $productosModel->actualizarMedidaAdicional(
                 $id,
                 $producto_id,
                 $nombre,
-                $equivalencia
+                $equivalenciaFinal
             );
 
             echo json_encode($resultado);
@@ -291,12 +307,12 @@ $equivalencia = ($rawEquiv != 0) ? (1 / $rawEquiv) : 0;
         } catch (Exception $e) {
 
             echo json_encode([
-                'status'  => false,
+                'status' => false,
                 'message' => $e->getMessage()
             ]);
         }
 
-    exit;
+        exit;
 
 
 
@@ -306,7 +322,8 @@ $equivalencia = ($rawEquiv != 0) ? (1 / $rawEquiv) : 0;
 
     case 'eliminarMedidaAdicional':
 
-        while (ob_get_level()) ob_end_clean();
+        while (ob_get_level())
+            ob_end_clean();
 
         header('Content-Type: application/json');
 
@@ -325,12 +342,12 @@ $equivalencia = ($rawEquiv != 0) ? (1 / $rawEquiv) : 0;
         } catch (Exception $e) {
 
             echo json_encode([
-                'status'  => false,
+                'status' => false,
                 'message' => $e->getMessage()
             ]);
         }
 
-    exit;
+        exit;
 
 
 
@@ -340,14 +357,15 @@ $equivalencia = ($rawEquiv != 0) ? (1 / $rawEquiv) : 0;
 
     default:
 
-        while (ob_get_level()) ob_end_clean();
+        while (ob_get_level())
+            ob_end_clean();
 
         header('Content-Type: application/json');
 
         echo json_encode([
-            'status'  => false,
+            'status' => false,
             'message' => 'Acción no válida'
         ]);
 
-    exit;
+        exit;
 }

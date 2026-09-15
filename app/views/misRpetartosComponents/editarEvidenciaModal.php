@@ -325,7 +325,7 @@
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Guardando...';
 
-        fetch(API_URL, {
+        fetch("/cfsistem/app/controllers/misRepartosController.php", {
             method: 'POST',
             body: formData
         })

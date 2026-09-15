@@ -36,7 +36,9 @@
      * Abre el modal y consulta las evidencias pasando el ID de entrega (folio)
      * @param {string|number} entregaId ID o Folio de entrega (Ej: 847)
      */
+    let entregaNumeroId = 0;
     async function abrirModalEvidencias(entregaId) {
+        entregaNumeroId = entregaId;
         const modalEl = document.getElementById('modalEvidenciasEntrega');
         const modalBs = new bootstrap.Modal(modalEl);
         const divCargando = document.getElementById('cargandoEvidencias');
@@ -101,31 +103,47 @@
             const clienteNombre = v.cliente ? v.cliente : 'VENTA MOSTRADOR / GENERAL';
 
             // Imagen Foto Entrega
+            // Imagen Foto de Entrega
             const imgFotoHtml = v.foto_registrada
                 ? `<div class="col-md-6 text-center mb-3">
-                    <label class="form-label micro-text fw-bold text-secondary d-block">FOTO DE ENTREGA</label>
-                    <a href="${v.foto_registrada}" target="_blank">
-                        <img src="${v.foto_registrada}" class="img-fluid rounded-3 border shadow-sm style-img-evidencia" style="max-height: 220px; object-fit: cover; width: 100%;">
-                    </a>
-               </div>`
+        <label class="form-label micro-text fw-bold text-secondary d-block">FOTO DE ENTREGA</label>
+        <a href="${v.foto_registrada}" target="_blank">
+            <img src="${v.foto_registrada}" class="img-fluid rounded-3 border shadow-sm style-img-evidencia" style="max-height: 220px; object-fit: cover; width: 100%;">
+        </a>
+         <button type="button" class="btn btn-outline-success btn-sm" onclick="subirFotografiaEntrega(${v.id_movimiento}, ${v.id_venta}, ${v.vehiculo_id})">
+                <i class="bi bi-upload me-1"></i> Actualizar Fotografía
+            </button>
+       </div>`
                 : `<div class="col-md-6 text-center mb-3">
-                    <label class="form-label micro-text fw-bold text-secondary d-block">FOTO DE ENTREGA</label>
-                    <div class="p-4 bg-body-tertiary rounded-3 border text-muted small">Sin fotografía de entrega</div>
-               </div>`;
+        <label class="form-label micro-text fw-bold text-secondary d-block">FOTO DE ENTREGA</label>
+        <div class="p-3 bg-body-tertiary rounded-3 border text-muted small d-flex flex-column align-items-center justify-content-center" style="min-height: 160px;">
+            <span class="mb-2">Sin fotografía de entrega</span>
+            <button type="button" class="btn btn-outline-success btn-sm" onclick="subirFotografiaEntrega(${v.id_movimiento}, ${v.id_venta}, ${v.vehiculo_id})">
+                <i class="bi bi-upload me-1"></i> Subir Fotografía
+            </button>
+        </div>
+       </div>`;
 
-            // Imagen Foto Nota
+            // Imagen Foto Nota / Comprobante
             const imgNotaHtml = v.nota_registrada
                 ? `<div class="col-md-6 text-center mb-3">
-                    <label class="form-label micro-text fw-bold text-secondary d-block">NOTA / COMPROBANTE</label>
-                    <a href="${v.nota_registrada}" target="_blank">
-                        <img src="${v.nota_registrada}" class="img-fluid rounded-3 border shadow-sm style-img-evidencia" style="max-height: 220px; object-fit: cover; width: 100%;">
-                    </a>
-               </div>`
+        <label class="form-label micro-text fw-bold text-secondary d-block">NOTA / COMPROBANTE</label>
+        <a href="${v.nota_registrada}" target="_blank">
+            <img src="${v.nota_registrada}" class="img-fluid rounded-3 border shadow-sm style-img-evidencia" style="max-height: 220px; object-fit: cover; width: 100%;">
+        </a>
+        <button type="button" class="btn btn-outline-success btn-sm" onclick="subirNotaEntrega(${v.id_movimiento}, ${v.id_venta}, ${v.vehiculo_id})">
+                <i class="bi bi-upload me-1"></i> Actualizar Nota
+            </button>
+       </div>`
                 : `<div class="col-md-6 text-center mb-3">
-                    <label class="form-label micro-text fw-bold text-secondary d-block">NOTA / COMPROBANTE</label>
-                    <div class="p-4 bg-body-tertiary rounded-3 border text-muted small">Sin foto de nota registrada</div>
-               </div>`;
-
+        <label class="form-label micro-text fw-bold text-secondary d-block">NOTA / COMPROBANTE</label>
+        <div class="p-3 bg-body-tertiary rounded-3 border text-muted small d-flex flex-column align-items-center justify-content-center" style="min-height: 160px;">
+            <span class="mb-2">Sin foto de nota registrada</span>
+            <button type="button" class="btn btn-outline-success btn-sm" onclick="subirNotaEntrega(${v.id_movimiento}, ${v.id_venta}, ${v.vehiculo_id})">
+                <i class="bi bi-upload me-1"></i> Subir Nota
+            </button>
+        </div>
+       </div>`;
             html += `
         <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; overflow: hidden;">
             <div class="card-header bg-white border-bottom p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
@@ -175,6 +193,176 @@
         });
 
         contenedor.innerHTML = html;
+    }
+</script>
+<script>
+    // 1. Función para la Fotografía de Entrega
+    function subirFotografiaEntrega(reparto_id, venta_id, vehiculo_id) {
+        Swal.fire({
+            title: 'Fotografía de Entrega',
+            html: `
+            <div class="text-start">
+                <label class="fw-bold small mb-2">Subir / Reemplazar fotografía</label>
+                <input type="file" id="swal_file_foto" class="form-control mb-2" accept="image/*">
+            </div>
+        `,
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonText: 'Guardar',
+            confirmButtonColor: '#198754',
+            cancelButtonText: 'Cancelar',
+            focusConfirm: false,
+
+            preConfirm: async () => {
+                const fileInput = document.getElementById('swal_file_foto');
+                const file = fileInput?.files[0];
+
+                if (!file) {
+                    Swal.showValidationMessage('Selecciona una fotografía');
+                    return false;
+                }
+
+                const formData = new FormData();
+                formData.append('vehiculo_id', vehiculo_id);
+                formData.append('id_venta', venta_id);
+                formData.append('estatus_entrega', "Entregado");
+                formData.append('id_movimiento', entregaNumeroId);
+                formData.append('folio', reparto_id);
+                formData.append('evidencia_foto', file);
+                formData.append('action', 'subir_evidencia_reparto');
+
+                try {
+                    const response = await fetch(
+                        '/cfsistem/app/controllers/misRepartosController.php',
+                        {
+                            method: 'POST',
+                            body: formData
+                        }
+                    );
+
+                    const text = await response.text();
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                    let res;
+                    try {
+                        res = JSON.parse(text);
+                    } catch {
+                        throw new Error('El servidor devolvió HTML o texto inválido');
+                    }
+
+                    if (!res.success) {
+                        throw new Error(res.message || 'Error al subir la fotografía');
+                    }
+
+                    return res;
+
+                } catch (err) {
+                    console.error(err);
+                    Swal.showValidationMessage(err.message);
+                    return false;
+                }
+            }
+        }).then(result => {
+            // Si el usuario canceló o hubo error en preConfirm, no hacemos nada
+            if (!result.isConfirmed || !result.value) return;
+
+            // Mostramos el aviso de éxito y al terminar abrimos de nuevo tu modal
+            Swal.fire({
+                icon: 'success',
+                title: 'Guardado',
+                text: 'Fotografía actualizada correctamente',
+                timer: 1200,
+                showConfirmButton: false
+            }).then(() => {
+                // Reabrimos tu modal principal pasándole el ID correspondiente
+                abrirModalEvidencias(entregaNumeroId);
+            });
+        });
+    }
+
+
+    // 2. Función para la Nota de Entrega
+    function subirNotaEntrega(reparto_id, venta_id, vehiculo_id) {
+        Swal.fire({
+            title: 'Nota de Entrega',
+            html: `
+            <div class="text-start">
+                <label class="fw-bold small mb-2">Subir / Reemplazar nota de entrega</label>
+                <input type="file" id="swal_file_nota" class="form-control mb-2" accept="image/*,.pdf">
+            </div>
+        `,
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonText: 'Guardar',
+            confirmButtonColor: '#198754',
+            cancelButtonText: 'Cancelar',
+            focusConfirm: false,
+
+            preConfirm: async () => {
+                const fileInput = document.getElementById('swal_file_nota');
+                const file = fileInput?.files[0];
+
+                if (!file) {
+                    Swal.showValidationMessage('Selecciona el archivo de la nota');
+                    return false;
+                }
+
+                const formData = new FormData();
+                formData.append('vehiculo_id', vehiculo_id);
+                formData.append('id_venta', venta_id);
+                formData.append('estatus_entrega', "Entregado");
+                formData.append('id_movimiento', entregaNumeroId);
+                formData.append('folio', reparto_id);
+                formData.append('evidencia_nota', file);
+                formData.append('action', 'subir_evidencia_reparto');
+
+                try {
+                    const response = await fetch(
+                        '/cfsistem/app/controllers/misRepartosController.php',
+                        {
+                            method: 'POST',
+                            body: formData
+                        }
+                    );
+
+                    const text = await response.text();
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                    let res;
+                    try {
+                        res = JSON.parse(text);
+                    } catch {
+                        throw new Error('El servidor devolvió HTML o texto inválido');
+                    }
+
+                    if (!res.success) {
+                        throw new Error(res.message || 'Error al subir la nota');
+                    }
+
+                    return res;
+
+                } catch (err) {
+                    console.error(err);
+                    Swal.showValidationMessage(err.message);
+                    return false;
+                }
+            }
+        }).then(result => {
+            // Si el usuario canceló o hubo error en preConfirm, no hacemos nada
+            if (!result.isConfirmed || !result.value) return;
+
+            // Mostramos el aviso de éxito y al terminar abrimos de nuevo tu modal
+            Swal.fire({
+                icon: 'success',
+                title: 'Guardado',
+                text: 'Nota actualizada correctamente',
+                timer: 1200,
+                showConfirmButton: false
+            }).then(() => {
+                // Reabrimos tu modal principal pasándole el ID correspondiente
+                abrirModalEvidencias(entregaNumeroId);
+            });
+        });
     }
 </script>
 

@@ -11,28 +11,29 @@ require_once __DIR__ . '/../models/nominaModel.php';
 require_once __DIR__ . '/../models/trabajadores_model.php';
 require_once __DIR__ . '/../models/almacen_model.php';
 // Protegemos la página
-protegerPagina('trabajadores'); 
+protegerPagina('trabajadores');
 
 $nominaModel = new NominaModel($conexion);
 $trabajadorModel = new TrabajadorModel($conexion);
 
-$almacenesModel= new AlmacenModel($conexion);
+$almacenesModel = new AlmacenModel($conexion);
 $paginaActual = 'trabajadores';
 
 // --- ACCIÓN: GUARDAR / ACTUALIZAR TRABAJADOR (AJAX) ---
 // --- ACCIÓN: GUARDAR / ACTUALIZAR TRABAJADOR (AJAX) ---
 if (isset($_POST['action']) && $_POST['action'] === 'guardar') {
-    if (ob_get_level()) ob_clean(); 
+    if (ob_get_level())
+        ob_clean();
     header('Content-Type: application/json');
-    
+
     try {
         $datos = [
-            'id'         => intval($_POST['id'] ?? 0),
-            'nombre'     => trim($_POST['nombre'] ?? ''),
-            'telefono'   => trim($_POST['telefono'] ?? ''),
-            'rol'        => $_POST['rol'] ?? 'vendedor',
-            'estado'     => $_POST['estado'] ?? 'activo',
-            'salario'     => $_POST['salario'] ?? '0',
+            'id' => intval($_POST['id'] ?? 0),
+            'nombre' => trim($_POST['nombre'] ?? ''),
+            'telefono' => trim($_POST['telefono'] ?? ''),
+            'rol' => $_POST['rol'] ?? 'vendedor',
+            'estado' => $_POST['estado'] ?? 'activo',
+            'salario' => $_POST['salario'] ?? '0',
             // Si el usuario es admin (0), toma el del select; si no, toma el de su sesión
             'almacen_id' => ($_SESSION['almacen_id'] == 0) ? intval($_POST['almacen_id'] ?? 0) : intval($_SESSION['almacen_id'])
         ];
@@ -40,17 +41,17 @@ if (isset($_POST['action']) && $_POST['action'] === 'guardar') {
         if (empty($datos['nombre']) || empty($datos['telefono'])) {
             throw new Exception("El nombre y el teléfono son obligatorios.");
         }
-        
+
         if ($datos['almacen_id'] <= 0) {
             throw new Exception("Debes asignar un almacén válido al trabajador.");
         }
 
         $resultado = $trabajadorModel->guardar($datos);
-        
+
         echo json_encode([
-            'status'  => 'success', 
+            'status' => 'success',
             'message' => "Operación exitosa.",
-            'id'      => ($datos['id'] > 0) ? $datos['id'] : $conexion->insert_id
+            'id' => ($datos['id'] > 0) ? $datos['id'] : $conexion->insert_id
         ]);
 
     } catch (Throwable $e) {
@@ -61,7 +62,8 @@ if (isset($_POST['action']) && $_POST['action'] === 'guardar') {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'subirDocumento') {
 
-    if (ob_get_level()) ob_clean();
+    if (ob_get_level())
+        ob_clean();
     header('Content-Type: application/json');
 
     try {
@@ -137,21 +139,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'subirD
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'eliminarDocumento') {
 
-    if (ob_get_level()) ob_clean();
+    if (ob_get_level())
+        ob_clean();
     header('Content-Type: application/json');
 
     try {
 
-        
-        
+
+
         $id = intval($_POST['id'] ?? 0);
-        
+
 
         if ($id <= 0) {
             throw new Exception("Elemento inválida");
         }
 
-       
+
 
         // 🔥 ELIMINAR EN BD
         $ok = $trabajadorModel->eliminarDocumento($id);
@@ -178,28 +181,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'elimin
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     try {
         $almacenusu = $_SESSION['almacen_id'];
-        
+
         // Si es admin (0), listamos todos; si no, solo los de su almacén
-          $trabajadores = $nominaModel->listarTrabajadores($almacenusu);
-       $listaAlmacenes = $almacenesModel->getAlmacenes($almacenusu); 
+        $trabajadores = $nominaModel->listarTrabajadores($almacenusu);
+        $listaAlmacenes = $almacenesModel->getAlmacenes($almacenusu);
         $tituloPagina = "Gestión de Personal";
         require_once __DIR__ . '/../views/nomina_view.php';
-        
+
     } catch (Exception $e) {
         die("Error al cargar la vista: " . $e->getMessage());
     }
 }
 // --- ACCIÓN: ELIMINAR TRABAJADOR (AJAX) ---
 if (isset($_POST['action']) && $_POST['action'] === 'eliminar') {
-    if (ob_get_level()) ob_clean();
+    if (ob_get_level())
+        ob_clean();
     header('Content-Type: application/json');
-    
+
     try {
         $id = intval($_POST['id'] ?? 0);
-        if ($id <= 0) throw new Exception("ID no válido.");
+        if ($id <= 0)
+            throw new Exception("ID no válido.");
 
         $resultado = $trabajadorModel->eliminar($id);
-        
+
         if ($resultado) {
             echo json_encode(['status' => 'success', 'message' => 'Trabajador eliminado.']);
         } else {
@@ -209,16 +214,18 @@ if (isset($_POST['action']) && $_POST['action'] === 'eliminar') {
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }
     exit;
-}if (isset($_GET['action']) && $_GET['action'] === 'crearBono') {
+}
+if (isset($_GET['action']) && $_GET['action'] === 'crearBono') {
 
-    while (ob_get_level()) ob_end_clean();
+    while (ob_get_level())
+        ob_end_clean();
     header('Content-Type: application/json');
 
     try {
 
-        $fecha         = $_POST['fecha'] ?? date('Y-m-d');
+        $fecha = $_POST['fecha'] ?? date('Y-m-d');
         $trabajador_id = intval($_POST['trabajador_id'] ?? 0);
-        $monto         = floatval($_POST['monto'] ?? 0);
+        $monto = floatval($_POST['monto'] ?? 0);
 
         if ($trabajador_id <= 0) {
             throw new Exception("Seleccione un trabajador.");
@@ -234,8 +241,8 @@ if (isset($_POST['action']) && $_POST['action'] === 'eliminar') {
 
         $data = [
             'trabajador_id' => $trabajador_id,
-            'fecha'         => $fecha,
-            'monto'         => $monto
+            'fecha' => $fecha,
+            'monto' => $monto
         ];
 
         $resultado = $nominaModel->crearBono($data);
@@ -263,13 +270,14 @@ if (isset($_POST['action']) && $_POST['action'] === 'eliminar') {
 }
 if (isset($_GET['action']) && $_GET['action'] === 'listar') {
 
-    while (ob_get_level()) ob_end_clean();
+    while (ob_get_level())
+        ob_end_clean();
     header('Content-Type: application/json');
 
     try {
-
+        $almacenusu = ($_SESSION['almacen_id']);
         $fechaInicio = $_GET['fecha_inicio'] ?? date('Y-m-d', strtotime('monday this week'));
-        $fechaFin    = $_GET['fecha_fin'] ?? date('Y-m-d');
+        $fechaFin = $_GET['fecha_fin'] ?? date('Y-m-d');
 
         $trabajadores = $nominaModel->listarNominaSemanal(
             $fechaInicio,

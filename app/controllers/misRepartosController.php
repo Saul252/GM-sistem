@@ -357,7 +357,7 @@ if (isset($_REQUEST['action'])) {
                     'fotografia_entrega' => $foto_entrega,
                     'fotografia_nota' => $foto_nota,
                     'estatus_entrega' => $_POST['estatus_entrega'] ?? 'Entregado',
-                    'comentario' => $_POST['comentario'] ?? ''
+                    'comentario' => ''
                 ];
 
                 if ($repartoM->registrarEntregaMovimiento($datos)) {
