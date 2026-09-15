@@ -10,7 +10,7 @@
                     aria-label="Close"></button>
             </div>
 
-            <div class="modal-body p-4 bg-light">
+            <div class="modal-body p-4 ">
                 <!-- Spinner de Carga -->
                 <div id="cargandoEvidencias" class="text-center py-5">
                     <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
@@ -23,7 +23,7 @@
                 <div id="contenidoEvidencias" class="d-none"></div>
             </div>
 
-            <div class="modal-footer bg-white border-top-0" style="border-radius: 0 0 20px 20px;">
+            <div class="modal-footer  border-top-0" style="border-radius: 0 0 20px 20px;">
                 <button type="button" class="btn btn-secondary fw-bold px-4" data-bs-dismiss="modal"
                     style="border-radius: 10px;">Cerrar</button>
             </div>
@@ -94,6 +94,7 @@
     function renderizarEvidencias(listaVentas) {
         const contenedor = document.getElementById('contenidoEvidencias');
         let html = '';
+        console.log(listaVentas);
 
         listaVentas.forEach((v, index) => {
             const badgeEntregado = v.ya_entregado == 1
@@ -146,7 +147,7 @@
        </div>`;
             html += `
         <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px; overflow: hidden;">
-            <div class="card-header bg-white border-bottom p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <div class="card-header  border-bottom p-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <div>
                     <h6 class="fw-bold mb-0 text-primary">
                         <i class="bi bi-receipt me-1"></i> Venta: ${v.folio_venta} 
@@ -162,26 +163,26 @@
             <div class="card-body p-4">
                 <div class="row g-3 mb-3">
                     <div class="col-md-6">
-                        <div class="p-3 bg-white border rounded-3 h-100">
+                        <div class="p-3  border rounded-3 h-100">
                             <span class="micro-text fw-bold text-muted d-block text-uppercase">Cliente</span>
-                            <span class="fw-bold text-dark">${clienteNombre}</span>
+                            <span class="fw-bold ">${clienteNombre}</span>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <div class="p-3 bg-white border rounded-3 h-100">
+                        <div class="p-3  border rounded-3 h-100">
                             <span class="micro-text fw-bold text-muted d-block text-uppercase">Comentario de Evidencia</span>
                             <span class="fw-semibold text-secondary">${v.comentario_evidencia ? v.comentario_evidencia : 'Sin observaciones'}</span>
                         </div>
                     </div>
                 </div>
 
-                <div class="p-3 bg-white border rounded-3 mb-3">
+                <div class="p-3  border rounded-3 mb-3">
                     <span class="micro-text fw-bold text-muted d-block text-uppercase mb-2">Resumen de Productos</span>
                     <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="fw-bold text-dark small">${v.productos}</span>
-                        <span class="badge bg-primary rounded-pill px-3">${v.total_piezas_venta} Pzas Totales</span>
+                        <span class="fw-bold  small">${v.productos}</span>
+                      
                     </div>
-                    <small class="text-muted d-block">Detalle: ${v.cantidades_detalladas}</small>
+                  
                 </div>
 
                 <div class="row pt-2">

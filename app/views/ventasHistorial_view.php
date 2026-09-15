@@ -1354,7 +1354,7 @@
                 style="font-size: 0.75rem; transition: all 0.2s;"
                 onclick="imprimirRuta('${g.entrega_id}','${g.folio}')">
             <i class="bi bi-truck me-1" style="font-size: 0.85rem;"></i>
-            <span>Ver Reparto</span>
+            <span>Ver Despacho</span>
         </button>
 
         <button type="button" 
