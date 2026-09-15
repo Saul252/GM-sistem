@@ -6,52 +6,55 @@
 ?>
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-    <meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title><?= $es_supervisor ? 'Monitor Global' : 'Mis Repartos' ?> | cfsistem</title>
-      <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
+    <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
 
     <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
 
-    
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     <?php require_once __DIR__ . '/layout/icono.php' ?>
-    <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
-    
+    <?php if (function_exists('cargarEstilos')) {
+        cargarEstilos();
+    } ?>
+
     <style>
-        :root { 
+        :root {
             --apple-bg: #f5f5f7;
             --accent-blue: #007aff;
             --sidebar-width: 260px;
         }
 
-        body { 
-            background-color: var(--apple-bg); 
+        body {
+            background-color: var(--apple-bg);
             font-family: 'SF Pro Display', -apple-system, sans-serif;
-          
+
         }
 
-        .main-wrapper { 
-            padding: 30px; 
-            padding-top: 90px; 
+        .main-wrapper {
+            padding: 30px;
+            padding-top: 90px;
             min-height: 100vh;
         }
 
         .card-ios {
-           
+
             border-radius: 18px;
             border: none;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
             margin-bottom: 25px;
             overflow: hidden;
         }
 
         .header-premium {
-          
+
             color: white;
             padding: 15px 20px;
         }
@@ -62,7 +65,7 @@
             text-transform: uppercase;
             letter-spacing: 0.02em;
             color: #8e8e93;
-           
+
             border-bottom: 1px solid #dee2e6;
         }
 
@@ -71,11 +74,11 @@
         }
 
         .carga-scroll {
-           
-            border-radius: 8px; 
+
+            border-radius: 8px;
             padding: 6px;
-            font-size: 0.75rem; 
-            max-height: 60px; 
+            font-size: 0.75rem;
+            max-height: 60px;
             overflow-y: auto;
         }
 
@@ -107,6 +110,7 @@
             opacity: 0.6;
             transition: opacity 0.2s ease;
         }
+
         #modalVerEntrega .btn-close:hover {
             opacity: 1;
         }
@@ -154,18 +158,26 @@
         #contenedor_despacho::-webkit-scrollbar {
             width: 6px;
         }
+
         #contenedor_despacho::-webkit-scrollbar-thumb {
             background: var(--bs-border-color-translucent);
             border-radius: 4px;
         }
 
         @media (max-width: 992px) {
-            .main-wrapper { margin-left: 0; padding: 15px; padding-top: 80px; }
+            .main-wrapper {
+                margin-left: 0;
+                padding: 15px;
+                padding-top: 80px;
+            }
         }
     </style>
 </head>
+
 <body>
-    <?php if (function_exists('renderizarLayout')) { renderizarLayout($paginaActual); } ?>
+    <?php if (function_exists('renderizarLayout')) {
+        renderizarLayout($paginaActual);
+    } ?>
 
     <main class="main-content">
         <div>
@@ -175,10 +187,11 @@
         <div class="card-ios animate__animated animate__fadeIn">
             <div class="header-premium d-flex justify-content-between align-items-center">
                 <h6 class="mb-0 fw-bold small text-uppercase">
-                    <i class="bi bi-broadcast me-2 text-primary"></i> 
+                    <i class="bi bi-broadcast me-2 text-primary"></i>
                     <?= $es_supervisor ? 'Unidades en Tránsito' : 'Mi Ruta Activa' ?>
                 </h6>
-                <button class="btn btn-sm btn-outline-light rounded-pill px-3 border-0 bg-white bg-opacity-10" onclick="cargarMonitorViajes()">
+                <button class="btn btn-sm btn-outline-light rounded-pill px-3 border-0 bg-white bg-opacity-10"
+                    onclick="cargarMonitorViajes()">
                     <i class="bi bi-arrow-repeat me-1"></i> Actualizar
                 </button>
             </div>
@@ -204,36 +217,27 @@
                     <i class="bi bi-clock-history me-2 text-primary"></i>
                     <?= $es_supervisor ? 'Monitor General de Entregas' : 'Mis Entregas Recientes' ?>
                 </h6>
-                
+
                 <div class="d-flex align-items-center gap-2 flex-wrap">
                     <span class="small text-body-secondary">Fecha de Inicio:</span>
-                    <input
-                        type="date"
-                        id="fecha_inicio_monitor"
-                        value="<?= date('Y-m-01') ?>"
-                        class="form-control form-control-sm"
-                        style="width:auto;"
-                        onchange="cargarMonitor(1)"
-                    >
+                    <input type="date" id="fecha_inicio_monitor" value="<?= date('Y-m-01') ?>"
+                        class="form-control form-control-sm" style="width:auto;" onchange="cargarMonitor(1)">
 
                     <span class="small text-body-secondary">Fecha de Fin:</span>
-                    <input
-                        type="date"
-                        id="fecha_fin_monitor"
-                        value="<?= date('Y-m-t') ?>"
-                        class="form-control form-control-sm"
-                        style="width:auto;"
-                        onchange="cargarMonitor(1)"
-                    >
+                    <input type="date" id="fecha_fin_monitor" value="<?= date('Y-m-t') ?>"
+                        class="form-control form-control-sm" style="width:auto;" onchange="cargarMonitor(1)">
 
                     <?php if ($es_supervisor): ?>
-                    <span class="small text-body-secondary ms-2">Almacén:</span>
-                    <select id="filtro_almacen_monitor" class="form-select form-select-sm border rounded-3" style="width: auto;" onchange="cargarMonitor(1)">
-                        <?php if ($es_admin): ?><option value="0">Todos</option><?php endif; ?>
-                        <?php if(isset($listaAlmacenes)) foreach ($listaAlmacenes as $alm): ?>
-                            <option value="<?= $alm['id'] ?>"><?= $alm['nombre'] ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                        <span class="small text-body-secondary ms-2">Almacén:</span>
+                        <select id="filtro_almacen_monitor" class="form-select form-select-sm border rounded-3"
+                            style="width: auto;" onchange="cargarMonitor(1)">
+                            <?php if ($es_admin): ?>
+                                <option value="0">Todos</option><?php endif; ?>
+                            <?php if (isset($listaAlmacenes))
+                                foreach ($listaAlmacenes as $alm): ?>
+                                    <option value="<?= $alm['id'] ?>"><?= $alm['nombre'] ?></option>
+                                <?php endforeach; ?>
+                        </select>
                     <?php else: ?>
                         <input type="hidden" id="filtro_almacen_monitor" value="0">
                     <?php endif; ?>
@@ -259,7 +263,7 @@
                     <tbody id="tbodyMonitor"></tbody>
                 </table>
             </div>
-            
+
             <div class="card-footer bg-white py-3 border-top-0">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                     <div class="text-body-secondary small" id="infoConteo">
@@ -280,8 +284,10 @@
                 <div class="modal-header border-0 pt-4 px-4 pb-2">
                     <div class="w-100">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2" id="v_folio_ticket" style="border-radius: 12px; font-weight: 800;">FOLIO: ---</span>
-                            <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2"
+                                id="v_folio_ticket" style="border-radius: 12px; font-weight: 800;">FOLIO: ---</span>
+                            <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal"
+                                aria-label="Cerrar"></button>
                         </div>
                         <h4 class="fw-bold mb-1 text-body" id="v_producto_nombre">Cargando...</h4>
                         <div id="v_cliente_final" class="text-body-secondary fw-medium" style="font-size: 0.85rem;">
@@ -295,170 +301,171 @@
                 </div>
 
                 <div class="modal-footer border-0 justify-content-center pb-4 pt-0">
-                    <button type="button" class="btn btn-cerrar-modal rounded-pill px-5 fw-bold" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-cerrar-modal rounded-pill px-5 fw-bold"
+                        data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
     </div>
 
-  
+
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <?php require_once __DIR__ . '/misRpetartosComponents/repartoEvidenciaModal.php' ?>
-     <?php require_once __DIR__ . '/entregasComponets/editarRepartoModal.php'; ?>
+    <?php require_once __DIR__ . '/entregasComponets/editarRepartoModal.php'; ?>
 
-<script>
-const esSupervisor = <?= json_encode($es_supervisor) ?>;
-const usernamePHP = <?= json_encode($_SESSION['username'] ?? '') ?>;
-const filtroNombre = usernamePHP.replace('Trabajador', '').toUpperCase();
+    <script>
+        const esSupervisor = <?= json_encode($es_supervisor) ?>;
+        const usernamePHP = <?= json_encode($_SESSION['username'] ?? '') ?>;
+        const filtroNombre = usernamePHP.replace('Trabajador', '').toUpperCase();
 
-let paginaActual = 1;
-const limitePorPagina = 15;
+        let paginaActual = 1;
+        const limitePorPagina = 15;
 
-$(document).ready(function() { 
-    cargarMonitor(1); 
-    cargarMonitorViajes();
-});
+        $(document).ready(function () {
+            cargarMonitor(1);
+            cargarMonitorViajes();
+        });
 
 /**
  * CARGA DEL MONITOR (TABLA PRINCIPAL)
  */function cargarMonitor(pagina = 1) {
 
-    // Aseguramos número válido
-    paginaActual = parseInt(pagina) || 1;
+            // Aseguramos número válido
+            paginaActual = parseInt(pagina) || 1;
 
-    const idAlmacen = $('#filtro_almacen_monitor').val();
+            const idAlmacen = $('#filtro_almacen_monitor').val();
 
-    // Fechas
-    const fecha_inicio = $('#fecha_inicio_monitor').val();
-    const fecha_fin = $('#fecha_fin_monitor').val();
+            // Fechas
+            const fecha_inicio = $('#fecha_inicio_monitor').val();
+            const fecha_fin = $('#fecha_fin_monitor').val();
 
-    // Loader
-    $('#tbodyMonitor').html(
-        '<tr><td colspan="8" class="text-center py-5">' +
-        '<div class="spinner-border spinner-border-sm text-primary me-2"></div> Sincronizando...</td></tr>'
-    );
-
-    $.ajax({
-        url: '/cfsistem/app/controllers/misRepartosController.php',
-        type: 'GET',
-        data: { 
-            action: 'get_monitor_entregas', 
-            almacen_id: idAlmacen, 
-            pagina: paginaActual, 
-            limite: limitePorPagina,
-            fecha_inicio: fecha_inicio,
-            fecha_fin: fecha_fin
-        },
-        dataType: 'json',
-
-        success: function(res) {
-
-            // 🔥 DEBUG OPCIONAL
-            // console.log(res);
-
-            if (res.success && Array.isArray(res.data) && res.data.length > 0) { 
-                
-                renderizarFilas(res.data); 
-                
-                // 🔥 Normalizamos valores (CLAVE)
-                const totalPags = parseInt(res.total_pages) || 0;
-                const pagAct = parseInt(res.current_page) || 1;
-                const totalRecs = parseInt(res.total_records) || 0;
-
-                // 🔥 CONTROL REAL DE PAGINACIÓN
-                if (totalPags <= 1) {
-                    $('#paginacionMonitor').empty();
-                } else {
-                    renderizarPaginacion(totalPags, pagAct);
-                }
-
-                // 🔥 Opcional: ocultar texto si solo hay 1 página
-                if (totalPags <= 1) {
-                    $('#infoConteo').html(`Total: ${totalRecs} registros`);
-                } else {
-                    $('#infoConteo').html(
-                        `Página <b>${pagAct}</b> de <b>${totalPags}</b> | Total: ${totalRecs} registros`
-                    );
-                }
-
-            } else { 
-                $('#tbodyMonitor').html(
-                    '<tr><td colspan="8" class="text-center text-body-secondary py-5">No se encontraron entregas.</td></tr>'
-                ); 
-
-                $('#paginacionMonitor').empty();
-                $('#infoConteo').empty();
-            }
-        },
-
-        error: () => {
+            // Loader
             $('#tbodyMonitor').html(
-                '<tr><td colspan="8" class="text-center text-danger py-5">Error al conectar con el servidor.</td></tr>'
+                '<tr><td colspan="8" class="text-center py-5">' +
+                '<div class="spinner-border spinner-border-sm text-primary me-2"></div> Sincronizando...</td></tr>'
             );
 
-            $('#paginacionMonitor').empty();
-            $('#infoConteo').empty();
-        }
-    });
-}/**
+            $.ajax({
+                url: '/cfsistem/app/controllers/misRepartosController.php',
+                type: 'GET',
+                data: {
+                    action: 'get_monitor_entregas',
+                    almacen_id: idAlmacen,
+                    pagina: paginaActual,
+                    limite: limitePorPagina,
+                    fecha_inicio: fecha_inicio,
+                    fecha_fin: fecha_fin
+                },
+                dataType: 'json',
+
+                success: function (res) {
+
+                    // 🔥 DEBUG OPCIONAL
+                    // console.log(res);
+
+                    if (res.success && Array.isArray(res.data) && res.data.length > 0) {
+
+                        renderizarFilas(res.data);
+
+                        // 🔥 Normalizamos valores (CLAVE)
+                        const totalPags = parseInt(res.total_pages) || 0;
+                        const pagAct = parseInt(res.current_page) || 1;
+                        const totalRecs = parseInt(res.total_records) || 0;
+
+                        // 🔥 CONTROL REAL DE PAGINACIÓN
+                        if (totalPags <= 1) {
+                            $('#paginacionMonitor').empty();
+                        } else {
+                            renderizarPaginacion(totalPags, pagAct);
+                        }
+
+                        // 🔥 Opcional: ocultar texto si solo hay 1 página
+                        if (totalPags <= 1) {
+                            $('#infoConteo').html(`Total: ${totalRecs} registros`);
+                        } else {
+                            $('#infoConteo').html(
+                                `Página <b>${pagAct}</b> de <b>${totalPags}</b> | Total: ${totalRecs} registros`
+                            );
+                        }
+
+                    } else {
+                        $('#tbodyMonitor').html(
+                            '<tr><td colspan="8" class="text-center text-body-secondary py-5">No se encontraron entregas.</td></tr>'
+                        );
+
+                        $('#paginacionMonitor').empty();
+                        $('#infoConteo').empty();
+                    }
+                },
+
+                error: () => {
+                    $('#tbodyMonitor').html(
+                        '<tr><td colspan="8" class="text-center text-danger py-5">Error al conectar con el servidor.</td></tr>'
+                    );
+
+                    $('#paginacionMonitor').empty();
+                    $('#infoConteo').empty();
+                }
+            });
+        }/**
  * DIBUJA LOS BOTONES DE PAGINACIÓN (BOOTSTRAP)
  */
-function renderizarPaginacion(total, actual) {
+        function renderizarPaginacion(total, actual) {
 
-    // 🔥 SI SOLO HAY 1 PÁGINA, NO MOSTRAR NADA
-    if (!total || total <= 1) {
-        $('#paginacionMonitor').empty();
-        return;
-    }
+            // 🔥 SI SOLO HAY 1 PÁGINA, NO MOSTRAR NADA
+            if (!total || total <= 1) {
+                $('#paginacionMonitor').empty();
+                return;
+            }
 
-    let html = '';
-    
-    // Botón Anterior
-    const claseAnt = (actual <= 1) ? 'disabled' : '';
-    const clickAnt = (actual > 1) ? `onclick="cargarMonitor(${actual - 1})"` : '';
-    
-    html += `<li class="page-item ${claseAnt}">
+            let html = '';
+
+            // Botón Anterior
+            const claseAnt = (actual <= 1) ? 'disabled' : '';
+            const clickAnt = (actual > 1) ? `onclick="cargarMonitor(${actual - 1})"` : '';
+
+            html += `<li class="page-item ${claseAnt}">
                 <a class="page-link" href="javascript:void(0)" ${clickAnt}>&laquo;</a>
              </li>`;
 
-    // Páginas
-    for (let i = 1; i <= total; i++) {
-        if (i === 1 || i === total || (i >= actual - 2 && i <= actual + 2)) {
-            html += `<li class="page-item ${i === actual ? 'active' : ''}">
+            // Páginas
+            for (let i = 1; i <= total; i++) {
+                if (i === 1 || i === total || (i >= actual - 2 && i <= actual + 2)) {
+                    html += `<li class="page-item ${i === actual ? 'active' : ''}">
                         <a class="page-link" href="javascript:void(0)" onclick="cargarMonitor(${i})">${i}</a>
                      </li>`;
-        } else if (i === actual - 3 || i === actual + 3) {
-            html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
-        }
-    }
+                } else if (i === actual - 3 || i === actual + 3) {
+                    html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                }
+            }
 
-    // Botón Siguiente
-    const claseSig = (actual >= total) ? 'disabled' : '';
-    const clickSig = (actual < total) ? `onclick="cargarMonitor(${actual + 1})"` : '';
+            // Botón Siguiente
+            const claseSig = (actual >= total) ? 'disabled' : '';
+            const clickSig = (actual < total) ? `onclick="cargarMonitor(${actual + 1})"` : '';
 
-    html += `<li class="page-item ${claseSig}">
+            html += `<li class="page-item ${claseSig}">
                 <a class="page-link" href="javascript:void(0)" ${clickSig}>&raquo;</a>
              </li>`;
-             
-    $('#paginacionMonitor').html(html);
-}
-/**
- * RENDERIZA FILAS DE LA TABLA
- */
-function renderizarFilas(data) {
-    let html = '';
-    data.forEach(row => {
-        if (!esSupervisor) {
-            const resp = (row.responsable || '').toUpperCase();
-            if (!resp.includes(filtroNombre)) return;
-        }
 
-        const icon = (row.tipo_salida === 'RUTA') ? '🚚' : '🏬';
-        const folio = row.numero_ruta || row.reparto_id;
-        
-        html += `
+            $('#paginacionMonitor').html(html);
+        }
+        /**
+         * RENDERIZA FILAS DE LA TABLA
+         */
+        function renderizarFilas(data) {
+            let html = '';
+            data.forEach(row => {
+                if (!esSupervisor) {
+                    const resp = (row.responsable || '').toUpperCase();
+                    if (!resp.includes(filtroNombre)) return;
+                }
+
+                const icon = (row.tipo_salida === 'RUTA') ? '🚚' : '🏬';
+                const folio = row.numero_ruta || row.reparto_id;
+
+                html += `
             <tr class="align-middle">
                 <td class="text-center">${icon}</td>
                 <td>
@@ -478,32 +485,32 @@ function renderizarFilas(data) {
                     </button>
                 </td>
             </tr>`;
-    });
-    $('#tbodyMonitor').html(html);
-}
-
-/**
- * CARGA DE UNIDADES ACTIVAS (FETCH)
- */
-window.cargarMonitorViajes = async function() {
-    const body = $('#bodyMonitorViajes');
-    try {
-        body.html('<tr><td colspan="5" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary"></div></td></tr>');
-        const resp = await fetch(`/cfsistem/app/controllers/misRepartosController.php?action=listar_viajes_activos`);
-        const res = await resp.json();
-        console.log(res.data);
-        const filtrados = esSupervisor ? res.data : (res.data || []).filter(v => 
-            (v.chofer || '').toUpperCase().includes(filtroNombre) || (v.tripulantes || '').toUpperCase().includes(filtroNombre)
-        );
-
-        if (!filtrados || filtrados.length === 0) {
-            body.html('<tr><td colspan="5" class="text-center py-4 text-body-secondary small">No hay unidades activas en este momento.</td></tr>');
-            return;
+            });
+            $('#tbodyMonitor').html(html);
         }
 
-        body.empty();
-        filtrados.forEach(v => {
-            body.append(`
+        /**
+         * CARGA DE UNIDADES ACTIVAS (FETCH)
+         */
+        window.cargarMonitorViajes = async function () {
+            const body = $('#bodyMonitorViajes');
+            try {
+                body.html('<tr><td colspan="5" class="text-center py-4"><div class="spinner-border spinner-border-sm text-primary"></div></td></tr>');
+                const resp = await fetch(`/cfsistem/app/controllers/misRepartosController.php?action=listar_viajes_activos`);
+                const res = await resp.json();
+                console.log(res.data);
+                const filtrados = esSupervisor ? res.data : (res.data || []).filter(v =>
+                    (v.chofer || '').toUpperCase().includes(filtroNombre) || (v.tripulantes || '').toUpperCase().includes(filtroNombre)
+                );
+
+                if (!filtrados || filtrados.length === 0) {
+                    body.html('<tr><td colspan="5" class="text-center py-4 text-body-secondary small">No hay unidades activas en este momento.</td></tr>');
+                    return;
+                }
+
+                body.empty();
+                filtrados.forEach(v => {
+                    body.append(`
                 <tr class="animate__animated animate__fadeIn">
                     <td class="ps-4">
                         <div class="fw-bold">${v.unidad}</div>
@@ -527,120 +534,120 @@ window.cargarMonitorViajes = async function() {
                     </td>
                 </tr>
             `);
-        });
-    } catch (e) { body.html('<tr><td colspan="5" class="text-center text-danger py-4">Error de conexión</td></tr>'); }
-};
-async function finalizar (vehiculoId, folioRuta,entrega_id) {
-     
-         const container = document.getElementById('contenedor-entregas');
-    fetch(`/cfsistem/app/controllers/gestionarRepartoController.php?action=get_entregas_folio&folio=${folioRuta}`)
-        .then(res => res.json())
-        .then(res => {
-          
-            console.log(res.data);
-            datosTemporales = res.data || [];
-
-            if(datosTemporales.length === 0) {
-                    return;
-            }
-            let proseguir=1;
-
-            datosTemporales.forEach((item, index) => {
-            
-              if (item.foto_registrada == null && item.nota_registrada == null) {
-
-    Swal.fire({
-        icon: 'warning',
-        title: 'Evidencias pendientes',
-        html: `
-            La entrega <b>${item.id_venta}</b> no tiene foto ni nota registradas.
-        `,
-        confirmButtonText: 'Entendido'
-    });
-
-    proseguir = 0;
-    return;
-}
-              if(proseguir==1)
-              {
-                finalizarViaje(vehiculoId, folioRuta);
-     
-              }
-             
-                
-               
-            });
-        })
-        .catch(err => {
-            console.error(err);
                 });
-                   
-    };
-    window.finalizarViaje = async function(vehiculoId, folioRuta) {
-       const result = await Swal.fire({
-    title: '¿Finalizar viaje?',
-    text: `¿Confirmar llegada de la unidad ${folioRuta}?`,
-    icon: 'question',
-    showCancelButton: true,
-    confirmButtonText: 'Sí, finalizar',
-    cancelButtonText: 'Cancelar',
-    confirmButtonColor: '#198754'
-});
+            } catch (e) { body.html('<tr><td colspan="5" class="text-center text-danger py-4">Error de conexión</td></tr>'); }
+        };
+        async function finalizar(vehiculoId, folioRuta, entrega_id) {
 
-if (!result.isConfirmed) return;
+            const container = document.getElementById('contenedor-entregas');
+            fetch(`/cfsistem/app/controllers/gestionarRepartoController.php?action=get_entregas_folio&folio=${folioRuta}`)
+                .then(res => res.json())
+                .then(res => {
 
-try {
+                    console.log(res.data);
+                    datosTemporales = res.data || [];
 
-    const formData = new FormData();
-    formData.append('vehiculo_id', vehiculoId);
-    formData.append('viaje_folio', folioRuta);
+                    if (datosTemporales.length === 0) {
+                        return;
+                    }
+                    let proseguir = 1;
 
-    const resp = await fetch(
-        '/cfsistem/app/controllers/repartosController.php?action=finalizar_viaje',
-        {
-            method: 'POST',
-            body: formData
-        }
-    );
+                    // Verificamos si al menos un elemento no tiene foto ni nota
+                    const hayFaltantes = datosTemporales.some(item => item.foto_registrada == null && item.nota_registrada == null);
 
-    const res = await resp.json();
+                    if (hayFaltantes) {
+                        // Si hay entregas sin evidencias, lanzamos la advertencia con opción a continuar
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Evidencias pendientes',
+                            text: 'Algunas entregas no tienen foto ni nota registradas. ¿Realmente quieres finalizar el reparto?',
+                            showCancelButton: true,
+                            confirmButtonText: 'Sí, finalizar',
+                            cancelButtonText: 'Cancelar',
+                            confirmButtonColor: '#198754',
+                            cancelButtonColor: '#6c757d'
+                        }).then((result) => {
+                            // Si el usuario confirma a pesar de faltar evidencias, procedemos
+                            if (result.isConfirmed) {
+                                finalizarViaje(vehiculoId, folioRuta);
+                            }
+                        });
+                    } else {
+                        // Si todo está completo, finaliza directamente sin preguntar de más
+                        finalizarViaje(vehiculoId, folioRuta);
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                });
 
-    if (res.success) {
+        };
+        window.finalizarViaje = async function (vehiculoId, folioRuta) {
+            const result = await Swal.fire({
+                title: '¿Finalizar viaje?',
+                text: `¿Confirmar llegada de la unidad ${folioRuta}?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, finalizar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#198754'
+            });
 
-        await Swal.fire({
-            icon: 'success',
-            title: 'Éxito',
-            text: res.message,
-            timer: 2000,
-            showConfirmButton: false
-        }).then(() => location.reload())
+            if (!result.isConfirmed) return;
 
-       
+            try {
 
-    } else {
+                const formData = new FormData();
+                formData.append('vehiculo_id', vehiculoId);
+                formData.append('viaje_folio', folioRuta);
 
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: res.message || 'No se pudo finalizar el viaje'
-        });
+                const resp = await fetch(
+                    '/cfsistem/app/controllers/repartosController.php?action=finalizar_viaje',
+                    {
+                        method: 'POST',
+                        body: formData
+                    }
+                );
 
-    }
+                const res = await resp.json();
 
-} catch (e) {
+                if (res.success) {
 
-    console.error(e);
-
-    Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Ocurrió un problema al comunicarse con el servidor'
-    });
-
-}
-    };
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Éxito',
+                        text: res.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => location.reload())
 
 
-</script>
+
+                } else {
+
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: res.message || 'No se pudo finalizar el viaje'
+                    });
+
+                }
+
+            } catch (e) {
+
+                console.error(e);
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ocurrió un problema al comunicarse con el servidor'
+                });
+
+            }
+        };
+
+
+    </script>
 </body>
+
 </html>

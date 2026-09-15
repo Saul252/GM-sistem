@@ -13,7 +13,7 @@
         border-radius: 28px !important;
         border: none !important;
         overflow: hidden;
-        background-color: #ffffff;
+
     }
 
     /* --- ETIQUETAS DE INFORMACIÓN (Labels pequeñas) --- */
@@ -28,7 +28,7 @@
 
     /* --- BOTÓN DE CAPTURA (Cámara/Archivo) --- */
     .btn-camera {
-        background-color: #f8f9fa;
+
         color: var(--ios-blue);
         border: 2px dashed #d1d1d6;
         border-radius: 18px;
@@ -43,7 +43,7 @@
     }
 
     .btn-camera:hover {
-        background-color: #f0f0f5;
+
         border-color: var(--ios-blue);
         color: #0056b3;
     }
@@ -91,11 +91,10 @@
 <div class="modal fade" id="modalEvidencia" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content shadow-lg modal-ios-style">
-            <div class="modal-header border-0 pb-0 px-4 pt-4">
+            <div class="modal-header  pb-0 px-4 pt-4">
                 <div class="d-flex justify-content-between w-100 align-items-center">
                     <h5 class="modal-title fw-bold" id="tituloModal">Finalizar Entrega</h5>
-                    <span class="badge bg-light text-body-secondary border rounded-pill px-3 py-2"
-                        style="font-size: 0.7rem;">
+                    <span class="badge  text-body-secondary border rounded-pill px-3 py-2" style="font-size: 0.7rem;">
                         ID MOV: <span id="m_id_visible">0</span>
                     </span>
                 </div>
@@ -114,7 +113,7 @@
                         <i class="bi bi-pencil-square me-2"></i> Estás editando una entrega existente.
                     </div>
 
-                    <div class="mb-3 p-3 rounded-4" style="background-color: #f2f2f7; border: 1px solid #e5e5ea;">
+                    <div class="mb-3 p-3 rounded-4" style=" border: 1px solid #e5e5ea;">
                         <div class="info-label">Cliente / Folio de Venta</div>
                         <div id="m_cliente_full" class="fw-bold mb-2"></div>
                         <div class="info-label">Dirección de Entrega</div>
@@ -124,7 +123,7 @@
                     <div class="mb-3" style="display:none;">
                         <label class="info-label">Estado de la Visita</label>
                         <select name="estatus_entrega" id="m_estatus_select"
-                            class="form-select border-0 bg-light rounded-3 shadow-none">
+                            class="form-select   rounded-3 shadow-none">
                             <option value="Entregado">Entregado Total</option>
                             <option value="Parcial">Entrega Parcial</option>
                             <option value="Rechazado">Rechazado por Cliente</option>
@@ -164,12 +163,12 @@
                     <div class="mb-2">
                         <label class="info-label">Observaciones</label>
                         <textarea name="comentario" id="m_comentario"
-                            class="form-control text-uppercase border-0 bg-light rounded-3 shadow-none" rows="2"
+                            class="form-control text-uppercase   rounded-3 shadow-none" rows="2"
                             placeholder="Notas opcionales..."></textarea>
                     </div>
                 </div>
 
-                <div class="modal-footer border-0 px-4 pb-4">
+                <div class="modal-footer  px-4 pb-4">
                     <button type="submit" class="btn btn-primary-ios w-100 py-3" id="btnGuardar">Guardar y
                         Finalizar</button>
                 </div>
