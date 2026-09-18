@@ -182,6 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
         $almacenusu = $_SESSION['almacen_id'];
 
         // Si es admin (0), listamos todos; si no, solo los de su almacén
+        $esadmin = $almacenusu == 0 ? true : false;
         $trabajadores = $trabajadorModel->listarTrabajadores($almacenusu);
         $listaAlmacenes = $almacenesModel->getAlmacenes($almacenusu);
         $tituloPagina = "Gestión de Personal";

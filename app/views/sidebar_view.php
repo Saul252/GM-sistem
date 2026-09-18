@@ -66,9 +66,9 @@ $modulos = [
         'titulo' => 'Logística y Distribución',
         'icono' => 'bi-truck',
         'submodulos' => [
-            ['id' => 'entregas', 'url' => '/cfsistem/app/controllers/entregasController.php', 'icon' => 'bi-truck', 'label' => 'Despachos', 'active' => ($archivoActual == 'entregasController.php')],
+            ['id' => 'entregasVista', 'url' => '/cfsistem/app/controllers/entregasVistaController.php', 'icon' => 'bi-truck', 'label' => 'Despachos', 'active' => ($archivoActual == 'entregasVistaController.php')],
             ['id' => 'vehiculos', 'url' => '/cfsistem/app/controllers/vehiculosController.php', 'icon' => 'bi-truck-front-fill', 'label' => 'Vehículos', 'active' => ($archivoActual == 'vehiculosController.php')],
-            ['id' => 'repartos', 'url' => '/cfsistem/app/controllers/repartosController.php', 'icon' => 'bi-truck-flatbed', 'label' => 'Repartos', 'active' => ($archivoActual == 'repartosController.php')],
+            ['id' => 'repartosVista', 'url' => '/cfsistem/app/controllers/repartosVistaController.php', 'icon' => 'bi-truck-flatbed', 'label' => 'Repartos', 'active' => ($archivoActual == 'repartosVistaController.php')],
             ['id' => 'misRepartos', 'url' => '/cfsistem/app/controllers/misRepartosController.php', 'icon' => 'bi-map-fill', 'label' => 'Mis Repartos', 'active' => ($archivoActual == 'misRepartosController.php')],
             ['id' => 'viajesTrabajadores', 'url' => '/cfsistem/app/controllers/viajesTrabajadoresController.php', 'icon' => 'bi-person-workspace', 'label' => 'Viajes Trabajadores', 'active' => ($archivoActual == 'viajesTrabajadoresController.php')],
             ['id' => 'mantenimientos', 'url' => '/cfsistem/app/controllers/mantenimientosController.php', 'icon' => 'bi-wrench-adjustable-circle-fill', 'label' => 'Mantenimientos', 'active' => ($archivoActual == 'mantenimientosController.php')],

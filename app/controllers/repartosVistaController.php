@@ -14,8 +14,8 @@ require_once __DIR__ . '/../models/vehiculos_model.php';
 require_once __DIR__ . '/../models/entregasModel.php';
 require_once __DIR__ . '/../models/almacen_model.php';
 
-protegerPagina('repartos');
-$paginaActual = 'repartos';
+protegerPagina('repartosVista');
+$paginaActual = 'repartosVista';
 
 $repartoM = new RepartoModel($conexion);
 $trabajadorM = new TrabajadorModel($conexion);
@@ -679,3 +679,4 @@ $listaAlmacenes = $almacenModel->getAlmacenes($almacen_sesion);
 
 $tituloPagina = "Gestión de Repartos y Logística";
 
+require_once __DIR__ . '/../views/repartos_view.php';

@@ -8,8 +8,8 @@ require_once __DIR__ . '/../models/vehiculos_model.php';
 require_once __DIR__ . '/../models/trabajadores_model.php';
 require_once __DIR__ . '/../controllers/LayoutController.php';
 
-protegerPagina('entregas');
-$paginaActual = 'entregas';
+protegerPagina('entregasVista');
+$paginaActual = 'entregasVista';
 
 // Instanciación de modelos
 $modelo = new EntregaModel($conexion);
@@ -774,3 +774,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 // --- CARGA NORMAL DE LA VISTA ---
 $paginaActual = 'Entregas';
+require_once __DIR__ . '/../views/entregas_view.php';

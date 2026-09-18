@@ -71,12 +71,12 @@ $gruposModulos = [
         'icono' => 'bi-truck-front-fill',
         'theme' => 'slate',
         'submodulos' => [
-            ['id' => 'entregas', 'url' => '/cfsistem/app/controllers/entregasController.php', 'icon' => 'bi-truck', 'class' => 'text-warning', 'label' => 'Despachos'],
+            ['id' => 'entregasVista', 'url' => '/cfsistem/app/controllers/entregasVistaController.php', 'icon' => 'bi-truck', 'class' => 'text-warning', 'label' => 'Despachos'],
             ['id' => 'vehiculos', 'url' => '/cfsistem/app/controllers/vehiculosController.php', 'icon' => 'bi-truck-front', 'class' => 'text-secondary', 'label' => 'Vehículos'],
             ['id' => 'verificaciones', 'url' => '/cfsistem/app/controllers/verificacionesController.php', 'icon' => 'bi-patch-check-fill', 'class' => 'text-success', 'label' => 'verificaciones',],
 
             ['id' => 'mantenimientos', 'url' => '/cfsistem/app/controllers/mantenimientosController.php', 'icon' => 'bi-wrench-adjustable-circle-fill', 'class' => 'text-danger', 'label' => 'Mantenimientos'],
-            ['id' => 'repartos', 'url' => '/cfsistem/app/controllers/repartosController.php', 'icon' => 'bi-truck-flatbed', 'class' => 'text-info', 'label' => 'Repartos'],
+            ['id' => 'repartosVista', 'url' => '/cfsistem/app/controllers/repartosVistaController.php', 'icon' => 'bi-truck-flatbed', 'class' => 'text-info', 'label' => 'Repartos'],
             ['id' => 'misRepartos', 'url' => '/cfsistem/app/controllers/misRepartosController.php', 'icon' => 'bi-map-fill', 'class' => 'text-primary', 'label' => 'Mis Repartos'],
             ['id' => 'viajesTrabajadores', 'url' => '/cfsistem/app/controllers/viajesTrabajadoresController.php', 'icon' => 'bi-person-workspace', 'class' => 'text-primary', 'label' => 'Viajes Personal'],
         ]

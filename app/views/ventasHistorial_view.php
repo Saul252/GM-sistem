@@ -262,7 +262,8 @@
                         <div class="col-md-2">
                             <label class="form-label small fw-bold">Ubicación</label>
                             <select id="f_almacen" class="form-select form-select-sm" onchange="getVentas()">
-                                <option value="">Todas</option>
+                                <?php if ($esadmin): ?>
+                                    <option value="0">Todos</option><?php endif; ?>
                                 <?php foreach ($almacenes as $a): ?>
                                     <option value="<?= $a['id'] ?>" <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
                                         <?= $a['nombre'] ?>
