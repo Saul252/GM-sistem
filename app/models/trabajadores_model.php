@@ -1,55 +1,59 @@
 <?php
-class TrabajadorModel {
+class TrabajadorModel
+{
     private $db;
 
-    public function __construct($db) {
+    public function __construct($db)
+    {
         $this->db = $db;
     }
 
     // Listar todos (Solo para Admin Global)
-    public function listar() {
+    public function listar()
+    {
         $sql = "SELECT * FROM trabajadores ORDER BY nombre ASC";
         $res = $this->db->query($sql);
         return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
     }
-     public function subirDocumentoCompra($id, $nombre_evidencia, $documento_url)
-{
-    $sql = "INSERT INTO documentos_trabajadores
+    public function subirDocumentoCompra($id, $nombre_evidencia, $documento_url)
+    {
+        $sql = "INSERT INTO documentos_trabajadores
             (trabajador_id, nombre, direccion)
             VALUES (?, ?, ?)";
 
-    $stmt = $this->db->prepare($sql);
+        $stmt = $this->db->prepare($sql);
 
-    if (!$stmt) {
-        throw new Exception("Error al preparar consulta: " . $this->db->error);
+        if (!$stmt) {
+            throw new Exception("Error al preparar consulta: " . $this->db->error);
+        }
+
+        $stmt->bind_param(
+            "iss",
+            $id,
+            $nombre_evidencia,
+            $documento_url
+        );
+
+        if (!$stmt->execute()) {
+            throw new Exception("Error al guardar documento: " . $stmt->error);
+        }
+
+        $documento_id = $stmt->insert_id;
+
+        $stmt->close();
+
+        return [
+            'success' => true,
+            'documento_id' => $documento_id,
+            'message' => 'Documento guardado correctamente'
+        ];
     }
+    public function listarTrabajadores($almacen_id = 0)
+    {
 
-    $stmt->bind_param(
-        "iss",
-        $id,
-        $nombre_evidencia,
-        $documento_url
-    );
-
-    if (!$stmt->execute()) {
-        throw new Exception("Error al guardar documento: " . $stmt->error);
-    }
-
-    $documento_id = $stmt->insert_id;
-
-    $stmt->close();
-
-    return [
-        'success' => true,
-        'documento_id' => $documento_id,
-        'message' => 'Documento guardado correctamente'
-    ];
-}
-public function listarTrabajadores($almacen_id = 0) {
-
-    if ($almacen_id == 0) {
-        // 🔥 ADMIN → todos
-        $sql = "SELECT t.*, a.nombre as nombreAlmacen,
+        if ($almacen_id == 0) {
+            // 🔥 ADMIN → todos
+            $sql = "SELECT t.*, a.nombre as nombreAlmacen,
           ( SELECT GROUP_CONCAT(
         CONCAT(
             IFNULL(nombre, ''),
@@ -66,10 +70,10 @@ public function listarTrabajadores($almacen_id = 0) {
         FROM trabajadores t
         Join almacenes a on t.almacen_id =a.id
         ORDER BY nombre ASC";
-        $stmt = $this->db->prepare($sql);
-    } else {
-        // 🔒 SUCURSAL → solo su almacén
-        $sql = "SELECT t.*, a.nombre as nombreAlmacen,
+            $stmt = $this->db->prepare($sql);
+        } else {
+            // 🔒 SUCURSAL → solo su almacén
+            $sql = "SELECT t.*, a.nombre as nombreAlmacen,
          ( SELECT GROUP_CONCAT(
         CONCAT(
             IFNULL(nombre, ''),
@@ -87,33 +91,36 @@ FROM trabajadores t
 JOIN almacenes a ON t.almacen_id = a.id
 WHERE t.almacen_id = ?
 ORDER BY nombre ASC;";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("i", $almacen_id);
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("i", $almacen_id);
+        }
+
+        $stmt->execute();
+        $res = $stmt->get_result();
+
+        return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
     }
 
-    $stmt->execute();
-    $res = $stmt->get_result();
-
-    return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
-}
-
     // NUEVO: Listar por almacén específico
-    public function listarPorAlmacen($almacen_id) {
+    public function listarPorAlmacen($almacen_id)
+    {
         $id = intval($almacen_id);
         $sql = "SELECT * FROM trabajadores WHERE almacen_id  = $id AND rol!='Administrador'ORDER BY nombre ASC";
         $res = $this->db->query($sql);
         return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
     }
-     public function listarPorAlmacenEncargado($almacen_id) {
+    public function listarPorAlmacenEncargado($almacen_id)
+    {
         $id = intval($almacen_id);
         $sql = "SELECT * FROM trabajadores WHERE almacen_id  = $id AND rol='Administrador'ORDER BY nombre ASC";
         $res = $this->db->query($sql);
         return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
     }
- public function listarTrabajadoresDisponiblesPorAlmacen($almacen_id) {
-    $id = intval($almacen_id);
+    public function listarTrabajadoresDisponiblesPorAlmacen($almacen_id)
+    {
+        $id = intval($almacen_id);
 
-    $sql = "        SELECT t.*
+        $sql = "        SELECT t.*
         FROM trabajadores t
         WHERE t.almacen_id = $id
         AND rol!='Administrador'
@@ -137,95 +144,117 @@ ORDER BY nombre ASC;";
         ORDER BY t.nombre ASC
     ";
 
-    $res = $this->db->query($sql);
-    return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
-}
-    public function guardar($d) {
-        $nombre = $this->db->real_escape_string($d['nombre']);
-        $tel    = $this->db->real_escape_string($d['telefono']);
-        $rol    = $this->db->real_escape_string($d['rol']);
-        $estado = $this->db->real_escape_string($d['estado']); 
-        $salario = $this->db->real_escape_string($d['salario']);
-        $complemento = $this->db->real_escape_string($d['complemento']);
-          $fecha_ingreso = $this->db->real_escape_string($d['fecha_ingreso']);
-        $alm_id = intval($d['almacen_id']); // Nueva columna crítica
+        $res = $this->db->query($sql);
+        return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+    }
+    public function guardar($d)
+    {
+        $nombre = $this->db->real_escape_string($d['nombre'] ?? '');
+        $tel = $this->db->real_escape_string($d['telefono'] ?? '');
+        $rol = $this->db->real_escape_string($d['rol'] ?? '');
+        $estado = $this->db->real_escape_string($d['estado'] ?? '');
+        $salario = floatval($d['salario'] ?? 0);
+        $complemento = floatval($d['complemento'] ?? 0);
+        $alm_id = intval($d['almacen_id'] ?? 0);
+
+        // Formatear y validar la fecha
+        $fecha_raw = trim($d['fecha_ingreso'] ?? '');
+        if (!empty($fecha_raw) && $fecha_raw !== '0') {
+            $fecha_ingreso = "' " . $this->db->real_escape_string($fecha_raw) . "'";
+        } else {
+            $fecha_ingreso = "'" . date('Y-m-d') . "'"; // O usa "NULL" si tu columna acepta nulos
+        }
 
         if (!empty($d['id'])) {
-            // EDITAR: Incluimos almacen_id por si el admin global lo mueve de sucursal
+            // EDITAR
             $id = intval($d['id']);
             $sql = "UPDATE trabajadores 
-                    SET nombre='$nombre', telefono='$tel', rol='$rol', estado='$estado', almacen_id=$alm_id ,salario='$salario',complemento_pago='$complemento',fecha_ingreso='$fecha_ingreso'
-                    WHERE id=$id";
+                SET nombre='$nombre', 
+                    telefono='$tel', 
+                    rol='$rol', 
+                    estado='$estado', 
+                    almacen_id=$alm_id, 
+                    salario=$salario, 
+                    complemento_pago=$complemento, 
+                    fecha_ingreso=$fecha_ingreso
+                WHERE id=$id";
         } else {
-            // INSERTAR: Obligatorio asignar el almacén desde el inicio
-            $sql = "INSERT INTO trabajadores (nombre, telefono, rol, estado, almacen_id,salario,complemento_pago,fecha_ingreso) 
-                    VALUES ('$nombre', '$tel', '$rol', '$estado', $alm_id,$salario,$complemento,$fecha_ingreso)";
+            // INSERTAR (Note que $salario, $complemento y $fecha_ingreso van sin comillas extra si $fecha_ingreso ya trae sus comillas)
+            $sql = "INSERT INTO trabajadores (nombre, telefono, rol, estado, almacen_id, salario, complemento_pago, fecha_ingreso) 
+                VALUES ('$nombre', '$tel', '$rol', '$estado', $alm_id, $salario, $complemento, $fecha_ingreso)";
         }
+
         return $this->db->query($sql);
     }
 
-    public function eliminar($id) {
+    public function eliminar($id)
+    {
         $id = intval($id);
         return $this->db->query("DELETE FROM trabajadores WHERE id = $id");
     }
-       public function listarPersonal($almacen_id = 0) {
+    public function listarPersonal($almacen_id = 0)
+    {
         // Si mandas 0, busca en todos (opcional), si no, filtra por sucursal
         $whereAlmacen = ($almacen_id > 0) ? " AND almacen_id = " . intval($almacen_id) : "";
-        
+
         $sql = "SELECT id, nombre, rol 
                 FROM trabajadores 
                 WHERE estado = 'activo' 
               
                 $whereAlmacen
                 ORDER BY nombre ASC";
-                
+
         $res = $this->db->query($sql);
         return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
     }
 
     // Ajustado para logística filtrando por almacén
-    public function listarPersonalLogistica($almacen_id = 0) {
+    public function listarPersonalLogistica($almacen_id = 0)
+    {
         // Si mandas 0, busca en todos (opcional), si no, filtra por sucursal
         $whereAlmacen = ($almacen_id > 0) ? " AND almacen_id = " . intval($almacen_id) : "";
-        
+
         $sql = "SELECT id, nombre, rol 
                 FROM trabajadores 
                 WHERE estado = 'activo' 
                 AND rol IN ('chofer', 'cargador') 
                 $whereAlmacen
                 ORDER BY nombre ASC";
-                
+
         $res = $this->db->query($sql);
         return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
     }
-public function nombreTrabajador($id)
-{
-    $sql = "SELECT nombre FROM trabajadores WHERE id = ?";
-    $stmt = $this->db->prepare($sql);
+    public function nombreTrabajador($id)
+    {
+        $sql = "SELECT nombre FROM trabajadores WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
 
-    if (!$stmt) return null;
+        if (!$stmt)
+            return null;
 
-    $stmt->bind_param("i", $id);
-    $stmt->execute();
+        $stmt->bind_param("i", $id);
+        $stmt->execute();
 
-    $res = $stmt->get_result();
-    $row = $res->fetch_assoc();
+        $res = $stmt->get_result();
+        $row = $res->fetch_assoc();
 
-    return $row['nombre'] ?? null;
-}
+        return $row['nombre'] ?? null;
+    }
 
-public function eliminarDocumento( $id_documento) {
+    public function eliminarDocumento($id_documento)
+    {
 
-    $sql = "UPDATE documentos_trabajadores
+        $sql = "UPDATE documentos_trabajadores
             SET activo = 0
             WHERE id = ?";
 
-    $stmt = $this->db->prepare($sql);
-    if (!$stmt) return false;
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt)
+            return false;
 
-    $stmt->bind_param("i", $id_documento);
+        $stmt->bind_param("i", $id_documento);
 
-    return $stmt->execute();
-}
+        return $stmt->execute();
+    }
     // NUEVO: Listar vehículos por almacén específico
 }

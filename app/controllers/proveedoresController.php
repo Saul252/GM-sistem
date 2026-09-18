@@ -11,7 +11,7 @@ $model = new ProveedoresModel($conexion);
 $almacenModel = new AlmacenModel($conexion);
 
 $almacen_sesion = $_SESSION['almacen_id'] ?? 0;
-$usuario_id     = $_SESSION['id_usuario'] ?? 0;
+$usuario_id = $_SESSION['id_usuario'] ?? 0;
 
 
 /* =====================================================
@@ -87,7 +87,8 @@ $usuario_id     = $_SESSION['id_usuario'] ?? 0;
 
 if (isset($_GET['action']) && $_GET['action'] == 'eliminarProveedor') {
 
-    while (ob_get_level()) ob_end_clean();
+    while (ob_get_level())
+        ob_end_clean();
     header('Content-Type: application/json; charset=utf-8');
 
     try {
@@ -134,12 +135,12 @@ if (isset($_GET['ajax'])) {
         $almacen_id_req = intval($_GET['almacen_id'] ?? 0);
 
         // 🔒 lógica tipo corteCaja
-        $target =  $_SESSION['almacen_id'];
-        $data = $model->listarTodosProveedores( $target);
+        $target = $_SESSION['almacen_id'];
+        $data = $model->listarTodosProveedores($target);
 
         echo json_encode([
             'status' => 'success',
-            'data'   => $data,
+            'data' => $data,
             'es_lista' => ($target == 0)
         ]);
 
@@ -194,7 +195,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerProveedor') {
 
 if (isset($_GET['action']) && $_GET['action'] == 'actualizarProveedor') {
 
-    while (ob_get_level()) ob_end_clean();
+    while (ob_get_level())
+        ob_end_clean();
 
     header('Content-Type: application/json; charset=utf-8');
 
@@ -208,17 +210,18 @@ if (isset($_GET['action']) && $_GET['action'] == 'actualizarProveedor') {
 
         // 🔥 TEXTOS
         $nombre_comercial = trim($_POST['nombre_comercial'] ?? '');
-        $razon_social     = trim($_POST['razon_social'] ?? '');
-        $rfc              = trim($_POST['rfc'] ?? 'XAXX010101000');
-        $correo           = trim($_POST['correo'] ?? '');
-        $direccion        = trim($_POST['direccion'] ?? '');
-        $colonia          = trim($_POST['colonia'] ?? '');
-        $ciudad           = trim($_POST['ciudad'] ?? '');
+        $razon_social = trim($_POST['razon_social'] ?? '');
+        $rfc = trim($_POST['rfc'] ?? 'XAXX010101000');
+        $correo = trim($_POST['correo'] ?? '');
+        $direccion = trim($_POST['direccion'] ?? '');
+        $colonia = trim($_POST['colonia'] ?? '');
+        $ciudad = trim($_POST['ciudad'] ?? '');
+        $codigoPostal = ($_POST['codigoPostal'] ?? '');
 
         // 🔥 ENTEROS
-        $telefono   = !empty($_POST['telefono']) ? intval($_POST['telefono']) : 0;
-        $telefono2  = !empty($_POST['telefono2']) ? intval($_POST['telefono2']) : 0;
-        $extencion  = !empty($_POST['extencion']) ? intval($_POST['extencion']) : 0;
+        $telefono = !empty($_POST['telefono']) ? intval($_POST['telefono']) : 0;
+        $telefono2 = !empty($_POST['telefono2']) ? intval($_POST['telefono2']) : 0;
+        $extencion = !empty($_POST['extencion']) ? intval($_POST['extencion']) : 0;
 
         // 🔥 NUMEROS EXTERIOR/INTERIOR
         $numeroExt = trim($_POST['numeroExt'] ?? '');
@@ -226,7 +229,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'actualizarProveedor') {
 
         // 🔥 IDS
         $almacen_id = intval($_POST['almacen_id'] ?? 0);
-        $activo     = intval($_POST['activo'] ?? 1);
+        $activo = intval($_POST['activo'] ?? 1);
 
         // VALIDACIONES
         if ($nombre_comercial === '') {
@@ -240,19 +243,20 @@ if (isset($_GET['action']) && $_GET['action'] == 'actualizarProveedor') {
         // ARRAY
         $datos = [
             'nombre_comercial' => $nombre_comercial,
-            'razon_social'     => $razon_social,
-            'rfc'              => $rfc,
-            'correo'           => $correo,
-            'telefono'         => $telefono,
-            'telefono2'        => $telefono2,
-            'extencion'        => $extencion,
-            'direccion'        => $direccion,
-            'colonia'          => $colonia,
-            'ciudad'           => $ciudad,
-            'numeroExt'        => $numeroExt,
-            'numeroInt'        => $numeroInt,
-            'almacen_id'       => $almacen_id,
-            'activo'           => $activo
+            'razon_social' => $razon_social,
+            'rfc' => $rfc,
+            'correo' => $correo,
+            'telefono' => $telefono,
+            'telefono2' => $telefono2,
+            'extencion' => $extencion,
+            'direccion' => $direccion,
+            'colonia' => $colonia,
+            'ciudad' => $ciudad,
+            'codigoPostal' => $codigoPostal,
+            'numeroExt' => $numeroExt,
+            'numeroInt' => $numeroInt,
+            'almacen_id' => $almacen_id,
+            'activo' => $activo
         ];
 
         $resultado = $model->actualizar($id, $datos);

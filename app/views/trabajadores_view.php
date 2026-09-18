@@ -136,7 +136,8 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                         <?php endif; ?>
                         <?php foreach ($listaAlmacenes as $almacen): ?>
                             <option value="<?= htmlspecialchars($almacen['nombre']) ?>">
-                                <?= htmlspecialchars($almacen['nombre']) ?></option>
+                                <?= htmlspecialchars($almacen['nombre']) ?>
+                            </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -301,8 +302,7 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small">Teléfono</label>
-                                <input type="text" name="telefono" id="t_telefono" class="form-control" maxlength="10"
-                                    required>
+                                <input type="text" name="telefono" id="t_telefono" class="form-control" maxlength="10">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small">Puesto / Rol</label>
@@ -317,9 +317,9 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                                 <label class="form-label fw-bold small">Almacén / Sucursal</label>
                                 <?php if ($_SESSION['almacen_id'] == 0): ?>
                                     <select name="almacen_id" id="t_almacen_id" class="form-select" required>
-                                        <option value="">Seleccionar Almacén...</option>
+
                                         <?php foreach ($listaAlmacenes as $alm): ?>
-                                            <option value="<?= $alm['nombre'] ?>"><?= htmlspecialchars($alm['nombre']) ?>
+                                            <option value="<?= $alm['id'] ?>"><?= htmlspecialchars($alm['nombre']) ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
@@ -341,7 +341,7 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small">Salario</label>
                                 <input type="number" step="0.01" name="salario" id="t_salario" class="form-control"
-                                    required>
+                                    value="0" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-bold small">Fecha de Ingreso</label>
@@ -350,7 +350,7 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
                             </div>
                             <div class="col-md-12">
                                 <label class="form-label fw-bold small">Complemento</label>
-                                <input type="number" step="0.01" name="complemento" id="t_complemento"
+                                <input type="number" step="0.01" name="complemento" id="t_complemento" value="0"
                                     class="form-control" required>
                             </div>
                         </div>
@@ -419,7 +419,7 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
         function nuevoTrabajador() {
             $('#formTrabajador')[0].reset();
             $('#trabajador_id').val('0');
-            if ($('#t_almacen_id').is('select')) $('#t_almacen_id').val('');
+
             $('#modalTitulo').text('Nuevo Trabajador');
             $('#modalTrabajador').modal('show');
         }
@@ -433,7 +433,13 @@ $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
             $('#t_estado').val(t.estado);
             $('#t_salario').val(t.salario);
             $('#t_complemento').val(t.complemento_pago);
-            $('#t_fecha_ingreso').val(t.fecha_ingreso);
+            if (t.fecha_ingreso) {
+                // Si la fecha viene con hora (ej: "2026-09-18 14:30:00"), cortamos solo la parte de la fecha ("2026-09-18")
+                let fechaLimpia = t.fecha_ingreso.split(' ')[0];
+                $('#t_fecha_ingreso').val(fechaLimpia);
+            } else {
+                $('#t_fecha_ingreso').val('');
+            }
 
             if ($('#t_almacen_id').is('select')) {
                 $('#t_almacen_id').val(t.almacen_id);

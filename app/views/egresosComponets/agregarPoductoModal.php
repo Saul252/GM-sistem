@@ -23,10 +23,7 @@
                             </h6>
 
                             <div class="row g-3">
-                                <select name="select_almacen_id" id="select_almacen_id" class="form-select shadow-sm"
-                                    required>
 
-                                </select>
 
                                 <input type="hidden" name="precio_adquisicion" value="0">
                                 <div class="col-md-8">
@@ -71,7 +68,7 @@
                                 <div class="col-md-4">
 
 
-                                    <label class="form-label small fw-bold text-secondary">UNIDAD BASE (VENTA)</label>
+                                    <label class="form-label small fw-bold text-secondary">UNIDAD MAYOR (VENTA)</label>
                                     <select required id="u_mayoreo" name="unidad_reporte"
                                         class="form-select  shadow-sm fw-bold">
                                         <option value="">Seleccione...</option>
@@ -143,19 +140,19 @@
                                 <div class="col-md-4">
                                     <label class="form-label small text-body-secondary">Minorista</label>
                                     <input type="number" step="0.01" name="precio_minorista"
-                                        class="form-control shadow-sm" value="0">
+                                        class="form-control shadow-sm" placeholder="0">
                                 </div>
 
                                 <div class="col-md-4">
                                     <label class="form-label small text-body-secondary">Mayorista</label>
                                     <input type="number" step="0.01" name="precio_mayorista"
-                                        class="form-control shadow-sm" value="0">
+                                        class="form-control shadow-sm" placeholder="0">
                                 </div>
 
                                 <div class="col-md-4">
                                     <label class="form-label small text-body-secondary">Distribuidor</label>
                                     <input type="number" step="0.01" name="precio_distribuidor"
-                                        class="form-control shadow-sm" value="0">
+                                        class="form-control shadow-sm" placeholder="0">
                                 </div>
 
                             </div>
@@ -191,14 +188,7 @@
             <div class="modal-body">
                 <form id="formRapidoCategoria">
                     <div class="mb-3">
-                        <select name="almacen_id_compra" id="almacen_id_compra"
-                            class="form-select  shadow-sm rounded-3 py-2" required>
 
-                            <?php foreach ($almacenes as $a): ?>
-                                <option value="<?= $a['id'] ?>"><?= htmlspecialchars($a['nombre']) ?><?= $a['id'] ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
                         <label class="form-label small">Nombre de la Categoría</label>
                         <input type="text" name="nombre" id="nombre" class="form-control" placeholder="Ej: Herramientas"
                             required>
@@ -258,26 +248,13 @@
     });
 
     // 4. Obtener Almacenes para el select principal
-    function getAlmacenes() {
-        const selectPrincipal = document.getElementById('select_almacen_id');
-        if (selectPrincipal) {
-            fetch('/cfsistem/app/controllers/accesoController.php?action=getAlmacenesJSON')
-                .then(res => res.json())
-                .then(categorias => {
-                    categorias.forEach(cat => {
-                        const option = new Option(cat.nombre, cat.id);
-                        selectPrincipal.add(option);
-                    });
-                })
-                .catch(err => console.error("Error cargando almacenes:", err));
-        }
-    }
+
 
     // 5. Guardar Categoría Rápida desde el submodal
     function guardarCategoriaRapida() {
         const input = document.getElementById('nombre');
         const nombre = input.value.trim();
-        const inputAlmacen = document.getElementById('almacen_id_compra');
+
         const almacen = inputAlmacen.value;
 
         if (!nombre) {
@@ -286,7 +263,7 @@
 
         const formData = new FormData();
         formData.append('nombre', nombre);
-        formData.append('almacen', almacen);
+
 
         fetch('/cfsistem/app/controllers/egresosController.php?action=guardarCategoria', {
             method: 'POST',

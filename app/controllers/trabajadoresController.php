@@ -32,9 +32,11 @@ if (isset($_POST['action']) && $_POST['action'] === 'guardar') {
             'estado' => $_POST['estado'] ?? 'activo',
             'salario' => $_POST['salario'] ?? '0',
             'complemento' => $_POST['complemento'] ?? '0',
-            'fecha_ingreso' => $_POST['fecha_ingreso'] ?? '0',
-            // Si el usuario es admin (0), toma el del select; si no, toma el de su sesión
-            'almacen_id' => ($_SESSION['almacen_id'] == 0) ? intval($_POST['almacen_id'] ?? 0) : intval($_SESSION['almacen_id'])
+
+            // CAMBIO AQUÍ: Usar '' o date('Y-m-d') en lugar de '0'
+            'fecha_ingreso' => !empty($_POST['fecha_ingreso']) ? $_POST['fecha_ingreso'] : date('Y-m-d'),
+
+            'almacen_id' => ($_SESSION['almacen_id'] == 0) ? intval($_POST['almacen_id'] ?? 1) : intval($_SESSION['almacen_id'])
         ];
 
         if (empty($datos['nombre']) || empty($datos['telefono'])) {
@@ -42,7 +44,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'guardar') {
         }
 
         if ($datos['almacen_id'] <= 0) {
-            throw new Exception("Debes asignar un almacén válido al trabajador.");
+            $datos['almacen_id'] = 1;
         }
 
         $resultado = $trabajadorModel->guardar($datos);
