@@ -10,7 +10,8 @@
                         </div>
                         <div>
                             <h4 class="fw-bold mb-0">Nueva Solicitud de Compra</h4>
-                            <p class="text-body-secondary small mb-0">Complete los datos para requerir materiales al almacén</p>
+                            <p class="text-body-secondary small mb-0">Complete los datos para requerir materiales al
+                                almacén</p>
                         </div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -22,14 +23,16 @@
 
                         <!-- 1. Almacén de Cargo -->
                         <div class="col-md-6 col-lg-4 min-w-0">
-                            <label for="almacen_id" class="form-label form-label-custom mb-1 text-uppercase tracking-wider">
+                            <label for="almacen_id"
+                                class="form-label form-label-custom mb-1 text-uppercase tracking-wider">
                                 <i class="bi bi-box-seam me-1 text-primary"></i> Almacén de Cargo
                             </label>
 
                             <?php $es_admin = ($_SESSION['rol_id'] == 1); ?>
 
                             <div class="input-group input-group-fixed flex-nowrap w-100">
-                                <select id="almacen_id" name="<?= $es_admin ? 'almacen_id' : 'almacen_id_cabecera_visual' ?>"
+                                <select id="almacen_id"
+                                    name="<?= $es_admin ? 'almacen_id' : 'almacen_id_cabecera_visual' ?>"
                                     class="form-select border-slate-200 control-fixed-height <?= !$es_admin ? '' : '' ?>"
                                     <?= !$es_admin ? 'disabled' : '' ?> required>
 
@@ -37,16 +40,16 @@
                                         <option value="">Seleccionar ubicación...</option>
                                     <?php endif; ?>
 
-                                    <?php foreach($almacenes as $a): ?>
-                                        <option value="<?= $a['id'] ?>"
-                                            <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
+                                    <?php foreach ($almacenes as $a): ?>
+                                        <option value="<?= $a['id'] ?>" <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
                                             <?= $a['nombre'] ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
 
                                 <?php if (!$es_admin): ?>
-                                    <span class="input-group-text  text-body-secondary border-slate-200 control-fixed-height flex-shrink-0">
+                                    <span
+                                        class="input-group-text  text-body-secondary border-slate-200 control-fixed-height flex-shrink-0">
                                         <i class="bi bi-lock-fill"></i>
                                     </span>
                                 <?php endif; ?>
@@ -62,32 +65,55 @@
 
                         <!-- 2. Proveedor Sugerido -->
                         <div class="col-md-6 col-lg-4 min-w-0">
-                            <label for="proveedor_id" class="form-label form-label-custom mb-1 text-uppercase tracking-wider">
+                            <label for="proveedor_id"
+                                class="form-label form-label-custom mb-1 text-uppercase tracking-wider">
                                 <i class="bi bi-truck me-1 text-primary"></i> Proveedor Sugerido
                             </label>
                             <div class="input-group input-group-fixed flex-nowrap w-100">
-                                <select name="proveedor_id" id="proveedor_id" class="form-select select2-modal border-slate-200" required>
+                                <select name="proveedor_id" id="proveedor_id"
+                                    class="form-select select2-modal border-slate-200" required>
                                     <option value="">Seleccionar proveedor...</option>
-                                    <?php foreach($proveedores as $p): ?>
-                                        <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?></option>
+                                    <?php foreach ($proveedores as $p): ?>
+                                        <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?>
+                                        </option>
                                     <?php endforeach; ?>
                                 </select>
-                                <button class="btn btn-outline-success px-3 d-flex align-items-center justify-content-center flex-shrink-0"
+                                <button
+                                    class="btn btn-outline-success px-3 d-flex align-items-center justify-content-center flex-shrink-0"
                                     type="button" onclick="abrirModalNuevoProveedor()" title="Nuevo Proveedor">
                                     <i class="bi bi-plus-lg"></i>
                                 </button>
                             </div>
                         </div>
-
+                        <div class="col-md-6 col-lg-4 min-w-0">
+                            <label for="ubicacion_proveedor_id"
+                                class="form-label form-label-custom mb-1 text-uppercase tracking-wider">
+                                <i class="bi bi-geo-alt me-1 text-primary"></i> Ubicación / Sucursal
+                            </label>
+                            <div class="input-group input-group-fixed flex-nowrap w-100">
+                                <select name="ubicacion_proveedor_id" id="ubicacion_proveedor_id"
+                                    class="form-select select2-modal border-slate-200" required>
+                                    <option value="">Seleccione un proveedor primero...</option>
+                                </select>
+                                <!-- Opcional: Botón para abrir el modal de gestión de ubicaciones que hicimos antes -->
+                                <button
+                                    class="btn btn-outline-primary px-3 d-flex align-items-center justify-content-center flex-shrink-0"
+                                    type="button" onclick="abrirGestionUbicacionesActual()"
+                                    title="Administrar Ubicaciones">
+                                    <i class="bi bi-gear"></i>
+                                </button>
+                            </div>
+                        </div>
                         <!-- 3. Añadir Producto -->
                         <div class="col-md-12 col-lg-4 min-w-0">
-                            <label for="buscadorProductos" class="form-label form-label-custom mb-1 text-uppercase tracking-wider">
+                            <label for="buscadorProductos"
+                                class="form-label form-label-custom mb-1 text-uppercase tracking-wider">
                                 <i class="bi bi-search me-1 text-primary"></i> Añadir Producto
                             </label>
                             <div class="input-group input-group-fixed flex-nowrap w-100">
                                 <select id="buscadorProductos" class="form-select select2-modal border-slate-200">
                                     <option value="">Escribe SKU o nombre...</option>
-                                    <?php foreach($listaProductos as $pr): ?>
+                                    <?php foreach ($listaProductos as $pr): ?>
                                         <option value="<?= $pr['producto_id'] ?>"
                                             data-nombre="<?= htmlspecialchars($pr['nombre']) ?>"
                                             data-sku="<?= htmlspecialchars($pr['sku']) ?>"
@@ -98,7 +124,8 @@
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
-                                <button type="button" class="btn btn-primary d-flex align-items-center justify-content-center px-3 flex-shrink-0"
+                                <button type="button"
+                                    class="btn btn-primary d-flex align-items-center justify-content-center px-3 flex-shrink-0"
                                     onclick="abrirModalProducto()" title="Agregar nuevo producto">
                                     <i class="bi bi-plus-lg me-1"></i>
                                     <span class="fw-medium">Nuevo</span>
@@ -109,7 +136,7 @@
                     </div>
 
                     <!-- Tabla de Detalle -->
-                     <div class="table-responsive border rounded-4 ">
+                    <div class="table-responsive border rounded-4 ">
                         <table class="table align-middle mb-0" id="tablaDetalle">
                             <thead class="">
                                 <tr class="text-body-secondary small uppercase">
@@ -138,10 +165,12 @@
                     <!-- Resumen del Total -->
                     <div class="d-flex justify-content-end align-items-center mt-4">
                         <div class="bg-dark bg-gradient text-white p-3 rounded-4 shadow-sm text-end px-4 min-w-200">
-                            <small class="d-block text-white-50 fw-bold text-uppercase tracking-wider mb-1" style="font-size: 0.65rem; letter-spacing: 0.8px;">
+                            <small class="d-block text-white-50 fw-bold text-uppercase tracking-wider mb-1"
+                                style="font-size: 0.65rem; letter-spacing: 0.8px;">
                                 Costo Total de Compra
                             </small>
-                            <div id="costoTotalCompra" class="fw-bolder text-success" style="font-size: 2rem; line-height: 1;">
+                            <div id="costoTotalCompra" class="fw-bolder text-success"
+                                style="font-size: 2rem; line-height: 1;">
                                 $0.00
                             </div>
                         </div>
@@ -150,10 +179,12 @@
 
                 <!-- Footer -->
                 <div class="modal-footer border-0 p-4  d-flex justify-content-between align-items-center">
-                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-semibold" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-semibold"
+                        data-bs-dismiss="modal">
                         Cancelar
                     </button>
-                    <button type="submit" class="btn btn-primary rounded-pill px-5 py-2.5 fw-bold shadow-sm d-flex align-items-center">
+                    <button type="submit"
+                        class="btn btn-primary rounded-pill px-5 py-2.5 fw-bold shadow-sm d-flex align-items-center">
                         <i class="bi bi-check2-circle fs-5 me-2"></i> Confirmar Solicitud
                     </button>
                 </div>
@@ -163,243 +194,311 @@
 </div>
 
 <style>
-/* Ampliación del Modal */
-@media (min-width: 1200px) {
-    .modal-dialog-custom {
-        max-width: 92% !important;
+    /* Ampliación del Modal */
+    @media (min-width: 1200px) {
+        .modal-dialog-custom {
+            max-width: 92% !important;
+        }
     }
-}
 
-:root {
-    --control-height: 42px;
-    --border-color: #dee2e6;
-    --bg-input: #ffffff;
-}
+    :root {
+        --control-height: 42px;
+        --border-color: #dee2e6;
+        --bg-input: #ffffff;
+    }
 
-.min-w-0 {
-    min-width: 0 !important;
-}
+    .min-w-0 {
+        min-width: 0 !important;
+    }
 
-.min-w-200 {
-    min-width: 200px;
-}
+    .min-w-200 {
+        min-width: 200px;
+    }
 
-.form-label-custom {
-    font-size: 0.72rem !important;
-    font-weight: 600 !important;
-    color: #6c757d !important;
-    letter-spacing: 0.5px !important;
-}
+    .form-label-custom {
+        font-size: 0.72rem !important;
+        font-weight: 600 !important;
+        color: #6c757d !important;
+        letter-spacing: 0.5px !important;
+    }
 
-/* Forzar límites en Input Groups */
-.input-group-fixed {
-    width: 100% !important;
-    max-width: 100% !important;
-}
+    /* Forzar límites en Input Groups */
+    .input-group-fixed {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
 
-.input-group-fixed .select2-container {
-    flex: 1 1 auto !important;
-    width: 1% !important;
-    min-width: 0 !important;
-}
+    .input-group-fixed .select2-container {
+        flex: 1 1 auto !important;
+        width: 1% !important;
+        min-width: 0 !important;
+    }
 
-/* Alturas homogéneas */
-.control-fixed-height,
-.modal-body .form-select,
-.modal-body .input-group-fixed .btn {
-    height: var(--control-height) !important;
-}
+    /* Alturas homogéneas */
+    .control-fixed-height,
+    .modal-body .form-select,
+    .modal-body .input-group-fixed .btn {
+        height: var(--control-height) !important;
+    }
 
-/* Reglas estrictas Select2 */
-.modal-body .select2-container--bootstrap-5 .select2-selection,
-.modal-body .select2-container .select2-selection--single {
-    height: var(--control-height) !important;
-   
-    border-color: var(--border-color) !important;
-    border-radius: 0.375rem !important;
-    display: flex !important;
-    align-items: center !important;
-    font-size: 0.875rem !important;
-    width: 100% !important;
-    max-width: 100% !important;
-}
+    /* Reglas estrictas Select2 */
+    .modal-body .select2-container--bootstrap-5 .select2-selection,
+    .modal-body .select2-container .select2-selection--single {
+        height: var(--control-height) !important;
 
-.modal-body .select2-container .select2-selection--single .select2-selection__rendered {
-    line-height: calc(var(--control-height) - 2px) !important;
-    color: #212529 !important;
-    padding-left: 0.75rem !important;
-    padding-right: 1.75rem !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    width: 100% !important;
-}
+        border-color: var(--border-color) !important;
+        border-radius: 0.375rem !important;
+        display: flex !important;
+        align-items: center !important;
+        font-size: 0.875rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
 
-/* Tabla Fija */
-.table-fixed {
-    table-layout: fixed !important;
-    width: 100% !important;
-}
+    .modal-body .select2-container .select2-selection--single .select2-selection__rendered {
+        line-height: calc(var(--control-height) - 2px) !important;
+        color: #212529 !important;
+        padding-left: 0.75rem !important;
+        padding-right: 1.75rem !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        width: 100% !important;
+    }
+
+    /* Tabla Fija */
+    .table-fixed {
+        table-layout: fixed !important;
+        width: 100% !important;
+    }
 </style>
 
 <script>
-const URL_CONTROLADOR = '/cfsistem/app/controllers/solicitudesCompraController.php';
+    /**
+ * Llena el select de ubicaciones haciendo fetch al endpoint existente de listar
+ * @param {number} proveedorId - ID del proveedor seleccionado
+ */
+    function cargarSelectUbicaciones(proveedorId) {
+        const selectUbicacion = document.getElementById('ubicacion_proveedor_id');
 
-// =====================================================
-// SELECT2
-// =====================================================
+        // Limpiar y poner estado de carga
+        selectUbicacion.innerHTML = '<option value="">Cargando ubicaciones...</option>';
 
-$('.select2-modal').select2({
-    theme: 'bootstrap-5',
-    dropdownParent: $('#modalSolicitud')
-});
-
-// =====================================================
-// CALCULAR TOTAL
-// =====================================================
-
-// 🔥 EVITAR LOOPS
-let recalculandoFila = false;
-let totaLCompra;
-
-function calcularTotalSol(input) {
-
-    if (recalculandoFila) return;
-
-    recalculandoFila = true;
-
-    try {
-
-        const fila = input.closest('tr');
-
-        const cantidad = parseFloat(
-            fila.querySelector('.cantidad').value
-        ) || 0;
-
-        const precioUnitario = parseFloat(
-            fila.querySelector('.precio-unitario').value
-        ) || 0;
-
-        // =====================================
-        // CALCULAR TOTAL
-        // =====================================
-
-        const precioTotal =
-            cantidad * precioUnitario;
-        console.log(precioTotal);
-
-        fila.querySelector('.precio-total').value =
-            precioTotal.toFixed(2);
-
-        // =====================================
-        // SUMAR TODO
-        // =====================================
-
-        totaLCompra = 0;
-        console.log('hola');
-
-        document.querySelectorAll('.precio-total')
-            .forEach(el => {
-
-                totaLCompra +=
-                    parseFloat(el.value) || 0;
-            });
-        const cT = document.getElementById('costoTotalCompra');
-        console.log(cT);
-
-        cT.textContent = totaLCompra.toLocaleString('es-MX', {
-            style: 'currency',
-            currency: 'MXN'
-        });
-
-        console.log(totaLCompra);
-        console.log(totaLCompra);
-
-    } finally {
-
-        recalculandoFila = false;
-    }
-}
-// =====================================================
-// AGREGAR PRODUCTO
-// =====================================================
-async function recargarProductos() {
-
-    try {
-
-        const resp = await fetch(
-            `/cfsistem/app/controllers/egresosController.php?action=obtenerProductosSelect`
-        );
-
-        const res = await resp.json();
-
-        if (!res.success) {
-            throw new Error(res.message);
+        if (!proveedorId || proveedorId <= 0) {
+            selectUbicacion.innerHTML = '<option value="">Seleccione un proveedor primero...</option>';
+            return;
         }
 
-        const select = document.getElementById('buscadorProductos');
+        // Usamos la misma acción que ya creamos en el controlador: listarDireccionesProveedor
+        fetch(`/cfsistem/app/controllers/proveedoresController.php?action=listarDireccionesProveedor&proveedor_id=${proveedorId}`)
+            .then(res => res.json())
+            .then(data => {
+                selectUbicacion.innerHTML = '<option value="0">Seleccionar ubicación...</option>';
 
-        // 🔥 limpiar opciones
-        select.innerHTML = `
+                if (data.success && data.data.length > 0) {
+                    data.data.forEach(u => {
+                        let detalleTelefono = u.telefono ? ` (Tel: ${u.telefono})` : '';
+                        let option = document.createElement('option');
+                        option.value = u.id;
+                        option.textContent = `${u.nombre} - ${u.direccion_completa}${detalleTelefono}`;
+                        selectUbicacion.appendChild(option);
+                    });
+                } else {
+                    selectUbicacion.innerHTML = '<option value="">No hay ubicaciones registradas para este proveedor</option>';
+                }
+
+                // Si usas Select2, actualizamos la vista del componente visualmente
+                if (window.jQuery && $(selectUbicacion).data('select2')) {
+                    $(selectUbicacion).trigger('change');
+                }
+            })
+            .catch(err => {
+                console.error("Error al cargar ubicaciones para el select:", err);
+                selectUbicacion.innerHTML = '<option value="">Error al cargar ubicaciones</option>';
+            });
+    }
+
+    // Función auxiliar opcional para el botón de engrane/gestión junto al select
+    function abrirGestionUbicacionesActual() {
+        const proveedorId = document.getElementById('proveedor_id').value;
+        const selectProveedor = document.getElementById('proveedor_id');
+        const nombreProveedor = selectProveedor.options[selectProveedor.selectedIndex]?.text || 'Proveedor';
+
+        if (!proveedorId) {
+            Swal.fire('Atención', 'Primero debe seleccionar un proveedor', 'warning');
+            return;
+        }
+
+        // Llama al modal de administración que hicimos en el paso anterior
+        abrirModalGestionUbicaciones(proveedorId, nombreProveedor);
+    }
+    $(document).ready(function () {
+        $('#proveedor_id').on('change', function () {
+            const proveedorId = $(this).val();
+
+            // Opcional: Validar que se haya seleccionado un proveedor válido antes de llamar a la función
+            if (proveedorId) {
+                cargarSelectUbicaciones(proveedorId); // Si tu función requiere el ID
+            }
+        });
+    });
+    const URL_CONTROLADOR = '/cfsistem/app/controllers/solicitudesCompraController.php';
+
+    // =====================================================
+    // SELECT2
+    // =====================================================
+
+    $('.select2-modal').select2({
+        theme: 'bootstrap-5',
+        dropdownParent: $('#modalSolicitud')
+    });
+
+    // =====================================================
+    // CALCULAR TOTAL
+    // =====================================================
+
+    // 🔥 EVITAR LOOPS
+    let recalculandoFila = false;
+    let totaLCompra;
+
+    function calcularTotalSol(input) {
+
+        if (recalculandoFila) return;
+
+        recalculandoFila = true;
+
+        try {
+
+            const fila = input.closest('tr');
+
+            const cantidad = parseFloat(
+                fila.querySelector('.cantidad').value
+            ) || 0;
+
+            const precioUnitario = parseFloat(
+                fila.querySelector('.precio-unitario').value
+            ) || 0;
+
+            // =====================================
+            // CALCULAR TOTAL
+            // =====================================
+
+            const precioTotal =
+                cantidad * precioUnitario;
+            console.log(precioTotal);
+
+            fila.querySelector('.precio-total').value =
+                precioTotal.toFixed(2);
+
+            // =====================================
+            // SUMAR TODO
+            // =====================================
+
+            totaLCompra = 0;
+            console.log('hola');
+
+            document.querySelectorAll('.precio-total')
+                .forEach(el => {
+
+                    totaLCompra +=
+                        parseFloat(el.value) || 0;
+                });
+            const cT = document.getElementById('costoTotalCompra');
+            console.log(cT);
+
+            cT.textContent = totaLCompra.toLocaleString('es-MX', {
+                style: 'currency',
+                currency: 'MXN'
+            });
+
+            console.log(totaLCompra);
+            console.log(totaLCompra);
+
+        } finally {
+
+            recalculandoFila = false;
+        }
+    }
+    // =====================================================
+    // AGREGAR PRODUCTO
+    // =====================================================
+    async function recargarProductos() {
+
+        try {
+
+            const resp = await fetch(
+                `/cfsistem/app/controllers/egresosController.php?action=obtenerProductosSelect`
+            );
+
+            const res = await resp.json();
+
+            if (!res.success) {
+                throw new Error(res.message);
+            }
+
+            const select = document.getElementById('buscadorProductos');
+
+            // 🔥 limpiar opciones
+            select.innerHTML = `
             <option value="">
                 Escribe para buscar...
             </option>
         `;
 
-        // 🔥 volver a llenar
-        res.data.forEach(pr => {
+            // 🔥 volver a llenar
+            res.data.forEach(pr => {
 
-            const option = document.createElement('option');
+                const option = document.createElement('option');
 
-            option.value = pr.producto_id;
+                option.value = pr.producto_id;
 
-            option.dataset.nombre = pr.nombre;
-            option.dataset.sku = pr.sku;
-            option.dataset.um = pr.unidad_medida;
-            option.dataset.ur = pr.unidad_reporte;
-            option.dataset.factor = pr.factor_conversion || 1;
+                option.dataset.nombre = pr.nombre;
+                option.dataset.sku = pr.sku;
+                option.dataset.um = pr.unidad_medida;
+                option.dataset.ur = pr.unidad_reporte;
+                option.dataset.factor = pr.factor_conversion || 1;
 
-            option.textContent =
-                `[${pr.sku}] ${pr.nombre}`;
+                option.textContent =
+                    `[${pr.sku}] ${pr.nombre}`;
 
-            select.appendChild(option);
+                select.appendChild(option);
 
-        });
+            });
 
-    } catch (e) {
+        } catch (e) {
 
-        console.error(e);
+            console.error(e);
 
-        Swal.fire(
-            'Error',
-            'No se pudo actualizar la lista de productos',
-            'error'
-        );
+            Swal.fire(
+                'Error',
+                'No se pudo actualizar la lista de productos',
+                'error'
+            );
+        }
+        $('#buscadorProductos').trigger('change.select2');
     }
-    $('#buscadorProductos').trigger('change.select2');
-}
-$('#buscadorProductos').on('select2:select', function(e) {
+    $('#buscadorProductos').on('select2:select', function (e) {
 
-    const d = e.params.data.element.dataset;
+        const d = e.params.data.element.dataset;
 
-    const id = $(this).val();
+        const id = $(this).val();
 
-    // VALIDAR DUPLICADO
-    if ($(`#fila-${id}`).length) {
+        // VALIDAR DUPLICADO
+        if ($(`#fila-${id}`).length) {
 
-        Swal.fire(
-            'Aviso',
-            'El producto ya está en la lista',
-            'info'
-        );
+            Swal.fire(
+                'Aviso',
+                'El producto ya está en la lista',
+                'info'
+            );
 
-        return;
-    }
+            return;
+        }
 
-    $('#emptyState').addClass('d-none');
+        $('#emptyState').addClass('d-none');
 
-    // AGREGAR FILA
-    $('#tablaDetalle tbody').append(`
+        // AGREGAR FILA
+        $('#tablaDetalle tbody').append(`
 
         <tr id="fila-${id}">
 
@@ -487,185 +586,185 @@ $('#buscadorProductos').on('select2:select', function(e) {
         </tr>
     `);
 
-    // LIMPIAR SELECT
-    $(this).val(null).trigger('change');
-});
-
-// =====================================================
-// GUARDAR SOLICITUD
-// =====================================================
-
-$('#formSolicitud').on('submit', async function(e) {
-
-    e.preventDefault();
-
-    if (!$('#tablaDetalle tbody tr').length) {
-
-        Swal.fire(
-            'Error',
-            'Agregue productos',
-            'warning'
-        );
-
-        return;
-    }
-
-    Swal.fire({
-        title: 'Guardando...',
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
+        // LIMPIAR SELECT
+        $(this).val(null).trigger('change');
     });
 
-    try {
+    // =====================================================
+    // GUARDAR SOLICITUD
+    // =====================================================
 
-        const resp = await fetch(
-            `${URL_CONTROLADOR}?action=guardar`, {
-                method: 'POST',
-                body: new FormData(this)
-            }
-        );
+    $('#formSolicitud').on('submit', async function (e) {
 
-        const res = await resp.json();
+        e.preventDefault();
 
-        if (res.status === 'success') {
-    await Swal.fire({
-        icon: 'success',
-        title: '¡Éxito!',
-        text: res.message,
-        // 1. Eliminamos 'timer' para que la alerta no se cierre sola
-        showDenyButton: true,
-        showCancelButton: true,
-        confirmButtonText: 'IMPRIMIR',
-        denyButtonText: 'SALIR',
-        cancelButtonText: 'Cerrar',
-        confirmButtonColor: '#34c759',
-        denyButtonColor: '#5856d6',
-        customClass: {
-            popup: 'rounded-4 border-0 shadow-lg'
-        }
-    }).then((result) => {
-        let url = '';
-        
-        if (result.isConfirmed) {
-            $('#modalSolicitud').modal('hide');
-            prepararImpresion(res.id);
-
-    setTimeout(() => {
-        ejecutarImpresion();
-        cargarSolicitudes();
-    }, 500);
-        } else if (result.isDenied) {
-            url = `/cfsistem/app/controllers/solicitudesCompraController.php`;
-        }
-
-        // Si se seleccionó una opción válida, abre la pestaña
-        if (url !== '') {
-            window.open(url, '_blank');
-        }
-        
-        // Finalmente recarga la página actual
-      
-    });
-} else {
+        if (!$('#tablaDetalle tbody tr').length) {
 
             Swal.fire(
                 'Error',
-                res.message,
-                'error'
+                'Agregue productos',
+                'warning'
             );
+
+            return;
         }
 
-    } catch (e) {
+        Swal.fire({
+            title: 'Guardando...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
 
-        Swal.fire(
-            'Error',
-            'Fallo de conexión',
-            'error'
-        );
-    }
-});
+        try {
 
-// =====================================================
-// CONVERTIR A COMPRA
-// =====================================================
-
-$('#formConvertirCompra').on('submit', async function(e) {
-
-    e.preventDefault();
-
-    Swal.fire({
-        title: 'Procesando ingreso...',
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
-    });
-
-    try {
-
-        const resp = await fetch(
-            `${URL_CONTROLADOR}?action=convertirACompra`, {
+            const resp = await fetch(
+                `${URL_CONTROLADOR}?action=guardar`, {
                 method: 'POST',
                 body: new FormData(this)
             }
-        );
+            );
 
-        const res = await resp.json();
+            const res = await resp.json();
 
-        if (res.status === 'success') {
+            if (res.status === 'success') {
+                await Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: res.message,
+                    // 1. Eliminamos 'timer' para que la alerta no se cierre sola
+                    showDenyButton: true,
+                    showCancelButton: true,
+                    confirmButtonText: 'IMPRIMIR',
+                    denyButtonText: 'SALIR',
+                    cancelButtonText: 'Cerrar',
+                    confirmButtonColor: '#34c759',
+                    denyButtonColor: '#5856d6',
+                    customClass: {
+                        popup: 'rounded-4 border-0 shadow-lg'
+                    }
+                }).then((result) => {
+                    let url = '';
 
-            await Swal.fire({
-                icon: 'success',
-                title: 'Ingresado',
-                text: res.message
-            });
+                    if (result.isConfirmed) {
+                        $('#modalSolicitud').modal('hide');
+                        prepararImpresion(res.id);
 
-            location.reload();
+                        setTimeout(() => {
+                            ejecutarImpresion();
+                            cargarSolicitudes();
+                        }, 500);
+                    } else if (result.isDenied) {
+                        url = `/cfsistem/app/controllers/solicitudesCompraController.php`;
+                    }
 
-        } else {
+                    // Si se seleccionó una opción válida, abre la pestaña
+                    if (url !== '') {
+                        window.open(url, '_blank');
+                    }
+
+                    // Finalmente recarga la página actual
+
+                });
+            } else {
+
+                Swal.fire(
+                    'Error',
+                    res.message,
+                    'error'
+                );
+            }
+
+        } catch (e) {
 
             Swal.fire(
                 'Error',
-                res.message,
+                'Fallo de conexión',
                 'error'
             );
         }
+    });
 
-    } catch (e) {
+    // =====================================================
+    // CONVERTIR A COMPRA
+    // =====================================================
 
-        Swal.fire(
-            'Error',
-            'Fallo de conexión',
-            'error'
-        );
+    $('#formConvertirCompra').on('submit', async function (e) {
+
+        e.preventDefault();
+
+        Swal.fire({
+            title: 'Procesando ingreso...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        try {
+
+            const resp = await fetch(
+                `${URL_CONTROLADOR}?action=convertirACompra`, {
+                method: 'POST',
+                body: new FormData(this)
+            }
+            );
+
+            const res = await resp.json();
+
+            if (res.status === 'success') {
+
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Ingresado',
+                    text: res.message
+                });
+
+                location.reload();
+
+            } else {
+
+                Swal.fire(
+                    'Error',
+                    res.message,
+                    'error'
+                );
+            }
+
+        } catch (e) {
+
+            Swal.fire(
+                'Error',
+                'Fallo de conexión',
+                'error'
+            );
+        }
+    });
+
+    // =====================================================
+    // ELIMINAR FILA
+    // =====================================================
+
+    function quitarFila(id) {
+
+        $(`#fila-${id}`).remove();
+
+        if (!$('#tablaDetalle tbody tr').length) {
+
+            $('#emptyState').removeClass('d-none');
+        }
     }
-});
 
-// =====================================================
-// ELIMINAR FILA
-// =====================================================
+    // =====================================================
+    // NUEVA SOLICITUD
+    // =====================================================
 
-function quitarFila(id) {
+    function nuevaSolicitud() {
 
-    $(`#fila-${id}`).remove();
+        $('#formSolicitud')[0].reset();
 
-    if (!$('#tablaDetalle tbody tr').length) {
+        $('#tablaDetalle tbody').empty();
 
         $('#emptyState').removeClass('d-none');
+
+        $('#modalSolicitud').modal('show');
+        recargarProductos();
     }
-}
-
-// =====================================================
-// NUEVA SOLICITUD
-// =====================================================
-
-function nuevaSolicitud() {
-
-    $('#formSolicitud')[0].reset();
-
-    $('#tablaDetalle tbody').empty();
-
-    $('#emptyState').removeClass('d-none');
-
-    $('#modalSolicitud').modal('show');
-    recargarProductos();
-}
 </script>

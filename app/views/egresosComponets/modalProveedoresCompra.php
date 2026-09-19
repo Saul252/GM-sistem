@@ -188,6 +188,8 @@
                     if (typeof cargarProveedoresSelect === 'function') {
                         cargarProveedoresSelect(); // Se ejecuta si existe
                     }
+                    abrirModalGestionUbicaciones(data.id, nombre);
+
 
                 } else {
                     Swal.fire('Error', data.message || 'No se pudo guardar', 'error');

@@ -182,6 +182,7 @@
                         }
 
                         bootstrap.Modal.getInstance(document.getElementById('modalNuevoProveedorRapido')).hide();
+                        abrirModalGestionUbicaciones(data.id, nombre);
                         form.reset();
                         // 🔥 actualizar select
 
