@@ -451,7 +451,8 @@ error_reporting(E_ALL);
                                 </div>
 
                                 <div class="col-8">
-                                    <small style="font-size:11px;" class="text-body-secondary">Dirección</small><br>
+                                    <small style="font-size:11px;" class="text-body-secondary">Dirección
+                                        Fiscal</small><br>
                                     <span style="font-size:11px;" id="print-direccion"></span>
                                 </div>
 

@@ -228,7 +228,7 @@ if (isset($_GET['action']) && $_GET['action'] == 'actualizarProveedor') {
         $numeroInt = trim($_POST['numeroInt'] ?? '');
 
         // 🔥 IDS
-        $almacen_id = intval($_POST['almacen_id'] ?? 0);
+        $almacen_id = 1;
         $activo = intval($_POST['activo'] ?? 1);
 
         // VALIDACIONES

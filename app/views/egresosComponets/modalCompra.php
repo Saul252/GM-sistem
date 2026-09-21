@@ -1,7 +1,7 @@
 <script>
-// PHP le pasa estos valores a JS una sola vez al cargar la página
-const USER_ALMACEN_ID = <?= json_encode($_SESSION['almacen_id']) ?>;
-const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
+    // PHP le pasa estos valores a JS una sola vez al cargar la página
+    const USER_ALMACEN_ID = <?= json_encode($_SESSION['almacen_id']) ?>;
+    const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
 </script>
 <link href="/cfsistem/css/modalCompras.css" rel="stylesheet">
 <div class="modal fade" id="modalNuevaCompra" tabindex="-1" aria-labelledby="modalNuevaCompraLabel" aria-hidden="true"
@@ -30,10 +30,10 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
                                     <div class="input-group shadow-sm">
                                         <select name="proveedor" id="select_proveedor" class="form-select" required>
                                             <option value="">Seleccione un proveedor...</option>
-                                            <?php foreach($proveedores as $p): ?>
-                                            <option value="<?= $p['id'] ?>" data-deuda="<?= $p['total_deuda'] ?>">
-                                                <?= $p['nombre_comercial'] ?>
-                                            </option>
+                                            <?php foreach ($proveedores as $p): ?>
+                                                <option value="<?= $p['id'] ?>" data-deuda="<?= $p['total_deuda'] ?>">
+                                                    <?= $p['nombre_comercial'] ?>
+                                                </option>
                                             <?php endforeach; ?>
                                         </select>
 
@@ -70,30 +70,29 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
                                             <?= !$es_admin ? 'disabled' : 'name="almacen_id_cabecera"' ?> required>
 
                                             <?php if ($es_admin): ?>
-                                            <option value="">Seleccionar ubicación...</option>
+                                                <option value="">Seleccionar ubicación...</option>
                                             <?php endif; ?>
 
-                                            <?php foreach($almacenes as $a): ?>
-                                            <option value="<?= $a['id'] ?>"
-                                                <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
-                                                <?= $a['nombre'] ?>
-                                            </option>
+                                            <?php foreach ($almacenes as $a): ?>
+                                                <option value="<?= $a['id'] ?>" <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
+                                                    <?= $a['nombre'] ?>
+                                                </option>
                                             <?php endforeach; ?>
                                         </select>
 
                                         <?php if (!$es_admin): ?>
-                                        <span class="input-group-text border border-subtle text-body-secondary">
-                                            <i class="bi bi-lock-fill"></i>
-                                        </span>
+                                            <span class="input-group-text border border-subtle text-body-secondary">
+                                                <i class="bi bi-lock-fill"></i>
+                                            </span>
                                         <?php endif; ?>
                                     </div>
 
                                     <?php if (!$es_admin): ?>
-                                    <input type="hidden" name="almacen_id_cabecera"
-                                        value="<?= $_SESSION['almacen_id'] ?>">
-                                    <small class="text-body-secondary">
-                                        Privilegios de sede actual
-                                    </small>
+                                        <input type="hidden" name="almacen_id_cabecera"
+                                            value="<?= $_SESSION['almacen_id'] ?>">
+                                        <small class="text-body-secondary">
+                                            Privilegios de sede actual
+                                        </small>
                                     <?php endif; ?>
                                 </div>
 
@@ -108,7 +107,7 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
                                 <div class="col-md-3">
                                     <label class="form-label small fw-bold">Método de pago</label>
                                     <select name="metodo_pago" id="metodo_pago" class="form-select shadow-sm" required>
-                                        
+
                                         <option value="Efectivo">Efectivo</option>
                                         <option value="Transferencia">Transferencia</option>
                                         <option value="Tarjeta">Tarjeta</option>
@@ -165,166 +164,167 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
     </div>
 </div>
 <style>
-.select2-container--open {
-    z-index: 9999 !important;
-}
+    .select2-container--open {
+        z-index: 9999 !important;
+    }
 
-.select2-dropdown {
-    pointer-events: auto;
-}
+    .select2-dropdown {
+        pointer-events: auto;
+    }
 
-.select2-results__options {
-    max-height: 200px !important;
-    overflow-y: auto !important;
-}
-.select2-container{
-    max-width:100% !important;
-    width:100% !important;
-}
+    .select2-results__options {
+        max-height: 200px !important;
+        overflow-y: auto !important;
+    }
 
-.select2-selection{
-    max-width:100% !important;
-    overflow:hidden !important;
-}
+    .select2-container {
+        max-width: 100% !important;
+        width: 100% !important;
+    }
 
-.select2-selection__rendered{
-    white-space:nowrap !important;
-    overflow:hidden !important;
-    text-overflow:ellipsis !important;
-}
+    .select2-selection {
+        max-width: 100% !important;
+        overflow: hidden !important;
+    }
+
+    .select2-selection__rendered {
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        +text-overflow: ellipsis !important;
+    }
 </style>
 <?php require_once __DIR__ . '/agregarPoductoModal.php'; ?>
 <?php require_once __DIR__ . '/modalProveedoresCompra.php'; ?>
 
-    <?php require_once __DIR__ . '/direccionUbicacionModal.php'; ?>
-    <?php require_once __DIR__ . '/verEditarUbicaciones.php'; ?>
+<?php require_once __DIR__ . '/direccionUbicacionModal.php'; ?>
+<?php require_once __DIR__ . '/verEditarUbicaciones.php'; ?>
 
 
 <script>
-/**
- * LÓGICA DE COMPRAS - CF SISTEM
- */
-function abrirModalCompra() {
+    /**
+     * LÓGICA DE COMPRAS - CF SISTEM
+     */
+    function abrirModalCompra() {
 
-    const $selectProveedor = $('#select_proveedor');
+        const $selectProveedor = $('#select_proveedor');
 
-    // 🔥 SOLO destruir si ya está inicializado
-    if ($selectProveedor.hasClass('select2-hidden-accessible')) {
-        $selectProveedor.select2('destroy');
+        // 🔥 SOLO destruir si ya está inicializado
+        if ($selectProveedor.hasClass('select2-hidden-accessible')) {
+            $selectProveedor.select2('destroy');
+        }
+
+        // Guardar almacén antes del reset
+        const almacenPreseleccionado = $('#almacen_id_cabecera').val();
+
+        // Reset form
+        $('#formNuevaCompra')[0].reset();
+
+        // Restaurar almacén
+        $('#almacen_id_cabecera').val(almacenPreseleccionado);
+
+        // Limpiar UI
+        $('#contenedorItemsCompra').empty();
+        $('#granTotalCompra').text('$ 0.00');
+
+        // Agregar primera fila
+        agregarFilaCompra();
+
+        // 🔥 Mostrar modal primero
+        $('#modalNuevaCompra').modal('show');
+
+        // 🔥 Inicializar select2 DESPUÉS de abrir
+        if (ES_ADMIN) {
+            setTimeout(() => {
+                $('.select2-cabecera').select2({
+                    theme: 'bootstrap-5',
+                    dropdownParent: $('#modalNuevaCompra')
+                });
+            }, 150);
+        }
     }
 
-    // Guardar almacén antes del reset
-    const almacenPreseleccionado = $('#almacen_id_cabecera').val();
+    // --- PEGA ESTO DENTRO DE TU ETIQUETA <script> ---
 
-    // Reset form
-    $('#formNuevaCompra')[0].reset();
+    /**
+     * Función para obtener el folio desde el servidor
+     */
+    function asignarSiguienteFolioCompra() {
+        const inputFolio = document.getElementById('folio_compra');
+        if (!inputFolio) return;
 
-    // Restaurar almacén
-    $('#almacen_id_cabecera').val(almacenPreseleccionado);
+        inputFolio.value = "Cargando...";
 
-    // Limpiar UI
-    $('#contenedorItemsCompra').empty();
-    $('#granTotalCompra').text('$ 0.00');
-
-    // Agregar primera fila
-    agregarFilaCompra();
-
-    // 🔥 Mostrar modal primero
-    $('#modalNuevaCompra').modal('show');
-
-    // 🔥 Inicializar select2 DESPUÉS de abrir
-    if (ES_ADMIN) {
-        setTimeout(() => {
-            $('.select2-cabecera').select2({
-                theme: 'bootstrap-5',
-                dropdownParent: $('#modalNuevaCompra')
+        fetch('egresosController.php?action=getSiguienteFolio')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    inputFolio.value = data.folio;
+                } else {
+                    inputFolio.value = "";
+                    inputFolio.readOnly = false; // Si falla, dejamos que el usuario escriba
+                }
+            })
+            .catch(err => {
+                console.error("Error al obtener folio:", err);
+                inputFolio.readOnly = false;
             });
-        }, 150);
     }
-}
 
-// --- PEGA ESTO DENTRO DE TU ETIQUETA <script> ---
+    // MODIFICACIÓN: Agregamos la carga del folio a tu función de abrir modal
+    // Busca tu función abrirModalCompra() y asegúrate de que llame a asignarSiguienteFolioCompra()
+    const originalAbrirModal = window.abrirModalCompra;
+    window.abrirModalCompra = function () {
+        // Llamamos a la lógica original que ya tenías
+        originalAbrirModal();
 
-/**
- * Función para obtener el folio desde el servidor
- */
-function asignarSiguienteFolioCompra() {
-    const inputFolio = document.getElementById('folio_compra');
-    if (!inputFolio) return;
+        // Disparamos la carga del folio automático
+        asignarSiguienteFolioCompra();
+    };
 
-    inputFolio.value = "Cargando...";
-
-    fetch('egresosController.php?action=getSiguienteFolio')
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                inputFolio.value = data.folio;
-            } else {
-                inputFolio.value = "";
-                inputFolio.readOnly = false; // Si falla, dejamos que el usuario escriba
-            }
-        })
-        .catch(err => {
-            console.error("Error al obtener folio:", err);
-            inputFolio.readOnly = false;
-        });
-}
-
-// MODIFICACIÓN: Agregamos la carga del folio a tu función de abrir modal
-// Busca tu función abrirModalCompra() y asegúrate de que llame a asignarSiguienteFolioCompra()
-const originalAbrirModal = window.abrirModalCompra;
-window.abrirModalCompra = function() {
-    // Llamamos a la lógica original que ya tenías
-    originalAbrirModal();
-
-    // Disparamos la carga del folio automático
-    asignarSiguienteFolioCompra();
-};
-
-/**
- * Listener para asegurar que si abres el modal por otros medios (como data-bs-toggle), 
- * también se cargue el folio.
- */
-window.addEventListener('load', function() {
-    if (window.jQuery) {
-        $(document).on('show.bs.modal', '#modalNuevaCompra', function() {
-            asignarSiguienteFolioCompra();
-        });
-    }
-});
-
-function agregarFilaCompra() {
-    const idUnico = Date.now();
-
-    let opcionesProd = '<option value="">Seleccione Producto </option>';
-    DATA_COMPRAS.productos.forEach(p => {
-        opcionesProd +=
-            `<option value="${p.id}" data-factor="${p.factor_conversion}" data-ubase="${p.unidad_medida}" data-urep="${p.unidad_reporte}">${p.nombre} (${p.sku})</option>`;
+    /**
+     * Listener para asegurar que si abres el modal por otros medios (como data-bs-toggle), 
+     * también se cargue el folio.
+     */
+    window.addEventListener('load', function () {
+        if (window.jQuery) {
+            $(document).on('show.bs.modal', '#modalNuevaCompra', function () {
+                asignarSiguienteFolioCompra();
+            });
+        }
     });
 
-    let filasAlmacenes = '';
-    const almacenesAMostrar = ES_ADMIN ?
-        DATA_COMPRAS.almacenes :
-        DATA_COMPRAS.almacenes.filter(alm => alm.id == USER_ALMACEN_ID);
-       
-         const valorTienda= ES_ADMIN ?
-        0 :
-       1;
-       
+    function agregarFilaCompra() {
+        const idUnico = Date.now();
+
+        let opcionesProd = '<option value="">Seleccione Producto </option>';
+        DATA_COMPRAS.productos.forEach(p => {
+            opcionesProd +=
+                `<option value="${p.id}" data-factor="${p.factor_conversion}" data-ubase="${p.unidad_medida}" data-urep="${p.unidad_reporte}">${p.nombre} (${p.sku})</option>`;
+        });
+
+        let filasAlmacenes = '';
+        const almacenesAMostrar = ES_ADMIN ?
+            DATA_COMPRAS.almacenes :
+            DATA_COMPRAS.almacenes.filter(alm => alm.id == USER_ALMACEN_ID);
+
+        const valorTienda = ES_ADMIN ?
+            0 :
+            1;
+
         //items[${idUnico}][cantidad_total_piezas]
 
-   almacenesAMostrar.forEach(alm => {
+        almacenesAMostrar.forEach(alm => {
 
-    const inputBloqueado = !ES_ADMIN
-        ? 'onclick="return false;" style="opacity:0.7;"'
-        : '';
+            const inputBloqueado = !ES_ADMIN
+                ? 'onclick="return false;" style="opacity:0.7;"'
+                : '';
 
-    const filaResaltada =
-        alm.id == USER_ALMACEN_ID
-            ? 'table-info'
-            : '';
+            const filaResaltada =
+                alm.id == USER_ALMACEN_ID
+                    ? 'table-info'
+                    : '';
 
-    filasAlmacenes += `
+            filasAlmacenes += `
     <tr class="${filaResaltada}">
         <td class="text-center align-middle">
             <input type="checkbox"
@@ -349,8 +349,8 @@ function agregarFilaCompra() {
                    oninput="validarReparto(${idUnico})">
         </td>
     </tr>`;
-});
-    const html = `
+        });
+        const html = `
 <div class="card mb-4 border-0 shadow-sm rounded-4 item-compra" id="card_item_${idUnico}">
     <div class="card-body p-3">
 
@@ -498,500 +498,500 @@ function agregarFilaCompra() {
     </div>
 </div>
 `;
-    $('#contenedorItemsCompra').append(html);
-   
-    setTimeout(() => {
-        $(`#card_item_${idUnico} .select2-compra`).select2({
-            theme: 'bootstrap-5',
-            dropdownParent: $('#modalNuevaCompra .modal-content')
-        });
-    }, 50);
-    actualizarConteo();
-    
-}
+        $('#contenedorItemsCompra').append(html);
 
-function actualizarLabelsUnidad(id, select) {
-    const opt = $(select).find(':selected');
-    const factor = opt.data('factor') || 1;
-    const uBase = opt.data('ubase') || 'Piezas';
-    const uRep = opt.data('urep') || 'Mayoreo';
-    const card = $(`#card_item_${id}`);
-    card.find('.hidden-factor').val(factor);
-    card.find('.label-urep').text(uRep);
-    card.find('.label-ubase').text(uBase);
-    card.find('.label-ubase-text').text(uBase);
-    recalcularTotales(id);
-}
+        setTimeout(() => {
+            $(`#card_item_${idUnico} .select2-compra`).select2({
+                theme: 'bootstrap-5',
+                dropdownParent: $('#modalNuevaCompra .modal-content')
+            });
+        }, 50);
+        actualizarConteo();
 
-let recalculandoTotales = false;
-// 🔥 EVITAR CICLOS INFINITOS
+    }
 
-// =====================================================
-// 🔥 RECALCULAR TOTALES
-// =====================================================
-
-function recalcularTotales(id, origen = '') {
-
-    // 🔥 evitar loops
-    if (recalculandoTotales) return;
-
-    recalculandoTotales = true;
-
-    try {
-
+    function actualizarLabelsUnidad(id, select) {
+        const opt = $(select).find(':selected');
+        const factor = opt.data('factor') || 1;
+        const uBase = opt.data('ubase') || 'Piezas';
+        const uRep = opt.data('urep') || 'Mayoreo';
         const card = $(`#card_item_${id}`);
-
-        const factor = parseFloat(
-            card.find('.hidden-factor').val()
-        ) || 0;
-
-        const inputFaltante =
-            card.find('.input-faltante');
-
-        const inputExcedente =
-            card.find('.input-excedente');
-
-        // =====================================================
-        // 🔥 CANTIDADES
-        // =====================================================
-
-        const mayoreo = parseFloat(
-            card.find('.input-mayoreo').val()
-        ) || 0;
-
-        const sueltas = parseFloat(
-            card.find('.input-sueltas').val()
-        ) || 0;
-
-        const cantidadFacturada =
-            (mayoreo * factor) + sueltas;
-
-        // =====================================================
-        // 🔥 FALTANTES / EXCEDENTES
-        // =====================================================
-
-        const faltante = inputFaltante.is(':disabled')
-            ? 0
-            : (parseFloat(inputFaltante.val()) || 0);
-
-        const excedente = inputExcedente.is(':disabled')
-            ? 0
-            : (parseFloat(inputExcedente.val()) || 0);
-
-        // =====================================================
-        // 🔥 TOTAL REAL
-        // =====================================================
-
-        const totalReal =
-            cantidadFacturada - faltante + excedente;
-
-        // =====================================================
-        // 🔥 PRECIOS
-        // =====================================================
-
-        let precioUnitario = parseFloat(
-            card.find('.input-precioUnitario').val()
-        ) || 0;
-
-        let costoTotal = parseFloat(
-            card.find('.input-costo-total').val()
-        ) || 0;
-
-        // =====================================================
-        // 🔥 SI EL USUARIO MODIFICÓ COSTO TOTAL
-        // recalcular precio unitario
-        // =====================================================
-
-        if (origen === 'costoTotal') {
-
-            if (
-                costoTotal > 0 &&
-                cantidadFacturada > 0
-            ) {
-
-                precioUnitario =
-                    costoTotal / cantidadFacturada;
-
-                if(precioUnitario%1 !=0){
-                     card.find('.input-precioUnitario')
-                    .val(precioUnitario.toFixed(2));
-
-                }
-                else{
-                    card.find('.input-precioUnitario')
-                    .val(precioUnitario);
-
-                }
-                    
-
-                // 🔥 SOLO AQUÍ actualizamos precio unitario
-               
-            }
-        }
-
-        // =====================================================
-        // 🔥 SI EL USUARIO MODIFICÓ PRECIO UNITARIO
-        // recalcular costo total
-        // =====================================================
-
-        if (origen === 'precioUnitario') {
-
-            const subtotalMayoreo = mayoreo > 0 ? (mayoreo * precioUnitario) : 0;
-            const subtotalSueltas = (sueltas !== 0 && factor > 0) ? ((sueltas / factor) * precioUnitario) : 0;
-            
-            costoTotal = subtotalMayoreo + subtotalSueltas;
-
-            // 🔥 SOLO AQUÍ actualizamos costo total
-            card.find('.input-costo-total')
-                .val(costoTotal.toFixed(2));
-        }
-
-        // =====================================================
-        // 🔥 SI CAMBIARON CANTIDADES
-        // =====================================================
-
-        if (
-            origen === '' &&
-            precioUnitario > 0
-        ) {
-
-            const subtotalMayoreo = mayoreo > 0 ? (mayoreo * precioUnitario) : 0;
-            const subtotalSueltas = (sueltas !== 0 && factor > 0) ? ((sueltas / factor) * precioUnitario) : 0;
-
-            costoTotal = subtotalMayoreo + subtotalSueltas;
-
-            card.find('.input-costo-total')
-                .val(costoTotal.toFixed(2));
-        }
-
-        // =====================================================
-        // 🔥 ACTUALIZAR CAMPOS
-        // =====================================================
-
-        card.find('.span-total-base')
-            .text(totalReal.toLocaleString());
-
-        card.find('.hidden-total-piezas')
-            .val(totalReal);
-
-        card.find('.hidden-faltante')
-            .val(faltante);
-
-        card.find('.hidden-precio-lote')
-            .val(precioUnitario.toFixed(4));
-
-        // =====================================================
-        // 🔥 VALIDACIONES
-        // =====================================================
-
-        validarReparto(id);
-
-        actualizarGranTotal();
-
-    } finally {
-
-        recalculandoTotales = false;
-    }
-}
-function validarReparto(id) {
-    const card = $(`#card_item_${id}`);
-    const total = parseFloat(card.find('.hidden-total-piezas').val()) || 0;
-    let suma = 0;
-    card.find('.input-reparto').each(function() {
-        if ($(this).closest('tr').find('.check-activo').is(':checked')) suma += parseFloat($(this).val()) || 0;
-    });
-    const error = $(`#error_reparto_${id}`);
-    if (Math.abs(suma - total) > 0.001 && total > 0) {
-        card.find('.alert').addClass('alert-danger text-danger').removeClass('alert-info text-dark');
-        error.show().text(`Diferencia: ${(total - suma).toFixed(2)}`);
-    } else {
-        card.find('.alert').addClass('alert-info text-dark').removeClass('alert-danger text-danger');
-        error.hide();
-    }
-     if (!ES_ADMIN) {
-
-    const totalPiezas =
-        document.querySelector(
-            `input[name='items[${id}][cantidad_total_piezas]']`
-        )?.value || 0;
-
-    document.querySelectorAll(
-        `input[name^='items[${id}][almacenes]'][name$='[cantidad]']`
-    ).forEach(input => {
-
-        input.value = totalPiezas;
-    });
-}
-}
-
-function toggleFaltante(id, checkbox) {
-
-    const container = $(checkbox).closest('.col-md-2');
-    const inputFaltante = container.find('.input-faltante');
-
-    if (checkbox.checked) {
-        inputFaltante.prop('disabled', false).focus();
-    } else {
-        inputFaltante.prop('disabled', true).val(0);
+        card.find('.hidden-factor').val(factor);
+        card.find('.label-urep').text(uRep);
+        card.find('.label-ubase').text(uBase);
+        card.find('.label-ubase-text').text(uBase);
         recalcularTotales(id);
     }
-}
 
-function actualizarGranTotal() {
-    let granTotal = 0;
-    $('.input-costo-total').each(function() {
-        granTotal += parseFloat($(this).val()) || 0;
-    });
-    $('#granTotalCompra').text('$ ' + granTotal.toLocaleString(undefined, {
-        minimumFractionDigits: 2
-    }));
-    actualizarConteo();
-}
+    let recalculandoTotales = false;
+    // 🔥 EVITAR CICLOS INFINITOS
 
-function actualizarConteo() {
-    const n = $('.item-compra').length;
-    $('#conteoItems').text(`${n} Producto${n !== 1 ? 's' : ''}`);
-}
+    // =====================================================
+    // 🔥 RECALCULAR TOTALES
+    // =====================================================
 
-function refrescarListaProductosCompra(nuevoIdSeleccionar = null) {
-    $.get('almacenes.php?action=getListaProductosJson', function(data) {
-        // VALIDACIÓN CRÍTICA: Asegurarnos de que 'data' sea un array
-        let productos = [];
-        if (Array.isArray(data)) {
-            productos = data;
-        } else if (data && typeof data === 'object' && data.status === 'success') {
-            // Por si tu controlador devuelve {status: success, data: [...]}
-            productos = data.data;
+    function recalcularTotales(id, origen = '') {
+
+        // 🔥 evitar loops
+        if (recalculandoTotales) return;
+
+        recalculandoTotales = true;
+
+        try {
+
+            const card = $(`#card_item_${id}`);
+
+            const factor = parseFloat(
+                card.find('.hidden-factor').val()
+            ) || 0;
+
+            const inputFaltante =
+                card.find('.input-faltante');
+
+            const inputExcedente =
+                card.find('.input-excedente');
+
+            // =====================================================
+            // 🔥 CANTIDADES
+            // =====================================================
+
+            const mayoreo = parseFloat(
+                card.find('.input-mayoreo').val()
+            ) || 0;
+
+            const sueltas = parseFloat(
+                card.find('.input-sueltas').val()
+            ) || 0;
+
+            const cantidadFacturada =
+                (mayoreo * factor) + sueltas;
+
+            // =====================================================
+            // 🔥 FALTANTES / EXCEDENTES
+            // =====================================================
+
+            const faltante = inputFaltante.is(':disabled')
+                ? 0
+                : (parseFloat(inputFaltante.val()) || 0);
+
+            const excedente = inputExcedente.is(':disabled')
+                ? 0
+                : (parseFloat(inputExcedente.val()) || 0);
+
+            // =====================================================
+            // 🔥 TOTAL REAL
+            // =====================================================
+
+            const totalReal =
+                cantidadFacturada - faltante + excedente;
+
+            // =====================================================
+            // 🔥 PRECIOS
+            // =====================================================
+
+            let precioUnitario = parseFloat(
+                card.find('.input-precioUnitario').val()
+            ) || 0;
+
+            let costoTotal = parseFloat(
+                card.find('.input-costo-total').val()
+            ) || 0;
+
+            // =====================================================
+            // 🔥 SI EL USUARIO MODIFICÓ COSTO TOTAL
+            // recalcular precio unitario
+            // =====================================================
+
+            if (origen === 'costoTotal') {
+
+                if (
+                    costoTotal > 0 &&
+                    cantidadFacturada > 0
+                ) {
+
+                    precioUnitario =
+                        costoTotal / cantidadFacturada;
+
+                    if (precioUnitario % 1 != 0) {
+                        card.find('.input-precioUnitario')
+                            .val(precioUnitario.toFixed(2));
+
+                    }
+                    else {
+                        card.find('.input-precioUnitario')
+                            .val(precioUnitario);
+
+                    }
+
+
+                    // 🔥 SOLO AQUÍ actualizamos precio unitario
+
+                }
+            }
+
+            // =====================================================
+            // 🔥 SI EL USUARIO MODIFICÓ PRECIO UNITARIO
+            // recalcular costo total
+            // =====================================================
+
+            if (origen === 'precioUnitario') {
+
+                const subtotalMayoreo = mayoreo > 0 ? (mayoreo * precioUnitario) : 0;
+                const subtotalSueltas = (sueltas !== 0 && factor > 0) ? ((sueltas / factor) * precioUnitario) : 0;
+
+                costoTotal = subtotalMayoreo + subtotalSueltas;
+
+                // 🔥 SOLO AQUÍ actualizamos costo total
+                card.find('.input-costo-total')
+                    .val(costoTotal.toFixed(2));
+            }
+
+            // =====================================================
+            // 🔥 SI CAMBIARON CANTIDADES
+            // =====================================================
+
+            if (
+                origen === '' &&
+                precioUnitario > 0
+            ) {
+
+                const subtotalMayoreo = mayoreo > 0 ? (mayoreo * precioUnitario) : 0;
+                const subtotalSueltas = (sueltas !== 0 && factor > 0) ? ((sueltas / factor) * precioUnitario) : 0;
+
+                costoTotal = subtotalMayoreo + subtotalSueltas;
+
+                card.find('.input-costo-total')
+                    .val(costoTotal.toFixed(2));
+            }
+
+            // =====================================================
+            // 🔥 ACTUALIZAR CAMPOS
+            // =====================================================
+
+            card.find('.span-total-base')
+                .text(totalReal.toLocaleString());
+
+            card.find('.hidden-total-piezas')
+                .val(totalReal);
+
+            card.find('.hidden-faltante')
+                .val(faltante);
+
+            card.find('.hidden-precio-lote')
+                .val(precioUnitario.toFixed(4));
+
+            // =====================================================
+            // 🔥 VALIDACIONES
+            // =====================================================
+
+            validarReparto(id);
+
+            actualizarGranTotal();
+
+        } finally {
+
+            recalculandoTotales = false;
         }
-
-        if (productos.length === 0) {
-            console.warn("No se recibieron productos o el formato es incorrecto", data);
-            return;
+    }
+    function validarReparto(id) {
+        const card = $(`#card_item_${id}`);
+        const total = parseFloat(card.find('.hidden-total-piezas').val()) || 0;
+        let suma = 0;
+        card.find('.input-reparto').each(function () {
+            if ($(this).closest('tr').find('.check-activo').is(':checked')) suma += parseFloat($(this).val()) || 0;
+        });
+        const error = $(`#error_reparto_${id}`);
+        if (Math.abs(suma - total) > 0.001 && total > 0) {
+            card.find('.alert').addClass('alert-danger text-danger').removeClass('alert-info text-dark');
+            error.show().text(`Diferencia: ${(total - suma).toFixed(2)}`);
+        } else {
+            card.find('.alert').addClass('alert-info text-dark').removeClass('alert-danger text-danger');
+            error.hide();
         }
+        if (!ES_ADMIN) {
 
-        // Actualizamos DATA_COMPRAS
-        if (typeof DATA_COMPRAS !== 'undefined') {
-            DATA_COMPRAS.productos = productos;
+            const totalPiezas =
+                document.querySelector(
+                    `input[name='items[${id}][cantidad_total_piezas]']`
+                )?.value || 0;
+
+            document.querySelectorAll(
+                `input[name^='items[${id}][almacenes]'][name$='[cantidad]']`
+            ).forEach(input => {
+
+                input.value = totalPiezas;
+            });
         }
+    }
 
-        $('.select2-compra').each(function() {
-            const select = $(this);
-            const valorActual = select.val();
+    function toggleFaltante(id, checkbox) {
 
-            let html = '<option value="">Seleccione Producto </option>';
-            productos.forEach(p => {
-                html += `<option value="${p.id}" 
+        const container = $(checkbox).closest('.col-md-2');
+        const inputFaltante = container.find('.input-faltante');
+
+        if (checkbox.checked) {
+            inputFaltante.prop('disabled', false).focus();
+        } else {
+            inputFaltante.prop('disabled', true).val(0);
+            recalcularTotales(id);
+        }
+    }
+
+    function actualizarGranTotal() {
+        let granTotal = 0;
+        $('.input-costo-total').each(function () {
+            granTotal += parseFloat($(this).val()) || 0;
+        });
+        $('#granTotalCompra').text('$ ' + granTotal.toLocaleString(undefined, {
+            minimumFractionDigits: 2
+        }));
+        actualizarConteo();
+    }
+
+    function actualizarConteo() {
+        const n = $('.item-compra').length;
+        $('#conteoItems').text(`${n} Producto${n !== 1 ? 's' : ''}`);
+    }
+
+    function refrescarListaProductosCompra(nuevoIdSeleccionar = null) {
+        $.get('almacenes.php?action=getListaProductosJson', function (data) {
+            // VALIDACIÓN CRÍTICA: Asegurarnos de que 'data' sea un array
+            let productos = [];
+            if (Array.isArray(data)) {
+                productos = data;
+            } else if (data && typeof data === 'object' && data.status === 'success') {
+                // Por si tu controlador devuelve {status: success, data: [...]}
+                productos = data.data;
+            }
+
+            if (productos.length === 0) {
+                console.warn("No se recibieron productos o el formato es incorrecto", data);
+                return;
+            }
+
+            // Actualizamos DATA_COMPRAS
+            if (typeof DATA_COMPRAS !== 'undefined') {
+                DATA_COMPRAS.productos = productos;
+            }
+
+            $('.select2-compra').each(function () {
+                const select = $(this);
+                const valorActual = select.val();
+
+                let html = '<option value="">Seleccione Producto </option>';
+                productos.forEach(p => {
+                    html += `<option value="${p.id}" 
                             data-factor="${p.factor_conversion}" 
                             data-ubase="${p.unidad_medida}" 
                             data-urep="${p.unidad_reporte}">${p.nombre} (${p.sku})</option>`;
+                });
+
+                select.html(html).val(valorActual).trigger('change.select2');
             });
 
-            select.html(html).val(valorActual).trigger('change.select2');
+            if (nuevoIdSeleccionar && window.ultimaFilaEditada) {
+                const filaSelect = $(`#card_item_${window.ultimaFilaEditada} .select2-compra`);
+                filaSelect.val(nuevoIdSeleccionar).trigger('change');
+                window.ultimaFilaEditada = null;
+            }
+        }, 'json').fail(function (e) {
+            console.error("Error al obtener productos:", e.responseText);
         });
-
-        if (nuevoIdSeleccionar && window.ultimaFilaEditada) {
-            const filaSelect = $(`#card_item_${window.ultimaFilaEditada} .select2-compra`);
-            filaSelect.val(nuevoIdSeleccionar).trigger('change');
-            window.ultimaFilaEditada = null;
-        }
-    }, 'json').fail(function(e) {
-        console.error("Error al obtener productos:", e.responseText);
-    });
-}
-
-// function calcularPrecioUnitarioLote(id) {
-
-//     const card = $(`#card_item_${id}`);
-
-//     const costoTotalRenglon = parseFloat(card.find('.input-costo-total').val()) || 0;
-
-//     const piezasReales = parseFloat(card.find('.input-cantidad-recibida').val()) || 0;
-//     const excedente = parseFloat(card.find('.input-excedente').val()) || 0;
-
-//     // 🔥 calcular base correctamente
-//     let piezasBase = piezasReales - excedente;
-
-//     // 🛑 evitar negativos o 0
-//     if (piezasBase <= 0) {
-//         piezasBase = 0;
-//     }
-
-//     let precioUnitario = 0;
-
-//     if (piezasBase > 0) {
-//         precioUnitario = costoTotalRenglon / piezasBase;
-//     }
-
-//     // 🛡️ blindaje
-//     if (!isFinite(precioUnitario)) {
-//         precioUnitario = 0;
-//     }
-
-//     card.find('.hidden-precio-lote').val(precioUnitario.toFixed(4));
-
-//     card.find('.span-precio-lote').text(
-//         '$ ' + precioUnitario.toLocaleString(undefined, {
-//             minimumFractionDigits: 2,
-//             maximumFractionDigits: 4
-//         })
-//     );
-
-//     actualizarGranTotal();
-// }
-/**
- * MANEJO DEL SUBMIT (BLINDADO)
- */
-function procesarGuardadoCompra(event) {
-    if (event) {
-        event.preventDefault();
-        event.stopPropagation();
     }
 
-    console.log("Iniciando proceso de guardado...");
+    // function calcularPrecioUnitarioLote(id) {
 
-    // 1. VALIDACIÓN: Comparamos lo repartido vs lo que FÍSICAMENTE llegó
-    let inconsistencias = 0;
-    let mensajeDetalle = "";
+    //     const card = $(`#card_item_${id}`);
 
-    $('.item-compra').each(function(index) {
-        // 'hidden-total-piezas' ya tiene restado el faltante por la función recalcularTotales
-        const totalFisicoReal = parseFloat($(this).find('.hidden-total-piezas').val()) || 0;
-        const nombreProd = $(this).find('.select2-compra option:selected').text() || "Producto " + (index + 1);
+    //     const costoTotalRenglon = parseFloat(card.find('.input-costo-total').val()) || 0;
 
-        let sumaAlmacenes = 0;
-        $(this).find('.input-reparto').each(function() {
-            if ($(this).closest('tr').find('.check-activo').is(':checked')) {
-                sumaAlmacenes += parseFloat($(this).val()) || 0;
+    //     const piezasReales = parseFloat(card.find('.input-cantidad-recibida').val()) || 0;
+    //     const excedente = parseFloat(card.find('.input-excedente').val()) || 0;
+
+    //     // 🔥 calcular base correctamente
+    //     let piezasBase = piezasReales - excedente;
+
+    //     // 🛑 evitar negativos o 0
+    //     if (piezasBase <= 0) {
+    //         piezasBase = 0;
+    //     }
+
+    //     let precioUnitario = 0;
+
+    //     if (piezasBase > 0) {
+    //         precioUnitario = costoTotalRenglon / piezasBase;
+    //     }
+
+    //     // 🛡️ blindaje
+    //     if (!isFinite(precioUnitario)) {
+    //         precioUnitario = 0;
+    //     }
+
+    //     card.find('.hidden-precio-lote').val(precioUnitario.toFixed(4));
+
+    //     card.find('.span-precio-lote').text(
+    //         '$ ' + precioUnitario.toLocaleString(undefined, {
+    //             minimumFractionDigits: 2,
+    //             maximumFractionDigits: 4
+    //         })
+    //     );
+
+    //     actualizarGranTotal();
+    // }
+    /**
+     * MANEJO DEL SUBMIT (BLINDADO)
+     */
+    function procesarGuardadoCompra(event) {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+
+        console.log("Iniciando proceso de guardado...");
+
+        // 1. VALIDACIÓN: Comparamos lo repartido vs lo que FÍSICAMENTE llegó
+        let inconsistencias = 0;
+        let mensajeDetalle = "";
+
+        $('.item-compra').each(function (index) {
+            // 'hidden-total-piezas' ya tiene restado el faltante por la función recalcularTotales
+            const totalFisicoReal = parseFloat($(this).find('.hidden-total-piezas').val()) || 0;
+            const nombreProd = $(this).find('.select2-compra option:selected').text() || "Producto " + (index + 1);
+
+            let sumaAlmacenes = 0;
+            $(this).find('.input-reparto').each(function () {
+                if ($(this).closest('tr').find('.check-activo').is(':checked')) {
+                    sumaAlmacenes += parseFloat($(this).val()) || 0;
+                }
+            });
+
+            if (Math.abs(totalFisicoReal - sumaAlmacenes) > 0.01) {
+                inconsistencias++;
+                mensajeDetalle += `\n- ${nombreProd}: Debes repartir ${totalFisicoReal} (llevas ${sumaAlmacenes})`;
             }
         });
 
-        if (Math.abs(totalFisicoReal - sumaAlmacenes) > 0.01) {
-            inconsistencias++;
-            mensajeDetalle += `\n- ${nombreProd}: Debes repartir ${totalFisicoReal} (llevas ${sumaAlmacenes})`;
+        if (inconsistencias > 0) {
+            Swal.fire('Atención', 'La distribución en almacenes no coincide con lo recibido físicamente:' + mensajeDetalle,
+                'warning');
+            return false;
         }
-    });
 
-    if (inconsistencias > 0) {
-        Swal.fire('Atención', 'La distribución en almacenes no coincide con lo recibido físicamente:' + mensajeDetalle,
-            'warning');
-        return false;
-    }
+        // 2. DETECTAR SI HAY FALTANTES PARA EL CONFIRM
+        let hayFaltantes = false;
+        $('.hidden-faltante').each(function () {
+            if (parseFloat($(this).val()) > 0) hayFaltantes = true;
+        });
 
-    // 2. DETECTAR SI HAY FALTANTES PARA EL CONFIRM
-    let hayFaltantes = false;
-    $('.hidden-faltante').each(function() {
-        if (parseFloat($(this).val()) > 0) hayFaltantes = true;
-    });
+        // 3. CONFIRMACIÓN Y ENVÍO AJAX (Tu bloque original)
+        Swal.fire({
+            title: hayFaltantes ? '¿Registrar con Faltantes?' : '¿Confirmar Registro?',
+            text: hayFaltantes ?
+                "La mercancía incompleta se guardará como pendiente." :
+                "Se actualizará el stock y se registrará el gasto.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#198754',
+            confirmButtonText: 'Sí, guardar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const formElement = document.getElementById('formNuevaCompra');
+                const formData = new FormData(formElement);
 
-    // 3. CONFIRMACIÓN Y ENVÍO AJAX (Tu bloque original)
-    Swal.fire({
-        title: hayFaltantes ? '¿Registrar con Faltantes?' : '¿Confirmar Registro?',
-        text: hayFaltantes ?
-            "La mercancía incompleta se guardará como pendiente." :
-            "Se actualizará el stock y se registrará el gasto.",
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#198754',
-        confirmButtonText: 'Sí, guardar',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            const formElement = document.getElementById('formNuevaCompra');
-            const formData = new FormData(formElement);
+                // Importante: Aseguramos que el controlador reciba si hay faltantes
+                formData.append('tiene_faltantes', hayFaltantes ? 1 : 0);
 
-            // Importante: Aseguramos que el controlador reciba si hay faltantes
-            formData.append('tiene_faltantes', hayFaltantes ? 1 : 0);
-
-            $.ajax({
-                url: '/cfsistem/app/controllers/egresosController.php?action=guardarCompraInventario',
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                cache: false,
-                beforeSend: function() {
-                    $('#btnGuardarCompra').prop('disabled', true).html(
-                        '<span class="spinner-border spinner-border-sm"></span> Guardando...');
-                },
-                success: function(res) {
-                    try {
-                        const data = typeof res === 'string' ? JSON.parse(res) : res;
-                        if (data.success) {
-                            Swal.fire('¡Éxito!', data.message, 'success').then(() => {
-                                location.reload();
-                            });
-                        } else {
-                            Swal.fire('Error', data.message, 'error');
-                            $('#btnGuardarCompra').prop('disabled', false).html(
-                                '<i class="bi bi-save me-2"></i> Guardar Compra e Inventario');
+                $.ajax({
+                    url: '/cfsistem/app/controllers/egresosController.php?action=guardarCompraInventario',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    cache: false,
+                    beforeSend: function () {
+                        $('#btnGuardarCompra').prop('disabled', true).html(
+                            '<span class="spinner-border spinner-border-sm"></span> Guardando...');
+                    },
+                    success: function (res) {
+                        try {
+                            const data = typeof res === 'string' ? JSON.parse(res) : res;
+                            if (data.success) {
+                                Swal.fire('¡Éxito!', data.message, 'success').then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire('Error', data.message, 'error');
+                                $('#btnGuardarCompra').prop('disabled', false).html(
+                                    '<i class="bi bi-save me-2"></i> Guardar Compra e Inventario');
+                            }
+                        } catch (err) {
+                            console.error("Error parseo JSON:", res);
+                            Swal.fire('Error Crítico', 'Respuesta no válida del servidor.', 'error');
+                            $('#btnGuardarCompra').prop('disabled', false).html('Guardar');
                         }
-                    } catch (err) {
-                        console.error("Error parseo JSON:", res);
-                        Swal.fire('Error Crítico', 'Respuesta no válida del servidor.', 'error');
+                    },
+                    error: function (xhr) {
+                        console.error("Error 500:", xhr.responseText);
+                        Swal.fire('Error de Servidor', 'El controlador falló (500).', 'error');
                         $('#btnGuardarCompra').prop('disabled', false).html('Guardar');
                     }
-                },
-                error: function(xhr) {
-                    console.error("Error 500:", xhr.responseText);
-                    Swal.fire('Error de Servidor', 'El controlador falló (500).', 'error');
-                    $('#btnGuardarCompra').prop('disabled', false).html('Guardar');
-                }
-            });
-        }
-    });
-}
+                });
+            }
+        });
+    }
 </script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
 
-    const select = document.getElementById('select_proveedor');
-    const box = document.getElementById('deuda_proveedor');
-    const input = document.getElementById('input_pagar_deuda');
+        const select = document.getElementById('select_proveedor');
+        const box = document.getElementById('deuda_proveedor');
+        const input = document.getElementById('input_pagar_deuda');
 
-    // Limpia formato ($, comas, etc.)
+        // Limpia formato ($, comas, etc.)
 
-    select.addEventListener('change', function() {
+        select.addEventListener('change', function () {
 
-        const option = this.options[this.selectedIndex];
+            const option = this.options[this.selectedIndex];
 
-        const deuda = parseFloat(option.dataset.deuda || 0);
-        $('#input_pagar_deuda').attr('max', deuda);
-        $('.label-abono-info').text(`Máximo: ${deuda}`);
+            const deuda = parseFloat(option.dataset.deuda || 0);
+            $('#input_pagar_deuda').attr('max', deuda);
+            $('.label-abono-info').text(`Máximo: ${deuda}`);
 
-        box.innerText = "Deuda: $" + deuda.toLocaleString('es-MX', {
-            minimumFractionDigits: 2
-        });
-
-        // 🔥 opcional: cambiar color si debe o no
-        if (deuda > 0) {
-            box.classList.remove('text-success');
-            box.classList.add('text-danger');
-            input.disabled = false;
-        } else {
-            box.classList.remove('text-danger');
-            box.classList.add('text-success');
-            input.disabled = true;
-            input.value = 0;
-        }
-
-    });
-
-});
-</script>
-<script>
-// Función para refrescar la lista de proveedores sin recargar página
-function actualizarListaProveedores() {
-    fetch('egresosController.php?action=getProveedoresJSON')
-        .then(res => res.json())
-        .then(data => {
-            let $select = $('#select_proveedor');
-            $select.empty().append('<option value="">Seleccione o busque un proveedor...</option>');
-
-            data.forEach(p => {
-                $select.append(new Option(p.nombre_comercial, p.nombre_comercial));
+            box.innerText = "Deuda: $" + deuda.toLocaleString('es-MX', {
+                minimumFractionDigits: 2
             });
 
-            $select.trigger('change');
+            // 🔥 opcional: cambiar color si debe o no
+            if (deuda > 0) {
+                box.classList.remove('text-success');
+                box.classList.add('text-danger');
+                input.disabled = false;
+            } else {
+                box.classList.remove('text-danger');
+                box.classList.add('text-success');
+                input.disabled = true;
+                input.value = 0;
+            }
+
         });
-}
+
+    });
+</script>
+<script>
+    // Función para refrescar la lista de proveedores sin recargar página
+    function actualizarListaProveedores() {
+        fetch('egresosController.php?action=getProveedoresJSON')
+            .then(res => res.json())
+            .then(data => {
+                let $select = $('#select_proveedor');
+                $select.empty().append('<option value="">Seleccione o busque un proveedor...</option>');
+
+                data.forEach(p => {
+                    $select.append(new Option(p.nombre_comercial, p.nombre_comercial));
+                });
+
+                $select.trigger('change');
+            });
+    }
 </script>
