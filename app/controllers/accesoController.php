@@ -80,6 +80,34 @@ if (isset($_GET['action']) && $_GET['action'] === 'getAlmacenesJSON') {
     // 3. Terminamos la ejecución para que no se pegue el HTML del Layout
     exit;
 }
+if (isset($_GET['action']) && $_GET['action'] === 'getAlmacenesUsuario') {
+    // Asegúrate de que la sesión esté iniciada si usas $_SESSION
+    // session_start();
+
+    if (ob_get_level()) {
+        ob_clean();
+    }
+
+    header('Content-Type: application/json; charset=utf-8');
+
+    try {
+        $id = intval($_SESSION['almacen_id'] ?? 0);
+
+        // Llamamos a tu modelo
+        $almacenes = $almacenModel->getAlmacenes($id);
+
+        if (!$almacenes) {
+            echo json_encode([]);
+        } else {
+            echo json_encode($almacenes);
+        }
+    } catch (Exception $e) {
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
+
+    // Terminamos la ejecución para evitar que se renderice HTML adicional
+    exit;
+}
 
 if (isset($_GET['action']) && $_GET['action'] === 'obtenerClientes') {
     if (ob_get_level())

@@ -2,29 +2,25 @@
 MODAL LISTA DE MEDIDAS
 ========================================= -->
 <div class="modal fade" id="modalListaMedidas" tabindex="-1" aria-hidden="true">
-
     <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content  shadow-lg overflow-hidden rounded-4">
 
-        <div class="modal-content border-0 shadow-lg overflow-hidden">
-
-            <!-- HEADER: Gradiente adaptativo -->
-            <div class="modal-header bg-primary bg-gradient text-white border-0 p-4 position-relative">
-
+            <!-- HEADER: Elegante, minimalista y sin exceso de azul -->
+            <div class="modal-header border-bottom bg-body px-4 py-3 position-relative">
                 <div class="pe-4">
-                    <h5 class="modal-title fw-bold mb-1 d-flex align-items-center gap-2">
-                        <i class="bi bi-rulers fs-4"></i>
+                    <h5 class="modal-title fw-bold mb-1 d-flex align-items-center gap-2 text-body">
+                        <i class="bi bi-rulers text-primary fs-5"></i>
                         Medidas Disponibles
                     </h5>
-
-                    <small id="subtituloListaMedidas" class="text-white-50 fw-medium">
+                    <small id="subtituloListaMedidas" class="text-muted fw-medium">
                         Cargando detalles...
                     </small>
                 </div>
 
-                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-4"
+                <button type="button"
+                    class="btn-close shadow-none position-absolute top-50 translate-middle-y end-0 me-4"
                     data-bs-dismiss="modal" aria-label="Close">
                 </button>
-
             </div>
 
             <!-- BODY -->
@@ -43,56 +39,40 @@ MODAL LISTA DE MEDIDAS
                 </div>
 
                 <div class="table-responsive">
-
                     <table class="table table-hover align-middle mb-0">
-
                         <thead class="bg-body-tertiary border-bottom">
-
                             <tr>
                                 <th class="ps-4 text-body-secondary small text-uppercase">Nombre Medida</th>
                                 <th class="text-body-secondary small text-uppercase">Equivalencia</th>
                                 <th class="text-end pe-4 text-body-secondary small text-uppercase">Acciones</th>
                             </tr>
-
                         </thead>
-
                         <tbody id="tablaCuerpoMedidas">
-
                             <!-- JS Populate -->
-
                         </tbody>
-
                     </table>
-
                 </div>
 
                 <!-- EMPTY STATE -->
                 <div id="listaVacia" class="text-center py-5 d-none">
-
                     <i class="bi bi-inbox fs-1 text-body-tertiary d-block mb-2"></i>
-
                     <p class="text-body-secondary fw-medium mb-0">
                         No hay medidas adicionales configuradas para este producto.
                     </p>
-
                 </div>
 
             </div>
 
             <!-- FOOTER -->
             <div class="modal-footer border-top bg-body-tertiary px-4 py-3">
-
-                <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-semibold"
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-semibold shadow-none"
                     data-bs-dismiss="modal">
                     Cerrar
                 </button>
-
             </div>
 
         </div>
-
     </div>
-
 </div>
 
 
@@ -101,10 +81,10 @@ MODAL EDITAR MEDIDA
 ========================================= -->
 <div class="modal fade" id="modalEditarMedida" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-content  shadow-lg rounded-4 overflow-hidden">
 
             <!-- HEADER -->
-            <div class="modal-header bg-dark text-white px-4 py-3 border-0">
+            <div class="modal-header bg-dark text-white px-4 py-3 ">
                 <div class="d-flex align-items-center gap-3">
                     <div class="bg-primary bg-opacity-25 text-primary p-2 rounded-3 d-flex align-items-center justify-content-center"
                         style="width: 42px; height: 42px;">
@@ -124,7 +104,7 @@ MODAL EDITAR MEDIDA
                 <input type="hidden" id="edit_medida_id" name="id">
                 <input type="hidden" id="edit_producto_id" name="producto_id">
 
-                <div class="modal-body p-4 bg-light">
+                <div class="modal-body p-4 ">
 
                     <!-- NOMBRE -->
                     <div class="mb-3">
@@ -133,12 +113,11 @@ MODAL EDITAR MEDIDA
                             Nombre de la medida
                         </label>
                         <div class="input-group input-group-lg shadow-sm rounded-3 overflow-hidden">
-                            <span class="input-group-text bg-white border-end-0 text-muted ps-3">
+                            <span class="input-group-text  border-end-0 text-muted ps-3">
                                 <i class="bi bi-tag"></i>
                             </span>
-                            <input type="text" id="edit_nombre_medida"
-                                class="form-control border-start-0 ps-2 fs-6 bg-white" name="nombre_edit"
-                                placeholder="Ej. Caja, Gramo, Pieza" required>
+                            <input type="text" id="edit_nombre_medida" class="form-control border-start-0 ps-2 fs-6 "
+                                name="nombre_edit" placeholder="Ej. Caja, Gramo, Pieza" required>
                         </div>
                     </div>
 
@@ -150,18 +129,18 @@ MODAL EDITAR MEDIDA
                             Factor de equivalencia
                         </label>
 
-                        <div class="border rounded-3 p-3 bg-white shadow-sm">
+                        <div class="border rounded-3 p-3  shadow-sm">
                             <div class="row g-2 align-items-center">
 
                                 <!-- Valor / Unidad Adicional -->
                                 <div class="col-5">
                                     <div class="input-group input-group-sm">
                                         <input type="number"
-                                            class="form-control fw-bold text-primary text-center bg-light border-end-0"
+                                            class="form-control fw-bold text-primary text-center  border-end-0"
                                             id="edit_equivalencia" name="equivalencia" step="0.000000001" min="0.00001"
                                             required>
                                         <span
-                                            class="input-group-text bg-light text-muted fw-normal px-2 border-start-0 text-truncate"
+                                            class="input-group-text  text-muted fw-normal px-2 border-start-0 text-truncate"
                                             id="edit_unidad_text" style="max-width: 80px; font-size: 0.75rem;">
                                             Unidades
                                         </span>
@@ -178,10 +157,10 @@ MODAL EDITAR MEDIDA
                                 <div class="col-5">
                                     <div class="input-group input-group-sm">
                                         <input type="number"
-                                            class="form-control fw-bold text-success text-center bg-light border-end-0"
+                                            class="form-control fw-bold text-success text-center  border-end-0"
                                             id="edit_base" name="base" step="0.000000001" min="0.00001" required>
                                         <span
-                                            class="input-group-text bg-light text-muted fw-normal px-2 border-start-0 text-truncate"
+                                            class="input-group-text  text-muted fw-normal px-2 border-start-0 text-truncate"
                                             id="unidadMedidaMostrar" style="max-width: 80px; font-size: 0.75rem;">
                                             Base
                                         </span>
@@ -196,7 +175,7 @@ MODAL EDITAR MEDIDA
                 </div>
 
                 <!-- FOOTER -->
-                <div class="modal-footer bg-white border-0 px-4 py-3 gap-2">
+                <div class="modal-footer   px-4 py-3 gap-2">
                     <button type="button" class="btn btn-light rounded-pill px-4 fw-semibold text-secondary"
                         data-bs-dismiss="modal">
                         Cancelar
@@ -324,7 +303,7 @@ JAVASCRIPT
 
                     let boton = esProtegido
                         ? ''
-                        : `<button class="btn btn-sm btn-light-hover text-danger rounded-circle border-0 p-2 d-inline-flex align-items-center justify-content-center"
+                        : `<button class="btn btn-sm btn-light-hover text-danger rounded-circle  p-2 d-inline-flex align-items-center justify-content-center"
                                 title="Eliminar medida"
                                 style="width: 34px; height: 34px;"
                                 onclick="eliminarMedida(${m.id})">
@@ -371,7 +350,7 @@ JAVASCRIPT
 
                         <td class="text-end pe-4">
                             <div class="d-inline-flex gap-1">
-                                <button class="btn btn-sm btn-light-hover text-primary rounded-circle border-0 p-2 d-inline-flex align-items-center justify-content-center"
+                                <button class="btn btn-sm btn-light-hover text-primary rounded-circle  p-2 d-inline-flex align-items-center justify-content-center"
                                         title="Editar medida"
                                         style="width: 34px; height: 34px;"
                                         onclick="abrirEditarMedida('${medidaData}','${unidad_medida}')">

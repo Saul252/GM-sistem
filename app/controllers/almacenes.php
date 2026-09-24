@@ -12,88 +12,97 @@ require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../models/almacen_model.php';
 require_once __DIR__ . '/../models/almacen/productosModel.php';
-require_once __DIR__ . '/../models/almacen/categoriasModel.php'; 
+require_once __DIR__ . '/../models/almacen/categoriasModel.php';
 
 require_once __DIR__ . '/LayoutController.php';
-protegerPagina('almacenes'); 
-class AlmacenController {
+protegerPagina('almacenes');
+class AlmacenController
+{
     private $model;
     private $productoModel;
 
-        private $categoriaModel; 
+    private $categoriaModel;
     private $conexion;
 
-    public function __construct($conexion) {
+    public function __construct($conexion)
+    {
         $this->conexion = $conexion;
         $this->model = new AlmacenModel($conexion);
         $this->productoModel = new ProductoModel($conexion);
-        $this->categoriaModel = new CategoriaModel($conexion); 
+        $this->categoriaModel = new CategoriaModel($conexion);
     }
 
-   public function index() {
+    public function index()
+    {
 
-    $paginaActual = 'almacenes'; 
-    // Mantenemos el ID de sesión para los filtros de las tablas de abajo
-    $almacen_usuario = $_SESSION['almacen_id'] ?? 0;
+        $paginaActual = 'almacenes';
+        // Mantenemos el ID de sesión para los filtros de las tablas de abajo
+        $almacen_usuario = $_SESSION['almacen_id'] ?? 0;
 
-    try {
-        // 1. Cargamos el catálogo y almacenes para los selectores/tablas
-        $categorias = $this->model->getCategorias();
-        $almacenes = $this->model->getAlmacenes($almacen_usuario);
+        try {
+            // 1. Cargamos el catálogo y almacenes para los selectores/tablas
+            $categorias = $this->model->getCategorias();
+            $almacenes = $this->model->getAlmacenes($almacen_usuario);
+            $almacenesIngreso = $this->model->getAlmacenes($almacen_usuario);
 
-        $inversion = $this->model->inversion($almacen_usuario);
-        $todosLosAlmacenes = $this->model->getAlmacenesDestino($almacen_usuario);
-        
-        // 2. Cargamos el inventario detallado para el DataTable
-        $productos = $this->model->getInventario($almacen_usuario);
-        
-        $unidadesMedida = $this->model->getUnidadesMedida();
+            $inversion = $this->model->inversion($almacen_usuario);
+            $todosLosAlmacenes = $this->model->getAlmacenesDestino($almacen_usuario);
 
-        $unidadesMedidam = $this->model->getUnidadesMedida();
+            // 2. Cargamos el inventario detallado para el DataTable
+            $productos = $this->model->getInventario($almacen_usuario);
 
-        // --- 3. NUEVA LÓGICA: RESUMEN AUTOMÁTICO PARA LAS TARJETAS ---
-        // El modelo detectará por sesión si es Admin o Vendedor
-       
-        $resumenData = $this->model->getResumenStock( $almacen_usuario);
+            $unidadesMedida = $this->model->getUnidadesMedida();
 
-// AÑADE ESTO TEMPORALMENTE PARA TESTEAR:
+            $unidadesMedidam = $this->model->getUnidadesMedida();
+
+            // --- 3. NUEVA LÓGICA: RESUMEN AUTOMÁTICO PARA LAS TARJETAS ---
+            // El modelo detectará por sesión si es Admin o Vendedor
+
+            $resumenData = $this->model->getResumenStock($almacen_usuario);
+
+            // AÑADE ESTO TEMPORALMENTE PARA TESTEAR:
 // var_dump($resumenData); die();
-        // -------------------------------------------------------------
+            // -------------------------------------------------------------
 
-        // Validaciones de seguridad para evitar errores en la vista
-        if ($categorias === null) $categorias = [];
-        if ($almacenes === null) $almacenes = [];
-        if ($productos === null) $productos = [];
-        if ($resumenData === null) {
-            $resumenData = [
-                'tipo' => 'error', 
-                'nombre' => 'No disponible', 
-                'mis_productos' => 0, 
-                'total_sistema' => 0
-            ];
+            // Validaciones de seguridad para evitar errores en la vista
+            if ($categorias === null)
+                $categorias = [];
+            if ($almacenes === null)
+                $almacenes = [];
+            if ($productos === null)
+                $productos = [];
+            if ($resumenData === null) {
+                $resumenData = [
+                    'tipo' => 'error',
+                    'nombre' => 'No disponible',
+                    'mis_productos' => 0,
+                    'total_sistema' => 0
+                ];
+            }
+
+            // 4. Renderizamos la vista (ya lleva $resumenData inyectado)
+            $tituloPagina = 'Almacenes';
+            require_once __DIR__ . '/../views/almacenes_view2.php';
+
+        } catch (Exception $e) {
+            // Un mensaje un poco más limpio para el usuario final
+            error_log("Error en AlmacenController: " . $e->getMessage());
+            die("Lo sentimos, hubo un problema al cargar el inventario. Por favor, intenta más tarde.");
         }
-
-        // 4. Renderizamos la vista (ya lleva $resumenData inyectado)
-        $tituloPagina='Almacenes';
-        require_once __DIR__ . '/../views/almacenes_view2.php';
-
-    } catch (Exception $e) {
-        // Un mensaje un poco más limpio para el usuario final
-        error_log("Error en AlmacenController: " . $e->getMessage());
-        die("Lo sentimos, hubo un problema al cargar el inventario. Por favor, intenta más tarde.");
     }
-}
 
     /**
      * AJAX: Obtener lista completa de productos para refrescar Selects en Compras
      */
-    public function getListaProductosJson() {
-        while (ob_get_level()) ob_end_clean(); // Limpiar búfer para JSON puro
+    public function getListaProductosJson()
+    {
+        while (ob_get_level())
+            ob_end_clean(); // Limpiar búfer para JSON puro
         header('Content-Type: application/json; charset=utf-8');
         try {
             // Nota: Usamos getProductos() o el método que tengas en tu productoModel 
             // que devuelva el catálogo básico (id, nombre, sku, factor, unidades)
-            $productos = $this->productoModel->getProductos(); 
+            $productos = $this->productoModel->getProductos();
             echo json_encode($productos ?: []);
         } catch (Exception $e) {
             echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
@@ -101,7 +110,8 @@ class AlmacenController {
         exit;
     }
 
-    public function guardarCategoria() {
+    public function guardarCategoria()
+    {
         header('Content-Type: application/json');
         $nombre = trim($_POST['nombre'] ?? '');
         if (empty($nombre)) {
@@ -120,9 +130,11 @@ class AlmacenController {
         }
         exit;
     }
-    
-    public function getCategoriasJSON() {
-        while (ob_get_level()) ob_end_clean(); 
+
+    public function getCategoriasJSON()
+    {
+        while (ob_get_level())
+            ob_end_clean();
         header('Content-Type: application/json; charset=utf-8');
         try {
             $categorias = $this->model->getCategorias();
@@ -132,8 +144,10 @@ class AlmacenController {
         }
         exit;
     }
-     public function getUnidadesMedidaJSON() {
-        while (ob_get_level()) ob_end_clean(); 
+    public function getUnidadesMedidaJSON()
+    {
+        while (ob_get_level())
+            ob_end_clean();
         header('Content-Type: application/json; charset=utf-8');
         try {
             $unidadesMedida = $this->model->getUnidadesMedida();
@@ -144,36 +158,39 @@ class AlmacenController {
         exit;
     }
 
-    public function guardarProducto() {
-        while (ob_get_level()) ob_end_clean(); // Asegurar respuesta limpia, quitar despues para un solo almacen ya que este es para cf
+    public function guardarProducto()
+    {
+        while (ob_get_level())
+            ob_end_clean(); // Asegurar respuesta limpia, quitar despues para un solo almacen ya que este es para cf
         header('Content-Type: application/json');
         $factor_conversion = floatval($_POST['factor_conversion'] ?? 1);
-if ($factor_conversion <= 0) $factor_conversion = 1;
+        if ($factor_conversion <= 0)
+            $factor_conversion = 1;
 
-$p_minorista = floatval($_POST['precio_minorista'] ?? 0);
-$p_mayorista = floatval($_POST['precio_mayorista'] ?? 0);
-$p_distribuidor = floatval($_POST['precio_distribuidor'] ?? 0);
+        $p_minorista = floatval($_POST['precio_minorista'] ?? 0);
+        $p_mayorista = floatval($_POST['precio_mayorista'] ?? 0);
+        $p_distribuidor = floatval($_POST['precio_distribuidor'] ?? 0);
 
-$pmin = $p_minorista > 0 ? ($p_minorista / $factor_conversion) : 0;
-$pmay = $p_mayorista > 0 ? ($p_mayorista / $factor_conversion) : 0;
-$pdi  = $p_distribuidor > 0 ? ($p_distribuidor / $factor_conversion) : 0;
+        $pmin = $p_minorista > 0 ? ($p_minorista / $factor_conversion) : 0;
+        $pmay = $p_mayorista > 0 ? ($p_mayorista / $factor_conversion) : 0;
+        $pdi = $p_distribuidor > 0 ? ($p_distribuidor / $factor_conversion) : 0;
 
 
 
         $datos = [
-            'sku'                 => trim($_POST['sku'] ?? ''),
-            'nombre'              => trim($_POST['nombre'] ?? ''),
-            'categoria_id'        => $_POST['categoria_id'] ?? null,
-            'unidad_medida'       => $_POST['unidad_medida'] ?? 'PZA',
-            'unidad_reporte'      => $_POST['unidad_reporte'] ?? '',
-            'factor_conversion'   => floatval($_POST['factor_conversion'] ?? 1),
-            'precio_adquisicion'  => 0,
-            'impuesto_iva'        => floatval($_POST['impuesto_iva'] ?? 16.00),
-            'descripcion'         => $_POST['description'] ?? '',
-            'fiscal_clave_prod'   => $_POST['fiscal_clave_prod'] ?? '',
-            'fiscal_clave_unidad'   => $_POST['fiscal_clave_unidad'] ?? '',
-            'precio_minorista'    => $pmin,
-            'precio_mayorista'    => $pmay,
+            'sku' => trim($_POST['sku'] ?? ''),
+            'nombre' => trim($_POST['nombre'] ?? ''),
+            'categoria_id' => $_POST['categoria_id'] ?? null,
+            'unidad_medida' => $_POST['unidad_medida'] ?? 'PZA',
+            'unidad_reporte' => $_POST['unidad_reporte'] ?? '',
+            'factor_conversion' => floatval($_POST['factor_conversion'] ?? 1),
+            'precio_adquisicion' => 0,
+            'impuesto_iva' => floatval($_POST['impuesto_iva'] ?? 16.00),
+            'descripcion' => $_POST['description'] ?? '',
+            'fiscal_clave_prod' => $_POST['fiscal_clave_prod'] ?? '',
+            'fiscal_clave_unidad' => $_POST['fiscal_clave_unidad'] ?? '',
+            'precio_minorista' => $pmin,
+            'precio_mayorista' => $pmay,
             'precio_distribuidor' => $pdi
         ];
 
@@ -181,7 +198,7 @@ $pdi  = $p_distribuidor > 0 ? ($p_distribuidor / $factor_conversion) : 0;
             echo json_encode(['status' => 'error', 'message' => 'SKU y Nombre son obligatorios']);
             exit;
         }
- //$nuevoId = $this->productoModel->guardarCompleto($datos);//este es el original para un solo almacen
+        //$nuevoId = $this->productoModel->guardarCompleto($datos);//este es el original para un solo almacen
         $nuevoId = $this->productoModel->guardarCompletoMultiALmacen($datos);
 
         if ($nuevoId) {
@@ -193,24 +210,26 @@ $pdi  = $p_distribuidor > 0 ? ($p_distribuidor / $factor_conversion) : 0;
     }
     // Añade este método antes del final de la llave de la clase }
 
-    public function guardarProductoUnsoloAlmacen() {//es igual que guardar producto(la que esta arriba pero este es para solo guardar en un solo almacen)
-        while (ob_get_level()) ob_end_clean(); // Asegurar respuesta limpia
+    public function guardarProductoUnsoloAlmacen()
+    {//es igual que guardar producto(la que esta arriba pero este es para solo guardar en un solo almacen)
+        while (ob_get_level())
+            ob_end_clean(); // Asegurar respuesta limpia
         header('Content-Type: application/json');
 
         $datos = [
-            'sku'                 => trim($_POST['sku'] ?? ''),
-            'nombre'              => trim($_POST['nombre'] ?? ''),
-            'categoria_id'        => $_POST['categoria_id'] ?? null,
-            'unidad_medida'       => $_POST['unidad_medida'] ?? 'PZA',
-            'unidad_reporte'      => $_POST['unidad_reporte'] ?? '',
-            'factor_conversion'   => floatval($_POST['factor_conversion'] ?? 1),
-            'precio_adquisicion'  => 0,
-            'impuesto_iva'        => floatval($_POST['impuesto_iva'] ?? 16.00),
-            'descripcion'         => $_POST['description'] ?? '',
-            'fiscal_clave_prod'   => $_POST['fiscal_clave_prod'] ?? '',
-            'fiscal_clave_unidad'   => $_POST['fiscal_clave_unidad'] ?? '',
-            'precio_minorista'    => floatval($_POST['precio_minorista'] ?? 0),
-            'precio_mayorista'    => floatval($_POST['precio_mayorista'] ?? 0),
+            'sku' => trim($_POST['sku'] ?? ''),
+            'nombre' => trim($_POST['nombre'] ?? ''),
+            'categoria_id' => $_POST['categoria_id'] ?? null,
+            'unidad_medida' => $_POST['unidad_medida'] ?? 'PZA',
+            'unidad_reporte' => $_POST['unidad_reporte'] ?? '',
+            'factor_conversion' => floatval($_POST['factor_conversion'] ?? 1),
+            'precio_adquisicion' => 0,
+            'impuesto_iva' => floatval($_POST['impuesto_iva'] ?? 16.00),
+            'descripcion' => $_POST['description'] ?? '',
+            'fiscal_clave_prod' => $_POST['fiscal_clave_prod'] ?? '',
+            'fiscal_clave_unidad' => $_POST['fiscal_clave_unidad'] ?? '',
+            'precio_minorista' => floatval($_POST['precio_minorista'] ?? 0),
+            'precio_mayorista' => floatval($_POST['precio_mayorista'] ?? 0),
             'precio_distribuidor' => floatval($_POST['precio_distribuidor'] ?? 0)
         ];
 
@@ -228,71 +247,209 @@ $pdi  = $p_distribuidor > 0 ? ($p_distribuidor / $factor_conversion) : 0;
         }
         exit;
     }
-public function obtenerListaAlmacenes() {
-    // 1. Limpiamos cualquier salida previa (espacios, warnings, etc)
-    while (ob_get_level()) ob_end_clean(); 
-    
-    // 2. Cabeceras obligatorias
-    header('Content-Type: application/json; charset=utf-8');
-    
-    try {
-        // Llamamos a tu modelo con 0 para traer todos
-        $almacenes = $this->model->getAlmacenes(0); 
-        
-        if (!$almacenes) {
-            echo json_encode([]);
-        } else {
-            echo json_encode($almacenes);
+    public function obtenerListaAlmacenes()
+    {
+        // 1. Limpiamos cualquier salida previa (espacios, warnings, etc)
+        while (ob_get_level())
+            ob_end_clean();
+
+        // 2. Cabeceras obligatorias
+        header('Content-Type: application/json; charset=utf-8');
+
+        try {
+            // Llamamos a tu modelo con 0 para traer todos
+            $almacenes = $this->model->getAlmacenes(0);
+
+            if (!$almacenes) {
+                echo json_encode([]);
+            } else {
+                echo json_encode($almacenes);
+            }
+        } catch (Exception $e) {
+            echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         }
-    } catch (Exception $e) {
-        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+        // 3. Terminamos la ejecución para que no se pegue el HTML del Layout
+        exit;
     }
-    // 3. Terminamos la ejecución para que no se pegue el HTML del Layout
-    exit; 
-}
 
-public function guardarProductoCompleto() {
-   while (ob_get_level()) ob_end_clean();
+    public function guardarCantidadesIniciales()
+    {
+        while (ob_get_level())
+            ob_end_clean();
 
-ini_set('display_errors', 0);
-error_reporting(0);
+        ini_set('display_errors', 0);
+        error_reporting(0);
 
-header('Content-Type: application/json');
-    try {
+        header('Content-Type: application/json');
 
-        // 🔹 1. Armar datos
-        $data = [
-            'sku' => trim($_POST['sku'] ?? ''),
-            'nombre' => trim($_POST['nombre'] ?? ''),
-            'descripcion' => $_POST['description'] ?? '',
-            'categoria_id' => !empty($_POST['categoria_id']) ? $_POST['categoria_id'] : null,
-            'unidad_medida' => $_POST['unidad_medida'] ?? 'PZA',
-            'unidad_reporte' => $_POST['unidad_reporte'] ?? null,
-            'factor_conversion' => floatval($_POST['factor_conversion'] ?? 1),
-            'precio_adquisicion' => floatval($_POST['precio_adquisicion'] ?? 0),
-            'fiscal_clave_prod' => $_POST['fiscal_clave_prod'] ?? null,
-            'fiscal_clave_unit' => $_POST['fiscal_clave_unit'] ?? null,
-            'impuesto_iva' => floatval($_POST['impuesto_iva'] ?? 16),
-            'almacenes' => $_POST['almacenes'] ?? [],
-            'usuario_id' => $_SESSION['usuario_id'] ?? 1
-        ];
+        try {
+            // 🔹 1. Mapear y estructurar estrictamente los almacenes que vienen por POST
+            $almacenes_estructurados = [];
 
-        // 🔹 2. Validación básica
-        if (empty($data['sku']) || empty($data['nombre'])) {
+            if (isset($_POST['almacenes']) && is_array($_POST['almacenes'])) {
+                foreach ($_POST['almacenes'] as $almacen_id => $datos) {
+                    // Definimos únicamente la estructura que tu función lee dentro de $datos
+                    $almacenes_estructurados[$almacen_id] = [
+                        'stock' => floatval($datos['stock'] ?? 0),
+                        'stock_minimo' => floatval($datos['stock_minimo'] ?? 0),
+                        'precio_minorista' => floatval($datos['precio_minorista'] ?? 0),
+                        'precio_mayorista' => floatval($datos['precio_mayorista'] ?? 0),
+                        'precio_distribuidor' => floatval($datos['precio_distribuidor'] ?? 0)
+                    ];
+                }
+            }
+
+            // 🔹 2. Armar el arreglo $data con la estructura exacta y limpia
+            $data = [
+                'sku' => trim($_POST['sku'] ?? ''),
+                'factor_conversion' => floatval($_POST['factorConversionProducto'] ?? 1),
+                'precio_adquisicion' => floatval($_POST['precio_adquisicion'] ?? 0),
+                'usuario_id' => $_SESSION['usuario_id'] ?? 1,
+                'almacenes' => $almacenes_estructurados
+            ];
+
+            // 🔹 3. Validaciones obligatorias
+            if (empty($data['sku'])) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'El SKU es obligatorio.'
+                ]);
+                exit;
+            }
+
+            if (empty($data['almacenes'])) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'El arreglo de almacenes es obligatorio y no puede estar vacío.'
+                ]);
+                exit;
+            }
+
+            $producto_id = intval($_POST['producto_id'] ?? 0);
+            if ($producto_id <= 0) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'El ID del producto es inválido.'
+                ]);
+                exit;
+            }
+
+            // 🔹 4. Llamada directa a tu función
+            $resultado = $this->productoModel->agregarCantidadesIniciales($producto_id, $data);
+
+            if ($resultado) {
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => 'Cantidades iniciales registradas correctamente.'
+                ]);
+            } else {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'No se pudieron registrar las cantidades iniciales.'
+                ]);
+            }
+
+        } catch (Exception $e) {
+            error_log("Error en guardarCantidadesIniciales: " . $e->getMessage());
+
             echo json_encode([
                 'status' => 'error',
-                'message' => 'SKU y Nombre son obligatorios'
+                'message' => 'Error interno del servidor.'
+            ]);
+        }
+
+        exit;
+    }
+    public function guardarProductoCompleto()
+    {
+        while (ob_get_level())
+            ob_end_clean();
+
+        ini_set('display_errors', 0);
+        error_reporting(0);
+
+        header('Content-Type: application/json');
+        try {
+
+            // 🔹 1. Armar datos
+            $data = [
+                'sku' => trim($_POST['sku'] ?? ''),
+                'nombre' => trim($_POST['nombre'] ?? ''),
+                'descripcion' => $_POST['description'] ?? '',
+                'categoria_id' => !empty($_POST['categoria_id']) ? $_POST['categoria_id'] : null,
+                'unidad_medida' => $_POST['unidad_medida'] ?? 'PZA',
+                'unidad_reporte' => $_POST['unidad_reporte'] ?? null,
+                'factor_conversion' => floatval($_POST['factor_conversion'] ?? 1),
+                'precio_adquisicion' => floatval($_POST['precio_adquisicion'] ?? 0),
+                'fiscal_clave_prod' => $_POST['fiscal_clave_prod'] ?? null,
+                'fiscal_clave_unit' => $_POST['fiscal_clave_unit'] ?? null,
+                'impuesto_iva' => floatval($_POST['impuesto_iva'] ?? 16),
+                'almacenes' => $_POST['almacenes'] ?? [],
+                'usuario_id' => $_SESSION['usuario_id'] ?? 1
+            ];
+
+            // 🔹 2. Validación básica
+            if (empty($data['sku']) || empty($data['nombre'])) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'SKU y Nombre son obligatorios'
+                ]);
+                exit;
+            }
+
+            // 🔹 3. Llamar al modelo PRO
+            $resultado = $this->productoModel->crearProductoMultiAlmacen($data);
+            // 🔹 4. Respuesta
+            if ($resultado['status']) {
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => 'Producto guardado correctamente'
+                ]);
+            } else {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => $resultado['msg']
+                ]);
+            }
+
+        } catch (Exception $e) {
+            error_log($e->getMessage()); // 👈 guarda error real en logs
+
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Error interno del servidor'
+            ]);
+
+        }
+
+        exit;
+    }
+    /**
+     * AJAX: Obtiene el resumen de productos (Mi Almacén vs Total Sistema)
+     */
+    public function obtenerProductoDetalle()
+    {
+        while (ob_get_level())
+            ob_end_clean();
+        header('Content-Type: application/json');
+
+        $id = $_GET['id'] ?? 0;
+        $almacen_id = $_GET['almacen_id'] ?? 0;
+
+        if (!$id || !$almacen_id) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Parámetros incompletos'
             ]);
             exit;
         }
 
-        // 🔹 3. Llamar al modelo PRO
-        $resultado = $this->productoModel->crearProductoMultiAlmacen($data);
-               // 🔹 4. Respuesta
+        $resultado = $this->productoModel->obtenerProductoPorAlmacen($id, $almacen_id);
+
         if ($resultado['status']) {
             echo json_encode([
                 'status' => 'success',
-                'message' => 'Producto guardado correctamente'
+                'producto' => $resultado['data']
             ]);
         } else {
             echo json_encode([
@@ -301,129 +458,86 @@ header('Content-Type: application/json');
             ]);
         }
 
-    } catch (Exception $e) {
-    error_log($e->getMessage()); // 👈 guarda error real en logs
-
-    echo json_encode([
-        'status' => 'error',
-        'message' => 'Error interno del servidor'
-    ]);
-
-    }
-
-    exit;
-}
-/**
-     * AJAX: Obtiene el resumen de productos (Mi Almacén vs Total Sistema)
-     */
-public function obtenerProductoDetalle()
-{
-    while (ob_get_level()) ob_end_clean();
-    header('Content-Type: application/json');
-
-    $id = $_GET['id'] ?? 0;
-    $almacen_id = $_GET['almacen_id'] ?? 0;
-
-    if (!$id || !$almacen_id) {
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'Parámetros incompletos'
-        ]);
         exit;
     }
+    public function actualizarProducto()
+    {
+        while (ob_get_level())
+            ob_end_clean();
+        header('Content-Type: application/json');
 
-    $resultado = $this->productoModel->obtenerProductoPorAlmacen($id, $almacen_id);
+        try {
+            $factor_conversion = floatval($_POST['factor_conversion'] ?? 1);
+            if ($factor_conversion <= 0)
+                $factor_conversion = 1;
 
-    if ($resultado['status']) {
-        echo json_encode([
-            'status' => 'success',
-            'producto' => $resultado['data']
-        ]);
-    } else {
-        echo json_encode([
-            'status' => 'error',
-            'message' => $resultado['msg']
-        ]);
-    }
+            $p_minorista = floatval($_POST['precio_minorista'] ?? 0);
+            $p_mayorista = floatval($_POST['precio_mayorista'] ?? 0);
+            $p_distribuidor = floatval($_POST['precio_distribuidor'] ?? 0);
 
-    exit;
-}
-public function actualizarProducto()
-{
-    while (ob_get_level()) ob_end_clean();
-    header('Content-Type: application/json');
+            $pmin = $p_minorista > 0 ? ($p_minorista / $factor_conversion) : 0;
+            $pmay = $p_mayorista > 0 ? ($p_mayorista / $factor_conversion) : 0;
+            $pdi = $p_distribuidor > 0 ? ($p_distribuidor / $factor_conversion) : 0;
 
-    try {
-     $factor_conversion = floatval($_POST['factor_conversion'] ?? 1);
-if ($factor_conversion <= 0) $factor_conversion = 1;
+            $data = [
+                'id' => $_POST['producto_id'] ?? 0,
+                'almacen_id' => $_POST['almacen_actual_id'] ?? 0,
+                'sku' => $_POST['sku'] ?? '',
+                'nombre' => $_POST['nombre'] ?? '',
+                'descripcion' => $_POST['descripcion'] ?? '',
+                'categoria_id' => $_POST['categoria_id'] ?? null,
 
-$p_minorista = floatval($_POST['precio_minorista'] ?? 0);
-$p_mayorista = floatval($_POST['precio_mayorista'] ?? 0);
-$p_distribuidor = floatval($_POST['precio_distribuidor'] ?? 0);
+                'fiscal_clave_prod' => $_POST['fiscal_clave_prod'] ?? '',
+                'fiscal_clave_unit' => $_POST['fiscal_clave_unidad'] ?? '',
+                'impuesto_iva' => floatval($_POST['impuesto_iva'] ?? 0),
 
-$pmin = $p_minorista > 0 ? ($p_minorista / $factor_conversion) : 0;
-$pmay = $p_mayorista > 0 ? ($p_mayorista / $factor_conversion) : 0;
-$pdi  = $p_distribuidor > 0 ? ($p_distribuidor / $factor_conversion) : 0;
+                'unidad_reporte' => $_POST['unidad_reporte'] ?? '',
+                'factor_conversion' => floatval($_POST['factor_conversion'] ?? 1),
+                'unidad_medida' => $_POST['unidad_medida'] ?? '',
 
-        $data = [
-            'id' => $_POST['producto_id'] ?? 0,
-            'almacen_id' => $_POST['almacen_actual_id'] ?? 0,
-            'sku' => $_POST['sku'] ?? '',
-            'nombre' => $_POST['nombre'] ?? '',
-            'descripcion' => $_POST['descripcion'] ?? '',
-            'categoria_id' => $_POST['categoria_id'] ?? null,
+                'precio_minorista' => $pmin,
+                'precio_mayorista' => $pmay,
+                'precio_distribuidor' => $pdi,
 
-            'fiscal_clave_prod' => $_POST['fiscal_clave_prod'] ?? '',
-            'fiscal_clave_unit' => $_POST['fiscal_clave_unidad'] ?? '',
-            'impuesto_iva' => floatval($_POST['impuesto_iva'] ?? 0),
+                'stock' => floatval($_POST['stock'] ?? 0),
+                'stock_minimo' => floatval($_POST['stock_minimo'] ?? 0),
 
-            'unidad_reporte' => $_POST['unidad_reporte'] ?? '',
-            'factor_conversion' => floatval($_POST['factor_conversion'] ?? 1),
-            'unidad_medida' => $_POST['unidad_medida'] ?? '',
+                'aplicar_global' => isset($_POST['aplicar_global'])
+            ];
 
-            'precio_minorista' => $pmin,
-            'precio_mayorista' => $pmay,
-            'precio_distribuidor' => $pdi,
+            if (!$data['id']) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'ID inválido'
+                ]);
+                exit;
+            }
 
-            'stock' => floatval($_POST['stock'] ?? 0),
-            'stock_minimo' => floatval($_POST['stock_minimo'] ?? 0),
+            $res = $this->productoModel->actualizarProductoCompleto($data);
 
-            'aplicar_global' => isset($_POST['aplicar_global'])
-        ];
+            if ($res['status']) {
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => 'Producto actualizado correctamente'
+                ]);
+            } else {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => $res['msg']
+                ]);
+            }
 
-        if (!$data['id']) {
+        } catch (Exception $e) {
+            error_log($e->getMessage());
+
             echo json_encode([
                 'status' => 'error',
-                'message' => 'ID inválido'
-            ]);
-            exit;
-        }
-
-        $res = $this->productoModel->actualizarProductoCompleto($data);
-
-        if ($res['status']) {
-            echo json_encode([
-                'status' => 'success',
-                'message' => 'Producto actualizado correctamente'
-            ]);
-        } else {
-            echo json_encode([
-                'status' => 'error',
-                'message' => $res['msg']
+                'message' => 'Error interno del servidor'
             ]);
         }
 
-    } catch (Exception $e) {
-        error_log($e->getMessage());
-
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'Error interno del servidor'
-        ]);
+        exit;
     }
-
-    exit;
-}
 }
 
 /**
@@ -437,8 +551,10 @@ if (isset($conexion)) {
         case 'guardar':
             $controller->guardarProducto();
             break;
-            case 'guardarCompleto':
+        case 'guardarCompleto':
             $controller->guardarProductoCompleto();
+        case 'guardarCantidadesIniciales':
+            $controller->guardarCantidadesIniciales();
             break;
         case 'guardarCategoria':
             $controller->guardarCategoria();
@@ -446,23 +562,23 @@ if (isset($conexion)) {
         case 'getCategoriasJSON':
             $controller->getCategoriasJSON();
             break;
-            case 'getUnidadesMedidaJSON':
+        case 'getUnidadesMedidaJSON':
             $controller->getUnidadesMedidaJSON();
             break;
         case 'getListaProductosJson': // <--- SECCIÓN PARA ACTUALIZAR SELECTS
             $controller->getListaProductosJson();
             break;
-            case 'getProducto': // <--- SECCIÓN PARA ACTUALIZAR SELECTS
+        case 'getProducto': // <--- SECCIÓN PARA ACTUALIZAR SELECTS
             $controller->obtenerProductoDetalle();
             break;
-            case 'actualizarProducto':
-    $controller->actualizarProducto();
-    break;
-            case 'getAlmacenesJSON': // <--- AÑADE ESTO
-        $controller->obtenerListaAlmacenes();
-        break;
-   // --- NUEVO CASO AQUÍ ---
-        
+        case 'actualizarProducto':
+            $controller->actualizarProducto();
+            break;
+        case 'getAlmacenesJSON': // <--- AÑADE ESTO
+            $controller->obtenerListaAlmacenes();
+            break;
+        // --- NUEVO CASO AQUÍ ---
+
         // -----------------------
         default:
             $controller->index();
