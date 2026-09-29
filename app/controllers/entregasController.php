@@ -82,7 +82,7 @@ if (isset($_GET['ajax'])) {
                 break;
                 ;
             case 'get_recursos_sucursal':
-                $almacen_id = intval($_GET['almacen_id'] ?? 0);
+                $almacen_id = $_SESSION['rol_id'] == 1 ? 0 : intval($_GET['almacen_id'] ?? 0);
                 echo json_encode([
                     "success" => true,
                     "unidades" => $vehiculoM->listarPorAlmacen($almacen_id),

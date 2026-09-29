@@ -105,8 +105,15 @@ ORDER BY nombre ASC;";
     public function listarPorAlmacen($almacen_id)
     {
         $id = intval($almacen_id);
-        $sql = "SELECT * FROM trabajadores WHERE almacen_id  = $id AND rol!='Administrador'ORDER BY nombre ASC";
+
+        $sql = "SELECT *
+            FROM trabajadores
+            WHERE rol != 'Administrador'
+              AND ($id = 0 OR almacen_id = $id)
+            ORDER BY nombre ASC";
+
         $res = $this->db->query($sql);
+
         return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
     }
     public function listarPorAlmacenEncargado($almacen_id)
@@ -120,31 +127,35 @@ ORDER BY nombre ASC;";
     {
         $id = intval($almacen_id);
 
-        $sql = "        SELECT t.*
+        $sql = "
+        SELECT t.*
         FROM trabajadores t
-        WHERE t.almacen_id = $id
-        AND rol!='Administrador'
-        AND t.id NOT IN (
+        WHERE t.rol != 'Administrador'
+          AND ($id = 0 OR t.almacen_id = $id)
 
-            -- Encargados en rutas activas
-            SELECT rm.usuario_encargado_id
-            FROM transporte_repartos_maestro rm
-            WHERE rm.estado_reparto = 'en_transito'
-            AND rm.usuario_encargado_id IS NOT NULL
+          AND t.id NOT IN (
+              
+              -- Encargados en rutas activas
+              SELECT rm.usuario_encargado_id
+              FROM transporte_repartos_maestro rm
+              WHERE rm.estado_reparto = 'en_transito'
+                AND rm.usuario_encargado_id IS NOT NULL
 
-            UNION
+              UNION
 
-            -- Tripulantes en rutas activas
-            SELECT td.usuario_id
-            FROM transporte_tripulantes_detalle td
-            INNER JOIN transporte_repartos_maestro rm2 
-                ON rm2.id = td.reparto_id
-            WHERE rm2.estado_reparto = 'en_transito'
-        )
+              -- Tripulantes en rutas activas
+              SELECT td.usuario_id
+              FROM transporte_tripulantes_detalle td
+              INNER JOIN transporte_repartos_maestro rm2
+                  ON rm2.id = td.reparto_id
+              WHERE rm2.estado_reparto = 'en_transito'
+          )
+
         ORDER BY t.nombre ASC
     ";
 
         $res = $this->db->query($sql);
+
         return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
     }
     public function guardar($d)
