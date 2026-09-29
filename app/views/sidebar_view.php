@@ -552,7 +552,7 @@ $modulos = [
                             <div class="fw-bold text-${color}">Vehículo: ${item.vehiculo}</div>
                             <div class="small text-secondary">${item.placas}</div>
                         </div>
-                        <button class="btn btn-dark btn-sm rounded-circle" onclick="window.location='/cfsistem/app/controllers/mantenimientos.php?id=${item.id_mantenimiento}'">
+                        <button class="btn btn-dark btn-sm rounded-circle" onclick="window.location='/cfsistem/app/controllers/mantenimientosController.php?id=${item.id_mantenimiento}'">
                             <i class="bi bi-arrow-right text-danger"></i>
                         </button>
                     </div>`;

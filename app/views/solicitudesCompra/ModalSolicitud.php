@@ -28,7 +28,7 @@
                                 <i class="bi bi-box-seam me-1 text-primary"></i> Almacén de Cargo
                             </label>
 
-                            <?php $es_admin = ($_SESSION['rol_id'] == 1); ?>
+                            <?php $es_admin = ($_SESSION['rol_id'] == 1 || $_SESSION['rol_id'] == 3); ?>
 
                             <div class="input-group input-group-fixed flex-nowrap w-100">
                                 <select id="almacen_id"

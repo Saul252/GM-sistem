@@ -950,7 +950,7 @@
     <li>
         <a class="dropdown-item py-2 px-3 rounded-3 d-flex align-items-center text-secondary hover-info" 
            href="/cfsistem/app/backend/ventas/ticketFormal.php?id=${v.id}" target="_blank">
-            <i class="bi bi-file-earmark-check me-2 card-title-text"></i> Ticket Formal
+            <i class="bi bi-file-earmark-check me-2 card-title-text"></i> Imprimir Remision
         </a>
     </li>
 

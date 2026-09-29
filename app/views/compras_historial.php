@@ -5,10 +5,10 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial de Lotes</title>
-      <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
+    <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
 
     <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
 
@@ -19,48 +19,52 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
     <?php require_once __DIR__ . '/layout/icono.php' ?>
 
-    <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
+    <?php if (function_exists('cargarEstilos')) {
+        cargarEstilos();
+    } ?>
 
     <style>
-    :root {
-        --sidebar-width: 260px;
-        --navbar-height: 65px;
-        --apple-bg: #f5f5f7;
-        --accent-blue: #007aff;
-    }
-
-    body {
-        background-color: var(--apple-bg);
-        font-family: 'SF Pro Display', -apple-system, sans-serif;
-        color: #1d1d1f;
-    }
-
-    .main-content {
-        margin-left: var(--sidebar-width);
-        padding: 40px;
-        padding-top: calc(var(--navbar-height) + 20px);
-    }
-
-    .card-premium {
-        border: none;
-        border-radius: 20px;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(10px);
-    }
-
-    @media (max-width: 768px) {
-        .main-content {
-            margin-left: 0;
-            padding: 20px;
-            padding-top: 90px;
+        :root {
+            --sidebar-width: 260px;
+            --navbar-height: 65px;
+            --apple-bg: #f5f5f7;
+            --accent-blue: #007aff;
         }
-    }
+
+        body {
+            background-color: var(--apple-bg);
+            font-family: 'SF Pro Display', -apple-system, sans-serif;
+            color: #1d1d1f;
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 40px;
+            padding-top: calc(var(--navbar-height) + 20px);
+        }
+
+        .card-premium {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+                padding-top: 90px;
+            }
+        }
     </style>
 </head>
 
 <body>
-    <?php if (function_exists('renderizarLayout')) { renderizarLayout($paginaActual); } ?>
+    <?php if (function_exists('renderizarLayout')) {
+        renderizarLayout($paginaActual);
+    } ?>
 
     <main class="main-content">
         <h3 class="mb-3">📦 Historial Compras</h3>
@@ -73,9 +77,9 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
                     <select id="filtroAlmacen" class="form-select">
                         <option value="0">Todos</option>
                         <?php foreach ($almacenes as $a): ?>
-                        <option value="<?= $a['id'] ?>">
-                            <?= htmlspecialchars($a['nombre']) ?>
-                        </option>
+                            <option value="<?= $a['id'] ?>">
+                                <?= htmlspecialchars($a['nombre']) ?>
+                            </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
@@ -140,100 +144,100 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-    function cargarHistorial() {
-        const producto = $('#filtroProducto').val();
-        const almacen = $('#filtroAlmacen').val() ?? 0;
-        // NUEVO: Captura de fechas
-        const f_ini = $('#fecha_inicio').val();
-        const f_fin = $('#fecha_fin').val();
-        //cargarTraspasos(producto, almacen);
+        function cargarHistorial() {
+            const producto = $('#filtroProducto').val();
+            const almacen = $('#filtroAlmacen').val() ?? 0;
+            // NUEVO: Captura de fechas
+            const f_ini = $('#fecha_inicio').val();
+            const f_fin = $('#fecha_fin').val();
+            //cargarTraspasos(producto, almacen);
 
 
 
 
 
-        //cargarTraspasos(producto, almacen);
-        // cargarConsumoLotes(producto, almacen);
+            //cargarTraspasos(producto, almacen);
+            // cargarConsumoLotes(producto, almacen);
 
-        $.ajax({
-            url: '/cfsistem/app/controllers/comprasHistorialController.php',
-            type: 'GET',
-            data: {
-                action: 'obtenerCompras',
+            $.ajax({
+                url: '/cfsistem/app/controllers/comprasHistorialController.php',
+                type: 'GET',
+                data: {
+                    action: 'obtenerCompras',
 
-                almacen_id: almacen,
-                periodo: 'personalizado', // Enviamos el periodo para que el controller sepa usar f_inicio
-                f_inicio: f_ini,
-                f_fin: f_fin
-            },
-            dataType: 'json',
-            success: function(res) {
-                // $('#total_inicial').text(res.totales.total_cantidad_inicial || 0);
-                // $('#total_actual').text(res.totales.total_cantidad_actual || 0);
-                console.log(res.data);
+                    almacen_id: almacen,
+                    periodo: 'personalizado', // Enviamos el periodo para que el controller sepa usar f_inicio
+                    f_inicio: f_ini,
+                    f_fin: f_fin
+                },
+                dataType: 'json',
+                success: function (res) {
+                    // $('#total_inicial').text(res.totales.total_cantidad_inicial || 0);
+                    // $('#total_actual').text(res.totales.total_cantidad_actual || 0);
+                    console.log(res.data);
 
-                let html = '';
-                if (!res.success || !res.data.length) {
-                    $('#tablaHistorial').html(
-                        '<tr><td colspan="10" class="text-center">Sin datos</td></tr>');
-                    return;
-                }
-
-                // 1. Agrupamos usando Map para mantener el ORDEN EXACTO en el que vienen los datos
-                const comprasMap = new Map();
-
-                res.data.forEach(item => {
-                    if (!comprasMap.has(item.id)) {
-                        comprasMap.set(item.id, {
-                            id: item.id,
-                            folio: item.folio,
-                            almacen: item.almacen,
-                            fecha_compra: item.fecha_compra,
-                            estado: item.estado,
-                            estado_compra: item.estado_compra,
-                            total: item.total,
-                            proveedor:item.proveedor,
-
-                            productosList: [] // Aquí acumulamos los productos de esta compra
-                        });
+                    let html = '';
+                    if (!res.success || !res.data.length) {
+                        $('#tablaHistorial').html(
+                            '<tr><td colspan="10" class="text-center">Sin datos</td></tr>');
+                        return;
                     }
-                    comprasMap.get(item.id).productosList.push({
-                        id: item.producto_id,
-                        nombre: item.productos,
-                        cantidad: item.cantidadProd,
-                        faltante: item.faltante,
-                        sobrante: item.sobrante,
-                        factor: item.factor_conversion,
-                        uMedida: item.unidad_medida,
-                        uReporte: item.unidad_reporte,
 
+                    // 1. Agrupamos usando Map para mantener el ORDEN EXACTO en el que vienen los datos
+                    const comprasMap = new Map();
+
+                    res.data.forEach(item => {
+                        if (!comprasMap.has(item.id)) {
+                            comprasMap.set(item.id, {
+                                id: item.id,
+                                folio: item.folio,
+                                almacen: item.almacen,
+                                fecha_compra: item.fecha_compra,
+                                estado: item.estado,
+                                estado_compra: item.estado_compra,
+                                total: item.total,
+                                proveedor: item.proveedor,
+
+                                productosList: [] // Aquí acumulamos los productos de esta compra
+                            });
+                        }
+                        comprasMap.get(item.id).productosList.push({
+                            id: item.producto_id,
+                            nombre: item.productos,
+                            cantidad: item.cantidadProd,
+                            faltante: item.faltante,
+                            sobrante: item.sobrante,
+                            factor: item.factor_conversion,
+                            uMedida: item.unidad_medida,
+                            uReporte: item.unidad_reporte,
+
+                        });
                     });
-                });
 
-                // 2. Generamos el HTML manteniendo el orden original
-                comprasMap.forEach(compra => {
-                    let color = compra.estado === 'activo' ? 'success' : (compra.estado_compra ===
-                        'agotado' ? 'danger' : 'secondary');
+                    // 2. Generamos el HTML manteniendo el orden original
+                    comprasMap.forEach(compra => {
+                        let color = compra.estado === 'activo' ? 'success' : (compra.estado_compra ===
+                            'agotado' ? 'danger' : 'secondary');
 
-                    // En lugar del .join(', '), creamos una lista limpia de Bootstrap
-                    let nombresProductos =
-                        '<ul class="list-unstyled m-0 p-0" style="font-size: 11px; line-height: 1.3;">';
-                    compra.productosList.forEach(p => {
-                        let cantidad = p.cantidad / p.factor;
-                        let totalC = cantidad >= 1 ? p.nombre + ' ' + cantidad + ' ' + p
-                            .uReporte : p.nombre + ' ' + p.cantidad + ' ' + p.uMedida;
+                        // En lugar del .join(', '), creamos una lista limpia de Bootstrap
+                        let nombresProductos =
+                            '<ul class="list-unstyled m-0 p-0" style="font-size: 11px; line-height: 1.3;">';
+                        compra.productosList.forEach(p => {
+                            let cantidad = p.cantidad / p.factor;
+                            let totalC = cantidad >= 1 ? p.nombre + ' ' + cantidad + ' ' + p
+                                .uReporte : p.nombre + ' ' + p.cantidad + ' ' + p.uMedida;
 
-                        nombresProductos +=
-                            `<li class="text-truncate" style="max-width: 250px;" title="${totalC}">• ${totalC}</li>`;
-                    });
-                    nombresProductos += '</ul>';
-                    let columnaAccion = '';
+                            nombresProductos +=
+                                `<li class="text-truncate" style="max-width: 250px;" title="${totalC}">• ${totalC}</li>`;
+                        });
+                        nombresProductos += '</ul>';
+                        let columnaAccion = '';
 
-                    // Si es un solo producto, botón directo. Si son más, Dropdown de Bootstrap
-                   if (compra.productosList.length === 1) {
-    let prod = compra.productosList[0];
+                        // Si es un solo producto, botón directo. Si son más, Dropdown de Bootstrap
+                        if (compra.productosList.length === 1) {
+                            let prod = compra.productosList[0];
 
-    columnaAccion = `
+                            columnaAccion = `
         <button
             class="btn btn-sm btn-outline-primary"
             onclick='verMovimientos(
@@ -245,14 +249,14 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
             Ver
         </button>
     `;
-} else {
-                        let opciones = '';
-                        compra.productosList.forEach(prod => {
-                            let cantidad = prod.cantidad / prod.factor;
-                            let totalC = cantidad >= 1 ? prod.nombre + ' ' + cantidad +
-                                ' ' + prod.uReporte : prod.nombre + ' ' + prod.cantidad +
-                                ' ' + prod.uMedida;
-                            opciones += `
+                        } else {
+                            let opciones = '';
+                            compra.productosList.forEach(prod => {
+                                let cantidad = prod.cantidad / prod.factor;
+                                let totalC = cantidad >= 1 ? prod.nombre + ' ' + cantidad +
+                                    ' ' + prod.uReporte : prod.nombre + ' ' + prod.cantidad +
+                                    ' ' + prod.uMedida;
+                                opciones += `
                <li>
     <a class="dropdown-item d-flex justify-content-between align-items-center gap-2"
        href="#"
@@ -267,9 +271,9 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
     </a>
 </li>
 `;
-                        });
+                            });
 
-                        columnaAccion = `
+                            columnaAccion = `
             <div class="dropdown">
                 <button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     Opciones (${compra.productosList.length})
@@ -279,17 +283,17 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
                 </ul>
             </div>
         `;
-                    }
+                        }
 
 
-                   const color2 =
-    compra.estado === 'confirmada' ? 'success' :
-    compra.estado === 'pendiente'  ? 'primary' :
-    compra.estado === 'cancelada'  ? 'danger' :
-    'secondary';
-    (compra.faltante>0&& compra.estado!='cancelada')?compra.estado='pendiente':'';
+                        const color2 =
+                            compra.estado === 'confirmada' ? 'success' :
+                                compra.estado === 'pendiente' ? 'primary' :
+                                    compra.estado === 'cancelada' ? 'danger' :
+                                        'secondary';
+                        (compra.faltante > 0 && compra.estado != 'cancelada') ? compra.estado = 'pendiente' : '';
 
-html += `
+                        html += `
     <tr>
         <td>${compra.almacen}</td>
         <td class="fw-bold">#${compra.id}</td>
@@ -306,141 +310,141 @@ html += `
         <td class="text-end fw-bold">$${parseFloat(compra.total || 0).toFixed(2)}</td>
         <td class="text-center">${compra.estado != 'Cancelada' ? columnaAccion : ''}</td>
     </tr>`;;
-                });
-                $('#tablaHistorial').html(html);
-            }
-        });
-    }
-
-
-
-    function verMovimientos(producto_id, compra_id, compra_folio,prod) {
-
-        console.log("Compra enviada:", compra_folio);
-
-        $.ajax({
-            url: '/cfsistem/app/controllers/comprasHistorialController.php',
-            type: 'GET',
-            data: {
-                action: 'obtenerVentasCompra',
-                producto_id: producto_id,
-                compra_id: compra_id
-            },
-            dataType: 'json',
-
-            success: function(res) {
-                console.log("RESPUESTA:", res);
-
-                if (!res.success) {
-                    console.error(res.message);
-                    alert(res.message);
-                    return;
+                    });
+                    $('#tablaHistorial').html(html);
                 }
-                generarReporteMovimientos(res.reparto, res.data, compra_folio,prod);
+            });
+        }
 
-                let html = '';
 
-                if (res.data.length > 0) {
-                    console.log(res.data);
-                } else {
-                    html = '<tr><td colspan="14" class="text-center">Sin movimientos</td></tr>';
-                }
 
-                $('#tablaMovimientosLote').html(html);
-            },
+        function verMovimientos(producto_id, compra_id, compra_folio, prod) {
 
-            error: function(xhr, status, error) {
+            console.log("Compra enviada:", compra_folio);
 
-                console.log(xhr);
-                console.log(xhr.responseText);
+            $.ajax({
+                url: '/cfsistem/app/controllers/comprasHistorialController.php',
+                type: 'GET',
+                data: {
+                    action: 'obtenerVentasCompra',
+                    producto_id: producto_id,
+                    compra_id: compra_id
+                },
+                dataType: 'json',
 
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error AJAX',
-                    text: typeof xhr.responseText === 'string' ?
-                        xhr.responseText : JSON.stringify(xhr.responseText)
-                });
+                success: function (res) {
+                    console.log("RESPUESTA:", res);
 
-            }
-        });
-    }
+                    if (!res.success) {
+                        console.error(res.message);
+                        alert(res.message);
+                        return;
+                    }
+                    generarReporteMovimientos(res.reparto, res.data, compra_folio, prod);
 
-    function generarReporteMovimientos(reparto, data, compra_folio,prod) {
-        let contenidoReporte = '';
-        let repartosAlmacen='';
-        let totalGeneralGanancia = 0;
-        let totalGeneralRegistros = 0;
-        let pintarTraspasos = '';
-        let productoC='';
-        let nuevoreparto = [];
-        let movimientosTraspaso = [];
-        let proveedor='';
-        // 1. Recorremos el arreglo de distribución primero
-        reparto.forEach(rep => {
-            proveedor=rep.nombre_comercial;
+                    let html = '';
 
-        productoC=rep.producto;
-            const movimientosAlmacen = data.filter(
-                mov =>
-                Number(mov.almacen_id) === Number(rep.almacen_id) &&
-                String(mov.codigo_lote || '').trim() === String(rep.codigo_lote || '').trim()
-            );
-            const traspasos = data.filter(
-                movi =>
-                (Number(movi.almacen_id) === Number(rep.almacen_id) &&
-                    String(movi.codigo_lote || '').trim() === String(rep.codigo_lote || '').trim()) &&
-                movi.tipo_movimiento === 'TRASPASO'
-            );
+                    if (res.data.length > 0) {
+                        console.log(res.data);
+                    } else {
+                        html = '<tr><td colspan="14" class="text-center">Sin movimientos</td></tr>';
+                    }
 
-            console.log(traspasos.length);
-            let filasAlmacen = '';
-            let gananciaAlmacen = 0;
+                    $('#tablaMovimientosLote').html(html);
+                },
 
-            // Variable para acumular los bloques de los nuevos repartos (traspasos)
-            let bloquesTraspasosHtml = '';
+                error: function (xhr, status, error) {
 
-            if (traspasos.length > 0) {
+                    console.log(xhr);
+                    console.log(xhr.responseText);
 
-                console.log('Traspasos encontrados:', traspasos);
-
-                traspasos.forEach(t => {
-                    nuevoreparto.push({
-                        almacen_id: t.almacen_destino,
-                        almacen: t.cliente_proveedor,
-                        lote_id: parseInt(t.referencia_extra),
-                        codigo_lote: t.lote_destino_traspaso,
-                        cantidad_inicial: t.cantidad_salida,
-                        producto: t.producto
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error AJAX',
+                        text: typeof xhr.responseText === 'string' ?
+                            xhr.responseText : JSON.stringify(xhr.responseText)
                     });
 
-                    console.log('nuev reparto', nuevoreparto);
+                }
+            });
+        }
 
-                    let filasTraspaso = '';
+        function generarReporteMovimientos(reparto, data, compra_folio, prod) {
+            let contenidoReporte = '';
+            let repartosAlmacen = '';
+            let totalGeneralGanancia = 0;
+            let totalGeneralRegistros = 0;
+            let pintarTraspasos = '';
+            let productoC = '';
+            let nuevoreparto = [];
+            let movimientosTraspaso = [];
+            let proveedor = '';
+            // 1. Recorremos el arreglo de distribución primero
+            reparto.forEach(rep => {
+                proveedor = rep.nombre_comercial;
 
-                    $.ajax({
-                        url: '/cfsistem/app/controllers/lotesHistorialController.php',
-                        type: 'GET',
-                        async: false, // Forzamos sincronía para que el HTML espere los datos del servidor
-                        data: {
-                            action: 'obtenerVentasLote',
-                            lote_id: parseInt(t.referencia_extra)
-                        },
-                        dataType: 'json',
-                        success: function(res) {
+                productoC = rep.producto;
+                const movimientosAlmacen = data.filter(
+                    mov =>
+                        Number(mov.almacen_id) === Number(rep.almacen_id) &&
+                        String(mov.codigo_lote || '').trim() === String(rep.codigo_lote || '').trim()
+                );
+                const traspasos = data.filter(
+                    movi =>
+                        (Number(movi.almacen_id) === Number(rep.almacen_id) &&
+                            String(movi.codigo_lote || '').trim() === String(rep.codigo_lote || '').trim()) &&
+                        movi.tipo_movimiento === 'TRASPASO'
+                );
 
-                            if (res.success && res.data && res.data.length > 0) {
+                console.log(traspasos.length);
+                let filasAlmacen = '';
+                let gananciaAlmacen = 0;
 
-                                console.log('Información del traspaso:', res.data);
-                                let cantidadReal = t.cantidad_salida / t.factor;
-                                let cantidad = cantidadReal >= 1 ? cantidadReal + ' ' + t
-                                    .unidad_reporte : t.cantidad_salida + ' ' + t
-                                    .unidad_medida;
-                                let costo = cantidadReal >= 1 ? (parseFloat((t
+                // Variable para acumular los bloques de los nuevos repartos (traspasos)
+                let bloquesTraspasosHtml = '';
+
+                if (traspasos.length > 0) {
+
+                    console.log('Traspasos encontrados:', traspasos);
+
+                    traspasos.forEach(t => {
+                        nuevoreparto.push({
+                            almacen_id: t.almacen_destino,
+                            almacen: t.cliente_proveedor,
+                            lote_id: parseInt(t.referencia_extra),
+                            codigo_lote: t.lote_destino_traspaso,
+                            cantidad_inicial: t.cantidad_salida,
+                            producto: t.producto
+                        });
+
+                        console.log('nuev reparto', nuevoreparto);
+
+                        let filasTraspaso = '';
+
+                        $.ajax({
+                            url: '/cfsistem/app/controllers/lotesHistorialController.php',
+                            type: 'GET',
+                            async: false, // Forzamos sincronía para que el HTML espere los datos del servidor
+                            data: {
+                                action: 'obtenerVentasLote',
+                                lote_id: parseInt(t.referencia_extra)
+                            },
+                            dataType: 'json',
+                            success: function (res) {
+
+                                if (res.success && res.data && res.data.length > 0) {
+
+                                    console.log('Información del traspaso:', res.data);
+                                    let cantidadReal = t.cantidad_salida / t.factor;
+                                    let cantidad = cantidadReal >= 1 ? cantidadReal + ' ' + t
+                                        .unidad_reporte : t.cantidad_salida + ' ' + t
+                                            .unidad_medida;
+                                    let costo = cantidadReal >= 1 ? (parseFloat((t
                                         .costo_unitario) * t.factor)).toFixed(1) + ' X ' + t
-                                    .unidad_reporte : (parseFloat(t.costo_unitario))
-                                    .toFixed(2) + ' X ' + rep.unidad_medida;
+                                            .unidad_reporte : (parseFloat(t.costo_unitario))
+                                                .toFixed(2) + ' X ' + rep.unidad_medida;
 
-                                filasTraspaso = `
+                                    filasTraspaso = `
                             
                         
                    
@@ -496,65 +500,65 @@ html += `
                             </tr>
                         `;
 
-                                res.data.forEach(tj => {
-                                    console.log('tj',tj);
+                                    res.data.forEach(tj => {
+                                        console.log('tj', tj);
 
-                                    movimientosTraspaso.push({
-                                        tipo_movimiento: tj.tipo_movimiento,
-                                        almacen_id: tj.almacen_id,
-                                        producto_id: tj.producto_id,
-                                        nombre: tj.nombre,
-                                        producto: tj.producto,
-                                        documento: tj.documento,
-                                        cliente_proveedor: tj
-                                            .cliente_proveedor,
-                                        codigo_lote: tj.codigo_lote,
-                                        fecha_lote: tj.fecha_lote,
-                                        fecha_movimiento: tj
-                                            .fecha_movimiento,
-                                        cantidad_inicial: tj
-                                            .cantidad_inicial,
-                                        cantidad_actual: tj.cantidad_actual,
-                                        cantidad_salida: tj.cantidad_salida,
-                                        saldo_final: tj.saldo_final,
-                                        costo_unitario: tj.costo_unitario,
-                                        precio_venta: tj.precio_venta,
-                                        ganancia: tj.ganancia,
-                                        referencia_extra: tj
-                                            .referencia_extra
-                                    });
+                                        movimientosTraspaso.push({
+                                            tipo_movimiento: tj.tipo_movimiento,
+                                            almacen_id: tj.almacen_id,
+                                            producto_id: tj.producto_id,
+                                            nombre: tj.nombre,
+                                            producto: tj.producto,
+                                            documento: tj.documento,
+                                            cliente_proveedor: tj
+                                                .cliente_proveedor,
+                                            codigo_lote: tj.codigo_lote,
+                                            fecha_lote: tj.fecha_lote,
+                                            fecha_movimiento: tj
+                                                .fecha_movimiento,
+                                            cantidad_inicial: tj
+                                                .cantidad_inicial,
+                                            cantidad_actual: tj.cantidad_actual,
+                                            cantidad_salida: tj.cantidad_salida,
+                                            saldo_final: tj.saldo_final,
+                                            costo_unitario: tj.costo_unitario,
+                                            precio_venta: tj.precio_venta,
+                                            ganancia: tj.ganancia,
+                                            referencia_extra: tj
+                                                .referencia_extra
+                                        });
 
-                                    const gananciaTJ = parseFloat((tj.precio_venta *
-                                        tj.cantidad_salida) - (tj
-                                        .costo_unitario * tj.cantidad_salida
-                                        ) || 0);
-                                    let cantidadReal = 
-                                    tj.cantidad_inicial / tj.factor;
-                                       
-                                    let cantidad = cantidadReal >= 1 ?
-                                        cantidadReal + ' ' + tj.unidad_reporte :
-                                         tj.cantidad_salida + ' ' + tj.unidad_medida;
-                                        
-                                    let costo = cantidadReal >= 1 ? (parseFloat((tj
-                                                .costo_unitario) * tj
-                                            .factor)).toFixed(1) +
-                                        ' X ' + tj.unidad_reporte : (parseFloat(tj
-                                            .costo_unitario)).toFixed(2) + ' X ' +
+                                        const gananciaTJ = parseFloat((tj.precio_venta *
+                                            tj.cantidad_salida) - (tj
+                                                .costo_unitario * tj.cantidad_salida
+                                            ) || 0);
+                                        let cantidadReal =
+                                            tj.cantidad_inicial / tj.factor;
+
+                                        let cantidad = cantidadReal >= 1 ?
+                                            cantidadReal + ' ' + tj.unidad_reporte :
+                                            tj.cantidad_salida + ' ' + tj.unidad_medida;
+
+                                        let costo = cantidadReal >= 1 ? (parseFloat((tj
+                                            .costo_unitario) * tj
+                                                .factor)).toFixed(1) +
+                                            ' X ' + tj.unidad_reporte : (parseFloat(tj
+                                                .costo_unitario)).toFixed(2) + ' X ' +
                                         rep.unidad_medida;
 
 
 
 
-                                        let saldo=tj.saldo_final/tj.factor;
-                                        let saldoReal=saldo >= 1 ?
-                                        saldo + ' ' + tj.unidad_reporte :
-                                         tj.saldo_final + ' ' + tj.unidad_medida;
-                                         let salida=tj.cantidad_salida/tj.factor;
-                                        let salidaReal=saldo >= 1 ?
-                                        saldo + ' ' + tj.unidad_reporte :
-                                         tj.cantidad_salida + ' ' + tj.unidad_medida;
+                                        let saldo = tj.saldo_final / tj.factor;
+                                        let saldoReal = saldo >= 1 ?
+                                            saldo + ' ' + tj.unidad_reporte :
+                                            tj.saldo_final + ' ' + tj.unidad_medida;
+                                        let salida = tj.cantidad_salida / tj.factor;
+                                        let salidaReal = saldo >= 1 ?
+                                            saldo + ' ' + tj.unidad_reporte :
+                                            tj.cantidad_salida + ' ' + tj.unidad_medida;
 
-                                    filasTraspaso += `
+                                        filasTraspaso += `
                                 <tr>
                                 <td>Traspaso </td>
                                 <td>${tj.documento}</td>
@@ -570,44 +574,44 @@ html += `
                                     <td class="num">${cantidad}</td>
                                     <td class="num">${salidaReal}</td>
                                     <td class="num">${saldoReal}</td>
-                                    <td class="money">${(cantidadReal>=1?(tj.costo_unitario*tj.factor).toFixed(1)+'0 X '+tj.unidad_reporte:tj.costo_unitario+' X '+tj.unidad_medida|| 0)}</td>
-                                    <td class="money">$${(cantidadReal>=1?(tj.precio_venta*tj.factor).toFixed(1)+'0 X '+tj.unidad_reporte:tj.precio_venta+' X '+tj.unidad_medida|| 0)}</td>
+                                    <td class="money">${(cantidadReal >= 1 ? (tj.costo_unitario * tj.factor).toFixed(1) + '0 X ' + tj.unidad_reporte : tj.costo_unitario + ' X ' + tj.unidad_medida || 0)}</td>
+                                    <td class="money">$${(cantidadReal >= 1 ? (tj.precio_venta * tj.factor).toFixed(1) + '0 X ' + tj.unidad_reporte : tj.precio_venta + ' X ' + tj.unidad_medida || 0)}</td>
                                     <td class="money gain">$${gananciaTJ.toFixed(2)}</td>
                                 </tr>
                             `;
-                                });
-                            } else {
+                                    });
+                                } else {
 
-                                movimientosTraspaso.push({
-                                    tipo_movimiento: 'SIN_MOVIMIENTOS',
-                                    almacen_id: t?.almacen_destino ||
-                                        0, // Corregido tj por t
-                                    producto: '',
-                                    documento: '',
-                                    cliente_proveedor: '',
-                                    codigo_lote: '',
-                                    fecha_lote: '',
-                                    fecha_movimiento: '',
-                                    cantidad_inicial: 0,
-                                    cantidad_actual: 0,
-                                    cantidad_salida: 0,
-                                    saldo_final: 0,
-                                    costo_unitario: 0,
-                                    precio_venta: 0,
-                                    ganancia: 0,
-                                    referencia_extra: '-'
-                                });
-                                console.log('datos', t);
-                                let cantidadReal = t.cantidad_salida / t.factor;
-                                let cantidad = cantidadReal >= 1 ? cantidadReal + ' ' + t
-                                    .unidad_reporte : t.cantidad_salida + ' ' + t
-                                    .unidad_medida;
-                                let costo = cantidadReal >= 1 ? (parseFloat((t
+                                    movimientosTraspaso.push({
+                                        tipo_movimiento: 'SIN_MOVIMIENTOS',
+                                        almacen_id: t?.almacen_destino ||
+                                            0, // Corregido tj por t
+                                        producto: '',
+                                        documento: '',
+                                        cliente_proveedor: '',
+                                        codigo_lote: '',
+                                        fecha_lote: '',
+                                        fecha_movimiento: '',
+                                        cantidad_inicial: 0,
+                                        cantidad_actual: 0,
+                                        cantidad_salida: 0,
+                                        saldo_final: 0,
+                                        costo_unitario: 0,
+                                        precio_venta: 0,
+                                        ganancia: 0,
+                                        referencia_extra: '-'
+                                    });
+                                    console.log('datos', t);
+                                    let cantidadReal = t.cantidad_salida / t.factor;
+                                    let cantidad = cantidadReal >= 1 ? cantidadReal + ' ' + t
+                                        .unidad_reporte : t.cantidad_salida + ' ' + t
+                                            .unidad_medida;
+                                    let costo = cantidadReal >= 1 ? (parseFloat((t
                                         .costo_unitario) * t.factor)).toFixed(1) + ' X ' + t
-                                    .unidad_reporte : (parseFloat(t.costo_unitario))
-                                    .toFixed(2) + ' X ' + rep.unidad_medida;
+                                            .unidad_reporte : (parseFloat(t.costo_unitario))
+                                                .toFixed(2) + ' X ' + rep.unidad_medida;
 
-                                filasTraspaso = `
+                                    filasTraspaso = `
                            
                                
                                    <tr style="
@@ -660,34 +664,34 @@ html += `
                                 
                             </tr>
                         `;
+                                }
+                            },
+                            error: function (xhr, status, error) {
+                                console.error('Error AJAX:', error);
+                                console.error(xhr.responseText);
                             }
-                        },
-                        error: function(xhr, status, error) {
-                            console.error('Error AJAX:', error);
-                            console.error(xhr.responseText);
-                        }
-                    });
+                        });
 
-                    // Construimos la sección de "nuevoreparto" con el mismo diseño que el almacén principal
-                    bloquesTraspasosHtml += `
+                        // Construimos la sección de "nuevoreparto" con el mismo diseño que el almacén principal
+                        bloquesTraspasosHtml += `
               
                             ${filasTraspaso}
                             
                            
                       
             `;
-                });
-            }
+                    });
+                }
 
-            if (movimientosAlmacen.length > 0) {
-                let cantidadReal = rep.cantidad_inicial / rep.factor_conversion;
-                let cantidad = cantidadReal >= 1 ? cantidadReal + ' ' + rep.unidad_reporte : rep
-                    .cantidad_salida + ' ' + rep.unidad_medida;
-                let costo = cantidadReal >= 1 ? (parseFloat((rep.costo_unitario) * rep.factor_conversion))
-                    .toFixed(1) + ' X ' + rep.unidad_reporte : (parseFloat(rep.costo_unitario)).toFixed(2) +
-                    ' X ' + rep.unidad_medida;
+                if (movimientosAlmacen.length > 0) {
+                    let cantidadReal = rep.cantidad_inicial / rep.factor_conversion;
+                    let cantidad = cantidadReal >= 1 ? cantidadReal + ' ' + rep.unidad_reporte : rep
+                        .cantidad_salida + ' ' + rep.unidad_medida;
+                    let costo = cantidadReal >= 1 ? (parseFloat((rep.costo_unitario) * rep.factor_conversion))
+                        .toFixed(1) + ' X ' + rep.unidad_reporte : (parseFloat(rep.costo_unitario)).toFixed(2) +
+                        ' X ' + rep.unidad_medida;
 
-                repartosAlmacen += `
+                    repartosAlmacen += `
             <tr style="
     background:#f0fdf4;
     border-left:4px solid #22c55e;
@@ -733,71 +737,71 @@ html += `
     </td>
 </tr>
         `;
-                
 
 
-                movimientosAlmacen.forEach(mov => {
-                    // 1. Forzar conversión a números para evitar caídas de .toFixed() y NaN
-                    const subtotal = parseFloat(mov.subtotal || 0);
-                    const costoUnitario = parseFloat(mov.costo_unitario || 0);
-                    const precioVenta = parseFloat(mov.precio_venta || 0);
-                    const cantInicial = parseFloat(mov.cantidad_inicial || 0);
-                    const cantSalidaBase = parseFloat(mov.cantidad_salida || 0);
-                    const salFinalBase = parseFloat(mov.saldo_final || 0);
-                    let ganancia = 0;
-                    // Evita división entre cero: si no hay factor o es 0, por defecto usa 1
-                    const factor = parseFloat(mov.factor || 1) || 1;
 
-                    // 2. Operaciones matemáticas seguras
-                    if (mov.tipo_movimiento != 'TRASPASO') {
-                        ganancia = parseFloat((mov.precio_venta * mov.cantidad_salida) - (mov
-                            .costo_unitario * mov.cantidad_salida) || 0);
+                    movimientosAlmacen.forEach(mov => {
+                        // 1. Forzar conversión a números para evitar caídas de .toFixed() y NaN
+                        const subtotal = parseFloat(mov.subtotal || 0);
+                        const costoUnitario = parseFloat(mov.costo_unitario || 0);
+                        const precioVenta = parseFloat(mov.precio_venta || 0);
+                        const cantInicial = parseFloat(mov.cantidad_inicial || 0);
+                        const cantSalidaBase = parseFloat(mov.cantidad_salida || 0);
+                        const salFinalBase = parseFloat(mov.saldo_final || 0);
+                        let ganancia = 0;
+                        // Evita división entre cero: si no hay factor o es 0, por defecto usa 1
+                        const factor = parseFloat(mov.factor || 1) || 1;
 
-
-                    }
+                        // 2. Operaciones matemáticas seguras
+                        if (mov.tipo_movimiento != 'TRASPASO') {
+                            ganancia = parseFloat((mov.precio_venta * mov.cantidad_salida) - (mov
+                                .costo_unitario * mov.cantidad_salida) || 0);
 
 
-                    ;
-                    gananciaAlmacen += ganancia;
-                    totalGeneralGanancia += ganancia;
-                   
+                        }
 
-                    const cantidadTotal = cantInicial / factor;
-                    const cantidadSalida = cantSalidaBase / factor;
-                    const saldoFinal = salFinalBase / factor;
 
-                    const uReporte = mov.unidad_reporte || '';
-                    const uMedida = mov.unidad_medida || '';
+                        ;
+                        gananciaAlmacen += ganancia;
+                        totalGeneralGanancia += ganancia;
 
-                    // 3. Preparar los textos de las celdas de forma limpia
-                    const txtInicial = cantidadTotal >= 1 ?
-                        `${cantidadTotal.toLocaleString()} ${uReporte} (${cantInicial.toLocaleString()} ${uMedida})` :
-                        `${cantInicial.toLocaleString()} ${uMedida}`;
 
-                    const txtSalida = cantidadSalida >= 1 ?
-                        `${cantidadSalida.toLocaleString()} ${uReporte}` :
-                        `${cantSalidaBase.toLocaleString()} ${uMedida}`;
+                        const cantidadTotal = cantInicial / factor;
+                        const cantidadSalida = cantSalidaBase / factor;
+                        const saldoFinal = salFinalBase / factor;
 
-                    const txtSaldo = saldoFinal >= 1 ?
-                        `${saldoFinal.toLocaleString()} ${uReporte}` :
-                        `${salFinalBase.toLocaleString()} ${uMedida}`;
+                        const uReporte = mov.unidad_reporte || '';
+                        const uMedida = mov.unidad_medida || '';
 
-                    const txtCosto = cantidadSalida >= 1 ?
-                        `$${(costoUnitario * factor).toFixed(2)} x ${uReporte}` :
-                        `$${costoUnitario.toFixed(2)} x ${uMedida}`;
+                        // 3. Preparar los textos de las celdas de forma limpia
+                        const txtInicial = cantidadTotal >= 1 ?
+                            `${cantidadTotal.toLocaleString()} ${uReporte} (${cantInicial.toLocaleString()} ${uMedida})` :
+                            `${cantInicial.toLocaleString()} ${uMedida}`;
 
-                    const txtVenta = cantidadSalida >= 1 ?
-                        `$${(precioVenta * factor).toFixed(1)}0 x ${uReporte}` :
-                        `$${precioVenta.toFixed(1)}0 x ${uMedida}`;
-                    let cantidadReal = rep.cantidad_inicial / rep.factor_conversion;
-                    let cantidad = cantidadReal >= 1 ? cantidadReal + ' ' + rep.unidad_reporte : rep
-                        .cantidad_salida + ' ' + rep.unidad_medida;
-                    let costo = cantidadReal >= 1 ? (parseFloat((rep.costo_unitario) * rep
-                        .factor_conversion)).toFixed(1) + ' X ' + rep.unidad_reporte : (parseFloat(
-                        rep.costo_unitario)).toFixed(2) + ' X ' + rep.unidad_medida;
+                        const txtSalida = cantidadSalida >= 1 ?
+                            `${cantidadSalida.toLocaleString()} ${uReporte}` :
+                            `${cantSalidaBase.toLocaleString()} ${uMedida}`;
 
-                    // 4. Inyección en la tabla libre de lógica compleja
-                    filasAlmacen += `
+                        const txtSaldo = saldoFinal >= 1 ?
+                            `${saldoFinal.toLocaleString()} ${uReporte}` :
+                            `${salFinalBase.toLocaleString()} ${uMedida}`;
+
+                        const txtCosto = cantidadSalida >= 1 ?
+                            `$${(costoUnitario * factor).toFixed(2)} x ${uReporte}` :
+                            `$${costoUnitario.toFixed(2)} x ${uMedida}`;
+
+                        const txtVenta = cantidadSalida >= 1 ?
+                            `$${(precioVenta * factor).toFixed(1)}0 x ${uReporte}` :
+                            `$${precioVenta.toFixed(1)}0 x ${uMedida}`;
+                        let cantidadReal = rep.cantidad_inicial / rep.factor_conversion;
+                        let cantidad = cantidadReal >= 1 ? cantidadReal + ' ' + rep.unidad_reporte : rep
+                            .cantidad_salida + ' ' + rep.unidad_medida;
+                        let costo = cantidadReal >= 1 ? (parseFloat((rep.costo_unitario) * rep
+                            .factor_conversion)).toFixed(1) + ' X ' + rep.unidad_reporte : (parseFloat(
+                                rep.costo_unitario)).toFixed(2) + ' X ' + rep.unidad_medida;
+
+                        // 4. Inyección en la tabla libre de lógica compleja
+                        filasAlmacen += `
         <tr>
            <td>${mov.documento}</td>
              <td>${mov.fecha_movimiento}</td>
@@ -809,8 +813,8 @@ html += `
             <td>${mov.producto}</td>
          
             <td>${mov.tipo_movimiento === 'TRASPASO'
-                ? 'Traspaso a sucursal de ' + mov.cliente_proveedor
-                : mov.cliente_proveedor}
+                                ? 'Traspaso a sucursal de ' + mov.cliente_proveedor
+                                : mov.cliente_proveedor}
             </td>
             
             <td class="num">${txtInicial}</td>
@@ -818,24 +822,24 @@ html += `
             <td class="num">${txtSaldo}</td>
             <td class="money">${costo}</td>
             <td>${mov.tipo_movimiento === 'TRASPASO'
-                ? costo+' traspaso'
-                : txtVenta}
+                                ? costo + ' traspaso'
+                                : txtVenta}
             </td>
           
             <td class="money gain">$${ganancia.toFixed(2)}</td>
         </tr>
     `;
-                });
+                    });
 
-            } else {
-                let cantidadReal = rep.cantidad_inicial / rep.factor_conversion;
-                let cantidad = cantidadReal >= 1 ? cantidadReal + ' ' + rep.unidad_reporte : rep
-                    .cantidad_salida + ' ' + rep.unidad_medida;
-                let costo = cantidadReal >= 1 ? (parseFloat((rep.costo_unitario) * rep.factor_conversion))
-                    .toFixed(1) + ' X ' + rep.unidad_reporte : (parseFloat(rep.costo_unitario)).toFixed(2) +
-                    ' X ' + rep.unidad_medida;
+                } else {
+                    let cantidadReal = rep.cantidad_inicial / rep.factor_conversion;
+                    let cantidad = cantidadReal >= 1 ? cantidadReal + ' ' + rep.unidad_reporte : rep
+                        .cantidad_salida + ' ' + rep.unidad_medida;
+                    let costo = cantidadReal >= 1 ? (parseFloat((rep.costo_unitario) * rep.factor_conversion))
+                        .toFixed(1) + ' X ' + rep.unidad_reporte : (parseFloat(rep.costo_unitario)).toFixed(2) +
+                        ' X ' + rep.unidad_medida;
 
-                repartosAlmacen += `
+                    repartosAlmacen += `
            <tr style="
     background:#f0fdf4;
     border-left:4px solid #22c55e;
@@ -882,38 +886,38 @@ html += `
     </td>
 </tr>
         `;
-            }
-            let cantidadTotal = rep.cantidad_inicial / rep.factor_conversion;
-            
+                }
+                let cantidadTotal = rep.cantidad_inicial / rep.factor_conversion;
 
-            // Inyección en el reporte principal
-            contenidoReporte += `
+
+                // Inyección en el reporte principal
+                contenidoReporte += `
         
                     ${filasAlmacen}
               
         
         ${bloquesTraspasosHtml}
     `;
-        });
-        let cantidad = prod.cantidad / prod.factor;
-                            let totalC = cantidad >= 1 ? prod.nombre + ' cantidad: ' + cantidad +
-                                ' ' + prod.uReporte +' ('+ ' ' + prod.cantidad +
-                                ' ' + prod.uMedida+')'
-                                : prod.nombre + ' ' + prod.cantidad +
-                                ' (' + prod.uMedida+')';
-                                console.log(prod);
-        // 4. Abrimos la ventana y renderizamos todo el reporte
-        let cantidadFaltante = prod.faltante / prod.factor;
-                            let totalFaltante = cantidadFaltante >= 1 ? prod.nombre + ' cantidad: ' + cantidadFaltante +
-                                ' ' + prod.uReporte +' ('+ ' ' + prod.faltante +
-                                ' ' + prod.uMedida+')'
-                                : prod.nombre + ' ' + prod.faltante +
-                                ' (' + prod.uMedida+')';
-                                console.log(prod);
-        // 4. Abrimos la ventana y renderizamos todo el reporte
-        const ventana = window.open('', '_blank', 'width=1700,height=950');
+            });
+            let cantidad = prod.cantidad / prod.factor;
+            let totalC = cantidad >= 1 ? prod.nombre + ' cantidad: ' + cantidad +
+                ' ' + prod.uReporte + ' (' + ' ' + prod.cantidad +
+                ' ' + prod.uMedida + ')'
+                : prod.nombre + ' ' + prod.cantidad +
+                ' (' + prod.uMedida + ')';
+            console.log(prod);
+            // 4. Abrimos la ventana y renderizamos todo el reporte
+            let cantidadFaltante = prod.faltante / prod.factor;
+            let totalFaltante = cantidadFaltante >= 1 ? prod.nombre + ' cantidad: ' + cantidadFaltante +
+                ' ' + prod.uReporte + ' (' + ' ' + prod.faltante +
+                ' ' + prod.uMedida + ')'
+                : prod.nombre + ' ' + prod.faltante +
+                ' (' + prod.uMedida + ')';
+            console.log(prod);
+            // 4. Abrimos la ventana y renderizamos todo el reporte
+            const ventana = window.open('', '_blank', 'width=1700,height=950');
 
-        ventana.document.write(`
+            ventana.document.write(`
         <html>
         <!DOCTYPE html>
 <html lang="es">
@@ -1216,8 +1220,8 @@ html += `
 </html>
     `);
 
-        ventana.document.close();
-    }
+            ventana.document.close();
+        }
 
 
 
@@ -1227,58 +1231,58 @@ html += `
 
 
 
-    function cargarTraspasos(lote_id) {
-        const f_ini = $('#fecha_inicio').val();
-        const f_fin = $('#fecha_fin').val();
+        function cargarTraspasos(lote_id) {
+            const f_ini = $('#fecha_inicio').val();
+            const f_fin = $('#fecha_fin').val();
 
-        $.ajax({
-            url: '/cfsistem/app/controllers/lotesHistorialController.php',
-            type: 'GET',
-            data: {
-                action: 'obtenerTraspasos',
-                lote_id: lote_id,
+            $.ajax({
+                url: '/cfsistem/app/controllers/lotesHistorialController.php',
+                type: 'GET',
+                data: {
+                    action: 'obtenerTraspasos',
+                    lote_id: lote_id,
 
-                f_inicio: f_ini,
-                f_fin: f_fin
-            },
-            dataType: 'json',
-            success: function(res) {
-                let html = '';
-                if (res.data && res.data.length > 0) {
-                    res.data.forEach(t => {
-                        html +=
-                            `<tr><td>TRASPASO</td><td>${t.fecha}</td><td>${t.movimiento_id}</td><td>${t.nombreOrigen}</td><td>${t.codigo_lote_origen}</td><td>${t.nombreDestino}</td><td>${t.codigo_lote_destino}</td><td>${t.cantidad}</td></tr>`;
-                    });
-                } else {
-                    html = '<tr><td colspan="9" class="text-center">Sin traspasos</td></tr>';
+                    f_inicio: f_ini,
+                    f_fin: f_fin
+                },
+                dataType: 'json',
+                success: function (res) {
+                    let html = '';
+                    if (res.data && res.data.length > 0) {
+                        res.data.forEach(t => {
+                            html +=
+                                `<tr><td>TRASPASO</td><td>${t.fecha}</td><td>${t.movimiento_id}</td><td>${t.nombreOrigen}</td><td>${t.codigo_lote_origen}</td><td>${t.nombreDestino}</td><td>${t.codigo_lote_destino}</td><td>${t.cantidad}</td></tr>`;
+                        });
+                    } else {
+                        html = '<tr><td colspan="9" class="text-center">Sin traspasos</td></tr>';
+                    }
+                    $('#tablaTraspasosLote').html(html);
                 }
-                $('#tablaTraspasosLote').html(html);
-            }
-        });
-    }
+            });
+        }
 
-    // $('#filtroAlmacen').on('change', function() {
-    //     verMovimientos(0);
-    //     let almacen = $(this).val();
-    //     $.ajax({
-    //         url: '/cfsistem/app/controllers/lotesHistorialController.php',
-    //         type: 'GET',
-    //         data: {
-    //             action: 'productos',
-    //             almacen_id: almacen
-    //         },
-    //         dataType: 'json',
-    //         success: function(res) {
-    //             let html = '<option value="">Selecciona producto</option>';
-    //             if (res.success) {
-    //                 res.data.forEach(p => {
-    //                     html += `<option value="${p.id}">${p.nombre}</option>`;
-    //                 });
-    //             }
-    //             $('#filtroProducto').html(html);
-    //         }
-    //     });
-    // });
+        // $('#filtroAlmacen').on('change', function() {
+        //     verMovimientos(0);
+        //     let almacen = $(this).val();
+        //     $.ajax({
+        //         url: '/cfsistem/app/controllers/lotesHistorialController.php',
+        //         type: 'GET',
+        //         data: {
+        //             action: 'productos',
+        //             almacen_id: almacen
+        //         },
+        //         dataType: 'json',
+        //         success: function(res) {
+        //             let html = '<option value="">Selecciona producto</option>';
+        //             if (res.success) {
+        //                 res.data.forEach(p => {
+        //                     html += `<option value="${p.id}">${p.nombre}</option>`;
+        //                 });
+        //             }
+        //             $('#filtroProducto').html(html);
+        //         }
+        //     });
+        // });
     </script>
 </body>
 

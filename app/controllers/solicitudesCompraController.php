@@ -27,8 +27,8 @@ $egresoModel = new EgresoModel($conexion);
 $proveedorModel = new ProveedoresModel($conexion);
 $comprasModel = new CompraModel($conexion);
 $paginaActual = 'solicitudesCompra';
-$almacen_usuario = $_SESSION['almacen_id'] ?? 0;
-$es_admin = ($_SESSION['rol_id'] == 1 || $almacen_usuario == 0);
+$almacen_usuario = $_SESSION['rol_id'] == 3 ? 0 : $_SESSION['almacen_id'] ?? 0;
+$es_admin = ($_SESSION['rol_id'] == 1 || $almacen_usuario == 0 || $_SESSION['rol_id'] == 3);
 
 // --- ACCIÓN: GUARDAR (AJAX) ---
 if (isset($_GET['action']) && $_GET['action'] === 'guardar') {

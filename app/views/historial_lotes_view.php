@@ -5,14 +5,14 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historial de Lotes</title>
-      <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
+    <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
 
     <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
 
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
@@ -20,79 +20,83 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
     <?php require_once __DIR__ . '/layout/icono.php' ?>
 
-    <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
+    <?php if (function_exists('cargarEstilos')) {
+        cargarEstilos();
+    } ?>
 
     <style>
-    :root {
-        --sidebar-width: 260px;
-        --navbar-height: 65px;
-        --apple-bg: #f5f5f7;
-        --accent-blue: #007aff;
-    }
-
-    body {
-        background-color: var(--apple-bg);
-        font-family: 'SF Pro Display', -apple-system, sans-serif;
-        color: #1d1d1f;
-    }
-
-    .main-content {
-        margin-left: var(--sidebar-width);
-        padding: 40px;
-        padding-top: calc(var(--navbar-height) + 20px);
-    }
-
-    .card-premium {
-        border: none;
-        border-radius: 20px;
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(10px);
-    }
-
-    @media (max-width: 768px) {
-        .main-content {
-            margin-left: 0;
-            padding: 20px;
-            padding-top: 90px;
+        :root {
+            --sidebar-width: 260px;
+            --navbar-height: 65px;
+            --apple-bg: #f5f5f7;
+            --accent-blue: #007aff;
         }
-    }
+
+        body {
+            background-color: var(--apple-bg);
+            font-family: 'SF Pro Display', -apple-system, sans-serif;
+            color: #1d1d1f;
+        }
+
+        .main-content {
+            margin-left: var(--sidebar-width);
+            padding: 40px;
+            padding-top: calc(var(--navbar-height) + 20px);
+        }
+
+        .card-premium {
+            border: none;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                margin-left: 0;
+                padding: 20px;
+                padding-top: 90px;
+            }
+        }
     </style>
 </head>
 
 <body>
-    <?php if (function_exists('renderizarLayout')) { renderizarLayout($paginaActual); } ?>
+    <?php if (function_exists('renderizarLayout')) {
+        renderizarLayout($paginaActual);
+    } ?>
 
     <main class="main-content">
         <h3 class="mb-3">📦 Historial de Lotes</h3>
 
         <div class="card p-3 mb-3">
             <div class="row g-3">
-                <?php if ($almacen_usuario == 0): ?>
+                <?php if ($almacen_usuario == 0 || $_SESSION['rol_id'] == 3): ?>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-bold">Almacén</label>
+                        <select id="filtroAlmacen" class="form-select">
+                            <option value="0">Todos</option>
+                            <?php foreach ($almacenes as $a): ?>
+                                <option value="<?= $a['id'] ?>">
+                                    <?= htmlspecialchars($a['nombre']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                <?php endif; ?>
+
                 <div class="col-md-3">
-                    <label class="form-label small fw-bold">Almacén</label>
-                    <select id="filtroAlmacen" class="form-select">
-                        <option value="0">Todos</option>
-                        <?php foreach ($almacenes as $a): ?>
-                        <option value="<?= $a['id'] ?>">
-                            <?= htmlspecialchars($a['nombre']) ?>
-                        </option>
+                    <label class="form-label small fw-bold">Producto</label>
+                    <select id="filtroProducto" class="form-select select2">
+                        <option value="">Selecciona producto</option>
+                        <?php foreach ($productos as $p): ?>
+                            <option value="<?= $p['id'] ?>">
+                                <?= htmlspecialchars($p['nombre']) ?>
+                            </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <?php endif; ?>
-
-<div class="col-md-3">
-    <label class="form-label small fw-bold">Producto</label>
-    <select id="filtroProducto" class="form-select select2">
-        <option value="">Selecciona producto</option>
-        <?php foreach ($productos as $p): ?>
-        <option value="<?= $p['id'] ?>">
-            <?= htmlspecialchars($p['nombre']) ?>
-        </option>
-        <?php endforeach; ?>
-    </select>
-</div>
                 <div class="col-md-2">
                     <label class="form-label small fw-bold">Desde</label>
                     <input type="date" id="fecha_inicio" class="form-control" value="<?= date('Y-m-01') ?>">
@@ -192,7 +196,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
                             <th>Tipo</th>
                             <th>Fecha</th>
                             <th>ID Mov</th>
-                            
+
                             <th>Alm. Origen</th>
                             <th>Lote Origen</th>
                             <th>Alm. Destino</th>
@@ -235,53 +239,53 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-    function cargarHistorial() {
-        const producto = $('#filtroProducto').val();
-        const almacen = $('#filtroAlmacen').val() ?? 0;
-        // NUEVO: Captura de fechas
-        const f_ini = $('#fecha_inicio').val();
-        const f_fin = $('#fecha_fin').val();
-        //cargarTraspasos(producto, almacen);
+        function cargarHistorial() {
+            const producto = $('#filtroProducto').val();
+            const almacen = $('#filtroAlmacen').val() ?? 0;
+            // NUEVO: Captura de fechas
+            const f_ini = $('#fecha_inicio').val();
+            const f_fin = $('#fecha_fin').val();
+            //cargarTraspasos(producto, almacen);
 
 
 
-        if (!producto) {
-            Swal.fire("Aviso", "Selecciona un producto", "warning");
-            return;
-        }
+            if (!producto) {
+                Swal.fire("Aviso", "Selecciona un producto", "warning");
+                return;
+            }
 
-        //cargarTraspasos(producto, almacen);
-       // cargarConsumoLotes(producto, almacen);
+            //cargarTraspasos(producto, almacen);
+            // cargarConsumoLotes(producto, almacen);
 
-        $.ajax({
-            url: '/cfsistem/app/controllers/lotesHistorialController.php',
-            type: 'GET',
-            data: {
-                action: 'obtenerLotes',
-                producto_id: producto,
-                almacen_id: almacen,
-                periodo: 'personalizado', // Enviamos el periodo para que el controller sepa usar f_inicio
-                f_inicio: f_ini,
-                f_fin: f_fin
-            },
-            dataType: 'json',
-            success: function(res) {
-                $('#total_inicial').text(res.totales.total_cantidad_inicial || 0);
-                $('#total_actual').text(res.totales.total_cantidad_actual || 0);
+            $.ajax({
+                url: '/cfsistem/app/controllers/lotesHistorialController.php',
+                type: 'GET',
+                data: {
+                    action: 'obtenerLotes',
+                    producto_id: producto,
+                    almacen_id: almacen,
+                    periodo: 'personalizado', // Enviamos el periodo para que el controller sepa usar f_inicio
+                    f_inicio: f_ini,
+                    f_fin: f_fin
+                },
+                dataType: 'json',
+                success: function (res) {
+                    $('#total_inicial').text(res.totales.total_cantidad_inicial || 0);
+                    $('#total_actual').text(res.totales.total_cantidad_actual || 0);
 
-                let html = '';
-                if (!res.success || !res.data.length) {
-                    $('#tablaHistorial').html(
-                        '<tr><td colspan="10" class="text-center">Sin datos</td></tr>');
-                    return;
-                }
+                    let html = '';
+                    if (!res.success || !res.data.length) {
+                        $('#tablaHistorial').html(
+                            '<tr><td colspan="10" class="text-center">Sin datos</td></tr>');
+                        return;
+                    }
 
-                res.data.forEach(lote => {
-                    let color = lote.estado_lote === 'activo' ? 'primary' : (lote.estado_lote ===
-                        'agotado' ? 'danger' : 'secondary');
-                    html += `
+                    res.data.forEach(lote => {
+                        let color = lote.estado_lote === 'activo' ? 'primary' : (lote.estado_lote ===
+                            'agotado' ? 'danger' : 'secondary');
+                        html += `
                     <tr>
                         <td>
     ${((lote.folio_compra ?? '').trim() || 'TRASPASO')}
@@ -297,67 +301,67 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
                         <td><span class="badge bg-${color}">${lote.estado_lote}</span></td>
                         <td><button class="btn btn-sm btn-outline-primary" onclick="verMovimientos(${lote.lote_id})">Ver</button></td>
                     </tr>`;
-                });
-                $('#tablaHistorial').html(html);
-            }
-        });
-    }
+                    });
+                    $('#tablaHistorial').html(html);
+                }
+            });
+        }
 
 
-    // function cargarConsumoLotes(producto, almacen) {
-    //     const f_ini = $('#fecha_inicio').val();
-    //     const f_fin = $('#fecha_fin').val();
+        // function cargarConsumoLotes(producto, almacen) {
+        //     const f_ini = $('#fecha_inicio').val();
+        //     const f_fin = $('#fecha_fin').val();
 
-    //     $.ajax({
-    //         url: '/cfsistem/app/controllers/lotesHistorialController.php',
-    //         type: 'GET',
-    //         data: {
-    //             action: 'obtenerConsumoLotes',
-    //             producto_id: producto,
-    //             almacen_id: almacen,
-    //             fecha_inicio: f_ini,
-    //             fecha_fin: f_fin
-    //         },
-    //         dataType: 'json',
-    //         success: function(res) {
-    //             let html = '';
-    //             if (res.length > 0) {
-    //                 res.forEach(row => {
-    //                     html += `<tr>
-    //                     <td><span class="badge bg-primary">${row.venta_id}</span></td>
-    //                     <td>${row.folio}</td><td>${row.cliente}</td><td>${row.codigo_lote}</td>
-    //                     <td>${row.fecha_ingreso}</td><td>${row.fecha_movimiento}</td>
-    //                     <td class="text-center">${row.cantidad_inicial}</td><td class="text-center">${row.cantidad_actual}</td>
-    //                     <td class="text-center text-danger">-${row.cantidad_salida}</td>
-    //                     <td class="text-center fw-bold">${row.saldo_final}</td>
-    //                 </tr>`;
-    //                 });
-    //             } else {
-    //                 html = '<tr><td colspan="10" class="text-center">Sin datos</td></tr>';
-    //             }
-    //             $('#tablaConsumoLotes').html(html);
-    //         }
-    //     });
-    // }
+        //     $.ajax({
+        //         url: '/cfsistem/app/controllers/lotesHistorialController.php',
+        //         type: 'GET',
+        //         data: {
+        //             action: 'obtenerConsumoLotes',
+        //             producto_id: producto,
+        //             almacen_id: almacen,
+        //             fecha_inicio: f_ini,
+        //             fecha_fin: f_fin
+        //         },
+        //         dataType: 'json',
+        //         success: function(res) {
+        //             let html = '';
+        //             if (res.length > 0) {
+        //                 res.forEach(row => {
+        //                     html += `<tr>
+        //                     <td><span class="badge bg-primary">${row.venta_id}</span></td>
+        //                     <td>${row.folio}</td><td>${row.cliente}</td><td>${row.codigo_lote}</td>
+        //                     <td>${row.fecha_ingreso}</td><td>${row.fecha_movimiento}</td>
+        //                     <td class="text-center">${row.cantidad_inicial}</td><td class="text-center">${row.cantidad_actual}</td>
+        //                     <td class="text-center text-danger">-${row.cantidad_salida}</td>
+        //                     <td class="text-center fw-bold">${row.saldo_final}</td>
+        //                 </tr>`;
+        //                 });
+        //             } else {
+        //                 html = '<tr><td colspan="10" class="text-center">Sin datos</td></tr>';
+        //             }
+        //             $('#tablaConsumoLotes').html(html);
+        //         }
+        //     });
+        // }
 
-    function verMovimientos(lote_id) {
-        cargarTraspasos(lote_id);
-        //cargarConsumoLotes(producto, almacen);
+        function verMovimientos(lote_id) {
+            cargarTraspasos(lote_id);
+            //cargarConsumoLotes(producto, almacen);
 
-        $.ajax({
-            url: '/cfsistem/app/controllers/lotesHistorialController.php',
-            type: 'GET',
-            data: {
-                action: 'obtenerVentasLote',
-                lote_id: lote_id
-            },
-            dataType: 'json',
-            success: function(res) {
-                let html = '';
-                if (res.success && res.data.length > 0) {
-                    res.data.forEach(mov => {
-                        let ganancia = parseFloat(mov.ganancia || 0);
-                        html += `<tr>
+            $.ajax({
+                url: '/cfsistem/app/controllers/lotesHistorialController.php',
+                type: 'GET',
+                data: {
+                    action: 'obtenerVentasLote',
+                    lote_id: lote_id
+                },
+                dataType: 'json',
+                success: function (res) {
+                    let html = '';
+                    if (res.success && res.data.length > 0) {
+                        res.data.forEach(mov => {
+                            let ganancia = parseFloat(mov.ganancia || 0);
+                            html += `<tr>
                         <td>${mov.tipo_movimiento}</td><td>${mov.documento}</td><td>${mov.cliente_proveedor}</td>
                         <td>${mov.codigo_lote}</td><td>${mov.fecha_lote}</td><td>${mov.fecha_movimiento}</td>
                         <td class="text-end">${mov.cantidad_inicial}</td><td class="text-end">${mov.cantidad_actual}</td>
@@ -366,74 +370,74 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
                         <td class="text-end ${ganancia >= 0 ? 'text-success' : 'text-danger'}">$${ganancia.toFixed(2)}</td>
                         <td>${mov.referencia_extra}</td>
                     </tr>`;
-                    });
-                } else {
-                    html = '<tr><td colspan="14" class="text-center">Sin movimientos</td></tr>';
+                        });
+                    } else {
+                        html = '<tr><td colspan="14" class="text-center">Sin movimientos</td></tr>';
+                    }
+                    $('#tablaMovimientosLote').html(html);
                 }
-                $('#tablaMovimientosLote').html(html);
-            }
-        });
-    }
+            });
+        }
 
-    function cargarTraspasos(lote_id) {
-        const f_ini = $('#fecha_inicio').val();
-        const f_fin = $('#fecha_fin').val();
+        function cargarTraspasos(lote_id) {
+            const f_ini = $('#fecha_inicio').val();
+            const f_fin = $('#fecha_fin').val();
 
-        $.ajax({
-            url: '/cfsistem/app/controllers/lotesHistorialController.php',
-            type: 'GET',
-            data: {
-                action: 'obtenerTraspasos',
-                lote_id: lote_id,
+            $.ajax({
+                url: '/cfsistem/app/controllers/lotesHistorialController.php',
+                type: 'GET',
+                data: {
+                    action: 'obtenerTraspasos',
+                    lote_id: lote_id,
 
-                f_inicio: f_ini,
-                f_fin: f_fin
-            },
-            dataType: 'json',
-            success: function(res) {
-                let html = '';
-                if (res.data && res.data.length > 0) {
-                    res.data.forEach(t => {
-                        html +=
-                            `<tr><td>TRASPASO</td><td>${t.fecha}</td><td>${t.movimiento_id}</td><td>${t.nombreOrigen}</td><td>${t.codigo_lote_origen}</td><td>${t.nombreDestino}</td><td>${t.codigo_lote_destino}</td><td>${t.cantidad}</td></tr>`;
-                    });
-                } else {
-                    html = '<tr><td colspan="9" class="text-center">Sin traspasos</td></tr>';
+                    f_inicio: f_ini,
+                    f_fin: f_fin
+                },
+                dataType: 'json',
+                success: function (res) {
+                    let html = '';
+                    if (res.data && res.data.length > 0) {
+                        res.data.forEach(t => {
+                            html +=
+                                `<tr><td>TRASPASO</td><td>${t.fecha}</td><td>${t.movimiento_id}</td><td>${t.nombreOrigen}</td><td>${t.codigo_lote_origen}</td><td>${t.nombreDestino}</td><td>${t.codigo_lote_destino}</td><td>${t.cantidad}</td></tr>`;
+                        });
+                    } else {
+                        html = '<tr><td colspan="9" class="text-center">Sin traspasos</td></tr>';
+                    }
+                    $('#tablaTraspasosLote').html(html);
                 }
-                $('#tablaTraspasosLote').html(html);
-            }
-        });
-    }
+            });
+        }
 
-    $('#filtroAlmacen').on('change', function() {
-        verMovimientos(0);
-        let almacen = $(this).val();
-        $.ajax({
-            url: '/cfsistem/app/controllers/lotesHistorialController.php',
-            type: 'GET',
-            data: {
-                action: 'productos',
-                almacen_id: almacen
-            },
-            dataType: 'json',
-            success: function(res) {
-                let html = '<option value="">Selecciona producto</option>';
-                if (res.success) {
-                    res.data.forEach(p => {
-                        html += `<option value="${p.id}">${p.nombre}</option>`;
-                    });
+        $('#filtroAlmacen').on('change', function () {
+            verMovimientos(0);
+            let almacen = $(this).val();
+            $.ajax({
+                url: '/cfsistem/app/controllers/lotesHistorialController.php',
+                type: 'GET',
+                data: {
+                    action: 'productos',
+                    almacen_id: almacen
+                },
+                dataType: 'json',
+                success: function (res) {
+                    let html = '<option value="">Selecciona producto</option>';
+                    if (res.success) {
+                        res.data.forEach(p => {
+                            html += `<option value="${p.id}">${p.nombre}</option>`;
+                        });
+                    }
+                    $('#filtroProducto').html(html);
                 }
-                $('#filtroProducto').html(html);
-            }
+            });
         });
-    });
-    $(document).ready(function () {
-    $('#filtroProducto').select2({
-        placeholder: 'Buscar producto...',
-        allowClear: true,
-        width: '100%'
-    });
-});
+        $(document).ready(function () {
+            $('#filtroProducto').select2({
+                placeholder: 'Buscar producto...',
+                allowClear: true,
+                width: '100%'
+            });
+        });
     </script>
 </body>
 

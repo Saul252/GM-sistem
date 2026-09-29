@@ -409,7 +409,7 @@
                                 </select>
                             </div>
 
-                            <?php if ($_SESSION['rol_id'] == 1): ?>
+                            <?php if ($_SESSION['rol_id'] == 1 || $_SESSION['rol_id'] == 3): ?>
                                 <div class="col-md-2">
                                     <label
                                         class="form-label fw-bold small text-uppercase text-body-secondary">Almacén</label>

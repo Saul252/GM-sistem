@@ -1193,7 +1193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && empty($action)) {
     $rol_id = $_SESSION['rol_id'] ?? 0;
     $mi_almacen_id = $_SESSION['almacen_id'] ?? 0;
 
-    $almacen_a_consultar = ($rol_id == 1)
+    $almacen_a_consultar = ($rol_id == 1 || $rol_id == 3)
         ? (isset($_GET['almacen_filtro']) ? intval($_GET['almacen_filtro']) : 0)
         : $mi_almacen_id;
 
