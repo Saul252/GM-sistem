@@ -1,34 +1,47 @@
 <?php
-class CorteCajaModel {
+class CorteCajaModel
+{
     private $db;
 
-    public function __construct($conexion) {
+    public function __construct($conexion)
+    {
         $this->db = $conexion;
     }
 
 
 
     // FUNCIÓN 1: TABLA DETALLADA
-public function obtenerVentasDetalladas($periodo, $f_inicio, $f_fin, $almacen_id) {
-    date_default_timezone_set('America/Mexico_City');
-    $target = intval($almacen_id);
-    $inicio = $f_inicio;
-    $fin = $f_fin;
+    public function obtenerVentasDetalladas($periodo, $f_inicio, $f_fin, $almacen_id)
+    {
+        date_default_timezone_set('America/Mexico_City');
+        $target = intval($almacen_id);
+        $inicio = $f_inicio;
+        $fin = $f_fin;
 
-    if ($periodo !== 'personalizado') {
-        $hoy = date('Y-m-d');
-        switch ($periodo) {
-            case 'ayer': $inicio = $fin = date('Y-m-d', strtotime('-1 day')); break;
-            case 'semana': $inicio = date('Y-m-d', strtotime('-7 days')); $fin = $hoy; break;
-            case 'mes': $inicio = date('Y-m-01'); $fin = $hoy; break;
-            default: $inicio = $fin = $hoy; break;
+        if ($periodo !== 'personalizado') {
+            $hoy = date('Y-m-d');
+            switch ($periodo) {
+                case 'ayer':
+                    $inicio = $fin = date('Y-m-d', strtotime('-1 day'));
+                    break;
+                case 'semana':
+                    $inicio = date('Y-m-d', strtotime('-7 days'));
+                    $fin = $hoy;
+                    break;
+                case 'mes':
+                    $inicio = date('Y-m-01');
+                    $fin = $hoy;
+                    break;
+                default:
+                    $inicio = $fin = $hoy;
+                    break;
+            }
         }
-    }
 
-    $filtroAlmacen  = ($target > 0) ? " AND v.almacen_id = $target " : "";
-    $filtroAlmacen2 = ($target > 0) ? " AND v.almacen_id = $target " : "";
+        $filtroAlmacen = ($target > 0) ? " AND v.almacen_id = $target " : "";
+        $filtroAlmacen2 = ($target > 0) ? " AND v.almacen_id = $target " : "";
 
-    $sql = "SELECT * FROM (
+        $sql = "SELECT * FROM (
 
         -- PARTE A: Ventas del día (agrupadas por venta, productos en JSON)
         SELECT 
@@ -128,54 +141,54 @@ public function obtenerVentasDetalladas($periodo, $f_inicio, $f_fin, $almacen_id
 
     ) AS reporte_final ORDER BY fecha_movimiento DESC";
 
-    $res = $this->db->query($sql);
-    $data = [];
-    while ($res && $row = $res->fetch_assoc()) {
-        // Decodificar el JSON de productos
-        $row['productos'] = json_decode($row['productos'], true) ?? [];
-        $data[] = $row;
+        $res = $this->db->query($sql);
+        $data = [];
+        while ($res && $row = $res->fetch_assoc()) {
+            // Decodificar el JSON de productos
+            $row['productos'] = json_decode($row['productos'], true) ?? [];
+            $data[] = $row;
+        }
+        return $data;
     }
-    return $data;
-}
     // FUNCIÓN 2: SUMAS TOTALES
-public function obtenerSumasCorte($periodo, $f_inicio, $f_fin, $almacen_id)
-{
-    date_default_timezone_set('America/Mexico_City');
-    $target = intval($almacen_id);
-    $hoy    = date('Y-m-d');
+    public function obtenerSumasCorte($periodo, $f_inicio, $f_fin, $almacen_id)
+    {
+        date_default_timezone_set('America/Mexico_City');
+        $target = intval($almacen_id);
+        $hoy = date('Y-m-d');
 
-    // --- 1. CONFIGURACIÓN DE TIEMPO ---
-    $inicio = $hoy . ' 00:00:00';
-    $fin    = $hoy . ' 23:59:59';
+        // --- 1. CONFIGURACIÓN DE TIEMPO ---
+        $inicio = $hoy . ' 00:00:00';
+        $fin = $hoy . ' 23:59:59';
 
-    switch ($periodo) {
-        case 'personalizado':
-            $inicio = date('Y-m-d', strtotime($f_inicio)) . ' 00:00:00';
-            $fin    = date('Y-m-d', strtotime($f_fin))    . ' 23:59:59';
-            break;
-        case 'ayer':
-            $inicio = date('Y-m-d', strtotime('-1 day')) . ' 00:00:00';
-            $fin    = date('Y-m-d', strtotime('-1 day')) . ' 23:59:59';
-            break;
-        case 'semana':
-            $inicio = date('Y-m-d', strtotime('-7 days')) . ' 00:00:00';
-            $fin    = $hoy . ' 23:59:59';
-            break;
-        case 'mes':
-            $inicio = date('Y-m-01') . ' 00:00:00';
-            $fin    = $hoy . ' 23:59:59';
-            break;
-        default:
-            $inicio = $hoy . ' 00:00:00';
-            $fin    = $hoy . ' 23:59:59';
-            break;
-    }
+        switch ($periodo) {
+            case 'personalizado':
+                $inicio = date('Y-m-d', strtotime($f_inicio)) . ' 00:00:00';
+                $fin = date('Y-m-d', strtotime($f_fin)) . ' 23:59:59';
+                break;
+            case 'ayer':
+                $inicio = date('Y-m-d', strtotime('-1 day')) . ' 00:00:00';
+                $fin = date('Y-m-d', strtotime('-1 day')) . ' 23:59:59';
+                break;
+            case 'semana':
+                $inicio = date('Y-m-d', strtotime('-7 days')) . ' 00:00:00';
+                $fin = $hoy . ' 23:59:59';
+                break;
+            case 'mes':
+                $inicio = date('Y-m-01') . ' 00:00:00';
+                $fin = $hoy . ' 23:59:59';
+                break;
+            default:
+                $inicio = $hoy . ' 00:00:00';
+                $fin = $hoy . ' 23:59:59';
+                break;
+        }
 
-    $filtroV  = ($target > 0) ? " AND v.almacen_id  = $target" : "";
-    $filtroHP = ($target > 0) ? " AND v2.almacen_id = $target" : "";
-    $filtroG  = ($target > 0) ? " AND almacen_id    = $target" : "";
+        $filtroV = ($target > 0) ? " AND v.almacen_id  = $target" : "";
+        $filtroHP = ($target > 0) ? " AND v2.almacen_id = $target" : "";
+        $filtroG = ($target > 0) ? " AND almacen_id    = $target" : "";
 
-    $sql = "SELECT 
+        $sql = "SELECT 
                 base.*,
                 (base.venta_bruta_periodo - base.pagos_realizados_de_ventas_periodo) AS deuda_pendiente,
                 (base.ingreso_total_efectivo + base.ingreso_total_tarjeta + base.ingreso_total_transferencia) AS gran_total_ingresos
@@ -240,87 +253,88 @@ public function obtenerSumasCorte($periodo, $f_inicio, $f_fin, $almacen_id)
                      WHERE fecha_registro BETWEEN '$inicio' AND '$fin' AND estado = 'confirmada' $filtroG) AS compras_totales
             ) AS base";
 
-    $res = $this->db->query($sql);
-    $row = $res->fetch_assoc();
+        $res = $this->db->query($sql);
+        $row = $res->fetch_assoc();
 
-    return [
-        'venta_bruta'          => (float)$row['venta_bruta_periodo'],
-        'ingreso_total_efectivo' => (float)$row['ingreso_total_efectivo'],
-        'ingreso_total_tarjeta'  => (float)$row['ingreso_total_tarjeta'],
-        'ingreso_total_transfer' => (float)$row['ingreso_total_transferencia'],
-        'gran_total_ingresos'    => (float)$row['gran_total_ingresos'],
-        'solo_venta_efectivo'    => (float)$row['solo_venta_efectivo'],
-        'solo_venta_tarjeta'     => (float)$row['solo_venta_tarjeta'],
-        'solo_venta_transfer'    => (float)$row['solo_venta_transferencia'],
-        'abono_efectivo'         => (float)$row['abono_efectivo'],
-        'abono_tarjeta'          => (float)$row['abono_tarjeta'],
-        'abono_transferencia'    => (float)$row['abono_transferencia'],
-        'saldo_favor_usado'      => (float)$row['saldo_favor_usado'],
-        'deuda_pendiente'        => (float)$row['deuda_pendiente'], // Ya regresa con el valor correcto
-        'gastos_totales'         => (float)$row['gastos_totales'],
-        'compras_totales'        => (float)$row['compras_totales'],
-        'diadehoy'               => $hoy,
-    ];
-}
-
-public function obtenerSumasCorteCaja($filtros, $almacen_id_target) {
-    date_default_timezone_set('America/Mexico_City');
-    $target = intval($almacen_id_target);
-    $ahora = date('Y-m-d H:i:s');
-
-    // --- 1. CONFIGURACIÓN DE TIEMPO ---
-    $periodo = $filtros['periodo'] ?? 'hoy';
-    $inicioFiltro = date('Y-m-d 00:00:00'); 
-    $fin = $ahora;
-
-    if ($periodo !== 'personalizado') {
-        switch ($periodo) {
-            case 'ayer': 
-                $inicioFiltro = date('Y-m-d 00:00:00', strtotime('-1 day'));
-                $fin = date('Y-m-d 23:59:59', strtotime('-1 day'));
-                break;
-            case 'semana': 
-                $inicioFiltro = date('Y-m-d 00:00:00', strtotime('-7 days')); 
-                break;
-            case 'mes': 
-                $inicioFiltro = date('Y-m-01 00:00:00'); 
-                break;
-        }
-    } else {
-        $inicioFiltro = $filtros['f_inicio'] . " 00:00:00";
-        $fin = $filtros['f_fin'] . " 23:59:59";
+        return [
+            'venta_bruta' => (float) $row['venta_bruta_periodo'],
+            'ingreso_total_efectivo' => (float) $row['ingreso_total_efectivo'],
+            'ingreso_total_tarjeta' => (float) $row['ingreso_total_tarjeta'],
+            'ingreso_total_transfer' => (float) $row['ingreso_total_transferencia'],
+            'gran_total_ingresos' => (float) $row['gran_total_ingresos'],
+            'solo_venta_efectivo' => (float) $row['solo_venta_efectivo'],
+            'solo_venta_tarjeta' => (float) $row['solo_venta_tarjeta'],
+            'solo_venta_transfer' => (float) $row['solo_venta_transferencia'],
+            'abono_efectivo' => (float) $row['abono_efectivo'],
+            'abono_tarjeta' => (float) $row['abono_tarjeta'],
+            'abono_transferencia' => (float) $row['abono_transferencia'],
+            'saldo_favor_usado' => (float) $row['saldo_favor_usado'],
+            'deuda_pendiente' => (float) $row['deuda_pendiente'], // Ya regresa con el valor correcto
+            'gastos_totales' => (float) $row['gastos_totales'],
+            'compras_totales' => (float) $row['compras_totales'],
+            'diadehoy' => $hoy,
+        ];
     }
 
-    // --- 2. DETERMINAR INICIO REAL (DESDE ÚLTIMO CORTE) ---
-    $sqlUltimo = "SELECT CONCAT(fecha_corte, ' ', hora_cierre) as ultimo_cierre 
+    public function obtenerSumasCorteCaja($filtros, $almacen_id_target)
+    {
+        date_default_timezone_set('America/Mexico_City');
+        $target = intval($almacen_id_target);
+        $ahora = date('Y-m-d H:i:s');
+
+        // --- 1. CONFIGURACIÓN DE TIEMPO ---
+        $periodo = $filtros['periodo'] ?? 'hoy';
+        $inicioFiltro = date('Y-m-d 00:00:00');
+        $fin = $ahora;
+
+        if ($periodo !== 'personalizado') {
+            switch ($periodo) {
+                case 'ayer':
+                    $inicioFiltro = date('Y-m-d 00:00:00', strtotime('-1 day'));
+                    $fin = date('Y-m-d 23:59:59', strtotime('-1 day'));
+                    break;
+                case 'semana':
+                    $inicioFiltro = date('Y-m-d 00:00:00', strtotime('-7 days'));
+                    break;
+                case 'mes':
+                    $inicioFiltro = date('Y-m-01 00:00:00');
+                    break;
+            }
+        } else {
+            $inicioFiltro = $filtros['f_inicio'] . " 00:00:00";
+            $fin = $filtros['f_fin'] . " 23:59:59";
+        }
+
+        // --- 2. DETERMINAR INICIO REAL (DESDE ÚLTIMO CORTE) ---
+        $sqlUltimo = "SELECT CONCAT(fecha_corte, ' ', hora_cierre) as ultimo_cierre 
                   FROM corte_de_caja 
                   WHERE almacen_id = $target 
                   ORDER BY id DESC LIMIT 1";
-    $resUltimo = $this->db->query($sqlUltimo);
-    $inicioReal = $inicioFiltro;
+        $resUltimo = $this->db->query($sqlUltimo);
+        $inicioReal = $inicioFiltro;
 
-    if ($resUltimo && $resUltimo->num_rows > 0) {
-        $datoCorte = $resUltimo->fetch_assoc();
-        $fechaUltimoCorte = $datoCorte['ultimo_cierre'];
-        if ($fechaUltimoCorte > $inicioFiltro) {
-            $inicioReal = $fechaUltimoCorte;
+        if ($resUltimo && $resUltimo->num_rows > 0) {
+            $datoCorte = $resUltimo->fetch_assoc();
+            $fechaUltimoCorte = $datoCorte['ultimo_cierre'];
+            if ($fechaUltimoCorte > $inicioFiltro) {
+                $inicioReal = $fechaUltimoCorte;
+            }
         }
-    }
 
-    // --- 3. CONDICIONES ESTRICTAS ---
-    $filtroAlmacenV  = ($target > 0) ? " AND v.almacen_id = $target"  : "";
-    $filtroAlmacenV2 = ($target > 0) ? " AND v2.almacen_id = $target" : "";
+        // --- 3. CONDICIONES ESTRICTAS ---
+        $filtroAlmacenV = ($target > 0) ? " AND v.almacen_id = $target" : "";
+        $filtroAlmacenV2 = ($target > 0) ? " AND v2.almacen_id = $target" : "";
 
-    // El estado 'activa' va en el ON del JOIN para excluir ventas canceladas desde el inicio
-    $condicionPagosBase = "INNER JOIN ventas v2 
+        // El estado 'activa' va en el ON del JOIN para excluir ventas canceladas desde el inicio
+        $condicionPagosBase = "INNER JOIN ventas v2 
                                ON hp.venta_id = v2.id 
                               AND v2.estado_general = 'activa'
                               $filtroAlmacenV2
                            WHERE hp.fecha > '$inicioReal' 
                              AND hp.fecha <= '$fin'";
 
-    // --- 4. CONSULTA MAESTRA ---
-    $sql = "SELECT 
+        // --- 4. CONSULTA MAESTRA ---
+        $sql = "SELECT 
                 -- Venta Bruta (Solo activas)
                 (SELECT IFNULL(SUM(v.total), 0) 
                  FROM ventas v 
@@ -366,52 +380,52 @@ public function obtenerSumasCorteCaja($filtros, $almacen_id_target) {
                  WHERE estado = 'confirmada' AND almacen_id = $target 
                    AND fecha_registro > '$inicioReal' AND fecha_registro <= '$fin') AS compras_total";
 
-    $res = $this->db->query($sql);
+        $res = $this->db->query($sql);
 
-    if (!$res) {
-        return ['error' => $this->db->error];
+        if (!$res) {
+            return ['error' => $this->db->error];
+        }
+
+        $row = $res->fetch_assoc();
+
+        // --- 5. CÁLCULOS FINALES ---
+        $bruta = floatval($row['venta_bruta_total']);
+        $favor = floatval($row['favor_usado']);
+
+        $efectivo_real = floatval($row['efec_puro']) - floatval($row['g_efec']) - floatval($row['compras_total']);
+        $trans_real = floatval($row['trans_puro']) - floatval($row['g_trans']);
+        $tarjeta_real = floatval($row['tarj_puro']) - floatval($row['g_tarj']);
+
+        $ingresos_liquidos = floatval($row['efec_puro']) + floatval($row['trans_puro']) + floatval($row['tarj_puro']);
+        $cobradoTotal = $ingresos_liquidos + $favor;
+
+        return [
+            'venta_bruta' => $bruta,
+            'efectivo_real' => $efectivo_real,
+            'transferencia' => $trans_real,
+            'tarjeta' => $tarjeta_real,
+            'saldo_favor_usado' => $favor,
+            'cobrado_total' => $cobradoTotal,
+            'deuda_pendiente' => max(0, $bruta - $cobradoTotal),
+            'metadata' => [
+                'inicio' => $inicioReal,
+                'fin' => $fin
+            ]
+        ];
     }
-
-    $row = $res->fetch_assoc();
-
-    // --- 5. CÁLCULOS FINALES ---
-    $bruta  = floatval($row['venta_bruta_total']);
-    $favor  = floatval($row['favor_usado']);
-
-    $efectivo_real = floatval($row['efec_puro']) - floatval($row['g_efec']) - floatval($row['compras_total']);
-    $trans_real    = floatval($row['trans_puro']) - floatval($row['g_trans']);
-    $tarjeta_real  = floatval($row['tarj_puro'])  - floatval($row['g_tarj']);
-
-    $ingresos_liquidos = floatval($row['efec_puro']) + floatval($row['trans_puro']) + floatval($row['tarj_puro']);
-    $cobradoTotal      = $ingresos_liquidos + $favor;
-
-    return [
-        'venta_bruta'       => $bruta,
-        'efectivo_real'     => $efectivo_real,
-        'transferencia'     => $trans_real,
-        'tarjeta'           => $tarjeta_real,
-        'saldo_favor_usado' => $favor,
-        'cobrado_total'     => $cobradoTotal,
-        'deuda_pendiente'   => max(0, $bruta - $cobradoTotal),
-        'metadata'          => [
-            'inicio' => $inicioReal,
-            'fin'    => $fin
-        ]
-    ];
-}
-// 2. REGISTRAR UN SOLO ALMACÉN
+    // 2. REGISTRAR UN SOLO ALMACÉN
 // public function registrarCortePorAlmacen($id_almacen) {
 //     date_default_timezone_set('America/Mexico_City');
 //     $fecha_dia = date('Y-m-d');
 //     $hora_cierre = date('H:i:s'); 
 
-//     $filtros = ['periodo' => 'personalizado', 'f_inicio' => $fecha_dia, 'f_fin' => $fecha_dia];
+    //     $filtros = ['periodo' => 'personalizado', 'f_inicio' => $fecha_dia, 'f_fin' => $fecha_dia];
 //     $totales = $this->obtenerSumasCorte($filtros, $id_almacen);
-    
-//     // Asegurar que el usuario_id sea un entero
+
+    //     // Asegurar que el usuario_id sea un entero
 //     $usuario_id = isset($_SESSION['usuario_id']) ? intval($_SESSION['usuario_id']) : 1;
 
-//     $sql = "INSERT INTO corte_de_caja (fecha_corte, hora_cierre, almacen_id, venta_bruta, efectivo_real, transferencia, tarjeta, saldo_favor_usado, cobrado_total, deuda_pendiente, usuario_id) 
+    //     $sql = "INSERT INTO corte_de_caja (fecha_corte, hora_cierre, almacen_id, venta_bruta, efectivo_real, transferencia, tarjeta, saldo_favor_usado, cobrado_total, deuda_pendiente, usuario_id) 
 //             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 //             ON DUPLICATE KEY UPDATE 
 //                 hora_cierre = VALUES(hora_cierre),
@@ -424,12 +438,12 @@ public function obtenerSumasCorteCaja($filtros, $almacen_id_target) {
 //                 deuda_pendiente = VALUES(deuda_pendiente),
 //                 usuario_id = VALUES(usuario_id)";
 
-//     $stmt = $this->db->prepare($sql);
+    //     $stmt = $this->db->prepare($sql);
 //     if (!$stmt) {
 //         throw new Exception("Error en prepare: " . $this->db->error);
 //     }
 
-//     // "ssi" -> fecha (s), hora (s), almacen_id (i)
+    //     // "ssi" -> fecha (s), hora (s), almacen_id (i)
 //     // "ddddddd" -> los 7 montos decimales (double)
 //     // "i" -> usuario_id (i)
 //     $stmt->bind_param("ssidddddddi", 
@@ -446,48 +460,50 @@ public function obtenerSumasCorteCaja($filtros, $almacen_id_target) {
 //         $usuario_id
 //     );
 
-//     if ($stmt->execute()) {
+    //     if ($stmt->execute()) {
 //         return ['status' => 'success', 'data' => $totales];
 //     } else {
 //         throw new Exception("Error al ejecutar el corte: " . $stmt->error);
 //     }
 // }
-/**
- * Verifica si ya existe un registro de corte para un almacén y fecha específicos.
- * * @param string $fecha Formato 'YYYY-MM-DD'
- * @param int $id_almacen El ID del almacén a consultar
- * @return bool True si ya existe, False si no
- */
-public function existeCorte($fecha, $id_almacen) {
-    // Es vital filtrar por ambos: fecha Y almacén
-    $sql = "SELECT id FROM corte_de_caja 
+    /**
+     * Verifica si ya existe un registro de corte para un almacén y fecha específicos.
+     * * @param string $fecha Formato 'YYYY-MM-DD'
+     * @param int $id_almacen El ID del almacén a consultar
+     * @return bool True si ya existe, False si no
+     */
+    public function existeCorte($fecha, $id_almacen)
+    {
+        // Es vital filtrar por ambos: fecha Y almacén
+        $sql = "SELECT id FROM corte_de_caja 
             WHERE fecha_corte = ? 
             AND almacen_id = ? 
             LIMIT 1";
 
-    try {
-        $stmt = $this->db->prepare($sql);
-        
-        // "s" para la fecha (string), "i" para el almacén (int)
-        $stmt->bind_param("si", $fecha, $id_almacen);
-        $stmt->execute();
-        
-        $resultado = $stmt->get_result();
-        
-        // Retorna true si encontró una fila, false si está vacío
-        return $resultado->num_rows > 0;
+        try {
+            $stmt = $this->db->prepare($sql);
 
-    } catch (Exception $e) {
-        // En caso de error de SQL, logueamos y retornamos false 
-        // para permitir que el flujo intente el registro
-        error_log("Error en existeCorte del Modelo: " . $e->getMessage());
-        return false;
+            // "s" para la fecha (string), "i" para el almacén (int)
+            $stmt->bind_param("si", $fecha, $id_almacen);
+            $stmt->execute();
+
+            $resultado = $stmt->get_result();
+
+            // Retorna true si encontró una fila, false si está vacío
+            return $resultado->num_rows > 0;
+
+        } catch (Exception $e) {
+            // En caso de error de SQL, logueamos y retornamos false 
+            // para permitir que el flujo intente el registro
+            error_log("Error en existeCorte del Modelo: " . $e->getMessage());
+            return false;
+        }
     }
-}
- public function obtenerAlmacenesPendientes($id_almacen_sesion, $es_admin, $fecha) {
-    if ($es_admin) {
-        // AUTOMATIZACIÓN ADMIN: Busca almacenes con ventas que NO han cerrado hoy
-        $sql = "SELECT DISTINCT a.id, a.nombre 
+    public function obtenerAlmacenesPendientes($id_almacen_sesion, $es_admin, $fecha)
+    {
+        if ($es_admin) {
+            // AUTOMATIZACIÓN ADMIN: Busca almacenes con ventas que NO han cerrado hoy
+            $sql = "SELECT DISTINCT a.id, a.nombre 
                 FROM almacenes a
                 INNER JOIN ventas v ON v.almacen_id = a.id
                 WHERE a.activo = 1 
@@ -497,68 +513,69 @@ public function existeCorte($fecha, $id_almacen) {
                     SELECT 1 FROM corte_de_caja c 
                     WHERE c.almacen_id = a.id AND c.fecha_corte = ?
                 ) LIMIT 5";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("ss", $fecha, $fecha);
-    } else {
-        // AUTOMATIZACIÓN USUARIO: Revisa si SU almacén ya cerró hoy
-        $sql = "SELECT id, nombre FROM almacenes 
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("ss", $fecha, $fecha);
+        } else {
+            // AUTOMATIZACIÓN USUARIO: Revisa si SU almacén ya cerró hoy
+            $sql = "SELECT id, nombre FROM almacenes 
                 WHERE id = ? 
                 AND activo = 1 
                 AND NOT EXISTS (
                     SELECT 1 FROM corte_de_caja 
                     WHERE almacen_id = ? AND fecha_corte = ?
                 ) LIMIT 1";
-        $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("iis", $id_almacen_sesion, $id_almacen_sesion, $fecha);
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("iis", $id_almacen_sesion, $id_almacen_sesion, $fecha);
+        }
+
+        $stmt->execute();
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
+    public function agregarCorteManual($datos)
+    {
+        date_default_timezone_set('America/Mexico_City');
 
-    $stmt->execute();
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
-public function agregarCorteManual($datos) {
-   date_default_timezone_set('America/Mexico_City');
+        $fecha_corte = $datos['fecha_corte'] ?? date('Y-m-d');
+        $hora_cierre = date('H:i:s');
+        $almacen_id = intval($datos['almacen_id']);
+        $usuario_id = intval($datos['usuario_id']);
 
-    $fecha_corte     = $datos['fecha_corte'] ?? date('Y-m-d');
-    $hora_cierre     = date('H:i:s');
-    $almacen_id      = intval($datos['almacen_id']);
-    $usuario_id      = intval($datos['usuario_id']);
+        // ===============================
+        // 🔥 INGRESOS YA PROCESADOS (NO RECALCULAR)
+        // ===============================
+        $venta_bruta = floatval($datos['venta_bruta']);
 
-    // ===============================
-    // 🔥 INGRESOS YA PROCESADOS (NO RECALCULAR)
-    // ===============================
-    $venta_bruta         = floatval($datos['venta_bruta']);
+        $efectivo_real = floatval($datos['total_efectivo']);
+        $transferencia = floatval($datos['total_transferencia']);
+        $tarjeta = floatval($datos['total_tarjeta']);
 
-    $efectivo_real       = floatval($datos['total_efectivo']);
-    $transferencia       = floatval($datos['total_transferencia']);
-    $tarjeta             = floatval($datos['total_tarjeta']);
+        // ===============================
+        // 🔥 ABONOS
+        // ===============================
+        $abono_efectivo = floatval($datos['abono_efectivo']);
+        $abono_tarjeta = floatval($datos['abono_tarjeta']);
+        $abono_transferencia = floatval($datos['abono_transferencia']);
+        $abonos_totales = floatval($datos['abonos_totales']);
 
-    // ===============================
-    // 🔥 ABONOS
-    // ===============================
-    $abono_efectivo      = floatval($datos['abono_efectivo']);
-    $abono_tarjeta       = floatval($datos['abono_tarjeta']);
-    $abono_transferencia = floatval($datos['abono_transferencia']);
-    $abonos_totales      = floatval($datos['abonos_totales']);
+        // ===============================
+        // 🔥 OTROS MOVIMIENTOS
+        // ===============================
+        $deuda_pendiente = floatval($datos['deuda_pendiente']);
+        $saldo_favor_usado = floatval($datos['saldo_favor'] ?? 0);
+        $cobrado_total = floatval($datos['cobrado_total']);
 
-    // ===============================
-    // 🔥 OTROS MOVIMIENTOS
-    // ===============================
-    $deuda_pendiente     = floatval($datos['deuda_pendiente']);
-    $saldo_favor_usado   = floatval($datos['saldo_favor'] ?? 0);
-    $cobrado_total       = floatval($datos['cobrado_total']);
+        // ===============================
+        // 🔥 EGRESOS
+        // ===============================
+        $gastos_totales = floatval($datos['gastos_totales']);
+        $compras_totales = floatval($datos['compras_totales']);
+        $gran_total_ingresos = floatval($datos['gran_total_ingresos']);
 
-    // ===============================
-    // 🔥 EGRESOS
-    // ===============================
-    $gastos_totales      = floatval($datos['gastos_totales']);
-    $compras_totales     = floatval($datos['compras_totales']);
-    $gran_total_ingresos = floatval($datos['gran_total_ingresos']);
+        $observaciones = $datos['observaciones'] ?? '';
+        $created_at = date('Y-m-d H:i:s');
 
-    $observaciones       = $datos['observaciones'] ?? '';
-    $created_at          = date('Y-m-d H:i:s');
-
-    // Usamos ON DUPLICATE KEY UPDATE para actualizar si la dupla fecha/almacen ya existe
-    $sql = "INSERT INTO `corte_de_caja` (
+        // Usamos ON DUPLICATE KEY UPDATE para actualizar si la dupla fecha/almacen ya existe
+        $sql = "INSERT INTO `corte_de_caja` (
                 `fecha_corte`, `hora_cierre`, `almacen_id`, `venta_bruta`, `efectivo_real`, 
                 `transferencia`, `tarjeta`, `abono_efectivo`, `abono_tarjeta`, 
                 `abono_transferencia`, `abonos_totales`, `saldo_favor_usado`, 
@@ -586,42 +603,59 @@ public function agregarCorteManual($datos) {
                 `observaciones` = VALUES(`observaciones`),
                 `updated_at` = NOW()";
 
-    $stmt = $this->db->prepare($sql);
-    $tipos = "ssiddddddddddddddiss";
+        $stmt = $this->db->prepare($sql);
+        $tipos = "ssiddddddddddddddiss";
 
-    $stmt->bind_param(
-        $tipos, 
-        $fecha_corte, $hora_cierre, $almacen_id, $venta_bruta, $efectivo_real,
-        $transferencia, $tarjeta, $abono_efectivo, $abono_tarjeta, $abono_transferencia,
-        $abonos_totales, $saldo_favor_usado, $cobrado_total, $gastos_totales, $compras_totales,
-        $gran_total_ingresos, $deuda_pendiente, $usuario_id, $observaciones, $created_at
-    );
+        $stmt->bind_param(
+            $tipos,
+            $fecha_corte,
+            $hora_cierre,
+            $almacen_id,
+            $venta_bruta,
+            $efectivo_real,
+            $transferencia,
+            $tarjeta,
+            $abono_efectivo,
+            $abono_tarjeta,
+            $abono_transferencia,
+            $abonos_totales,
+            $saldo_favor_usado,
+            $cobrado_total,
+            $gastos_totales,
+            $compras_totales,
+            $gran_total_ingresos,
+            $deuda_pendiente,
+            $usuario_id,
+            $observaciones,
+            $created_at
+        );
 
-    if ($stmt->execute()) {
-        // insert_id devolverá el ID del registro creado o actualizado
-        $final_id = ($stmt->insert_id > 0) ? $stmt->insert_id : "Actualizado";
-        return ['status' => 'success', 'id' => $final_id];
-    } else {
-        return ['status' => 'error', 'message' => $this->db->error];
+        if ($stmt->execute()) {
+            // insert_id devolverá el ID del registro creado o actualizado
+            $final_id = ($stmt->insert_id > 0) ? $stmt->insert_id : "Actualizado";
+            return ['status' => 'success', 'id' => $final_id];
+        } else {
+            return ['status' => 'error', 'message' => $this->db->error];
+        }
     }
-}
-public function registrarAperturaDesdeCierre($almacen_id, $usuario_id, $desglose, $fecha_corte) {
-    /**
-     * $desglose es un array esperado: 
-     * ['efectivo' => 0.00, 'tarjeta' => 0.00, 'transferencia' => 0.00]
-     */
-    
-    // Calculamos el monto total
-    $monto_total = array_sum($desglose);
-    
-    // Definimos la fecha contable (mañana al primer segundo)
-    $fecha_apertura = date('Y-m-d', strtotime($fecha_corte . ' +1 day')) . ' 00:00:01';
-    
-    $concepto = "Saldo inicial automático (Corte: " . $fecha_corte . ")";
+    public function registrarAperturaDesdeCierre($almacen_id, $usuario_id, $desglose, $fecha_corte)
+    {
+        /**
+         * $desglose es un array esperado: 
+         * ['efectivo' => 0.00, 'tarjeta' => 0.00, 'transferencia' => 0.00]
+         */
 
-    // Agregamos las columnas de destino aunque vayan como NULL 
-    // para que coincida con la estructura actual de historial_capital
-    $sql = "INSERT INTO historial_capital (
+        // Calculamos el monto total
+        $monto_total = array_sum($desglose);
+
+        // Definimos la fecha contable (mañana al primer segundo)
+        $fecha_apertura = date('Y-m-d', strtotime($fecha_corte . ' +1 day')) . ' 00:00:01';
+
+        $concepto = "Saldo inicial automático (Corte: " . $fecha_corte . ")";
+
+        // Agregamos las columnas de destino aunque vayan como NULL 
+        // para que coincida con la estructura actual de historial_capital
+        $sql = "INSERT INTO historial_capital (
                 categoria_id, 
                 almacen_origen_id, 
                 almacen_destino_id, 
@@ -635,193 +669,504 @@ public function registrarAperturaDesdeCierre($almacen_id, $usuario_id, $desglose
                 concepto, 
                 fecha_movimiento
             ) VALUES (1, ?, NULL, NULL, NULL, ?, ?, ?, ?, ?, ?, ?)";
-    
-    try {
-        $stmt = $this->db->prepare($sql);
-        
-        return $stmt->execute([
-            $almacen_id, 
-            $monto_total,
-            $desglose['efectivo'] ?? 0,
-            $desglose['tarjeta'] ?? 0,
-            $desglose['transferencia'] ?? 0,
-            $usuario_id, 
-            $concepto, 
-            $fecha_apertura
-        ]);
-    } catch (Exception $e) {
-        error_log("Error en registrarAperturaDesdeCierre: " . $e->getMessage());
-        return false;
-    }
-}
-public function registrarAperturaDesdeCierreConcepto($data) {
-     date_default_timezone_set('America/Mexico_City');
-    // 1. Datos base
-    $almacen_id   = intval($data['almacen_id'] ?? 0);
-    $usuario_id   = intval($data['usuario_id'] ?? 0);
-    $categoria_id = intval($data['categoria_id'] ?? 1);
-    $monto_mov    = floatval($data['monto'] ?? 0);
-    $tipo_op      = $data['tipo_operacion'] ?? 'entrada';
-    $metodo       = $data['metodo_pago'] ?? 'efectivo'; // Importante para el destino
-    
-    // 2. Lógica para Caja/Banco (Inversa)
-    if ($tipo_op === 'salida' || $tipo_op === 'traspaso') {
-        $operador = 1; // Sube el saldo en Caja/Banco
-    } else {
-        $operador = -1; // Baja el saldo en Caja/Banco
-    }
-    $ajuste_saldo = $monto_mov * $operador;
 
-    // 3. Preparación de variables
-    $efectivo      = floatval($data['monto_efectivo'] ?? 0);
-    $tarjeta       = floatval($data['monto_tarjeta'] ?? 0);
-    $transferencia = floatval($data['monto_transferencia'] ?? 0);
-    $monto=$efectivo+ $tarjeta+$transferencia;
-    
-    $fecha_base     = $data['fecha_movimiento'] ?? date('Y-m-d');
-   
-// Comparamos solo la fecha (Año-mes-día)
-if (date('Y-m-d', strtotime($fecha_base)) == date('Y-m-d')) {
-    // Si es hoy, usamos la hora, minuto y segundo actual
-    $fecha_apertura = date('Y-m-d H:i:s');
-} else {
-    // Si es una fecha distinta (pasada o futura), usamos el primer segundo del día
-    $fecha_apertura = date('Y-m-d', strtotime($fecha_base)) . ' 00:00:01';
-}
-   $concepto_final = "Movimiento de " . $tipo_op . ": " . ($data['concepto'] ?? '') . " Monto :".$monto_mov." Fecha: " . date('Y-m-d H:i:s');
-    try {
-        $this->db->begin_transaction();
+        try {
+            $stmt = $this->db->prepare($sql);
 
-        // --- PASO A: Registro del ORIGEN (El movimiento actual) ---
-        $sql = "INSERT INTO historial_capital (
-                    categoria_id, almacen_origen_id, almacen_destino_id, 
-                    caja_fuerte_destino_id, banco_destino_id, monto, 
-                    monto_efectivo, monto_tarjeta, monto_transferencia,
-                    usuario_registro_id, concepto, fecha_movimiento
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            $categoria_id, $almacen_id, 
-            $data['almacen_destino_id'] ?: null,
-            $data['caja_fuerte_id'] ?: null,
-            $data['banco_id'] ?: null,
-            $monto, $efectivo, $tarjeta, $transferencia,
-            $usuario_id, $concepto_final, $fecha_apertura
-        ]);
-
-        // --- PASO B: Lógica de Traspaso entre ALMACENES ---
-        // Si hay un almacén destino, creamos la "Entrada" automática para ese almacén
-        $almacen_dest_id = intval($data['almacen_destino_id'] ?? 0);
-        if ($tipo_op === 'traspaso' && $almacen_dest_id > 0) {
-            
-            // Consultamos el saldo actual del almacén DESTINO para sumarle el dinero
-            $saldos_dest = $this->obtenerSaldoInicialMonitor($almacen_dest_id, '2000-01-01', $fecha_base);
-            
-            $nuevo_desglose_dest = [
-                'efectivo'      => floatval($saldos_dest['monto_efectivo']),
-                'tarjeta'       => floatval($saldos_dest['monto_tarjeta']),
-                'transferencia' => floatval($saldos_dest['monto_transferencia'])
-            ];
-
-            // Sumamos el monto al método correspondiente en el destino
-            if (isset($nuevo_desglose_dest[$metodo])) {
-                $nuevo_desglose_dest[$metodo] += $monto_mov;
-            }
-
-            // Insertamos el registro de entrada en el almacén destino
-            $stmt->execute([
-    $categoria_id, 
-    $almacen_dest_id, 
-    null, null, null,
-    $monto_mov,
-    $nuevo_desglose_dest['efectivo'],
-    $nuevo_desglose_dest['tarjeta'],
-    $nuevo_desglose_dest['transferencia'],
-    $usuario_id,
-    // Añadimos un espacio o separador antes de la fecha
-    "Entrada por traspaso desde Almacén ID: " . $almacen_id ." Monto ".$monto_mov. " | " . date('Y-m-d H:i:s'),
-    $fecha_apertura
-]);
+            return $stmt->execute([
+                $almacen_id,
+                $monto_total,
+                $desglose['efectivo'] ?? 0,
+                $desglose['tarjeta'] ?? 0,
+                $desglose['transferencia'] ?? 0,
+                $usuario_id,
+                $concepto,
+                $fecha_apertura
+            ]);
+        } catch (Exception $e) {
+            error_log("Error en registrarAperturaDesdeCierre: " . $e->getMessage());
+            return false;
         }
-
-        // --- PASO C: Afectar Caja Fuerte / Banco ---
-        if (!empty($data['caja_fuerte_id']) && $data['caja_fuerte_id'] > 0) {
-            $this->actualizarSaldoCajaFuerte($data['caja_fuerte_id'], $ajuste_saldo);
-        }
-        if (!empty($data['banco_id']) && $data['banco_id'] > 0) {
-            $this->actualizarSaldoBanco($data['banco_id'], $ajuste_saldo);
-        }
-
-        $this->db->commit();
-        return true;
-
-    } catch (Exception $e) {
-        $this->db->rollback();
-        error_log("Error en flujo de fondos: " . $e->getMessage());
-        return false;
     }
-}
-public function registrarAperturaDesdeCierreConceptoAbono($data) {
+    public function registrarAperturaDesdeCierreConcepto($data)
+    {
+        date_default_timezone_set('America/Mexico_City');
 
-    date_default_timezone_set('America/Mexico_City');
+        // ============================================================
+        // 1. DATOS BASE
+        // ============================================================
 
-    // 1. Datos base
-    $almacen_id   = intval($data['almacen_id'] ?? 0);
-    $usuario_id   = intval($data['usuario_id'] ?? 0);
-    $categoria_id = intval($data['categoria_id'] ?? 1);
+        $almacen_id = intval($data['almacen_id'] ?? 0);
+        $usuario_id = intval($data['usuario_id'] ?? 0);
+        $categoria_id = intval($data['categoria_id'] ?? 1);
 
-    $monto_mov    = floatval($data['monto'] ?? 0);
-    $tipo_op      = $data['tipo_operacion'] ?? 'entrada';
-    $metodo       = $data['metodo_pago'] ?? 'efectivo';
+        $monto_mov = floatval($data['monto'] ?? 0);
 
-    $efectivo      = floatval($data['monto_efectivo'] ?? 0);
-    $tarjeta       = floatval($data['monto_tarjeta'] ?? 0);
-    $transferencia = floatval($data['monto_transferencia'] ?? 0);
+        $tipo_op = $data['tipo_operacion'] ?? 'entrada';
+        $metodo = $data['metodo_pago'] ?? 'efectivo';
 
-    $fecha_base = $data['fecha_movimiento'] ?? date('Y-m-d');
-
-    if (date('Y-m-d', strtotime($fecha_base)) == date('Y-m-d')) {
-        $fecha_apertura = date('Y-m-d H:i:s');
-    } else {
-        $fecha_apertura = date('Y-m-d', strtotime($fecha_base)) . ' 00:00:01';
-    }
-
-    $concepto_final = "Movimiento de " . $tipo_op . ": " . ($data['concepto'] ?? '') ." Monto ".$monto_mov. " : " . date('Y-m-d H:i:s');
-
-    // 2. Caja/Banco lógica
-    $operador = ($tipo_op === 'salida' || $tipo_op === 'traspaso') ? 1 : -1;
-    $ajuste_saldo = $monto_mov * $operador;
-
-    try {
-        $this->db->begin_transaction();
-
-        // ======================================================
-        // 🔥 PASO 1: CONSULTAR SALDO ACTUAL DEL ALMACÉN
-        // ======================================================
-        $saldos_actuales = $this->obtenerSaldoInicialMonitor(
-            $almacen_id,
-            '2000-01-01',
-            $fecha_base
+        $almacen_dest_id = intval(
+            $data['almacen_destino_id'] ?? 0
         );
 
-        $saldo_efectivo_actual      = floatval($saldos_actuales['monto_efectivo'] ?? 0);
-        $saldo_tarjeta_actual       = floatval($saldos_actuales['monto_tarjeta'] ?? 0);
-        $saldo_transferencia_actual = floatval($saldos_actuales['monto_transferencia'] ?? 0);
+        $caja_fuerte_id = intval(
+            $data['caja_fuerte_id'] ?? 0
+        );
 
-        // ======================================================
-        // 🔥 PASO 2: SUMAR LO NUEVO
-        // ======================================================
-        $nuevo_efectivo      = $saldo_efectivo_actual + $efectivo;
-        $nuevo_tarjeta       = $saldo_tarjeta_actual + $tarjeta;
-        $nuevo_transferencia = $saldo_transferencia_actual + $transferencia;
+        $banco_id = intval(
+            $data['banco_id'] ?? 0
+        );
 
-        $monto = $nuevo_efectivo + $nuevo_tarjeta + $nuevo_transferencia;
 
-        // ======================================================
-        // 🔥 PASO 3: INSERT MOVIMIENTO PRINCIPAL
-        // ======================================================
-        $sql = "INSERT INTO historial_capital (
+        // ============================================================
+        // 2. VALIDACIONES
+        // ============================================================
+
+        if ($almacen_id <= 0) {
+            throw new Exception("No se recibió un almacén de origen válido.");
+        }
+
+        if ($monto_mov <= 0) {
+            throw new Exception("El monto debe ser mayor a 0.");
+        }
+
+
+        // ============================================================
+        // 3. LÓGICA CAJA / BANCO
+        // ============================================================
+
+        if (
+            $tipo_op === 'salida' ||
+            $tipo_op === 'traspaso'
+        ) {
+            $operador = 1;
+        } else {
+            $operador = -1;
+        }
+
+        $ajuste_saldo = $monto_mov * $operador;
+
+
+        // ============================================================
+        // 4. DESGLOSE DEL MOVIMIENTO
+        // ============================================================
+
+        $efectivo = floatval(
+            $data['monto_efectivo'] ?? 0
+        );
+
+        $tarjeta = floatval(
+            $data['monto_tarjeta'] ?? 0
+        );
+
+        $transferencia = floatval(
+            $data['monto_transferencia'] ?? 0
+        );
+
+        $monto = $efectivo + $tarjeta + $transferencia;
+
+
+        // ============================================================
+        // 5. FECHA
+        // ============================================================
+
+        $fecha_base = $data['fecha_movimiento']
+            ?? date('Y-m-d');
+
+        $fecha_base_formateada = date(
+            'Y-m-d',
+            strtotime($fecha_base)
+        );
+
+        if (
+            $fecha_base_formateada ===
+            date('Y-m-d')
+        ) {
+
+            $fecha_apertura = date(
+                'Y-m-d H:i:s'
+            );
+
+        } else {
+
+            $fecha_apertura =
+                $fecha_base_formateada .
+                ' 00:00:01';
+        }
+
+
+        // ============================================================
+        // 6. CONCEPTO
+        // ============================================================
+
+        $concepto_final =
+            "Movimiento de " .
+            $tipo_op .
+            ": " .
+            ($data['concepto'] ?? '') .
+            " Monto: " .
+            $monto_mov .
+            " Fecha: " .
+            date('Y-m-d H:i:s');
+
+
+        try {
+
+            $this->db->begin_transaction();
+
+
+            // ========================================================
+            // PASO A
+            // REGISTRO DEL MOVIMIENTO EN EL ALMACÉN DE ORIGEN
+            // ========================================================
+
+            $sql = "
+            INSERT INTO historial_capital (
+                categoria_id,
+                almacen_origen_id,
+                almacen_destino_id,
+                caja_fuerte_destino_id,
+                banco_destino_id,
+                monto,
+                monto_efectivo,
+                monto_tarjeta,
+                monto_transferencia,
+                usuario_registro_id,
+                concepto,
+                fecha_movimiento
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ";
+
+            $stmtOrigen = $this->db->prepare($sql);
+
+            if (!$stmtOrigen) {
+                throw new Exception(
+                    "Error preparando movimiento de origen: " .
+                    $this->db->error
+                );
+            }
+
+
+            // Convertimos los valores opcionales a NULL
+            $almacen_destino_db =
+                $almacen_dest_id > 0
+                ? $almacen_dest_id
+                : null;
+
+            $caja_fuerte_db =
+                $caja_fuerte_id > 0
+                ? $caja_fuerte_id
+                : null;
+
+            $banco_db =
+                $banco_id > 0
+                ? $banco_id
+                : null;
+
+
+            $stmtOrigen->bind_param(
+                "iiiiiddddiss",
+                $categoria_id,
+                $almacen_id,
+                $almacen_destino_db,
+                $caja_fuerte_db,
+                $banco_db,
+                $monto,
+                $efectivo,
+                $tarjeta,
+                $transferencia,
+                $usuario_id,
+                $concepto_final,
+                $fecha_apertura
+            );
+
+
+            if (!$stmtOrigen->execute()) {
+
+                throw new Exception(
+                    "Error al registrar movimiento de origen: " .
+                    $stmtOrigen->error
+                );
+            }
+
+
+            // ========================================================
+            // PASO B
+            // TRASPASO AL ALMACÉN DESTINO
+            // ========================================================
+
+            if (
+                $tipo_op === 'traspaso' &&
+                $almacen_dest_id > 0
+            ) {
+
+                // ----------------------------------------------------
+                // Verificar que el destino sea diferente al origen
+                // ----------------------------------------------------
+
+                if ($almacen_dest_id === $almacen_id) {
+
+                    throw new Exception(
+                        "El almacén de destino no puede ser igual al almacén de origen."
+                    );
+                }
+
+
+                // ----------------------------------------------------
+                // Verificar que el almacén destino exista
+                // ----------------------------------------------------
+
+                $stmtDestinoCheck = $this->db->prepare("
+                SELECT id
+                FROM almacenes
+                WHERE id = ?
+                  AND activo = 1
+            ");
+
+                if (!$stmtDestinoCheck) {
+                    throw new Exception(
+                        "Error preparando validación del almacén destino: " .
+                        $this->db->error
+                    );
+                }
+
+                $stmtDestinoCheck->bind_param(
+                    "i",
+                    $almacen_dest_id
+                );
+
+                if (!$stmtDestinoCheck->execute()) {
+                    throw new Exception(
+                        "Error validando almacén destino: " .
+                        $stmtDestinoCheck->error
+                    );
+                }
+
+                $resDestino =
+                    $stmtDestinoCheck->get_result();
+
+                if ($resDestino->num_rows === 0) {
+
+                    throw new Exception(
+                        "El almacén destino no existe o está inactivo."
+                    );
+                }
+
+
+                // ----------------------------------------------------
+                // REGISTRO DE ENTRADA EN EL DESTINO
+                // ----------------------------------------------------
+
+                $concepto_destino =
+                    "Entrada por traspaso desde Almacén ID: " .
+                    $almacen_id .
+                    " Monto: " .
+                    $monto_mov .
+                    " | " .
+                    date('Y-m-d H:i:s');
+
+
+                /*
+                 * IMPORTANTE:
+                 *
+                 * Aquí NO usamos el saldo acumulado del destino.
+                 *
+                 * Solamente registramos lo que está entrando
+                 * mediante este traspaso.
+                 */
+
+                $entrada_efectivo = 0;
+                $entrada_tarjeta = 0;
+                $entrada_transferencia = 0;
+
+
+                if ($metodo === 'efectivo') {
+
+                    $entrada_efectivo = $monto_mov;
+
+                } elseif ($metodo === 'tarjeta') {
+
+                    $entrada_tarjeta = $monto_mov;
+
+                } elseif ($metodo === 'transferencia') {
+
+                    $entrada_transferencia = $monto_mov;
+
+                } else {
+
+                    throw new Exception(
+                        "Método de pago no válido: " .
+                        $metodo
+                    );
+                }
+
+
+                $stmtDestino = $this->db->prepare("
+                INSERT INTO historial_capital (
+                    categoria_id,
+                    almacen_origen_id,
+                    almacen_destino_id,
+                    caja_fuerte_destino_id,
+                    banco_destino_id,
+                    monto,
+                    monto_efectivo,
+                    monto_tarjeta,
+                    monto_transferencia,
+                    usuario_registro_id,
+                    concepto,
+                    fecha_movimiento
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ");
+
+                if (!$stmtDestino) {
+                    throw new Exception(
+                        "Error preparando movimiento destino: " .
+                        $this->db->error
+                    );
+                }
+
+
+                $null = null;
+
+                $stmtDestino->bind_param(
+                    "iiiiiddddiss",
+                    $categoria_id,
+                    $almacen_dest_id,
+                    $null,
+                    $null,
+                    $null,
+                    $monto_mov,
+                    $entrada_efectivo,
+                    $entrada_tarjeta,
+                    $entrada_transferencia,
+                    $usuario_id,
+                    $concepto_destino,
+                    $fecha_apertura
+                );
+
+
+                if (!$stmtDestino->execute()) {
+
+                    throw new Exception(
+                        "Error al registrar entrada en almacén destino: " .
+                        $stmtDestino->error
+                    );
+                }
+            }
+
+
+            // ========================================================
+            // PASO C
+            // AFECTAR CAJA FUERTE
+            // ========================================================
+
+            if ($caja_fuerte_id > 0) {
+
+                $this->actualizarSaldoCajaFuerte(
+                    $caja_fuerte_id,
+                    $ajuste_saldo
+                );
+            }
+
+
+            // ========================================================
+            // PASO D
+            // AFECTAR BANCO
+            // ========================================================
+
+            if ($banco_id > 0) {
+
+                $this->actualizarSaldoBanco(
+                    $banco_id,
+                    $ajuste_saldo
+                );
+            }
+
+
+            // ========================================================
+            // COMMIT
+            // ========================================================
+
+            $this->db->commit();
+
+            return true;
+
+
+        } catch (Exception $e) {
+
+            $this->db->rollback();
+
+            error_log(
+                "Error en registrarAperturaDesdeCierreConcepto: " .
+                $e->getMessage()
+            );
+
+            return false;
+        }
+    }
+    public function registrarAperturaDesdeCierreConceptoAbono($data)
+    {
+
+        date_default_timezone_set('America/Mexico_City');
+
+        // 1. Datos base
+        $almacen_id = intval($data['almacen_id'] ?? 0);
+        $usuario_id = intval($data['usuario_id'] ?? 0);
+        $categoria_id = intval($data['categoria_id'] ?? 1);
+
+        $monto_mov = floatval($data['monto'] ?? 0);
+        $tipo_op = $data['tipo_operacion'] ?? 'entrada';
+        $metodo = $data['metodo_pago'] ?? 'efectivo';
+
+        $efectivo = floatval($data['monto_efectivo'] ?? 0);
+        $tarjeta = floatval($data['monto_tarjeta'] ?? 0);
+        $transferencia = floatval($data['monto_transferencia'] ?? 0);
+
+        $fecha_base = $data['fecha_movimiento'] ?? date('Y-m-d');
+
+        if (date('Y-m-d', strtotime($fecha_base)) == date('Y-m-d')) {
+            $fecha_apertura = date('Y-m-d H:i:s');
+        } else {
+            $fecha_apertura = date('Y-m-d', strtotime($fecha_base)) . ' 00:00:01';
+        }
+
+        $concepto_final = "Movimiento de " . $tipo_op . ": " . ($data['concepto'] ?? '') . " Monto " . $monto_mov . " : " . date('Y-m-d H:i:s');
+
+        // 2. Caja/Banco lógica
+        $operador = ($tipo_op === 'salida' || $tipo_op === 'traspaso') ? 1 : -1;
+        $ajuste_saldo = $monto_mov * $operador;
+
+        try {
+            $this->db->begin_transaction();
+
+            // ======================================================
+            // 🔥 PASO 1: CONSULTAR SALDO ACTUAL DEL ALMACÉN
+            // ======================================================
+            $saldos_actuales = $this->obtenerSaldoInicialMonitor(
+                $almacen_id,
+                '2000-01-01',
+                $fecha_base
+            );
+
+            $saldo_efectivo_actual = floatval($saldos_actuales['monto_efectivo'] ?? 0);
+            $saldo_tarjeta_actual = floatval($saldos_actuales['monto_tarjeta'] ?? 0);
+            $saldo_transferencia_actual = floatval($saldos_actuales['monto_transferencia'] ?? 0);
+
+            // ======================================================
+            // 🔥 PASO 2: SUMAR LO NUEVO
+            // ======================================================
+            $nuevo_efectivo = $saldo_efectivo_actual + $efectivo;
+            $nuevo_tarjeta = $saldo_tarjeta_actual + $tarjeta;
+            $nuevo_transferencia = $saldo_transferencia_actual + $transferencia;
+
+            $monto = $nuevo_efectivo + $nuevo_tarjeta + $nuevo_transferencia;
+
+            // ======================================================
+            // 🔥 PASO 3: INSERT MOVIMIENTO PRINCIPAL
+            // ======================================================
+            $sql = "INSERT INTO historial_capital (
                     categoria_id,
                     almacen_origen_id,
                     almacen_destino_id,
@@ -836,114 +1181,122 @@ public function registrarAperturaDesdeCierreConceptoAbono($data) {
                     fecha_movimiento
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-        $stmt = $this->db->prepare($sql);
-
-        $stmt->execute([
-            $categoria_id,
-            $almacen_id,
-            $data['almacen_destino_id'] ?: null,
-            $data['caja_fuerte_id'] ?: null,
-            $data['banco_id'] ?: null,
-            $monto,
-            $nuevo_efectivo,
-            $nuevo_tarjeta,
-            $nuevo_transferencia,
-            $usuario_id,
-            $concepto_final,
-            $fecha_apertura
-        ]);
-
-        // ======================================================
-        // 🔥 PASO 4: TRASPASO A OTRO ALMACÉN
-        // ======================================================
-        $almacen_dest_id = intval($data['almacen_destino_id'] ?? 0);
-
-        if ($tipo_op === 'traspaso' && $almacen_dest_id > 0) {
-
-            $saldos_dest = $this->obtenerSaldoInicialMonitor(
-                $almacen_dest_id,
-                '2000-01-01',
-                $fecha_base
-            );
-
-            $nuevo_dest_efectivo      = floatval($saldos_dest['monto_efectivo'] ?? 0);
-            $nuevo_dest_tarjeta       = floatval($saldos_dest['monto_tarjeta'] ?? 0);
-            $nuevo_dest_transferencia = floatval($saldos_dest['monto_transferencia'] ?? 0);
-
-            if (isset([
-                'efectivo' => $nuevo_dest_efectivo,
-                'tarjeta' => $nuevo_dest_tarjeta,
-                'transferencia' => $nuevo_dest_transferencia
-            ][$metodo])) {
-                if ($metodo === 'efectivo') $nuevo_dest_efectivo += $monto_mov;
-                if ($metodo === 'tarjeta') $nuevo_dest_tarjeta += $monto_mov;
-                if ($metodo === 'transferencia') $nuevo_dest_transferencia += $monto_mov;
-            }
+            $stmt = $this->db->prepare($sql);
 
             $stmt->execute([
                 $categoria_id,
-                $almacen_dest_id,
-                null,
-                null,
-                null,
-                $monto_mov,
-                $nuevo_dest_efectivo,
-                $nuevo_dest_tarjeta,
-                $nuevo_dest_transferencia,
+                $almacen_id,
+                $data['almacen_destino_id'] ?: null,
+                $data['caja_fuerte_id'] ?: null,
+                $data['banco_id'] ?: null,
+                $monto,
+                $nuevo_efectivo,
+                $nuevo_tarjeta,
+                $nuevo_transferencia,
                 $usuario_id,
-                "Entrada por traspaso desde Almacén ID: " . $almacen_id ." Monto ".$monto_mov. " | " . date('Y-m-d H:i:s'),
+                $concepto_final,
                 $fecha_apertura
             ]);
+
+            // ======================================================
+            // 🔥 PASO 4: TRASPASO A OTRO ALMACÉN
+            // ======================================================
+            $almacen_dest_id = intval($data['almacen_destino_id'] ?? 0);
+
+            if ($tipo_op === 'traspaso' && $almacen_dest_id > 0) {
+
+                $saldos_dest = $this->obtenerSaldoInicialMonitor(
+                    $almacen_dest_id,
+                    '2000-01-01',
+                    $fecha_base
+                );
+
+                $nuevo_dest_efectivo = floatval($saldos_dest['monto_efectivo'] ?? 0);
+                $nuevo_dest_tarjeta = floatval($saldos_dest['monto_tarjeta'] ?? 0);
+                $nuevo_dest_transferencia = floatval($saldos_dest['monto_transferencia'] ?? 0);
+
+                if (
+                    isset([
+                        'efectivo' => $nuevo_dest_efectivo,
+                        'tarjeta' => $nuevo_dest_tarjeta,
+                        'transferencia' => $nuevo_dest_transferencia
+                    ][$metodo])
+                ) {
+                    if ($metodo === 'efectivo')
+                        $nuevo_dest_efectivo += $monto_mov;
+                    if ($metodo === 'tarjeta')
+                        $nuevo_dest_tarjeta += $monto_mov;
+                    if ($metodo === 'transferencia')
+                        $nuevo_dest_transferencia += $monto_mov;
+                }
+
+                $stmt->execute([
+                    $categoria_id,
+                    $almacen_dest_id,
+                    null,
+                    null,
+                    null,
+                    $monto_mov,
+                    $nuevo_dest_efectivo,
+                    $nuevo_dest_tarjeta,
+                    $nuevo_dest_transferencia,
+                    $usuario_id,
+                    "Entrada por traspaso desde Almacén ID: " . $almacen_id . " Monto " . $monto_mov . " | " . date('Y-m-d H:i:s'),
+                    $fecha_apertura
+                ]);
+            }
+
+            // ======================================================
+            // 🔥 PASO 5: CAJA FUERTE / BANCO
+            // ======================================================
+            if (!empty($data['caja_fuerte_id'])) {
+                $this->actualizarSaldoCajaFuerte($almacen_id, $ajuste_saldo);
+            }
+
+            if (!empty($data['banco_id'])) {
+                $this->actualizarSaldoBanco($data['banco_id'], $ajuste_saldo);
+            }
+
+            $this->db->commit();
+            return true;
+
+        } catch (Exception $e) {
+            $this->db->rollback();
+            error_log("Error en flujo de fondos: " . $e->getMessage());
+            return false;
         }
-
-        // ======================================================
-        // 🔥 PASO 5: CAJA FUERTE / BANCO
-        // ======================================================
-        if (!empty($data['caja_fuerte_id'])) {
-            $this->actualizarSaldoCajaFuerte($data['caja_fuerte_id'], $ajuste_saldo);
-        }
-
-        if (!empty($data['banco_id'])) {
-            $this->actualizarSaldoBanco($data['banco_id'], $ajuste_saldo);
-        }
-
-        $this->db->commit();
-        return true;
-
-    } catch (Exception $e) {
-        $this->db->rollback();
-        error_log("Error en flujo de fondos: " . $e->getMessage());
-        return false;
     }
-}
-/**
- * Métodos auxiliares para la actualización de saldos reales
- */
-public function actualizarSaldoCajaFuerte($id, $monto) {
-    $sql = "UPDATE cajas_fuertes SET Saldo = Saldo + ? WHERE id = ?";
-    return $this->db->prepare($sql)->execute([$monto, $id]);
-}
+    /**
+     * Métodos auxiliares para la actualización de saldos reales
+     */
+    public function actualizarSaldoCajaFuerte($id, $monto)
+    {
+        $sql = "UPDATE cajas_fuertes SET Saldo = Saldo + ? WHERE id = ?";
+        return $this->db->prepare($sql)->execute([$monto, $id]);
+    }
 
-public function actualizarSaldoBanco($id, $monto) {
-    $sql = "UPDATE bancos SET saldo = saldo + ? WHERE id_cuenta = ?"; 
-    return $this->db->prepare($sql)->execute([$monto, $id]);
-}
-/**
- * Obtiene el saldo inicial basándose en el nivel de acceso.
- * Si $almacen_id es 0, actúa como Admin y devuelve un array de todos los almacenes.
- * Si $almacen_id > 0, devuelve el monto único de esa sucursal.
- */
-public function obtenerSaldoInicialMonitor($almacen_id, $f_inicio, $f_fin) {
-    // Solo necesitamos la fecha final del rango
-    $fecha_corte = $f_fin . ' 23:59:59';
+    public function actualizarSaldoBanco($id, $monto)
+    {
+        $sql = "UPDATE bancos SET saldo = saldo + ? WHERE id_cuenta = ?";
+        return $this->db->prepare($sql)->execute([$monto, $id]);
+    }
+    /**
+     * Obtiene el saldo inicial basándose en el nivel de acceso.
+     * Si $almacen_id es 0, actúa como Admin y devuelve un array de todos los almacenes.
+     * Si $almacen_id > 0, devuelve el monto único de esa sucursal.
+     */
+    public function obtenerSaldoInicialMonitor($almacen_id, $f_inicio, $f_fin)
+    {
+        // Solo necesitamos la fecha final del rango
+        $fecha_corte = $f_fin . ' 23:59:59';
 
-    if ($almacen_id == 0) {
-        /**
-         * VISTA ADMIN:
-         * Trae todas las sucursales y su último saldo registrado
-         * ANTES o igual a la fecha seleccionada
-         */
-        $sql = "SELECT 
+        if ($almacen_id == 0) {
+            /**
+             * VISTA ADMIN:
+             * Trae todas las sucursales y su último saldo registrado
+             * ANTES o igual a la fecha seleccionada
+             */
+            $sql = "SELECT 
         a.id as idAlmacen,
                     a.nombre AS almacen, 
                     IFNULL(h.monto, 0.00) AS monto, 
@@ -962,30 +1315,30 @@ public function obtenerSaldoInicialMonitor($almacen_id, $f_inicio, $f_fin) {
                 WHERE a.activo = 1 
                 ORDER BY a.nombre ASC";
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("s", $fecha_corte);
-        $stmt->execute();
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("s", $fecha_corte);
+            $stmt->execute();
 
-        $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-        // 🔥 Asegurar estructura consistente (por si acaso)
-        foreach ($result as &$r) {
-              $r['almacen'] = ($r['almacen'] ?? '');
-              $r['idAlmacen'] = ($r['idAlmacen'] ?? 0);
-            $r['monto'] = floatval($r['monto'] ?? 0);
-            $r['monto_efectivo'] = floatval($r['monto_efectivo'] ?? 0);
-            $r['monto_tarjeta'] = floatval($r['monto_tarjeta'] ?? 0);
-            $r['monto_transferencia'] = floatval($r['monto_transferencia'] ?? 0);
-        }
+            // 🔥 Asegurar estructura consistente (por si acaso)
+            foreach ($result as &$r) {
+                $r['almacen'] = ($r['almacen'] ?? '');
+                $r['idAlmacen'] = ($r['idAlmacen'] ?? 0);
+                $r['monto'] = floatval($r['monto'] ?? 0);
+                $r['monto_efectivo'] = floatval($r['monto_efectivo'] ?? 0);
+                $r['monto_tarjeta'] = floatval($r['monto_tarjeta'] ?? 0);
+                $r['monto_transferencia'] = floatval($r['monto_transferencia'] ?? 0);
+            }
 
-        return $result;
+            return $result;
 
-    } else {
-        /**
-         * VISTA SUCURSAL:
-         * Último saldo antes o igual a la fecha
-         */
-        $sql = "SELECT 
+        } else {
+            /**
+             * VISTA SUCURSAL:
+             * Último saldo antes o igual a la fecha
+             */
+            $sql = "SELECT 
 
                     IFNULL(monto, 0.00) as monto, 
                     IFNULL(monto_efectivo, 0.00) as monto_efectivo, 
@@ -997,32 +1350,33 @@ public function obtenerSaldoInicialMonitor($almacen_id, $f_inicio, $f_fin) {
                 ORDER BY id DESC 
                 LIMIT 1";
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("is", $almacen_id, $fecha_corte);
-        $stmt->execute();
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("is", $almacen_id, $fecha_corte);
+            $stmt->execute();
 
-        $res = $stmt->get_result()->fetch_assoc();
+            $res = $stmt->get_result()->fetch_assoc();
 
-        // ✅ Si no hay historial → regresar ceros
-        return $res ?: [
-            'monto' => 0.00, 
-            'monto_efectivo' => 0.00, 
-            'monto_tarjeta' => 0.00, 
-            'monto_transferencia' => 0.00
-        ];
+            // ✅ Si no hay historial → regresar ceros
+            return $res ?: [
+                'monto' => 0.00,
+                'monto_efectivo' => 0.00,
+                'monto_tarjeta' => 0.00,
+                'monto_transferencia' => 0.00
+            ];
+        }
     }
-}
-public function obtenerSaldoInicialMonitorTabla($almacen_id, $f_inicio, $f_fin) {
-    // Definimos el rango completo de tiempo
-    $fecha_inicio = $f_inicio . ' 00:00:00';
-    $fecha_final  = $f_fin . ' 23:59:59';
+    public function obtenerSaldoInicialMonitorTabla($almacen_id, $f_inicio, $f_fin)
+    {
+        // Definimos el rango completo de tiempo
+        $fecha_inicio = $f_inicio . ' 00:00:00';
+        $fecha_final = $f_fin . ' 23:59:59';
 
-    if ($almacen_id == 0) {
-        /**
-         * VISTA ADMIN:
-         * Trae TODOS los movimientos de todas las sucursales en el rango
-         */
-        $sql = "SELECT 
+        if ($almacen_id == 0) {
+            /**
+             * VISTA ADMIN:
+             * Trae TODOS los movimientos de todas las sucursales en el rango
+             */
+            $sql = "SELECT 
                     a.nombre AS almacen, 
                     h.monto, 
                     h.monto_efectivo, 
@@ -1035,14 +1389,14 @@ public function obtenerSaldoInicialMonitorTabla($almacen_id, $f_inicio, $f_fin) 
                 WHERE h.fecha_movimiento BETWEEN ? AND ?
                 ORDER BY h.id DESC";
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("ss", $fecha_inicio, $fecha_final);
-    } else {
-        /**
-         * VISTA SUCURSAL:
-         * Trae todos los movimientos de UNA sucursal en el rango
-         */
-        $sql = "SELECT 
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("ss", $fecha_inicio, $fecha_final);
+        } else {
+            /**
+             * VISTA SUCURSAL:
+             * Trae todos los movimientos de UNA sucursal en el rango
+             */
+            $sql = "SELECT 
             a.nombre AS almacen, -- Faltaba la coma aquí
             h.monto, 
             h.monto_efectivo, 
@@ -1056,40 +1410,41 @@ public function obtenerSaldoInicialMonitorTabla($almacen_id, $f_inicio, $f_fin) 
           AND h.fecha_movimiento BETWEEN ? AND ?
         ORDER BY h.id DESC";
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("iss", $almacen_id, $fecha_inicio, $fecha_final);
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("iss", $almacen_id, $fecha_inicio, $fecha_final);
+        }
+
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        // Formatear para que el JS reciba números y no strings
+        foreach ($result as &$r) {
+            $r['monto'] = (float) $r['monto'];
+            $r['monto_efectivo'] = (float) $r['monto_efectivo'];
+            $r['monto_tarjeta'] = (float) $r['monto_tarjeta'];
+            $r['monto_transferencia'] = (float) $r['monto_transferencia'];
+        }
+
+        return $result;
     }
+    public function saldoCajaFuerte($almacen_id = 0)
+    {
 
-    $stmt->execute();
-    $result = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        if ($almacen_id == 0) {
 
-    // Formatear para que el JS reciba números y no strings
-    foreach ($result as &$r) {
-        $r['monto'] = (float)$r['monto'];
-        $r['monto_efectivo'] = (float)$r['monto_efectivo'];
-        $r['monto_tarjeta'] = (float)$r['monto_tarjeta'];
-        $r['monto_transferencia'] = (float)$r['monto_transferencia'];
-    }
-
-    return $result;
-}
-public function saldoCajaFuerte($almacen_id = 0) {
-
-    if ($almacen_id == 0) {
-
-        $sql = "SELECT 
+            $sql = "SELECT 
                     cf.nombre, cf.saldo,
                     a.nombre AS almacen
                 FROM cajas_fuertes cf
                 INNER JOIN almacenes a ON a.id = cf.almacen_id
                 WHERE cf.estatus = 1";
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute();
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
 
-    } else {
+        } else {
 
-        $sql = "SELECT 
+            $sql = "SELECT 
                     cf.nombre, cf.saldo,
                     a.nombre AS almacen
                 FROM cajas_fuertes cf
@@ -1097,19 +1452,20 @@ public function saldoCajaFuerte($almacen_id = 0) {
                 WHERE cf.almacen_id = ? 
                 AND cf.estatus = 1";
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("i", $almacen_id);
-        $stmt->execute();
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("i", $almacen_id);
+            $stmt->execute();
+        }
+
+        $result = $stmt->get_result();
+        return $result->fetch_all(MYSQLI_ASSOC);
     }
+    public function saldoCuentasBancarias($almacen_id = 0)
+    {
 
-    $result = $stmt->get_result();
-    return $result->fetch_all(MYSQLI_ASSOC);
-}
-public function saldoCuentasBancarias($almacen_id = 0) {
+        if ($almacen_id == 0) {
 
-    if ($almacen_id == 0) {
-
-        $sql = "SELECT 
+            $sql = "SELECT 
                     cb.nombre_cuenta AS nombre,
                     cb.saldo AS saldo,
                     a.nombre AS almacen
@@ -1117,12 +1473,12 @@ public function saldoCuentasBancarias($almacen_id = 0) {
                 INNER JOIN almacenes a ON a.id = cb.id_almacen
                 WHERE cb.estatus = 1";
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute();
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute();
 
-    } else {
+        } else {
 
-        $sql = "SELECT 
+            $sql = "SELECT 
                     cb.nombre_cuenta AS nombre,
                     cb.saldo AS saldo,
                     a.nombre AS almacen
@@ -1131,18 +1487,18 @@ public function saldoCuentasBancarias($almacen_id = 0) {
                 WHERE cb.id_almacen = ? 
                 AND cb.estatus = 1";
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->bind_param("i", $almacen_id);
-        $stmt->execute();
+            $stmt = $this->db->prepare($sql);
+            $stmt->bind_param("i", $almacen_id);
+            $stmt->execute();
+        }
+
+        // 🔥 FIX IMPORTANTE
+        $result = $stmt->get_result();
+
+        if (!$result) {
+            throw new Exception("Error get_result(): " . $this->db->error);
+        }
+
+        return $result->fetch_all(MYSQLI_ASSOC);
     }
-
-    // 🔥 FIX IMPORTANTE
-    $result = $stmt->get_result();
-
-    if (!$result) {
-        throw new Exception("Error get_result(): " . $this->db->error);
-    }
-
-    return $result->fetch_all(MYSQLI_ASSOC);
-}
 }

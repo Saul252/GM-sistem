@@ -426,7 +426,7 @@ if ($action === 'guardarGastoInsumo') {
     header('Content-Type: application/json');
     try {
         $rol_id = $_SESSION['rol_id'] ?? 0;
-        $almacen_final = ($rol_id == 1) ? intval($_POST['almacen_id'] ?? 0) : intval($_SESSION['almacen_id'] ?? 0);
+        $almacen_final = intval($_POST['almacen_id']) ?? intval($_SESSION['almacen_id']);
         if ($almacen_final <= 0)
             throw new Exception("Almacén no válido.");
 
