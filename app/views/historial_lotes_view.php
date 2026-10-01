@@ -35,7 +35,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
         body {
             background-color: var(--apple-bg);
             font-family: 'SF Pro Display', -apple-system, sans-serif;
-            color: #1d1d1f;
+
         }
 
         .main-content {

@@ -15,7 +15,7 @@ $paginaActual = 'clientes';
 // Capturamos el almacén de la sesión para las consultas
 $almacen_id = $_SESSION['almacen_id'] ?? 0;
 $almacenModel = new AlmacenModel($conexion);
-$almacenes = $almacenModel->getAlmacenes($_SESSION['almacen_id']);
+$almacenes = $almacenModel->getAlmacenes($almacen_id);
 
 if (isset($_GET['action']) && $_GET['action'] === 'obtenerEstadoCuenta') {
     if (ob_get_level())

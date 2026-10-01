@@ -20,7 +20,7 @@
 
     <style>
         :root {
-            --apple-bg: #f5f5f7;
+
             --apple-blue: #007aff;
         }
 
@@ -35,25 +35,24 @@
         }
 
         .glass-card {
-            background: rgba(255, 255, 255, 0.85);
+
             backdrop-filter: blur(15px);
             border-radius: 20px;
-            border: none;
+
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         }
 
         .ios-input {
-            border: none;
-            background: #eef0f2;
+
             border-radius: 10px;
             padding: 10px;
         }
 
         .table thead th {
-            background: #fafdff;
+
             font-size: 11px;
             color: #8e8e93;
-            border: none;
+
         }
 
         @media (max-width: 992px) {

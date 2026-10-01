@@ -208,7 +208,7 @@ try {
     // Carga necesaria para el select de la vista
 
     $tituloPagina = "mantenimientos";
-
+    $almacen_usuario = $_SESSION['almacen_id'] ?? 0;
     $almacenes = $almacenModel->getAlmacenes($almacen_usuario);
     $vistaRuta = __DIR__ . '/../views/verificaciones_view.php';
 
