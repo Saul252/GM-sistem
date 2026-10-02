@@ -1,475 +1,529 @@
-<?php session_start(); ?>
+<?php
+session_start();
+$_SESSION = [];
+session_destroy();
+?>
 <!DOCTYPE html>
 <html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>G-M SISTEM | Acceso</title>
+    <title>Cerrando sesión | G-M SISTEM</title>
+
     <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
     <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
 
-    <!-- Bootstrap & Icons -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        :root {
-            --bg-dark: #090d16;
-            --card-bg: rgba(22, 27, 34, 0.55);
-            --card-border: rgba(255, 255, 255, 0.12);
-            --accent-primary: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.4);
-            --accent-cyan: #06b6d4;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-        }
-
-        * {
+        /* ============================================================
+           RESET
+           ============================================================ */
+        *,
+        *::before,
+        *::after {
             box-sizing: border-box;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-        }
-
-        body, html {
-            height: 100%;
             margin: 0;
-            overflow-x: hidden;
-            background-color: var(--bg-dark);
-            color: var(--text-main);
+            padding: 0;
         }
 
-        .split-container {
-            display: flex;
-            min-height: 100vh;
-            width: 100vw;
-            position: relative;
+        :root {
+            --blue: #0071e3;
+            --blue-light: #4aa3ff;
+            --blue-dark: #005bb8;
         }
 
-        /* --- LADO IZQUIERDO: CAROUSEL CON KEN BURNS EFFECT --- */
-        .left-side {
-            flex: 1.3;
-            position: relative;
-            display: none;
-            overflow: hidden;
-        }
-
-        @media (min-width: 992px) {
-            .left-side {
-                display: block;
-            }
-        }
-
-        .carousel, .carousel-inner, .carousel-item {
+        html,
+        body {
             height: 100%;
+            width: 100%;
         }
 
-        .carousel-item img {
-            height: 100vh;
-            object-fit: cover;
-            filter: brightness(0.55) contrast(1.15) saturate(1.1);
-            transform: scale(1);
-            transition: transform 6s cubic-bezier(0.25, 1, 0.5, 1);
-        }
-
-        .carousel-item.active img {
-            transform: scale(1.08);
-        }
-
-        .carousel-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, rgba(9, 13, 22, 0.4) 0%, rgba(9, 13, 22, 0.95) 100%),
-                        linear-gradient(90deg, rgba(9, 13, 22, 0.2) 0%, rgba(9, 13, 22, 0.8) 100%);
-            display: flex;
-            align-items: flex-end;
-            padding: 4.5rem;
-            z-index: 2;
-        }
-
-        .glass-badge {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            padding: 7px 18px;
-            border-radius: 50px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            text-transform: uppercase;
-            color: #60a5fa;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-            animation: pulseGlow 3s infinite alternate;
-        }
-
-        @keyframes pulseGlow {
-            0% { box-shadow: 0 0 10px rgba(59, 130, 246, 0.2); }
-            100% { box-shadow: 0 0 22px rgba(59, 130, 246, 0.6); }
-        }
-
-        /* --- LADO DERECHO: VIDRIO ESMERILADO (GLASSMORPHISM) --- */
-        .right-side {
-            flex: 1;
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+            background: #000;
+            color: #fff;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
-            padding: 2rem;
-            background: var(--bg-dark);
-            z-index: 1;
             overflow: hidden;
-        }
-
-        /* Ambient Orbs (Fondo Neón Animado) */
-        .orb {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(90px);
-            z-index: -1;
-            pointer-events: none;
-            opacity: 0.6;
-            animation: floatAmbient 10s infinite ease-in-out alternate;
-        }
-
-        .orb-1 {
-            width: 320px;
-            height: 320px;
-            background: radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, rgba(0,0,0,0) 70%);
-            top: 10%;
-            right: 10%;
-        }
-
-        .orb-2 {
-            width: 280px;
-            height: 280px;
-            background: radial-gradient(circle, rgba(147, 51, 234, 0.35) 0%, rgba(0,0,0,0) 70%);
-            bottom: 10%;
-            left: 10%;
-            animation-delay: -5s;
-        }
-
-        @keyframes floatAmbient {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(30px, -20px) scale(1.1); }
-        }
-
-        /* TARJETA DE LOGIN ULTRA-GLASS */
-        .login-card {
-            width: 100%;
-            max-width: 430px;
-            padding: 3.2rem 2.5rem;
-            background: var(--card-bg);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid var(--card-border);
-            border-radius: 28px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.15);
-            animation: cardEntrance 0.8s cubic-bezier(0.16, 1, 0.3, 1);
             position: relative;
+            letter-spacing: -0.011em;
         }
 
-        @keyframes cardEntrance {
+        /* ============================================================
+           FONDO
+           ============================================================ */
+        .bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            background:
+                radial-gradient(ellipse at 20% 30%, rgba(0, 113, 227, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 70%, rgba(120, 160, 220, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(30, 30, 40, 1) 0%, #05050a 100%);
+        }
+
+        /* ============================================================
+           ESCENA
+           ============================================================ */
+        .scene {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 46px;
+            animation: sceneIn 1s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes sceneIn {
             from {
                 opacity: 0;
-                transform: translateY(30px) scale(0.96);
+                transform: scale(0.95);
             }
+
             to {
                 opacity: 1;
-                transform: translateY(0) scale(1);
+                transform: scale(1);
             }
         }
 
-        .logo-title {
-            font-size: 2.2rem;
-            font-weight: 800;
-            letter-spacing: -1px;
-            background: linear-gradient(135deg, #ffffff 30%, #93c5fd 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-align: center;
-            margin-bottom: 0.2rem;
-        }
-
-        .logo-subtitle {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            text-align: center;
-            margin-bottom: 2.2rem;
-            font-weight: 500;
-        }
-
-        /* FORM INPUTS */
-        .form-label {
-            color: #cbd5e1;
-            font-size: 0.75rem;
-            font-weight: 700;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-        }
-
-        .input-group {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 14px;
-            overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .input-group:focus-within {
-            border-color: var(--accent-primary);
-            box-shadow: 0 0 0 4px var(--accent-glow);
-            background: rgba(15, 23, 42, 0.85);
-            transform: translateY(-1px);
-        }
-
-        .input-group-text {
-            background: transparent;
-            border: none;
-            color: #64748b;
-            padding-left: 1.2rem;
-            transition: color 0.3s;
-        }
-
-        .input-group:focus-within .input-group-text {
-            color: #60a5fa;
-        }
-
-        .form-control {
-            background: transparent !important;
-            border: none !important;
-            color: #ffffff !important;
-            padding: 0.85rem 1rem;
-            font-size: 0.95rem;
-            font-weight: 500;
-        }
-
-        .form-control::placeholder {
-            color: #475569;
-        }
-
-        .form-control:focus {
-            box-shadow: none;
-        }
-
-        .btn-show-pass {
-            background: transparent;
-            border: none;
-            color: #64748b;
-            padding-right: 1.2rem;
-            transition: color 0.2s;
-        }
-
-        .btn-show-pass:hover {
-            color: #f8fafc;
-        }
-
-        /* BOTÓN PRINCIPAL CON SHIMMER */
-        .btn-login {
+        /* ============================================================
+           CONTENEDOR DE LA RULETA
+           ============================================================ */
+        .wheel-wrap {
             position: relative;
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 14px;
-            padding: 0.95rem;
-            font-weight: 700;
-            font-size: 0.95rem;
-            letter-spacing: 0.5px;
-            margin-top: 1.2rem;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.5);
+            width: 200px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
         }
 
-        .btn-login::before {
+        /* Halo brillante detrás */
+        .wheel-wrap::before {
+            content: '';
+            position: absolute;
+            inset: -30px;
+            border-radius: 50%;
+            background: radial-gradient(circle,
+                    rgba(0, 113, 227, 0.35) 0%,
+                    rgba(0, 113, 227, 0.1) 40%,
+                    transparent 70%);
+            filter: blur(20px);
+            animation: haloPulse 3s ease-in-out infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        @keyframes haloPulse {
+
+            0%,
+            100% {
+                opacity: 0.6;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.08);
+            }
+        }
+
+        /* ============================================================
+           RULETA — 4 CUADRANTES GIRANDO
+           ============================================================ */
+        .wheel {
+            position: relative;
+            width: 180px;
+            height: 180px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 8px;
+            transform-style: preserve-3d;
+            animation: wheelSpin 4.5s cubic-bezier(0.6, 0, 0.4, 1) forwards;
+            animation-delay: 0.4s;
+            will-change: transform;
+        }
+
+        /* Giro completo tipo ruleta */
+        @keyframes wheelSpin {
+            0% {
+                transform: rotate(0deg) scale(1);
+            }
+
+            15% {
+                transform: rotate(-15deg) scale(1.05);
+            }
+
+            70% {
+                transform: rotate(540deg) scale(1);
+            }
+
+            85% {
+                transform: rotate(680deg) scale(0.95);
+            }
+
+            100% {
+                transform: rotate(720deg) scale(0.9);
+            }
+        }
+
+        /* ============================================================
+           CADA CUADRANTE
+           ============================================================ */
+        .quad {
+            position: relative;
+            border-radius: 14px;
+            background: linear-gradient(145deg, #0071e3 0%, #005bb8 100%);
+            box-shadow:
+                0 8px 24px rgba(0, 113, 227, 0.35),
+                inset 0 1px 0 rgba(255, 255, 255, 0.25),
+                inset 0 -2px 6px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            animation: quadClose 0.9s cubic-bezier(0.6, 0, 0.4, 1) forwards;
+            will-change: opacity, transform, filter;
+        }
+
+        /* Cuadrante 1 (arriba izq) — primero */
+        .quad:nth-child(1) {
+            animation-delay: 3.2s;
+            transform-origin: top left;
+        }
+
+        /* Cuadrante 2 (arriba der) */
+        .quad:nth-child(2) {
+            animation-delay: 3.5s;
+            transform-origin: top right;
+        }
+
+        /* Cuadrante 4 (abajo der) */
+        .quad:nth-child(4) {
+            animation-delay: 3.8s;
+            transform-origin: bottom right;
+        }
+
+        /* Cuadrante 3 (abajo izq) */
+        .quad:nth-child(3) {
+            animation-delay: 4.1s;
+            transform-origin: bottom left;
+        }
+
+        /* Cada cuadrante se cierra alejándose hacia su esquina */
+        @keyframes quadClose {
+            0% {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+                filter: blur(0);
+            }
+
+            40% {
+                opacity: 1;
+                transform: scale(1.05) rotate(3deg);
+                filter: blur(0);
+            }
+
+            100% {
+                opacity: 0;
+                transform: scale(0.15) rotate(-25deg);
+                filter: blur(12px);
+            }
+        }
+
+        /* Brillo superior cristal */
+        .quad::before {
             content: '';
             position: absolute;
             top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
-            transition: 0.5s;
+            left: 10%;
+            right: 10%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.9), transparent);
         }
 
-        .btn-login:hover::before {
-            left: 100%;
+        /* Reflejo diagonal interno */
+        .quad::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg,
+                    rgba(255, 255, 255, 0.22) 0%,
+                    transparent 40%,
+                    transparent 60%,
+                    rgba(0, 0, 0, 0.18) 100%);
         }
 
-        .btn-login:hover {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 15px 30px -5px rgba(37, 99, 235, 0.6);
+        /* ============================================================
+           CENTRO DE LA RULETA (aro decorativo)
+           ============================================================ */
+        .wheel-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #4aa3ff 0%, #0071e3 60%, #004a99 100%);
+            box-shadow:
+                0 0 12px rgba(74, 163, 255, 0.8),
+                0 0 24px rgba(0, 113, 227, 0.5),
+                inset 0 1px 2px rgba(255, 255, 255, 0.5);
+            z-index: 10;
+            animation: centerGlow 1.5s ease-in-out infinite;
         }
 
-        .btn-login:active {
-            transform: translateY(0);
+        @keyframes centerGlow {
+
+            0%,
+            100% {
+                box-shadow: 0 0 12px rgba(74, 163, 255, 0.8), 0 0 24px rgba(0, 113, 227, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.5);
+            }
+
+            50% {
+                box-shadow: 0 0 18px rgba(74, 163, 255, 1), 0 0 36px rgba(0, 113, 227, 0.7), inset 0 1px 2px rgba(255, 255, 255, 0.6);
+            }
         }
 
-        .login-footer {
-            margin-top: 2.5rem;
+        /* ============================================================
+           TEXTO
+           ============================================================ */
+        .status {
             text-align: center;
-            font-size: 0.8rem;
-            color: #64748b;
+            animation: fadeIn 1s ease-out 0.4s backwards;
         }
 
-        /* Custom SweetAlert Dark Theme */
-        .swal2-popup.swal2-toast, .swal2-popup {
-            background: #161b22 !important;
-            color: #f8fafc !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            border-radius: 18px !important;
-            backdrop-filter: blur(15px);
+        .status-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: -0.025em;
+            margin-bottom: 8px;
         }
-        .swal2-title {
-            color: #f8fafc !important;
+
+        .status-subtitle {
+            font-size: 0.88rem;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.55);
+            letter-spacing: -0.01em;
+        }
+
+        .status-subtitle .dot {
+            display: inline-block;
+            animation: dotBlink 1.4s ease-in-out infinite;
+        }
+
+        .status-subtitle .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .status-subtitle .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes dotBlink {
+
+            0%,
+            60%,
+            100% {
+                opacity: 0.25;
+            }
+
+            30% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ============================================================
+           BARRA DE PROGRESO
+           ============================================================ */
+        .progress {
+            width: 220px;
+            height: 3px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            animation: fadeIn 1s ease-out 0.6s backwards;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #0071e3 0%, #4aa3ff 100%);
+            border-radius: 3px;
+            animation: progressFill 6s linear forwards;
+            animation-delay: 0.4s;
+            box-shadow: 0 0 10px rgba(74, 163, 255, 0.6);
+        }
+
+        @keyframes progressFill {
+            from {
+                width: 0%;
+            }
+
+            to {
+                width: 100%;
+            }
+        }
+
+        /* ============================================================
+           MARCA
+           ============================================================ */
+        .brand {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            animation: fadeIn 1s ease-out 0.8s backwards;
+        }
+
+        .brand-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        /* ============================================================
+           FUNDIDO FINAL
+           ============================================================ */
+        .curtain {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: #000;
+            opacity: 0;
+            pointer-events: none;
+            animation: curtainFade 1s ease-in forwards;
+            animation-delay: 5.8s;
+        }
+
+        @keyframes curtainFade {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* ============================================================
+           RESPONSIVE
+           ============================================================ */
+        @media (max-width: 480px) {
+            .wheel-wrap {
+                width: 160px;
+                height: 160px;
+            }
+
+            .wheel {
+                width: 150px;
+                height: 150px;
+                gap: 6px;
+            }
+
+            .quad {
+                border-radius: 12px;
+            }
+
+            .status-title {
+                font-size: 1.25rem;
+            }
+
+            .scene {
+                gap: 38px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <div class="split-container">
-        <!-- Lado Izquierdo (Carrusel) -->
-        <div class="left-side">
-            <div id="labCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="5000">
-                <div class="carousel-inner">
-                    <div class="carousel-item active">
-                        <img src="public/assets/almacen3.jpg" class="d-block w-100" alt="Almacén 1">
-                    </div>
-                    <div class="carousel-item">
-                        <img src="public/assets/almacen2.jpg" class="d-block w-100" alt="Almacén 2">
-                    </div>
-                </div>
+    <div class="bg"></div>
+
+    <div class="scene">
+
+        <!-- RULETA -->
+        <div class="wheel-wrap">
+            <div class="wheel">
+                <div class="quad"></div>
+                <div class="quad"></div>
+                <div class="quad"></div>
+                <div class="quad"></div>
             </div>
-            <div class="carousel-overlay">
-                <div class="text-white px-2">
-                    <span class="glass-badge mb-3 d-inline-block">G-M SISTEM v2.0</span>
-                    <h1 class="fw-extrabold display-5 mt-2 mb-3" style="font-weight: 800; letter-spacing: -1px;">Eficiencia en cada movimiento.</h1>
-                    <p class="lead text-slate-300" style="color: #cbd5e1; font-size: 1.1rem;">Optimiza e integra tu inventario logístico en tiempo real.</p>
-                </div>
+            <div class="wheel-center"></div>
+        </div>
+
+        <!-- TEXTO -->
+        <div class="status">
+            <div class="status-title">Cerrando sesión</div>
+            <div class="status-subtitle">
+                Finalizando de forma segura
+                <span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
             </div>
         </div>
 
-        <!-- Lado Derecho (Login Glassmorphism) -->
-        <div class="right-side">
-            <!-- Background Orbs -->
-            <div class="orb orb-1"></div>
-            <div class="orb orb-2"></div>
-
-            <div class="login-card">
-                <div class="logo-title">G-M SISTEM</div>
-                <div class="logo-subtitle">Gestión Inteligente de Inventarios</div>
-
-                <form id="formLogin">
-                    <div class="mb-35 text-start mb-3">
-                        <label class="form-label">USUARIO</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-person-gear fs-5"></i></span>
-                            <input type="text" name="usuario" class="form-control" placeholder="Ingresa tu usuario" required autocomplete="off">
-                        </div>
-                    </div>
-
-                    <div class="mb-4 text-start">
-                        <label class="form-label">CONTRASEÑA</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-shield-lock fs-5"></i></span>
-                            <input type="password" name="password" id="passwordField" class="form-control" placeholder="••••••••" required>
-                            <button type="button" class="btn btn-show-pass" id="togglePassword" tabindex="-1">
-                                <i class="bi bi-eye" id="eyeIcon"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <button type="submit" id="btnIngresar" class="btn btn-login w-100 text-white">
-                        <span>Ingresar al Sistema</span>
-                    </button>
-                </form>
-
-                <div class="login-footer">
-                    © <?php echo date('Y'); ?> <span class="fw-semibold text-slate-400" style="color: #94a3b8;">G-M SISTEM</span><br>
-                    <span>Todos los derechos reservados</span>
-                </div>
-            </div>
+        <!-- BARRA -->
+        <div class="progress">
+            <div class="progress-bar"></div>
         </div>
+
     </div>
 
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Marca -->
+    <div class="brand">
+        <span>G-M Sistem</span>
+        <span class="brand-dot"></span>
+        <span><?php echo date('Y'); ?></span>
+    </div>
+
+    <!-- Fundido final -->
+    <div class="curtain"></div>
 
     <script>
-    // Toggle para mostrar/ocultar contraseña
-    const togglePassword = document.querySelector('#togglePassword');
-    const passwordField = document.querySelector('#passwordField');
-    const eyeIcon = document.querySelector('#eyeIcon');
-
-    togglePassword.addEventListener('click', function() {
-        const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordField.setAttribute('type', type);
-
-        eyeIcon.classList.toggle('bi-eye');
-        eyeIcon.classList.toggle('bi-eye-slash');
-    });
-
-    // Petición AJAX de Login
-    document.getElementById('formLogin').addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const btn = document.getElementById('btnIngresar');
-        const originalContent = btn.innerHTML;
-
-        btn.disabled = true;
-        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Validando...`;
-
-        try {
-            const response = await fetch('/cfsistem/app/controllers/authController.php?action=login', {
-                method: 'POST',
-                body: new FormData(e.target)
-            });
-
-            const texto = await response.text();
-
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status} ${response.statusText}\n\n${texto}`);
-            }
-
-            let data;
-            try {
-                data = JSON.parse(texto);
-            } catch (error) {
-                throw new Error(`El servidor NO devolvió JSON válido.\n\nRespuesta:\n${texto}`);
-            }
-
-            if (data.status === 'success') {
-                window.location.href = data.redirect;
-            } else {
-                Swal.fire({
-                    icon: data.status || 'error',
-                    title: 'Aviso',
-                    text: data.message || 'Error desconocido',
-                    confirmButtonColor: '#2563eb'
-                });
-                btn.disabled = false;
-                btn.innerHTML = originalContent;
-            }
-
-        } catch (error) {
-            console.error('Error Login:', error);
-
-            Swal.fire({
-                icon: 'error',
-                title: 'Error de conexión',
-                html: `<pre style="text-align:left;white-space:pre-wrap;font-size:0.8rem;color:#f87171;">${error.message}</pre>`,
-                confirmButtonColor: '#2563eb'
-            });
-
-            btn.disabled = false;
-            btn.innerHTML = originalContent;
-        }
-    });
+        setTimeout(() => {
+            window.location.href = 'index.php';
+        }, 6800);
     </script>
+
 </body>
 
 </html>
