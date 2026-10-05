@@ -325,6 +325,7 @@ if (isset($_POST['action']) && $_POST['action'] === 'guardarCompraCompleta') {
 
             $_POST['folio'] ?? '',
 
+
             $proveedor,
 
             $_FILES['evidencia_compra'] ?? null,

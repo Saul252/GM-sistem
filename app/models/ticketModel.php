@@ -13,7 +13,7 @@ class VentasTicketModel
      */
     public function obtenerVentaPorId($id_venta)
     {
-        $sql = "SELECT v.*, c.nombre_comercial, c.rfc, c.direccion, 
+        $sql = "SELECT v.*, c.nombre_comercial, c.rfc, c.direccion, c.correo as correo,
                        u.nombre as nombre_vendedor, u2.nombre as vendedor,
                        a.nombre as nombre_almacen, a.ubicacion as direccion_almacen
                 FROM ventas v

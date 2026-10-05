@@ -183,6 +183,7 @@ class SolicitudCompra
     prov.numeroExt  AS dp_numeroExt,
     prov.numeroInt  AS dp_numeroInt,
     prov.activo     AS dp_activo,
+    prov.correo as dp_correo,
     prov.creado_at  AS dp_creado_at
 
                       

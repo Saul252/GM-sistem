@@ -304,7 +304,7 @@
                         selectUbicacion.appendChild(option);
                     });
                 } else {
-                    selectUbicacion.innerHTML = '<option value="">No hay ubicaciones registradas para este proveedor</option>';
+                    selectUbicacion.innerHTML = '<option value="0"></option>';
                 }
 
                 // Si usas Select2, actualizamos la vista del componente visualmente
@@ -631,7 +631,6 @@
                     icon: 'success',
                     title: '¡Éxito!',
                     text: res.message,
-                    // 1. Eliminamos 'timer' para que la alerta no se cierre sola
                     showDenyButton: true,
                     showCancelButton: true,
                     confirmButtonText: 'IMPRIMIR',
@@ -643,8 +642,8 @@
                         popup: 'rounded-4 border-0 shadow-lg'
                     }
                 }).then((result) => {
-                    let url = '';
 
+                    // 1) IMPRIMIR
                     if (result.isConfirmed) {
                         $('#modalSolicitud').modal('hide');
                         prepararImpresion(res.id);
@@ -653,25 +652,29 @@
                             ejecutarImpresion();
                             cargarSolicitudes();
                         }, 500);
-                    } else if (result.isDenied) {
-                        url = `/cfsistem/app/controllers/solicitudesCompraController.php`;
                     }
 
-                    // Si se seleccionó una opción válida, abre la pestaña
-                    if (url !== '') {
+                    // 2) SALIR (abre pestaña y recarga)
+                    else if (result.isDenied) {
+                        const url = `/cfsistem/app/controllers/solicitudesCompraController.php`;
                         window.open(url, '_blank');
+                        // 🔄 Recargar la página actual
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 300);
                     }
 
-                    // Finalmente recarga la página actual
+                    // 3) CERRAR / X / ESC → también recarga
+                    else {
+                        // 🔄 Recargar la página actual
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 300);
+                    }
 
                 });
             } else {
-
-                Swal.fire(
-                    'Error',
-                    res.message,
-                    'error'
-                );
+                Swal.fire('Error', res.message, 'error');
             }
 
         } catch (e) {
