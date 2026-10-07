@@ -145,10 +145,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'getSiguienteFolio') {
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     try {
         // Nota: Verifica que sea listarTodo() o listarTodos() según tu ProductosModel
+        $almacenusuario = $_SESSION['rol_id'] == 3 ? 0 : $almacen_usuario ?? 0;
         $productos = $productosModel->listarTodo();
         $proveedores = $proveedorModel->listarTodos();
         $listaProductos = $productosModel->listarTodo();
-        $almacenes = $almacenModel->getAlmacenes($almacen_usuario);
+        $almacenes = $almacenModel->getAlmacenes($almacenusuario);
         $unidadesMedida = $almacenModel->getUnidadesMedida();
 
         $tituloPagina = "Solicitudes de Compra";
