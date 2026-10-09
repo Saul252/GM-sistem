@@ -184,86 +184,110 @@
                 <h3 class="fw-bold card-title-text m-0">Historial de Ventas</h3>
                 <div id="loader" class="spinner-border spinner-border-sm text-secondary d-none"></div>
             </div>
-            <div class="dropdown">
-                <button class="btn btn-add dropdown-toggle" type="button" data-bs-toggle="dropdown"
-                    aria-expanded="false" style="border-radius: 10px; background: #123e77; color: #ffffff;">
+            <a class="d-inline-flex align-items-center gap-2 btn btn-outline-primary btn-sm rounded-pill px-3 py-2"
+                href="/cfsistem/app/controllers/misRepartosController.php">
+                <i class="bi bi-list-ul"></i>
+                Gestionar mis repartos
+            </a>
+            <div class="card border-0 shadow-sm rounded-4 mb-4 filter-card">
+                <div class="card-body p-4">
 
-                    <i class="bi bi-gear me-2"></i> Mis repartos
-                </button>
-
-                <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
-
-
-
-                    <li>
-                        <a class="dropdown-item d-flex align-items-center gap-2"
-                            href="/cfsistem/app/controllers/misRepartosController.php">
-                            <i class="bi bi-list-ul text-primary"></i>
-                            Gestionar mis repartos
-                        </a>
-                    </li>
-
-                </ul>
-            </div>
-            <div class="card filter-card mb-4">
-                <div class="card-body">
-                    <div class="row g-3 align-items-end">
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold">Buscador</label>
-                            <input type="text" id="f_search" class="form-control form-control-sm"
-                                placeholder="Folio o Cliente..." onkeyup="getVentas()">
+                    <!-- Header del card -->
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="d-flex align-items-center justify-content-center rounded-3 bg-primary-subtle text-primary"
+                                style="width: 38px; height: 38px;">
+                                <i class="bi bi-funnel-fill fs-5"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold">Filtros de búsqueda</h6>
+                                <small class="text-body-secondary">Refina los resultados de ventas</small>
+                            </div>
                         </div>
+                        <button type="button" class="btn btn-sm btn-light rounded-pill px-3" onclick="limpiarFiltros()">
+                            <i class="bi bi-arrow-counterclockwise me-1"></i> Limpiar
+                        </button>
+                    </div>
+
+                    <!-- Filtros -->
+                    <div class="row g-3 align-items-end">
+
+                        <div class="col-md-3">
+                            <label
+                                class="form-label small fw-semibold text-body-secondary text-uppercase mb-1">Buscador</label>
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-body-tertiary border-end-0 rounded-start-3">
+                                    <i class="bi bi-search text-body-secondary"></i>
+                                </span>
+                                <input type="text" id="f_search" class="form-control border-start-0 rounded-end-3"
+                                    placeholder="Folio o Cliente..." onkeyup="getVentas()">
+                            </div>
+                        </div>
+
                         <div class="col-md-2">
-                            <label class="form-label small fw-bold">Estatus Entrega</label>
-                            <select id="f_status" class="form-select form-select-sm" onchange="getVentas()">
+                            <label class="form-label small fw-semibold text-body-secondary text-uppercase mb-1">Estatus
+                                Entrega</label>
+                            <select id="f_status" class="form-select form-select-sm rounded-3" onchange="getVentas()">
                                 <option value="">Todos</option>
                                 <option value="pendiente">Pendiente</option>
                                 <option value="parcial">Parcial</option>
                                 <option value="entregado">Entregado</option>
                             </select>
                         </div>
+
                         <div class="col-md-2">
                             <label for="select-usuarios"
-                                class="form-label fw-bold small text-body-secondary text-uppercase">Vendedor</label>
-                            <select class="form-select rounded-pill" id="select-usuarios" name="usuario_id"
+                                class="form-label small fw-semibold text-body-secondary text-uppercase mb-1">Vendedor</label>
+                            <select class="form-select form-select-sm rounded-3" id="select-usuarios" name="usuario_id"
                                 onchange="getVentas()">
-                                <option value=""> Seleccione vendedor</option>
+                                <option value="">Seleccione vendedor</option>
                             </select>
                         </div>
+
                         <div class="col-md-2">
-                            <label class="form-label small fw-bold">Estatus Pago</label>
-                            <select id="f_pago" class="form-select form-select-sm" onchange="getVentas()">
+                            <label class="form-label small fw-semibold text-body-secondary text-uppercase mb-1">Estatus
+                                Pago</label>
+                            <select id="f_pago" class="form-select form-select-sm rounded-3" onchange="getVentas()">
                                 <option value="">Todos</option>
                                 <option value="deuda">Con Deuda</option>
                                 <option value="pagado">Pagados</option>
                             </select>
                         </div>
+
                         <div class="col-md-2">
-                            <label class="form-label small fw-bold">Periodo</label>
-                            <select id="f_rango" class="form-select form-select-sm" onchange="togglePerso()">
-                                <option value="semana">Semana</option>
+                            <label
+                                class="form-label small fw-semibold text-body-secondary text-uppercase mb-1">Periodo</label>
+                            <select id="f_rango" class="form-select form-select-sm rounded-3" onchange="togglePerso()">
                                 <option value="hoy">Hoy</option>
                                 <option value="ayer">Ayer</option>
-                                <option value="semana">Semana</option>
+                                <option value="semana" selected>Semana</option>
                                 <option value="mes">Mes</option>
                                 <option value="todos">Historial Completo</option>
                                 <option value="personalizado">Rango...</option>
                             </select>
                         </div>
+
                         <div class="col-md-3 d-none" id="div_p">
-                            <label class="form-label small fw-bold">Fechas</label>
+                            <label
+                                class="form-label small fw-semibold text-body-secondary text-uppercase mb-1">Fechas</label>
                             <div class="input-group input-group-sm">
-                                <input type="date" id="f_ini" class="form-control" value="<?= date('Y-m-d') ?>"
-                                    onchange="getVentas()">
-                                <input type="date" id="f_fin" class="form-control" value="<?= date('Y-m-d') ?>"
-                                    onchange="getVentas()">
+                                <input type="date" id="f_ini" class="form-control rounded-start-3"
+                                    value="<?= date('Y-m-d') ?>" onchange="getVentas()">
+                                <span class="input-group-text bg-body-tertiary border-start-0 border-end-0 px-2">
+                                    <i class="bi bi-arrow-right text-body-secondary"></i>
+                                </span>
+                                <input type="date" id="f_fin" class="form-control rounded-end-3"
+                                    value="<?= date('Y-m-d') ?>" onchange="getVentas()">
                             </div>
                         </div>
+
                         <div class="col-md-2">
-                            <label class="form-label small fw-bold">Ubicación</label>
-                            <select id="f_almacen" class="form-select form-select-sm" onchange="getVentas()">
+                            <label
+                                class="form-label small fw-semibold text-body-secondary text-uppercase mb-1">Ubicación</label>
+                            <select id="f_almacen" class="form-select form-select-sm rounded-3" onchange="getVentas()">
                                 <?php if ($esadmin): ?>
-                                    <option value="0">Todos</option><?php endif; ?>
+                                    <option value="0">Todos</option>
+                                <?php endif; ?>
                                 <?php foreach ($almacenes as $a): ?>
                                     <option value="<?= $a['id'] ?>" <?= ($a['id'] == $_SESSION['almacen_id']) ? 'selected' : '' ?>>
                                         <?= $a['nombre'] ?>
@@ -271,15 +295,18 @@
                                 <?php endforeach; ?>
                             </select>
                         </div>
+
                         <div class="col-md-2">
-                            <label class="form-label small fw-bold">Estatus Factura</label>
-                            <select id="estado_factura" class="form-select form-select-sm" onchange="getVentas()">
+                            <label class="form-label small fw-semibold text-body-secondary text-uppercase mb-1">Estatus
+                                Factura</label>
+                            <select id="estado_factura" class="form-select form-select-sm rounded-3"
+                                onchange="getVentas()">
                                 <option value="">Todos</option>
                                 <option value="1">Facturada</option>
-                                <option value="0">No factuarada</option>
-
+                                <option value="0">No facturada</option>
                             </select>
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -883,14 +910,14 @@
 .btn-glass-danger {
     width: 36px;
     height: 36px;
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #090356;
+    background-color: rgba(241, 232, 232, 0.98);
+    color: #ff0808;
     transition: all 0.2s ease-in-out;
 }
 
 .btn-glass-danger:hover {
-    background-color: rgba(220, 53, 69, 0.25);
-    color: #2a54b0;
+    background-color: rgba(11, 11, 11, 0.25);
+    color: #f70000;
     transform: scale(1.08);
 }
 </style>` : `<button type="button" 
@@ -907,13 +934,13 @@
     width: 36px;
     height: 36px;
     background-color: rgba(255, 255, 255, 0.1);
-    color: #dc3545;
+    color: #020202;
     transition: all 0.2s ease-in-out;
 }
 
 .btn-glass-danger:hover {
-    background-color: rgba(220, 53, 69, 0.25);
-    color: #b02a37;
+    background-color: rgba(255, 0, 25, 0.25);
+    color: #fa0a0a;
     transform: scale(1.08);
 }
 </style>`;
