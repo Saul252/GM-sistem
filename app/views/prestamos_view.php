@@ -137,17 +137,21 @@ $paginaActual = $paginaActual ?? 'prestamos';
                             <option value="personalizado">Personalizado</option>
                         </select>
                     </div>
-
+ <?php
+$hoy = date('Y-m-d');
+$inicioSemana = date('Y-m-d', strtotime('monday this week'));
+?>
                     <!-- 📆 FECHA INICIO -->
                     <div class="col-md-2">
                         <label class="form-label text-body-secondary small">Desde</label>
-                        <input type="date" id="f_inicio" class="form-control   rounded-3">
+                        <input type="date" id="f_inicio" value="<?= $inicioSemana ?>" class="form-control rounded-3">
+                        
                     </div>
 
                     <!-- 📆 FECHA FIN -->
                     <div class="col-md-2">
                         <label class="form-label text-body-secondary small">Hasta</label>
-                        <input type="date" id="f_fin" class="form-control   rounded-3">
+                        <input type="date" id="f_fin" value="<?= $hoy ?>" class="form-control   rounded-3">
                     </div>
 
                     <!-- 🏢 SUCURSAL (solo si aplica) -->

@@ -1,73 +1,75 @@
 <?php
 
-class LogisticaModel {
+class LogisticaModel
+{
 
     private $db;
 
-    public function __construct($conexion) {
+    public function __construct($conexion)
+    {
         $this->db = $conexion;
     }
 
     /**
      * 🔹 Obtener viajes con filtros
      */
-public function obtenerViajesFiltrados(
-    $almacen = 0, 
-    $fecha_inicio = null, 
-    $fecha_fin = null,
-    $chofer = '', 
-    $ayudantes = '', 
-    $estado = ''
-) {
+    public function obtenerViajesFiltrados(
+        $almacen = 0,
+        $fecha_inicio = null,
+        $fecha_fin = null,
+        $chofer = '',
+        $ayudantes = '',
+        $estado = ''
+    ) {
 
-    $where = [];
-    $params = [];
-    $types = '';
+        $where = [];
+        $params = [];
+        $types = '';
+        $where[] = "tc.vehiculo_id != 999";
+        // 🔹 FILTRO POR ALMACÉN
+        if (!empty($almacen) && $almacen > 0) {
+            $where[] = "a.id = ?";
+            $params[] = $almacen;
+            $types .= 'i';
+        }
 
-    // 🔹 FILTRO POR ALMACÉN
-    if (!empty($almacen) && $almacen > 0) {
-        $where[] = "a.id = ?";
-        $params[] = $almacen;
-        $types .= 'i';
-    }
+        // 🔹 FILTRO POR RANGO DE FECHAS
+        if (!empty($fecha_inicio) && !empty($fecha_fin)) {
+            $where[] = "DATE(tc.fecha_creacion) BETWEEN ? AND ?";
+            $params[] = $fecha_inicio;
+            $params[] = $fecha_fin;
+            $types .= 'ss';
+        } elseif (!empty($fecha_inicio)) {
+            $where[] = "DATE(tc.fecha_creacion) >= ?";
+            $params[] = $fecha_inicio;
+            $types .= 's';
+        }
 
-    // 🔹 FILTRO POR RANGO DE FECHAS
-    if (!empty($fecha_inicio) && !empty($fecha_fin)) {
-        $where[] = "DATE(tc.fecha_creacion) BETWEEN ? AND ?";
-        $params[] = $fecha_inicio;
-        $params[] = $fecha_fin;
-        $types .= 'ss';
-    } elseif (!empty($fecha_inicio)) {
-        $where[] = "DATE(tc.fecha_creacion) >= ?";
-        $params[] = $fecha_inicio;
-        $types .= 's';
-    }
+        // 🔹 FILTRO CHOFER
+        if (!empty($chofer)) {
+            $where[] = "u_chofer.nombre LIKE ?";
+            $params[] = "%$chofer%";
+            $types .= 's';
+        }
 
-    // 🔹 FILTRO CHOFER
-    if (!empty($chofer)) {
-        $where[] = "u_chofer.nombre LIKE ?";
-        $params[] = "%$chofer%";
-        $types .= 's';
-    }
+        // 🔹 FILTRO AYUDANTES
+        if (!empty($ayudantes)) {
+            $where[] = "u_ayu.nombre LIKE ?";
+            $params[] = "%$ayudantes%";
+            $types .= 's';
+        }
 
-    // 🔹 FILTRO AYUDANTES
-    if (!empty($ayudantes)) {
-        $where[] = "u_ayu.nombre LIKE ?";
-        $params[] = "%$ayudantes%";
-        $types .= 's';
-    }
+        // 🔹 FILTRO ESTADO
+        if (!empty($estado)) {
+            $where[] = "trm.estado_reparto = ?";
+            $params[] = $estado;
+            $types .= 's';
+        }
 
-    // 🔹 FILTRO ESTADO
-    if (!empty($estado)) {
-        $where[] = "trm.estado_reparto = ?";
-        $params[] = $estado;
-        $types .= 's';
-    }
+        // 🔥 SI NO HAY FILTROS → NO PONE WHERE (TRAE TODO)
+        $where_sql = (!empty($where)) ? "WHERE " . implode(" AND ", $where) : "";
 
-    // 🔥 SI NO HAY FILTROS → NO PONE WHERE (TRAE TODO)
-    $where_sql = (!empty($where)) ? "WHERE " . implode(" AND ", $where) : "";
-
-    $sql = "SELECT 
+        $sql = "SELECT 
         a.nombre as almacenOrigen,
         a.id,
         tc.viaje_folio AS folio_viaje,
@@ -115,80 +117,81 @@ public function obtenerViajesFiltrados(
         tc.fecha_creacion DESC,
         tc.viaje_folio ASC";
 
-    $stmt = $this->db->prepare($sql);
+        $stmt = $this->db->prepare($sql);
 
-    if (!empty($params)) {
-        $stmt->bind_param($types, ...$params);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+
+        $stmt->execute();
+
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
+    public function obtenerViajesFiltradosPago(
+        $almacen = 0,
+        $fecha_inicio = null,
+        $fecha_fin = null,
+        $chofer = '',
+        $ayudantes = '',
+        $estado = ''
 
-    $stmt->execute();
+    ) {
+        $vehiculo = 999;
+        $where = [];
+        $params = [];
+        $types = '';
 
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}public function obtenerViajesFiltradosPago(
-    $almacen = 0, 
-    $fecha_inicio = null, 
-    $fecha_fin = null,
-    $chofer = '', 
-    $ayudantes = '', 
-    $estado = ''
-  
-) {
-      $vehiculo = 999;
-    $where = [];
-    $params = [];
-    $types = '';
+        // 🔹 FILTRO POR VEHÍCULO EXCLUIDO
+        if (!empty($vehiculo)) {
+            $where[] = "tv.id != ?";
+            $params[] = $vehiculo; // Corregido: se usaba $almacen por error
+            $types .= 'i';
+        }
 
-    // 🔹 FILTRO POR VEHÍCULO EXCLUIDO
-    if (!empty($vehiculo)) {
-        $where[] = "tv.id != ?";
-        $params[] = $vehiculo; // Corregido: se usaba $almacen por error
-        $types .= 'i';
-    }
+        // 🔹 FILTRO POR ALMACÉN
+        if (!empty($almacen) && $almacen > 0) {
+            $where[] = "a.id = ?";
+            $params[] = $almacen;
+            $types .= 'i';
+        }
 
-    // 🔹 FILTRO POR ALMACÉN
-    if (!empty($almacen) && $almacen > 0) {
-        $where[] = "a.id = ?";
-        $params[] = $almacen;
-        $types .= 'i';
-    }
+        // 🔹 FILTRO POR RANGO DE FECHAS
+        if (!empty($fecha_inicio) && !empty($fecha_fin)) {
+            $where[] = "DATE(tc.fecha_creacion) BETWEEN ? AND ?";
+            $params[] = $fecha_inicio;
+            $params[] = $fecha_fin;
+            $types .= 'ss';
+        } elseif (!empty($fecha_inicio)) {
+            $where[] = "DATE(tc.fecha_creacion) >= ?";
+            $params[] = $fecha_inicio;
+            $types .= 's';
+        }
 
-    // 🔹 FILTRO POR RANGO DE FECHAS
-    if (!empty($fecha_inicio) && !empty($fecha_fin)) {
-        $where[] = "DATE(tc.fecha_creacion) BETWEEN ? AND ?";
-        $params[] = $fecha_inicio;
-        $params[] = $fecha_fin;
-        $types .= 'ss';
-    } elseif (!empty($fecha_inicio)) {
-        $where[] = "DATE(tc.fecha_creacion) >= ?";
-        $params[] = $fecha_inicio;
-        $types .= 's';
-    }
+        // 🔹 FILTRO CHOFER
+        if (!empty($chofer) && $chofer > 0) {
+            $where[] = "u_chofer.id = ?";
+            $params[] = $chofer;
+            $types .= 'i';
+        }
 
-    // 🔹 FILTRO CHOFER
-    if (!empty($chofer) && $chofer > 0) {
-        $where[] = "u_chofer.id = ?";
-        $params[] = $chofer;
-        $types .= 'i';
-    }
+        // 🔹 FILTRO AYUDANTES
+        if (!empty($ayudantes)) {
+            $where[] = "u_ayu.nombre LIKE ?";
+            $params[] = "%$ayudantes%";
+            $types .= 's';
+        }
 
-    // 🔹 FILTRO AYUDANTES
-    if (!empty($ayudantes)) {
-        $where[] = "u_ayu.nombre LIKE ?";
-        $params[] = "%$ayudantes%";
-        $types .= 's';
-    }
+        // 🔹 FILTRO ESTADO
+        if (!empty($estado)) {
+            $where[] = "trm.estado_reparto = ?";
+            $params[] = $estado;
+            $types .= 's';
+        }
 
-    // 🔹 FILTRO ESTADO
-    if (!empty($estado)) {
-        $where[] = "trm.estado_reparto = ?";
-        $params[] = $estado;
-        $types .= 's';
-    }
+        // SI NO HAY FILTROS → NO PONE WHERE
+        $where_sql = (!empty($where)) ? "WHERE " . implode(" AND ", $where) : "";
 
-    // SI NO HAY FILTROS → NO PONE WHERE
-    $where_sql = (!empty($where)) ? "WHERE " . implode(" AND ", $where) : "";
-
-    $sql = "SELECT 
+        $sql = "SELECT 
         a.nombre AS almacenOrigen,
         a.id,
         tc.viaje_folio AS folio_viaje,
@@ -246,108 +249,112 @@ public function obtenerViajesFiltrados(
         tc.fecha_creacion DESC,
         tc.viaje_folio ASC";
 
-    $stmt = $this->db->prepare($sql);
+        $stmt = $this->db->prepare($sql);
 
-    if (!empty($params)) {
-        $stmt->bind_param($types, ...$params);
+        if (!empty($params)) {
+            $stmt->bind_param($types, ...$params);
+        }
+
+        $stmt->execute();
+
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
-
-    $stmt->execute();
-
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
 
     /**
      * 🔹 Contar viajes por persona (chofer + ayudantes)
      */
-  public function contarViajesPorPersona(
-    $almacen = 0, 
-    $fecha_inicio = null, 
-    $fecha_fin = null,
-    $chofer = '', 
-    $ayudantes = '', 
-    $estado = ''
-) {
+    public function contarViajesPorPersona(
+        $almacen = 0,
+        $fecha_inicio = null,
+        $fecha_fin = null,
+        $chofer = '',
+        $ayudantes = '',
+        $estado = ''
+    ) {
 
-    // 🔹 FILTROS SEPARADOS
-    $where_chofer = [];
-    $where_ayu = [];
+        // 🔹 FILTROS SEPARADOS
+        $where_chofer = [];
+        $where_ayu = [];
 
-    $params_chofer = [];
-    $params_ayu = [];
+        $params_chofer = [];
+        $params_ayu = [];
 
-    $types_chofer = '';
-    $types_ayu = '';
+        $types_chofer = '';
+        $types_ayu = '';
 
-    // 🔹 ALMACÉN
-    if (!empty($almacen) && $almacen > 0) {
-        $where_chofer[] = "a.id = ?";
-        $where_ayu[] = "a.id = ?";
+        // 🔥 FILTRO FIJO: excluir vehículo 999 (para ambos)
+        $where_chofer[] = "tc.vehiculo_id != 999";
+        $where_ayu[] = "tc.vehiculo_id != 999";
 
-        $params_chofer[] = $almacen;
-        $params_ayu[] = $almacen;
+        // 🔹 ALMACÉN
+        if (!empty($almacen) && $almacen > 0) {
+            $where_chofer[] = "a.id = ?";
+            $where_ayu[] = "a.id = ?";
 
-        $types_chofer .= 'i';
-        $types_ayu .= 'i';
-    }
+            $params_chofer[] = $almacen;
+            $params_ayu[] = $almacen;
 
-    // 🔹 FECHAS
-    if (!empty($fecha_inicio) && !empty($fecha_fin)) {
-        $where_chofer[] = "DATE(tc.fecha_creacion) BETWEEN ? AND ?";
-        $where_ayu[] = "DATE(tc.fecha_creacion) BETWEEN ? AND ?";
+            $types_chofer .= 'i';
+            $types_ayu .= 'i';
+        }
 
-        $params_chofer[] = $fecha_inicio;
-        $params_chofer[] = $fecha_fin;
+        // 🔹 FECHAS
+        if (!empty($fecha_inicio) && !empty($fecha_fin)) {
+            $where_chofer[] = "DATE(tc.fecha_creacion) BETWEEN ? AND ?";
+            $where_ayu[] = "DATE(tc.fecha_creacion) BETWEEN ? AND ?";
 
-        $params_ayu[] = $fecha_inicio;
-        $params_ayu[] = $fecha_fin;
+            $params_chofer[] = $fecha_inicio;
+            $params_chofer[] = $fecha_fin;
 
-        $types_chofer .= 'ss';
-        $types_ayu .= 'ss';
+            $params_ayu[] = $fecha_inicio;
+            $params_ayu[] = $fecha_fin;
 
-    } elseif (!empty($fecha_inicio)) {
-        $where_chofer[] = "DATE(tc.fecha_creacion) >= ?";
-        $where_ayu[] = "DATE(tc.fecha_creacion) >= ?";
+            $types_chofer .= 'ss';
+            $types_ayu .= 'ss';
 
-        $params_chofer[] = $fecha_inicio;
-        $params_ayu[] = $fecha_inicio;
+        } elseif (!empty($fecha_inicio)) {
+            $where_chofer[] = "DATE(tc.fecha_creacion) >= ?";
+            $where_ayu[] = "DATE(tc.fecha_creacion) >= ?";
 
-        $types_chofer .= 's';
-        $types_ayu .= 's';
-    }
+            $params_chofer[] = $fecha_inicio;
+            $params_ayu[] = $fecha_inicio;
 
-    // 🔹 CHOFER (solo chofer)
-    if (!empty($chofer)) {
-        $where_chofer[] = "u_chofer.nombre LIKE ?";
-        $params_chofer[] = "%$chofer%";
-        $types_chofer .= 's';
-    }
+            $types_chofer .= 's';
+            $types_ayu .= 's';
+        }
 
-    // 🔹 AYUDANTES (solo ayudantes)
-    if (!empty($ayudantes)) {
-        $where_ayu[] = "u_ayu.nombre LIKE ?";
-        $params_ayu[] = "%$ayudantes%";
-        $types_ayu .= 's';
-    }
+        // 🔹 CHOFER (solo chofer)
+        if (!empty($chofer)) {
+            $where_chofer[] = "u_chofer.nombre LIKE ?";
+            $params_chofer[] = "%$chofer%";
+            $types_chofer .= 's';
+        }
 
-    // 🔹 ESTADO
-    if (!empty($estado)) {
-        $where_chofer[] = "trm.estado_reparto = ?";
-        $where_ayu[] = "trm.estado_reparto = ?";
+        // 🔹 AYUDANTES (solo ayudantes)
+        if (!empty($ayudantes)) {
+            $where_ayu[] = "u_ayu.nombre LIKE ?";
+            $params_ayu[] = "%$ayudantes%";
+            $types_ayu .= 's';
+        }
 
-        $params_chofer[] = $estado;
-        $params_ayu[] = $estado;
+        // 🔹 ESTADO
+        if (!empty($estado)) {
+            $where_chofer[] = "trm.estado_reparto = ?";
+            $where_ayu[] = "trm.estado_reparto = ?";
 
-        $types_chofer .= 's';
-        $types_ayu .= 's';
-    }
+            $params_chofer[] = $estado;
+            $params_ayu[] = $estado;
 
-    // 🔹 SQL WHERE
-    $where_sql_chofer = (!empty($where_chofer)) ? "WHERE " . implode(" AND ", $where_chofer) : "";
-    $where_sql_ayu = (!empty($where_ayu)) ? "WHERE " . implode(" AND ", $where_ayu) : "";
+            $types_chofer .= 's';
+            $types_ayu .= 's';
+        }
 
-    // 🔥 SQL PRINCIPAL
-    $sql = "
+        // 🔹 SQL WHERE
+        $where_sql_chofer = (!empty($where_chofer)) ? "WHERE " . implode(" AND ", $where_chofer) : "";
+        $where_sql_ayu = (!empty($where_ayu)) ? "WHERE " . implode(" AND ", $where_ayu) : "";
+
+        // 🔥 SQL PRINCIPAL
+        $sql = "
         SELECT 
             persona_id,
             nombre,
@@ -390,71 +397,70 @@ public function obtenerViajesFiltrados(
         ORDER BY total_viajes DESC
     ";
 
-    $stmt = $this->db->prepare($sql);
+        $stmt = $this->db->prepare($sql);
 
-    // 🔥 PARAMS CORRECTOS
-    $params_final = array_merge($params_chofer, $params_ayu);
-    $types_final = $types_chofer . $types_ayu;
+        // 🔥 PARAMS CORRECTOS
+        $params_final = array_merge($params_chofer, $params_ayu);
+        $types_final = $types_chofer . $types_ayu;
 
-    if (!empty($params_final)) {
-        $stmt->bind_param($types_final, ...$params_final);
+        if (!empty($params_final)) {
+            $stmt->bind_param($types_final, ...$params_final);
+        }
+
+        $stmt->execute();
+
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
-
-    $stmt->execute();
-
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
-
-    public function aplicarPagoPorViaje($idViaje, $idChofer, $monto,$fecha)
-{
-    $sql = "INSERT INTO pagos_viaje (
+    public function aplicarPagoPorViaje($idViaje, $idChofer, $monto, $fecha)
+    {
+        $sql = "INSERT INTO pagos_viaje (
                 id_viaje,
                 id_chofer,
                 monto,
                 fecha
             ) VALUES (?, ?, ?,?)";
 
-    $stmt = $this->db->prepare($sql);
+        $stmt = $this->db->prepare($sql);
 
-    if (!$stmt) {
-        throw new Exception("Error al preparar la consulta: " . $this->db->error);
+        if (!$stmt) {
+            throw new Exception("Error al preparar la consulta: " . $this->db->error);
+        }
+
+        $stmt->bind_param("iids", $idViaje, $idChofer, $monto, $fecha);
+
+        if (!$stmt->execute()) {
+            throw new Exception("Error al guardar el pago: " . $stmt->error);
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Pago registrado correctamente.',
+            'id' => $stmt->insert_id
+        ];
     }
+    public function eliminarPagoPorViaje($idViaje)
+    {
+        $sql = "DELETE FROM pagos_viaje WHERE id_viaje = ?";
 
-    $stmt->bind_param("iids", $idViaje, $idChofer, $monto,$fecha);
+        $stmt = $this->db->prepare($sql);
 
-    if (!$stmt->execute()) {
-        throw new Exception("Error al guardar el pago: " . $stmt->error);
+        if (!$stmt) {
+            throw new Exception("Error al preparar la consulta: " . $this->db->error);
+        }
+
+        $stmt->bind_param("i", $idViaje);
+
+        if (!$stmt->execute()) {
+            throw new Exception("Error al eliminar el pago: " . $stmt->error);
+        }
+
+        if ($stmt->affected_rows === 0) {
+            throw new Exception("No se encontró un pago para el viaje indicado.");
+        }
+
+        return [
+            'success' => true,
+            'message' => 'Pago eliminado correctamente.'
+        ];
     }
-
-    return [
-        'success' => true,
-        'message' => 'Pago registrado correctamente.',
-        'id' => $stmt->insert_id
-    ];
-}
-public function eliminarPagoPorViaje($idViaje)
-{
-    $sql = "DELETE FROM pagos_viaje WHERE id_viaje = ?";
-
-    $stmt = $this->db->prepare($sql);
-
-    if (!$stmt) {
-        throw new Exception("Error al preparar la consulta: " . $this->db->error);
-    }
-
-    $stmt->bind_param("i", $idViaje);
-
-    if (!$stmt->execute()) {
-        throw new Exception("Error al eliminar el pago: " . $stmt->error);
-    }
-
-    if ($stmt->affected_rows === 0) {
-        throw new Exception("No se encontró un pago para el viaje indicado.");
-    }
-
-    return [
-        'success' => true,
-        'message' => 'Pago eliminado correctamente.'
-    ];
-}
 }

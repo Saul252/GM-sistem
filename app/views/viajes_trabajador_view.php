@@ -81,15 +81,19 @@
             <!-- FILTROS -->
             <div class="glass-card p-4 mb-4">
                 <form id="formFiltros" class="row g-3">
-
+                    <?php
+                    $hoy = date('Y-m-d');
+                    $inicioSemana = date('Y-m-d', strtotime('monday this week'));
+                    ?>
                     <div class="col-md-2">
                         <label class="small fw-bold text-body-secondary">Inicio</label>
-                        <input type="date" id="fecha_inicio" class="form-control ios-input">
+                        <input type="date" id="fecha_inicio" value="<?= $inicioSemana ?>"
+                            class="form-control ios-input">
                     </div>
 
                     <div class="col-md-2">
                         <label class="small fw-bold text-body-secondary">Fin</label>
-                        <input type="date" id="fecha_fin" class="form-control ios-input">
+                        <input type="date" id="fecha_fin" value="<?= $hoy ?>" class="form-control ios-input">
                     </div>
 
                     <div class="col-md-2">
