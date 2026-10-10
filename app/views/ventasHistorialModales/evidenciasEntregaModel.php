@@ -1,4 +1,33 @@
 <!-- Modal de Evidencias de Entrega -->
+<style>
+    /* ─── Z-INDEX: por encima del detalle y de agregar factura ─── */
+    #modalEvidenciasEntrega {
+        z-index: 10110 !important;
+    }
+
+
+
+    /* El contenedor raíz de SweetAlert2 */
+    .swal2-container {
+        z-index: 99999 !important;
+    }
+
+    /* El backdrop de SweetAlert */
+    .swal2-container.swal2-backdrop-show {
+        z-index: 99999 !important;
+    }
+
+    /* El popup en sí */
+    .swal2-popup {
+        z-index: 100000 !important;
+        position: relative;
+    }
+
+    /* El toast (notificaciones sin backdrop) */
+    .swal2-toast-shown .swal2-container {
+        z-index: 99999 !important;
+    }
+</style>
 <div class="modal fade" id="modalEvidenciasEntrega" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
@@ -267,7 +296,7 @@
             // Si el usuario canceló o hubo error en preConfirm, no hacemos nada
             if (!result.isConfirmed || !result.value) return;
 
-            // Mostramos el aviso de éxito y al terminar abrimos de nuevo tu modal
+            // Mostramos el aviso de éxito
             Swal.fire({
                 icon: 'success',
                 title: 'Guardado',
@@ -275,12 +304,47 @@
                 timer: 1200,
                 showConfirmButton: false
             }).then(() => {
-                // Reabrimos tu modal principal pasándole el ID correspondiente
-                abrirModalEvidencias(entregaNumeroId);
+
+                // ═══════════════════════════════════════════════════════
+                // 1) Cerrar el modal actual correctamente
+                // ═══════════════════════════════════════════════════════
+                const modalEl = document.getElementById('modalEvidenciasEntrega');
+                const modalInstance = bootstrap.Modal.getInstance(modalEl);
+
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+
+                // ═══════════════════════════════════════════════════════
+                // 2) Esperar la animación de cierre (~300ms)
+                //    y LUEGO limpiar backdrops huérfanos
+                // ═══════════════════════════════════════════════════════
+                setTimeout(() => {
+
+                    // ✅ Eliminar TODOS los backdrops huérfanos
+                    document.querySelectorAll('.modal-backdrop').forEach(bd => bd.remove());
+
+                    // ✅ Limpiar clases y estilos que Bootstrap deja en el body
+                    document.body.classList.remove('modal-open');
+                    document.body.style.removeProperty('overflow');
+                    document.body.style.removeProperty('padding-right');
+
+                    // ✅ También limpiar cualquier residuo de Swal
+                    document.querySelectorAll('.swal2-container').forEach(el => el.remove());
+                    document.body.classList.remove('swal2-shown', 'swal2-height-auto');
+                    document.body.style.removeProperty('padding-right');
+
+                    // ═══════════════════════════════════════════════════
+                    // 3) Reabrir el modal limpio
+                    // ═══════════════════════════════════════════════════
+                    setTimeout(() => {
+                        abrirModalEvidencias(entregaNumeroId);
+                    }, 50);
+
+                }, 350);
             });
         });
     }
-
 
     // 2. Función para la Nota de Entrega
     function subirNotaEntrega(reparto_id, venta_id, vehiculo_id) {
@@ -352,7 +416,7 @@
             // Si el usuario canceló o hubo error en preConfirm, no hacemos nada
             if (!result.isConfirmed || !result.value) return;
 
-            // Mostramos el aviso de éxito y al terminar abrimos de nuevo tu modal
+            // Mostramos el aviso de éxito
             Swal.fire({
                 icon: 'success',
                 title: 'Guardado',
@@ -360,8 +424,44 @@
                 timer: 1200,
                 showConfirmButton: false
             }).then(() => {
-                // Reabrimos tu modal principal pasándole el ID correspondiente
-                abrirModalEvidencias(entregaNumeroId);
+
+                // ═══════════════════════════════════════════════════════
+                // 1) Cerrar el modal actual correctamente
+                // ═══════════════════════════════════════════════════════
+                const modalEl = document.getElementById('modalEvidenciasEntrega');
+                const modalInstance = bootstrap.Modal.getInstance(modalEl);
+
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+
+                // ═══════════════════════════════════════════════════════
+                // 2) Esperar la animación de cierre (Bootstrap tarda ~300ms)
+                //    y LUEGO limpiar backdrops huérfanos
+                // ═══════════════════════════════════════════════════════
+                setTimeout(() => {
+
+                    // ✅ Eliminar TODOS los backdrops huérfanos
+                    document.querySelectorAll('.modal-backdrop').forEach(bd => bd.remove());
+
+                    // ✅ Limpiar clases y estilos que Bootstrap deja en el body
+                    document.body.classList.remove('modal-open');
+                    document.body.style.removeProperty('overflow');
+                    document.body.style.removeProperty('padding-right');
+
+                    // ✅ También limpiar cualquier residuo de Swal
+                    document.querySelectorAll('.swal2-container').forEach(el => el.remove());
+                    document.body.classList.remove('swal2-shown', 'swal2-height-auto');
+                    document.body.style.removeProperty('padding-right');
+
+                    // ═══════════════════════════════════════════════════
+                    // 3) Ahora sí, reabrir el modal limpio
+                    // ═══════════════════════════════════════════════════
+                    setTimeout(() => {
+                        abrirModalEvidencias(entregaNumeroId);
+                    }, 50);
+
+                }, 350); // ⏱ tiempo suficiente para que Bootstrap cierre el modal
             });
         });
     }

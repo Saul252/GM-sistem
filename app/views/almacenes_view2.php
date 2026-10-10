@@ -31,7 +31,7 @@
         const productosInventario = <?= json_encode($productos) ?>;
     </script>
 
-    <div class="main-content container-fluid px-4 py-3">
+    <div class="main-content px-4 py-3">
 
         <!-- Cabecera y Micro-tarjetas estilo iOS -->
         <div class="d-flex justify-content-between align-items-center flex-wrap m-4 gap-3">

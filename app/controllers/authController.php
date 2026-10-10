@@ -12,7 +12,8 @@ $loginModel = new AuthModel($conexion);
 // --- ACCIÓN: LOGIN (AJAX POST) ---
 if (isset($_GET['action']) && $_GET['action'] === 'login') {
 
-    if (ob_get_level()) ob_clean();
+    if (ob_get_level())
+        ob_clean();
     header('Content-Type: application/json; charset=utf-8');
 
     try {
@@ -20,7 +21,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'login') {
             throw new Exception("Método no permitido.");
         }
 
-        $usuario  = trim($_POST['usuario'] ?? '');
+        $usuario = trim($_POST['usuario'] ?? '');
         $password = trim($_POST['password'] ?? '');
 
         if ($usuario === '' || $password === '') {
@@ -35,9 +36,9 @@ if (isset($_GET['action']) && $_GET['action'] === 'login') {
         }
 
         // 🔹 2. Validar estado activo
-        if ((int)$row['activo'] === 0) {
+        if ((int) $row['activo'] === 0) {
             echo json_encode([
-                'status'  => 'warning',
+                'status' => 'warning',
                 'message' => 'Tu usuario está deshabilitado. Contacta al administrador.'
             ]);
             exit;
@@ -52,12 +53,12 @@ if (isset($_GET['action']) && $_GET['action'] === 'login') {
         session_regenerate_id(true);
 
         $_SESSION['usuario_id'] = $row['id'];
-        $_SESSION['username']   = $row['username'];
-        $_SESSION['nombre']     = $row['nombre'];
-        $_SESSION['rol_id']     = $row['rol_id'];
-        $_SESSION['rol']        = $row['rol'];
+        $_SESSION['username'] = $row['username'];
+        $_SESSION['nombre'] = $row['nombre'];
+        $_SESSION['rol_id'] = $row['rol_id'];
+        $_SESSION['rol'] = $row['rol'];
         $_SESSION['almacen_id'] = $row['almacen_id'] ?? 0;
-        $_SESSION['login']      = true;
+        $_SESSION['login'] = true;
 
         // 🔹 5. Configuración de Almacén y Hora de Cierre
         $id_almacen_usuario = intval($_SESSION['almacen_id']);
@@ -87,10 +88,10 @@ if (isset($_GET['action']) && $_GET['action'] === 'login') {
 
         // 🔹 7. Respuesta JSON exitosa
         echo json_encode([
-            'status'      => 'success',
-            'message'     => '¡Bienvenido, ' . $row['nombre'] . '!',
+            'status' => 'success',
+            'message' => '¡Bienvenido, ' . $row['nombre'] . '!',
             'hora_cierre' => $_SESSION['hora_cierre'],
-            'redirect'    => 'app/views/inicio.php'
+            'redirect' => 'app/views/inicio.php'
         ]);
 
     } catch (Throwable $e) {
@@ -98,7 +99,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'login') {
         http_response_code(400);
 
         echo json_encode([
-            'status'  => 'error',
+            'status' => 'error',
             'message' => $e->getMessage()
         ]);
     }
