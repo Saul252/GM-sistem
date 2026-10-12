@@ -863,6 +863,9 @@ $modulos = [
         if (typeof actualizarBotonTema === 'function') {
             actualizarBotonTema(nuevoTema);
         }
+        if (typeof seleccionarFondoInicio === 'function') {
+            seleccionarFondoInicio();
+        }
     }
     (function () {
         const savedTheme = localStorage.getItem('theme') || 'light';
