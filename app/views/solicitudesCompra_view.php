@@ -437,33 +437,33 @@ error_reporting(E_ALL);
                             <div class="row g-1">
                                 <!-- BODEGA FORTALEZA CHALCO S.A DE C,V RFC:BFC121126CKA DOMICILIO EMILIANO ZAPATA S/N SAN MARTIN CUAUTLALPAN CHALCO ESTADO DE MEXICO CP:56644 -->
                                 <div class="col-12">
-                                    <small style="font-size:11px;" class="text-body-secondary">Proveedor</small><br>
+                                    <small style="font-size:11px;" class="text-dark-secondary">Proveedor</small><br>
                                     <span style="font-size:11px;" class="fw-bold" id="print-proveedor"></span>
                                 </div>
 
                                 <div class="col-6">
-                                    <small style="font-size:11px;" class="text-body-secondary">RFC</small><br>
+                                    <small style="font-size:11px;" class="text-dark-secondary">RFC</small><br>
                                     <span style="font-size:11px;" id="print-rfc"></span>
                                 </div>
 
                                 <div class="col-6">
-                                    <small style="font-size:11px;" class="text-body-secondary">Teléfono</small><br>
+                                    <small style="font-size:11px;" class="text-dark-secondary">Teléfono</small><br>
                                     <span style="font-size:11px;" id="print-telefono"></span>
                                 </div>
 
                                 <div class="col-8">
-                                    <small style="font-size:11px;" class="text-body-secondary">Dirección
+                                    <small style="font-size:11px;" class="text-dark-secondary">Dirección
                                         Fiscal</small><br>
                                     <span style="font-size:11px;" id="print-direccion"></span>
                                 </div>
 
                                 <div class="col-2">
-                                    <small style="font-size:11px;" class="text-body-secondary">Tel. 2</small><br>
+                                    <small style="font-size:11px;" class="text-dark-secondary">Tel. 2</small><br>
                                     <span style="font-size:11px;" id="print-telefono2"></span>
                                 </div>
 
                                 <div class="col-2">
-                                    <small style="font-size:11px;" class="text-body-secondary">Ext.</small><br>
+                                    <small style="font-size:11px;" class="text-dark-secondary">Ext.</small><br>
                                     <span style="font-size:11px;" id="print-extencion"></span>
                                 </div>
 
@@ -471,10 +471,10 @@ error_reporting(E_ALL);
 
 
                                 <div class="col-8">
-                                    <small style="font-size: 11px;" class="text-body-secondary d-block mb-1">Dirección
+                                    <small style="font-size: 11px;" class="text-dark-secondary d-block mb-1">Dirección
                                         de recolección</small>
                                     <spam type="text" id="print-direccion-recogida"
-                                        class="form-control form-control-sm border-0 bg-transparent p-0 text-body shadow-none w-100 fw-semibold text-uppercase"
+                                        class="form-control form-control-sm border-0 bg-transparent p-0 text-dark shadow-none w-100 fw-semibold text-uppercase"
                                         style="font-size: 11px;" readonly></spam>
                                 </div>
 
@@ -919,7 +919,7 @@ error_reporting(E_ALL);
                 // Validación de seguridad: Comprueba si la respuesta no trae datos o el arreglo viene totalmente vacío
                 if (!data.data || data.data.length === 0) {
                     // Inserta una fila única con un mensaje centralizado indicando que no hay registros y frena el script
-                    $('#tablaSolicitudes').html('<tr><td colspan="6" class="text-center text-body-secondary py-3">No se encontraron registros</td></tr>');
+                    $('#tablaSolicitudes').html('<tr><td colspan="6" class="text-center text-dark-secondary py-3">No se encontraron registros</td></tr>');
                     return;
                 }
 
