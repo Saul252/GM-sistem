@@ -28,12 +28,15 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
             <label class="form-label small fw-bold">Proveedor</label>
 
             <div class="input-group shadow-sm">
+                <!-- 🔥 FIX: data-razon + nombre | razón en el texto -->
                 <select name="proveedor" id="select_proveedor" class="form-select" required>
                     <option value="">Seleccione un proveedor...</option>
                     <?php foreach($proveedores as $p): ?>
-                    <option value="<?= $p['id'] ?>" data-deuda="<?= $p['total_deuda'] ?>">
-                        <?= $p['nombre_comercial'] ?>
-                    </option>
+                        <option value="<?= $p['id'] ?>"
+                                data-deuda="<?= $p['total_deuda'] ?>"
+                                data-razon="<?= htmlspecialchars($p['razon_social'] ?? '') ?>">
+                            <?= htmlspecialchars($p['nombre_comercial']) ?><?= !empty($p['razon_social']) ? ' | ' . htmlspecialchars($p['razon_social']) : '' ?>
+                        </option>
                     <?php endforeach; ?>
                 </select>
 
@@ -180,11 +183,10 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
  * LÓGICA DE COMPRAS - CF SISTEM
  */
 function abrirModalCompra() {
-    $('#select_proveedor').select2('destroy');
-    // Resetear el formulario pero mantener el almacén seleccionado por PHP
+    // 🔥 FIX: ya no destruimos select2 aquí, se maneja al abrir
     const almacenPreseleccionado = $('#almacen_id_cabecera').val();
     $('#formNuevaCompra')[0].reset();
-    $('#almacen_id_cabecera').val(almacenPreseleccionado); // Restauramos lo que PHP eligió
+    $('#almacen_id_cabecera').val(almacenPreseleccionado);
 
     $('#contenedorItemsCompra').empty();
     $('#granTotalCompra').text('$ 0.00');
@@ -201,7 +203,6 @@ function abrirModalCompra() {
     agregarFilaCompra();
     $('#modalNuevaCompra').modal('show');
 }
-// --- PEGA ESTO DENTRO DE TU ETIQUETA <script> ---
 
 /**
  * Función para obtener el folio desde el servidor
@@ -219,7 +220,7 @@ function asignarSiguienteFolioCompra() {
                 inputFolio.value = data.folio;
             } else {
                 inputFolio.value = "";
-                inputFolio.readOnly = false; // Si falla, dejamos que el usuario escriba
+                inputFolio.readOnly = false;
             }
         })
         .catch(err => {
@@ -228,21 +229,12 @@ function asignarSiguienteFolioCompra() {
         });
 }
 
-// MODIFICACIÓN: Agregamos la carga del folio a tu función de abrir modal
-// Busca tu función abrirModalCompra() y asegúrate de que llame a asignarSiguienteFolioCompra()
 const originalAbrirModal = window.abrirModalCompra;
 window.abrirModalCompra = function() {
-    // Llamamos a la lógica original que ya tenías
     originalAbrirModal();
-
-    // Disparamos la carga del folio automático
     asignarSiguienteFolioCompra();
 };
 
-/**
- * Listener para asegurar que si abres el modal por otros medios (como data-bs-toggle), 
- * también se cargue el folio.
- */
 window.addEventListener('load', function() {
     if (window.jQuery) {
         $(document).on('show.bs.modal', '#modalNuevaCompra', function() {
@@ -340,8 +332,6 @@ function agregarFilaCompra() {
                     placeholder="0.00">
             </div>
 
-         
-
             <div class="col-md-2">
                 <label class="form-label small fw-semibold text-body-secondary mb-1">Costo total</label>
                 <div class="input-group input-group-sm shadow-sm">
@@ -436,28 +426,19 @@ function recalcularTotales(id) {
     const card = $(`#card_item_${id}`);
     const factor = parseFloat(card.find('.hidden-factor').val()) || 0;
     const inputFaltante = card.find('.input-faltante');
-    const inputExcedente = card.find('.input-excedente'); // <--- NUEVO
+    const inputExcedente = card.find('.input-excedente');
 
-    // 1. Cantidad según factura (Mayoreo * Factor + Sueltas)
     const cantidadFacturada = (parseFloat(card.find('.input-mayoreo').val()) || 0) * factor +
         (parseFloat(card.find('.input-sueltas').val()) || 0);
 
-    // 2. Faltante: Si está habilitado, restamos.
     const faltante = inputFaltante.is(':disabled') ? 0 : (parseFloat(inputFaltante.val()) || 0);
-
-    // 3. Excedente: Si está habilitado, SUMAMOS (Lo que llegó de más) <--- NUEVO
     const excedente = inputExcedente.is(':disabled') ? 0 : (parseFloat(inputExcedente.val()) || 0);
 
-    // 4. Lo que realmente entró físicamente al almacén
     const totalReal = cantidadFacturada - faltante + excedente;
 
-    // Actualizar labels y campos ocultos
     card.find('.span-total-base').text(totalReal.toLocaleString());
     card.find('.hidden-total-piezas').val(totalReal);
     card.find('.hidden-faltante').val(faltante);
-
-    // Si tienes un input oculto para excedente, actualízalo aquí:
-    // card.find('.hidden-excedente').val(excedente); 
 
     calcularPrecioUnitarioLote(id);
     validarReparto(id);
@@ -482,7 +463,6 @@ function validarReparto(id) {
 }
 
 function toggleFaltante(id, checkbox) {
-
     const container = $(checkbox).closest('.col-md-2');
     const inputFaltante = container.find('.input-faltante');
 
@@ -512,12 +492,10 @@ function actualizarConteo() {
 
 function refrescarListaProductosCompra(nuevoIdSeleccionar = null) {
     $.get('almacenes.php?action=getListaProductosJson', function(data) {
-        // VALIDACIÓN CRÍTICA: Asegurarnos de que 'data' sea un array
         let productos = [];
         if (Array.isArray(data)) {
             productos = data;
         } else if (data && typeof data === 'object' && data.status === 'success') {
-            // Por si tu controlador devuelve {status: success, data: [...]}
             productos = data.data;
         }
 
@@ -526,7 +504,6 @@ function refrescarListaProductosCompra(nuevoIdSeleccionar = null) {
             return;
         }
 
-        // Actualizamos DATA_COMPRAS
         if (typeof DATA_COMPRAS !== 'undefined') {
             DATA_COMPRAS.productos = productos;
         }
@@ -557,18 +534,15 @@ function refrescarListaProductosCompra(nuevoIdSeleccionar = null) {
 }
 
 function calcularPrecioUnitarioLote(id) {
-
     const card = $(`#card_item_${id}`);
 
     const costoTotalRenglon = parseFloat(card.find('.input-costo-total').val()) || 0;
 
-    const piezasReales = parseFloat(card.find('.input-cantidad-recibida').val()) || 0;
+    const piezasReales = parseFloat(card.find('.hidden-total-piezas').val()) || 0;
     const excedente   = parseFloat(card.find('.input-excedente').val()) || 0;
 
-    // 🔥 calcular base correctamente
     let piezasBase = piezasReales - excedente;
 
-    // 🛑 evitar negativos o 0
     if (piezasBase <= 0) {
         piezasBase = 0;
     }
@@ -579,7 +553,6 @@ function calcularPrecioUnitarioLote(id) {
         precioUnitario = costoTotalRenglon / piezasBase;
     }
 
-    // 🛡️ blindaje
     if (!isFinite(precioUnitario)) {
         precioUnitario = 0;
     }
@@ -594,7 +567,9 @@ function calcularPrecioUnitarioLote(id) {
     );
 
     actualizarGranTotal();
-}/**
+}
+
+/**
  * MANEJO DEL SUBMIT (BLINDADO)
  */
 function procesarGuardadoCompra(event) {
@@ -605,12 +580,10 @@ function procesarGuardadoCompra(event) {
 
     console.log("Iniciando proceso de guardado...");
 
-    // 1. VALIDACIÓN: Comparamos lo repartido vs lo que FÍSICAMENTE llegó
     let inconsistencias = 0;
     let mensajeDetalle = "";
 
     $('.item-compra').each(function(index) {
-        // 'hidden-total-piezas' ya tiene restado el faltante por la función recalcularTotales
         const totalFisicoReal = parseFloat($(this).find('.hidden-total-piezas').val()) || 0;
         const nombreProd = $(this).find('.select2-compra option:selected').text() || "Producto " + (index + 1);
 
@@ -633,13 +606,11 @@ function procesarGuardadoCompra(event) {
         return false;
     }
 
-    // 2. DETECTAR SI HAY FALTANTES PARA EL CONFIRM
     let hayFaltantes = false;
     $('.hidden-faltante').each(function() {
         if (parseFloat($(this).val()) > 0) hayFaltantes = true;
     });
 
-    // 3. CONFIRMACIÓN Y ENVÍO AJAX (Tu bloque original)
     Swal.fire({
         title: hayFaltantes ? '¿Registrar con Faltantes?' : '¿Confirmar Registro?',
         text: hayFaltantes ?
@@ -655,7 +626,6 @@ function procesarGuardadoCompra(event) {
             const formElement = document.getElementById('formNuevaCompra');
             const formData = new FormData(formElement);
 
-            // Importante: Aseguramos que el controlador reciba si hay faltantes
             formData.append('tiene_faltantes', hayFaltantes ? 1 : 0);
 
             $.ajax({
@@ -697,6 +667,41 @@ function procesarGuardadoCompra(event) {
     });
 }
 </script>
+
+<script>
+// =====================================================
+// 🔥 FIX: SELECT2 PERSONALIZADO — PROVEEDOR (nombre + razón)
+// =====================================================
+$('#select_proveedor').select2({
+    width: '100%',
+    placeholder: 'Seleccione un proveedor...',
+    dropdownParent: $('#modalNuevaCompra .modal-content'),
+    templateResult: function (state) {
+        if (!state.id) return state.text;
+
+        const razon = $(state.element).data('razon') || '';
+        const nombre = state.text.split(' | ')[0];
+
+        return $(`
+            <div style="line-height:1.15; padding:2px 0;">
+                <div style="font-weight:600; color:#052a52; font-size:0.9rem;">
+                    ${nombre}
+                </div>
+                ${razon ? `
+                    <div style="font-size:0.72rem; color:#5a7090; margin-top:2px;">
+                        ${razon}
+                    </div>
+                ` : ''}
+            </div>
+        `);
+    },
+    templateSelection: function (state) {
+        if (!state.id) return state.text;
+        return state.text.split(' | ')[0];
+    }
+});
+</script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -704,11 +709,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const box = document.getElementById('deuda_proveedor');
     const input = document.getElementById('input_pagar_deuda');
 
- // Limpia formato ($, comas, etc.)
-    
-    select.addEventListener('change', function () {
+    // 🔥 FIX: escucha el evento change de Select2 (no el nativo)
+    $(select).on('change select2:select', function () {
 
         const option = this.options[this.selectedIndex];
+        if (!option) return;
 
         const deuda = parseFloat(option.dataset.deuda || 0);
 
@@ -716,24 +721,25 @@ document.addEventListener('DOMContentLoaded', function () {
             minimumFractionDigits: 2
         });
 
-        // 🔥 opcional: cambiar color si debe o no
         if (deuda > 0) {
             box.classList.remove('text-success');
             box.classList.add('text-danger');
-             input.disabled = false;
+            input.disabled = false;
         } else {
             box.classList.remove('text-danger');
             box.classList.add('text-success');
             input.disabled = true;
-        input.value = 0;
+            input.value = 0;
         }
-
     });
 
 });
 </script>
+
 <script>
-// Función para refrescar la lista de proveedores sin recargar página
+// =====================================================
+// 🔥 FIX: actualizar lista de proveedores conservando ID + razón
+// =====================================================
 function actualizarListaProveedores() {
     fetch('egresosController.php?action=getProveedoresJSON')
         .then(res => res.json())
@@ -742,7 +748,19 @@ function actualizarListaProveedores() {
             $select.empty().append('<option value="">Seleccione o busque un proveedor...</option>');
 
             data.forEach(p => {
-                $select.append(new Option(p.nombre_comercial, p.nombre_comercial));
+                const razon = p.razon_social || '';
+                const texto = razon
+                    ? `${p.nombre_comercial} | ${razon}`
+                    : p.nombre_comercial;
+
+                const $opt = $('<option>', {
+                    value: p.id,
+                    text: texto
+                })
+                .attr('data-deuda', p.total_deuda || 0)
+                .attr('data-razon', razon);
+
+                $select.append($opt);
             });
 
             $select.trigger('change');

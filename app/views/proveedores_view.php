@@ -188,7 +188,6 @@
         </div>
     </main>
 
-    <!-- MODAL PROVEEDOR -->
     <div class="modal fade" id="modalProveedor" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
@@ -223,10 +222,7 @@
 
                                     <div class="row g-3">
 
-
                                         <input type="hidden" name="almacen_id" id="almacen_id" value="1">
-
-
                                         <input type="hidden" class="form-control" id="almacen_id2" name="almacen_id2">
 
                                         <div class="col-md-6">
@@ -240,18 +236,20 @@
                                         <div class="col-12">
                                             <label class="form-label">Nombre Comercial</label>
                                             <input type="text" class="form-control" id="nombre_comercial"
-                                                name="nombre_comercial">
+                                                name="nombre_comercial" placeholder="Ej. Distribuidora del Norte">
                                         </div>
 
                                         <div class="col-12">
                                             <label class="form-label">Razón Social</label>
                                             <input type="text" class="form-control" id="razon_social"
-                                                name="razon_social">
+                                                name="razon_social"
+                                                placeholder="Ej. Distribuidora del Norte S.A. de C.V.">
                                         </div>
 
                                         <div class="col-12">
                                             <label class="form-label">RFC</label>
-                                            <input type="text" class="form-control text-uppercase" id="rfc" name="rfc">
+                                            <input type="text" class="form-control text-uppercase" id="rfc" name="rfc"
+                                                placeholder="Ej. DNO123456ABC" maxlength="13">
                                         </div>
                                     </div>
                                 </div>
@@ -268,27 +266,32 @@
                                     <div class="row g-3">
                                         <div class="col-12">
                                             <label class="form-label">Correo</label>
-                                            <input type="email" class="form-control" id="correo" name="correo">
+                                            <input type="email" class="form-control" id="correo" name="correo"
+                                                placeholder="Ej. contacto@proveedor.com">
                                         </div>
 
                                         <div class="col-12">
                                             <label class="form-label">Contacto</label>
-                                            <input type="text" class="form-control" id="contacto" name="contacto">
+                                            <input type="text" class="form-control" id="contacto" name="contacto"
+                                                placeholder="Ej. Juan Pérez">
                                         </div>
 
                                         <div class="col-md-8">
                                             <label class="form-label">Teléfono</label>
-                                            <input type="text" class="form-control" id="telefono" name="telefono">
+                                            <input type="text" class="form-control" id="telefono" name="telefono"
+                                                placeholder="Ej. 5551234567" maxlength="10">
                                         </div>
 
                                         <div class="col-md-4">
                                             <label class="form-label">Extensión</label>
-                                            <input type="text" class="form-control" id="extencion" name="extencion">
+                                            <input type="text" class="form-control" id="extencion" name="extencion"
+                                                placeholder="Ej. 101" maxlength="5">
                                         </div>
 
                                         <div class="col-12">
                                             <label class="form-label">Teléfono 2</label>
-                                            <input type="text" class="form-control" id="telefono2" name="telefono2">
+                                            <input type="text" class="form-control" id="telefono2" name="telefono2"
+                                                placeholder="Ej. 5559876543 (opcional)" maxlength="10">
                                         </div>
                                     </div>
                                 </div>
@@ -306,36 +309,39 @@
                                         <div class="col-12">
                                             <label class="form-label">Dirección</label>
                                             <textarea class="form-control text-uppercase" id="direccion"
-                                                name="direccion"></textarea>
+                                                name="direccion" rows="2"
+                                                placeholder="Ej. AV. REFORMA 123, COL. CENTRO"></textarea>
                                         </div>
 
                                         <div class="col-md-3">
                                             <label class="form-label">No. Exterior</label>
-                                            <input type="text" class="form-control" id="numeroExt" name="numeroExt">
+                                            <input type="text" class="form-control" id="numeroExt" name="numeroExt"
+                                                placeholder="Ej. 123" maxlength="10">
                                         </div>
 
                                         <div class="col-md-3">
                                             <label class="form-label">No. Interior</label>
-                                            <input type="text" class="form-control" id="numeroInt" name="numeroInt">
+                                            <input type="text" class="form-control" id="numeroInt" name="numeroInt"
+                                                placeholder="Ej. 4B" maxlength="10">
                                         </div>
 
                                         <div class="col-md-3">
                                             <label class="form-label">Colonia</label>
-                                            <input type="text" class="form-control" id="colonia" name="colonia">
+                                            <input type="text" class="form-control" id="colonia" name="colonia"
+                                                placeholder="Ej. Centro">
                                         </div>
 
                                         <div class="col-md-3">
                                             <label class="form-label">Ciudad</label>
-                                            <input type="text" class="form-control" id="ciudad" name="ciudad">
+                                            <input type="text" class="form-control" id="ciudad" name="ciudad"
+                                                placeholder="Ej. CDMX">
                                         </div>
 
                                         <div class="col-md-6">
                                             <label class="form-label">Código Postal</label>
                                             <input type="text" class="form-control" id="codigoPostal"
-                                                name="codigoPostal">
+                                                name="codigoPostal" placeholder="Ej. 06000" maxlength="5">
                                         </div>
-
-
 
                                         <input type="hidden" class="form-control" id="creado_at" readonly>
 
