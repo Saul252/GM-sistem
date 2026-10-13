@@ -10,7 +10,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Proveedores | Sistema</title>
-    
+
     <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
     <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
 
@@ -19,7 +19,9 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
 
     <?php require_once __DIR__ . '/layout/icono.php' ?>
-    <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
+    <?php if (function_exists('cargarEstilos')) {
+        cargarEstilos();
+    } ?>
 
     <style>
         .card-table {
@@ -55,14 +57,14 @@
             box-shadow: 0 2px 10px rgba(0, 0, 0, .04);
             padding: 18px;
             height: 100%;
-            background-color: #fff;
+
         }
 
         #formProveedor .titulo-seccion {
             font-size: .78rem;
             font-weight: 700;
             text-transform: uppercase;
-            color: #6c757d;
+
             letter-spacing: .6px;
             margin-bottom: 1rem;
         }
@@ -70,7 +72,7 @@
         #formProveedor .form-label {
             font-size: .78rem;
             font-weight: 600;
-            color: #6c757d;
+
             margin-bottom: .35rem;
         }
 
@@ -131,7 +133,9 @@
 
 <body>
 
-    <?php if (function_exists('renderizarLayout')) { renderizarLayout($tituloPagina); } ?>
+    <?php if (function_exists('renderizarLayout')) {
+        renderizarLayout($tituloPagina);
+    } ?>
 
     <main class="main-content py-4">
         <div class="container-fluid">
@@ -154,7 +158,8 @@
 
             <!-- CARD -->
             <div class="card border-0 shadow-sm rounded-4">
-                <div class="card-header border-0 bg-transparent py-3 px-4 d-flex justify-content-between align-items-center">
+                <div
+                    class="card-header border-0 bg-transparent py-3 px-4 d-flex justify-content-between align-items-center">
                     <span class="fw-semibold text-body-secondary small">
                         Lista de proveedores
                     </span>
@@ -217,25 +222,10 @@
                                     </div>
 
                                     <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label">Almacén</label>
-                                            <select name="almacen_id" id="almacen_id"
-                                                class="form-select"
-                                                <?= $_SESSION['almacen_id'] != 0 ? 'disabled' : '' ?>>
-                                                <?php if ($_SESSION['almacen_id'] == 0): ?>
-                                                    <option value="">Seleccionar ubicación...</option>
-                                                <?php endif; ?>
-                                                <?php foreach($almacenes as$a): ?>
-                                                    <option value="<?= $a['id'] ?>"
-                                                        <?= ($a['id'] ==$_SESSION['almacen_id']) ? 'selected' : '' ?>>
-                                                        <?= $a['nombre'] ?>
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                            <?php if ($_SESSION['almacen_id'] != 0): ?>
-                                                <input type="hidden" name="almacen_id" value="<?= $_SESSION['almacen_id'] ?>">
-                                            <?php endif; ?>
-                                        </div>
+
+
+                                        <input type="hidden" name="almacen_id" id="almacen_id" value="1">
+
 
                                         <input type="hidden" class="form-control" id="almacen_id2" name="almacen_id2">
 
@@ -249,12 +239,14 @@
 
                                         <div class="col-12">
                                             <label class="form-label">Nombre Comercial</label>
-                                            <input type="text" class="form-control" id="nombre_comercial" name="nombre_comercial">
+                                            <input type="text" class="form-control" id="nombre_comercial"
+                                                name="nombre_comercial">
                                         </div>
 
                                         <div class="col-12">
                                             <label class="form-label">Razón Social</label>
-                                            <input type="text" class="form-control" id="razon_social" name="razon_social">
+                                            <input type="text" class="form-control" id="razon_social"
+                                                name="razon_social">
                                         </div>
 
                                         <div class="col-12">
@@ -313,7 +305,8 @@
                                     <div class="row g-3">
                                         <div class="col-12">
                                             <label class="form-label">Dirección</label>
-                                            <textarea class="form-control text-uppercase" id="direccion" name="direccion"></textarea>
+                                            <textarea class="form-control text-uppercase" id="direccion"
+                                                name="direccion"></textarea>
                                         </div>
 
                                         <div class="col-md-3">
@@ -338,13 +331,14 @@
 
                                         <div class="col-md-6">
                                             <label class="form-label">Código Postal</label>
-                                            <input type="text" class="form-control" id="codigoPostal" name="codigoPostal">
+                                            <input type="text" class="form-control" id="codigoPostal"
+                                                name="codigoPostal">
                                         </div>
 
-                                        <div class="col-md-6">
-                                            <label class="form-label">Fecha Creación</label>
-                                            <input type="text" class="form-control" id="creado_at" readonly>
-                                        </div>
+
+
+                                        <input type="hidden" class="form-control" id="creado_at" readonly>
+
                                     </div>
                                 </div>
                             </div>
@@ -378,40 +372,40 @@
     <?php require_once __DIR__ . '/egresosComponets/verEditarUbicaciones.php'; ?>
 
     <script>
-    let tabla;
+        let tabla;
 
-    /* =========================
-       CARGAR PROVEEDORES
-    ========================= */
-    function cargarProveedores() {
-        $.get('/cfsistem/app/controllers/proveedoresController.php?ajax=1', function(res) {
-            if (res.status === 'success') {
-                if ($.fn.DataTable.isDataTable('#tablaProveedores')) {
-                    $('#tablaProveedores').DataTable().destroy();
-                }
+        /* =========================
+           CARGAR PROVEEDORES
+        ========================= */
+        function cargarProveedores() {
+            $.get('/cfsistem/app/controllers/proveedoresController.php?ajax=1', function (res) {
+                if (res.status === 'success') {
+                    if ($.fn.DataTable.isDataTable('#tablaProveedores')) {
+                        $('#tablaProveedores').DataTable().destroy();
+                    }
 
-                let html = '';
+                    let html = '';
 
-                res.data.forEach(p => {
-                    const inicial = (p.nombre_comercial || 'P').charAt(0).toUpperCase();
+                    res.data.forEach(p => {
+                        const inicial = (p.nombre_comercial || 'P').charAt(0).toUpperCase();
 
-                    const rfc = p.rfc 
-                        ? `<span class="badge bg-body-secondary text-body border font-monospace fw-semibold">${p.rfc}</span>` 
-                        : `<span class="text-body-tertiary">-</span>`;
+                        const rfc = p.rfc
+                            ? `<span class="badge bg-body-secondary text-body border font-monospace fw-semibold">${p.rfc}</span>`
+                            : `<span class="text-body-tertiary">-</span>`;
 
-                    const correo = p.correo 
-                        ? `<a href="mailto:${p.correo}" class="text-body text-decoration-none small"><i class="bi bi-envelope text-body-tertiary me-1"></i>${p.correo}</a>` 
-                        : `<span class="text-body-tertiary">-</span>`;
+                        const correo = p.correo
+                            ? `<a href="mailto:${p.correo}" class="text-body text-decoration-none small"><i class="bi bi-envelope text-body-tertiary me-1"></i>${p.correo}</a>`
+                            : `<span class="text-body-tertiary">-</span>`;
 
-                    const telefono = p.telefono 
-                        ? `<span class="text-body small"><i class="bi bi-telephone text-body-tertiary me-1"></i>${p.telefono}</span>` 
-                        : `<span class="text-body-tertiary">-</span>`;
+                        const telefono = p.telefono
+                            ? `<span class="text-body small"><i class="bi bi-telephone text-body-tertiary me-1"></i>${p.telefono}</span>`
+                            : `<span class="text-body-tertiary">-</span>`;
 
-                    const estadoBadge = p.activo == 1 
-                        ? `<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1"><i class="bi bi-circle-fill me-1" style="font-size: 6px;"></i>Activo</span>` 
-                        : `<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 py-1"><i class="bi bi-circle-fill me-1" style="font-size: 6px;"></i>Inactivo</span>`;
+                        const estadoBadge = p.activo == 1
+                            ? `<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1"><i class="bi bi-circle-fill me-1" style="font-size: 6px;"></i>Activo</span>`
+                            : `<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 py-1"><i class="bi bi-circle-fill me-1" style="font-size: 6px;"></i>Inactivo</span>`;
 
-                    html += `
+                        html += `
                     <tr>
                         <td class="ps-4 py-3">
                             <div class="d-flex align-items-center gap-3">
@@ -444,199 +438,200 @@
                         </td>
                     </tr>
                     `;
-                });
+                    });
 
-                $('#tablaProveedores tbody').html(html);
+                    $('#tablaProveedores tbody').html(html);
 
-                tabla = $('#tablaProveedores').DataTable({
-                    language: {
-                        url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
-                    },
-                    pageLength: 10,
-                    responsive: true
-                });
-            }
-        }, 'json');
-    }
-
-    /* =========================
-          <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 rounded-pill px-3 py-1 shadow-sm" onclick="abrirModalNuevaDireccion(${p.id ?? ''}, '${p.nombre_comercial ?? ''}')" title="Agregar Dirección proveedor">
-    <i class="bi bi-plus-lg"></i>
-    <span>Dirección</span>
-</button>  
-       NUEVO
-    ========================= */
-    function nuevoProveedor() {
-        $('#formProveedor')[0].reset();
-        $('#proveedor_id').val('');
-        $('#tituloModal').text('Nuevo Proveedor');
-
-        new bootstrap.Modal(document.getElementById('modalProveedor')).show();
-    }
-
-    /* =========================
-       EDITAR
-    ========================= */
-    async function editarProveedor(id) {
-        try {
-            const resp = await fetch(`/cfsistem/app/controllers/proveedoresController.php?action=obtenerProveedor&id=${id}`);
-            const res = await resp.json();
-
-            if (!res.success) throw new Error(res.message);
-
-            const p = res.data;
-
-            document.getElementById('proveedor_id').value = p.id || '';
-            document.getElementById('nombre_comercial').value = p.nombre_comercial || '';
-            document.getElementById('razon_social').value = p.razon_social || '';
-            document.getElementById('rfc').value = p.rfc || '';
-            document.getElementById('correo').value = p.correo || '';
-            document.getElementById('contacto').value = p.contacto || '';
-            document.getElementById('telefono').value = p.telefono || '';
-            document.getElementById('telefono2').value = p.telefono2 || '';
-            document.getElementById('extencion').value = p.extencion || '';
-            document.getElementById('direccion').value = p.direccion || '';
-            document.getElementById('ciudad').value = p.ciudad || '';
-            document.getElementById('colonia').value = p.colonia || '';
-            document.getElementById('numeroExt').value = p.numeroExt || '';
-            document.getElementById('numeroInt').value = p.numeroInt || '';
-            document.getElementById('codigoPostal').value = p.codigo_postal || '';
-
-            document.getElementById('almacen_id').value = p.almacen_id || 0;
-            document.getElementById('almacen_id2').value = p.almacen_id || 0;
-            document.getElementById('activo').value = p.activo ?? 1;
-            document.getElementById('creado_at').value = p.creado_at || '';
-
-            document.getElementById('tituloModal').innerText = 'Editar Proveedor';
-
-            const modal = new bootstrap.Modal(document.getElementById('modalProveedor'));
-            modal.show();
-
-        } catch (e) {
-            console.error(e);
-            Swal.fire('Error', e.message, 'error');
-        }
-    }
-
-    /* =========================
-       GUARDAR
-    ========================= */
-    function guardarProveedor() {
-        const formData = new FormData();
-
-        formData.append('id', document.getElementById('proveedor_id').value || 0);
-        formData.append('nombre_comercial', document.getElementById('nombre_comercial').value.trim());
-        formData.append('razon_social', document.getElementById('razon_social').value.trim());
-        formData.append('rfc', document.getElementById('rfc').value.trim());
-        formData.append('correo', document.getElementById('correo').value.trim());
-        formData.append('telefono', document.getElementById('telefono').value.trim() || 0);
-        formData.append('telefono2', document.getElementById('telefono2').value.trim() || 0);
-        formData.append('extencion', document.getElementById('extencion').value.trim() || 0);
-        formData.append('direccion', document.getElementById('direccion').value.trim());
-        formData.append('colonia', document.getElementById('colonia').value.trim());
-        formData.append('ciudad', document.getElementById('ciudad').value.trim());
-        formData.append('numeroExt', document.getElementById('numeroExt').value.trim() || 0);
-        formData.append('numeroInt', document.getElementById('numeroInt').value.trim() || 0);
-        formData.append('codigoPostal', document.getElementById('codigoPostal').value.trim() || 0);
-
-        const almacen = document.getElementById('almacen_id');
-        const almacen2 = document.getElementById('almacen_id2');
-        formData.append('almacen_id', almacen.value == 0 ? almacen2.value : almacen.value || 0);
-        formData.append('activo', document.getElementById('activo').value || 1);
-
-        fetch('/cfsistem/app/controllers/proveedoresController.php?action=actualizarProveedor', {
-            method: 'POST',
-            body: formData
-        })
-        .then(async res => {
-            const text = await res.text();
-            try {
-                return JSON.parse(text);
-            } catch (e) {
-                throw new Error('La respuesta no es JSON válido');
-            }
-        })
-        .then(data => {
-            if (data.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Proveedor actualizado',
-                    text: data.message,
-                    timer: 1600,
-                    showConfirmButton: false
-                });
-
-                const modalEl = document.getElementById('modalProveedor');
-                const modal = bootstrap.Modal.getInstance(modalEl);
-                if (modal) {
-                    modal.hide();
+                    tabla = $('#tablaProveedores').DataTable({
+                        language: {
+                            url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+                        },
+                        pageLength: 10,
+                        responsive: true
+                    });
                 }
+            }, 'json');
+        }
 
-                setTimeout(() => {
-                    location.reload();
-                }, 1600);
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: data.message || 'No se pudo actualizar'
-                });
+        /* =========================
+              <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 rounded-pill px-3 py-1 shadow-sm" onclick="abrirModalNuevaDireccion(${p.id ?? ''}, '${p.nombre_comercial ?? ''}')" title="Agregar Dirección proveedor">
+        <i class="bi bi-plus-lg"></i>
+        <span>Dirección</span>
+    </button>  
+           NUEVO
+        ========================= */
+        function nuevoProveedor() {
+            $('#formProveedor')[0].reset();
+            $('#proveedor_id').val('');
+            $('#tituloModal').text('Nuevo Proveedor');
+
+            new bootstrap.Modal(document.getElementById('modalProveedor')).show();
+        }
+
+        /* =========================
+           EDITAR
+        ========================= */
+        async function editarProveedor(id) {
+            try {
+                const resp = await fetch(`/cfsistem/app/controllers/proveedoresController.php?action=obtenerProveedor&id=${id}`);
+                const res = await resp.json();
+
+                if (!res.success) throw new Error(res.message);
+
+                const p = res.data;
+
+                document.getElementById('proveedor_id').value = p.id || '';
+                document.getElementById('nombre_comercial').value = p.nombre_comercial || '';
+                document.getElementById('razon_social').value = p.razon_social || '';
+                document.getElementById('rfc').value = p.rfc || '';
+                document.getElementById('correo').value = p.correo || '';
+                document.getElementById('contacto').value = p.contacto || '';
+                document.getElementById('telefono').value = p.telefono || '';
+                document.getElementById('telefono2').value = p.telefono2 || '';
+                document.getElementById('extencion').value = p.extencion || '';
+                document.getElementById('direccion').value = p.direccion || '';
+                document.getElementById('ciudad').value = p.ciudad || '';
+                document.getElementById('colonia').value = p.colonia || '';
+                document.getElementById('numeroExt').value = p.numeroExt || '';
+                document.getElementById('numeroInt').value = p.numeroInt || '';
+                document.getElementById('codigoPostal').value = p.codigo_postal || '';
+
+                document.getElementById('almacen_id').value = p.almacen_id || 0;
+                document.getElementById('almacen_id2').value = p.almacen_id || 0;
+                document.getElementById('activo').value = p.activo ?? 1;
+                document.getElementById('creado_at').value = p.creado_at || '';
+
+                document.getElementById('tituloModal').innerText = 'Editar Proveedor';
+
+                const modal = new bootstrap.Modal(document.getElementById('modalProveedor'));
+                modal.show();
+
+            } catch (e) {
+                console.error(e);
+                Swal.fire('Error', e.message, 'error');
             }
-        })
-        .catch(err => {
-            console.error(err);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: err.message || 'Error en la petición'
-            });
-        });
-    }
+        }
 
-    /* =========================
-       CAMBIAR ESTADO
-    ========================= */
-    function cambiarEstado(id) {
-        const formData = new FormData();
-        formData.append('id', id);
+        /* =========================
+           GUARDAR
+        ========================= */
+        function guardarProveedor() {
+            const formData = new FormData();
 
-        fetch('/cfsistem/app/controllers/proveedoresController.php?action=eliminarProveedor', {
-            method: 'POST',
-            body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Estado actualizado',
-                    timer: 1000,
-                    showConfirmButton: false
+            formData.append('id', document.getElementById('proveedor_id').value || 0);
+            formData.append('nombre_comercial', document.getElementById('nombre_comercial').value.trim());
+            formData.append('razon_social', document.getElementById('razon_social').value.trim());
+            formData.append('rfc', document.getElementById('rfc').value.trim());
+            formData.append('correo', document.getElementById('correo').value.trim());
+            formData.append('telefono', document.getElementById('telefono').value.trim() || 0);
+            formData.append('telefono2', document.getElementById('telefono2').value.trim() || 0);
+            formData.append('extencion', document.getElementById('extencion').value.trim() || 0);
+            formData.append('direccion', document.getElementById('direccion').value.trim());
+            formData.append('colonia', document.getElementById('colonia').value.trim());
+            formData.append('ciudad', document.getElementById('ciudad').value.trim());
+            formData.append('numeroExt', document.getElementById('numeroExt').value.trim() || 0);
+            formData.append('numeroInt', document.getElementById('numeroInt').value.trim() || 0);
+            formData.append('codigoPostal', document.getElementById('codigoPostal').value.trim() || 0);
+
+            const almacen = document.getElementById('almacen_id');
+            const almacen2 = document.getElementById('almacen_id2');
+            formData.append('almacen_id', almacen.value == 0 ? almacen2.value : almacen.value || 0);
+            formData.append('activo', document.getElementById('activo').value || 1);
+
+            fetch('/cfsistem/app/controllers/proveedoresController.php?action=actualizarProveedor', {
+                method: 'POST',
+                body: formData
+            })
+                .then(async res => {
+                    const text = await res.text();
+                    try {
+                        return JSON.parse(text);
+                    } catch (e) {
+                        throw new Error('La respuesta no es JSON válido');
+                    }
+                })
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Proveedor actualizado',
+                            text: data.message,
+                            timer: 1600,
+                            showConfirmButton: false
+                        });
+
+                        const modalEl = document.getElementById('modalProveedor');
+                        const modal = bootstrap.Modal.getInstance(modalEl);
+                        if (modal) {
+                            modal.hide();
+                        }
+
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1600);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message || 'No se pudo actualizar'
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: err.message || 'Error en la petición'
+                    });
                 });
-                setTimeout(() => location.reload(), 1000);
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Error',
-                    text: data.message
-                });
-            }
-        })
-        .catch(() => {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Error en la petición'
-            });
-        });
-    }
+        }
 
-    /* =========================
-       INIT
-    ========================= */
-    $(document).ready(function() {
-        cargarProveedores();
-    });
+        /* =========================
+           CAMBIAR ESTADO
+        ========================= */
+        function cambiarEstado(id) {
+            const formData = new FormData();
+            formData.append('id', id);
+
+            fetch('/cfsistem/app/controllers/proveedoresController.php?action=eliminarProveedor', {
+                method: 'POST',
+                body: formData
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Estado actualizado',
+                            timer: 1000,
+                            showConfirmButton: false
+                        });
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: data.message
+                        });
+                    }
+                })
+                .catch(() => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Error en la petición'
+                    });
+                });
+        }
+
+        /* =========================
+           INIT
+        ========================= */
+        $(document).ready(function () {
+            cargarProveedores();
+        });
     </script>
 </body>
+
 </html>

@@ -202,11 +202,9 @@ if (isset($_GET['action']) && $_GET['action'] == 'actualizarProveedor') {
 
     try {
 
+        // 🔥 Si llega ID es edición, si no, es creación
         $id = intval($_POST['id'] ?? 0);
-
-        if ($id <= 0) {
-            throw new Exception("ID de proveedor inválido.");
-        }
+        $esEdicion = ($id > 0);
 
         // 🔥 TEXTOS
         $nombre_comercial = trim($_POST['nombre_comercial'] ?? '');
@@ -259,16 +257,37 @@ if (isset($_GET['action']) && $_GET['action'] == 'actualizarProveedor') {
             'activo' => $activo
         ];
 
-        $resultado = $model->actualizar($id, $datos);
+        // 🔥 DECIDIR ACCIÓN SEGÚN SI LLEGA ID
+        if ($esEdicion) {
+            // EDITAR
+            $resultado = $model->actualizar($id, $datos);
 
-        if (!$resultado) {
-            throw new Exception("Error al actualizar proveedor.");
+            if (!$resultado) {
+                throw new Exception("Error al actualizar proveedor.");
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Proveedor actualizado correctamente',
+                'id' => $id,
+                'accion' => 'edicion'
+            ]);
+
+        } else {
+            // CREAR
+            $nuevoId = $model->guardar($datos);
+
+            if (!$nuevoId) {
+                throw new Exception("Error al crear proveedor.");
+            }
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Proveedor creado correctamente',
+                'id' => $nuevoId,
+                'accion' => 'creacion'
+            ]);
         }
-
-        echo json_encode([
-            'success' => true,
-            'message' => 'Proveedor actualizado correctamente'
-        ]);
 
     } catch (Throwable $e) {
 
