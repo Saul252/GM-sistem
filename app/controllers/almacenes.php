@@ -271,6 +271,51 @@ class AlmacenController
         // 3. Terminamos la ejecución para que no se pegue el HTML del Layout
         exit;
     }
+    public function obtenerProductosParaAlmacen()
+    {
+        // 1. Limpiamos cualquier salida previa (espacios, warnings, etc)
+        while (ob_get_level())
+            ob_end_clean();
+
+        // 2. Cabeceras obligatorias
+        header('Content-Type: application/json; charset=utf-8');
+
+        $almacen_usuario = !empty($_GET['id'])
+            ? intval($_GET['id'])
+            : (int) ($_SESSION['almacen_id'] ?? 0);
+        $productos = $this->productoModel->obtenerTodosProductosParaAlmacen(0);
+        $medidasAdicionales = $this->productoModel->obtenerMedidas();
+
+        $medidasPorProducto = [];
+
+        foreach ($medidasAdicionales as $medida) {
+            $producto_id = $medida['producto_id'];
+
+            if (!isset($medidasPorProducto[$producto_id])) {
+                $medidasPorProducto[$producto_id] = [];
+            }
+
+            $medidasPorProducto[$producto_id][] = $medida;
+        }
+
+        foreach ($productos as &$producto) {
+
+            // AQUÍ
+            $idProducto = $producto['producto_id'];
+
+            $producto['medidas_adicionales'] =
+                $medidasPorProducto[$idProducto] ?? [];
+        }
+
+        unset($producto);
+
+        echo json_encode([
+            'success' => true,
+            'data' => $productos
+        ]);
+
+        exit;
+    }
 
     public function guardarCantidadesIniciales()
     {
@@ -570,6 +615,9 @@ if (isset($conexion)) {
             break;
         case 'getProducto': // <--- SECCIÓN PARA ACTUALIZAR SELECTS
             $controller->obtenerProductoDetalle();
+            break;
+        case 'obtenerProductosParaAlmacen': // <--- SECCIÓN PARA ACTUALIZAR SELECTS
+            $controller->obtenerProductosParaAlmacen();
             break;
         case 'actualizarProducto':
             $controller->actualizarProducto();

@@ -2,15 +2,7 @@
 date_default_timezone_set('America/Mexico_City');
 
 $modulos = [
-    [
-        'id_grupo' => 'general',
-        'titulo' => 'General',
-        'icono' => 'bi-grid',
-        'color' => '#0d6efd',
-        'submodulos' => [
-            ['id' => 'inicio', 'url' => '/cfsistem/app/views/inicio.php', 'icon' => 'bi-house-door', 'label' => 'Inicio', 'active' => ($archivoActual == 'inicio.php'), 'color' => '#0d6efd'],
-        ]
-    ],
+
     [
         'id_grupo' => 'ventas_clientes',
         'titulo' => 'Ventas y Clientes',
@@ -166,6 +158,22 @@ $modulos = [
         </div>
 
         <ul class="nav nav-pills flex-column gap-1">
+
+            <!-- ===== INICIO (acceso directo, sin grupo) ===== -->
+            <?php if (puedeVerModulo('inicio')): ?>
+                <li class="nav-item">
+                    <a href="/cfsistem/app/views/inicio.php"
+                        class="nav-link d-flex align-items-center gap-3 <?= ($archivoActual == 'inicio.php') ? 'active shadow-sm' : 'text-body' ?>">
+                        <span class="icon-reflect" data-icon="bi-house-door">
+                            <i class="bi-house-door fs-5"
+                                style="color: <?= ($archivoActual == 'inicio.php') ? '#fff' : '#0d6efd' ?>;"></i>
+                        </span>
+                        <span>Inicio</span>
+                    </a>
+                </li>
+            <?php endif; ?>
+            <!-- ===== FIN INICIO ===== -->
+
             <?php foreach ($modulos as $grupo): ?>
                 <?php
                 $submodulosPermitidos = array_filter($grupo['submodulos'], function ($sub) {

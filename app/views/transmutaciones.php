@@ -28,50 +28,59 @@
     <div class="main-content">
         <div class="container-fluid">
 
-            <div class="page-header">
+            <!-- ==================== HEADER ==================== -->
+            <div class="page-header mb-4">
                 <div class="page-title">
                     <h1><i class="fas fa-random text-primary me-2"></i>Transmutación de Productos</h1>
                     <small class="text-body-secondary">Procesa la transformación de materiales e insumos</small>
                 </div>
             </div>
 
-            <div class="row align-items-stretch">
+            <!-- ==================== FILA PRINCIPAL ==================== -->
+            <div class="row g-4 align-items-stretch mb-4">
+
+                <!-- Columna Izquierda: Guía de Equivalencias -->
                 <div class="col-lg-4">
-                    <div class="card card-custom mb-4 h-100">
-                        <div class="card-header-custom">
+                    <div class="card card-custom h-100 d-flex flex-column">
+                        <div
+                            class="card-header-custom d-flex justify-content-between align-items-center flex-wrap gap-2">
                             <h6 class="m-0 font-weight-bold text-dark">
                                 <i class="fas fa-book me-2"></i>Guía de Equivalencias Activas
-                                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                    data-bs-target="#modalEquivalencia">
-                                    <i class="fas fa-cog me-1"></i> Nueva Regla
-                                </button>
                             </h6>
+                            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                data-bs-target="#modalEquivalencia">
+                                <i class="fas fa-cog me-1"></i> Nueva Regla
+                            </button>
                         </div>
-                        <div class="card-body p-3">
+                        <div class="card-body p-3 flex-grow-1">
                             <?php require_once __DIR__ . '/transmutaciones/reglasConversion.php' ?>
                         </div>
                     </div>
                 </div>
 
+                <!-- Columna Derecha: Formulario de Transformación -->
                 <div class="col-lg-8">
-                    <div class="card card-custom mb-4 h-100">
+                    <div class="card card-custom h-100 d-flex flex-column">
                         <div class="card-header-custom">
                             <h6 class="m-0 font-weight-bold" style="color: var(--primary-color);">
                                 <i class="fas fa-plus-circle me-2"></i>Nueva Operación de Transformación
                             </h6>
                         </div>
-                        <div class="card-body p-4">
+                        <div class="card-body p-4 flex-grow-1">
                             <form id="formTransmutacion">
-                                <div class="row align-items-stretch">
+                                <div class="row g-3 align-items-stretch">
+
+                                    <!-- Caja Origen -->
                                     <div class="col-xl-5">
-                                        <div class="section-box box-origen">
-                                            <div class="section-title text-danger">
+                                        <div class="section-box box-origen h-100">
+                                            <div class="section-title text-danger mb-3">
                                                 <i class="fas fa-minus-circle me-2"></i>Producto Origen (Salida)
                                             </div>
+
                                             <div class="mb-3">
                                                 <label class="form-label text-xs">Almacén de Trabajo</label>
                                                 <select name="almacen_id" id="trans_almacen"
-                                                    class="form-select  shadow-sm" required style="width: 100%;">
+                                                    class="form-select shadow-sm" required style="width: 100%;">
                                                     <option value="">Seleccione Almacén...</option>
                                                     <?php foreach ($almacenes as $a): ?>
                                                         <option value="<?= $a['id'] ?>">
@@ -80,57 +89,65 @@
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
+
                                             <div class="mb-3">
                                                 <label class="form-label text-xs">Producto a Transformar</label>
                                                 <select name="producto_origen_id" id="trans_producto_origen"
-                                                    class="form-select " disabled required style="width: 100%;">
+                                                    class="form-select" disabled required style="width: 100%;">
                                                     <option value="">Seleccione almacén primero</option>
                                                 </select>
                                             </div>
+
                                             <div class="row g-2">
                                                 <div class="col-md-7">
                                                     <label class="form-label text-xs">Lote Origen</label>
                                                     <select name="lote_origen_id" id="trans_lote_origen"
-                                                        class="form-select " disabled required
+                                                        class="form-select" disabled required
                                                         style="width: 100%;"></select>
                                                 </div>
                                                 <div class="col-md-5">
                                                     <label class="form-label text-xs">Cant. Salida</label>
                                                     <input type="number" step="0.01" name="cantidad_origen"
                                                         id="trans_cant_origen" class="form-control" required>
-                                                    <div class="small mt-1 text-body-secondary">Stock: <span
-                                                            id="trans_stock_disp" class="fw-bold text-danger">0</span>
+                                                    <div class="small mt-1 text-body-secondary">
+                                                        Stock: <span id="trans_stock_disp"
+                                                            class="fw-bold text-danger">0</span>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
+                                    <!-- Flecha de conversión -->
                                     <div
                                         class="col-xl-2 conversion-arrow d-flex align-items-center justify-content-center">
                                         <i class="fas fa-arrow-right fa-2x d-none d-xl-block"></i>
                                         <i class="fas fa-arrow-down fa-2x d-xl-none my-3"></i>
                                     </div>
 
+                                    <!-- Caja Destino -->
                                     <div class="col-xl-5">
-                                        <div class="section-box box-destino">
-                                            <div class="section-title text-success">
+                                        <div class="section-box box-destino h-100">
+                                            <div class="section-title text-success mb-3">
                                                 <i class="fas fa-plus-circle me-2"></i>Producto Destino (Entrada)
                                             </div>
+
                                             <div class="mb-3">
                                                 <label class="form-label text-xs">Convertir a:</label>
                                                 <select name="producto_destino_id" id="trans_producto_destino"
-                                                    class="form-select " disabled required style="width: 100%;">
+                                                    class="form-select" disabled required style="width: 100%;">
                                                     <option value="">Seleccione origen primero</option>
                                                 </select>
                                             </div>
+
                                             <div class="mb-3">
                                                 <label class="form-label text-xs">Lote Destino</label>
                                                 <select name="lote_destino_id" id="trans_lote_destino"
-                                                    class="form-select " disabled style="width: 100%;">
+                                                    class="form-select" disabled style="width: 100%;">
                                                     <option value="0">-- Crear Lote Nuevo --</option>
                                                 </select>
                                             </div>
+
                                             <div class="mb-3">
                                                 <label class="form-label text-xs">Cant. Obtenida (Real)</label>
                                                 <input type="number" step="0.01" name="cantidad_destino"
@@ -142,16 +159,22 @@
                                     </div>
                                 </div>
 
-                                <div class="row mt-3">
+                                <!-- Observaciones -->
+                                <div class="row mt-4">
                                     <div class="col-12">
+                                        <label
+                                            class="form-label text-xs fw-bold text-secondary mb-1">Observaciones</label>
                                         <textarea name="observaciones"
                                             class="form-control text-uppercase form-control-sm" rows="2"
                                             placeholder="Notas del proceso..."></textarea>
                                     </div>
                                 </div>
 
-                                <div class="text-end mt-3">
-                                    <button type="reset" class="btn btn-light btn-sm me-2">Limpiar</button>
+                                <!-- Botones de acción -->
+                                <div class="d-flex justify-content-end gap-2 mt-4">
+                                    <button type="reset" class="btn btn-light btn-sm px-4">
+                                        <i class="fas fa-eraser me-1"></i> Limpiar
+                                    </button>
                                     <button type="submit" class="btn btn-primary btn-sm px-4 shadow">
                                         <i class="fas fa-check-circle me-1"></i> Procesar
                                     </button>
@@ -162,7 +185,8 @@
                 </div>
             </div>
 
-            <div class="card card-custom">
+            <!-- ==================== HISTORIAL ==================== -->
+            <div class="card card-custom mb-4">
                 <div class="card-header-custom d-flex flex-wrap justify-content-between align-items-center gap-2">
                     <h6 class="m-0 font-weight-bold text-dark me-auto">
                         <i class="fas fa-history me-2"></i>Historial de Movimientos
@@ -171,9 +195,10 @@
                         <i class="fas fa-sync-alt me-1"></i> Limpiar Filtros
                     </button>
                 </div>
-                <div class="card-body">
+                <div class="card-body p-4">
+
                     <!-- BARRA DE FILTROS -->
-                    <div class="row g-2 mb-3 align-items-end p-3  rounded border">
+                    <div class="row g-3 mb-4 align-items-end p-3 rounded border">
                         <div class="col-md-3">
                             <label class="form-label text-xs fw-bold text-secondary mb-1">Buscar</label>
                             <div class="input-group input-group-sm">
@@ -188,7 +213,9 @@
                             <select id="f_almacen" class="form-select form-select-sm">
                                 <option value="0">Todos los almacenes</option>
                                 <?php foreach ($almacenes as $a): ?>
-                                    <option value="<?= $a['id'] ?>"><?= htmlspecialchars($a['nombre']) ?></option>
+                                    <option value="<?= $a['id'] ?>">
+                                        <?= htmlspecialchars($a['nombre']) ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -221,7 +248,7 @@
 
                     <!-- TABLA HISTORIAL -->
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle" id="tablaHistorial" style="width: 100%;">
+                        <table class="table table-hover align-middle mb-0" id="tablaHistorial" style="width: 100%;">
                             <thead class="table-light">
                                 <tr>
                                     <th width="60px">ID</th>
@@ -244,18 +271,18 @@
         </div>
     </div>
 
-    <!-- MODAL EQUIVALENCIAS -->
+    <!-- ==================== MODAL EQUIVALENCIAS ==================== -->
     <div class="modal fade" id="modalEquivalencia" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content  shadow-lg" style="border-radius: 20px;">
-                <div class="modal-header  pb-0">
+            <div class="modal-content shadow-lg" style="border-radius: 20px;">
+                <div class="modal-header pb-0">
                     <h5 class="modal-title fw-bold"><i class="fas fa-cog me-2 text-primary"></i>Configurar Equivalencia
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form id="formNuevaEquivalencia">
                     <div class="modal-body p-4">
-                        <div class="alert alert-primary  shadow-sm small d-flex align-items-center"
+                        <div class="alert alert-primary shadow-sm small d-flex align-items-center mb-4"
                             style="border-radius: 12px;">
                             <i class="fas fa-info-circle fa-2x me-3"></i>
                             <div>Define cuántas unidades del producto destino se obtienen por cada unidad del producto
@@ -276,7 +303,9 @@
                                         <option value="">-- Seleccione Almacén --</option>
                                         <?php foreach ($almacenes as $a): ?>
                                             <?php if ($a['id'] > 0): ?>
-                                                <option value="<?= $a['id'] ?>"><?= htmlspecialchars($a['nombre']) ?></option>
+                                                <option value="<?= $a['id'] ?>">
+                                                    <?= htmlspecialchars($a['nombre']) ?>
+                                                </option>
                                             <?php endif; ?>
                                         <?php endforeach; ?>
                                     </select>
@@ -291,9 +320,9 @@
                                     }
                                     ?>
                                     <div class="input-group shadow-sm">
-                                        <span class="input-group-text  "><i
+                                        <span class="input-group-text"><i
                                                 class="fas fa-lock text-body-secondary"></i></span>
-                                        <input type="text" class="form-control   fw-bold"
+                                        <input type="text" class="form-control fw-bold"
                                             value="<?= htmlspecialchars($nombreAlmacen) ?>" readonly>
                                     </div>
                                     <input type="hidden" name="almacen_id" value="<?= $idSesion ?>">
@@ -310,7 +339,8 @@
                                             data-unidad="<?= htmlspecialchars($p['unidad_medida']) ?>"
                                             data-sku="<?= htmlspecialchars($p['sku']) ?>">
                                             <?= htmlspecialchars($p['sku'] . " - " . $p['nombre']) ?>
-                                            (<?= htmlspecialchars($p['unidad_medida']) ?>)
+                                            (
+                                            <?= htmlspecialchars($p['unidad_medida']) ?>)
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
@@ -326,21 +356,22 @@
                                             data-unidad="<?= htmlspecialchars($p['unidad_medida']) ?>"
                                             data-sku="<?= htmlspecialchars($p['sku']) ?>">
                                             <?= htmlspecialchars($p['sku'] . " - " . $p['nombre']) ?>
-                                            (<?= htmlspecialchars($p['unidad_medida']) ?>)
+                                            (
+                                            <?= htmlspecialchars($p['unidad_medida']) ?>)
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
 
                             <div class="col-md-12">
-                                <div class="p-3  rounded-3 border">
+                                <div class="p-3 rounded-3 border">
                                     <label class="form-label d-block text-center mb-3">Factor de Rendimiento</label>
                                     <div class="input-group input-group-lg">
                                         <div class="badge bg-danger-subtle text-danger">
                                             <i class="bi bi-box-arrow-up-right me-1"></i>
                                             <span>Origen</span>
                                             <input type="text" id="unidadOrigen" readonly
-                                                class="bg-transparent  text-danger fw-bold text-center"
+                                                class="bg-transparent text-danger fw-bold text-center"
                                                 style="width: 70px;">
                                         </div>
                                         <input type="number" step="0.0001" name="factor"
@@ -350,7 +381,7 @@
                                             <i class="bi bi-box-arrow-up-right me-1"></i>
                                             <span>Destino</span>
                                             <input type="text" id="unidadDestino" readonly
-                                                class="bg-transparent  text-success fw-bold text-center"
+                                                class="bg-transparent text-success fw-bold text-center"
                                                 style="width: 70px;">
                                         </div>
                                     </div>
@@ -358,7 +389,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer  pt-0">
+                    <div class="modal-footer pt-0">
                         <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cerrar</button>
                         <button type="submit" class="btn btn-primary">Guardar Configuración</button>
                     </div>
@@ -401,7 +432,7 @@
                     {
                         "data": "id",
                         "render": function (data) {
-                            return `<span class="badge  text-dark border">#${data}</span>`;
+                            return `<span class="badge text-dark border">#${data}</span>`;
                         }
                     },
                     {

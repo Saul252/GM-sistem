@@ -1201,6 +1201,109 @@ class ProductoModel
 
         return $productos;
     }
+    public function obtenerTodosProductosParaAlmacen($almacen_id = 0)
+    {
+        $productos = [];
+        $almacen_id = (int) $almacen_id;
+
+        if ($almacen_id > 0) {
+
+            /* ============================================================
+               CASO 1: almacén específico → filtra por ese almacén
+               ============================================================ */
+            $sql = "
+            SELECT
+                a.nombre AS almacen_nombre,
+                p.id     AS producto_id,
+                p.sku,
+                p.nombre,
+                p.unidad_medida,
+                p.unidad_reporte,
+                p.descripcion,
+                p.factor_conversion,
+                p.categoria_id,
+                pp.precio_minorista,
+                pp.precio_mayorista,
+                pp.precio_distribuidor,
+                i.stock,
+                i.almacen_id,
+                c.nombre AS categoria_nombre
+            FROM productos p
+            INNER JOIN inventario i
+                ON p.id = i.producto_id
+               AND i.almacen_id = ?
+            JOIN almacenes a ON a.id = i.almacen_id
+            LEFT JOIN categorias c ON p.categoria_id = c.id
+            LEFT JOIN precios_producto pp
+                ON p.id = pp.producto_id
+               AND pp.almacen_id = ?
+            ORDER BY p.nombre ASC
+        ";
+
+            $stmt = $this->db->prepare($sql);
+            if (!$stmt) {
+                error_log("Error prepare (almacén específico): " . $this->db->error);
+                return [];
+            }
+
+            $stmt->bind_param("ii", $almacen_id, $almacen_id);
+
+        } else {
+
+            /* ============================================================
+               CASO 2: almacén == 0 → SIN filtro, todos los productos
+               de todos los almacenes
+               ============================================================ */
+            $sql = "
+            SELECT
+                a.nombre AS almacen_nombre,
+                p.id     AS producto_id,
+                p.sku,
+                p.nombre,
+                p.unidad_medida,
+                p.unidad_reporte,
+                p.descripcion,
+                p.factor_conversion,
+                p.categoria_id,
+                pp.precio_minorista,
+                pp.precio_mayorista,
+                pp.precio_distribuidor,
+                i.stock,
+                i.almacen_id,
+                c.nombre AS categoria_nombre
+            FROM productos p
+            INNER JOIN inventario i
+                ON p.id = i.producto_id
+            INNER JOIN almacenes a
+                ON a.id = i.almacen_id
+            LEFT JOIN categorias c
+                ON p.categoria_id = c.id
+            LEFT JOIN precios_producto pp
+                ON p.id = pp.producto_id
+               AND pp.almacen_id = i.almacen_id
+            ORDER BY a.nombre ASC, p.nombre ASC
+        ";
+
+            $stmt = $this->db->prepare($sql);
+            if (!$stmt) {
+                error_log("Error prepare (todos): " . $this->db->error);
+                return [];
+            }
+
+            // Sin bind_param: no hay parámetros
+        }
+
+        $stmt->execute();
+        $resultado = $stmt->get_result();
+
+        while ($row = $resultado->fetch_assoc()) {
+            $productos[] = $row;
+        }
+
+        $stmt->close();
+
+        return $productos;
+    }
     public function actualizarProductoCompleto($data)
     {
         $this->db->begin_transaction();

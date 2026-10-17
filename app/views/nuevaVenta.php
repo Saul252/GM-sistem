@@ -2,30 +2,35 @@
 <html lang="es">
 
 <head>
-    <meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ventas | Sistema</title>
-      <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
+    <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
 
     <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
 
     <?php require_once __DIR__ . '/layout/icono.php' ?>
-    <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
+    <?php if (function_exists('cargarEstilos')) {
+        cargarEstilos();
+    } ?>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+        rel="stylesheet" />
 
     <style>
         body {
             background-color: #f8fafc;
-            
+
             padding-bottom: 40px;
         }
-.main-content{
-    padding-top: 65px!important;
 
-}
+        .main-content {
+            padding-top: 65px !important;
+
+        }
+
         .main-card {
             background: #ffffff;
             border-radius: 20px;
@@ -133,10 +138,11 @@
             opacity: 1;
             visibility: visible;
         }
+
         .fixed-top {
-    
-    z-index: 2050;
-}
+
+            z-index: 2050;
+        }
     </style>
 </head>
 
@@ -146,15 +152,16 @@
 
     <div class=" main-content">
         <div class="main-card">
-            
+
             <form id="formEditarSolicitud">
                 <input type="hidden" id="editar_venta_id" name="cotizacion_id" value="">
 
                 <!-- Encabezado de la Página -->
                 <div class="page-header-gradient d-flex justify-content-between align-items-center">
                     <div>
-                        <h4 class="fw-bold mb-0 text-white"><i class="bi bi-cart-check me-2"></i> Módulo de Remisiones</h4>
-                       
+                        <h4 class="fw-bold mb-0 text-white"><i class="bi bi-cart-check me-2"></i> Módulo de Remisiones
+                        </h4>
+
                     </div>
                 </div>
 
@@ -171,7 +178,7 @@
                                 <select name="almacen_id_editar" id="almacen_id_editar"
                                     class="form-select border-slate-300 rounded-3" required>
                                     <option value="">Seleccionar ubicación...</option>
-                                    <?php foreach($almacenes as $a): ?>
+                                    <?php foreach ($almacenes as $a): ?>
                                         <option value="<?= $a['id'] ?>"><?= htmlspecialchars($a['nombre']) ?></option>
                                     <?php endforeach; ?>
                                 </select>
@@ -186,8 +193,9 @@
                                     <select name="cliente_id_editar" id="cliente_id_editar"
                                         class="form-select select2-pagina border-slate-300" required>
                                         <option value="">Seleccionar cliente...</option>
-                                        <?php foreach($clientes as $p): ?>
-                                            <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?></option>
+                                        <?php foreach ($clientes as $p): ?>
+                                            <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?>
+                                            </option>
                                         <?php endforeach; ?>
                                     </select>
                                     <button class="btn btn-outline-secondary px-3" type="button"
@@ -217,7 +225,7 @@
                                     <select id="buscadorProductosEditar"
                                         class="form-select select2-pagina border-slate-300">
                                         <option value="">Escribe SKU o nombre...</option>
-                                        <?php foreach($productos as $pr): ?>
+                                        <?php foreach ($productos as $pr): ?>
                                             <option value="<?= $pr['producto_id'] ?>"
                                                 data-nombre="<?= htmlspecialchars($pr['nombre']) ?>"
                                                 data-sku="<?= htmlspecialchars($pr['sku']) ?>"
@@ -267,14 +275,16 @@
                                 <i class="bi bi-cart-x text-slate-300 opacity-50" style="font-size: 3.5rem;"></i>
                             </div>
                             <p class="fw-semibold text-slate-600 mb-1">La lista está vacía</p>
-                            <small class="text-slate-400">Utiliza el buscador superior para agregar productos a esta venta</small>
+                            <small class="text-slate-400">Utiliza el buscador superior para agregar productos a esta
+                                venta</small>
                         </div>
                     </div>
 
                     <!-- Resumen del Total y Botones de Acción -->
                     <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
-                        <a href="/cfsistem/app/controllers/ventasController2.php" class="btn btn-outline-secondary rounded-pill px-4 fw-bold">
-                             Reiniciar
+                        <a href="/cfsistem/app/controllers/ventasController2.php"
+                            class="btn btn-outline-secondary rounded-pill px-4 fw-bold">
+                            Reiniciar
                         </a>
 
                         <div class="d-flex align-items-center gap-4">
@@ -283,7 +293,8 @@
                                     style="font-size:0.7rem;">
                                     Costo Total de Compra
                                 </small>
-                                <div id="costoTotalCompraEditar" class="fw-bold" style="font-size:2.2rem; line-height:1;">
+                                <div id="costoTotalCompraEditar" class="fw-bold"
+                                    style="font-size:2.2rem; line-height:1;">
                                     $0.00
                                 </div>
                                 <input type="hidden" id="totalCotizacionEditar" name="totalCotizacionEditar" value="0">
@@ -322,7 +333,7 @@
             theme: 'bootstrap-5'
         });
 
-        $(document).ready(async function() {
+        $(document).ready(async function () {
             try {
                 await recargarProductosEditar();
                 await cargarVendedores3();
@@ -442,7 +453,7 @@
         // =====================================================
         // EVENTO SELECT2: AGREGAR PRODUCTO
         // =====================================================
-        $('#buscadorProductosEditar').on('select2:select', function(e) {
+        $('#buscadorProductosEditar').on('select2:select', function (e) {
             const d = e.params.data.element.dataset;
             const id = $(this).val();
 
@@ -564,7 +575,7 @@
             const unidadSelect = fila.querySelector('.unidad-select-editar');
             const tipoSelect = fila.querySelector('.tipoPrecio-select-editar');
             const inputtotal = fila.querySelector('.precio-total-editar');
-            
+
             const unidadOption = unidadSelect.options[unidadSelect.selectedIndex];
             const tipoOption = tipoSelect.options[tipoSelect.selectedIndex];
 
@@ -573,14 +584,14 @@
 
             const sugerido = equivalencia > 0 ? (precioBase / equivalencia) : precioBase;
             inputPrecio.value = sugerido.toFixed(2);
-            
+
             const cantidad = parseFloat(fila.querySelector('.cantidad-editar')?.value) || 0;
             inputtotal.value = (sugerido * cantidad).toFixed(2);
 
             calcularTotalSolEditar(null);
         }
 
-        document.addEventListener('input', function(e) {
+        document.addEventListener('input', function (e) {
             if (e.target.classList.contains('precio-unitario-editar')) {
                 e.target.dataset.editado = "1";
             }
@@ -590,142 +601,142 @@
         // GUARDAR ACTUALIZACIÓN (SUBMIT FORM)
         // =====================================================
         // =====================================================
-        $('#formEditarSolicitud').on('submit', async function(e) {
-    e.preventDefault();
+        $('#formEditarSolicitud').on('submit', async function (e) {
+            e.preventDefault();
 
-    if (!$('#tablaDetalleEditar tbody tr').length) {
-        Swal.fire('Error', 'Agregue al menos un producto a la venta', 'warning');
-        return;
-    }
+            if (!$('#tablaDetalleEditar tbody tr').length) {
+                Swal.fire('Error', 'Agregue al menos un producto a la venta', 'warning');
+                return;
+            }
 
-    const $btnFinalizar = $(this).find('button[type="submit"]');
-    $btnFinalizar.prop('disabled', true);
+            const $btnFinalizar = $(this).find('button[type="submit"]');
+            $btnFinalizar.prop('disabled', true);
 
-    const totalVenta = parseFloat($('#totalCotizacionEditar').val()) || 0;
-    const montoPagado = 0; // Dinero real recibido
+            const totalVenta = parseFloat($('#totalCotizacionEditar').val()) || 0;
+            const montoPagado = 0; // Dinero real recibido
 
-    const payload = {
-        accion: 'guardar_venta',
-        id_cliente: $('#cliente_id_editar').val(),
-        id_vendedor: $('#select-vendedor1').val(),
-        monto_pagado: montoPagado,
-        monto_usado_favor: 0,
-        total_venta: totalVenta,
-        almacen_id: $('#almacen_id_editar').val(),
-        metodo_pago: 'efectivo',
-        referencia: '',
-        observaciones: '',
-        usar_saldo_favor: 0,
-        carrito: []
-    };
+            const payload = {
+                accion: 'guardar_venta',
+                id_cliente: $('#cliente_id_editar').val(),
+                id_vendedor: $('#select-vendedor1').val(),
+                monto_pagado: montoPagado,
+                monto_usado_favor: 0,
+                total_venta: totalVenta,
+                almacen_id: $('#almacen_id_editar').val(),
+                metodo_pago: 'efectivo',
+                referencia: '',
+                observaciones: '',
+                usar_saldo_favor: 0,
+                carrito: []
+            };
 
-    $('#tablaDetalleEditar tbody tr').each(function() {
-        const fila = $(this);
-        const id = fila.attr('id').replace('filaEditar-', '');
+            $('#tablaDetalleEditar tbody tr').each(function () {
+                const fila = $(this);
+                const id = fila.attr('id').replace('filaEditar-', '');
 
-        const unidadSelect = fila.find('.unidad-select-editar option:selected');
-        const tipoPrecioSelect = fila.find('.tipoPrecio-select-editar option:selected');
-        let cantidadInicial = parseFloat(fila.find('.cantidad-editar').val()) || 0;
-        let equivalencia = parseFloat(fila.find('.equivalencia').val()) || 1;
-        
-        
-        let cantidadT = (cantidadInicial * equivalencia);
-        let cantidadTotal = (cantidadT % 1 > 0) ? cantidadT.toFixed(2) : cantidadT;
-        console.log(cantidadInicial);
-        console.log('equivalencia',equivalencia);
-      
-        payload.carrito.push({
-            producto_id: id,
-            almacen_id: $('#almacen_id_editar').val(),
-            cantidad: cantidadTotal,
-            unidad_base: unidadSelect.val(),
-           
-            noEliminar: fila.find('.noEliminar').val(),
-            idunidadMedida: unidadSelect.data('medida-id'),
-            unidadEquivalencia: unidadSelect.data('equivalencia'),
-            tipo_precio: tipoPrecioSelect.val(),
-            precio_unitario: fila.find('.precio-unitario-editar').val(),
-            subtotal: fila.find('.precio-total-editar').val()
-        });
-    });
+                const unidadSelect = fila.find('.unidad-select-editar option:selected');
+                const tipoPrecioSelect = fila.find('.tipoPrecio-select-editar option:selected');
+                let cantidadInicial = parseFloat(fila.find('.cantidad-editar').val()) || 0;
+                let equivalencia = parseFloat(fila.find('.equivalencia').val()) || 1;
 
-    Swal.fire({
-        title: 'Actualizando venta...',
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
-    });
 
-    try {
-        const resp = await fetch(`/cfsistem/app/controllers/ventasController.php?action=guardar_venta`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
+                let cantidadT = (cantidadInicial * equivalencia);
+                let cantidadTotal = (cantidadT % 1 > 0) ? cantidadT.toFixed(2) : cantidadT;
+                console.log(cantidadInicial);
+                console.log('equivalencia', equivalencia);
 
-        const res = await resp.json();
+                payload.carrito.push({
+                    producto_id: id,
+                    almacen_id: $('#almacen_id_editar').val(),
+                    cantidad: cantidadTotal,
+                    unidad_base: unidadSelect.val(),
 
-        if (res.status === 'success') {
-            // CORREGIDO: Se compara usando las variables definidas en este scope
-            const tieneDeuda = payload.monto_pagado < payload.total_venta;
-            const esEntregaTotal = (res.total_entregado ?? 0) >= (res.total_pedido ?? 0);
-            const iconoFinal = esEntregaTotal ? 'success' : 'warning';
+                    noEliminar: fila.find('.noEliminar').val(),
+                    idunidadMedida: unidadSelect.data('medida-id'),
+                    unidadEquivalencia: unidadSelect.data('equivalencia'),
+                    tipo_precio: tipoPrecioSelect.val(),
+                    precio_unitario: fila.find('.precio-unitario-editar').val(),
+                    subtotal: fila.find('.precio-total-editar').val()
+                });
+            });
 
-            let htmlExtra = `<p class="mb-2">Folio: <span class="badge bg-light text-dark border">${res.folio || 'N/A'}</span></p>`;
+            Swal.fire({
+                title: 'Actualizando venta...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
 
-            if (tieneDeuda) {
-                htmlExtra += `
+            try {
+                const resp = await fetch(`/cfsistem/app/controllers/ventasController.php?action=guardar_venta`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const res = await resp.json();
+
+                if (res.status === 'success') {
+                    // CORREGIDO: Se compara usando las variables definidas en este scope
+                    const tieneDeuda = payload.monto_pagado < payload.total_venta;
+                    const esEntregaTotal = (res.total_entregado ?? 0) >= (res.total_pedido ?? 0);
+                    const iconoFinal = esEntregaTotal ? 'success' : 'warning';
+
+                    let htmlExtra = `<p class="mb-2">Folio: <span class="badge bg-light text-dark border">${res.folio || 'N/A'}</span></p>`;
+
+                    if (tieneDeuda) {
+                        htmlExtra += `
                 <div class="alert alert-danger py-1 px-2 border-0 mb-2" style="font-size:0.75rem; border-radius:10px;">
                     <i class="bi bi-exclamation-circle-fill me-1"></i> Saldo pendiente registrado en cuenta
                 </div>`;
-            }
+                    }
 
-            Swal.fire({
-                title: esEntregaTotal ? '¡Venta Exitosa!' : 'Entrega Parcial Registrada',
-                html: `
+                    Swal.fire({
+                        title: esEntregaTotal ? '¡Venta Exitosa!' : 'Entrega Parcial Registrada',
+                        html: `
                     <div class="alert bg-body-tertiary text-body border-0 small text-start py-2 mb-3" style="background:var(--bs-tertiary-bg);; border-radius:12px;">
                         ${res.message || 'Operación realizada correctamente.'}
                     </div>
                     ${htmlExtra}
                     <p class="text-body-secondary small mb-0">¿Deseas imprimir el comprobante?</p>
                 `,
-                icon: iconoFinal,
-                showDenyButton: true,
-                showCancelButton: true,
-                confirmButtonText: '<i class="bi bi-receipt"></i> Con Precios',
-                denyButtonText: '<i class="bi bi-receipt"></i> Ticket Formal',
-                cancelButtonText: 'Cerrar',
-                confirmButtonColor: '#34c759',
-                denyButtonColor: '#5856d6',
-                customClass: {
-                    popup: 'rounded-4 border-0 shadow-lg'
-                }
-            }).then((result) => {
-                let url = '';
-                if (result.isConfirmed) {
-                    url = `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`;
-                } else if (result.isDenied) {
-                    url = `/cfsistem/app/backend/ventas/ticketFormal.php?id=${res.id_venta}`;
+                        icon: iconoFinal,
+                        showDenyButton: true,
+                        showCancelButton: true,
+                        confirmButtonText: '<i class="bi bi-receipt"></i> Con Precios',
+                        denyButtonText: '<i class="bi bi-receipt"></i> Ticket Formal',
+                        cancelButtonText: 'Cerrar',
+                        confirmButtonColor: '#34c759',
+                        denyButtonColor: '#5856d6',
+                        customClass: {
+                            popup: 'rounded-4 border-0 shadow-lg'
+                        }
+                    }).then((result) => {
+                        let url = '';
+                        if (result.isConfirmed) {
+                            url = `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`;
+                        } else if (result.isDenied) {
+                            url = `/cfsistem/app/backend/ventas/ticketFormal.php?id=${res.id_venta}`;
+                        }
+
+                        if (url !== '') window.open(url, '_blank');
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: res.message || 'Error desconocido',
+                        icon: 'error',
+                        customClass: { popup: 'rounded-4' }
+                    });
+                    $btnFinalizar.prop('disabled', false);
                 }
 
-                if (url !== '') window.open(url, '_blank');
-                location.reload();
-            });
-        } else {
-            Swal.fire({
-                title: 'Error',
-                text: res.message || 'Error desconocido',
-                icon: 'error',
-                customClass: { popup: 'rounded-4' }
-            });
-            $btnFinalizar.prop('disabled', false);
-        }
-
-    } catch (e) {
-        console.error(e);
-        Swal.fire('Error', 'Fallo de conexión con el servidor', 'error');
-        $btnFinalizar.prop('disabled', false);
-    }
-});
+            } catch (e) {
+                console.error(e);
+                Swal.fire('Error', 'Fallo de conexión con el servidor', 'error');
+                $btnFinalizar.prop('disabled', false);
+            }
+        });
         // ELIMINAR FILA
         // =====================================================
         function quitarFilaEditar(id) {

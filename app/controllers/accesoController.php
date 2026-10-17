@@ -256,3 +256,41 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerProductosAlmacen') {
 
     exit;
 }
+if (isset($_GET['action']) && $_GET['action'] === 'obtenerProductosParaAlmacen') {
+    header('Content-Type: application/json');
+    $almacen_usuario = !empty($_GET['id'])
+        ? intval($_GET['id'])
+        : (int) ($_SESSION['almacen_id'] ?? 0);
+    $productos = $productosModel->obtenerTodosProductosParaAlmacen($almacen_usuario);
+    $medidasAdicionales = $productosModel->obtenerMedidas();
+
+    $medidasPorProducto = [];
+
+    foreach ($medidasAdicionales as $medida) {
+        $producto_id = $medida['producto_id'];
+
+        if (!isset($medidasPorProducto[$producto_id])) {
+            $medidasPorProducto[$producto_id] = [];
+        }
+
+        $medidasPorProducto[$producto_id][] = $medida;
+    }
+
+    foreach ($productos as &$producto) {
+
+        // AQUÍ
+        $idProducto = $producto['producto_id'];
+
+        $producto['medidas_adicionales'] =
+            $medidasPorProducto[$idProducto] ?? [];
+    }
+
+    unset($producto);
+
+    echo json_encode([
+        'success' => true,
+        'data' => $productos
+    ]);
+
+    exit;
+}

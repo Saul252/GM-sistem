@@ -10,9 +10,7 @@
 }
 
 body {
-
     font-family: 'Inter', sans-serif;
-
 }
 
 .main-content {
@@ -24,7 +22,6 @@ body {
 
 /* Títulos y Header */
 .page-header {
-
     padding: 20px 25px;
     border-radius: 15px;
     box-shadow: var(--card-shadow);
@@ -38,7 +35,6 @@ body {
     font-size: 1.5rem;
     font-weight: 700;
     margin: 0;
-
 }
 
 /* Cards Estilizadas */
@@ -48,13 +44,15 @@ body {
     box-shadow: var(--card-shadow);
     margin-bottom: 25px;
     overflow: hidden;
-
+    padding: 10px;
+    /* padding interno para que el contenido no toque los bordes */
 }
 
 .card-header-custom {
-
     border-bottom: 1px solid #edf2f7;
     padding: 18px 25px;
+    margin-bottom: 10px;
+    /* separación extra entre header y contenido */
 }
 
 /* Formulario de Transmutación */
@@ -62,6 +60,8 @@ body {
     padding: 20px;
     border-radius: 12px;
     height: 100%;
+    margin-bottom: 20px;
+    /* separación entre cajas */
 }
 
 .box-origen {
@@ -87,12 +87,15 @@ body {
     align-items: center;
     justify-content: center;
     color: #cbd5e0;
+    padding: 10px;
+    /* padding para separar la flecha de las cajas */
 }
 
 .form-label {
     font-size: 0.85rem;
     font-weight: 600;
-
+    margin-bottom: 6px;
+    /* separación entre label e input */
 }
 
 .form-select,
@@ -101,6 +104,8 @@ body {
     padding: 10px 15px;
     border: 1px solid #e2e8f0;
     transition: all 0.2s;
+    margin-bottom: 15px;
+    /* separación entre campos */
 }
 
 .form-select:focus,
@@ -111,12 +116,10 @@ body {
 
 /* Tabla Estilizada */
 .table thead th {
-
     text-transform: uppercase;
     font-size: 0.75rem;
     letter-spacing: 0.05em;
     font-weight: 700;
-
     border-top: none;
     padding: 15px;
 }
@@ -134,6 +137,8 @@ body {
     padding: 10px 25px;
     border-radius: 10px;
     font-weight: 600;
+    margin-top: 10px;
+    /* separación del contenido superior */
 }
 
 .btn-primary:hover {
@@ -144,6 +149,8 @@ body {
 .btn-dark {
     border-radius: 10px;
     padding: 8px 20px;
+    margin-top: 10px;
+    /* separación del contenido superior */
 }
 
 @media (max-width: 768px) {

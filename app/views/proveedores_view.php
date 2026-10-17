@@ -28,13 +28,11 @@
             border: none;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-            background: white;
         }
 
         .fila-inactiva {
             opacity: 0.5;
             filter: grayscale(1);
-            background-color: #f8f9fa;
         }
 
         .main-content {
@@ -52,19 +50,17 @@
 
         /* Estilos mejorados para secciones del modal */
         #formProveedor .card-seccion {
-            border: 1px solid #eef1f5;
+            border: 1px solid var(--bs-border-color);
             border-radius: 18px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, .04);
             padding: 18px;
             height: 100%;
-
         }
 
         #formProveedor .titulo-seccion {
             font-size: .78rem;
             font-weight: 700;
             text-transform: uppercase;
-
             letter-spacing: .6px;
             margin-bottom: 1rem;
         }
@@ -72,14 +68,13 @@
         #formProveedor .form-label {
             font-size: .78rem;
             font-weight: 600;
-
             margin-bottom: .35rem;
         }
 
         #formProveedor .form-control,
         #formProveedor .form-select {
             border-radius: 14px;
-            border: 1px solid #e4e7ec;
+            border: 1px solid var(--bs-border-color);
             min-height: 46px;
             font-size: .92rem;
             transition: all .2s ease;
@@ -103,7 +98,6 @@
             border: none;
             background: linear-gradient(135deg, #4f46e5, #7c3aed);
             box-shadow: 0 8px 20px rgba(79, 70, 229, .25);
-            color: #fff;
         }
 
         #formProveedor .btn-cancelar {
@@ -116,7 +110,6 @@
             background: linear-gradient(135deg, #4f46e5, #7c3aed);
             border-radius: 16px;
             padding: 18px 22px;
-            color: #fff;
             margin-bottom: 1.2rem;
         }
 
@@ -127,6 +120,133 @@
 
         .header-form-modal small {
             opacity: .85;
+        }
+
+        /* ============================
+       TABLA DE PROVEEDORES
+    ============================ */
+        .tabla-proveedores {
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+
+        .tabla-proveedores thead th {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            border-bottom: 1px solid var(--bs-border-color);
+            border-top: none;
+            padding: 14px 16px;
+            white-space: nowrap;
+        }
+
+        .tabla-proveedores thead th:first-child {
+            border-top-left-radius: 12px;
+        }
+
+        .tabla-proveedores thead th:last-child {
+            border-top-right-radius: 12px;
+        }
+
+        .tabla-proveedores tbody tr {
+            border-bottom: 1px solid var(--bs-border-color);
+            transition: background-color 0.15s ease;
+        }
+
+        .tabla-proveedores tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .tabla-proveedores tbody td {
+            padding: 14px 16px;
+            vertical-align: middle;
+            border: none;
+        }
+
+        /* Avatar circular */
+        .tabla-proveedores .avatar-proveedor {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+        }
+
+        /* Nombre y subtítulo */
+        .tabla-proveedores .nombre-proveedor {
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        .tabla-proveedores .id-proveedor {
+            font-size: 0.72rem;
+            font-weight: 500;
+        }
+
+        /* Badges */
+        .tabla-proveedores .badge-rfc {
+            border: 1px solid var(--bs-border-color);
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .tabla-proveedores .badge-estado {
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 5px 12px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            border: 1px solid var(--bs-border-color);
+        }
+
+        /* Botones de acción */
+        .tabla-proveedores .acciones-cell {
+            display: inline-flex;
+            gap: 6px;
+            justify-content: flex-end;
+        }
+
+        .tabla-proveedores .btn-accion {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--bs-border-color);
+            transition: all 0.18s ease;
+            font-size: 0.85rem;
+        }
+
+        .tabla-proveedores .btn-accion:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Correo y teléfono */
+        .tabla-proveedores .dato-contacto {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+
+        .tabla-proveedores .dato-contacto i {
+            font-size: 0.85rem;
         }
     </style>
 </head>
@@ -166,19 +286,19 @@
                 </div>
 
                 <!-- TABLA -->
-                <div class="table-responsive rounded-4 bg-body p-3">
-                    <table class="table table-hover align-middle mb-0" id="tablaProveedores">
-                        <thead class="bg-body-tertiary">
-                            <tr class="text-body-secondary" style="font-size: 0.75rem; letter-spacing: 0.5px;">
-                                <th class="ps-4 py-3 text-uppercase fw-bold">PROVEEDOR / RAZÓN SOCIAL</th>
-                                <th class="py-3 text-uppercase fw-bold">RFC</th>
-                                <th class="py-3 text-uppercase fw-bold">CORREO</th>
-                                <th class="py-3 text-uppercase fw-bold">TELÉFONO</th>
-                                <th class="py-3 text-uppercase fw-bold text-center">ESTADO</th>
-                                <th class="text-end pe-4 py-3 text-uppercase fw-bold">ACCIONES</th>
+                <div class="table-responsive rounded-4 bg-body p-0 overflow-hidden border mx-3 mb-3">
+                    <table class="table table-hover align-middle mb-0 tabla-proveedores" id="tablaProveedores">
+                        <thead>
+                            <tr>
+                                <th class="ps-4 py-3">Proveedor / Razón Social</th>
+                                <th class="py-3">RFC</th>
+                                <th class="py-3">Correo</th>
+                                <th class="py-3">Teléfono</th>
+                                <th class="py-3 text-center">Estado</th>
+                                <th class="text-end pe-4 py-3">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody class="border-top-0">
+                        <tbody>
                             <!-- Cargado dinámicamente -->
                         </tbody>
                     </table>
@@ -392,58 +512,80 @@
 
                     let html = '';
 
-                    res.data.forEach(p => {
+                    // Paleta de colores para avatares
+                    const colores = [
+                        'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                        'linear-gradient(135deg, #06b6d4, #3b82f6)',
+                        'linear-gradient(135deg, #f59e0b, #f97316)',
+                        'linear-gradient(135deg, #10b981, #14b8a6)',
+                        'linear-gradient(135deg, #ec4899, #f43f5e)',
+                        'linear-gradient(135deg, #8b5cf6, #d946ef)',
+                        'linear-gradient(135deg, #0ea5e9, #06b6d4)',
+                        'linear-gradient(135deg, #84cc16, #22c55e)'
+                    ];
+
+                    res.data.forEach((p, i) => {
                         const inicial = (p.nombre_comercial || 'P').charAt(0).toUpperCase();
+                        const color = colores[i % colores.length];
 
                         const rfc = p.rfc
-                            ? `<span class="badge bg-body-secondary text-body border font-monospace fw-semibold">${p.rfc}</span>`
-                            : `<span class="text-body-tertiary">-</span>`;
+                            ? `<span class="badge-rfc">${p.rfc}</span>`
+                            : `<span class="text-body-tertiary">—</span>`;
 
                         const correo = p.correo
-                            ? `<a href="mailto:${p.correo}" class="text-body text-decoration-none small"><i class="bi bi-envelope text-body-tertiary me-1"></i>${p.correo}</a>`
-                            : `<span class="text-body-tertiary">-</span>`;
+                            ? `<a href="mailto:${p.correo}" class="dato-contacto"><i class="bi bi-envelope"></i>${p.correo}</a>`
+                            : `<span class="text-body-tertiary">—</span>`;
 
                         const telefono = p.telefono
-                            ? `<span class="text-body small"><i class="bi bi-telephone text-body-tertiary me-1"></i>${p.telefono}</span>`
-                            : `<span class="text-body-tertiary">-</span>`;
+                            ? `<span class="dato-contacto"><i class="bi bi-telephone"></i>${p.telefono}</span>`
+                            : `<span class="text-body-tertiary">—</span>`;
 
                         const estadoBadge = p.activo == 1
-                            ? `<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1"><i class="bi bi-circle-fill me-1" style="font-size: 6px;"></i>Activo</span>`
-                            : `<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-3 py-1"><i class="bi bi-circle-fill me-1" style="font-size: 6px;"></i>Inactivo</span>`;
+                            ? `<span class="badge-estado activo"><i class="bi bi-circle-fill" style="font-size: 6px;"></i>Activo</span>`
+                            : `<span class="badge-estado inactivo"><i class="bi bi-circle-fill" style="font-size: 6px;"></i>Inactivo</span>`;
+
+                        const toggleClass = p.activo == 1 ? 'btn-toggle-on' : 'btn-toggle-off';
+                        const toggleIcon = p.activo == 1 ? 'bi-toggle-on' : 'bi-toggle-off';
+                        const toggleTitle = p.activo == 1 ? 'Desactivar' : 'Activar';
 
                         html += `
-                    <tr>
-                        <td class="ps-4 py-3">
-                            <div class="d-flex align-items-center gap-3">
-                                <div class="rounded-circle bg-primary bg-opacity-10 text-primary fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style="width: 38px; height: 38px; font-size: 0.9rem;">
-                                    ${inicial}
-                                </div>
-                                <div>
-                                    <div class="fw-semibold text-body">${p.nombre_comercial || 'Sin Nombre'}</div>
-                                    <div class="text-body-tertiary small">ID: #${p.id || 'N/A'}</div>
-                                </div>
-                            </div>
-                        </td>
-                        <td>${rfc}</td>
-                        <td>${correo}</td>
-                        <td>${telefono}</td>
-                        <td class="text-center">${estadoBadge}</td>
-                        <td class="text-end pe-4">
-                            <div class="d-inline-flex gap-1">
-           <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 rounded-pill px-3 py-1 shadow-sm" onclick=" abrirModalGestionUbicaciones(${p.id ?? ''}, '${p.nombre_comercial ?? ''}')" title="Agregar Dirección proveedor">
-    <i class="bi bi-map"></i>
-    <span>ubicaciones</span>
-</button>
-                                <button type="button" class="btn btn-sm btn-outline-secondary rounded-2 px-2 py-1" onclick="editarProveedor(${p.id ?? ''})" title="Editar proveedor">
-                                    <i class="bi bi-pencil"></i>
-                                </button>
-                                <button type="button" class="btn btn-sm ${p.activo == 1 ? 'btn-outline-danger' : 'btn-outline-success'} rounded-2 px-2 py-1" onclick="cambiarEstado(${p.id})" title="${p.activo == 1 ? 'Desactivar' : 'Activar'}">
-                                    <i class="bi ${p.activo == 1 ? 'bi-toggle-on' : 'bi-toggle-off'} fs-6"></i>
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                    `;
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="avatar-proveedor" style="background: ${color};">
+                                            ${inicial}
+                                        </div>
+                                        <div>
+                                            <div class="nombre-proveedor">${p.nombre_comercial || 'Sin Nombre'}</div>
+                                            <div class="id-proveedor">ID: #${p.id || 'N/A'}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>${rfc}</td>
+                                <td>${correo}</td>
+                                <td>${telefono}</td>
+                                <td class="text-center">${estadoBadge}</td>
+                                <td class="text-end pe-4">
+                                    <div class="acciones-cell">
+                                        <button type="button" class="btn-accion btn-ubicacion"
+                                            onclick="abrirModalGestionUbicaciones(${p.id ?? ''}, '${p.nombre_comercial ?? ''}')"
+                                            title="Gestionar ubicaciones">
+                                            <i class="bi bi-geo-alt"></i>
+                                        </button>
+                                        <button type="button" class="btn-accion btn-editar"
+                                            onclick="editarProveedor(${p.id ?? ''})"
+                                            title="Editar proveedor">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                        <button type="button" class="btn-accion ${toggleClass}"
+                                            onclick="cambiarEstado(${p.id})"
+                                            title="${toggleTitle}">
+                                            <i class="bi ${toggleIcon}"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
                     });
 
                     $('#tablaProveedores tbody').html(html);
@@ -453,17 +595,17 @@
                             url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
                         },
                         pageLength: 10,
-                        responsive: true
+                        responsive: true,
+                        columnDefs: [
+                            { orderable: false, targets: [5] }
+                        ],
+                        dom: '<"d-flex justify-content-between align-items-center px-4 py-3"f>rt<"d-flex justify-content-between align-items-center px-4 py-3"ip>'
                     });
                 }
             }, 'json');
         }
 
         /* =========================
-              <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 rounded-pill px-3 py-1 shadow-sm" onclick="abrirModalNuevaDireccion(${p.id ?? ''}, '${p.nombre_comercial ?? ''}')" title="Agregar Dirección proveedor">
-        <i class="bi bi-plus-lg"></i>
-        <span>Dirección</span>
-    </button>  
            NUEVO
         ========================= */
         function nuevoProveedor() {
