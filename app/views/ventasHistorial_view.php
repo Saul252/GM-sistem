@@ -166,6 +166,77 @@
                 padding: 1rem;
             }
         }
+        /* ============================================================
+   PAGE LOADER — Overlay de carga a pantalla completa
+   ============================================================ */
+
+#pageLoader {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(245, 245, 247, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: opacity .35s ease, visibility .35s ease;
+}
+
+#pageLoader.oculto {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.page-loader-logo {
+    width: 68px;
+    height: 68px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #376bd8, #2855b8);
+    color: #fff;
+    font-size: 1.8rem;
+    box-shadow: 0 12px 30px rgba(55, 107, 216, .35);
+    animation: pulseLogo 1.6s ease-in-out infinite;
+}
+
+.page-loader-spinner {
+    margin-top: 22px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 3px solid rgba(55, 107, 216, .15);
+    border-top-color: #376bd8;
+    animation: girar .85s linear infinite;
+}
+
+.page-loader-text {
+    margin-top: 16px;
+    font-weight: 600;
+    font-size: .9rem;
+    color: #3a3a3c;
+}
+
+@keyframes girar {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes pulseLogo {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.06); }
+}
+
+/* Dark mode */
+[data-bs-theme="dark"] #pageLoader {
+    background: rgba(28, 28, 30, .85);
+}
+[data-bs-theme="dark"] .page-loader-text {
+    color: #f5f5f7;
+}
     </style>
 </head>
 
@@ -173,6 +244,13 @@
     <?php if (function_exists('renderizarLayout')) {
         renderizarLayout($paginaActual);
     } ?>
+    <div id="pageLoader">
+        <div class="page-loader-logo">
+            <i class="bi bi-bag-check-fill"></i>
+        </div>
+        <div class="page-loader-spinner"></div>
+        <div class="page-loader-text">Cargando historial de ventas…</div>
+    </div>
     <div class="main-content">
         <div class="container-fluid">
             <div class="d-flex justify-content-between align-items-center mb-4">
@@ -526,62 +604,72 @@
             // La ruta al controlador (ajusta si el nombre del archivo varía)
             const URL_CONTROLLER = '/cfsistem/app/controllers/ventasHistorialController.php';
 
-            async function getVentas() {
-                $('#loader').removeClass('d-none');
+           async function getVentas() {
 
+    /* ------------------------------------------------------------------
+       1. ESTADO DE CARGA
+       ------------------------------------------------------------------ */
+    $('#pageLoader').removeClass('oculto');
+    $('#loader').removeClass('d-none');
 
-                const params = new URLSearchParams({
-                    action: 'listar',
-                    // <--- Nuevo parámetro para el ID de venta
-                    f_search: $('#f_search').val(),
-                    f_rango: $('#f_rango').val(),
-                    f_inicio: $('#f_ini').val(),
-                    f_fin: $('#f_fin').val(),
-                    f_almacen: $('#f_almacen').val(),
-                    f_status: $('#f_status').val(),
-                    f_pago: $('#f_pago').val(),
-                    f_vendedor: $('#select-usuarios').val() ?? '',
-                    f_factura: $('#estado_factura').val() ?? ''
-                });
+    /* ------------------------------------------------------------------
+       2. PARÁMETROS DE BÚSQUEDA
+       ------------------------------------------------------------------ */
+    const params = new URLSearchParams({
+        action: 'listar',
+        // <--- Nuevo parámetro para el ID de venta
+        f_search: $('#f_search').val(),
+        f_rango: $('#f_rango').val(),
+        f_inicio: $('#f_ini').val(),
+        f_fin: $('#f_fin').val(),
+        f_almacen: $('#f_almacen').val(),
+        f_status: $('#f_status').val(),
+        f_pago: $('#f_pago').val(),
+        f_vendedor: $('#select-usuarios').val() ?? '',
+        f_factura: $('#estado_factura').val() ?? ''
+    });
 
-                try {
-                    const res = await fetch(`${URL_CONTROLLER}?${params.toString()}`);
-                    const data = await res.json();
-                    //<td class="ps-3 small">${v.id}</td>
-                    let totalVendido = 0;
-                    let deuda = 0;
+    try {
+        const res = await fetch(`${URL_CONTROLLER}?${params.toString()}`);
+        const data = await res.json();
+        //<td class="ps-3 small">${v.id}</td>
 
-                    $('#tablaVentas tbody').html(data.map(v => {
-                        let total = 0;
-                        let pagado = 0;
-                        if (v.estado_general != 'cancelada') {
-                            total = parseFloat(v.total) || 0;
-                            pagado = parseFloat(v.pagado) || 0;
-                        }
-                        let saldo = total - pagado;
+        let totalVendido = 0;
+        let deuda = 0;
 
-                        if (v.estado_general == 'activa') {
-                            totalVendido += total;
-                            deuda += (total - pagado);
-                        }
+        $('#tablaVentas tbody').html(data.map(v => {
+            let total = 0;
+            let pagado = 0;
+            if (v.estado_general != 'cancelada') {
+                total = parseFloat(v.total) || 0;
+                pagado = parseFloat(v.pagado) || 0;
+            }
+            let saldo = total - pagado;
 
-                        let badgeCobro = (saldo <= 0) ?
-                            '<span class="text-success small fw-bold"><i class="bi bi-check-circle"></i> Pagado</span>' :
-                            `<span class="text-danger small fw-bold">Debe: $${saldo.toFixed(2)}</span>`;
+            if (v.estado_general == 'activa') {
+                totalVendido += total;
+                deuda += (total - pagado);
+            }
 
-                        let entrega = (v.estado_general == 'activa') ?
-                            `<span class="badge ${v.estado_entrega == 'entregado' ? 'bg-success' : (v.estado_entrega == 'parcial' ? 'bg-warning card-title-text' : 'bg-danger')}">
+            let badgeCobro = (saldo <= 0) ?
+                '<span class="text-success small fw-bold"><i class="bi bi-check-circle"></i> Pagado</span>' :
+                `<span class="text-danger small fw-bold">Debe: $${saldo.toFixed(2)}</span>`;
+
+            let entrega = (v.estado_general == 'activa') ?
+                `<span class="badge ${v.estado_entrega == 'entregado' ? 'bg-success' : (v.estado_entrega == 'parcial' ? 'bg-warning card-title-text' : 'bg-danger')}">
             ${v.estado_entrega.toUpperCase()}
         </span>` :
-                            '<span class="text-danger small fw-bold"><i class="bi bi-check-circle"></i> Cancelado</span>';
+                '<span class="text-danger small fw-bold"><i class="bi bi-check-circle"></i> Cancelado</span>';
 
-                        let factura = (v.estado_general == 'activa') ?
-                            `${v.factura}
+            let factura = (v.estado_general == 'activa') ?
+                `${v.factura}
         <button type="button" class="btn btn-link text-primary p-1 border-0" onclick="modalFactura(${v.id},${v.factura})" title="Agregar Factura">
             <i class="bi bi-pencil-square me-2"></i>
         </button>` : '';
-                        let rolAct = <?= $rol ?>;
-                        let botonCancelar = rolAct == 1 ? `<button type="button" 
+
+            let rolAct = <?= $rol ?>;
+
+            let botonCancelar = rolAct == 1 ? `<button type="button" 
         class="btn btn-glass-danger rounded-3 border-0 d-inline-flex align-items-center justify-content-center" 
         onclick="abrirModalCancelacion('${v.id}','${v.folio}')" 
         data-bs-toggle="tooltip" 
@@ -628,7 +716,8 @@
     transform: scale(1.08);
 }
 </style>`;
-                        let cancelada = (v.estado_general == 'activa') ? `
+
+            let cancelada = (v.estado_general == 'activa') ? `
         
 
         <div class="btn-group" role="group">
@@ -668,7 +757,7 @@
             </ul>
         </div>${botonCancelar}` : ``;
 
-                        return `<tr>
+            return `<tr>
         <td class="ps-3 small">${v.fecha}</td>
         <td class="fw-bold">${v.folio}</td>
         <td><span class="badge bg-light text-dark border fw-normal">${v.almacen_nombre}</span></td>
@@ -708,10 +797,10 @@
             </div>
         </td>
     </tr>`;
-                    }).join(''));
+        }).join(''));
 
-                    // Fila de totales corregida (Sin 'v.almacen_nombre' para evitar errores)
-                    let totales = `<tr class="table-light fw-bold border-top border-dark">
+        // Fila de totales corregida (Sin 'v.almacen_nombre' para evitar errores)
+        let totales = `<tr class="table-light fw-bold border-top border-dark">
     <td class="ps-3 small"></td>
     <td class="fw-bold">TOTALES</td>
     <td></td>
@@ -724,17 +813,20 @@
     <td></td>
 </tr>`;
 
+        // CORRECCIÓN AQUÍ: Agregamos la fila al final del tbody usando .append() sin .join()
+        $('#tablaVentas tbody').append(totales);
 
+    } catch (e) {
+        console.error("Error al cargar ventas:", e);
+    } finally {
+        /* SIEMPRE: ocultar loaders */
+        $('#loader').addClass('d-none');
 
-                    // CORRECCIÓN AQUÍ: Agregamos la fila al final del tbody usando .append() sin .join()
-                    $('#tablaVentas tbody').append(totales);
-                } catch (e) {
-                    console.error("Error al cargar ventas:", e);
-                } finally {
-                    $('#loader').addClass('d-none');
-                }
-            }
-            document.addEventListener('input', e => {
+        setTimeout(() => {
+            $('#pageLoader').addClass('oculto');
+        }, 300);
+    }
+} document.addEventListener('input', e => {
 
                 if (e.target.classList.contains('input-entrega1')) {
 
