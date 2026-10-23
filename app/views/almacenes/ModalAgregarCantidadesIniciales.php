@@ -20,8 +20,8 @@
                         <i class="bi bi-search me-1 text-primary"></i> Añadir Producto
                     </label>
                     <div class="input-group input-group-sm rounded-3 overflow-hidden shadow-sm">
-                        <select id="buscadorProductosEditar" class="form-select border-0 bg-body-secondary text-body"
-                            style="width: 100%;">
+                        <select id="buscadorProductosEditarInicial"
+                            class="form-select border-0 bg-body-secondary text-body" style="width: 100%;">
                             <option value="">Escribe SKU o nombre...</option>
                         </select>
 
@@ -177,9 +177,9 @@
     /* =========================================================
        CARGA DE PRODUCTOS (precarga con AJAX al abrir)
        ========================================================= */
-    async function recargarProductosEditar() {
+    async function recargarProductosEditarCantidadesIniciales() {
         const $ = window.jQuery;
-        const $select = $('#buscadorProductosEditar');
+        const $select = $('#buscadorProductosEditarInicial');
         const url = `/cfsistem/app/controllers/accesoController.php?action=obtenerProductosAlmacen`;
 
         try {
@@ -240,7 +240,7 @@
             return;
         }
 
-        const $select = $('#buscadorProductosEditar');
+        const $select = $('#buscadorProductosEditarInicial');
 
         // Destruir si ya estaba inicializado
         if ($select.hasClass('select2-hidden-accessible')) {
@@ -364,7 +364,7 @@
         let pDistribuidor = document.getElementById('global_precio_distribuidor').value;
 
         let formData = new FormData();
-        let $select = $('#buscadorProductosEditar');
+        let $select = $('#buscadorProductosEditarInicial');
         let opcionSeleccionada = $select.find(':selected');
 
         let productoId = opcionSeleccionada.val();
@@ -470,7 +470,7 @@
         await cargarAlmacenesModal();
 
         // 2. Cargar productos + inicializar Select2
-        await recargarProductosEditar();
+        await recargarProductosEditarCantidadesIniciales();
 
         // 3. Mostrar modal
         modal.show();

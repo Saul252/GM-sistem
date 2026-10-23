@@ -1,123 +1,146 @@
- <div class="modal fade" id="modalImprimirSolicitud" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
+<div class="modal fade" id="modalImprimirSolicitud" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 16px; overflow: hidden;">
 
-                <!-- HEADER -->
-                <div class="modal-header text-white border-0"
-                    style="background: linear-gradient(135deg, #1f2a37 0%, #334155 100%);">
-                    <h5 class="fw-bold mb-0">
-                        Vista de Cotizacion
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-
-                <div class="modal-body p-0">
-
-                    <div id="areaImpresion" class="p-5 bg-white" style="min-height: 650px; font-size: 0.95rem;">
-
-                        <!-- ENCABEZADO -->
-                        
-<div class="d-flex justify-content-between align-items-center mb-4">
-
-    <!-- Logo + Título -->
-    <div class="d-flex align-items-center">
-
-        <img src="/cfsistem/public/assets/logo.ico"
-             alt="Logo"
-             width="55"
-             height="55"
-             class="me-3">
-
-        <div>
-            <h2 class="fw-bold text-uppercase mb-0" style="color:#1f2a37; letter-spacing:1px;">
-                COTIZACIÓN
-            </h2>
-
-            <div class="text-body-secondary small mt-1" id="print-folio">
-                Folio: <span class="fw-semibold">#00000</span>
+            <!-- HEADER -->
+            <div class="modal-header text-white border-0"
+                style="background: linear-gradient(135deg, #1f2a37 0%, #334155 100%);">
+                <h5 class="fw-bold mb-0">
+                    Vista de Cotizacion
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-        </div>
 
-    </div>
+            <div class="modal-body p-0">
 
-    <!-- Empresa -->
-    <div class="text-end">
-        <div class="fw-bold fs-5" style="color:#1f2a37;">
-            CFSistem
-        </div>
+                <div id="areaImpresion" class="p-5 bg-white" style="min-height: 650px; font-size: 0.95rem;">
 
-        <div class="text-body-secondary small" id="print-fecha">
-            Fecha: --/--/----
-        </div>
-    </div>
+                    <!-- ENCABEZADO -->
 
-</div>
-                       
+                    <div class="d-flex justify-content-between align-items-center mb-4">
 
-                        <!-- INFO -->
-<div class="row p-3"style="background: #ffffff02 !important;">
-    <div style="background: #ffffff02 !important;"class="col-4 border rounded-3 bg-light p-3 shadow-sm">
-        <div class="  ">
-            <small class="text-uppercase text-body-secondary fw-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">
-                Vendedor:
-            </small>
-            <div class="fw-bold text-black" id="vendedor" style="background: #ffffff02 !important;font-size: 0.9rem;">---</div>
-        </div>
-    </div>
-    
-    <div style="background: #ffffff02 !important;" class="col-8 border rounded-3 bg-light p-3 shadow-sm">
-        
-            <small class="text-uppercase text-body-secondary fw-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">
-                Cliente:
-            </small>
-            <div class="row fw-bold text-black" id="clienteData"style="background: #ffffff02 !important;font-size: 0.9rem;">---</div>
-       
-    </div>
-    </div>
+                        <!-- Logo + Título -->
+                        <div class="d-flex align-items-center">
 
+                            <img src="/cfsistem/public/assets/logo.ico" alt="Logo" width="55" height="55" class="me-3">
 
-                        <!-- TABLA -->
-                        <div class="table-responsive mb-3">
-                            <table class="table align-middle">
+                            <div>
+                                <h2 class="fw-bold text-uppercase mb-0" style="color:#1f2a37; letter-spacing:1px;">
+                                    COTIZACIÓN
+                                </h2>
 
-                                <thead style="background: #ffffff02 !important; color:#fff;">
-                                    <tr style="background: #ffffff02 !important;">
-                                        <th>Producto</th>
-                                        <th class="text-center">Cantidad</th>
-                                        <th class="text-center">Costo Unitario</th>
-                                        <th class="text-center">Costo Total</th>
-                                    </tr>
-                                </thead>
+                                <div class="text-body-secondary small mt-1" id="print-folio">
+                                    Folio: <span class="fw-semibold">#00000</span>
+                                </div>
+                            </div>
 
-                                <tbody id="print-tabla-cuerpo"></tbody>
-
-                            </table>
                         </div>
 
-                        <!-- TOTAL -->
-                        <div class="text-end mb-4">
-                            <div class="fw-bold fs-5">
-                                Total: <span id="costo_total"></span>
+                        <!-- Empresa -->
+                        <div class="text-end">
+                            <div class="fw-bold fs-5" style="color:#1f2a37;">
+                                CFSistem
+                            </div>
+
+                            <div class="text-body-secondary small" id="print-fecha">
+                                Fecha: --/--/----
                             </div>
                         </div>
 
-                        <!-- FIRMAS -->
-                        
-
                     </div>
+
+
+                    <!-- INFO -->
+                    <div class="row p-3" style="background: #ffffff02 !important;">
+                        <div style="background: #ffffff02 !important;"
+                            class="col-4 border rounded-3 bg-light p-3 shadow-sm">
+                            <div class="  ">
+                                <small class="text-uppercase text-body-secondary fw-bold d-block mb-1"
+                                    style="font-size: 0.7rem; letter-spacing: 0.5px;">
+                                    Vendedor:
+                                </small>
+                                <div class="fw-bold text-black" id="vendedor"
+                                    style="background: #ffffff02 !important;font-size: 0.9rem;">---</div>
+                            </div>
+                        </div>
+
+                        <div style="background: #ffffff02 !important;"
+                            class="col-8 border rounded-3 bg-light p-3 shadow-sm">
+
+                            <small class="text-uppercase text-body-secondary fw-bold d-block mb-1"
+                                style="font-size: 0.7rem; letter-spacing: 0.5px;">
+                                Cliente:
+                            </small>
+                            <div class="row fw-bold text-black" id="clienteData"
+                                style="background: #ffffff02 !important;font-size: 0.9rem;">---</div>
+
+                        </div>
+                    </div>
+
+
+                    <!-- TABLA -->
+                    <div class="table-responsive mb-3">
+                        <table class="table align-middle">
+
+                            <thead style="background: #ffffff02 !important; color:#fff;">
+                                <tr style="background: #ffffff02 !important;">
+                                    <th>Producto</th>
+                                    <th class="text-center">Cantidad</th>
+                                    <th class="text-center">Costo Unitario</th>
+                                    <th class="text-center">Costo Total</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="print-tabla-cuerpo"></tbody>
+
+                        </table>
+                    </div>
+
+                    <!-- TOTAL -->
+                    <div class="text-end mb-4">
+                        <div class="fw-bold fs-5">
+                            Total: <span id="costo_total"></span>
+                        </div>
+                    </div>
+
+                    <!-- FIRMAS -->
+
+
                 </div>
-
-                <!-- FOOTER -->
-
-
             </div>
+
+            <!-- FOOTER -->
+
+
         </div>
     </div>
+</div>
 <script>
+    function formatearDireccion(direccion) {
+        if (!direccion) return '';
 
- async function prepararImpresion(id) {
+        const etiquetas = ['calle', 'col', 'ciudad', 'pueblo'];
+        let texto = String(direccion);
+
+        etiquetas.forEach(etq => {
+            // Elimina "etiqueta:" o "etiqueta" (con o sin dos puntos y espacios)
+            const regex = new RegExp(`\\b${etq}\\s*:?\\s*`, 'gi');
+            texto = texto.replace(regex, '');
+        });
+
+        // Limpiar comas duplicadas o sueltas al inicio/final
+        texto = texto
+            .replace(/,\s*,/g, ',')     // ", ," → ","
+            .replace(/^\s*,\s*/, '')    // coma al inicio
+            .replace(/\s*,\s*$/, '')    // coma al final
+            .replace(/\s+/g, ' ')       // espacios múltiples → uno
+            .trim();
+
+        return texto.toUpperCase();
+    }
+    async function prepararImpresion(id) {
         try {
-            
+
             $('#tablaConversion tbody').empty();
 
             console.log(id);
@@ -141,7 +164,7 @@
             $('#print-fecha').text(`Fecha: ${new Date().toLocaleDateString()}`);
             $('#print-almacen').text(infoBase.almacen_nombre);
             $('#print-proveedor').text(infoBase.cliente_nombre || 'No especificado');
-let cliente=`
+            let cliente = `
     
         <div class="col-6">
             <small class="text-body-secondary d-block" style="font-size: 0.75rem;">CLIENTE</small>
@@ -155,7 +178,7 @@ let cliente=`
            
             <div>
                 <small class="text-body-secondary d-block" style="font-size: 0.75rem;">Dirección</small>
-                <span id="print-cliente-direccion" class="text-secondary small">${infoBase.direccion ?? ''}</span>
+                <span id="print-cliente-direccion" class="text-secondary small">${formatearDireccion(infoBase.direccion ?? '')}</span>
             </div>
         </div>
 
@@ -167,9 +190,9 @@ let cliente=`
         </div>
     
 `;
-$('#clienteData').html(cliente);
+            $('#clienteData').html(cliente);
 
-let vendedor=`<div class="card border-0 bg-light">
+            let vendedor = `<div class="card border-0 bg-light">
     <div class="d-flex flex-column gap-2">
         <div class="d-flex align-items-center gap-2">
             <i class="bi bi-person-fill text-secondary fs-5"></i>
@@ -182,7 +205,7 @@ let vendedor=`<div class="card border-0 bg-light">
         
     </div>
 </div>`;
-$('#vendedor').html(vendedor);
+            $('#vendedor').html(vendedor);
 
             let totalGeneral = 0;
             let html = '';
@@ -224,21 +247,21 @@ $('#vendedor').html(vendedor);
 
             $('#print-tabla-cuerpo').html(html);
 
-            ejecutarImpresion(vendedor,cliente,html,id,totalGeneral);
+            ejecutarImpresion(vendedor, cliente, html, id, totalGeneral);
 
         } catch (e) {
             console.error(e);
         }
     }
- function ejecutarImpresion(vendedor,cliente,html,id,totalGeneral) {
+    function ejecutarImpresion(vendedor, cliente, html, id, totalGeneral) {
         // 1. Obtener el contenido del área de impresión
-        
+
 
         // 2. Crear una ventana nueva
         const ventana = window.open('', '_blank', 'height=600,width=800');
-let fecha = "<?= date('d/m/Y') ?>"; // Resultado: 01/07/2026
-       
-          
+        let fecha = "<?= date('d/m/Y') ?>"; // Resultado: 01/07/2026
+
+
         ventana.document.write(`
         <html>
             <head>
@@ -368,9 +391,9 @@ ${html}
                         <div class="text-end mb-4">
                             <div class="fw-bold fs-5">
                                 Total: <span id="costo_total">${totalGeneral.toLocaleString('es-MX', {
-                    style: 'currency',
-                    currency: 'MXN'
-                })}</span>
+            style: 'currency',
+            currency: 'MXN'
+        })}</span>
                 
 
                             </div>

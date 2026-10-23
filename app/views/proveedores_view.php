@@ -17,6 +17,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
 
     <?php require_once __DIR__ . '/layout/icono.php' ?>
     <?php if (function_exists('cargarEstilos')) {
@@ -39,6 +40,8 @@
             padding: 20px;
             transition: all 0.3s;
             margin-top: 70px;
+            max-width: 100%;
+            overflow-x: hidden;
         }
 
         @media (min-width: 768px) {
@@ -48,7 +51,7 @@
             }
         }
 
-        /* Estilos mejorados para secciones del modal */
+        /* ===== MODAL FORM ESTILOS (se mantienen) ===== */
         #formProveedor .card-seccion {
             border: 1px solid var(--bs-border-color);
             border-radius: 18px;
@@ -123,13 +126,12 @@
         }
 
         /* ============================
-       TABLA DE PROVEEDORES
-    ============================ */
+           TABLA DE PROVEEDORES (reducido)
+        ============================ */
         .tabla-proveedores {
-            border-collapse: separate;
-            border-spacing: 0;
             font-size: 0.9rem;
             width: 100%;
+            margin-bottom: 0;
         }
 
         .tabla-proveedores thead th {
@@ -137,37 +139,16 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.6px;
-            border-bottom: 1px solid var(--bs-border-color);
-            border-top: none;
             padding: 14px 16px;
             white-space: nowrap;
-        }
-
-        .tabla-proveedores thead th:first-child {
-            border-top-left-radius: 12px;
-        }
-
-        .tabla-proveedores thead th:last-child {
-            border-top-right-radius: 12px;
-        }
-
-        .tabla-proveedores tbody tr {
-            border-bottom: 1px solid var(--bs-border-color);
-            transition: background-color 0.15s ease;
-        }
-
-        .tabla-proveedores tbody tr:last-child {
-            border-bottom: none;
         }
 
         .tabla-proveedores tbody td {
             padding: 14px 16px;
             vertical-align: middle;
-            border: none;
         }
 
-        /* Avatar circular */
-        .tabla-proveedores .avatar-proveedor {
+        .avatar-proveedor {
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -180,19 +161,17 @@
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
         }
 
-        /* Nombre y subtítulo */
-        .tabla-proveedores .nombre-proveedor {
+        .nombre-proveedor {
             font-weight: 600;
             line-height: 1.2;
         }
 
-        .tabla-proveedores .id-proveedor {
+        .id-proveedor {
             font-size: 0.72rem;
             font-weight: 500;
         }
 
-        /* Badges */
-        .tabla-proveedores .badge-rfc {
+        .badge-rfc {
             border: 1px solid var(--bs-border-color);
             font-family: 'Courier New', monospace;
             font-weight: 600;
@@ -201,7 +180,7 @@
             border-radius: 6px;
         }
 
-        .tabla-proveedores .badge-estado {
+        .badge-estado {
             font-size: 0.72rem;
             font-weight: 600;
             padding: 5px 12px;
@@ -212,14 +191,13 @@
             border: 1px solid var(--bs-border-color);
         }
 
-        /* Botones de acción */
-        .tabla-proveedores .acciones-cell {
+        .acciones-cell {
             display: inline-flex;
             gap: 6px;
             justify-content: flex-end;
         }
 
-        .tabla-proveedores .btn-accion {
+        .btn-accion {
             width: 34px;
             height: 34px;
             border-radius: 10px;
@@ -231,13 +209,12 @@
             font-size: 0.85rem;
         }
 
-        .tabla-proveedores .btn-accion:hover {
+        .btn-accion:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
         }
 
-        /* Correo y teléfono */
-        .tabla-proveedores .dato-contacto {
+        .dato-contacto {
             display: inline-flex;
             align-items: center;
             gap: 6px;
@@ -245,8 +222,61 @@
             text-decoration: none;
         }
 
-        .tabla-proveedores .dato-contacto i {
-            font-size: 0.85rem;
+        /* ============================
+           RESPONSIVE TABLA (clave)
+        ============================ */
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 12px;
+                margin-top: 60px;
+            }
+
+            /* Scroll horizontal real */
+            .table-responsive {
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch;
+                width: 100%;
+            }
+
+            /* Fuerza ancho mínimo → aparece scroll */
+            #tablaProveedores {
+                min-width: 820px;
+                white-space: nowrap;
+            }
+
+            #tablaProveedores tbody td {
+                white-space: nowrap;
+            }
+
+            /* Compacta header y botón */
+            h2.fw-bold {
+                font-size: 1.4rem;
+            }
+
+            .btn-primary.rounded-pill {
+                font-size: 0.8rem;
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+
+            /* Scrollbar visible */
+            .table-responsive::-webkit-scrollbar {
+                height: 8px;
+            }
+
+            .table-responsive::-webkit-scrollbar-track {
+                background: #f2f2f7;
+                border-radius: 10px;
+            }
+
+            .table-responsive::-webkit-scrollbar-thumb {
+                background: #c7c7cc;
+                border-radius: 10px;
+            }
+
+            .table-responsive::-webkit-scrollbar-thumb:hover {
+                background: #a1a1a6;
+            }
         }
     </style>
 </head>
@@ -286,8 +316,8 @@
                 </div>
 
                 <!-- TABLA -->
-                <div class="table-responsive rounded-4 bg-body p-0 overflow-hidden border mx-3 mb-3">
-                    <table class="table table-hover align-middle mb-0 tabla-proveedores" id="tablaProveedores">
+                <div class="table-responsive rounded-4 bg-body p-0 border mx-3 mb-3">
+                    <table class="table table-hover align-middle mb-0 tabla-proveedores w-100" id="tablaProveedores">
                         <thead>
                             <tr>
                                 <th class="ps-4 py-3">Proveedor / Razón Social</th>
@@ -493,6 +523,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <?php require_once __DIR__ . '/egresosComponets/direccionUbicacionModal.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/verEditarUbicaciones.php'; ?>
@@ -595,7 +627,8 @@
                             url: 'https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
                         },
                         pageLength: 10,
-                        responsive: true,
+                        autoWidth: false,        // 👈 evita que DataTables comprima columnas
+                        responsive: false,       // 👈 desactivado: usamos scroll horizontal en móvil
                         columnDefs: [
                             { orderable: false, targets: [5] }
                         ],

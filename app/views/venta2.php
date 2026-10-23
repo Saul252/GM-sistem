@@ -211,7 +211,9 @@
                                 <select name="almacen_id_editar" id="almacen_id_editar"
                                     class="form-select border-0 shadow-sm rounded-3 py-2" required>
                                     <?php foreach ($almacenes as $a): ?>
-                                        <option value="<?= $a['id'] ?>"><?= htmlspecialchars($a['nombre']) ?></option>
+                                        <option value="<?= $a['id'] ?>">
+                                            <?= htmlspecialchars(mb_strtoupper($a['nombre'], 'UTF-8')) ?>
+                                        </option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
@@ -224,11 +226,7 @@
                                 <div class="input-group shadow-sm rounded-3 overflow-hidden">
                                     <select name="cliente_id_editar" id="cliente_id_editar"
                                         class="form-select border-0 select2-pagina" required>
-                                        <option value="">Seleccionar cliente...</option>
-                                        <?php foreach ($clientes as $p): ?>
-                                            <option value="<?= $p['id'] ?>"><?= htmlspecialchars($p['nombre_comercial']) ?>
-                                            </option>
-                                        <?php endforeach; ?>
+
                                     </select>
                                     <button class="btn btn-primary-light border-0 px-3" type="button"
                                         onclick="abrirModalNuevoCliente()" title="Nuevo Cliente">
@@ -475,6 +473,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+
         function vaciarTablaEditar() {
             // 1. Remueve todas las filas del tbody
             $('#tablaDetalleEditar tbody').empty();
@@ -526,19 +525,22 @@
 
             if (Array.isArray(res.data)) {
                 res.data.forEach(pr => {
-                    const option = new Option(`[${pr.sku}] ${pr.nombre}`, pr.producto_id, false, false);
+                    const nombreUpper = (pr.nombre || '').toUpperCase();   // 🔥 MAYÚSCULAS
+                    const skuUpper = (pr.sku || '').toUpperCase();      // 🔥 MAYÚSCULAS
+
+                    const option = new Option(`[${skuUpper}] ${nombreUpper}`, pr.producto_id, false, false);
 
                     $(option).attr({
-                        'data-nombre': pr.nombre || '',
+                        'data-nombre': nombreUpper,
                         'data-medidas': JSON.stringify(pr.medidas_adicionales || []),
-                        'data-sku': pr.sku || '',
+                        'data-sku': skuUpper,
                         'data-um': pr.unidad_medida || '',
                         'data-ur': pr.unidad_reporte || '',
                         'data-premin': pr.precio_minorista || 0,
                         'data-premat': pr.precio_mayorista || 0,
                         'data-predis': pr.precio_distribuidor || 0,
                         'data-factor': pr.factor_conversion || 1,
-                        'data-stock': (pr.stock) || 1
+                        'data-stock': pr.stock || 1
                     });
 
                     $select.append(option);
@@ -554,15 +556,27 @@
         let dataEdicion = null;
         let recalculandoFilaEditar = false;
 
-        // Inicializar Select2 en la página
-        $('.select2-pagina').select2({
+        // 1. Buscador de productos (sin dropdownParent por el overflow-hidden)
+        $('#buscadorProductosEditar').select2({
             theme: 'bootstrap-5'
         });
 
+        // 2. Select de vendedor
+        $('#select-vendedor1').select2({
+            theme: 'bootstrap-5'
+        });
+
+        // 3. Cualquier OTRO .select2-pagina que NO sean los dos anteriores
+        $('.select2-pagina').not('#buscadorProductosEditar, #select-vendedor1').each(function () {
+            $(this).select2({
+                theme: 'bootstrap-5'
+            });
+        });
         $(document).ready(async function () {
             try {
 
                 await cargarVendedores3();
+                await cargarClientes();
             } catch (error) {
                 console.error("Error en inicialización:", error);
             }
@@ -590,7 +604,7 @@
                     resultado.data.forEach(usuario => {
                         const opcion = document.createElement('option');
                         opcion.value = usuario.id;
-                        opcion.textContent = `${usuario.nombre}`;
+                        opcion.textContent = `${usuario.nombre}`.toUpperCase();
                         select.appendChild(opcion);
                     });
 
@@ -609,16 +623,13 @@
                 select.innerHTML = '<option value="">Error al cargar la lista</option>';
                 console.error('Error al ejecutar cargarVendedores3:', error);
             }
-        } async function cargarClientes() {
+        }
+        async function cargarClientes() {
             console.log("cargo clientes");
 
-            // Obtenemos el ID del almacén actual
             const almacenId = $('#almacen_id_editar').val();
             const select = document.getElementById('cliente_id_editar');
             if (!select) return;
-
-            // Limpiamos el select antes de poblarlo
-            select.innerHTML = '<option value="">-- Seleccione un cliente --</option>';
 
             try {
                 const url = '/cfsistem/app/controllers/accesoController.php?action=obtenerClientes';
@@ -631,11 +642,9 @@
 
                 if (resultado.success && Array.isArray(resultado.data)) {
 
-                    // FILTRADO:
-                    // 1. Conserva clientes cuyo nombre NO contenga "público en general".
-                    // 2. Para "público en general", solo conserva el que coincida con el almacenId actual.
+                    // FILTRADO
                     const clientesFiltrados = resultado.data.filter(cliente => {
-                        const nombreNorm = cliente.nombre_comercial.toLowerCase().trim();
+                        const nombreNorm = String(cliente.nombre_comercial || '').toLowerCase().trim();
                         const esPublicoGeneral = nombreNorm.includes('publico en general') || nombreNorm.includes('público en general');
 
                         if (esPublicoGeneral) {
@@ -645,32 +654,99 @@
                         return true;
                     });
 
-                    // Llenamos el select con la lista filtrada
+                    // 🔥 Construir opciones con data-* forzados a string
+                    const fragment = document.createDocumentFragment();
+
+                    const first = document.createElement('option');
+                    first.value = '';
+                    first.textContent = '-- Seleccione un cliente --';
+                    fragment.appendChild(first);
+
                     clientesFiltrados.forEach(cliente => {
                         const opcion = document.createElement('option');
                         opcion.value = cliente.id;
-                        opcion.textContent = `${cliente.nombre_comercial}`;
-                        select.appendChild(opcion);
+                        opcion.textContent = String(cliente.nombre_comercial || '').toUpperCase();
+
+                        opcion.dataset.nombre = String(cliente.nombre_comercial || '');
+                        opcion.dataset.razonSocial = String(cliente.razon_social || '');
+                        opcion.dataset.contacto = String(cliente.contacto || '');
+
+                        fragment.appendChild(opcion);
                     });
 
-                    // SELECCIÓN AUTOMÁTICA DEL PRIMER REGISTRO ENCONTRADO
-                    if (clientesFiltrados.length > 0) {
-                        const primerClienteId = clientesFiltrados[0].id;
+                    select.replaceChildren(fragment);
 
-                        // Soporte nativo y compatibilidad con Select2/jQuery
-                        $('#cliente_id_editar').val(primerClienteId).trigger('change');
+                    // 🔥 Destruir Select2 si existe
+                    if ($(select).hasClass('select2-hidden-accessible')) {
+                        $(select).select2('destroy');
+                    }
+
+                    // 🔥 Inicializar Select2 con matcher personalizado
+                    $(select).select2({
+                        theme: 'bootstrap-5',
+                        width: 'resolve',
+                        matcher: function (params, data) {
+                            if (!params.term || params.term.trim() === '') return data;
+
+                            const term = String(params.term).toLowerCase().trim();
+                            const text = String(data.text || '').toLowerCase();
+
+                            const $el = $(data.element);
+                            const razonSocial = String($el.data('razonSocial') || '').toLowerCase();
+                            const contacto = String($el.data('contacto') || '').toLowerCase();
+
+                            if (text.includes(term) || razonSocial.includes(term) || contacto.includes(term)) {
+                                return data;
+                            }
+
+                            return null;
+                        },
+                        templateResult: function (state) {
+                            if (!state.id) return state.text;
+
+                            const $opt = $(state.element);
+                            const nombre = String($opt.data('nombre') || state.text || '');
+                            const razonSocial = String($opt.data('razonSocial') || '');
+                            const contacto = String($opt.data('contacto') || '');
+
+                            if (!razonSocial && !contacto) {
+                                return $(`<span class="fw-semibold">${nombre.toUpperCase()}</span>`);
+                            }
+
+                            return $(`
+                        <div class="d-flex flex-column">
+                            <span class="fw-semibold">${nombre.toUpperCase()}</span>
+                            <div class="d-flex justify-content-between align-items-center gap-2 mt-1">
+                                <small class="text-truncate" style="max-width:65%;">${razonSocial.toUpperCase()}</small>
+                                <small class="fw-semibold text-nowrap">${contacto ? `👤 ${contacto.toUpperCase()}` : ''}</small>
+                            </div>
+                        </div>
+                    `);
+                        },
+                        templateSelection: function (state) {
+                            if (!state.id) return state.text;
+                            const nombre = String($(state.element).data('nombre') || state.text || '');
+                            return nombre.toUpperCase();
+                        }
+                    });
+
+                    // SELECCIÓN AUTOMÁTICA DEL PRIMER REGISTRO
+                    if (clientesFiltrados.length > 0) {
+                        $(select).val(clientesFiltrados[0].id).trigger('change');
+                    } else {
+                        $(select).val(null).trigger('change');
                     }
 
                 } else {
                     select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
+                    $(select).trigger('change.select2');
                 }
             } catch (error) {
                 select.innerHTML = '<option value="">Error al cargar la lista</option>';
+                $(select).trigger('change.select2');
                 console.error('Error al ejecutar cargarClientes:', error);
             }
-        }
-        // =====================================================
-        // CALCULAR TOTAL EDITAR
+        }  // CALCULAR TOTAL EDITAR
         // =====================================================
         function calcularTotalSolEditar(input) {
             if (recalculandoFilaEditar) return;
@@ -808,6 +884,7 @@
                         min="0.01"
                         placeholder="0.00"
                         required
+                        onkeydown="if(event.key==='Enter'){ event.preventDefault(); $('#buscadorProductosEditar').select2('open'); }"
                         oninput="calcularTotalSolEditar(this)">
                 </td>
 
@@ -820,6 +897,7 @@
                         step="0.01"
                         min="0"
                         placeholder="0.00"
+                        onkeydown="if(event.key==='Enter'){ event.preventDefault(); $('#buscadorProductosEditar').select2('open'); }"
                         oninput="calcularTotalSolEditar(this)"
                         style="font-size:1.1rem; height:40px;">
                 </td>

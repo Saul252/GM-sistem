@@ -100,7 +100,24 @@ ORDER BY nombre ASC;";
 
         return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
     }
+    public function listarRoles()
+    {
+        $sql = "SELECT `id`, `nombre` 
+            FROM `roles` 
+            WHERE 1 
+            ORDER BY `nombre` ASC";
 
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new Exception("Error al preparar consulta de roles: " . $this->db->error);
+        }
+
+        $stmt->execute();
+        $res = $stmt->get_result();
+
+        return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
+    }
     // NUEVO: Listar por almacén específico
     public function listarPorAlmacen($almacen_id)
     {

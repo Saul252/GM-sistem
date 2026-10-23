@@ -486,6 +486,7 @@
                 if (!res.success) {
                     throw new Error(res.message || 'Respuesta no válida del servidor');
                 }
+                console.log(res.data);
 
                 renderizarTicket(res.data);
             } catch (error) {
@@ -493,8 +494,37 @@
             }
         }
 
+        /**
+     * Formatea una dirección agregando ":" después de calle, col, ciudad, pueblo.
+     * Ejemplo: "calle Av. Juárez 123, col Centro, ciudad Tlalpan"
+     *       → "calle: Av. Juárez 123, col: Centro, ciudad: Tlalpan"
+     */
+        function formatearDireccion(direccion) {
+            if (!direccion) return '';
+
+            const etiquetas = ['calle', 'col', 'ciudad', 'pueblo'];
+            let texto = String(direccion);
+
+            etiquetas.forEach(etq => {
+                // Elimina "etiqueta:" o "etiqueta" (con o sin dos puntos y espacios)
+                const regex = new RegExp(`\\b${etq}\\s*:?\\s*`, 'gi');
+                texto = texto.replace(regex, '');
+            });
+
+            // Limpiar comas duplicadas o sueltas al inicio/final
+            texto = texto
+                .replace(/,\s*,/g, ',')     // ", ," → ","
+                .replace(/^\s*,\s*/, '')    // coma al inicio
+                .replace(/\s*,\s*$/, '')    // coma al final
+                .replace(/\s+/g, ' ')       // espacios múltiples → uno
+                .trim();
+
+            return texto.toUpperCase();
+        }
+
         function renderizarTicket(data) {
             const { venta, detalles } = data;
+            console.log(data);
 
             // Llenado de Cabecera e Información General
             document.getElementById('almacen-nombre').innerText = (venta.nombre_almacen || '').toUpperCase();
@@ -505,7 +535,10 @@
 
             // Datos del Cliente y Reparto
             document.getElementById('ticket-cliente').innerText = (venta.nombre_comercial || '').toUpperCase();
-            document.getElementById('ticket-direccion').innerText = (venta.direccion || '').toUpperCase();
+
+            // 🔥 AQUÍ: formatear dirección con ":" al imprimir
+            document.getElementById('ticket-direccion').innerText = formatearDireccion(venta.direccion);
+
             document.getElementById('ticket-telefono').innerText = venta.telefono ? `#${venta.telefono}` : 'N/A';
             document.getElementById('ticket-estado-entrega').innerText = (venta.estado_entrega || 'PENDIENTE').toUpperCase();
 
@@ -523,43 +556,62 @@
             const tbody = document.getElementById('tabla-detalles');
             tbody.innerHTML = '';
             console.log(detalles);
-            detalles.forEach(item => {
-                const equiv = Math.round(parseFloat(item.odmaEquivalencia) || 1);
-                const cantidadReal = Math.round(item.cantidad * equiv);
 
+            detalles.forEach(item => {
+                // 🔥 Calcular división: cantidad / equivalencia
+                const cantidadOriginal = parseFloat(item.cantidad) || 0;
+                const equivalencia = parseFloat(item.odmaEquivalencia) || 1;
+
+                const division = equivalencia > 0 ? (cantidadOriginal * equivalencia) : cantidadOriginal;
+
+                let cantidadMostrar;
+                let unidadMostrar = (item.odmaNombre || '').toUpperCase();
+
+                if (division >= 0.99) {
+                    // Casi 1 o más: forzar a 1 si está en el rango 0.99–1.01; si no, mostrar la división
+                    cantidadMostrar = Math.abs(division - 1) <= 0.01 ? 1 : division;
+                } else {
+                    // Menor a 0.99: mostrar la cantidad original del servidor
+                    cantidadMostrar = cantidadOriginal;
+                }
+
+                // Formatear cantidad: sin decimales si es entero, con 2 decimales si no
+                const cantidadFormateada = Number.isInteger(cantidadMostrar)
+                    ? cantidadMostrar
+                    : cantidadMostrar.toFixed(2);
+
+                // Importe: precio unitario * cantidad mostrada
                 const sku = item.sku ? item.sku : ('06020' + item.producto_id);
                 const precioUnitario = parseFloat(item.precio_unitario || 0);
-                const importe = precioUnitario * cantidadReal;
+                const importe = precioUnitario * cantidadMostrar;
 
                 let rowHtml = `
-                    <tr>
-                        <td style="font-family: monospace; color: #64748b; font-size: 9pt;">${sku}</td>
-                        <td class="bold" style="color: #475569;">${(item.odmaNombre || '').toUpperCase()}</td>
-                        <td class="bold" style="color: #0f172a;">${item.producto_nombre}</td>
-                        <td class="text-right bold" style="color: #0f172a;">${cantidadReal.toFixed(4)}</td>
-                `;
+        <tr>
+            <td style="font-family: monospace; color: #64748b; font-size: 9pt;">${sku}</td>
+            <td class="bold" style="color: #475569;">${unidadMostrar}</td>
+            <td class="bold" style="color: #0f172a;">${item.producto_nombre}</td>
+            <td class="text-right bold" style="color: #0f172a;">${cantidadFormateada}</td>
+    `;
 
                 if (mostrarPrecios) {
                     rowHtml += `
-                        <td class="text-right" style="color: #475569;">$${precioUnitario.toFixed(2)}</td>
-                        <td class="text-right bold" style="color: #1e3a8a;">$${importe.toFixed(2)}</td>
-                    `;
+            <td class="text-right" style="color: #475569;">$${precioUnitario.toFixed(2)}</td>
+            <td class="text-right bold" style="color: #1e3a8a;">$${importe.toFixed(2)}</td>
+        `;
                 }
 
                 rowHtml += `</tr>`;
                 tbody.insertAdjacentHTML('beforeend', rowHtml);
-            });
-
-            // Fila de Total
+            });  // Fila de Total
             if (mostrarPrecios) {
                 const totalVenta = parseFloat(venta.total || venta.subtotal || 0);
                 const totalHtml = `
-                    <tr class="total-row">
-                        <td colspan="4"></td>
-                        <td class="text-right" style="color: #475569; font-size: 10pt;">TOTAL MXN</td>
-                        <td class="text-right total-highlight">$${totalVenta.toFixed(2)}</td>
-                    </tr>
-                `;
+            <tr class="total-row">
+                <td colspan="4"></td>
+                <td class="text-right" style="color: #475569; font-size: 10pt;">TOTAL MXN</td>
+                <td class="text-right total-highlight">$${totalVenta.toFixed(2)}</td>
+            </tr>
+        `;
                 tbody.insertAdjacentHTML('beforeend', totalHtml);
             }
 
@@ -569,7 +621,6 @@
 
             setTimeout(procesarImpresion, 600);
         }
-
         function formatearFecha(fechaCadena) {
             if (!fechaCadena) return '';
             const fecha = new Date(fechaCadena);

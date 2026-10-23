@@ -8,10 +8,7 @@
     <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
     <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
 
-    <!-- Librería para generación de PDF en dispositivos móviles -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
@@ -80,6 +77,35 @@
             font-weight: bold;
         }
 
+        /* 🔥 NOTA CON SALTO DE LÍNEA */
+        #ticket-notas {
+            display: inline-block;
+            white-space: normal !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+            word-break: break-word !important;
+            max-width: 100%;
+            line-height: 1.3;
+            vertical-align: top;
+        }
+
+        /* 🔥 CELDA DE LA NOTA: permitir wrap */
+        #contenedor-ticket td {
+            white-space: normal;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+
+        #contenedor-ticket table {
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        #contenedor-ticket table td {
+            word-break: break-word;
+            overflow-wrap: break-word;
+        }
+
         @media print {
             .no-print {
                 display: none !important;
@@ -98,10 +124,8 @@
         </button>
     </div>
 
-    <!-- Indicador de Carga -->
     <div id="cargando">CARGANDO DATOS DEL TICKET...</div>
 
-    <!-- Contenedor Principal del Ticket -->
     <div id="contenedor-ticket" style="display: none;">
         <div class="text-center">
             <span class="bold" style="font-size: 14px;" id="almacen-nombre"></span><br>
@@ -136,7 +160,6 @@
                 </tr>
             </thead>
             <tbody id="tabla-detalles">
-                <!-- Marca de Agua -->
                 <img src="/cfsistem/public/assets/logo.ico" style="
                         position: fixed;
                         top: 19.5%;
@@ -160,7 +183,6 @@
             </table>
 
             <table style="font-size:14px; width:100%;" id="tabla-pagos">
-                <!-- Contenido de pagos generado dinámicamente -->
             </table>
         </div>
 
@@ -176,9 +198,6 @@
     </div>
 
     <script>
-        // ============================================
-        // CONFIGURACIÓN GLOBAL DE SWEETALERT
-        // ============================================
         const swalCF = Swal.mixin({
             customClass: {
                 popup: 'swal-cf-popup',
@@ -215,9 +234,28 @@
                 }
 
                 renderizarTicket(res.data);
+                console.log(res.data);
             } catch (error) {
                 document.getElementById('cargando').innerText = 'ERROR: ' + error.message;
             }
+        }
+
+        /**
+         * Formatea una dirección agregando ":" después de calle, col, ciudad, pueblo.
+         * Ejemplo: "calle Av. Juárez 123, col Centro" → "CALLE: AV. JUÁREZ 123, COL: CENTRO"
+         */
+        function formatearDireccion(direccion) {
+            if (!direccion) return '';
+
+            const etiquetas = ['calle', 'col', 'ciudad', 'pueblo'];
+            let texto = String(direccion);
+
+            etiquetas.forEach(etq => {
+                const regex = new RegExp(`\\b${etq}\\s*:?\\s*`, 'gi');
+                texto = texto.replace(regex, `${etq}: `);
+            });
+
+            return texto.toUpperCase().trim();
         }
 
         function renderizarTicket(data) {
@@ -228,8 +266,13 @@
             document.getElementById('ticket-titulo').innerText = mostrarPrecios ? 'TICKET DE VENTA' : 'VALE DE ENTREGA';
             document.getElementById('ticket-folio').innerText = venta.folio || '';
             document.getElementById('ticket-fecha').innerText = formatearFecha(venta.fecha);
-            document.getElementById('ticket-cliente').innerText = (venta.nombre_comercial || '').substring(0, 30);
-            document.getElementById('ticket-notas').innerText = (venta.observaciones || '').substring(0, 30);
+
+            // 🔥 CLIENTE completo (sin substring)
+            document.getElementById('ticket-cliente').innerText = (venta.nombre_comercial || '').toUpperCase();
+
+            // 🔥 NOTAS completas (sin substring) + formateadas
+            document.getElementById('ticket-notas').innerText = (venta.observaciones || 'SIN OBSERVACIONES').toUpperCase();
+
             document.getElementById('ticket-vendedor').innerText = venta.vendedor || venta.nombre_vendedor || '';
 
             if (!mostrarPrecios) {
@@ -242,36 +285,55 @@
 
             detalles.forEach(item => {
                 const cantidadOriginal = parseFloat(item.cantidad) || 0;
-                const equiv = 1 / parseFloat(item.odmaEquivalencia) || 0;
-                let cantidadReal = cantidadOriginal;
+                const equivalencia = parseFloat(item.odmaEquivalencia) || 1;
 
-                if (equiv > 0) {
-                    cantidadReal = Math.round(cantidadOriginal / equiv);
+                // Calcular la división real
+                const division = equivalencia > 0 ? (cantidadOriginal * equivalencia) : cantidadOriginal;
+                console.log(division);
+
+                // Detectar si es 1 o casi 1 (±1%)
+                const esCasiUno = Math.abs(division - 1) <= 0.01;
+
+                let cantidadMostrar;
+                let unidadMostrar;
+
+                if (esCasiUno) {
+                    // 🔥 Si es 1 o casi 1: forzar 1 y usar odmaNombre
+                    cantidadMostrar = 1;
+                    unidadMostrar = item.odmaNombre || '';
+                } else {
+                    // 🔥 Si NO es casi 1: usar los valores por defecto del servidor
+                    cantidadMostrar = division >= 1 ? division : cantidadOriginal;   // ← tal cual viene
+                    unidadMostrar = item.odmaNombre || ''; // ← tal cual viene
                 }
 
+                // Formatear cantidad (sin decimales si es entero)
+                const cantidadFormateada = Number.isInteger(cantidadMostrar)
+                    ? cantidadMostrar
+                    : cantidadMostrar.toFixed(2);
+
                 let rowHtml = `
-                    <tr class="item-row">
-                        <td>
-                            <div class="bold" style="font-size:13px;">${item.producto_nombre}</div>
-                            <div style="margin-top:3px;font-size:12px;">
-                                Cantidad: <span class="bold">${cantidadReal} ${item.odmaNombre || ''}</span>
-                            </div>
-                        </td>
-                `;
+        <tr class="item-row">
+            <td>
+                <div class="bold" style="font-size:13px;">${item.producto_nombre}</div>
+                <div style="margin-top:3px;font-size:12px;">
+                    Cantidad: <span class="bold">${cantidadFormateada} ${unidadMostrar}</span>
+                </div>
+            </td>
+    `;
 
                 if (mostrarPrecios) {
                     rowHtml += `
-                        <td align="right" class="bold">
-                            $${parseFloat(item.subtotal || 0).toFixed(2)}<br>
-                            ( $${parseFloat(item.precio_unitario || 0).toFixed(2)} X ${item.odmaNombre || ''} )
-                        </td>
-                    `;
+            <td align="right" class="bold">
+                $${parseFloat(item.subtotal || 0).toFixed(2)}<br>
+                ( $${parseFloat(item.precio_unitario || 0).toFixed(2)} X ${unidadMostrar} )
+            </td>
+        `;
                 }
 
                 rowHtml += `</tr>`;
                 tbody.insertAdjacentHTML('beforeend', rowHtml);
             });
-
             if (mostrarPrecios) {
                 document.getElementById('ticket-total').innerText = `$${parseFloat(venta.total || venta.subtotal || 0).toFixed(2)} (${venta.estado_pago || ''})`;
 
@@ -359,14 +421,7 @@
             }
         }
 
-        // ============================================
-        // ENVIAR TICKET POR CORREO (con SweetAlert)
-        // ============================================
-        // ============================================
-        // ENVIAR TICKET POR CORREO (con SweetAlert)
-        // ============================================
         async function enviarTicketPorCorreo() {
-            // Validar que el ticket ya se cargó
             const contenedor = document.getElementById('contenedor-ticket');
             if (!contenedor || contenedor.style.display === 'none') {
                 swalCF.fire({
@@ -378,19 +433,14 @@
                 return;
             }
 
-            // Datos del ticket
             const folio = document.getElementById('ticket-folio').innerText || 'S/N';
             const cliente = document.getElementById('ticket-cliente').innerText || 'Cliente';
             const total = document.getElementById('ticket-total').innerText || '';
             const fecha = document.getElementById('ticket-fecha').innerText || '';
             const almacen = document.getElementById('almacen-nombre').innerText || 'CF System';
 
-            // 📧 Correo por defecto (de pruebas)
             const correoPorDefecto = 'saulenriquealbatapia252@gmail.com';
 
-            // ============================================
-            // MODAL ÚNICO: correo + resumen + botón enviar
-            // ============================================
             const { value: correoDestino } = await swalCF.fire({
                 title: '📧 Enviar ticket por correo',
                 html: `
@@ -424,12 +474,8 @@
                 }
             });
 
-            // Si canceló el modal
             if (!correoDestino) return;
 
-            // ============================================
-            // LOADER MIENTRAS ENVÍA
-            // ============================================
             swalCF.fire({
                 title: 'Enviando correo...',
                 html: 'Por favor espera un momento ⏳',
@@ -441,7 +487,6 @@
             });
 
             try {
-                // Preparar título y descripción
                 const titulo = `Ticket ${folio} - ${almacen}`;
                 const descripcion =
                     `Buenas tardes ${cliente},\n\n` +
@@ -450,7 +495,6 @@
                     (total ? `Total: ${total}\n\n` : '') +
                     `Gracias por su preferencia.`;
 
-                // HTML del ticket envuelto con estilos para PDF
                 const htmlTicket = `
             <!DOCTYPE html>
             <html lang="es">
@@ -475,6 +519,7 @@
                     table        { width: 100%; border-collapse: collapse; }
                     .item-row td { padding: 5px 0; vertical-align: top; }
                     th           { font-size: 12px; }
+                    #ticket-notas { white-space: normal; word-break: break-word; }
                 </style>
             </head>
             <body>${contenedor.innerHTML}</body>
@@ -490,9 +535,6 @@
                     urlBackend: '/cfsistem/app/controllers/correoController.php'
                 });
 
-                // ============================================
-                // ÉXITO
-                // ============================================
                 swalCF.fire({
                     icon: 'success',
                     title: '¡Correo enviado!',
@@ -511,9 +553,6 @@
                 });
 
             } catch (err) {
-                // ============================================
-                // ERROR
-                // ============================================
                 swalCF.fire({
                     icon: 'error',
                     title: 'Error al enviar',
@@ -526,9 +565,8 @@
                     confirmButtonText: 'Cerrar'
                 });
             }
-        } // ============================================
-        // FUNCIÓN GENÉRICA PARA ENVIAR CORREO
-        // ============================================
+        }
+
         async function enviarCorreo({
             correo,
             titulo,
@@ -617,7 +655,6 @@
         }
     </script>
 
-    <!-- Estilos personalizados para SweetAlert2 -->
     <style>
         .swal-cf-popup {
             font-family: 'Segoe UI', Arial, sans-serif;

@@ -61,14 +61,17 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardar') {
         $id = intval($_POST['cliente_id'] ?? 0);
 
         $datos = [
-            'nombre_comercial' => trim($_POST['nombre_comercial'] ?? ''),
+            // 🔥 Sin trim en los campos que se comparan exactamente
+            'nombre_comercial' => $_POST['nombre_comercial'] ?? '',
+            'telefono' => $_POST['telefono'] ?? '',
+            'contacto' => $_POST['contacto'] ?? '',
+
+            // Estos sí pueden llevar trim porque no se comparan con BINARY
             'razon_social' => trim($_POST['razon_social'] ?? ''),
             'rfc' => strtoupper(trim($_POST['rfc'] ?? '')),
             'regimen_fiscal' => $_POST['regimen_fiscal'] ?? '',
             'codigo_postal' => $_POST['codigo_postal'] ?? '',
             'correo' => $_POST['correo'] ?? '',
-            'telefono' => $_POST['telefono'] ?? '',
-            'contacto' => $_POST['contacto'] ?? '',
 
             'calle' => $_POST['calle'] ?? '',
             'colonia' => $_POST['colonia'] ?? '',
@@ -82,39 +85,49 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardar') {
                 'ciudad ' . ($_POST['ciudad'] ?? ''),
 
             'uso_cfdi' => $_POST['uso_cfdi'] ?? 'G03',
-
             'almacen_id' => $_POST['almacen_id'] ?? null
         ];
 
-        if (empty($datos['nombre_comercial']) || empty($datos['rfc'])) {
+        if (empty(trim($datos['nombre_comercial'])) || empty($datos['rfc'])) {
             throw new Exception("Nombre comercial y RFC son campos obligatorios.");
         }
 
         if ($id > 0) {
             $resultado = $clientesModel->actualizar($id, $datos);
-            // Si es actualización, devolvemos el mismo ID que recibimos
             echo json_encode([
                 'success' => true,
                 'message' => "Cliente actualizado correctamente.",
                 'id' => $id
             ]);
         } else {
-            // Guardar devuelve un array: ['success' => true, 'id' => ..., 'api_token' => ...]
             $resultado = $clientesModel->guardar($datos);
 
             if ($resultado && isset($resultado['id'])) {
                 echo json_encode([
                     'success' => true,
                     'message' => "Cliente registrado correctamente.",
-                    'id' => $resultado['id'] // ESTO ES LO QUE NECESITA TU JS
+                    'id' => $resultado['id']
                 ]);
             } else {
-                throw new Exception("Cliente ya existente");
+                // 🔥 Devolver el detalle exacto del motivo de duplicado
+                $msg = $resultado['message'] ?? 'Cliente ya existente';
+
+                echo json_encode([
+                    'success' => false,
+                    'message' => $msg,
+                    'detalle' => $msg,      // mismo texto, para el JS
+                    'motivo' => $resultado['motivo'] ?? null,
+                    'existente' => $resultado['nombre_comercial'] ?? null
+                ]);
             }
         }
 
     } catch (Throwable $e) {
-        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
+        echo json_encode([
+            'success' => false,
+            'message' => $e->getMessage(),
+            'detalle' => $e->getMessage()
+        ]);
     }
     exit;
 }

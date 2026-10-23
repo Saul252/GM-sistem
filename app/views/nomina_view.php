@@ -90,6 +90,107 @@ $paginaActual = 'trabajadores';
                 padding-top: 90px;
             }
         }
+
+        /* ====== LOADER TRABAJADORES ====== */
+        #loaderTrabajadores {
+            display: none;
+        }
+
+        #loaderTrabajadores.activo {
+            display: block;
+        }
+
+        #tablaTrabajadoresWrap.cargando {
+            display: none;
+        }
+
+        .loader-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 30px 0 20px;
+        }
+
+        .loader-spinner {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 4px solid #e6eefc;
+            border-top-color: #0d6efd;
+            animation: spin .8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loader-text {
+            color: #8e8e93;
+            font-size: .85rem;
+            font-weight: 600;
+            letter-spacing: .3px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .loader-text .dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #0d6efd;
+            animation: pulse 1.2s infinite ease-in-out;
+        }
+
+        .loader-text .dot:nth-child(2) {
+            animation-delay: .2s;
+        }
+
+        .loader-text .dot:nth-child(3) {
+            animation-delay: .4s;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            80%,
+            100% {
+                opacity: .2;
+                transform: scale(.8);
+            }
+
+            40% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Skeleton */
+        .skeleton-row td {
+            padding: 14px 8px;
+        }
+
+        .skeleton-bar {
+            height: 12px;
+            border-radius: 6px;
+            background: linear-gradient(90deg, #eceff3 25%, #f5f7fa 50%, #eceff3 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
     </style>
 </head>
 
@@ -150,7 +251,38 @@ $paginaActual = 'trabajadores';
                 </div>
             </div>
 
-            <div class="table-responsive">
+            <!-- ============ LOADER ============ -->
+            <div id="loaderTrabajadores" class="activo" aria-live="polite" aria-busy="true">
+                <div class="loader-header">
+                    <div class="loader-spinner"></div>
+                    <div class="loader-text">
+                        Cargando trabajadores
+                        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                    </div>
+                </div>
+
+                <!-- Skeleton de la tabla -->
+                <div class="table-responsive">
+                    <table class="table align-middle w-100 mb-0">
+                        <tbody>
+                            <?php for ($i = 0; $i < 6; $i++): ?>
+                                <tr class="skeleton-row">
+                                    <?php
+                                    $widths = ['85%', '55%', '40%', '65%', '50%', '60%', '45%', '75%', '30%', '20%'];
+                                    foreach ($widths as $w): ?>
+                                        <td>
+                                            <div class="skeleton-bar" style="width:<?= $w ?>;"></div>
+                                        </td>
+                                    <?php endforeach; ?>
+                                </tr>
+                            <?php endfor; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ============ TABLA REAL ============ -->
+            <div id="tablaTrabajadoresWrap" class="cargando table-responsive">
                 <table id="tablaTrabajadores" class="table table-hover align-middle w-100">
                     <thead class="table-dark">
                         <tr>
@@ -166,11 +298,7 @@ $paginaActual = 'trabajadores';
                             <th class="text-end">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody id="bodyTrabajadores">
-                        <tr>
-                            <td colspan="9" class="text-center py-4 text-body-secondary">Cargando...</td>
-                        </tr>
-                    </tbody>
+                    <tbody id="bodyTrabajadores"></tbody>
                 </table>
             </div>
         </div>
@@ -394,17 +522,37 @@ $paginaActual = 'trabajadores';
     <script>
         let tabla = null;
 
-        $(document).ready(function () {
-            // Inicializar selector de semana con la semana ISO actual
-            $('#semana').val(obtenerSemanaActual());
+        /* =========================================================
+           🔥 LOADER con tiempo mínimo visible (evita parpadeo)
+           ========================================================= */
+        let _loaderStart = 0;
+        const LOADER_MIN_MS = 400;
 
-            // Cargar trabajadores por primera vez
+        function mostrarLoader() {
+            _loaderStart = Date.now();
+            $('#loaderTrabajadores').addClass('activo').attr('aria-busy', 'true');
+            $('#tablaTrabajadoresWrap').addClass('cargando');
+        }
+
+        function ocultarLoader() {
+            const transcurrido = Date.now() - _loaderStart;
+            const espera = Math.max(0, LOADER_MIN_MS - transcurrido);
+
+            setTimeout(() => {
+                $('#loaderTrabajadores').removeClass('activo').attr('aria-busy', 'false');
+                $('#tablaTrabajadoresWrap').removeClass('cargando');
+            }, espera);
+        }
+
+        /* =========================================================
+           INIT
+           ========================================================= */
+        $(document).ready(function () {
+            $('#semana').val(obtenerSemanaActual());
             cargarTrabajadores();
 
-            // Escuchar cambios en la fecha de la semana
             $('#semana').on('change', cargarTrabajadores);
 
-            // Búsqueda y Filtro rápido
             $('#busquedaTrabajador').on('keyup', function () {
                 if (tabla) tabla.search(this.value).draw();
             });
@@ -414,12 +562,14 @@ $paginaActual = 'trabajadores';
                 if (tabla) tabla.column(2).search(val ? `^${val}$` : '', true, false).draw();
             });
 
-            // Convertir automáticamente textos a MAYÚSCULAS
             $(document).on('input', 'input[type="text"], textarea', function () {
                 this.value = this.value.toUpperCase();
             });
         });
 
+        /* =========================================================
+           FORM BONO
+           ========================================================= */
         $('#formBono').on('submit', async function (e) {
             e.preventDefault();
 
@@ -427,17 +577,14 @@ $paginaActual = 'trabajadores';
             const monto = document.getElementById('monto_bono').value;
             const fecha = document.getElementById('fecha_bono').value;
 
-            // Validación corregida usando SweetAlert en lugar de throw new Error suelto
             if (!trabajador_id) {
                 Swal.fire('Atención', 'Selecciona un trabajador.', 'warning');
                 return;
             }
-
             if (!monto || parseFloat(monto) <= 0) {
                 Swal.fire('Atención', 'Ingresa un monto válido.', 'warning');
                 return;
             }
-
             if (!fecha) {
                 Swal.fire('Atención', 'Selecciona una fecha.', 'warning');
                 return;
@@ -453,7 +600,6 @@ $paginaActual = 'trabajadores';
                     method: 'POST',
                     body: fd
                 });
-
                 const res = await resp.json();
                 if (res.success) {
                     Swal.fire('Éxito', res.message, 'success').then(() => location.reload());
@@ -466,6 +612,9 @@ $paginaActual = 'trabajadores';
             }
         });
 
+        /* =========================================================
+           CARGAR TRABAJADORES
+           ========================================================= */
         async function cargarTrabajadores() {
             const valor = $('#semana').val();
             if (!valor) return;
@@ -478,9 +627,12 @@ $paginaActual = 'trabajadores';
             const inicio = formatearFecha(lunes);
             const fin = formatearFecha(domingo);
 
+            // 🔥 Mostrar loader (con mínimo visible)
+            mostrarLoader();
+
             try {
                 const res = await fetch(
-                    `/cfsistem/app/controllers/nominaController.php?action=listar&fecha_inicio=2026-08-01&fecha_fin=2026-09-01`
+                    `/cfsistem/app/controllers/nominaController.php?action=listar&fecha_inicio=${inicio}&fecha_fin=${fin}`
                 );
                 const response = await res.json();
 
@@ -488,18 +640,19 @@ $paginaActual = 'trabajadores';
                     throw new Error(response.message || 'Error al obtener nómina');
                 }
 
-                const data = response.data;
-                console.log(data);
+                const data = Array.isArray(response.data) ? response.data : [];
 
-                // Destruir la instancia actual de DataTable si existe
                 if ($.fn.DataTable.isDataTable('#tablaTrabajadores')) {
                     $('#tablaTrabajadores').DataTable().destroy();
                 }
 
                 let html = '';
                 if (data.length === 0) {
-                    // CORREGIDO: colspan cambiado a 10 para coincidir con las 10 columnas reales
-                    html = `<tr><td colspan="10" class="text-center py-4 text-body-secondary">No se encontraron trabajadores en este rango.</td></tr>`;
+                    html = `<tr>
+                <td colspan="10" class="text-center py-4 text-body-secondary">
+                    No se encontraron trabajadores en este rango.
+                </td>
+            </tr>`;
                 } else {
                     data.forEach(t => {
                         let claseEstado = 'bg-danger';
@@ -508,7 +661,7 @@ $paginaActual = 'trabajadores';
                         else if (t.estado === 'en_ruta') claseEstado = 'bg-info text-dark';
 
                         const tJson = JSON.stringify(t).replace(/'/g, "&#39;");
-                        let total = (parseFloat(t.total_nomina) || 0) + (parseFloat(t.total_vacaciones) || 0);
+                        const total = (parseFloat(t.total_nomina) || 0) + (parseFloat(t.total_vacaciones) || 0);
 
                         html += `
                 <tr>
@@ -535,22 +688,30 @@ $paginaActual = 'trabajadores';
                         </div>
                     </td>
                     <td><span class="badge rounded-pill ${claseEstado}">${t.estado ? t.estado.toUpperCase() : ''}</span></td>
-                    <td class="text-end">
-                    <button class="btn btn-success btn-sm rounded-pill px-3 me-1" 
-        onclick="imprimirNominaTrabajador(${t.id})"
-        title="Imprimir cheque de nómina">
-    <i class="bi bi-printer-fill me-1"></i> Imprimir cheque
-</button>
-                       <button class="btn btn-primary btn-sm rounded-pill px-3 me-1" onclick='nuevoBono(${tJson})'>
-                            <i class="bi bi-cash-stack me-1"></i> Bono
-                        </button>
-                        <button class="btn btn-sm btn-outline-primary" onclick='editarTrabajador(${tJson})'>
-                            <i class="bi bi-pencil-square"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-danger" onclick='eliminarTrabajador(${t.id})'>
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    </td>
+              <td class="text-end">
+    <div class="d-inline-flex align-items-center gap-2">
+        <button class="btn btn-success rounded-3 px-2 py-1"
+                onclick="imprimirNominaTrabajador(${t.id})"
+                title="Imprimir cheque">
+            <i class="bi bi-printer-fill fs-6"></i>
+        </button>
+        <button class="btn btn-primary rounded-3 px-2 py-1"
+                onclick='nuevoBono(${tJson})'
+                title="Agregar bono">
+            <i class="bi bi-cash-stack fs-6"></i>
+        </button>
+        <button class="btn btn-warning rounded-3 px-2 py-1"
+                onclick='editarTrabajador(${tJson})'
+                title="Editar">
+            <i class="bi bi-pencil-fill fs-6"></i>
+        </button>
+        <button class="btn btn-danger rounded-3 px-2 py-1"
+                onclick='eliminarTrabajador(${t.id})'
+                title="Eliminar">
+            <i class="bi bi-trash-fill fs-6"></i>
+        </button>
+    </div>
+</td>
                 </tr>`;
                     });
                 }
@@ -558,23 +719,37 @@ $paginaActual = 'trabajadores';
                 $('#bodyTrabajadores').html(html);
                 $('#conteoTrabajadores').text(data.length);
 
-                // Re-inicializar DataTable con los nuevos elementos
                 tabla = $('#tablaTrabajadores').DataTable({
-                    "language": {
-                        "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
-                    },
-                    "dom": 'rt<"row mt-3"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
-                    "pageLength": 10,
-                    "order": [
-                        [0, 'asc']
-                    ]
+                    language: { url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json' },
+                    dom: 'rt<"row mt-3"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                    pageLength: 10,
+                    order: [[0, 'asc']],
+                    columnDefs: [{ orderable: false, targets: -1 }]
                 });
 
             } catch (err) {
                 console.error(err);
+
+                $('#bodyTrabajadores').html(`
+            <tr>
+                <td colspan="10" class="text-center py-4 text-danger">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                    Error al cargar trabajadores: ${err.message || 'Error desconocido'}
+                </td>
+            </tr>`);
+                $('#conteoTrabajadores').text('0');
+
                 Swal.fire('Error', err.message || 'Error al cargar listado de trabajadores', 'error');
+
+            } finally {
+                // 🔥 Ocultar loader SIEMPRE (con delay mínimo)
+                ocultarLoader();
             }
         }
+
+        /* =========================================================
+           CRUD TRABAJADOR
+           ========================================================= */
         function nuevoTrabajador() {
             $('#formTrabajador')[0].reset();
             $('#trabajador_id').val('0');
@@ -584,16 +759,23 @@ $paginaActual = 'trabajadores';
         }
 
         function editarTrabajador(t) {
-            console.log(t);
             $('#modalTitulo').text('Editar Trabajador');
             $('#trabajador_id').val(t.id);
             $('#t_nombre').val(t.nombre);
             $('#t_telefono').val(t.telefono);
             $('#t_rol').val(t.rol);
             $('#t_estado').val(t.estado);
-            $('#t_salario').val((t.salario - t.complemento_pago));
-            $('#t_complemento').val(t.complemento_pago);
-            $('#fecha_ingreso').val(t.fecha_ingreso);
+
+            // 🔥 fix: validar complemento_pago (puede venir null)
+            const complemento = parseFloat(t.complemento_pago || 0);
+            const salarioBase = parseFloat(t.salario || 0);
+
+            $('#t_salario').val((salarioBase - complemento).toFixed(2));
+            $('#t_complemento').val(complemento.toFixed(2));
+
+            // 🔥 fix: el ID correcto del input es #t_fecha_ingreso, no #fecha_ingreso
+            $('#t_fecha_ingreso').val(t.fecha_ingreso);
+
             if ($('#t_almacen_id').is('select')) {
                 $('#t_almacen_id').val(t.almacen_id);
             }
@@ -627,18 +809,24 @@ $paginaActual = 'trabajadores';
             }
         });
 
+        /* =========================================================
+           BONO
+           ========================================================= */
         function nuevoBono(t) {
             $('#formBono')[0].reset();
             const modal = new bootstrap.Modal(document.getElementById('modalBono'));
             $('#modal_bono_trabajador_id').val(t.id);
             $('#trabajador_nombre').val(t.nombre);
-            $('#fecha__bono').val(<?= date('Y-m-d') ?>);
+
+            // 🔥 fix: el ID correcto es #fecha_bono, y hay que pasar un string
+            $('#fecha_bono').val('<?= date('Y-m-d') ?>');
 
             modal.show();
-            if ($('#modal_bono_almacen_id').val()) {
-                $('#modal_bono_almacen_id').trigger('change');
-            }
         }
+
+        /* =========================================================
+           ELIMINAR
+           ========================================================= */
         async function eliminarTrabajador(id) {
             const result = await Swal.fire({
                 title: '¿Eliminar trabajador?',
@@ -678,17 +866,18 @@ $paginaActual = 'trabajadores';
             }
         }
 
+        /* =========================================================
+           FILTROS
+           ========================================================= */
         function limpiarFiltros() {
             $('#busquedaTrabajador').val('');
             $('#filtroRol').val('');
             if (tabla) tabla.search('').column(2).search('').draw();
         }
 
-        function imprimirContenidoModal() {
-            window.print();
-        }
-
-        /* Auxiliares Fecha / Semana */
+        /* =========================================================
+           AUXILIARES FECHA / SEMANA
+           ========================================================= */
         function obtenerSemanaActual() {
             const hoy = new Date();
             const jueves = new Date(hoy);

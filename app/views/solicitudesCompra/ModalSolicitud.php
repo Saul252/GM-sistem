@@ -500,32 +500,37 @@
                         </option>
                     </select>
                 </td>
-                <td>
-                    <input 
-                        type="number"
-                        lang="en-US"
-                        name="items[${id}][precioUnitario]"
-                        class="form-control precio-unitario"
-                        step="0.01"
-                        min="0"
-                        placeholder="0.00"
-                        required
-                        oninput="calcularTotalSol(this, 'unitario')"
-                    >
-                </td>
-                <td style="min-width:160px;">
-                    <input 
-                        type="number"
-                        lang="en-US"
-                        name="items[${id}][precio]"
-                        class="form-control precio-total fw-bold text-success "
-                        step="0.01"
-                        min="0"
-                        placeholder="0.00"
-                        oninput="calcularTotalSol(this, 'total')"
-                        style="font-size:1.1rem;height:45px;min-width:140px;"
-                    >
-                </td>
+               <!-- PRECIO UNITARIO -->
+<td>
+    <input 
+        type="number"
+        lang="en-US"
+        name="items[${id}][precioUnitario]"
+        class="form-control precio-unitario"
+        step="0.01"
+        min="0"
+        placeholder="0.00"
+        required
+        onkeydown="if(event.key==='Enter'){ event.preventDefault(); $('#buscadorProductos').select2('open'); }"
+        oninput="calcularTotalSol(this, 'unitario')"
+    >
+</td>
+
+<!-- PRECIO TOTAL -->
+<td style="min-width:160px;">
+    <input 
+        type="number"
+        lang="en-US"
+        name="items[${id}][precio]"
+        class="form-control precio-total fw-bold text-success"
+        step="0.01"
+        min="0"
+        placeholder="0.00"
+        onkeydown="if(event.key==='Enter'){ event.preventDefault(); $('#buscadorProductos').select2('open'); }"
+        oninput="calcularTotalSol(this, 'total')"
+        style="font-size:1.1rem;height:45px;min-width:140px;"
+    >
+</td>
                 <td>
                     <button 
                         type="button"

@@ -3,7 +3,7 @@
  * trabajadores_view.php
  * Vista de administración de personal: Filtros, CRUD por Modales y AJAX.
  */
-$rolesEnum = ['administrador', 'vendedor', 'chofer', 'almacenista', 'cargador'];
+$rolesEnum = ['administrador', 'vendedor', 'chofer', 'almacenista', 'cargador', 'Ayudante General', 'Intendencia'];
 $estadosEnum = ['activo', 'inactivo', 'vacaciones', 'en_ruta'];
 ?>
 <!DOCTYPE html>

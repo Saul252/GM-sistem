@@ -10,7 +10,8 @@
                         </div>
                         <div>
                             <h4 class="fw-bold mb-0">Nueva Cotización</h4>
-                            <p class="text-body-secondary small mb-0">Complete los datos para requerir materiales al almacén</p>
+                            <p class="text-body-secondary small mb-0">Complete los datos para requerir materiales al
+                                almacén</p>
                         </div>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -19,16 +20,17 @@
                 <div class="modal-body px-4">
                     <!-- Fila de Controles -->
                     <div class="row g-3 mb-4 p-4 rounded-4  shadow-sm align-items-end border">
-                        
+
                         <!-- 1. Almacén de Cargo -->
                         <div class="col-md-6 col-lg-3 min-w-0">
-                            <label for="almacen_id" class="form-label form-label-custom mb-1 text-uppercase tracking-wider">
+                            <label for="almacen_id"
+                                class="form-label form-label-custom mb-1 text-uppercase tracking-wider">
                                 <i class="bi bi-box-seam me-1 text-primary"></i> Almacén de Cargo
                             </label>
-                            <select name="almacen_id" id="almacen_id" 
+                            <select name="almacen_id" id="almacen_id"
                                 class="form-select border-slate-200 control-fixed-height w-100 shadow-none" required>
                                 <option value="">Seleccionar ubicación...</option>
-                                <?php foreach($almacenes as $a): ?>
+                                <?php foreach ($almacenes as $a): ?>
                                     <option value="<?= $a['id'] ?>"><?= $a['nombre'] ?></option>
                                 <?php endforeach; ?>
                             </select>
@@ -36,16 +38,18 @@
 
                         <!-- 2. Cliente -->
                         <div class="col-md-6 col-lg-3 min-w-0">
-                            <label for="cliente_id" class="form-label form-label-custom mb-1 text-uppercase tracking-wider">
+                            <label for="cliente_id"
+                                class="form-label form-label-custom mb-1 text-uppercase tracking-wider">
                                 <i class="bi bi-person me-1 text-primary"></i> Cliente
                             </label>
                             <div class="input-group input-group-fixed flex-nowrap w-100">
-                                <select name="cliente_id" id="cliente_id" 
+                                <select name="cliente_id" id="cliente_id"
                                     class="form-select select2-modal border-slate-200" required>
                                     <option value="">Seleccionar cliente...</option>
-                                   
+
                                 </select>
-                                <button class="btn btn-outline-primary px-3 d-flex align-items-center justify-content-center flex-shrink-0" 
+                                <button
+                                    class="btn btn-outline-primary px-3 d-flex align-items-center justify-content-center flex-shrink-0"
                                     type="button" onclick="abrirModalNuevoCliente()" title="Nuevo Cliente">
                                     <i class="bi bi-person-plus-fill"></i>
                                 </button>
@@ -54,23 +58,26 @@
 
                         <!-- 3. Vendedor -->
                         <div class="col-md-6 col-lg-3 min-w-0">
-                            <label for="vendedor-select" class="form-label form-label-custom mb-1 text-uppercase tracking-wider">
+                            <label for="vendedor-select"
+                                class="form-label form-label-custom mb-1 text-uppercase tracking-wider">
                                 <i class="bi bi-person-badge me-1 text-primary"></i> Vendedor
                             </label>
-                            <select class="form-select select2-modal border-slate-200 w-100" id="vendedor-select" name="usuario_id3" required>
+                            <select class="form-select select2-modal border-slate-200 w-100" id="vendedor-select"
+                                name="usuario_id3" required>
                                 <option value="">Seleccione vendedor</option>
                             </select>
                         </div>
 
                         <!-- 4. Añadir Producto -->
                         <div class="col-md-6 col-lg-3 min-w-0">
-                            <label for="buscadorProductos" class="form-label form-label-custom mb-1 text-uppercase tracking-wider">
+                            <label for="buscadorProductos"
+                                class="form-label form-label-custom mb-1 text-uppercase tracking-wider">
                                 <i class="bi bi-search me-1 text-primary"></i> Añadir Producto
                             </label>
                             <div class="input-group input-group-fixed flex-nowrap w-100">
                                 <select id="buscadorProductos" class="form-select select2-modal border-slate-200">
                                     <option value="">Escribe SKU o nombre...</option>
-                                    <?php foreach($listaProductos as $pr): ?>
+                                    <?php foreach ($listaProductos as $pr): ?>
                                         <option value="<?= $pr['producto_id'] ?>"
                                             data-nombre="<?= htmlspecialchars($pr['nombre']) ?>"
                                             data-sku="<?= htmlspecialchars($pr['sku']) ?>"
@@ -81,7 +88,8 @@
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
-                                <button type="button" class="btn btn-primary d-flex align-items-center justify-content-center px-3 flex-shrink-0" 
+                                <button type="button"
+                                    class="btn btn-primary d-flex align-items-center justify-content-center px-3 flex-shrink-0"
                                     onclick="abrirModalProducto()" title="Agregar nuevo producto">
                                     <i class="bi bi-plus-lg me-1"></i>
                                     <span class="fw-medium">Nuevo</span>
@@ -92,7 +100,7 @@
                     </div>
 
                     <!-- Tabla de Detalle -->
-                   <div class="table-responsive border rounded-4 ">
+                    <div class="table-responsive border rounded-4 ">
                         <table class="table align-middle mb-0" id="tablaDetalle">
                             <thead class="">
                                 <tr class="text-body-secondary small uppercase">
@@ -100,8 +108,8 @@
                                     <th style="width: 20%;">Cantidad</th>
                                     <th style="width: 25%;">Presentación / Unidad</th>
                                     <th style="width: 25%;">Tipo de precio</th>
-                                    <th  class="ps-4">Precio Unitario</th>
-                                    <th style="width: 50%";>TOTAL</th>
+                                    <th class="ps-4">Precio Unitario</th>
+                                    <th style="width: 50%" ;>TOTAL</th>
                                     <th style="width: 10%;" class="text-end pe-4">Acción</th>
                                 </tr>
                             </thead>
@@ -122,10 +130,12 @@
                     <!-- Resumen del Total -->
                     <div class="d-flex justify-content-end align-items-center mt-4">
                         <div class="bg-dark bg-gradient text-white p-3 rounded-4 shadow-sm text-end px-4 min-w-200">
-                            <small class="d-block text-white-50 fw-bold text-uppercase tracking-wider mb-1" style="font-size: 0.65rem; letter-spacing: 0.8px;">
+                            <small class="d-block text-white-50 fw-bold text-uppercase tracking-wider mb-1"
+                                style="font-size: 0.65rem; letter-spacing: 0.8px;">
                                 Costo Total de Compra
                             </small>
-                            <div id="costoTotalCompra" class="fw-bolder text-success" style="font-size: 2rem; line-height: 1;">
+                            <div id="costoTotalCompra" class="fw-bolder text-success"
+                                style="font-size: 2rem; line-height: 1;">
                                 $0.00
                             </div>
                             <input type="hidden" id="totalCotizacion" name="totalCotizacion">
@@ -135,10 +145,12 @@
 
                 <!-- Footer -->
                 <div class="modal-footer border-0 p-4  d-flex justify-content-between align-items-center">
-                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-semibold" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-semibold"
+                        data-bs-dismiss="modal">
                         Cancelar
                     </button>
-                    <button type="submit" class="btn btn-primary rounded-pill px-5 py-2.5 fw-bold shadow-sm d-flex align-items-center">
+                    <button type="submit"
+                        class="btn btn-primary rounded-pill px-5 py-2.5 fw-bold shadow-sm d-flex align-items-center">
                         <i class="bi bi-check2-circle fs-5 me-2"></i> Confirmar Solicitud
                     </button>
                 </div>
@@ -148,92 +160,92 @@
 </div>
 
 <style>
-/* Ampliación del Modal */
-@media (min-width: 1200px) {
-    .modal-dialog-custom {
-        max-width: 92% !important;
+    /* Ampliación del Modal */
+    @media (min-width: 1200px) {
+        .modal-dialog-custom {
+            max-width: 92% !important;
+        }
     }
-}
 
-:root {
-    --control-height: 42px;
-    --border-color: #dee2e6;
-    --bg-input: #ffffff;
-}
+    :root {
+        --control-height: 42px;
+        --border-color: #dee2e6;
+        --bg-input: #ffffff;
+    }
 
-.min-w-0 {
-    min-width: 0 !important;
-}
+    .min-w-0 {
+        min-width: 0 !important;
+    }
 
-.min-w-200 {
-    min-width: 200px;
-}
+    .min-w-200 {
+        min-width: 200px;
+    }
 
-.form-label-custom {
-    font-size: 0.72rem !important;
-    font-weight: 600 !important;
-    color: #6c757d !important;
-    letter-spacing: 0.5px !important;
-}
+    .form-label-custom {
+        font-size: 0.72rem !important;
+        font-weight: 600 !important;
+        color: #6c757d !important;
+        letter-spacing: 0.5px !important;
+    }
 
-/* Forzar anchos de Input Group y Select2 */
-.input-group-fixed {
-    width: 100% !important;
-    max-width: 100% !important;
-}
+    /* Forzar anchos de Input Group y Select2 */
+    .input-group-fixed {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
 
-.input-group-fixed .select2-container {
-    flex: 1 1 auto !important;
-    width: 1% !important;
-    min-width: 0 !important;
-}
+    .input-group-fixed .select2-container {
+        flex: 1 1 auto !important;
+        width: 1% !important;
+        min-width: 0 !important;
+    }
 
-/* Control de altura universal */
-.control-fixed-height,
-.modal-body .form-select,
-.modal-body .input-group-fixed .btn {
-    height: var(--control-height) !important;
-}
+    /* Control de altura universal */
+    .control-fixed-height,
+    .modal-body .form-select,
+    .modal-body .input-group-fixed .btn {
+        height: var(--control-height) !important;
+    }
 
-/* Reglas estrictas Select2 para evitar desbordamientos */
-.modal-body .select2-container--bootstrap-5 .select2-selection,
-.modal-body .select2-container .select2-selection--single {
-    height: var(--control-height) !important;
-    background-color: var(--bg-input) !important;
-    border-color: var(--border-color) !important;
-    border-radius: 0.375rem !important;
-    display: flex !important;
-    align-items: center !important;
-    font-size: 0.875rem !important;
-    width: 100% !important;
-    max-width: 100% !important;
-}
+    /* Reglas estrictas Select2 para evitar desbordamientos */
+    .modal-body .select2-container--bootstrap-5 .select2-selection,
+    .modal-body .select2-container .select2-selection--single {
+        height: var(--control-height) !important;
+        background-color: var(--bg-input) !important;
+        border-color: var(--border-color) !important;
+        border-radius: 0.375rem !important;
+        display: flex !important;
+        align-items: center !important;
+        font-size: 0.875rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+    }
 
-.modal-body .select2-container .select2-selection--single .select2-selection__rendered {
-    line-height: calc(var(--control-height) - 2px) !important;
-    color: #212529 !important;
-    padding-left: 0.75rem !important;
-    padding-right: 1.75rem !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    width: 100% !important;
-}
+    .modal-body .select2-container .select2-selection--single .select2-selection__rendered {
+        line-height: calc(var(--control-height) - 2px) !important;
+        color: #212529 !important;
+        padding-left: 0.75rem !important;
+        padding-right: 1.75rem !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        width: 100% !important;
+    }
 
-/* Tabla Fija */
-.table-fixed {
-    table-layout: fixed !important;
-    width: 100% !important;
-}
+    /* Tabla Fija */
+    .table-fixed {
+        table-layout: fixed !important;
+        width: 100% !important;
+    }
 </style>
 
 <script>
-const URL_CONTROLADOR = '/cfsistem/app/controllers/cotizacionesController.php';
-   document.addEventListener('DOMContentLoaded', function() {
+    const URL_CONTROLADOR = '/cfsistem/app/controllers/cotizacionesController.php';
+    document.addEventListener('DOMContentLoaded', function () {
         const selectAlmacen = document.getElementById('almacen_id');
 
         if (selectAlmacen) {
-            selectAlmacen.addEventListener('change', function(e) {
+            selectAlmacen.addEventListener('change', function (e) {
                 const almacenId = this.value; // ID del almacén seleccionado
                 const textoSeleccionado = this.options[this.selectedIndex].text; // Nombre del almacén
 
@@ -241,7 +253,7 @@ const URL_CONTROLADOR = '/cfsistem/app/controllers/cotizacionesController.php';
                     console.log(`Almacén cambiado a ID: ${almacenId} - ${textoSeleccionado}`);
                     recargarProductosEditar();
                     const id = $('#almacen_id').val();
-                   
+
 
                     cargarClientes();
 
@@ -253,282 +265,300 @@ const URL_CONTROLADOR = '/cfsistem/app/controllers/cotizacionesController.php';
             });
         }
     });
- 
-        async function cargarClientes() {
-    console.log("cargo clientes");
-    
-    // Obtenemos el ID del almacén actual
-    const almacenId = $('#almacen_id').val();
-    const select = document.getElementById('cliente_id');
-    if (!select) return;
 
-    // Limpiamos el select antes de poblarlo
-    select.innerHTML = '<option value="">-- Seleccione un cliente --</option>';
+    async function cargarClientes() {
+        console.log("cargo clientes");
 
-    try {
-        const url = '/cfsistem/app/controllers/accesoController.php?action=obtenerClientes';
-        const respuesta = await fetch(url);
+        // Obtenemos el ID del almacén actual
+        const almacenId = $('#almacen_id').val();
+        const select = document.getElementById('cliente_id');
+        if (!select) return;
 
-        if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
+        // Limpiamos el select antes de poblarlo
+        select.innerHTML = '<option value="">-- Seleccione un cliente --</option>';
 
-        const resultado = await respuesta.json();
-        console.log(resultado);
+        try {
+            const url = '/cfsistem/app/controllers/accesoController.php?action=obtenerClientes';
+            const respuesta = await fetch(url);
 
-        if (resultado.success && Array.isArray(resultado.data)) {
-            
-            // FILTRADO: 
-            // 1. Conserva clientes cuyo nombre NO contenga "público en general" (clientes normales).
-            // 2. Para "público en general", solo conserva el que coincida con el almacenId actual.
-            const clientesFiltrados = resultado.data.filter(cliente => {
-                const nombreNorm = cliente.nombre_comercial.toLowerCase().trim();
-                const esPublicoGeneral = nombreNorm.includes('publico en general') || nombreNorm.includes('público en general');
+            if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
 
-                if (esPublicoGeneral) {
-                    // Revisa que coincida el ID del almacén (compara tanto número como string)
-                    return cliente.almacen_id == almacenId;
-                }
+            const resultado = await respuesta.json();
+            console.log(resultado);
 
-                // Si es un cliente regular, se muestra siempre
-                return true;
-            });
+            if (resultado.success && Array.isArray(resultado.data)) {
 
-            // Llenamos el select únicamente con la lista filtrada
-            clientesFiltrados.forEach(cliente => {
-                const opcion = document.createElement('option');
-                opcion.value = cliente.id;
-                opcion.textContent = `${cliente.nombre_comercial}`;
-                select.appendChild(opcion);
-            });
+                // FILTRADO: 
+                // 1. Conserva clientes cuyo nombre NO contenga "público en general" (clientes normales).
+                // 2. Para "público en general", solo conserva el que coincida con el almacenId actual.
+                const clientesFiltrados = resultado.data.filter(cliente => {
+                    const nombreNorm = cliente.nombre_comercial.toLowerCase().trim();
+                    const esPublicoGeneral = nombreNorm.includes('publico en general') || nombreNorm.includes('público en general');
 
-        } else {
-            select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
+                    if (esPublicoGeneral) {
+                        // Revisa que coincida el ID del almacén (compara tanto número como string)
+                        return cliente.almacen_id == almacenId;
+                    }
+
+                    // Si es un cliente regular, se muestra siempre
+                    return true;
+                });
+
+                // Llenamos el select únicamente con la lista filtrada
+                clientesFiltrados.forEach(cliente => {
+                    const opcion = document.createElement('option');
+                    opcion.value = cliente.id;
+                    opcion.textContent = `${cliente.nombre_comercial}`;
+                    select.appendChild(opcion);
+                });
+
+            } else {
+                select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
+            }
+        } catch (error) {
+            select.innerHTML = '<option value="">Error al cargar la lista</option>';
+            console.error('Error al ejecutar cargarClientes:', error);
         }
-    } catch (error) {
-        select.innerHTML = '<option value="">Error al cargar la lista</option>';
-        console.error('Error al ejecutar cargarClientes:', error);
     }
-}
-  document.addEventListener('DOMContentLoaded', () => {
-       
+    document.addEventListener('DOMContentLoaded', () => {
+
         cargarClientes();
     });
 
-// =====================================================
-// SELECT2
-// =====================================================
+    // =====================================================
+    // SELECT2
+    // =====================================================
 
-$('.select2-modal').select2({
-    theme: 'bootstrap-5',
-    dropdownParent: $('#modalCotizacion')
-});
+    // Inicializar Select2 cuando el modal ya está visible
+    $('#modalCotizacion').on('shown.bs.modal', function () {
 
-// =====================================================
-// CALCULAR TOTAL
-// =====================================================
+        // Cliente
+        $('#cliente_id').select2({
+            theme: 'bootstrap-5',
+            dropdownParent: $('#modalCotizacion') // el modal ya está visible, no hay overflow que recorte
+        });
+
+        // Vendedor
+        $('#vendedor-select').select2({
+            theme: 'bootstrap-5',
+            dropdownParent: $('#modalCotizacion')
+        });
+
+        // Buscador de productos
+        $('#buscadorProductos').select2({
+            theme: 'bootstrap-5',
+            dropdownParent: $('#modalCotizacion')
+        });
+
+    });
+
+    // =====================================================
+    // CALCULAR TOTAL
+    // =====================================================
 
     async function cargarVendedores() {
-    const select = document.getElementById('vendedor-select');
-    if (!select) return; // Seguridad por si el select no está en la vista actual
+        const select = document.getElementById('vendedor-select');
+        if (!select) return; // Seguridad por si el select no está en la vista actual
 
-    try {
-        // 1. Realizar la petición a tu controlador de Cf System
-        const url = '/cfsistem/app/controllers/accesoController.php?action=obtenerUsuarios';
-        const respuesta = await fetch(url);
-        
-        if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
-        
-        const resultado = await respuesta.json();
+        try {
+            // 1. Realizar la petición a tu controlador de Cf System
+            const url = '/cfsistem/app/controllers/accesoController.php?action=obtenerUsuarios';
+            const respuesta = await fetch(url);
 
-        // 2. Verificar que la respuesta sea exitosa y contenga los datos
-        if (resultado.success && Array.isArray(resultado.data)) {
-            
-            // Limpiamos el select y dejamos una opción inicial neutra
-           // select.innerHTML = '<option value="" selected disabled> Seleccione vendedor</option>';
+            if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
 
-            // 3. Recorrer los usuarios y crear las opciones
-            resultado.data.forEach(usuario => {
-                const opcion = document.createElement('option');
-                opcion.value = usuario.id; // El ID que se enviará en el formulario
-                
-                // Formateamos el texto: "Nombre (Almacén - Rol)" para que sea súper descriptivo
-                const almacen = usuario.almacen_nombre || 'Sin Almacén';
-                opcion.textContent = `${usuario.nombre}`;
-                
-                // Agregamos la opción al select
-                select.appendChild(opcion);
-            });
+            const resultado = await respuesta.json();
 
-        } else {
-            select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
-            console.error('El backend no devolvió success:true o la estructura cambió');
+            // 2. Verificar que la respuesta sea exitosa y contenga los datos
+            if (resultado.success && Array.isArray(resultado.data)) {
+
+                // Limpiamos el select y dejamos una opción inicial neutra
+                // select.innerHTML = '<option value="" selected disabled> Seleccione vendedor</option>';
+
+                // 3. Recorrer los usuarios y crear las opciones
+                resultado.data.forEach(usuario => {
+                    const opcion = document.createElement('option');
+                    opcion.value = usuario.id; // El ID que se enviará en el formulario
+
+                    // Formateamos el texto: "Nombre (Almacén - Rol)" para que sea súper descriptivo
+                    const almacen = usuario.almacen_nombre || 'Sin Almacén';
+                    opcion.textContent = `${usuario.nombre}`;
+
+                    // Agregamos la opción al select
+                    select.appendChild(opcion);
+                });
+
+            } else {
+                select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
+                console.error('El backend no devolvió success:true o la estructura cambió');
+            }
+
+        } catch (error) {
+            select.innerHTML = '<option value="">Error al cargar la lista</option>';
+            console.error('Error al ejecutar cargarUsuariosSelect:', error);
         }
-
-    } catch (error) {
-        select.innerHTML = '<option value="">Error al cargar la lista</option>';
-        console.error('Error al ejecutar cargarUsuariosSelect:', error);
     }
-}
 
-// 🔥 EVITAR LOOPS
-let recalculandoFila = false;
-let totaLCompra;
+    // 🔥 EVITAR LOOPS
+    let recalculandoFila = false;
+    let totaLCompra;
 
-function calcularTotalSol(input) {
+    function calcularTotalSol(input) {
 
-    if (recalculandoFila) return;
+        if (recalculandoFila) return;
 
-    recalculandoFila = true;
+        recalculandoFila = true;
 
-    try {
+        try {
 
-        const fila = input.closest('tr');
+            const fila = input.closest('tr');
 
-        const cantidad = parseFloat(
-            fila.querySelector('.cantidad').value
-        ) || 0;
+            const cantidad = parseFloat(
+                fila.querySelector('.cantidad').value
+            ) || 0;
 
-        const precioUnitarioOriginal = parseFloat(
-            fila.querySelector('.precio-unitario').value
-        ) || 0;
+            const precioUnitarioOriginal = parseFloat(
+                fila.querySelector('.precio-unitario').value
+            ) || 0;
 
-        // ✅ obtener select correcto
-        const selectUnidad = fila.querySelector('.unidad-select');
+            // ✅ obtener select correcto
+            const selectUnidad = fila.querySelector('.unidad-select');
 
-        // ✅ obtener equivalencia del option seleccionado
-        const equivalencia = parseFloat(
-            selectUnidad?.selectedOptions[0]?.dataset?.equivalencia
-        ) || 0;
+            // ✅ obtener equivalencia del option seleccionado
+            const equivalencia = parseFloat(
+                selectUnidad?.selectedOptions[0]?.dataset?.equivalencia
+            ) || 0;
 
-        console.log('equivalencia:', equivalencia);
+            console.log('equivalencia:', equivalencia);
 
-        // 🔥 APLICAR equivalencia al precio
-        const precioUnitarioAjustado =
-            precioUnitarioOriginal;
+            // 🔥 APLICAR equivalencia al precio
+            const precioUnitarioAjustado =
+                precioUnitarioOriginal;
 
-        // 🔥 TOTAL
-        const precioTotal = (cantidad) * precioUnitarioAjustado;
+            // 🔥 TOTAL
+            const precioTotal = (cantidad) * precioUnitarioAjustado;
 
-        console.log('precio ajustado:', precioUnitarioAjustado);
-        console.log('total:', precioTotal);
+            console.log('precio ajustado:', precioUnitarioAjustado);
+            console.log('total:', precioTotal);
 
-        fila.querySelector('.precio-total').value =
-            precioTotal.toFixed(2);
+            fila.querySelector('.precio-total').value =
+                precioTotal.toFixed(2);
 
-        // =====================================
-        // SUMA GENERAL
-        // =====================================
+            // =====================================
+            // SUMA GENERAL
+            // =====================================
 
-        let totaLCompra = 0;
+            let totaLCompra = 0;
 
-        document.querySelectorAll('.precio-total')
-            .forEach(el => {
-                totaLCompra += parseFloat(el.value) || 0;
-            });
+            document.querySelectorAll('.precio-total')
+                .forEach(el => {
+                    totaLCompra += parseFloat(el.value) || 0;
+                });
 
-        document.getElementById('costoTotalCompra')
-            .textContent = totaLCompra.toLocaleString('es-MX', {
-                style: 'currency',
-                currency: 'MXN'
-            });
-             document.getElementById('totalCotizacion').value=totaLCompra;
+            document.getElementById('costoTotalCompra')
+                .textContent = totaLCompra.toLocaleString('es-MX', {
+                    style: 'currency',
+                    currency: 'MXN'
+                });
+            document.getElementById('totalCotizacion').value = totaLCompra;
 
-    } finally {
-        recalculandoFila = false;
-    }
-}
-
-// =====================================================
-// AGREGAR PRODUCTO
-// =====================================================
-async function recargarProductos() {
-
-    try {
-
-        const resp = await fetch(
-            `/cfsistem/app/controllers/cotizacionesController.php?action=obtenerProductos`
-        );
-
-
-        const res = await resp.json();
-        console.log(res);
-
-        if (!res.success) {
-            throw new Error(res.message);
+        } finally {
+            recalculandoFila = false;
         }
+    }
+
+    // =====================================================
+    // AGREGAR PRODUCTO
+    // =====================================================
+    async function recargarProductos() {
+
+        try {
+
+            const resp = await fetch(
+                `/cfsistem/app/controllers/cotizacionesController.php?action=obtenerProductos`
+            );
 
 
-        const select = document.getElementById('buscadorProductos');
+            const res = await resp.json();
+            console.log(res);
 
-        // 🔥 limpiar opciones
-        select.innerHTML = `
+            if (!res.success) {
+                throw new Error(res.message);
+            }
+
+
+            const select = document.getElementById('buscadorProductos');
+
+            // 🔥 limpiar opciones
+            select.innerHTML = `
             <option value="">
                 Escribe para buscar...
             </option>
         `;
 
-        // 🔥 volver a llenar
-        res.data.forEach(pr => {
+            // 🔥 volver a llenar
+            res.data.forEach(pr => {
 
 
-            const option = document.createElement('option');
+                const option = document.createElement('option');
 
-            option.value = pr.producto_id;
+                option.value = pr.producto_id;
 
-            option.dataset.nombre = pr.nombre;
-            option.dataset.medidas = JSON.stringify(pr.medidas_adicionales || []);
-            option.dataset.sku = pr.sku;
-            option.dataset.um = pr.unidad_medida;
-            option.dataset.ur = pr.unidad_reporte;
-            option.dataset.preMin = pr.precio_minorista;
-            option.dataset.preMat = pr.precio_mayorista;
-            option.dataset.preDis = pr.precio_distribuidor;
-            option.dataset.factor = pr.factor_conversion || 1;
+                option.dataset.nombre = pr.nombre;
+                option.dataset.medidas = JSON.stringify(pr.medidas_adicionales || []);
+                option.dataset.sku = pr.sku;
+                option.dataset.um = pr.unidad_medida;
+                option.dataset.ur = pr.unidad_reporte;
+                option.dataset.preMin = pr.precio_minorista;
+                option.dataset.preMat = pr.precio_mayorista;
+                option.dataset.preDis = pr.precio_distribuidor;
+                option.dataset.factor = pr.factor_conversion || 1;
 
-            option.textContent =
-                `[${pr.sku}] ${pr.nombre}`;
+                option.textContent =
+                    `[${pr.sku}] ${pr.nombre}`;
 
-            select.appendChild(option);
+                select.appendChild(option);
 
-        });
+            });
 
-    } catch (e) {
+        } catch (e) {
 
-        console.error(e);
+            console.error(e);
 
-        Swal.fire(
-            'Error',
-            'No se pudo actualizar la lista de productos',
-            'error'
-        );
+            Swal.fire(
+                'Error',
+                'No se pudo actualizar la lista de productos',
+                'error'
+            );
+        }
+        $('#buscadorProductos').trigger('change.select2');
     }
-    $('#buscadorProductos').trigger('change.select2');
-}
-$('#buscadorProductos').on('select2:select', function(e) {
+    $('#buscadorProductos').on('select2:select', function (e) {
 
-    const d = e.params.data.element.dataset;
+        const d = e.params.data.element.dataset;
 
-    const id = $(this).val();
+        const id = $(this).val();
 
-    // VALIDAR DUPLICADO
-    if ($(`#fila-${id}`).length) {
+        // VALIDAR DUPLICADO
+        if ($(`#fila-${id}`).length) {
 
-        Swal.fire(
-            'Aviso',
-            'El producto ya está en la lista',
-            'info'
-        );
+            Swal.fire(
+                'Aviso',
+                'El producto ya está en la lista',
+                'info'
+            );
 
-        return;
-    }
+            return;
+        }
 
-    $('#emptyState').addClass('d-none');
-    const medidas = JSON.parse(d.medidas || '[]');
+        $('#emptyState').addClass('d-none');
+        const medidas = JSON.parse(d.medidas || '[]');
 
-    let opcionesUnidad = ``;
-    console.log(medidas);
-    medidas.forEach(m => {
+        let opcionesUnidad = ``;
+        console.log(medidas);
+        medidas.forEach(m => {
 
-        opcionesUnidad += `
+            opcionesUnidad += `
    
     <option 
         value="${m.id}"
@@ -539,10 +569,10 @@ $('#buscadorProductos').on('select2:select', function(e) {
     </option>
 
     `;
-    });
+        });
 
-    // AGREGAR FILA
-    $('#tablaDetalle tbody').append(`
+        // AGREGAR FILA
+        $('#tablaDetalle tbody').append(`
 
 <tr id="fila-${id}">
 
@@ -591,53 +621,54 @@ $('#buscadorProductos').on('select2:select', function(e) {
     > <option value="seleccionar" data-precio="0">
           seleccione
         </option>
-        <option value="minorista" data-precio="${d.preMin }">
+        <option value="minorista" data-precio="${d.preMin}">
             Min ${d.preMin * d.factor} x ${d.ur}
         </option>
 
-        <option value="mayorista" data-precio="${d.preMat }">
-            May ${d.preMat* d.factor} x ${d.ur}
+        <option value="mayorista" data-precio="${d.preMat}">
+            May ${d.preMat * d.factor} x ${d.ur}
         </option>
 
-        <option value="distribuidor" data-precio="${d.preDis }">
-            Dis ${d.preDis* d.factor} x ${d.ur}
+        <option value="distribuidor" data-precio="${d.preDis}">
+            Dis ${d.preDis * d.factor} x ${d.ur}
         </option>
     </select>
 </td>
-    <!-- COSTO UNITARIO -->
-    <td>
-        <input 
-            type="number"
-            lang="en-US"
-            name="items[${id}][precioUnitario]"
-            class="form-control precio-unitario precio_unitario"
-            step="0.01"
-            
-            min="0"
-            placeholder="0.00"
-            required
-            oninput="calcularTotalSol(this)"
-        >
-    </td>
+ <!-- COSTO UNITARIO -->
+<td>
+    <input 
+        type="number"
+        lang="en-US"
+        name="items[${id}][precioUnitario]"
+        class="form-control precio-unitario precio_unitario"
+        step="0.01"
+        min="0"
+        placeholder="0.00"
+        required
+        onkeydown="if(event.key==='Enter'){ event.preventDefault(); $('#buscadorProductos').select2('open'); }"
+        oninput="calcularTotalSol(this)"
+    >
+</td>
 
-    <!-- COSTO TOTAL -->
-    <td style="min-width:160px;">
-        <input 
-            type="number"
-            lang="en-US"
-            name="items[${id}][precio]"
-            class="form-control precio-total fw-bold text-success "
-            step="0.01"
-            min="0"
-            placeholder="0.00"
-            oninput="calcularTotalSol(this)"
-            style="
-                font-size:1.1rem;
-                height:45px;
-                min-width:140px;
-            "
-        >
-    </td>
+<!-- COSTO TOTAL -->
+<td style="min-width:160px;">
+    <input 
+        type="number"
+        lang="en-US"
+        name="items[${id}][precio]"
+        class="form-control precio-total fw-bold text-success"
+        step="0.01"
+        min="0"
+        placeholder="0.00"
+        onkeydown="if(event.key==='Enter'){ event.preventDefault(); $('#buscadorProductos').select2('open'); }"
+        oninput="calcularTotalSol(this)"
+        style="
+            font-size:1.1rem;
+            height:45px;
+            min-width:140px;
+        "
+    >
+</td>
 
     <!-- ELIMINAR -->
     <td>
@@ -652,32 +683,32 @@ $('#buscadorProductos').on('select2:select', function(e) {
 
 </tr>
 `);
-    // LIMPIAR SELECT
-    $(this).val(null).trigger('change');
-});
+        // LIMPIAR SELECT
+        $(this).val(null).trigger('change');
+    });
 
-function calcularPreciosugerido(select) {
+    function calcularPreciosugerido(select) {
 
-    const fila = select.closest('tr');
+        const fila = select.closest('tr');
 
-    const inputPrecio = fila.querySelector('.precio-unitario');
-const inputtotal = fila.querySelector('.precio-total');
+        const inputPrecio = fila.querySelector('.precio-unitario');
+        const inputtotal = fila.querySelector('.precio-total');
 
-    const unidadSelect = fila.querySelector('.unidad-select');
-    const tipoSelect = fila.querySelector('.tipoPrecio-select');
+        const unidadSelect = fila.querySelector('.unidad-select');
+        const tipoSelect = fila.querySelector('.tipoPrecio-select');
 
-    const unidadOption = unidadSelect.options[unidadSelect.selectedIndex];
-    const tipoOption = tipoSelect.options[tipoSelect.selectedIndex]??0;
+        const unidadOption = unidadSelect.options[unidadSelect.selectedIndex];
+        const tipoOption = tipoSelect.options[tipoSelect.selectedIndex] ?? 0;
 
-    const equivalencia = Number(unidadOption?.dataset.equivalencia || 1);
-    const precioBase = Number(tipoOption?.dataset.precio || 0)??0;
+        const equivalencia = Number(unidadOption?.dataset.equivalencia || 1);
+        const precioBase = Number(tipoOption?.dataset.precio || 0) ?? 0;
 
-    const sugerido = (precioBase / equivalencia)??0;
+        const sugerido = (precioBase / equivalencia) ?? 0;
 
-    // SOLO PLACEHOLDER
-    inputPrecio.value = sugerido.toFixed(2);
-    inputtotal.value = sugerido.toFixed(2);
-    let totaLCompra = 0;
+        // SOLO PLACEHOLDER
+        inputPrecio.value = sugerido.toFixed(2);
+        inputtotal.value = sugerido.toFixed(2);
+        let totaLCompra = 0;
 
         document.querySelectorAll('.precio-total')
             .forEach(el => {
@@ -689,164 +720,164 @@ const inputtotal = fila.querySelector('.precio-total');
                 style: 'currency',
                 currency: 'MXN'
             });
-             document.getElementById('totalCotizacion').value=totaLCompra;
+        document.getElementById('totalCotizacion').value = totaLCompra;
 
-}
-document.addEventListener('input', function(e) {
-
-    if (e.target.classList.contains('precio-unitario')) {
-        e.target.dataset.editado = "1";
     }
-});
-// =====================================================
-// GUARDAR SOLICITUD
-// =====================================================
-// // =====================================================
-// CONVERTIR A COMPRA
-// =====================================================
+    document.addEventListener('input', function (e) {
 
-$('#formSolicitud').on('submit', async function(e) {
-
-    e.preventDefault();
-
-    if (!$('#tablaDetalle tbody tr').length) {
-        Swal.fire('Error', 'Agregue productos', 'warning');
-        return;
-    }
-
-   const payload = {
-    almacen_id: $('#almacen_id').val(),
-    cliente_id: $('#cliente_id').val(),
-    totalCotizacion: $('#totalCotizacion').val(),
-    vendedor: $('#vendedor-select').val(),
-    items: []
-};
-    $('#tablaDetalle tbody tr').each(function() {
-
-        const fila = $(this);
-        const id = fila.attr('id').replace('fila-', '');
-
-        const unidadSelect = fila.find('.unidad-select option:selected');
-        const tipoPrecioSelect = fila.find('.tipoPrecio-select option:selected');
-
-        payload.items.push({
-            producto_id: id,
-
-            cantidad: fila.find('.cantidad').val(),
-
-            unidad: unidadSelect.val(),
-            unidad_id: unidadSelect.data('medida-id'),
-            equivalencia: unidadSelect.data('equivalencia'),
-
-            tipoPrecio: tipoPrecioSelect.val(),
-
-            precioUnitario: fila.find('.precio-unitario').val(),
-
-            precio: fila.find('.precio-total').val()
-        });
+        if (e.target.classList.contains('precio-unitario')) {
+            e.target.dataset.editado = "1";
+        }
     });
+    // =====================================================
+    // GUARDAR SOLICITUD
+    // =====================================================
+    // // =====================================================
+    // CONVERTIR A COMPRA
+    // =====================================================
 
-    console.log('JSON ENVIADO:', payload);
+    $('#formSolicitud').on('submit', async function (e) {
 
-    Swal.fire({
-        title: 'Guardando...',
-        allowOutsideClick: false,
-        didOpen: () => Swal.showLoading()
-    });
+        e.preventDefault();
 
-    try {
-
-        const resp = await fetch(`${URL_CONTROLADOR}?action=guardar`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
-
-        const res = await resp.json();
-
-        console.log('RESPUESTA:', res);
-
-        if (res.status === 'success') {
-
-            await Swal.fire({
-                icon: 'success',
-                title: '¡Éxito!',
-                text: res.message,
-                timer: 1500,
-                showConfirmButton: false
-            });
-
-            location.reload();
-
-        } else {
-            Swal.fire('Error', res.message, 'error');
+        if (!$('#tablaDetalle tbody tr').length) {
+            Swal.fire('Error', 'Agregue productos', 'warning');
+            return;
         }
 
-    } catch (e) {
-        console.error(e);
-        Swal.fire('Error', 'Fallo de conexión', 'error');
-    }
-});
-// $('#formConvertirCompra').on('submit', async function(e) {
+        const payload = {
+            almacen_id: $('#almacen_id').val(),
+            cliente_id: $('#cliente_id').val(),
+            totalCotizacion: $('#totalCotizacion').val(),
+            vendedor: $('#vendedor-select').val(),
+            items: []
+        };
+        $('#tablaDetalle tbody tr').each(function () {
 
-//     e.preventDefault();
+            const fila = $(this);
+            const id = fila.attr('id').replace('fila-', '');
 
-//     Swal.fire({
-//         title: 'Procesando ingreso...',
-//         allowOutsideClick: false,
-//         didOpen: () => Swal.showLoading()
-//     });
+            const unidadSelect = fila.find('.unidad-select option:selected');
+            const tipoPrecioSelect = fila.find('.tipoPrecio-select option:selected');
 
-//     try {
+            payload.items.push({
+                producto_id: id,
 
-//         const resp = await fetch(
-//             `${URL_CONTROLADOR}?action=convertirACompra`, {
-//                 method: 'POST',
-//                 body: new FormData(this)
-//             }
-//         );
+                cantidad: fila.find('.cantidad').val(),
 
-//         const res = await resp.json();
+                unidad: unidadSelect.val(),
+                unidad_id: unidadSelect.data('medida-id'),
+                equivalencia: unidadSelect.data('equivalencia'),
 
-//         if (res.status === 'success') {
+                tipoPrecio: tipoPrecioSelect.val(),
 
-//             await Swal.fire({
-//                 icon: 'success',
-//                 title: 'Ingresado',
-//                 text: res.message
-//             });
+                precioUnitario: fila.find('.precio-unitario').val(),
 
-//             location.reload();
+                precio: fila.find('.precio-total').val()
+            });
+        });
 
-//         } else {
+        console.log('JSON ENVIADO:', payload);
 
-//             Swal.fire(
-//                 'Error',
-//                 res.message,
-//                 'error'
-//             );
-//         }
+        Swal.fire({
+            title: 'Guardando...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
 
-//     } catch (e) {
+        try {
 
-//         Swal.fire(
-//             'Error',
-//             'Fallo de conexión',
-//             'error'
-//         );
-//     }
-// });
+            const resp = await fetch(`${URL_CONTROLADOR}?action=guardar`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
 
-// =====================================================
-// ELIMINAR FILA
-// =====================================================
+            const res = await resp.json();
 
-function quitarFila(id) {
+            console.log('RESPUESTA:', res);
 
-    $(`#fila-${id}`).remove();
-    let totaLCompra = 0;
+            if (res.status === 'success') {
+
+                await Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: res.message,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+
+                location.reload();
+
+            } else {
+                Swal.fire('Error', res.message, 'error');
+            }
+
+        } catch (e) {
+            console.error(e);
+            Swal.fire('Error', 'Fallo de conexión', 'error');
+        }
+    });
+    // $('#formConvertirCompra').on('submit', async function(e) {
+
+    //     e.preventDefault();
+
+    //     Swal.fire({
+    //         title: 'Procesando ingreso...',
+    //         allowOutsideClick: false,
+    //         didOpen: () => Swal.showLoading()
+    //     });
+
+    //     try {
+
+    //         const resp = await fetch(
+    //             `${URL_CONTROLADOR}?action=convertirACompra`, {
+    //                 method: 'POST',
+    //                 body: new FormData(this)
+    //             }
+    //         );
+
+    //         const res = await resp.json();
+
+    //         if (res.status === 'success') {
+
+    //             await Swal.fire({
+    //                 icon: 'success',
+    //                 title: 'Ingresado',
+    //                 text: res.message
+    //             });
+
+    //             location.reload();
+
+    //         } else {
+
+    //             Swal.fire(
+    //                 'Error',
+    //                 res.message,
+    //                 'error'
+    //             );
+    //         }
+
+    //     } catch (e) {
+
+    //         Swal.fire(
+    //             'Error',
+    //             'Fallo de conexión',
+    //             'error'
+    //         );
+    //     }
+    // });
+
+    // =====================================================
+    // ELIMINAR FILA
+    // =====================================================
+
+    function quitarFila(id) {
+
+        $(`#fila-${id}`).remove();
+        let totaLCompra = 0;
 
         document.querySelectorAll('.precio-total')
             .forEach(el => {
@@ -858,29 +889,29 @@ function quitarFila(id) {
                 style: 'currency',
                 currency: 'MXN'
             });
-             document.getElementById('totalCotizacion').value=totaLCompra;
+        document.getElementById('totalCotizacion').value = totaLCompra;
 
 
-    if (!$('#tablaDetalle tbody tr').length) {
+        if (!$('#tablaDetalle tbody tr').length) {
+
+            $('#emptyState').removeClass('d-none');
+        }
+    }
+
+    // =====================================================
+    // NUEVA SOLICITUD
+    // =====================================================
+
+    function nuevaCotizacion() {
+
+        $('#formSolicitud')[0].reset();
+
+        $('#tablaDetalle tbody').empty();
 
         $('#emptyState').removeClass('d-none');
+
+        $('#modalCotizacion').modal('show');
+        recargarProductos();
+        cargarVendedores();
     }
-}
-
-// =====================================================
-// NUEVA SOLICITUD
-// =====================================================
-
-function nuevaCotizacion() {
-
-    $('#formSolicitud')[0].reset();
-
-    $('#tablaDetalle tbody').empty();
-
-    $('#emptyState').removeClass('d-none');
-
-    $('#modalCotizacion').modal('show');
-    recargarProductos();
-    cargarVendedores();
-}
 </script>

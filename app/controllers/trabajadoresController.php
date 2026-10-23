@@ -248,6 +248,7 @@ if (
         $almacen = intval($_GET['almacen'] ?? $_SESSION['almacen_id']);
 
         $trabajadores = $trabajadorModel->listarTrabajadores($almacen);
+        $rolesEnum = $trabajadorModel->listarRoles();
 
         echo json_encode([
             'success' => true,

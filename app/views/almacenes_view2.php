@@ -113,12 +113,9 @@
                     </select>
                 </div>
 
-                <div class="col-xl-3 col-md-3">
-                    <select id="buscadorProductosEditar"
-                        class="form-select form-select-sm py-2 rounded-3 shadow-none w-100"></select>
-                </div>
 
-                <div class="col-xl-2 col-md-3">
+
+                <div class="col-xl-5 col-md-6">
                     <div class="input-group input-group-sm">
                         <span class="input-group-text bg-transparent border-end-0 text-muted rounded-start-3"><i
                                 class="bi bi-search"></i></span>

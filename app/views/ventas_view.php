@@ -598,7 +598,7 @@
                     resultado.data.forEach(usuario => {
                         const opcion = document.createElement('option');
                         opcion.value = usuario.id;
-                        opcion.textContent = `${usuario.nombre}`;
+                        opcion.textContent = `${usuario.nombre}`.toUpperCase();;
                         select.appendChild(opcion);
                     });
 
@@ -621,13 +621,9 @@
         async function cargarClientes() {
             console.log("cargo clientes");
 
-            // Obtenemos el ID del almacén actual
             const almacenId = $('#almacen_id_editar').val();
             const select = document.getElementById('cliente_id_editar');
             if (!select) return;
-
-            // Limpiamos el select antes de poblarlo
-            select.innerHTML = '<option value="">-- Seleccione un cliente --</option>';
 
             try {
                 const url = '/cfsistem/app/controllers/accesoController.php?action=obtenerClientes';
@@ -640,11 +636,9 @@
 
                 if (resultado.success && Array.isArray(resultado.data)) {
 
-                    // FILTRADO:
-                    // 1. Conserva clientes cuyo nombre NO contenga "público en general".
-                    // 2. Para "público en general", solo conserva el que coincida con el almacenId actual.
+                    // FILTRADO
                     const clientesFiltrados = resultado.data.filter(cliente => {
-                        const nombreNorm = cliente.nombre_comercial.toLowerCase().trim();
+                        const nombreNorm = (cliente.nombre_comercial || '').toLowerCase().trim();
                         const esPublicoGeneral = nombreNorm.includes('publico en general') || nombreNorm.includes('público en general');
 
                         if (esPublicoGeneral) {
@@ -654,31 +648,50 @@
                         return true;
                     });
 
-                    // Llenamos el select con la lista filtrada
+                    // 🔥 Construir opciones con data-* (razón social y contacto)
+                    const fragment = document.createDocumentFragment();
+
+                    const first = document.createElement('option');
+                    first.value = '';
+                    first.textContent = '-- Seleccione un cliente --';
+                    fragment.appendChild(first);
+
                     clientesFiltrados.forEach(cliente => {
                         const opcion = document.createElement('option');
                         opcion.value = cliente.id;
-                        opcion.textContent = `${cliente.nombre_comercial}`;
-                        select.appendChild(opcion);
+                        opcion.textContent = cliente.nombre_comercial || '';
+
+                        // Datos extra para los templates
+                        opcion.dataset.nombre = cliente.nombre_comercial || '';
+                        opcion.dataset.razonSocial = cliente.razon_social || '';
+                        opcion.dataset.contacto = cliente.contacto || '';
+
+                        fragment.appendChild(opcion);
                     });
 
-                    // SELECCIÓN AUTOMÁTICA DEL PRIMER REGISTRO ENCONTRADO
+                    select.replaceChildren(fragment);
+
+                    // 🔥 SOLO refrescar Select2, NO destruir ni re-inicializar
+                    $(select).trigger('change.select2');
+
+                    // SELECCIÓN AUTOMÁTICA DEL PRIMER REGISTRO
                     if (clientesFiltrados.length > 0) {
                         const primerClienteId = clientesFiltrados[0].id;
-
-                        // Soporte nativo y compatibilidad con Select2/jQuery
-                        $('#cliente_id_editar').val(primerClienteId).trigger('change');
+                        $(select).val(primerClienteId).trigger('change');
+                    } else {
+                        $(select).val(null).trigger('change');
                     }
 
                 } else {
                     select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
+                    $(select).trigger('change.select2');
                 }
             } catch (error) {
                 select.innerHTML = '<option value="">Error al cargar la lista</option>';
+                $(select).trigger('change.select2');
                 console.error('Error al ejecutar cargarClientes:', error);
             }
-        }
-        // =====================================================
+        }   // =====================================================
         // CALCULAR TOTAL EDITAR
         // =====================================================
         function calcularTotalSolEditar(input) {

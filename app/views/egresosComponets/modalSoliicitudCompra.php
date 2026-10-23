@@ -340,6 +340,7 @@ function agregarFilaCompra() {
                         name="items[${idUnico}][total_item]"
                         class="form-control input-costo-total"
                         value="0" step="0.01"
+                         onkeydown="if(event.key==='Enter'){ event.preventDefault(); const sel=$(this).closest('.item-compra').find('.select2-compra'); if(sel.hasClass('select2-hidden-accessible')){ sel.select2('open'); } }"
                         oninput="calcularPrecioUnitarioLote(${idUnico})"
                         required>
                 </div>
