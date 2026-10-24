@@ -288,31 +288,33 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
                             <div class="col-md-12">
                                 <label class="form-label small fw-bold text-body-secondary">NOMBRE COMERCIAL *</label>
                                 <input type="text" name="nombre_comercial" id="nombre_comercial"
-                                    class="form-control rounded-3" required>
+                                    class="form-control rounded-3" placeholder="Ej: Abarrotes La Esperanza" required>
                             </div>
                             <div class="col-md-12">
                                 <label class="form-label small fw-bold text-body-secondary">RAZÓN SOCIAL</label>
-                                <input type="text" name="razon_social" id="razon_social" class="form-control rounded-3">
+                                <input type="text" name="razon_social" id="razon_social" class="form-control rounded-3"
+                                    placeholder="Ej: Comercializadora Pérez S.A. de C.V.">
                             </div>
 
                             <div class="col-md-12">
                                 <label class="form-label fw-bold">Contacto *</label>
                                 <input type="text" name="contacto" id="contacto" class="form-control"
-                                    placeholder="Contacto">
+                                    placeholder="Nombre de la persona de contacto">
                             </div>
                             <div class="col-md-12">
                                 <label class="form-label small fw-bold text-body-secondary">TELEFONO</label>
-                                <input type="text" name="telefono" id="telefono" class="form-control rounded-3">
+                                <input type="text" name="telefono" id="telefono" class="form-control rounded-3"
+                                    placeholder="Ej: 555 123 4567">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold text-body-secondary">RFC *</label>
                                 <input type="text" name="rfc" id="rfc" class="form-control text-uppercase rounded-3"
-                                    maxlength="13">
+                                    maxlength="13" placeholder="Ej: XAXX010101000">
                             </div>
                             <div class="col-md-12">
                                 <label class="form-label fw-bold">Calle</label>
                                 <textarea name="calle" id="calle" class="form-control text-uppercase" rows="2"
-                                    placeholder="Calle, número, colonia..."></textarea>
+                                    placeholder="Calle y número"></textarea>
                             </div>
                             <div class="col-md-12">
                                 <label class="form-label fw-bold">Colonia</label>
@@ -327,12 +329,12 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
                             <div class="col-md-12">
                                 <label class="form-label fw-bold">Ciudad</label>
                                 <textarea name="ciudad" id="ciudad" class="form-control text-uppercase" rows="2"
-                                    placeholder="Calle, número, colonia..."></textarea>
+                                    placeholder="Ciudad"></textarea>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold text-body-secondary">CÓDIGO POSTAL</label>
                                 <input type="text" name="codigo_postal" id="codigo_postal"
-                                    class="form-control text-uppercase rounded-3" maxlength="5">
+                                    class="form-control text-uppercase rounded-3" maxlength="5" placeholder="Ej: 12345">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold text-body-secondary">USO CFDI</label>
@@ -344,7 +346,8 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-bold text-body-secondary">CORREO</label>
-                                <input type="email" name="correo" id="correo" class="form-control rounded-3">
+                                <input type="email" name="correo" id="correo" class="form-control rounded-3"
+                                    placeholder="Ej: cliente@correo.com">
                             </div>
 
                             <?php if ($almacen_usuario == 0): ?>

@@ -883,6 +883,56 @@ if ($action === 'guardar_insumo') {
     // 2. OBLIGATORIO: Detener el script aquí
     exit;
 }
+if ($action === 'editar_insumo') {
+    // 1. Limpieza total de búfer
+    while (ob_get_level())
+        ob_end_clean();
+
+    header('Content-Type: application/json; charset=utf-8');
+
+    try {
+        // 1. Validar ID
+        $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+        if ($id <= 0) {
+            throw new Exception("ID de insumo inválido.");
+        }
+
+        // 2. Limpieza de datos
+        $nombre = trim($_POST['nombre'] ?? '');
+        $descripcion = trim($_POST['descripcion'] ?? '');
+        $uma = trim($_POST['uma'] ?? '');
+        $umi = trim($_POST['umi'] ?? '');
+        $factor = floatval($_POST['factor'] ?? 1);
+
+        // 3. Validaciones
+        if (empty($nombre)) {
+            throw new Exception("El nombre del insumo es obligatorio.");
+        }
+        if ($factor <= 0) {
+            throw new Exception("El factor debe ser mayor a 0.");
+        }
+
+        // 4. Actualizar (el id solo va en el WHERE, no se modifica)
+        $resultado = $gastosCategorias->actualizarInsumo($id, $nombre, $descripcion, $uma, $umi, $factor);
+
+        if (!$resultado) {
+            throw new Exception("Error al actualizar en la base de datos.");
+        }
+
+        echo json_encode([
+            "success" => true,
+            "id" => $id,
+            "message" => "Insumo actualizado correctamente"
+        ]);
+
+    } catch (Exception $e) {
+        echo json_encode([
+            "success" => false,
+            "message" => $e->getMessage()
+        ]);
+    }
+    exit;
+}
 // Acción para registrar la deuda nacida de un exceso en compras o gastos
 if ($action === 'registrarDeudaPorExceso') {
     // Limpiamos el buffer para evitar que espacios en blanco rompan el JSON de salida
