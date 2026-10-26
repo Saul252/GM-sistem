@@ -95,19 +95,7 @@
                         <span class="ios-micro-label">Sin Stock</span>
                         <div class="ios-micro-value text-danger" id="kpiSinStock">0</div>
                     </div>
-                    <div class="ios-micro-card">
-                        <span class="ios-micro-label">Cobertura</span>
-                        <div class="d-flex align-items-baseline">
-                            <span class="ios-micro-value text-success" id="kpiCobertura">0</span>
-                            <span style="font-size: 0.65rem; font-weight: 700; margin-left: 1px;"
-                                class="text-success">%</span>
-                        </div>
-                        <div class="progress"
-                            style="height: 4px; background-color: var(--bs-tertiary-bg); border-radius: 10px; margin-top: 6px; width: 100%;">
-                            <div class="progress-bar bg-success rounded-pill" id="kpiBarra" style="width: 0%;">
-                            </div>
-                        </div>
-                    </div>
+
                 </div>
 
                 <!-- Filtros -->
@@ -308,8 +296,7 @@
             document.getElementById('kpiTotal').textContent = total;
             document.getElementById('kpiConStock').textContent = conStock;
             document.getElementById('kpiSinStock').textContent = sinStock;
-            document.getElementById('kpiCobertura').textContent = cobertura;
-            document.getElementById('kpiBarra').style.width = cobertura + '%';
+
         }
 
         /* ---------- Cargar insumos ---------- */
