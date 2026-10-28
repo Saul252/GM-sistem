@@ -381,7 +381,7 @@
                     <td>
                         <select name="itemsEditar[${id}][unidad]" class="form-select unidad-select-editar"
                             onchange="calcularPrecioSugeridoEditar(this)">
-                            <option value="0" data-equivalencia="0" data-medida-id="0">Seleccione</option>
+                          
                             ${opcionesUnidad}
                         </select>
                     </td>

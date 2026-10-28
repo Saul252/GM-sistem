@@ -517,7 +517,7 @@
             <td>
                 <select name="items[${id}][unidad]" class="form-select unidad-select"
                     onchange="calcularPreciosugerido(this)">
-                    <option value="0" data-equivalencia="0" data-medida-id="0">Seleccione</option>
+                 
                     ${opcionesUnidad}
                 </select>
             </td>

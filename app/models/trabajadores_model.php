@@ -126,6 +126,7 @@ ORDER BY nombre ASC;";
         $sql = "SELECT *
             FROM trabajadores
             WHERE rol != 'Administrador'
+            AND rol!='Intendencia'
               AND ($id = 0 OR almacen_id = $id)
             ORDER BY nombre ASC";
 
@@ -136,7 +137,7 @@ ORDER BY nombre ASC;";
     public function listarPorAlmacenEncargado($almacen_id)
     {
         $id = intval($almacen_id);
-        $sql = "SELECT * FROM trabajadores WHERE almacen_id  = $id AND rol='Administrador'ORDER BY nombre ASC";
+        $sql = "SELECT * FROM trabajadores WHERE almacen_id  = $id AND rol='Administrador'AND rol!='Intendencia'ORDER BY nombre ASC";
         $res = $this->db->query($sql);
         return $res ? $res->fetch_all(MYSQLI_ASSOC) : [];
     }

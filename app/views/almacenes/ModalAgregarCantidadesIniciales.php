@@ -366,6 +366,7 @@
         let formData = new FormData();
         let $select = $('#buscadorProductosEditarInicial');
         let opcionSeleccionada = $select.find(':selected');
+        let costo = $('#costoTotal').val();
 
         let productoId = opcionSeleccionada.val();
         let sku = opcionSeleccionada.attr('data-sku') || '';
@@ -379,7 +380,7 @@
         formData.append('producto_id', productoId);
         formData.append('sku', sku);
         formData.append('factor_conversion', factorConversion);
-
+        formData.append('precio_adquisicion', costo);
         let checkboxes = document.querySelectorAll('.check-almacen');
         let seleccionados = 0;
 
