@@ -175,14 +175,8 @@
         <div class="divider"></div>
 
         <div id="seccion-totales">
-            <table style="font-size: 14px;">
-                <tr class="bold">
-                    <td align="right">TOTAL:</td>
-                    <td align="right" style="width: 60%;" id="ticket-total"></td>
-                </tr>
-            </table>
-
-            <table style="font-size:14px; width:100%;" id="tabla-pagos">
+            <table style="font-size: 13px; width:100%;" id="tabla-pagos">
+                <!-- TOTAL + PAGOS se generan dinámicamente aquí -->
             </table>
         </div>
 
@@ -196,7 +190,6 @@
             <p class="bold">¡GRACIAS POR SU COMPRA!</p>
         </div>
     </div>
-
     <script>
         const swalCF = Swal.mixin({
             customClass: {
@@ -261,18 +254,14 @@
         function renderizarTicket(data) {
             const { venta, detalles, pagos } = data;
 
+            // ============ CABECERA ============
             document.getElementById('almacen-nombre').innerText = (venta.nombre_almacen || '').toUpperCase();
             document.getElementById('almacen-direccion').innerText = venta.direccion_almacen || '';
             document.getElementById('ticket-titulo').innerText = mostrarPrecios ? 'TICKET DE VENTA' : 'VALE DE ENTREGA';
             document.getElementById('ticket-folio').innerText = venta.folio || '';
             document.getElementById('ticket-fecha').innerText = formatearFecha(venta.fecha);
-
-            // 🔥 CLIENTE completo (sin substring)
             document.getElementById('ticket-cliente').innerText = (venta.nombre_comercial || '').toUpperCase();
-
-            // 🔥 NOTAS completas (sin substring) + formateadas
             document.getElementById('ticket-notas').innerText = (venta.observaciones || 'SIN OBSERVACIONES').toUpperCase();
-
             document.getElementById('ticket-vendedor').innerText = venta.vendedor || venta.nombre_vendedor || '';
 
             if (!mostrarPrecios) {
@@ -280,111 +269,196 @@
                 document.getElementById('seccion-totales').style.display = 'none';
             }
 
+            // ============ DETALLES ============
             const tbody = document.getElementById('tabla-detalles');
             tbody.innerHTML = '';
 
             detalles.forEach(item => {
                 const cantidadOriginal = parseFloat(item.cantidad) || 0;
                 const equivalencia = parseFloat(item.odmaEquivalencia) || 1;
-
-                // Calcular la división real
                 const division = equivalencia > 0 ? (cantidadOriginal * equivalencia) : cantidadOriginal;
-                console.log(division);
-
-                // Detectar si es 1 o casi 1 (±1%)
                 const esCasiUno = Math.abs(division - 1) <= 0.01;
 
                 let cantidadMostrar;
                 let unidadMostrar;
 
                 if (esCasiUno) {
-                    // 🔥 Si es 1 o casi 1: forzar 1 y usar odmaNombre
                     cantidadMostrar = 1;
                     unidadMostrar = item.odmaNombre || '';
                 } else {
-                    // 🔥 Si NO es casi 1: usar los valores por defecto del servidor
-                    cantidadMostrar = division >= 1 ? division : cantidadOriginal;   // ← tal cual viene
-                    unidadMostrar = item.odmaNombre || ''; // ← tal cual viene
+                    cantidadMostrar = division >= 1 ? division : cantidadOriginal;
+                    unidadMostrar = item.odmaNombre || '';
                 }
 
-                // Formatear cantidad (sin decimales si es entero)
                 const cantidadFormateada = Number.isInteger(cantidadMostrar)
                     ? cantidadMostrar
                     : cantidadMostrar.toFixed(2);
 
                 let rowHtml = `
-        <tr class="item-row">
-            <td>
-                <div class="bold" style="font-size:13px;">${item.producto_nombre}</div>
-                <div style="margin-top:3px;font-size:12px;">
-                    Cantidad: <span class="bold">${cantidadFormateada} ${unidadMostrar}</span>
-                </div>
-            </td>
-    `;
+            <tr class="item-row">
+                <td>
+                    <div class="bold" style="font-size:13px;">${item.producto_nombre}</div>
+                    <div style="margin-top:3px;font-size:12px;">
+                        Cantidad: <span class="bold">${cantidadFormateada} ${unidadMostrar}</span>
+                    </div>
+                </td>
+        `;
 
                 if (mostrarPrecios) {
                     rowHtml += `
-            <td align="right" class="bold">
-                $${parseFloat(item.subtotal || 0).toFixed(2)}<br>
-                ( $${parseFloat(item.precio_unitario || 0).toFixed(2)} X ${unidadMostrar} )
-            </td>
-        `;
+                <td align="right" class="bold">
+                    $${parseFloat(item.subtotal || 0).toFixed(2)}<br>
+                    ( $${parseFloat(item.precio_unitario || 0).toFixed(2)} X ${unidadMostrar} )
+                </td>
+            `;
                 }
 
                 rowHtml += `</tr>`;
                 tbody.insertAdjacentHTML('beforeend', rowHtml);
             });
+
+            // ============ TOTAL + PAGOS EN UNA SOLA TABLA (ALINEADO A LA DERECHA) ============
             if (mostrarPrecios) {
-                document.getElementById('ticket-total').innerText = `$${parseFloat(venta.total || venta.subtotal || 0).toFixed(2)} (${venta.estado_pago || ''})`;
+                const totalVenta = parseFloat(venta.total || venta.subtotal || 0);
 
                 const tablaPagos = document.getElementById('tabla-pagos');
                 tablaPagos.innerHTML = '';
 
-                pagos.forEach(pago => {
-                    let pagoHtml = `
-                        <tr><td colspan="4" style="border-top:1px dashed #000; padding-top:6px;"></td></tr>
-                        <tr>
-                            <td class="bold" style="padding:4px 0;">Método de pago:</td>
-                            <td colspan="3" style="padding:4px 0;">${pago.metodo_pago}</td>
-                        </tr>
-                        <tr>
-                            <td class="bold" style="padding:4px 0;">Total pagado:</td>
-                            <td colspan="3" style="padding:4px 0;">$${parseFloat(pago.monto || 0).toFixed(2)}</td>
-                        </tr>
-                    `;
+                // ---------- 1) FILA DE TOTAL ----------
+                tablaPagos.insertAdjacentHTML('beforeend', `
+            <tr>
+                <td class="bold" style="padding:6px 0; font-size:13px; text-align:right;">
+                    TOTAL
+                </td>
+                <td class="bold" style="padding:6px 0; font-size:13px; text-align:right;">
+                    $${totalVenta.toFixed(2)}
+                </td>
+            </tr>
+        `);
 
-                    if ((pago.metodo_pago || '').toLowerCase() === 'efectivo' && parseFloat(pago.efectivoPagado) > 0) {
-                        const efectivo = parseFloat(pago.efectivoPagado);
-                        const monto = parseFloat(pago.monto);
-                        const cambio = efectivo - monto;
+                const pagosReales = (pagos || []).filter(p => parseFloat(p.monto || 0) > 0);
 
-                        pagoHtml += `
+                if (pagosReales.length === 0) {
+                    // ---------- 2A) SIN PAGOS: solo PENDIENTE ----------
+                    tablaPagos.insertAdjacentHTML('beforeend', `
+                <tr>
+                    <td class="bold" style="padding:6px 0; font-size:13px; color:#b91c1c; text-align:right;">
+                        PENDIENTE DE PAGO
+                    </td>
+                    <td class="bold" style="padding:6px 0; font-size:13px; color:#b91c1c; text-align:right;">
+                        $${totalVenta.toFixed(2)}
+                    </td>
+                </tr>
+            `);
+                } else {
+                    // ---------- 2B) CON PAGOS ----------
+                    const totalAbonado = pagosReales.reduce((s, p) => s + parseFloat(p.monto || 0), 0);
+
+                    pagosReales.forEach((pago, idx) => {
+                        const metodo = (pago.metodo_pago || '').trim();
+                        const esEfectivo = metodo.toLowerCase() === 'efectivo';
+                        const montoPago = parseFloat(pago.monto || 0);
+                        const efectivoRec = parseFloat(pago.efectivoPagado || 0);
+
+                        const etiqueta = pagosReales.length > 1
+                            ? `PAGO ${idx + 1}: ${metodo}`
+                            : `PAGO: ${metodo}`;
+
+                        // Línea principal del pago
+                        tablaPagos.insertAdjacentHTML('beforeend', `
+                    <tr>
+                        <td class="bold" style="padding:4px 0; font-size:13px; text-align:right;">
+                            ${etiqueta.toUpperCase()}
+                        </td>
+                        <td class="bold" style="padding:4px 0; font-size:13px; text-align:right;">
+                            $${montoPago.toFixed(2)}
+                        </td>
+                    </tr>
+                `);
+
+                        // Sub-líneas de efectivo
+                        if (esEfectivo && efectivoRec > 0) {
+                            const cambio = efectivoRec - totalVenta;
+
+                            if (Math.abs(efectivoRec - montoPago) > 0.001) {
+                                tablaPagos.insertAdjacentHTML('beforeend', `
                             <tr>
-                                <td class="bold" style="padding:4px 0;">Caja:</td>
-                                <td colspan="3" style="padding:4px 0;">Caja Rápida</td>
+                                <td class="bold" style="padding:2px 0; font-size:13px;  text-align:right;">
+                                    Efectivo recibido
+                                </td>
+                                <td class="bold" style="padding:2px 0; font-size:13px;  text-align:right;">
+                                    $${efectivoRec.toFixed(2)}
+                                </td>
                             </tr>
-                            <tr>
-                                <td class="bold" style="padding:4px 0;">Efectivo recibido:</td>
-                                <td colspan="3" style="padding:4px 0;">$${efectivo.toFixed(2)}</td>
-                            </tr>
-                            <tr>
-                                <td class="bold" style="padding:4px 0;">Cambio:</td>
-                                <td colspan="3" style="padding:4px 0;">$${cambio.toFixed(2)}</td>
-                            </tr>
-                        `;
+                        `);
+                            }
+
+                            if (cambio > 0.001) {
+                                tablaPagos.insertAdjacentHTML('beforeend', `
+        <tr>
+            <td style="padding:2px 0; font-size:14px;  text-align:right; font-weight:bold;">
+                Cambio
+            </td>
+            <td style="padding:2px 0; font-size:14px;  text-align:right; font-weight:bold;">
+                $${cambio.toFixed(2)}
+            </td>
+        </tr>
+    `);
+                            }
+                        }
+
+                        // Referencia
+                        if (pago.referencia) {
+                            tablaPagos.insertAdjacentHTML('beforeend', `
+                        <tr>
+                            <td class="bold" style="padding:2px 0; font-size:13px; color:#475569; text-align:right;">
+                                Ref.
+                            </td>
+                            <td class="bold" style="padding:2px 0; font-size:13px; color:#475569; text-align:right;">
+                                ${pago.referencia}
+                            </td>
+                        </tr>
+                    `);
+                        }
+                    });
+
+                    // Saldo pendiente
+                    const saldoPendiente = totalVenta - totalAbonado;
+                    if (saldoPendiente > 0.001) {
+                        tablaPagos.insertAdjacentHTML('beforeend', `
+                    <tr>
+                        <td class="bold" style="padding:6px 0; font-size:13px; color:#b91c1c; text-align:right; border-top:1px solid #333;">
+                            PENDIENTE DE PAGO
+                        </td>
+                        <td class="bold" style="padding:6px 0; font-size:13px; color:#b91c1c; text-align:right; border-top:1px solid #333;">
+                            $${saldoPendiente.toFixed(2)}
+                        </td>
+                    </tr>
+                `);
                     }
 
-                    pagoHtml += `<tr><td colspan="4" style="border-bottom:1px dashed #000; padding-bottom:6px;"></td></tr>`;
-                    tablaPagos.insertAdjacentHTML('beforeend', pagoHtml);
-                });
+                    // TOTAL PAGADO (solo si hay más de un pago)
+                    if (pagosReales.length > 1) {
+                        tablaPagos.insertAdjacentHTML('beforeend', `
+                    <tr>
+                        <td class="bold" style="padding:6px 0; font-size:13px; text-align:right; border-top:1px solid #333;">
+                            TOTAL PAGADO
+                        </td>
+                        <td class="bold" style="padding:6px 0; font-size:13px; text-align:right; border-top:1px solid #333;">
+                            $${totalAbonado.toFixed(2)}
+                        </td>
+                    </tr>
+                `);
+                    }
+                }
             }
 
+            // ============ MOSTRAR TICKET ============
             document.getElementById('cargando').style.display = 'none';
             document.getElementById('contenedor-ticket').style.display = 'block';
 
             setTimeout(procesarImpresion, 500);
         }
-
         function formatearFecha(fechaCadena) {
             if (!fechaCadena) return '';
             const fecha = new Date(fechaCadena);
@@ -435,7 +509,8 @@
 
             const folio = document.getElementById('ticket-folio').innerText || 'S/N';
             const cliente = document.getElementById('ticket-cliente').innerText || 'Cliente';
-            const total = document.getElementById('ticket-total').innerText || '';
+            const totalFila = document.querySelector('#tabla-pagos tr td:nth-child(2)');
+            const total = totalFila ? totalFila.innerText : '';
             const fecha = document.getElementById('ticket-fecha').innerText || '';
             const almacen = document.getElementById('almacen-nombre').innerText || 'CF System';
 
@@ -654,72 +729,6 @@
                 .replace(/'/g, '&#039;');
         }
     </script>
-
-    <style>
-        .swal-cf-popup {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            border-radius: 14px !important;
-            padding: 24px !important;
-        }
-
-        .swal-cf-confirm {
-            background: linear-gradient(135deg, #0d6efd, #0a58ca) !important;
-            color: #fff !important;
-            border: none !important;
-            border-radius: 8px !important;
-            padding: 10px 22px !important;
-            font-weight: 600 !important;
-            font-size: 14px !important;
-            margin: 0 6px !important;
-            cursor: pointer;
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
-
-        .swal-cf-confirm:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
-        }
-
-        .swal-cf-cancel {
-            background: #e5e7eb !important;
-            color: #374151 !important;
-            border: none !important;
-            border-radius: 8px !important;
-            padding: 10px 22px !important;
-            font-weight: 600 !important;
-            font-size: 14px !important;
-            margin: 0 6px !important;
-            cursor: pointer;
-            transition: background 0.15s;
-        }
-
-        .swal-cf-cancel:hover {
-            background: #d1d5db !important;
-        }
-
-        .swal2-title {
-            font-size: 20px !important;
-            font-weight: 700 !important;
-            color: #1e293b !important;
-        }
-
-        .swal2-html-container {
-            font-size: 14px !important;
-        }
-
-        .swal2-input {
-            border-radius: 8px !important;
-            border: 2px solid #e5e7eb !important;
-            font-size: 14px !important;
-            padding: 10px 12px !important;
-        }
-
-        .swal2-input:focus {
-            border-color: #0d6efd !important;
-            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15) !important;
-            outline: none !important;
-        }
-    </style>
 </body>
 
 </html>

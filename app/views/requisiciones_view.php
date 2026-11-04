@@ -827,30 +827,25 @@
 
             $('#tablaDetalleEditar tbody').append(`
     <tr id="filaEditar-${id}">
-    
-        <td >
+
+        <td>
             <b>${d.nombre}</b><br>
             <small class="text-body-secondary">${d.sku}</small>
         </td>
-<td class="ps-4">
-<input 
+
+        <td class="ps-4">
+            <input
                 type="hidden"
                 name="itemsEditar[${id}][exis]"
-                class=" cantidad-exis" 
-              
+                class="cantidad-exis"
                 value="${d.stock}"
-                min="0.01"
-                
-                >
-<spam   
-             
-              
-               >${d.stock / d.factor}</spam>
-           <b> ${d.ur}</b>
-            
+                min="0.01">
+            <span>${d.stock / d.factor}</span>
+            <b> ${d.ur}</b>
         </td>
+
         <td>
-            <input 
+            <input
                 type="number"
                 name="itemsEditar[${id}][cant]"
                 class="form-control cantidad-editar"
@@ -858,10 +853,9 @@
                 value="1"
                 min="0.01"
                 required
-                 onkeydown="if(event.key==='Enter'){ event.preventDefault(); $('#buscadorProductosEditar').select2('open'); }"
-              
+                onkeydown="if(event.key==='Enter'){ event.preventDefault(); $('#buscadorProductosEditar').select2('open'); }"
                 oninput="actualizarEquivalencia(this);calcularTotalSolEditar(this)">
-            <input 
+            <input
                 type="hidden"
                 name="itemsEditar[${id}][equivalencia]"
                 class="form-control equivalencia"
@@ -869,20 +863,20 @@
         </td>
 
         <td>
-            <select 
-                name="itemsEditar[${id}][unidad]" 
+            <select
+                name="itemsEditar[${id}][unidad]"
                 class="form-select unidad-select-editar"
                 onchange="actualizarEquivalencia(this);calcularPrecioSugeridoEditar(this)">
-                 ${opcionesUnidad}
+                ${opcionesUnidad}
             </select>
         </td>
-        
+
         <td>
-            <select 
-                name="itemsEditar[${id}][tipoPrecio]" 
+            <select
+                name="itemsEditar[${id}][tipoPrecio]"
                 class="form-select tipoPrecio-select-editar"
                 onchange="calcularPrecioSugeridoEditar(this)">
-                <option value="seleccionar" data-precio="0">Seleccione</option>
+           
                 <option value="minorista" data-precio="${preMin}">Min $${(preMin * factor).toFixed(2)} x ${d.ur}</option>
                 <option value="mayorista" data-precio="${preMat}">May $${(preMat * factor).toFixed(2)} x ${d.ur}</option>
                 <option value="distribuidor" data-precio="${preDis}">Dis $${(preDis * factor).toFixed(2)} x ${d.ur}</option>
@@ -890,7 +884,7 @@
         </td>
 
         <td>
-            <input 
+            <input
                 type="number"
                 lang="en-US"
                 name="itemsEditar[${id}][precioUnitario]"
@@ -899,22 +893,20 @@
                 min="0.01"
                 placeholder="0.00"
                 required
-                 onkeydown="if(event.key==='Enter'){ event.preventDefault(); $('#buscadorProductosEditar').select2('open'); }"
-              
+                onkeydown="if(event.key==='Enter'){ event.preventDefault(); $('#buscadorProductosEditar').select2('open'); }"
                 oninput="calcularTotalSolEditar(this)" required>
         </td>
 
         <td style="min-width:140px;">
-            <input 
+            <input
                 type="number"
                 lang="en-US"
                 name="itemsEditar[${id}][precio]"
-                class="form-control precio-total-editar fw-bold text-success "
+                class="form-control precio-total-editar fw-bold text-success"
                 step="0.01"
                 min="0"
                 placeholder="0.00"
-                 onkeydown="if(event.key==='Enter'){ event.preventDefault(); $('#buscadorProductosEditar').select2('open'); }"
-              
+                onkeydown="if(event.key==='Enter'){ event.preventDefault(); $('#buscadorProductosEditar').select2('open'); }"
                 oninput="calcularTotalSolEditar(this)"
                 style="font-size:1.1rem; height:40px;">
         </td>
@@ -926,6 +918,17 @@
         </td>
     </tr>
     `);
+
+            // 🔥 Disparar el cálculo de precio sugerido al agregar el producto
+            const $fila = $(`#filaEditar-${id}`);
+
+            // Opcional: fijar "minorista" por defecto (descomenta si lo quieres)
+            // $fila.find('.tipoPrecio-select-editar').val('minorista');
+
+            const $selectTipoPrecio = $fila.find('.tipoPrecio-select-editar')[0];
+            if ($selectTipoPrecio && typeof calcularPrecioSugeridoEditar === 'function') {
+                calcularPrecioSugeridoEditar($selectTipoPrecio);
+            }
 
             $(this).val(null).trigger('change');
 

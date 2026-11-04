@@ -749,9 +749,9 @@
             let opcionesUnidad = ``;
             medidas.forEach(m => {
                 opcionesUnidad += `
-                <option value="${m.id}" data-equivalencia="${m.equivalencia}" data-medida-id="${m.id}">
-                    ${m.nombre}
-                </option>`;
+        <option value="${m.id}" data-equivalencia="${m.equivalencia}" data-medida-id="${m.id}">
+            ${m.nombre}
+        </option>`;
             });
 
             const preMin = parseFloat(d.premin) || 0;
@@ -760,104 +760,106 @@
             const factor = parseFloat(d.factor) || 1;
 
             $('#tablaDetalleEditar tbody').append(`
-            <tr id="filaEditar-${id}">
-            
-                <td >
-                    <b>${d.nombre}</b><br>
-                    <small class="text-body-secondary">${d.sku}</small>
-                </td>
-<td class="ps-4">
-<input 
-                        type="hidden"
-                        name="itemsEditar[${id}][exis]"
-                        class=" cantidad-exis" 
-                      
-                        value="${d.stock}"
-                        min="0.01"
-                        
-                        >
-<spam   
-                     
-                      
-                       >${d.stock / d.factor}</spam>
-                   <b> ${d.ur}</b>
-                    
-                </td>
-                <td>
-                    <input 
-                        type="number"
-                        name="itemsEditar[${id}][cant]"
-                        class="form-control cantidad-editar"
-                        step="0.01"
-                        value="1"
-                        min="0.01"
-                        required
-                        oninput="actualizarEquivalencia(this);calcularTotalSolEditar(this)">
-                    <input 
-                        type="hidden"
-                        name="itemsEditar[${id}][equivalencia]"
-                        class="form-control equivalencia"
-                        value="1">
-                </td>
+    <tr id="filaEditar-${id}">
 
-                <td>
-                    <select 
-                        name="itemsEditar[${id}][unidad]" 
-                        class="form-select unidad-select-editar"
-                        onchange="actualizarEquivalencia(this);calcularPrecioSugeridoEditar(this)">
-                         ${opcionesUnidad}
-                    </select>
-                </td>
-                
-                <td>
-                    <select 
-                        name="itemsEditar[${id}][tipoPrecio]" 
-                        class="form-select tipoPrecio-select-editar"
-                        onchange="calcularPrecioSugeridoEditar(this)">
-                        <option value="seleccionar" data-precio="0">Seleccione</option>
-                        <option value="minorista" data-precio="${preMin}">Min $${(preMin * factor).toFixed(2)} x ${d.ur}</option>
-                        <option value="mayorista" data-precio="${preMat}">May $${(preMat * factor).toFixed(2)} x ${d.ur}</option>
-                        <option value="distribuidor" data-precio="${preDis}">Dis $${(preDis * factor).toFixed(2)} x ${d.ur}</option>
-                    </select>
-                </td>
+        <td>
+            <b>${d.nombre}</b><br>
+            <small class="text-body-secondary">${d.sku}</small>
+        </td>
 
-                <td>
-                    <input 
-                        type="number"
-                        lang="en-US"
-                        name="itemsEditar[${id}][precioUnitario]"
-                        class="form-control precio-unitario-editar"
-                        step="0.01"
-                        min="0"
-                        placeholder="0.00"
-                        required
-                        oninput="calcularTotalSolEditar(this)">
-                </td>
+        <td class="ps-4">
+            <input
+                type="hidden"
+                name="itemsEditar[${id}][exis]"
+                class="cantidad-exis"
+                value="${d.stock}"
+                min="0.01">
+            <span>${d.stock / d.factor}</span>
+            <b> ${d.ur}</b>
+        </td>
 
-                <td style="min-width:140px;">
-                    <input 
-                        type="number"
-                        lang="en-US"
-                        name="itemsEditar[${id}][precio]"
-                        class="form-control precio-total-editar fw-bold text-success "
-                        step="0.01"
-                        min="0"
-                        placeholder="0.00"
-                        oninput="calcularTotalSolEditar(this)"
-                        style="font-size:1.1rem; height:40px;">
-                </td>
+        <td>
+            <input
+                type="number"
+                name="itemsEditar[${id}][cant]"
+                class="form-control cantidad-editar"
+                step="0.01"
+                value="1"
+                min="0.01"
+                required
+                oninput="actualizarEquivalencia(this);calcularTotalSolEditar(this)">
+            <input
+                type="hidden"
+                name="itemsEditar[${id}][equivalencia]"
+                class="form-control equivalencia"
+                value="1">
+        </td>
 
-                <td class="text-center">
-                    <button type="button" class="btn btn-link text-danger p-0" onclick="quitarFilaEditar('${id}')">
-                        <i class="bi bi-trash fs-5"></i>
-                    </button>
-                </td>
-            </tr>
-            `);
+        <td>
+            <select
+                name="itemsEditar[${id}][unidad]"
+                class="form-select unidad-select-editar"
+                onchange="actualizarEquivalencia(this);calcularPrecioSugeridoEditar(this)">
+                ${opcionesUnidad}
+            </select>
+        </td>
+
+        <td>
+            <select
+                name="itemsEditar[${id}][tipoPrecio]"
+                class="form-select tipoPrecio-select-editar"
+                onchange="calcularPrecioSugeridoEditar(this)">
+                <option value="seleccionar" data-precio="0">Seleccione</option>
+                <option value="minorista" data-precio="${preMin}">Min $${(preMin * factor).toFixed(2)} x ${d.ur}</option>
+                <option value="mayorista" data-precio="${preMat}">May $${(preMat * factor).toFixed(2)} x ${d.ur}</option>
+                <option value="distribuidor" data-precio="${preDis}">Dis $${(preDis * factor).toFixed(2)} x ${d.ur}</option>
+            </select>
+        </td>
+
+        <td>
+            <input
+                type="number"
+                lang="en-US"
+                name="itemsEditar[${id}][precioUnitario]"
+                class="form-control precio-unitario-editar"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
+                required
+                oninput="calcularTotalSolEditar(this)">
+        </td>
+
+        <td style="min-width:140px;">
+            <input
+                type="number"
+                lang="en-US"
+                name="itemsEditar[${id}][precio]"
+                class="form-control precio-total-editar fw-bold text-success"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
+                oninput="calcularTotalSolEditar(this)"
+                style="font-size:1.1rem; height:40px;">
+        </td>
+
+        <td class="text-center">
+            <button type="button" class="btn btn-link text-danger p-0" onclick="quitarFilaEditar('${id}')">
+                <i class="bi bi-trash fs-5"></i>
+            </button>
+        </td>
+    </tr>
+    `);
+
+            // 🔥 Disparar el cálculo de precio sugerido al agregar el producto
+            const $fila = $(`#filaEditar-${id}`);
+            const $selectTipoPrecio = $fila.find('.tipoPrecio-select-editar')[0];
+
+            if ($selectTipoPrecio && typeof calcularPrecioSugeridoEditar === 'function') {
+                calcularPrecioSugeridoEditar($selectTipoPrecio);
+            }
 
             $(this).val(null).trigger('change');
         });
-
         function validarExistencias(fila, cantidad, equivalencia, existencias) {
 
             const maximoPermitido = existencias / equivalencia;

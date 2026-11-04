@@ -90,19 +90,21 @@
         <div class="card border-0 shadow-sm p-4 mb-5" style="border-radius: 20px; background-color: var(--bs-body-bg);">
 
             <!-- Barra de Filtros -->
-            <div class="row mb-4 g-3 align-items-center">
+            <!-- Barra de Filtros (responsive) -->
+            <div class="row mb-4 g-2 g-md-3 align-items-center">
 
-                <div class="col-xl-2 col-md-3">
-                    <select id="filtroCategoria" class="form-select form-select-sm py-2 rounded-3 shadow-none">
+                <!-- Filtros: categoría + almacén -->
+                <div class="col-12 col-md-auto d-flex gap-2">
+                    <select id="filtroCategoria" class="form-select form-select-sm rounded-3 shadow-none flex-fill">
                         <option value="">Todas las Categorías</option>
                         <?php foreach ($categorias as $cat): ?>
-                            <option value="<?= $cat['id'] ?>"><?= htmlspecialchars($cat['nombre']) ?></option>
+                            <option value="<?= $cat['id'] ?>">
+                                <?= htmlspecialchars($cat['nombre']) ?>
+                            </option>
                         <?php endforeach; ?>
                     </select>
-                </div>
 
-                <div class="col-xl-2 col-md-3">
-                    <select id="filtroAlmacen" class="form-select form-select-sm py-2 rounded-3 shadow-none"
+                    <select id="filtroAlmacen" class="form-select form-select-sm rounded-3 shadow-none flex-fill"
                         <?= ($almacen_usuario > 0) ? 'disabled' : '' ?>>
                         <?php if ($almacen_usuario == 0): ?>
                             <option value="0">Todos los Almacenes</option>
@@ -115,51 +117,74 @@
                     </select>
                 </div>
 
-
-
-                <div class="col-xl-5 col-md-6">
+                <!-- Buscador -->
+                <div class="col-12 col-md flex-grow-1">
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-transparent border-end-0 text-muted rounded-start-3"><i
-                                class="bi bi-search"></i></span>
+                        <span class="input-group-text bg-body-tertiary border-0 text-secondary rounded-start-3">
+                            <i class="bi bi-search"></i>
+                        </span>
                         <input type="text" id="buscador"
-                            class="form-control border-start-0 ps-0 py-2 shadow-none rounded-end-3"
+                            class="form-control border-0 bg-body-tertiary ps-1 shadow-none rounded-end-3"
                             placeholder="Buscar...">
                     </div>
                 </div>
 
-                <div class="col-xl-3 col-md-3">
-                    <div class="d-flex gap-2 justify-content-md-end flex-wrap">
-                        <button
-                            class="btn btn-sm btn-success px-3 rounded-pill fw-semibold shadow-sm d-flex align-items-center gap-2"
-                            data-bs-toggle="modal" data-bs-target="#modalAgregarProducto">
-                            <i class="bi bi-box-seam-fill fs-6"></i> Producto
-                        </button>
-                        <button
-                            class="btn btn-sm btn-info text-white px-3 rounded-pill fw-semibold shadow-sm d-flex align-items-center gap-2"
-                            data-bs-toggle="modal" onclick="abrirModalInventarioInicial()">
-                            <i class="bi bi-sliders fs-6"></i> Iniciales
-                        </button>
-                        <button class="btn btn-outline-secondary" onclick="descargarProductos()"
-                            title="Descargar Excel de Productos">
-                            <i class="bi bi-download"></i>
-                        </button>
-                        <button
-                            class="btn btn-sm btn-warning text-dark px-3 rounded-pill fw-semibold shadow-sm d-flex align-items-center gap-2"
-                            data-bs-toggle="modal" data-bs-target="#modalTraspaso">
-                            <i class="bi bi-arrow-left-right fs-6"></i> Traspaso
-                        </button>
-                        <button
-                            class="btn btn-sm btn-primary px-3 rounded-pill fw-semibold shadow-sm d-flex align-items-center gap-2"
-                            data-bs-toggle="modal" data-bs-target="#modalTraspasosGestion" onclick="cargarTraspasos()">
-                            <i class="bi bi-check2-circle fs-6"></i> Autorizar
-                        </button>
-                        <button class="btn btn-primary" onclick="abrirModalCargarCSV()">
-                            Cargar CSV
-                        </button>
+                <!-- Acciones -->
+                <!-- Herramientas -->
+                <div class="dropdown position-relative flex-grow-1 flex-md-grow-0">
+                    <button type="button"
+                        class="btn btn-sm btn-light px-3 rounded-pill fw-medium d-flex align-items-center justify-content-center gap-2 btn-apple dropdown-toggle w-100"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-tools"></i> Herramientas
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm rounded-3 border-0 p-2">
 
-                    </div>
+                        <!-- ===== SECCIÓN: EXPORTAR ===== -->
+                        <li>
+                            <h6 class="dropdown-header text-uppercase small fw-bold text-muted mb-1"
+                                style="font-size:.7rem; letter-spacing:.5px;">
+                                <i class="bi bi-file-earmark-arrow-down me-1"></i> Exportar
+                            </h6>
+                        </li>
+                        <li>
+                            <button class="dropdown-item d-flex align-items-center gap-2 rounded-2"
+                                onclick="exportarTablaExcel()">
+                                <i class="bi bi-file-earmark-excel text-success"></i> Exportar Inventario a Excel
+                            </button>
+                        </li>
+
+                        <li>
+                            <hr class="dropdown-divider my-2">
+                        </li>
+
+                        <!-- ===== SECCIÓN: CARGA DE INVENTARIO ===== -->
+                        <li>
+                            <h6 class="dropdown-header text-uppercase small fw-bold text-muted mb-1"
+                                style="font-size:.7rem; letter-spacing:.5px;">
+                                <i class="bi bi-box-arrow-in-down me-1"></i> Carga de Inventario
+                            </h6>
+                        </li>
+                        <li>
+                            <button class="dropdown-item d-flex align-items-center gap-2 rounded-2"
+                                data-bs-toggle="modal" onclick="abrirModalInventarioInicial()">
+                                <i class="bi bi-sliders text-primary"></i> Cargar Inventario por producto
+                            </button>
+                        </li>
+                        <li>
+                            <button class="dropdown-item d-flex align-items-center gap-2 rounded-2"
+                                onclick="descargarProductos()">
+                                <i class="bi bi-download text-info"></i> Descargar Excel para carga masiva
+                            </button>
+                        </li>
+                        <li>
+                            <button class="dropdown-item d-flex align-items-center gap-2 rounded-2"
+                                onclick="abrirModalCargarCSV()">
+                                <i class="bi bi-filetype-csv text-warning"></i> Cargar Inventario masivo
+                            </button>
+                        </li>
+
+                    </ul>
                 </div>
-
             </div>
 
             <!-- Tabla -->
@@ -197,6 +222,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/es.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <!-- Modales (PHP) -->
     <?php require_once __DIR__ . '/almacenes/ModalAgregarCantidadesIniciales.php'; ?>
@@ -531,120 +557,82 @@
 
         }
         async function exportarProductosAExcel(productos) {
-            // 1. Crear un nuevo libro de trabajo
-            const workbook = new ExcelJS.Workbook();
-            const worksheet = workbook.addWorksheet('Inventario Productos');
-            const almacen_cargar = $('#filtroAlmacen').val();
+            // El nombre se conserva por compatibilidad con el onclick existente,
+            // pero ahora genera CSV.
 
-            // 2. Definir las columnas de la tabla y sus anchos
-            worksheet.columns = [
-                { header: 'ID Producto', key: 'producto_id', width: 12 },
-                { header: 'SKU', key: 'sku', width: 15 },
-                { header: 'Almacén', key: 'almacen_id', width: 12 },
-                { header: 'Nombre del Producto', key: 'nombre', width: 30 },
-                { header: 'U. Reporte', key: 'unidad_reporte', width: 12 },
-                { header: 'Factor Conv. (1/factor)', key: 'factor_conversion', width: 18 },
-                { header: 'P. Minorista', key: 'precio_minorista', width: 15 },
-                { header: 'P. Mayorista', key: 'precio_mayorista', width: 15 },
-                { header: 'P. Distribuidor', key: 'precio_distribuidor', width: 15 },
-                { header: 'Existencias', key: 'existencias', width: 12 },
-                { header: 'Costo Lote', key: 'costo_lote', width: 15 }
+            if (!Array.isArray(productos) || productos.length === 0) {
+                Swal.fire({ icon: 'warning', title: 'Sin datos', text: 'No hay productos para exportar.' });
+                return;
+            }
+
+            const almacenCargar = document.getElementById('filtroAlmacen')?.value || '';
+
+            // 1. Cabeceras (mismo orden que tenías en Excel)
+            const headers = [
+                'ID Producto',
+                'SKU',
+                'Almacén',
+                'Nombre del Producto',
+                'U. Reporte',
+                'Factor Conv. (1/factor)',
+                'P. Minorista',
+                'P. Mayorista',
+                'P. Distribuidor',
+                'Existencias',
+                'Costo Lote'
             ];
 
-            // Estilo para la cabecera (Fondo azul desaturado profesional, texto blanco en negrita)
-            const headerRow = worksheet.getRow(1);
-            headerRow.font = { name: 'Segoe UI', size: 11, bold: true, color: { argb: 'FFFFFF' } };
-            headerRow.fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: { argb: '2E5B82' }
+            // 2. Helper para escapar campos CSV (comillas, comas, saltos de línea)
+            const escCSV = (v) => {
+                const s = String(v ?? '');
+                // Si contiene coma, comilla o salto de línea → envolver en comillas y duplicar comillas internas
+                if (/[",\n\r]/.test(s)) {
+                    return '"' + s.replace(/"/g, '""') + '"';
+                }
+                return s;
             };
-            headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
-            headerRow.height = 25;
 
-            // 3. Iterar con un forEach sobre los datos para ir agregando las filas
-            productos.forEach((prod, index) => {
+            // 3. Construir filas
+            const lineas = [headers.map(escCSV).join(',')];
 
-                // --- Factor de conversión e inversa ---
+            productos.forEach((prod) => {
                 const factor = parseFloat(prod.factor_conversion || 0);
-                const factorInverso = factor === 0 ? 0 : 1 / factor;
 
-                // Añadimos la fila al worksheet mapeando los tipos numéricos correctos
-                const row = worksheet.addRow({
-                    producto_id: prod.producto_id,
-                    sku: prod.sku,
-                    almacen_id: almacen_cargar || '',
-                    nombre: prod.nombre,
-                    unidad_reporte: prod.unidad_reporte || '',
-                    factor_conversion: factorInverso,
-                    precio_minorista: parseFloat(prod.precio_minorista || 0),
-                    precio_mayorista: parseFloat(prod.precio_mayorista || 0),
-                    precio_distribuidor: parseFloat(prod.precio_distribuidor || 0),
-                    existencias: 0,
-                    costo_lote: 0
-                });
+                const fila = [
+                    prod.producto_id ?? '',
+                    prod.sku ?? '',
+                    almacenCargar,
+                    prod.nombre ?? '',
+                    prod.unidad_reporte ?? '',
+                    factor, // número crudo; Excel lo formatea
+                    parseFloat(prod.precio_minorista || 0),
+                    parseFloat(prod.precio_mayorista || 0),
+                    parseFloat(prod.precio_distribuidor || 0),
+                    0, // Existencias (para llenar)
+                    0  // Costo Lote (para llenar)
+                ];
 
-                // Formatear celdas de números y precios para que Excel los reconozca nativamente
-                row.getCell('producto_id').alignment = { horizontal: 'center' };
-                row.getCell('sku').alignment = { horizontal: 'center' };
-                row.getCell('almacen_id').alignment = { horizontal: 'center' };
-                row.getCell('unidad_reporte').alignment = { horizontal: 'center' };
-                row.getCell('existencias').alignment = { horizontal: 'center' };
-
-                // Formatos numéricos monetarios y decimales
-                row.getCell('factor_conversion').numFmt = '#,##0.0000';
-                row.getCell('precio_minorista').numFmt = '$#,##0.00';
-                row.getCell('precio_mayorista').numFmt = '$#,##0.00';
-                row.getCell('precio_distribuidor').numFmt = '$#,##0.00';
-                row.getCell('existencias').numFmt = '#,##0.00';
-                row.getCell('costo_lote').numFmt = '$#,##0.00';
-
-                // Aplicar bordes delgados gris claro a las filas
-                row.eachCell((cell) => {
-                    cell.font = { name: 'Segoe UI', size: 10 };
-                    cell.border = {
-                        top: { style: 'thin', color: { argb: 'E0E0E0' } },
-                        bottom: { style: 'thin', color: { argb: 'E0E0E0' } },
-                        left: { style: 'thin', color: { argb: 'E0E0E0' } },
-                        right: { style: 'thin', color: { argb: 'E0E0E0' } }
-                    };
-
-                    // Zebra striping alternado (efecto visual gris claro en filas impares)
-                    if (index % 2 !== 0) {
-                        cell.fill = {
-                            type: 'pattern',
-                            pattern: 'solid',
-                            fgColor: { argb: 'F9FAFB' }
-                        };
-                    }
-                });
-
-                row.height = 20;
+                lineas.push(fila.map(escCSV).join(','));
             });
 
-            const filename = 'Reporte_Productos_Inventario.xlsx';
+            // 4. Añadir BOM UTF-8 para que Excel respete tildes/ñ
+            const csvContent = '\uFEFF' + lineas.join('\r\n');
 
-            // --- Procesamiento y descarga en el Navegador ---
+            // 5. Descargar
+            const filename = 'Reporte_Productos_Inventario.csv';
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
 
-            // Generar el buffer del archivo Excel
-            const buffer = await workbook.xlsx.writeBuffer();
-
-            // Crear un objeto Blob con el tipo MIME correcto para archivos XLSX
-            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-
-            // Crear un enlace temporal en el DOM
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = filename;
-
-            // Añadir al documento, hacer click de forma virtual y removerlo
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
 
-            // Liberar memoria del objeto URL creado
-            URL.revokeObjectURL(link.href);
-        }    </script>
+            setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+        }
+
+    </script>
     <script>
         /**
      * Procesa el CSV descargado (editado por el usuario en Existencias y Costo Lote)
@@ -990,6 +978,74 @@
                     procesarCSVExistencias(result.value);
                 }
             });
+        }
+        function exportarTablaExcel(nombreArchivo = 'Productos') {
+            const tbody = document.getElementById('tbodyProductos');
+            if (!tbody) {
+                Swal.fire('Error', 'No se encontró la tabla de productos.', 'error');
+                return;
+            }
+
+            const filas = tbody.querySelectorAll('tr');
+            if (!filas.length) {
+                Swal.fire('Sin datos', 'No hay productos para exportar.', 'warning');
+                return;
+            }
+
+            // Detectar si la tabla está vacía (mensaje de "no hay productos")
+            if (filas.length === 1 && filas[0].querySelector('td[colspan]')) {
+                Swal.fire('Sin datos', 'No hay productos para exportar.', 'warning');
+                return;
+            }
+
+            // ============ ENCABEZADOS ============
+            // Ajusta estos nombres a los que quieras en el Excel
+            const encabezados = [
+                'SKU',
+                'Producto',
+                'Descripción',
+                'Categoría',
+                'Stock',
+                'Almacén'
+            ];
+
+            const datos = [encabezados];
+
+            // ============ FILAS ============
+            filas.forEach(tr => {
+                const celdas = tr.querySelectorAll('td');
+                if (celdas.length < 7) return; // fila inválida o mensaje vacío
+
+                // Extraemos el texto limpio (sin HTML interno de badges/botones)
+                const sku = celdas[0].innerText.trim();
+                const nombre = celdas[1].innerText.trim();
+                const descripcion = celdas[2].innerText.trim();
+                const categoria = celdas[3].innerText.trim();
+                const stock = celdas[4].innerText.trim();
+                const almacen = celdas[5].innerText.trim();
+
+                datos.push([sku, nombre, descripcion, categoria, stock, almacen]);
+            });
+
+            // ============ CREAR LIBRO ============
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(datos);
+
+            // Anchos de columna (aproximados)
+            ws['!cols'] = [
+                { wch: 15 },  // SKU
+                { wch: 30 },  // Producto
+                { wch: 40 },  // Descripción
+                { wch: 20 },  // Categoría
+                { wch: 15 },  // Stock
+                { wch: 20 }   // Almacén
+            ];
+
+            XLSX.utils.book_append_sheet(wb, ws, 'Productos');
+
+            // ============ DESCARGAR ============
+            const fecha = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+            XLSX.writeFile(wb, `${nombreArchivo}_${fecha}.xlsx`);
         }
     </script>
 </body>

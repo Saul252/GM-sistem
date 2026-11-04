@@ -4,8 +4,6 @@
         z-index: 10050 !important;
     }
 
-
-
     /* ═══ RESET: no heredar uppercase del body ═══ */
     #modalDetalle,
     #modalDetalle * {
@@ -47,8 +45,6 @@
         box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
     }
 
-    #modalDetalle .modal-body {}
-
     /* ═══ TABLAS ═══ */
     #modalDetalle table thead th {
         background-color: #2c3e50;
@@ -72,25 +68,16 @@
         font-weight: bold;
     }
 
-    /* El contenedor raíz de SweetAlert2 */
-    .swal2-container {
+    /* SweetAlert2 */
+    .swal2-container,
+    .swal2-container.swal2-backdrop-show,
+    .swal2-toast-shown .swal2-container {
         z-index: 99999 !important;
     }
 
-    /* El backdrop de SweetAlert */
-    .swal2-container.swal2-backdrop-show {
-        z-index: 99999 !important;
-    }
-
-    /* El popup en sí */
     .swal2-popup {
         z-index: 100000 !important;
         position: relative;
-    }
-
-    /* El toast (notificaciones sin backdrop) */
-    .swal2-toast-shown .swal2-container {
-        z-index: 99999 !important;
     }
 </style>
 
@@ -154,8 +141,6 @@
 
                         </div>
 
-
-
                         <div class="mb-4 p-2  border rounded shadow-sm text-center">
                             <div class="mb-2 pb-2 border-bottom">
                                 <span class="d-block small text-body-secondary text-uppercase fw-bold">Total de
@@ -170,30 +155,16 @@
                             </div>
                         </div>
 
-                        <?php if ($_SESSION['rol_id'] == 1 || $_SESSION['rol_id'] == 2): ?>
-                            <div id="contenedorBoton">
-                                <button id="btnHabilitar" class="btn btn-action w-100 mb-2 py-2 fw-bold" onclick="abrirModalDespachoVentaTotal(
+                        <div id="contenedorBoton">
+                            <button id="btnHabilitar" class="btn btn-action w-100 mb-2 py-2 fw-bold" onclick="abrirModalDespachoVentaTotal(
             $('#Almacen_id').text(),
             $('#IdFolio').text()
         )">
-                                    Nueva Entrega
-                                </button>
-                            </div>
-                        <?php endif; ?>
-                        <!-- <button id="btnAbonar" class="btn btn-primary w-100 mb-2 py-2 fw-bold"
-                                    onclick="abrirFlujoAbono()">
-                                    <i class="bi bi-cash"></i> Registrar Abono
-                                </button> -->
-
-
-                        <div class="text-end pe-3">
-
-
-
+                                Nueva Entrega
+                            </button>
                         </div>
 
-
-
+                        <div class="text-end pe-3"></div>
                     </div>
                     <div class="col-md-9 p-4">
                         <div class="table-responsive border rounded mb-3" style="max-height: 180px;">
@@ -203,7 +174,6 @@
                                         <th>Producto</th>
                                         <th class="text-center">Venta</th>
                                         <th class="text-center">Surtido</th>
-
                                         <th class="text-center text-danger">Falta</th>
                                         <th class="text-center col-input d-none">Entrega</th>
                                     </tr>
@@ -265,30 +235,73 @@
                                                 <th class="text-center">Ruta</th>
                                             </tr>
                                         </thead>
-
-                                        <tbody id="tbodyRepartos" class="small">
-
-                                            <!-- ejemplo -->
-
-
-
-                                        </tbody>
+                                        <tbody id="tbodyRepartos" class="small"></tbody>
                                     </table>
                                 </div>
                             </div>
                         </div>
                         <h4 id="cancelado" class="fw-bold text-danger padding-top-3 mb-3"></h4>
-
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
 <script>
+    // ═══════════════════════════════════════════════════════════════
+    // HELPERS DE CONVERSIÓN
+    // ═══════════════════════════════════════════════════════════════
+    // Regla:
+    //   factor_conversion = cuántas unidades base hay en 1 unidad de reporte
+    //   (ej: 1000 kg = 1 tonelada  →  factor = 1000)
+    //
+    //   base → reporte:  cantidadBase / factor
+    //   reporte → base:  cantidadReporte * factor
+    // ═══════════════════════════════════════════════════════════════
+
+    function factorProducto(p) {
+        const f = parseFloat(p.factor_conversion);
+        return (isFinite(f) && f > 0) ? f : 1;
+    }
+
+    /**
+     * Formatea una cantidad en unidad base para mostrarla
+     * en su unidad de reporte si aplica, o en su unidad base si no.
+     * Devuelve { cantidad, unidad } ya redondeados.
+     */
+    function formatearCantidad(cantidadBase, p) {
+        const cantBase = parseFloat(cantidadBase) || 0;
+        const factor = factorProducto(p);
+        const uBase = p.unidad_medida || '';
+        const uRep = p.unidad_reporte || uBase;
+
+        // Si no hay conversión real (factor <= 1), quedarse en unidad base
+        if (factor <= 1) {
+            return { cantidad: cantBase, unidad: uBase };
+        }
+
+        // Si es >= 1 unidad de reporte, mostrar en unidad de reporte
+        const enReporte = cantBase / factor;
+        if (enReporte >= 1) {
+            return { cantidad: enReporte, unidad: uRep };
+        }
+
+        // Si es menor a 1 unidad de reporte, mostrar en unidad base
+        return { cantidad: cantBase, unidad: uBase };
+    }
+
+    function fmtNum(n) {
+        const v = parseFloat(n) || 0;
+        // Enteros sin decimales, con decimales a 3 posiciones máximo
+        return Number.isInteger(v) ? v.toString() : v.toFixed(3).replace(/\.?0+$/, '');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // VER DETALLE
+    // ═══════════════════════════════════════════════════════════════
     async function verDetalle(id) {
         try {
-            // 🔥 OBTENER IDS PENDIENTES
             const respIds = await fetch(
                 `/cfsistem/app/controllers/entregasController.php?ajax=get_ids_pendientes_venta&venta_id=${id}`
             );
@@ -298,39 +311,27 @@
 
             const dataAlmacen = await resNAlmacen.json();
             const almacen_id_conseguido = dataAlmacen.almacen.almacen_id;
-            console.log(dataAlmacen.almacen.almacen_id);
+            console.log('almacen_id:', almacen_id_conseguido);
 
             const dataIds = await respIds.json();
+            console.log('ids pendientes:', dataIds.ids);
 
-            console.log(dataIds.ids);
-
-            // =====================================================
-            // 🔥 HABILITAR / DESHABILITAR BOTÓN
-            // =====================================================
-
-            if (
-                Array.isArray(dataIds.ids) &&
-                dataIds.ids.length > 0
-
-            ) {
-
-
-            } else {
-
+            // Habilitar/deshabilitar botón según pendientes
+            if (!(Array.isArray(dataIds.ids) && dataIds.ids.length > 0)) {
                 $('#btnGestionVenta')
                     .addClass('d-none')
                     .prop('disabled', true)
                     .removeAttr('onclick');
-
             }
+
             const res = await fetch(`${URL_CONTROLLER}?action=obtenerDetalle&id=${id}`);
             cargarRepartos(id);
             const data = await res.json();
             console.log(data);
 
-
             ventaActual = data;
             $('#folioFactura').text(data.info.factura);
+
             if (data.info.estado_general === 'cancelada') {
                 $('#btnGestionVenta')
                     .addClass('d-none')
@@ -348,6 +349,7 @@
             } else {
                 $('#cancelado').text('');
             }
+
             $('#spanFolio').text(data.info.folio);
             $('#IdFolio').text(data.info.id);
             $('#Almacen_id').text(data.info.almacen_id);
@@ -365,228 +367,196 @@
                 $('#detSaldoLabel').text('LIQUIDADO').removeClass('text-danger').addClass('text-success');
                 $('#btnAbonar').addClass('d-none');
             } else {
-                $('#detSaldoLabel').text('$' + deuda.toFixed(2)).removeClass('text-success').addClass(
-                    'text-danger');
+                $('#detSaldoLabel').text('$' + deuda.toFixed(2))
+                    .removeClass('text-success').addClass('text-danger');
                 $('#btnAbonar').removeClass('d-none');
             }
 
-            // --- RENDERIZADO DE PRODUCTOS CON CONVERSIÓN ---
-            // --- RENDERIZADO DE PRODUCTOS CON CONVERSIÓN ---
+            // ─────────────────────────────────────────────
+            // RENDERIZADO DE PRODUCTOS (CONVERSIÓN CORREGIDA)
+            // ─────────────────────────────────────────────
             $('#tbodyDetalle').html(data.productos.map(p => {
-                console.log(p);
-                let cant = parseFloat(p.cantidad) || 0;
-                let pendiente = (cant - (parseFloat(p.cantidad_entregada) || 0)).toFixed(3);
+                const factor = factorProducto(p);
+                const cant = parseFloat(p.cantidad) || 0;              // en unidad base
+                const entregada = parseFloat(p.cantidad_entregada) || 0;    // en unidad base
+                const disponible = parseFloat(p.disponible) || 0;           // en unidad base
+                const pendiente = Math.max(cant - entregada, 0);            // en unidad base
 
-                let factor = parseFloat(p.factor_conversion) || 1;
-                let cantPendiente = pendiente / factor;
+                const uBase = p.unidad_medida || '';
+                const uRep = p.unidad_reporte || uBase;
 
-                let pen = Number(pendiente / (1 / p.equivalencia));
-                let pendi = Number(cantPendiente);
-                let disponible = (p.disponible / factor);
-                console.log(disponible);
-                let entregada = p.cantidad_entregada / factor;
-
-                console.log({
-                    pen,
-                    tipo: typeof pen,
-                    comparacion: pen > 0
-                });
-                // 1. Definimos qué se verá en la columna "Venta"
-                let visualizacionVenta = "";
-                let infoEquivalenciaSub = "";
-                let unm = (parseFloat(p.cantidad_entregada) / (1 / parseFloat(p.equivalencia)));
-                console.log(unm);
-                unm = unm % 1 !== 0 ? unm.toFixed(0) : unm;
+                // ── Columna VENTA ──
+                // Mostrar en unidad de reporte si hay factor y la cantidad
+                // alcanza para al menos 1 unidad de reporte.
+                let ventaHtml;
                 if (factor > 1 && cant >= factor) {
-                    // Si alcanza el factor (Ej: 20 bultos >= 20 factor)
-                    let unidadesMayores = (cant / factor);
-                    // Formateamos para que si es entero no muestre .00 (Ej: 1 en vez de 1.00)
-                    let totalUnidadesStr = Number.isInteger(unidadesMayores) ? unidadesMayores :
-                        unidadesMayores.toFixed(2);
-
-
-                    // Lo que se verá grande en la celda
-                    visualizacionVenta =
-                        `<span class="fw-bold">${totalUnidadesStr} ${p.unidad_reporte}</span> <br> <small class="text-body-secondary">(${cant} ${p.unidad_medida})</small>`;
-
-                    // Leyenda pequeña debajo del nombre del producto (opcional, para referencia)
-                    infoEquivalenciaSub =
-                        `<div class="text-body-secondary small" style="font-size: 0.65rem;">1 ${p.unidad_reporte} = ${factor} ${p.unidad_medida}</div>`;
+                    const cantRep = cant / factor;
+                    ventaHtml = `
+                        <span class="fw-bold">${fmtNum(cantRep)} ${uRep}</span><br>
+                        <small class="text-body-secondary">(${fmtNum(cant)} ${uBase})</small>`;
                 } else {
-                    // Si no llega al factor (Ej: 10 bultos) mostramos la unidad normal
-                    //agregar observaciones en ticket 
-                    visualizacionVenta = `<span>${cant} ${p.unidad_medida}</span>`;
+                    ventaHtml = `<span>${fmtNum(cant)} ${uBase}</span>`;
                 }
 
+                // Leyenda de equivalencia debajo del producto
+                const leyendaEq = (factor > 1)
+                    ? `<div class="text-body-secondary small" style="font-size:0.65rem;">
+                         1 ${uRep} = ${fmtNum(factor)} ${uBase}
+                       </div>`
+                    : '';
+
+                // ── Columna SURTIDO ──
+                const surtidoFmt = formatearCantidad(entregada, p);
+                const surtidoHtml = (entregada > 0)
+                    ? `<span>${fmtNum(surtidoFmt.cantidad)} ${surtidoFmt.unidad}</span>`
+                    : '<span class="text-body-secondary">—</span>';
+
+                // ── Columna FALTA ──
+                const faltaFmt = formatearCantidad(pendiente, p);
+                const faltaHtml = (pendiente > 0)
+                    ? `<span class="fw-bold">${fmtNum(faltaFmt.cantidad)} ${faltaFmt.unidad}</span>`
+                    : '<span class="text-success fw-bold">Completo</span>';
+
+                // ── Input de entrega ──
+                // Máximo en unidad de reporte = min(pendiente, disponible) / factor
+                // Máximo en unidad base     = min(pendiente, disponible)
+                const topeBase = Math.min(pendiente, disponible);
+                const topeRep = topeBase / factor;
+
+                // Si hay stock suficiente para cubrir el pendiente completo en
+                // unidad de reporte, usamos unidad de reporte; si no, unidad base.
+                const usarReporte = (factor > 1 && topeRep >= 1);
+                const maxInput = usarReporte ? topeRep : topeBase;
+                const unidadInput = usarReporte ? uRep : uBase;
+                const stepInput = usarReporte ? '0.001' : '0.001';
+
+                let inputHtml;
+                if (pendiente > 0) {
+                    inputHtml = `
+                        <input type="number"
+                               class="form-control form-control-sm input-entrega2 mx-auto"
+                               max="${maxInput}"
+                               min="0"
+                               step="${stepInput}"
+                               value="0.000"
+                               data-dvid="${p.dvid}"
+                               data-id="${p.producto_id}"
+                               data-factor="${usarReporte ? factor : 1}"
+                               data-unidad="${unidadInput}"
+                               style="width:80px">
+                        <input type="hidden"
+                               class="input-entrega0"
+                               value="0"
+                               data-dvid="${p.dvid}"
+                               data-id="${p.producto_id}">
+                        <span class="badge bg-success mt-1">${unidadInput}</span>`;
+                } else {
+                    inputHtml = '<span class="badge bg-success">Completo</span>';
+                }
 
                 return `<tr>
-        <td>
-            <div class="fw-bold card-title-text">${p.producto}</div>
-            ${infoEquivalenciaSub}
-        </td>
-        <td class="text-center">
-        ${p.equivalencia >= 1 ? cant / (1 / p.equivalencia).toFixed(2) : (cant * (p.equivalencia)).toFixed(2)} ${p.nombre}
-        
-      
-        (${cant} ${p.unidad_medida})
-            
-        </td>
-        <td class="text-center">
-        
-      
-        ${entregada > 1 ? entregada + ' ' + p.unidad_reporte :
-                        (p.cantidad_entregada / (1 / p.equivalencia)) >= 1 ? (p.cantidad_entregada / (1 / p.equivalencia)).toFixed(3) + ' ' + p.nombre :
-                            p.cantidad_entregada + ' ' + p.unidad_medida}</td>
-        
-        <td class="text-center text-danger fw-bold">${(cantPendiente >= 1 ? cantPendiente.toFixed(3) : pen.toFixed(3))} ${cantPendiente >= 1 ? p.unidad_reporte : p.cantidad / (1 / p.equivalencia) > 1 ? p.nombre : p.unidad_medida}</td>
-         <td class="text-center col-input d-none">
-            ${pen.toFixed(4) > 0 ?
-                        `<input type="number"
-    class="form-control form-control-sm input-entrega2 mx-auto"
-    max="${pen <= p.disponible ? (pendi >= 1 ? pendi : pen) : (disponible > 1 ? disponible : p.disponible)}"
-    min="0"
-    step="0.01"
-    value="0.00"
-    data-dvid="${p.dvid}"
-    data-id="${p.producto_id}"
-    data-factor="${(pendi >= 1 && disponible >= 1) ? factor : 1}"
-    style="width:70px">
-                   <input type="hidden" class="form-control form-control-sm input-entrega0 mx-auto" 
-                    value="0"data-dvid=${p.dvid} data-id="${p.producto_id}" style="width:70px"step="0.01" min="0">
-                     <span class="badge bg-success">${(pendi >= 1 && disponible >= 1) ? p.unidad_reporte : p.unidad_medida}</span>`
-
-                        : '<span class="badge bg-success">Completo</span>'}
-        </td>
-    </tr>`;
+                    <td>
+                        <div class="fw-bold card-title-text">${p.producto}</div>
+                        ${leyendaEq}
+                    </td>
+                    <td class="text-center">${ventaHtml}</td>
+                    <td class="text-center">${surtidoHtml}</td>
+                    <td class="text-center text-danger">${faltaHtml}</td>
+                    <td class="text-center col-input d-none">${inputHtml}</td>
+                </tr>`;
             }).join(''));
-            // ... (dentro de verDetalle, después de renderizar historial de entregas)
-            $('#tbodyHistorial').html(data.historial.length > 0 ? data.historial.map(h => {
-                // 1. Extraemos los valores del historial
-                // Si salen vacíos o undefined, es que el PHP no los está mandando en el JSON de historial
-                let cantH = parseFloat(h.cantidad) || 0;
-                let factorH = parseFloat(h.factor_conversion) || 1;
-                let uReporteH = h.unidad_reporte || '';
-                let uMedidaH = h.unidad_medida || '';
 
-                let visualizacionHistorial = "";
-                console.log((h.cantidad / (1 / h.equivalencia)) >= 1 ? (h.cantidad / (1 / h
-                    .equivalencia)).toFixed(3) : cantH);
-                // 2. Aplicamos la misma lógica que usas arriba
+            // ─────────────────────────────────────────────
+            // HISTORIAL DE ENTREGAS (CONVERSIÓN CORREGIDA)
+            // ─────────────────────────────────────────────
+            $('#tbodyHistorial').html(
+                data.historial.length > 0
+                    ? data.historial.map(h => {
+                        const cantH = parseFloat(h.cantidad) || 0;
+                        const fmt = formatearCantidad(cantH, h);
 
-                // Aquí verás si unidad_medida viene vacío desde la base de datos
-                visualizacionHistorial =
-                    `<span>${(h.cantidad / (1 / h.equivalencia)) >= 1 ? (h.cantidad / (1 / h.equivalencia)).toFixed(3) : cantH} ${(h.cantidad / (1 / h.equivalencia)) >= 1 ? (h.nombre) : uMedidaH}</span>`;
-
-                return `
-    <tr>
-        <td class="small">${h.fecha}</td>
-        <td class="small">${h.usuario_nombre}</td>
-        <td>
-            <div class="fw-bold" style="font-size:0.85rem;">${h.producto}</div>
-        </td>
-        <td class="text-center">
-            ${visualizacionHistorial}
-        </td>
-    </tr>`;
-            }).join('') :
-                '<tr><td colspan="4" class="text-center text-body-secondary p-3">No hay entregas registradas</td></tr>'
+                        return `<tr>
+                            <td class="small">${h.fecha}</td>
+                            <td class="small">${h.usuario_nombre}</td>
+                            <td>
+                                <div class="fw-bold" style="font-size:0.85rem;">${h.producto}</div>
+                            </td>
+                            <td class="text-center">${fmtNum(fmt.cantidad)} ${fmt.unidad}</td>
+                        </tr>`;
+                    }).join('')
+                    : '<tr><td colspan="4" class="text-center text-body-secondary p-3">No hay entregas registradas</td></tr>'
             );
 
-
-            // --- RENDERIZADO DE HISTORIAL DE PAGOS ---
+            // ─────────────────────────────────────────────
+            // HISTORIAL DE PAGOS
+            // ─────────────────────────────────────────────
             if (data.pagos && data.pagos.length > 0) {
                 $('#tbodyPagos').html(data.pagos.map(p => `
-        <tr>
-            <td class="small">${p.fecha}</td>
-            <td class="fw-bold text-success">$${parseFloat(p.monto).toFixed(2)}</td>
-            <td>
-                <span class="badge bg-light text-dark border fw-normal">${p.metodo_pago} </span>
-               
-                <div class="text-body-secondary" style="font-size:0.65rem">Recibió: ${p.usuario_nombre}</div>
-            </td>
-            <td>
-            <span>
-    ${(p.referencia ?? '')
-
-                    }
-</span> 
-            </td>
-        </tr>
-    `).join(''));
+                    <tr>
+                        <td class="small">${p.fecha}</td>
+                        <td class="fw-bold text-success">$${parseFloat(p.monto).toFixed(2)}</td>
+                        <td>
+                            <span class="badge bg-light text-dark border fw-normal">${p.metodo_pago}</span>
+                            <div class="text-body-secondary" style="font-size:0.65rem">
+                                Recibió: ${p.usuario_nombre}
+                            </div>
+                        </td>
+                        <td><span>${p.referencia ?? ''}</span></td>
+                    </tr>`).join(''));
             } else {
                 $('#tbodyPagos').html(
-                    '<tr><td colspan="3" class="text-center text-body-secondary p-3">No hay abonos registrados</td></tr>'
+                    '<tr><td colspan="4" class="text-center text-body-secondary p-3">No hay abonos registrados</td></tr>'
                 );
             }
+
             alternarModo(false);
             modalObj.show();
         } catch (error) {
-            console.error("Error al obtener detalle:", error);
+            console.error('Error al obtener detalle:', error);
         }
     }
-    async function cargarRepartos(idVenta) {
 
+    // ═══════════════════════════════════════════════════════════════
+    // REPARTOS
+    // ═══════════════════════════════════════════════════════════════
+    async function cargarRepartos(idVenta) {
         const resp = await fetch(
-            `/cfsistem/app/controllers/repartosController.php?action=get_repartos_entrega&id=${idVenta}`);
+            `/cfsistem/app/controllers/repartosController.php?action=get_repartos_entrega&id=${idVenta}`
+        );
         const repartoViaje = await resp.json();
-        let repartos = repartoViaje.data;
-        console.log(repartoViaje);
+        const repartos = repartoViaje.data;
 
         const tbody = document.getElementById('tbodyRepartos');
         tbody.innerHTML = '';
 
         if (!repartoViaje.success) return;
-        // ================================
-        // RENDER TABLA
-        // ================================
+
         repartos.forEach(g => {
-
-            const estadoClass =
-                g.estatus_logistico === 'completado' ?
-                    'bg-success' :
-                    'bg-warning card-title-text';
-
             const tr = `
-            <tr>
-                <td class="fw-bold">
-                    ${g.entrega_id}
-                </td>
-                <td class="fw-bold">
-                    ${g.viaje_folio}
-                </td>
-
-                <td>
-                    ${g.fecha}
-                </td>
-
-                <td>
-                    <span >
-                        ${g.direccion_entrega}
-                    </span>
-                </td>
-<td class="text-center align-middle py-2">
-    <div class="d-inline-flex gap-1 bg-light p-1 rounded-pill border border-translucent shadow-xs">
-     <button type="button" 
-                class="btn btn-xs btn-primary rounded-pill px-2.5 py-1 d-inline-flex align-items-center border-0 fw-semibold" 
-                style="font-size: 0.75rem; transition: all 0.2s;"
-                onclick="imprimirRuta('${g.entrega_id}','${g.folio}')">
-            <i class="bi bi-truck me-1" style="font-size: 0.85rem;"></i>
-            <span>Ver Despacho</span>
-        </button>
-
-        <button type="button" 
-                class="btn btn-xs btn-dark rounded-pill px-2.5 py-1 d-inline-flex align-items-center border-0 fw-semibold" 
-                style="font-size: 0.75rem; transition: all 0.2s;"
-                onclick="abrirModalEvidencias(${g.entrega_id})">
-            <i class="bi bi-images me-1" style="font-size: 0.85rem;"></i>
-            <span>Evidencias</span>
-        </button>
-    </div>
-</td>
-
-            </tr>
-        `;
-
+                <tr>
+                    <td class="fw-bold">${g.entrega_id}</td>
+                    <td class="fw-bold">${g.viaje_folio}</td>
+                    <td>${g.fecha}</td>
+                    <td><span>${g.direccion_entrega}</span></td>
+                    <td class="text-center align-middle py-2">
+                        <div class="d-inline-flex gap-1 bg-light p-1 rounded-pill border border-translucent shadow-xs">
+                            <button type="button"
+                                    class="btn btn-xs btn-primary rounded-pill px-2.5 py-1 d-inline-flex align-items-center border-0 fw-semibold"
+                                    style="font-size: 0.75rem; transition: all 0.2s;"
+                                    onclick="imprimirRuta('${g.entrega_id}','${g.folio}')">
+                                <i class="bi bi-truck me-1" style="font-size: 0.85rem;"></i>
+                                <span>Ver Despacho</span>
+                            </button>
+                            <button type="button"
+                                    class="btn btn-xs btn-dark rounded-pill px-2.5 py-1 d-inline-flex align-items-center border-0 fw-semibold"
+                                    style="font-size: 0.75rem; transition: all 0.2s;"
+                                    onclick="abrirModalEvidencias(${g.entrega_id})">
+                                <i class="bi bi-images me-1" style="font-size: 0.85rem;"></i>
+                                <span>Evidencias</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>`;
             tbody.insertAdjacentHTML('beforeend', tr);
         });
     }

@@ -8,14 +8,10 @@
     <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
     <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
 
-    <!-- Librería para generación de PDF en dispositivos móviles -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
-    <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
-        /* Configuración de Impresión Media Hoja (A5 Horizontal) */
         @page {
             margin: 6mm 8mm;
         }
@@ -31,7 +27,6 @@
             background-color: #fff;
         }
 
-        /* Barra de control superior estilizada */
         .no-print {
             background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             padding: 14px;
@@ -75,7 +70,6 @@
             position: relative;
         }
 
-        /* Layout Base */
         .table-layout {
             width: 100%;
             border-collapse: collapse;
@@ -86,7 +80,6 @@
             vertical-align: top;
         }
 
-        /* Cabecera Estilo Corporativo */
         .logo-container {
             display: flex;
             align-items: center;
@@ -109,7 +102,6 @@
             line-height: 1.4;
         }
 
-        /* Bloque Destacado de Folio / Fecha */
         .remision-badge {
             background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
             color: white;
@@ -154,7 +146,6 @@
             width: 30%;
         }
 
-        /* Tarjetas de Información */
         .card-info {
             border: 1px solid #e2e8f0;
             background: #ffffff;
@@ -174,7 +165,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Tabla de Contenido Premium */
         .items-table {
             width: 100%;
             border-collapse: collapse;
@@ -204,7 +194,6 @@
             background-color: #f8fafc;
         }
 
-        /* Hilera de Totales */
         .total-row td {
             font-size: 11pt;
             font-weight: 700;
@@ -220,7 +209,6 @@
             font-weight: 800;
         }
 
-        /* Sección Inferior de Control */
         .card-obs {
             border: 1px solid #e2e8f0;
             background: #fafafa;
@@ -267,9 +255,6 @@
             }
         }
 
-        /* ============================================
-           ESTILOS PERSONALIZADOS SWEETALERT2
-           ============================================ */
         .swal-cf-popup {
             font-family: 'Segoe UI', Arial, sans-serif;
             border-radius: 14px !important;
@@ -345,10 +330,8 @@
         </button>
     </div>
 
-    <!-- Indicador de Carga -->
     <div id="cargando">CARGANDO DATOS DE LA REMISIÓN...</div>
 
-    <!-- Contenedor Principal de la Remisión (Elegante) -->
     <div id="contenedor-remision" style="display: none;">
         <div class="invoice-box">
 
@@ -428,10 +411,12 @@
                         <th class="text-right col-precios" style="width: 10%;">IMPORTE</th>
                     </tr>
                 </thead>
-                <tbody id="tabla-detalles">
-                    <!-- Filas generadas dinámicamente -->
-                </tbody>
+                <tbody id="tabla-detalles"></tbody>
             </table>
+
+            <div id="seccion-pagos" style="margin-top: 8px;">
+                <table class="items-table" id="tabla-pagos" style="margin-top: 0;"></table>
+            </div>
 
             <div class="card-obs">
                 <div
@@ -447,11 +432,7 @@
 
         </div>
     </div>
-
     <script>
-        // ============================================
-        // CONFIGURACIÓN GLOBAL DE SWEETALERT
-        // ============================================
         const swalCF = Swal.mixin({
             customClass: {
                 popup: 'swal-cf-popup',
@@ -494,11 +475,6 @@
             }
         }
 
-        /**
-     * Formatea una dirección agregando ":" después de calle, col, ciudad, pueblo.
-     * Ejemplo: "calle Av. Juárez 123, col Centro, ciudad Tlalpan"
-     *       → "calle: Av. Juárez 123, col: Centro, ciudad: Tlalpan"
-     */
         function formatearDireccion(direccion) {
             if (!direccion) return '';
 
@@ -506,59 +482,49 @@
             let texto = String(direccion);
 
             etiquetas.forEach(etq => {
-                // Elimina "etiqueta:" o "etiqueta" (con o sin dos puntos y espacios)
                 const regex = new RegExp(`\\b${etq}\\s*:?\\s*`, 'gi');
                 texto = texto.replace(regex, '');
             });
 
-            // Limpiar comas duplicadas o sueltas al inicio/final
             texto = texto
-                .replace(/,\s*,/g, ',')     // ", ," → ","
-                .replace(/^\s*,\s*/, '')    // coma al inicio
-                .replace(/\s*,\s*$/, '')    // coma al final
-                .replace(/\s+/g, ' ')       // espacios múltiples → uno
+                .replace(/,\s*,/g, ',')
+                .replace(/^\s*,\s*/, '')
+                .replace(/\s*,\s*$/, '')
+                .replace(/\s+/g, ' ')
                 .trim();
 
             return texto.toUpperCase();
         }
 
         function renderizarTicket(data) {
-            const { venta, detalles } = data;
+            const { venta, detalles, pagos } = data;
             console.log(data);
 
-            // Llenado de Cabecera e Información General
             document.getElementById('almacen-nombre').innerText = (venta.nombre_almacen || '').toUpperCase();
             document.getElementById('almacen-direccion').innerText = venta.direccion_almacen || '';
             document.getElementById('label-tipo-documento').innerText = mostrarPrecios ? 'N° REMISIÓN' : 'VALE DE ENTREGA';
             document.getElementById('ticket-folio').innerText = venta.folio || '';
             document.getElementById('ticket-fecha').innerText = formatearFecha(venta.fecha);
 
-            // Datos del Cliente y Reparto
             document.getElementById('ticket-cliente').innerText = (venta.nombre_comercial || '').toUpperCase();
-
-            // 🔥 AQUÍ: formatear dirección con ":" al imprimir
             document.getElementById('ticket-direccion').innerText = formatearDireccion(venta.direccion);
 
             document.getElementById('ticket-telefono').innerText = venta.telefono ? `#${venta.telefono}` : 'N/A';
             document.getElementById('ticket-estado-entrega').innerText = (venta.estado_entrega || 'PENDIENTE').toUpperCase();
 
-            // Datos de Control Inferior
             document.getElementById('ticket-vendedor-emisor').innerText = venta.nombre_vendedor || 'SISTEMA';
             document.getElementById('ticket-vendedor').innerText = venta.vendedor || venta.nombre_vendedor || 'N/A';
             document.getElementById('ticket-notas').innerText = venta.observaciones || 'SIN OBSERVACIONES';
 
-            // Ocultar columnas de precios si viene parametrizado
             if (!mostrarPrecios) {
                 document.querySelectorAll('.col-precios').forEach(el => el.style.display = 'none');
             }
 
-            // Renderizado de Detalles del Pedido
             const tbody = document.getElementById('tabla-detalles');
             tbody.innerHTML = '';
             console.log(detalles);
 
             detalles.forEach(item => {
-                // 🔥 Calcular división: cantidad / equivalencia
                 const cantidadOriginal = parseFloat(item.cantidad) || 0;
                 const equivalencia = parseFloat(item.odmaEquivalencia) || 1;
 
@@ -568,19 +534,15 @@
                 let unidadMostrar = (item.odmaNombre || '').toUpperCase();
 
                 if (division >= 0.99) {
-                    // Casi 1 o más: forzar a 1 si está en el rango 0.99–1.01; si no, mostrar la división
                     cantidadMostrar = Math.abs(division - 1) <= 0.01 ? 1 : division;
                 } else {
-                    // Menor a 0.99: mostrar la cantidad original del servidor
                     cantidadMostrar = cantidadOriginal;
                 }
 
-                // Formatear cantidad: sin decimales si es entero, con 2 decimales si no
                 const cantidadFormateada = Number.isInteger(cantidadMostrar)
                     ? cantidadMostrar
                     : cantidadMostrar.toFixed(2);
 
-                // Importe: precio unitario * cantidad mostrada
                 const sku = item.sku ? item.sku : ('06020' + item.producto_id);
                 const precioUnitario = parseFloat(item.precio_unitario || 0);
                 const importe = precioUnitario * cantidadMostrar;
@@ -602,7 +564,8 @@
 
                 rowHtml += `</tr>`;
                 tbody.insertAdjacentHTML('beforeend', rowHtml);
-            });  // Fila de Total
+            });
+
             if (mostrarPrecios) {
                 const totalVenta = parseFloat(venta.total || venta.subtotal || 0);
                 const totalHtml = `
@@ -615,12 +578,145 @@
                 tbody.insertAdjacentHTML('beforeend', totalHtml);
             }
 
-            // Muestra del contenedor y ocultamiento del cargando
+            // ============ BLOQUE DE PAGOS ============
+            const tablaPagos = document.getElementById('tabla-pagos');
+            const seccionPagos = document.getElementById('seccion-pagos');
+
+            if (tablaPagos && seccionPagos) {
+                tablaPagos.innerHTML = '';
+
+                if (!mostrarPrecios) {
+                    seccionPagos.style.display = 'none';
+                } else {
+                    const totalVenta = parseFloat(venta.total || venta.subtotal || 0);
+                    const pagosReales = (pagos || []).filter(p => parseFloat(p.monto || 0) > 0);
+
+                    if (pagosReales.length === 0) {
+                        tablaPagos.insertAdjacentHTML('beforeend', `
+                            <tr>
+                                <td colspan="5" class="bold"
+                                    style="padding:6px 8px; font-size:9pt; color:#b91c1c; background:#fef2f2;">
+                                    PENDIENTE DE PAGO
+                                </td>
+                                <td class="bold text-right"
+                                    style="padding:6px 8px; font-size:10pt; color:#b91c1c; background:#fef2f2;">
+                                    $${totalVenta.toFixed(2)}
+                                </td>
+                            </tr>
+                        `);
+                    } else {
+                        const totalAbonado = pagosReales.reduce((s, p) => s + parseFloat(p.monto || 0), 0);
+
+                        pagosReales.forEach((pago, idx) => {
+                            const metodo = (pago.metodo_pago || '').trim();
+                            const esEfectivo = metodo.toLowerCase() === 'efectivo';
+                            const montoPago = parseFloat(pago.monto || 0);
+                            const efectivoRec = parseFloat(pago.efectivoPagado || 0);
+
+                            const etiqueta = pagosReales.length > 1
+                                ? `PAGO ${idx + 1}: ${metodo}`
+                                : `PAGO: ${metodo}`;
+
+                            tablaPagos.insertAdjacentHTML('beforeend', `
+                                <tr>
+                                    <td colspan="5" class="bold"
+                                        style="padding:5px 8px; font-size:9pt; color:#1e3a8a; background:#eff6ff;">
+                                        ${etiqueta.toUpperCase()}
+                                    </td>
+                                    <td class="bold text-right"
+                                        style="padding:5px 8px; font-size:9.5pt; color:#1e3a8a; background:#eff6ff;">
+                                        $${montoPago.toFixed(2)}
+                                    </td>
+                                </tr>
+                            `);
+
+                            if (esEfectivo && efectivoRec > 0) {
+                                const cambio = efectivoRec - totalVenta;
+
+                                if (Math.abs(efectivoRec - montoPago) > 0.001) {
+                                    tablaPagos.insertAdjacentHTML('beforeend', `
+                                        <tr>
+                                            <td colspan="5" style="padding:3px 8px 3px 20px; font-size:8pt; color:#64748b;">
+                                                Efectivo recibido
+                                            </td>
+                                            <td class="text-right"
+                                                style="padding:3px 8px; font-size:8pt; color:#64748b;">
+                                                $${efectivoRec.toFixed(2)}
+                                            </td>
+                                        </tr>
+                                    `);
+                                }
+
+                                if (cambio > 0.001) {
+                                    tablaPagos.insertAdjacentHTML('beforeend', `
+                                        <tr>
+                                            <td colspan="5" style="padding:3px 8px 3px 20px; font-size:8pt; color:#64748b;">
+                                                Cambio
+                                            </td>
+                                            <td class="text-right"
+                                                style="padding:3px 8px; font-size:8pt; color:#64748b;">
+                                                $${cambio.toFixed(2)}
+                                            </td>
+                                        </tr>
+                                    `);
+                                }
+                            }
+
+                            if (pago.referencia) {
+                                tablaPagos.insertAdjacentHTML('beforeend', `
+                                    <tr>
+                                        <td colspan="5" style="padding:3px 8px 3px 20px; font-size:8pt; color:#64748b;">
+                                            Ref.
+                                        </td>
+                                        <td class="text-right"
+                                            style="padding:3px 8px; font-size:8pt; color:#64748b;">
+                                            ${pago.referencia}
+                                        </td>
+                                    </tr>
+                                `);
+                            }
+                        });
+
+                        const saldoPendiente = totalVenta - totalAbonado;
+                        if (saldoPendiente > 0.001) {
+                            tablaPagos.insertAdjacentHTML('beforeend', `
+                                <tr>
+                                    <td colspan="5" class="bold"
+                                        style="padding:6px 8px; font-size:9pt; color:#b91c1c; background:#fef2f2; border-top:1px solid #fecaca;">
+                                        PENDIENTE DE PAGO
+                                    </td>
+                                    <td class="bold text-right"
+                                        style="padding:6px 8px; font-size:10pt; color:#b91c1c; background:#fef2f2; border-top:1px solid #fecaca;">
+                                        $${saldoPendiente.toFixed(2)}
+                                    </td>
+                                </tr>
+                            `);
+                        }
+
+                        if (pagosReales.length > 1) {
+                            tablaPagos.insertAdjacentHTML('beforeend', `
+                                <tr>
+                                    <td colspan="5" class="bold"
+                                        style="padding:6px 8px; font-size:9pt; color:#1e3a8a; border-top:1px solid #cbd5e1;">
+                                        TOTAL PAGADO
+                                    </td>
+                                    <td class="bold text-right"
+                                        style="padding:6px 8px; font-size:10pt; color:#1e3a8a; border-top:1px solid #cbd5e1;">
+                                        $${totalAbonado.toFixed(2)}
+                                    </td>
+                                </tr>
+                            `);
+                        }
+                    }
+                }
+            }
+
             document.getElementById('cargando').style.display = 'none';
             document.getElementById('contenedor-remision').style.display = 'block';
 
             setTimeout(procesarImpresion, 600);
         }
+
         function formatearFecha(fechaCadena) {
             if (!fechaCadena) return '';
             const fecha = new Date(fechaCadena);
@@ -658,12 +754,7 @@
             }
         }
 
-        // ============================================
-        // ============================================
-        // ENVIAR REMISIÓN POR CORREO (con SweetAlert)
-        // ============================================
         async function enviarRemisionPorCorreo() {
-            // Validar que la remisión ya se cargó
             const contenedor = document.getElementById('contenedor-remision');
             if (!contenedor || contenedor.style.display === 'none') {
                 swalCF.fire({
@@ -675,19 +766,14 @@
                 return;
             }
 
-            // Datos de la remisión
             const folio = document.getElementById('ticket-folio').innerText || 'S/N';
             const cliente = document.getElementById('ticket-cliente').innerText || 'Cliente';
             const almacen = document.getElementById('almacen-nombre').innerText || 'CF System';
             const fecha = document.getElementById('ticket-fecha').innerText || '';
             const estado = document.getElementById('ticket-estado-entrega').innerText || '';
 
-            // 📧 Correo por defecto (de pruebas)
             const correoPorDefecto = 'saulenriquealbatapia252@gmail.com';
 
-            // ============================================
-            // MODAL ÚNICO: correo + resumen + botón enviar
-            // ============================================
             const { value: correoDestino } = await swalCF.fire({
                 title: '📧 Enviar remisión por correo',
                 html: `
@@ -723,12 +809,8 @@
                 }
             });
 
-            // Si canceló
             if (!correoDestino) return;
 
-            // ============================================
-            // LOADER MIENTRAS ENVÍA
-            // ============================================
             swalCF.fire({
                 title: 'Enviando remisión...',
                 html: 'Por favor espera un momento ⏳',
@@ -740,7 +822,6 @@
             });
 
             try {
-                // Preparar título y descripción
                 const titulo = `Remisión ${folio} - ${almacen}`;
                 const descripcion =
                     `Buenas tardes ${cliente},\n\n` +
@@ -749,83 +830,57 @@
                     (estado ? `Estado de entrega: ${estado}\n\n` : '') +
                     `Gracias por su preferencia.`;
 
-                // HTML de la remisión envuelto con estilos para PDF
-                const htmlRemision = `
-                    <!DOCTYPE html>
-                    <html lang="es">
-                    <head>
-                        <meta charset="UTF-8">
-                        <style>
-                            @page { margin: 6mm 8mm; }
-                            body {
-                                text-transform: uppercase !important;
-                                font-family: 'Segoe UI', Inter, Helvetica, Arial, sans-serif;
-                                color: #1e293b;
-                                font-size: 9pt;
-                                line-height: 1.3;
-                                margin: 0;
-                                padding: 0;
-                                background-color: #fff;
-                            }
-                            .invoice-box { max-width: 100%; margin: auto; position: relative; }
-                            .table-layout { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
-                            .table-layout td { vertical-align: top; }
-                            .logo-container { display: flex; align-items: center; gap: 12px; }
-                            .brand-title { font-size: 16pt; font-weight: 800; line-height: 1.1; color: #1e3a8a; letter-spacing: -0.5px; }
-                            .company-address { font-size: 8pt; color: #64748b; text-align: center; padding: 0 10px; line-height: 1.4; }
-                            .remision-badge {
-                                background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
-                                color: white; border-radius: 6px; text-align: center; padding: 4px;
-                                font-weight: 700; font-size: 9pt; width: 150px; float: right;
-                            }
-                            .remision-badge span { display: block; font-size: 12pt; font-weight: 800; margin-top: 2px; color: #f8fafc; }
-                            .date-tile {
-                                border: 1px solid #e2e8f0; border-radius: 6px; width: 100%;
-                                border-collapse: separate; background-color: #f8fafc;
-                                overflow: hidden; margin-top: 4px;
-                            }
-                            .date-tile td { padding: 6px; font-size: 8.5pt; text-align: center; }
-                            .date-tile .title-td { font-weight: 700; background: #e2e8f0; color: #334155; width: 30%; }
-                            .card-info {
-                                border: 1px solid #e2e8f0; background: #ffffff; border-radius: 8px;
-                                padding: 8px; min-height: 72px; font-size: 8.5pt;
-                            }
-                            .card-title {
-                                font-weight: 700; font-size: 8.5pt; color: #1e3a8a;
-                                margin-bottom: 5px; border-bottom: 2px solid #f1f5f9;
-                                padding-bottom: 3px; letter-spacing: 0.5px;
-                            }
-                            .items-table {
-                                width: 100%; border-collapse: collapse; margin-top: 6px;
-                                border-radius: 6px; overflow: hidden; border: 1px solid #e2e8f0;
-                            }
-                            .items-table th {
-                                background-color: #1e3a8a; color: #ffffff; font-weight: 600;
-                                text-align: left; padding: 6px 8px; font-size: 9pt;
-                            }
-                            .items-table td {
-                                padding: 6px 8px; font-size: 8.5pt;
-                                border-bottom: 1px solid #f1f5f9; color: #334155;
-                            }
-                            .items-table tr:nth-child(even) td { background-color: #f8fafc; }
-                            .total-row td { font-size: 11pt; font-weight: 700; padding: 8px; border-bottom: none; }
-                            .total-highlight {
-                                background: #f1f5f9; color: #1e3a8a;
-                                border-radius: 4px; font-size: 12pt; font-weight: 800;
-                            }
-                            .card-obs {
-                                border: 1px solid #e2e8f0; background: #fafafa; border-radius: 6px;
-                                padding: 6px 10px; font-size: 8pt; width: 100%;
-                                box-sizing: border-box; margin-top: 10px; color: #475569;
-                            }
-                            .text-right { text-align: right !important; }
-                            .text-center { text-align: center !important; }
-                            .bold { font-weight: bold; }
-                        </style>
-                    </head>
-                    <body>${contenedor.innerHTML}</body>
-                    </html>
-                `;
+                // HTML para el PDF adjunto: usa el contenido renderizado del contenedor
+                const htmlRemision = `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+    @page { margin: 6mm 8mm; }
+    body {
+        text-transform: uppercase !important;
+        font-family: 'Segoe UI', Inter, Helvetica, Arial, sans-serif;
+        color: #1e293b; font-size: 9pt; line-height: 1.3;
+        margin: 0; padding: 0; background-color: #fff;
+    }
+    .invoice-box { max-width: 100%; margin: auto; position: relative; }
+    .table-layout { width: 100%; border-collapse: collapse; margin-bottom: 6px; }
+    .table-layout td { vertical-align: top; }
+    .logo-container { display: flex; align-items: center; gap: 12px; }
+    .brand-title { font-size: 16pt; font-weight: 800; line-height: 1.1; color: #1e3a8a; letter-spacing: -0.5px; }
+    .company-address { font-size: 8pt; color: #64748b; text-align: center; padding: 0 10px; line-height: 1.4; }
+    .remision-badge {
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+        color: white; border-radius: 6px; text-align: center; padding: 4px;
+        font-weight: 700; font-size: 9pt; width: 150px; float: right;
+    }
+    .remision-badge span { display: block; font-size: 12pt; font-weight: 800; margin-top: 2px; color: #f8fafc; }
+    .date-tile {
+        border: 1px solid #e2e8f0; border-radius: 6px; width: 100%;
+        border-collapse: separate; background-color: #f8fafc;
+        overflow: hidden; margin-top: 4px;
+    }
+    .date-tile td { padding: 6px; font-size: 8.5pt; text-align: center; }
+    .date-tile .title-td { font-weight: 700; background: #e2e8f0; color: #334155; width: 30%; }
+    .card-info { border: 1px solid #e2e8f0; background: #ffffff; border-radius: 8px; padding: 8px; min-height: 72px; font-size: 8.5pt; }
+    .card-title {
+        font-weight: 700; font-size: 8.5pt; color: #1e3a8a; margin-bottom: 5px;
+        border-bottom: 2px solid #f1f5f9; padding-bottom: 3px; letter-spacing: 0.5px;
+    }
+    .items-table { width: 100%; border-collapse: collapse; margin-top: 6px; border-radius: 6px; overflow: hidden; border: 1px solid #e2e8f0; }
+    .items-table th { background-color: #1e3a8a; color: #ffffff; font-weight: 600; text-align: left; padding: 6px 8px; font-size: 9pt; }
+    .items-table td { padding: 6px 8px; font-size: 8.5pt; border-bottom: 1px solid #f1f5f9; color: #334155; }
+    .items-table tr:nth-child(even) td { background-color: #f8fafc; }
+    .total-row td { font-size: 11pt; font-weight: 700; padding: 8px; border-bottom: none; }
+    .total-highlight { background: #f1f5f9; color: #1e3a8a; border-radius: 4px; font-size: 12pt; font-weight: 800; }
+    .card-obs { border: 1px solid #e2e8f0; background: #fafafa; border-radius: 6px; padding: 6px 10px; font-size: 8pt; width: 100%; box-sizing: border-box; margin-top: 10px; color: #475569; }
+    .text-right { text-align: right !important; }
+    .text-center { text-align: center !important; }
+    .bold { font-weight: bold; }
+</style>
+</head>
+<body>${contenedor.innerHTML}</body>
+</html>`;
 
                 const resultado = await enviarCorreo({
                     correo: correoDestino,
@@ -836,9 +891,6 @@
                     urlBackend: '/cfsistem/app/controllers/correoController.php'
                 });
 
-                // ============================================
-                // ÉXITO
-                // ============================================
                 swalCF.fire({
                     icon: 'success',
                     title: '¡Remisión enviada!',
@@ -857,9 +909,6 @@
                 });
 
             } catch (err) {
-                // ============================================
-                // ERROR
-                // ============================================
                 swalCF.fire({
                     icon: 'error',
                     title: 'Error al enviar',
@@ -874,9 +923,6 @@
             }
         }
 
-        // ============================================
-        // FUNCIÓN GENÉRICA PARA ENVIAR CORREO
-        // ============================================
         async function enviarCorreo({
             correo,
             titulo,
@@ -955,7 +1001,6 @@
             };
         }
 
-        // Utilidad anti-inyección HTML
         function escaparHtml(texto) {
             return String(texto)
                 .replace(/&/g, '&amp;')

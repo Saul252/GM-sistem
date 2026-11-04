@@ -814,30 +814,26 @@
 
             $('#tablaDetalleEditar tbody').append(`
     <tr id="filaEditar-${id}">
-    
-        <td >
+
+        <td>
             <b>${d.nombre}</b><br>
             <small class="text-body-secondary">${d.sku}</small>
         </td>
-<td class="ps-4">
-<input 
+
+        <td class="ps-4">
+            <input
                 type="hidden"
                 name="itemsEditar[${id}][exis]"
-                class=" cantidad-exis" 
-              
+                class="cantidad-exis"
                 value="${d.stock}"
                 min="0.01"
-                
-               required >
-<spam   
-             
-              
-               >${d.stock / d.factor}</spam>
-           <b> ${d.ur}</b>
-            
+                required>
+            <span>${d.stock / d.factor}</span>
+            <b> ${d.ur}</b>
         </td>
+
         <td>
-            <input 
+            <input
                 type="number"
                 name="itemsEditar[${id}][cant]"
                 class="form-control cantidad-editar"
@@ -845,10 +841,9 @@
                 value="1"
                 min="0.01"
                 required
-                 onkeydown="if(event.key==='Enter'){ event.preventDefault(); $('#buscadorProductosEditar').select2('open'); }"
-              
+                onkeydown="if(event.key==='Enter'){ event.preventDefault(); $('#buscadorProductosEditar').select2('open'); }"
                 oninput="actualizarEquivalencia(this);calcularTotalSolEditar(this)" required>
-            <input 
+            <input
                 type="hidden"
                 name="itemsEditar[${id}][equivalencia]"
                 class="form-control equivalencia"
@@ -856,21 +851,20 @@
         </td>
 
         <td>
-            <select 
-                name="itemsEditar[${id}][unidad]" 
+            <select
+                name="itemsEditar[${id}][unidad]"
                 class="form-select unidad-select-editar"
                 onchange="actualizarEquivalencia(this);calcularPrecioSugeridoEditar(this)">
-               
                 ${opcionesUnidad}
             </select>
         </td>
-        
+
         <td>
-            <select 
-                name="itemsEditar[${id}][tipoPrecio]" 
+            <select
+                name="itemsEditar[${id}][tipoPrecio]"
                 class="form-select tipoPrecio-select-editar"
                 onchange="calcularPrecioSugeridoEditar(this)" required>
-                <option value="seleccionar" data-precio="0">Seleccione</option>
+               
                 <option value="minorista" data-precio="${preMin}">Min $${(preMin * factor).toFixed(2)} x ${d.ur}</option>
                 <option value="mayorista" data-precio="${preMat}">May $${(preMat * factor).toFixed(2)} x ${d.ur}</option>
                 <option value="distribuidor" data-precio="${preDis}">Dis $${(preDis * factor).toFixed(2)} x ${d.ur}</option>
@@ -878,7 +872,7 @@
         </td>
 
         <td>
-            <input 
+            <input
                 type="number"
                 lang="en-US"
                 name="itemsEditar[${id}][precioUnitario]"
@@ -892,11 +886,11 @@
         </td>
 
         <td style="min-width:140px;">
-            <input 
+            <input
                 type="number"
                 lang="en-US"
                 name="itemsEditar[${id}][precio]"
-                class="form-control precio-total-editar fw-bold text-success "
+                class="form-control precio-total-editar fw-bold text-success"
                 step="0.01"
                 min="0"
                 placeholder="0.00"
@@ -912,6 +906,17 @@
         </td>
     </tr>
     `);
+
+            // 🔥 Disparar el cálculo de precio sugerido al agregar el producto
+            const $fila = $(`#filaEditar-${id}`);
+
+            // Opcional: fijar "minorista" por defecto (descomenta si lo quieres)
+            // $fila.find('.tipoPrecio-select-editar').val('minorista');
+
+            const $selectTipoPrecio = $fila.find('.tipoPrecio-select-editar')[0];
+            if ($selectTipoPrecio && typeof calcularPrecioSugeridoEditar === 'function') {
+                calcularPrecioSugeridoEditar($selectTipoPrecio);
+            }
 
             $(this).val(null).trigger('change');
 
@@ -1123,7 +1128,7 @@
                 accion: 'guardar_venta',
                 id_cliente: $('#cliente_id_editar').val(),
                 id_vendedor: $('#select-vendedor1').val(),
-                monto_pagado: totalVenta, // Queda asignado exactamente como lo tenías
+                monto_pagado: montoPagado, // Queda asignado exactamente como lo tenías
                 monto_usado_favor: 0,
                 total_venta: totalVenta,
                 almacen_id: $('#almacen_id_editar').val(),

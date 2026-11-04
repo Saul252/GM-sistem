@@ -3,6 +3,7 @@
         z-index: 10110 !important;
     }
 </style>
+
 <div class="modal fade" id="modalImprimirRuta" tabindex="-1">
     <div class="modal-dialog modal-xl modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -32,6 +33,46 @@
 </div>
 
 <script>
+    // ═══════════════════════════════════════════════════════════════
+    // HELPERS DE CONVERSIÓN
+    // Regla:
+    //   factor = cuántas unidades base hay en 1 unidad de reporte
+    //   (ej: 1000 kg = 1 tonelada  →  factor = 1000)
+    //
+    //   base → reporte:  cantidadBase / factor
+    //   reporte → base:  cantidadReporte * factor
+    // ═══════════════════════════════════════════════════════════════
+
+    function formatearCantidadRuta(cantidadBase, prod) {
+        const cantBase = parseFloat(cantidadBase) || 0;
+        const factor = parseFloat(prod.factor) || 1;
+        const uBase = prod.unidadMedida || '';
+        const uRep = prod.unidadReporte || uBase;
+
+        // Sin conversión real → quedarse en unidad base
+        if (factor <= 1) {
+            return { cantidad: cantBase, unidad: uBase };
+        }
+
+        const enReporte = cantBase / factor;
+
+        // Si alcanza al menos 1 unidad de reporte → mostrar en unidad de reporte
+        if (enReporte >= 1) {
+            return { cantidad: enReporte, unidad: uRep };
+        }
+
+        // Si no alcanza → mostrar en unidad base
+        return { cantidad: cantBase, unidad: uBase };
+    }
+
+    function fmtNumRuta(n) {
+        const v = parseFloat(n) || 0;
+        return Number.isInteger(v) ? v.toString() : v.toFixed(3).replace(/\.?0+$/, '');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // RENDER DE RUTA DE REPARTO
+    // ═══════════════════════════════════════════════════════════════
     async function imprimirRuta(entrega_ida, folioViaje) {
 
         document.getElementById('folioRutaPrint').textContent = entrega_ida;
@@ -41,7 +82,6 @@
         );
 
         const data = await respuesta.json();
-
         console.log(data);
 
         if (!data.success) return;
@@ -54,39 +94,16 @@
         // =========================================
         const stringEntrega = String(entrega_ida || '').toUpperCase();
         const stringFolio = String(datos[0]?.folio_viaje || '').toUpperCase();
-
-        // Evalúa si alguno de los folios contiene el prefijo EN_PAT (ej: EN_PAT26082, EN_PAT1, etc.)
         const esEntregaPatio = stringEntrega.includes('EN_PAT') || stringFolio.includes('EN_PAT');
 
         // =========================================
-        // AGRUPAR PRODUCTOS
-        // =========================================
-        const productosAgrupados = {};
-
-        datos.forEach(item => {
-            const key = item.nombreProducto;
-            if (!productosAgrupados[key]) {
-                productosAgrupados[key] = {
-                    nombreProducto: item.nombreProducto,
-                    totalCantidad: 0,
-                    unidadMedida: item.unidadMedida,
-                    unidadReporte: item.unidadReporte,
-                    factor: item.factor
-                };
-            }
-            productosAgrupados[key].totalCantidad += parseFloat(item.totalCantidad || 0);
-        });
-
-        // =========================================
-        // GENERAR FILAS
+        // GENERAR FILAS (CONVERSIÓN CORREGIDA)
         // =========================================
         let filas = '';
 
         datos.forEach((prod, i) => {
-            const total = prod.totalCantidad / prod.factor;
-            const totalCantidad = prod.totalCantidad;
-            const unidad = total >= 1 ? prod.unidadReporte : (totalCantidad / (1 / prod.equi)) >= 1 ? prod.nombreEqui : prod.unidadMedida;
-            let cantidad = totalCantidad / (1 / prod.equi);
+            const fmt = formatearCantidadRuta(prod.totalCantidad, prod);
+
             let badgeColor = 'bg-warning text-dark';
             if (prod.estatus_logistico === 'completado') badgeColor = 'bg-success text-white';
             if (prod.estatus_logistico === 'en_transito') badgeColor = 'bg-primary text-white';
@@ -96,7 +113,7 @@
                 <td class="text-body-secondary fw-semibold">${i + 1}</td>
                 <td style="max-width:350px;" class="fw-medium text-body">${prod.nombreProducto}</td>
                 <td style="max-width:250px;" class="fw-bold text-primary">
-                    ${parseFloat(cantidad).toFixed(2)} <span class="text-body-secondary fw-normal small">${unidad}</span>
+                    ${fmtNumRuta(fmt.cantidad)} <span class="text-body-secondary fw-normal small">${fmt.unidad}</span>
                 </td>
                 <td style="max-width:250px;" class="text-body-secondary small">${prod.direccion_entrega ?? '-'}</td>
                 <td class="text-center">
@@ -109,7 +126,9 @@
         // =========================================
         // SECCIONES ADAPTATIVAS SEGÚN EL TIPO
         // =========================================
-        const tituloDoc = esEntregaPatio ? '🏬 Venta ' + datos[0].folio_venta + ': Vales / Entrega en Patio' : '🚚 Venta ' + datos[0].folio_venta + ': Hoja de Ruta';
+        const tituloDoc = esEntregaPatio
+            ? '🏬 Venta ' + datos[0].folio_venta + ': Vales / Entrega en Patio'
+            : '🚚 Venta ' + datos[0].folio_venta + ': Hoja de Ruta';
 
         const bloqueOperador = esEntregaPatio ? `
         <div class="info-card">
@@ -200,7 +219,7 @@
     `;
 
         // =========================================
-        // HTML GENERADO CON VARIABLES DE TEMA
+        // HTML GENERADO
         // =========================================
         let html = `
         <div class="hoja-ruta-container p-4">
@@ -299,7 +318,7 @@
                     background: var(--card-bg);
                     border-radius: 16px;
                     border: 1px solid var(--border-color);
-                    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04), 
+                    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04),
                                 0 4px 12px -2px rgba(0, 0, 0, 0.02);
                     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
                     backdrop-filter: blur(10px);
@@ -328,9 +347,9 @@
                     width: 1px;
                     height: 48px;
                     background: linear-gradient(
-                        180deg, 
-                        rgba(0,0,0,0) 0%, 
-                        rgba(0,0,0,0.07) 50%, 
+                        180deg,
+                        rgba(0,0,0,0) 0%,
+                        rgba(0,0,0,0.07) 50%,
                         rgba(0,0,0,0) 100%
                     );
                     margin: 0 1.5rem;
@@ -413,7 +432,7 @@
                         </div>
                     </div>
                 </div>
-               
+
                 <!-- Tarjeta 2: Dinámica (Chofer o Patio) -->
                 ${bloqueOperador}
             </div>
@@ -581,8 +600,8 @@
                     .no-print {
                         display: none !important;
                     }
-                    tr { 
-                        page-break-inside: avoid !important; 
+                    tr {
+                        page-break-inside: avoid !important;
                     }
                     .info-box {
                         background: #f8fafc !important;

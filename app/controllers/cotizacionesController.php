@@ -18,22 +18,24 @@ require_once __DIR__ . '/../models/ventas_model.php';
 $almacenesModel = new AlmacenModel($conexion);
 $clientesModel = new ClientesModel($conexion);
 $productosModel = new ProductoModel($conexion);
-$cotizacionesModel= new cotizacionesModel($conexion);
-$ventasModel= new VentasModel();
+$cotizacionesModel = new cotizacionesModel($conexion);
+$ventasModel = new VentasModel();
 
 
 
-protegerPagina('cotizaciones'); 
-$paginaActual = 'cotizaciones'; 
-$almacen_usuario = $_SESSION['almacen_id'] ?? 0;
+protegerPagina('cotizaciones');
+$paginaActual = 'cotizaciones';
+$rol_id = (int) ($_SESSION['rol_id'] ?? 0);
+$almacen_usuario = ($rol_id == 3)
+    ? 0
+    : ($_SESSION['almacen_id'] ?? 0);
 $es_admin = ($_SESSION['rol_id'] == 1 || $almacen_usuario == 0);
-   $rol = $_SESSION['rol_id'];
-   $puede=false;
+$rol = $_SESSION['rol_id'];
+$puede = false;
 
- if( $rol<3)
-            {
-                $puede=true;
-            }
+if ($rol < 3) {
+    $puede = true;
+}
 
 
 if (isset($_GET['action']) && $_GET['action'] === 'obtenerProductos') {
@@ -75,25 +77,26 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerProductos') {
 // --- CARGA DE VISTA ---
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     try {
-        
-      
+
+
         // Nota: Verifica que sea listarTodo() o listarTodos() según tu ProductosModel
-        $almacenes=$almacenesModel->getAlmacenes($almacen_usuario);
-        $clientes=$clientesModel->listarTodos($almacen_usuario);
-        
-       
+        $almacenes = $almacenesModel->getAlmacenes($almacen_usuario);
+        $clientes = $clientesModel->listarTodos($almacen_usuario);
+
+
 
         $tituloPagina = "Solicitudes de Compra";
-      
+
         require_once __DIR__ . '/../views/cotizaciones_view.php';
-        
+
     } catch (Exception $e) {
         die("Error fatal: " . $e->getMessage());
     }
 }
 if (isset($_GET['action']) && $_GET['action'] === 'guardar') {
 
-    if (ob_get_level()) ob_clean();
+    if (ob_get_level())
+        ob_clean();
     header('Content-Type: application/json; charset=utf-8');
 
     try {
@@ -107,16 +110,16 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardar') {
 
         $almacen_id = intval($input['almacen_id'] ?? 0);
 
-        if ($input['vendedor']<= 0) {
+        if ($input['vendedor'] <= 0) {
             throw new Exception("ID de vendedor no válido.");
         }
-     
+
         $data = [
             'usuario_id' => intval($_SESSION['usuario_id']),
-            'vendedor'=> intval($input['vendedor'] ?? $_SESSION['usuario_id']),
+            'vendedor' => intval($input['vendedor'] ?? $_SESSION['usuario_id']),
             'almacen_id' => $almacen_id,
             'cliente_id' => intval($input['cliente_id'] ?? 0),
-             'totalCotizacion' => intval($input['totalCotizacion'] ?? 0)
+            'totalCotizacion' => intval($input['totalCotizacion'] ?? 0)
         ];
 
         if ($data['cliente_id'] <= 0) {
@@ -131,11 +134,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardar') {
             $id_producto = intval($item['producto_id']);
 
             $items_procesados[$id_producto] = [
-                'cantidad'        => floatval($item['cantidad']),
-                'unidad'          => floatval($item['unidad']),
-                'tipo_precio'     => $item['tipoPrecio']??'minorista',
+                'cantidad' => floatval($item['cantidad']),
+                'unidad' => floatval($item['unidad']),
+                'tipo_precio' => $item['tipoPrecio'] ?? 'minorista',
                 'precio_unitario' => floatval($item['precioUnitario']),
-                'subtotal'        => floatval($item['precio'])
+                'subtotal' => floatval($item['precio'])
             ];
         }
 
@@ -147,15 +150,15 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardar') {
 
         if ($resultado === true) {
 
-    echo json_encode([
-        'status' => 'success',
-        'message' => '¡Cotización guardada con éxito!'
-    ]);
+            echo json_encode([
+                'status' => 'success',
+                'message' => '¡Cotización guardada con éxito!'
+            ]);
 
-} else {
+        } else {
 
-    throw new Exception($resultado ?: "Error al guardar cotización");
-}
+            throw new Exception($resultado ?: "Error al guardar cotización");
+        }
 
     } catch (Throwable $e) {
 
@@ -171,7 +174,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardar') {
 }
 if (isset($_GET['action']) && $_GET['action'] === 'actualizar') {
 
-    if (ob_get_level()) ob_clean();
+    if (ob_get_level())
+        ob_clean();
     header('Content-Type: application/json; charset=utf-8');
 
     try {
@@ -193,7 +197,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'actualizar') {
             throw new Exception("ID de almacén no válido.");
         }
 
-        $cliente_id = intval($input['cliente_id'] ?? 0); 
+        $cliente_id = intval($input['cliente_id'] ?? 0);
         $vendedor_id = intval($input['vendedor'] ?? 0);
         if ($cliente_id <= 0) {
             throw new Exception("Debe seleccionar un cliente.");
@@ -201,11 +205,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'actualizar') {
 
         // Estructuramos la cabecera con el ID de la cotización a modificar
         $data = [
-            'cotizacion_id'   => $cotizacion_id,
-            'usuario_id'      => intval($_SESSION['usuario_id']),
-            'almacen_id'      => $almacen_id,
-            'cliente_id'      => $cliente_id,
-            'vendedor_id'      => $vendedor_id,
+            'cotizacion_id' => $cotizacion_id,
+            'usuario_id' => intval($_SESSION['usuario_id']),
+            'almacen_id' => $almacen_id,
+            'cliente_id' => $cliente_id,
+            'vendedor_id' => $vendedor_id,
             'totalCotizacion' => floatval($input['totalCotizacion'] ?? 0) // Cambiado a floatval por si lleva decimales
         ];
 
@@ -218,12 +222,12 @@ if (isset($_GET['action']) && $_GET['action'] === 'actualizar') {
 
             // Mantenemos el formato plano indexado numéricamente para que coincida con el foreach del modelo
             $items_procesados[] = [
-                'producto_id'     => $id_producto,
-                'cantidad'        => floatval($item['cantidad']),
-                'unidad'          => intval($item['unidad']),
-                'tipoPrecio'      => $item['tipoPrecio'] ?? 'minorista',
-                'precioUnitario'  => floatval($item['precioUnitario']),
-                'precio'          => floatval($item['precio'])
+                'producto_id' => $id_producto,
+                'cantidad' => floatval($item['cantidad']),
+                'unidad' => intval($item['unidad']),
+                'tipoPrecio' => $item['tipoPrecio'] ?? 'minorista',
+                'precioUnitario' => floatval($item['precioUnitario']),
+                'precio' => floatval($item['precio'])
             ];
         }
 
@@ -261,7 +265,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerDetalle') {
 
     try {
 
-        $id = (int)($_GET['id'] ?? 0);
+        $id = (int) ($_GET['id'] ?? 0);
 
         $detalle = $cotizacionesModel->obtenerDetalle($id);
 
@@ -273,13 +277,13 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerDetalle') {
             exit;
         }
 
-       
-      
+
+
 
         echo json_encode([
             'status' => 'success',
             'data' => $detalle
-            
+
         ]);
 
     } catch (Throwable $e) {
@@ -297,42 +301,40 @@ if (isset($_GET['action']) && $_GET['action'] === 'listarCotizaciones') {
     header('Content-Type: application/json; charset=utf-8');
 
     try {
-$almacen = !empty($_GET['almacen']) ? (int)$_GET['almacen'] : 0;
+        $almacen = !empty($_GET['almacen']) ? (int) $_GET['almacen'] : 0;
 
-$fechaInicio = !empty($_GET['fechaInicio'])
-    ? $_GET['fechaInicio']
-    : null;
+        $fechaInicio = !empty($_GET['fechaInicio'])
+            ? $_GET['fechaInicio']
+            : null;
 
-$fechaFin = !empty($_GET['fechaFin'])
-    ? $_GET['fechaFin']
-    : null;
+        $fechaFin = !empty($_GET['fechaFin'])
+            ? $_GET['fechaFin']
+            : null;
 
-$estado = !empty($_GET['estado'])
-    ? $_GET['estado']
-    : null;
+        $estado = !empty($_GET['estado'])
+            ? $_GET['estado']
+            : null;
 
-$buscador = !empty($_GET['buscador'])
-    ? trim($_GET['buscador'])
-    : null;
-    
-if($puede==true)
-    {
-$vendedor = !empty($_GET['vendedor'])
-    ? trim($_GET['vendedor'])
-    : null;
-    }
-    else{
-        $vendedor=$_SESSION['usuario_id'];
-    }
-$cotizaciones = $cotizacionesModel->listarPorFechas(
-    $es_admin,
-    $almacen,
-    $fechaInicio,
-    $fechaFin,
-    $estado,
-    $buscador,
-    $vendedor
-);
+        $buscador = !empty($_GET['buscador'])
+            ? trim($_GET['buscador'])
+            : null;
+
+        if ($puede == true) {
+            $vendedor = !empty($_GET['vendedor'])
+                ? trim($_GET['vendedor'])
+                : null;
+        } else {
+            $vendedor = $_SESSION['usuario_id'];
+        }
+        $cotizaciones = $cotizacionesModel->listarPorFechas(
+            $es_admin,
+            $almacen,
+            $fechaInicio,
+            $fechaFin,
+            $estado,
+            $buscador,
+            $vendedor
+        );
 
         echo json_encode([
             'status' => 'success',
@@ -352,11 +354,13 @@ $cotizaciones = $cotizacionesModel->listarPorFechas(
     exit;
 }
 if (isset($_GET['action']) && $_GET['action'] === 'eliminar') {
-    if (ob_get_level()) ob_clean();
+    if (ob_get_level())
+        ob_clean();
     header('Content-Type: application/json');
     try {
         $id = intval($_POST['id'] ?? 0);
-        if ($id <= 0) throw new Exception("ID no válido.");
+        if ($id <= 0)
+            throw new Exception("ID no válido.");
         if ($cotizacionesModel->cancelarOrden($id)) {
             echo json_encode(['status' => 'success', 'message' => 'Eliminado.']);
         } else {
@@ -370,7 +374,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'eliminar') {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     header('Content-Type: application/json');
-    if (ob_get_level()) ob_clean();
+    if (ob_get_level())
+        ob_clean();
 
     try {
 
@@ -381,7 +386,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $id_usuario = $_SESSION['usuario_id'] ?? 1;
-  
+
         // ============================
         // ITEMS DEL CARRITO
         // ============================
@@ -401,50 +406,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         foreach ($items as $item) {
 
             $ventaData[] = [
-                'producto_id'        => intval($item['producto_id'] ?? 0),
-                'cantidad'           => floatval($item['cantidadR'] ?? 0),
-                'entrega_hoy'        => floatval($item['entrega_hoy'] ?? 0),
-                'precio_unitario'    => floatval($item['precio_unitario'] ?? 0),
-                'subtotal'           => floatval($item['subtotal'] ?? 0),
+                'producto_id' => intval($item['producto_id'] ?? 0),
+                'cantidad' => floatval($item['cantidadR'] ?? 0),
+                'entrega_hoy' => floatval($item['entrega_hoy'] ?? 0),
+                'precio_unitario' => floatval($item['precio_unitario'] ?? 0),
+                'subtotal' => floatval($item['subtotal'] ?? 0),
 
-                'almacen_id'         => intval($item['almacen_origen_id'] ?? 0),
-                'almacen_origen_id'  => intval($item['almacen_origen_id'] ?? 0),
+                'almacen_id' => intval($item['almacen_origen_id'] ?? 0),
+                'almacen_origen_id' => intval($item['almacen_origen_id'] ?? 0),
 
-                'cliente_id'         => intval($item['cliente_id'] ?? 0),
-                'usuario_id'         => $id_usuario,
-                 
+                'cliente_id' => intval($item['cliente_id'] ?? 0),
+                'usuario_id' => $id_usuario,
 
 
-                'unidadMedida'       => intval($item['unidadMedida'] ?? 0),
 
-                'observaciones'      => $item['observaciones'] ?? '',
-                'tipo_precio'        => $item['tipo_precio'] ?? '',
+                'unidadMedida' => intval($item['unidadMedida'] ?? 0),
 
-                'monto_pagado'       => floatval($item['monto_pagado'] ?? 0),
-                'metodo_pago'        => $item['metodo_pago'] ?? 'Efectivo',
-                'referencia'         => $item['referencia'] ?? '',
-                'efectivoPagado'     => floatval($item['efectivoPagado'] ?? 0),
+                'observaciones' => $item['observaciones'] ?? '',
+                'tipo_precio' => $item['tipo_precio'] ?? '',
 
-                'descuento'          => floatval($item['descuento'] ?? 0),
-                'monto_usado_favor'  => floatval($item['monto_usado_favor'] ?? 0),
-                'usar_saldo_favor'   => intval($item['usar_saldo_favor'] ?? 0),
+                'monto_pagado' => floatval($item['monto_pagado'] ?? 0),
+                'metodo_pago' => $item['metodo_pago'] ?? 'Efectivo',
+                'referencia' => $item['referencia'] ?? '',
+                'efectivoPagado' => floatval($item['efectivoPagado'] ?? 0),
 
-                'total'              => floatval($item['total'] ?? 0)
+                'descuento' => floatval($item['descuento'] ?? 0),
+                'monto_usado_favor' => floatval($item['monto_usado_favor'] ?? 0),
+                'usar_saldo_favor' => intval($item['usar_saldo_favor'] ?? 0),
+
+                'total' => floatval($item['total'] ?? 0)
             ];
         }
 
         // ============================
         // CAMPOS GLOBALES (DEL PAYLOAD)
         // ============================
-        $ventaData['descuento']         = floatval($input['descuento'] ?? 0);
-        $ventaData['observaciones']     = $input['observaciones'] ?? '';
-        $ventaData['monto_pagado']      = floatval($input['monto_pagado'] ?? 0);
-        $ventaData['metodo_pago']       = $input['metodo_pago'] ?? 'Efectivo';
-        $ventaData['referencia']        = $input['referencia'] ?? '';
-        $ventaData['efectivoPagado']    = floatval($input['efectivoPagado'] ?? 0);
+        $ventaData['descuento'] = floatval($input['descuento'] ?? 0);
+        $ventaData['observaciones'] = $input['observaciones'] ?? '';
+        $ventaData['monto_pagado'] = floatval($input['monto_pagado'] ?? 0);
+        $ventaData['metodo_pago'] = $input['metodo_pago'] ?? 'Efectivo';
+        $ventaData['referencia'] = $input['referencia'] ?? '';
+        $ventaData['efectivoPagado'] = floatval($input['efectivoPagado'] ?? 0);
         $ventaData['monto_usado_favor'] = floatval($input['monto_usado_favor'] ?? 0);
-        $ventaData['usar_saldo_favor']  = intval($input['usar_saldo_favor'] ?? 0);
- $ventaData['vendedor']  = intval($input['vendedor'] ?? 0);
+        $ventaData['usar_saldo_favor'] = intval($input['usar_saldo_favor'] ?? 0);
+        $ventaData['vendedor'] = intval($input['vendedor'] ?? 0);
 
         // ============================
         // PROCESAR
@@ -453,11 +458,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $conexion,
             $ventaData,
             $id_usuario,
-            
+
         );
 
         echo json_encode($resultado);
-        $competado=$cotizacionesModel->completarC(intval($input['idCotizacion'] ?? 0));
+        $competado = $cotizacionesModel->completarC(intval($input['idCotizacion'] ?? 0));
 
     } catch (Exception $e) {
 
