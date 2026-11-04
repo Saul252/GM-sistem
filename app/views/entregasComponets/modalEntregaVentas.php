@@ -127,6 +127,26 @@
             });
         });
 
+    /* ═══════════════════════════════════════════════════════════
+       HELPER GLOBAL — definido ANTES de cualquier función que lo use
+       ═══════════════════════════════════════════════════════════ */
+    window.extraerDvid = function (fuente) {
+        if (fuente == null) return '';
+        if (typeof fuente === 'number') return String(fuente);
+        if (typeof fuente === 'string') {
+            const s = fuente.trim();
+            return (s === '' || s === '[object Object]' || s === 'undefined' || s === 'null') ? '' : s;
+        }
+        if (typeof fuente === 'object') {
+            if (fuente.dvid != null) return window.extraerDvid(fuente.dvid);
+            if (fuente.dvid_id != null) return window.extraerDvid(fuente.dvid_id);
+            if (fuente.id != null) return window.extraerDvid(fuente.id);
+            if (fuente.row != null) return window.extraerDvid(fuente.row);
+            if (fuente.data != null) return window.extraerDvid(fuente.data);
+        }
+        return '';
+    };
+
     function toggleFormRuta(esRuta) {
         const btnConfirmar = $('#btnEjecutarDespachoMasivo');
 
@@ -148,7 +168,7 @@
     }
 
     let modal = null;
-    window.carrito = [];   // indexado por dvid (string)
+    window.carrito = {};
 
     async function lotes(producto_id, almacenId) {
         const resp = await fetch(
@@ -189,7 +209,7 @@
                 return;
             }
 
-            // 2. Lotes (en paralelo, por índice del array ORIGINAL — no filtrado)
+            // 2. Lotes
             window.carrito = {};
             const todos_los_lotes = await Promise.all(
                 idsParaProcesar.map(item => lotes(item.producto_id, almacenId))
@@ -199,9 +219,6 @@
 
             idsParaProcesar.forEach((item, index) => {
                 const cantidadRealFaltante = (Number(item.cantidad) || 0) - (Number(item.cantidad_entregada) || 0);
-
-                // ✅ FIX: NO hacemos return; si no hay faltante, renderizamos fila deshabilitada
-                //          para que los índices del DOM coincidan 1:1 con idsParaProcesar.
                 const sinFaltante = cantidadRealFaltante <= 0;
 
                 const cantidad_maxima = Math.min(
@@ -219,12 +236,15 @@
                 const compradaMostrar = (Number(item.cantidad) || 0) / factorFila;
                 const faltanteMostrar = cantidadRealFaltante / factorFila;
                 const unidadMostrar = usaUnidadReporte ? item.unidad_reporte : item.unidad_medida;
-
-                // ✅ FIX: max con 4 decimales para no capar 1.1 / 2.1
                 const maxInput = (cantidad_maxima / factorFila).toFixed(4);
 
-                // ✅ FIX: id único por dvid (no por index)
-                const dvid = String(item.dvid);
+                // ✅ dvid seguro desde el backend
+                const dvid = window.extraerDvid(item.dvid ?? item);
+                if (!dvid) {
+                    console.warn('[Despacho] Fila sin dvid válido, se omite:', item);
+                    return;
+                }
+
                 const inputId = `cantidad_despacho_${dvid}`;
                 const hiddenId = `cantidad_despacho_hidden_${dvid}`;
                 const loteSelectId = `merma_lote_${dvid}`;
@@ -247,10 +267,11 @@
                                min="0"
                                max="${maxInput}"
                                id="${inputId}"
-                               class="form-control form-control-sm input-entrega1"
+                               class="form-control form-control-sm entregador"
                                data-factor="${factorFila}"
                                data-dvid="${dvid}"
                                data-id="${item.producto_id}"
+                               data-max="${maxInput}"
                                ${sinFaltante ? 'disabled' : ''}>
                         <input type="hidden"
                                id="${hiddenId}"
@@ -270,7 +291,6 @@
                     </td>
                 `;
 
-                // Lotes en el select
                 const select = tr.querySelector('select');
                 const lotesData = todos_los_lotes[index]?.data || [];
                 lotesData.forEach(lote => {
@@ -285,17 +305,6 @@
 
                 contenedor.appendChild(tr);
 
-                // Visible → Hidden (unidad base para backend)
-                const inputVisible = tr.querySelector('.input-entrega1');
-                const inputHidden = tr.querySelector('.input-entrega');
-
-                inputVisible.addEventListener('input', () => {
-                    const f = parseFloat(inputVisible.dataset.factor) || 1;
-                    const v = parseFloat(inputVisible.value);
-                    inputHidden.value = (isNaN(v) || v <= 0) ? '' : (v * f).toFixed(4);
-                });
-
-                // Carrito indexado por dvid
                 window.carrito[dvid] = {
                     producto_id: item.producto_id,
                     nombre: item.nombre,
@@ -342,7 +351,6 @@
                     selectT.append(opt);
                 });
 
-                // Cambio de vehículo (con fallback)
                 $('#mv_vehiculo_id').off('change').on('change', function () {
                     const vehiculo_id = $(this).val();
                     if (!vehiculo_id) return;
@@ -350,8 +358,6 @@
                     fetch(`${URL_ENTREGAS}?ajax=get_datos_vehiculo&vehiculo_id=${vehiculo_id}`)
                         .then(r => r.json())
                         .then(res => {
-                            console.log("Respuesta servidor:", res);
-
                             $('#mv_chofer_id').val('').prop('disabled', false);
                             $('#mv_tripulantes').val('');
 
@@ -395,7 +401,6 @@
                         .catch(err => console.error('Error fetch:', err));
                 });
 
-                // Exclusión chofer → tripulante
                 $('#mv_chofer_id').off('change').on('change', function () {
                     const sel = String($(this).val());
                     $('#mv_tripulantes option').each(function () {
@@ -423,47 +428,95 @@
 
     async function procesarEntregaFinal() {
         const fd = new FormData();
-        const itemsValidos = [];   // guardamos {dvid, cantBase, loteId}
+        const itemsValidos = [];
+        const errores = [];
 
-        // ✅ FIX: leer inputs visibles, aplicar factor, validar lote por dvid
-        $('.input-entrega1').each(function () {
-            if ($(this).prop('disabled')) return;
+        // 1) Sincronizar hidden + recolectar valores
+        $('#listaItemsDespacho tr').each(function () {
+            const $tr = $(this);
+            const $inputVisible = $tr.find('input.entregador');
+            const $inputHidden = $tr.find('input.input-entrega');
 
-            const factor = parseFloat($(this).data('factor')) || 1;
-            const cantVisible = parseFloat($(this).val());
-            const dvid = String($(this).data('dvid'));
+            if (!$inputVisible.length || $inputVisible.prop('disabled')) return;
 
-            if (!isNaN(cantVisible) && cantVisible > 0) {
-                itemsValidos.push({
-                    dvid,
-                    cantVisible,
-                    cantBase: (cantVisible * factor).toFixed(4),
-                    factor
-                });
+            // ✅ dvid seguro usando el helper global
+            const dvid = window.extraerDvid($inputVisible.attr('data-dvid'))
+                || window.extraerDvid($tr.attr('data-dvid'));
+
+            if (!dvid) {
+                errores.push('Hay una fila sin identificador (dvid). Recarga el modal.');
+                return;
             }
+
+            const factor = parseFloat($inputVisible.attr('data-factor')) || 1;
+            const max = parseFloat($inputVisible.attr('data-max') || $inputVisible.attr('max'));
+            const maxLimit = isNaN(max) ? Infinity : max;
+
+            const raw = String($inputVisible.val() || '').trim().replace(',', '.');
+            const v = parseFloat(raw);
+
+            if (raw === '') { $inputHidden.val(''); return; }
+
+            if (isNaN(v) || v <= 0) {
+                errores.push(`Cantidad inválida en "${window.carrito[dvid]?.nombre || dvid}".`);
+                $inputHidden.val('');
+                return;
+            }
+            if (v > maxLimit) {
+                errores.push(`"${window.carrito[dvid]?.nombre || dvid}": ${v} excede el máximo ${maxLimit}.`);
+                $inputHidden.val('');
+                return;
+            }
+
+            const cantBase = (v * factor).toFixed(4);
+            $inputHidden.val(cantBase);
+
+            itemsValidos.push({ dvid, cantVisible: v, cantBase, factor });
         });
+
+        if (errores.length) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Revisa las cantidades',
+                html: `<ul style="text-align:left;margin:0;padding-left:1.2rem">${errores.map(e => `<li>${e}</li>`).join('')}</ul>`,
+                confirmButtonColor: '#198754'
+            });
+            return false;
+        }
 
         if (!itemsValidos.length) {
             Swal.fire('Atención', 'Indique al menos una cantidad válida para entregar', 'warning');
             return false;
         }
 
-        // Validar lote por cada item con cantidad
+        // 2) Validar lote por dvid
         for (const it of itemsValidos) {
-            const loteVal = $(`#merma_lote_${it.dvid}`).val();
+            const dvid = window.extraerDvid(it.dvid);
+            if (!dvid) {
+                Swal.fire('Error', 'Identificador de fila inválido. Recarga el modal.', 'error');
+                return false;
+            }
+            it.dvid = dvid;
+
+            const $lote = $(`#merma_lote_${dvid}`);
+            if (!$lote.length) {
+                Swal.fire('Error', `No se encontró el selector de lote para dvid=${dvid}.`, 'error');
+                return false;
+            }
+            const loteVal = $lote.val();
             if (!loteVal) {
-                Swal.fire('Atención', `Debes seleccionar un lote para el producto con cantidad (dvid ${it.dvid}).`, 'warning');
+                Swal.fire('Atención', `Debes seleccionar un lote para el producto con cantidad (dvid ${dvid}).`, 'warning');
                 return false;
             }
             it.loteId = loteVal;
         }
 
-        // Datos del formulario
+        // 3) Datos del formulario
         const tipo = $('input[name="tipo_entrega_masiva"]:checked').val();
         const vehiculoId = $('#mv_vehiculo_id').val();
         const choferId = $('#mv_chofer_id').val();
         const tripulanteId = $('#mv_tripulantes').val();
-        const direccion = $('#mv_direccion').val() ? $('#mv_direccion').val().trim() : '';
+        const direccion = ($('#mv_direccion').val() || '').trim();
 
         if (tipo === 'ruta') {
             if (!vehiculoId) { Swal.fire({ icon: 'error', title: 'Campos incompletos', text: 'Por favor, selecciona un vehículo.', confirmButtonColor: '#d33' }); return false; }
@@ -474,7 +527,7 @@
             return false;
         }
 
-        // Append productos/lotes al FormData por dvid
+        // 4) Armar FormData
         itemsValidos.forEach(it => {
             fd.append(`productos[${it.dvid}]`, it.cantBase);
             fd.append(`lotes[${it.dvid}]`, it.loteId);
@@ -487,19 +540,17 @@
         fd.append('direccion', direccion);
         fd.append('venta_id', ventaActual.info.id);
 
-        console.log('Datos enviados:', Object.fromEntries(fd));
-
         try {
             const res = await fetch(`${URL_CONTROLLER}?action=guardarEntregaMasiva`, { method: 'POST', body: fd });
             const result = await res.json();
-            console.log("Respuesta servidor:", result);
+            console.log('[Despacho] result.ids =', result.ids);
 
             if (result.status === 'success') {
                 if (typeof modalObj !== 'undefined' && modalObj && typeof modalObj.hide === 'function') modalObj.hide();
                 if (modal && typeof modal.hide === 'function') modal.hide();
                 if (typeof getVentas === 'function') getVentas();
 
-                Swal.fire({ title: '¡Listo!', text: 'Entrega guardada correctamente', icon: 'success', showConfirmButton: true });
+                Swal.fire({ title: '¡Listo!', text: 'Entrega guardada correctamente', icon: 'success' });
 
                 if (Array.isArray(result.ids) && result.ids.length) {
                     await ejecutarSalidaMasivaFinal(result.ids, itemsValidos);
@@ -520,7 +571,7 @@
     document.addEventListener('change', function (e) {
         if (!e.target.matches('select.lote-select')) return;
 
-        const dvid = String(e.target.dataset.dvid);
+        const dvid = window.extraerDvid(e.target.dataset.dvid);
         const item = window.carrito[dvid];
         if (!item) {
             console.warn(`[Lote] No existe carrito[${dvid}]`);
@@ -555,16 +606,35 @@
             formData.append('direccion', $('#mv_direccion').val() || '');
             formData.append('tripulante_id', $('#mv_tripulantes').val() || 0);
 
-            // ✅ FIX: el lote se busca por dvid, NO por posición i
+            // ✅ FIX: extraer movId y dvid de forma segura
             result_ids.forEach(row => {
-                const movId = row.movimiento_id ?? row;
-                const dvid = String(row.dvid ?? row);
-                const loteVal = $(`#merma_lote_${dvid}`).val() || '';
-                formData.append('ids_movimientos[]', movId);
-                formData.append('lotes[]', loteVal);
-            });
+                if (row == null) return;
 
-            console.log('Payload final:', Object.fromEntries(formData));
+                let movId, dvid;
+
+                if (typeof row === 'object') {
+                    movId = row.movimiento_id ?? row.movId ?? row.id ?? null;
+                    dvid = window.extraerDvid(row.dvid ?? row.dvid_id ?? row);
+                } else {
+                    movId = row;
+                    dvid = '';
+                }
+
+                // fallback: buscar dvid por movimiento_id en itemsValidos
+                if (!dvid && movId != null && Array.isArray(itemsValidos)) {
+                    const match = itemsValidos.find(it => String(it.dvid) === String(movId));
+                    if (match) dvid = window.extraerDvid(match.dvid);
+                }
+
+                const loteVal = (dvid && dvid !== '[object Object]')
+                    ? ($(`#merma_lote_${dvid}`).val() || '')
+                    : '';
+
+                if (movId != null) formData.append('ids_movimientos[]', movId);
+                formData.append('lotes[]', loteVal);
+
+                console.log('[SalidaMasiva] movId:', movId, '| dvid:', dvid, '| lote:', loteVal);
+            });
 
             const resp = await fetch('entregasController.php', { method: 'POST', body: formData });
             const res = await resp.json();
@@ -574,7 +644,7 @@
                 if (modal && typeof modal.hide === 'function') modal.hide();
                 if (typeof getVentas === 'function') getVentas();
 
-                Swal.fire({ icon: 'success', title: '¡Éxito!', text: res.ids || 'Despacho registrado', showConfirmButton: true });
+                Swal.fire({ icon: 'success', title: '¡Éxito!', text: res.ids || 'Despacho registrado' });
 
                 setTimeout(() => {
                     if (typeof cargarRepartos2 === 'function') cargarRepartos2(ventaActual.info.id);
