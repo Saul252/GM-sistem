@@ -536,7 +536,7 @@
                 if (division >= 0.99) {
                     cantidadMostrar = Math.abs(division - 1) <= 0.01 ? 1 : division;
                 } else {
-                    cantidadMostrar = cantidadOriginal;
+                    cantidadMostrar = division;
                 }
 
                 const cantidadFormateada = Number.isInteger(cantidadMostrar)

@@ -202,7 +202,9 @@
             const respIds = await fetch(`${URL_ENTREGAS}?ajax=get_productos_para_despacho&venta_id=${ventaId}`);
             const dataIds = await respIds.json();
             const idsParaProcesar = dataIds.ids || [];
-            const primerId = almacenId;
+            console.log(idsParaProcesar);
+            const primerId = idsParaProcesar[0]?.venta_id;
+
 
             if (!idsParaProcesar.length) {
                 contenedor.innerHTML = `<div class="alert alert-warning mx-2 small">No hay productos pendientes de despacho.</div>`;
@@ -326,6 +328,7 @@
             const resRecursos = await respRecursos.json();
 
             if (resDetalle.success && resRecursos.success) {
+                console.log(resDetalle);
                 $('#mv_direccion').val(resDetalle.data.entrega.cliente_direccion_fiscal || '');
 
                 const selectV = $('#mv_vehiculo_id')
@@ -353,33 +356,25 @@
 
                 $('#mv_vehiculo_id').off('change').on('change', function () {
                     const vehiculo_id = $(this).val();
+
+                    // Limpiar selección previa de chofer y tripulantes
+                    $('#mv_chofer_id').val('').prop('disabled', false);
+                    $('#mv_tripulantes').val('');
+
                     if (!vehiculo_id) return;
 
                     fetch(`${URL_ENTREGAS}?ajax=get_datos_vehiculo&vehiculo_id=${vehiculo_id}`)
                         .then(r => r.json())
                         .then(res => {
-                            $('#mv_chofer_id').val('').prop('disabled', false);
-                            $('#mv_tripulantes').val('');
+                            // Ya NO se asigna chofer ni tripulante por default.
+                            // Solo se deja la lista disponible para que el usuario elija manualmente.
 
                             if (res.success && res.data &&
                                 (res.data.encargado || (res.data.tripulantes && res.data.tripulantes.length))) {
-                                const data = res.data;
-
-                                if (data.encargado && data.encargado.id) {
-                                    const idChofer = String(data.encargado.id);
-                                    if ($(`#mv_chofer_id option[value="${idChofer}"]`).length) {
-                                        $('#mv_chofer_id').val(idChofer).trigger('change');
-                                        $('#mv_chofer_id').prop('disabled', true);
-                                    }
-                                }
-
-                                if (Array.isArray(data.tripulantes) && data.tripulantes.length > 0) {
-                                    const idPrimerTripulante = String(data.tripulantes[0].id);
-                                    if ($(`#mv_tripulantes option[value="${idPrimerTripulante}"]`).length) {
-                                        $('#mv_tripulantes').val(idPrimerTripulante).trigger('change');
-                                    }
-                                }
+                                // Opcional: aquí podrías mostrar un aviso tipo
+                                // "Este vehículo sugiere a X como chofer" sin seleccionarlo.
                             } else {
+                                // Fallback: si el vehículo no tiene datos, recargar lista de trabajadores
                                 const selectCf = $('#mv_chofer_id')
                                     .empty()
                                     .append('<option value="">Seleccione responsable...</option>');
@@ -400,7 +395,6 @@
                         })
                         .catch(err => console.error('Error fetch:', err));
                 });
-
                 $('#mv_chofer_id').off('change').on('change', function () {
                     const sel = String($(this).val());
                     $('#mv_tripulantes option').each(function () {

@@ -1,15 +1,18 @@
 <div id="gastoDetalle_seccionImpresion">
     <div class="modal fade" id="gastoDetalle_modalPrincipal" tabindex="-1" aria-hidden="true" data-bs-focus="false">
-        <div class="modal-dialog modal-xl"> 
+        <div class="modal-dialog modal-xl">
             <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
                 <div class="modal-body p-0" id="gastoDetalle_contenedorContenido"></div>
                 <div class="modal-footer border-0 bg-light justify-content-center">
-                    <button type="button" class="btn btn-dark btn-sm px-4 rounded-pill" onclick="gastoDetalle_ejecutarImpresion()">
-                        <i class="bi bi-printer me-2"></i>IMPRIMIR GASTO 
-                    </button> <button type="button" class="btn btn-dark btn-sm px-4 rounded-pill" onclick="gastoDetalle_ejecutarImpresionIVA()">
-                        <i class="bi bi-printer me-2"></i>IMPRIMIR GASTO CON IVA 
+                    <button type="button" class="btn btn-dark btn-sm px-4 rounded-pill"
+                        onclick="gastoDetalle_ejecutarImpresion()">
+                        <i class="bi bi-printer me-2"></i>IMPRIMIR GASTO
+                    </button> <button type="button" class="btn btn-dark btn-sm px-4 rounded-pill"
+                        onclick="gastoDetalle_ejecutarImpresionIVA()">
+                        <i class="bi bi-printer me-2"></i>IMPRIMIR GASTO CON IVA
                     </button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-pill" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-pill"
+                        data-bs-dismiss="modal">Cerrar</button>
                 </div>
             </div>
         </div>
@@ -17,220 +20,242 @@
 </div>
 
 <style>
-/* Estilos replicados del formato Premium */
-.gasto-invoice-box {
-    max-width: 950px;
-    margin: auto;
-    padding: 20px;
-    background: #fff;
-    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
-    color: #334155;
-    box-sizing: border-box;
-}
-.gasto-table-layout {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 10px;
-}
-.gasto-logo-container {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-.gasto-brand-title {
-    font-size: 16pt;
-    font-weight: 800;
-    color: #1e3a8a;
-    line-height: 1.1;
-    letter-spacing: -0.5px;
-}
-.gasto-company-address {
-    font-size: 8.5pt;
-    color: #64748b;
-    line-height: 1.4;
-    text-align: center;
-}
-.gasto-remision-badge {
-    background: #0f172a;
-    color: #fff;
-    padding: 6px 12px;
-    text-align: center;
-    font-size: 8pt;
-    font-weight: 700;
-    letter-spacing: 1px;
-    border-radius: 4px;
-    float: right;
-    min-width: 140px;
-}
-.gasto-remision-badge span {
-    display: block;
-    font-size: 13pt;
-    font-weight: 800;
-    color: #38bdf8;
-    margin-top: 2px;
-}
-.gasto-date-tile {
-    width: 140px;
-    float: right;
-    margin-top: 5px;
-    border-collapse: collapse;
-    font-size: 8.5pt;
-}
-.gasto-date-tile td {
-    padding: 4px 8px;
-    border: 1px solid #e2e8f0;
-}
-.gasto-date-tile .title-td {
-    background: #f1f5f9;
-    color: #64748b;
-    font-weight: 600;
-}
-.gasto-card-info {
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    padding: 10px 12px;
-    min-height: 90px;
-    background-color: #ffffff;
-}
-.gasto-card-title {
-    font-size: 7.5pt;
-    font-weight: 800;
-    color: #64748b;
-    letter-spacing: 0.5px;
-    margin-bottom: 6px;
-    border-bottom: 1px solid #f1f5f9;
-    padding-bottom: 3px;
-    text-transform: uppercase;
-}
-.gasto-items-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-    font-size: 9pt;
-}
-.gasto-items-table th {
-    background: #0f172a;
-    color: #fff;
-    font-weight: 600;
-    font-size: 8pt;
-    text-transform: uppercase;
-    padding: 7px 10px;
-    letter-spacing: 0.5px;
-}
-.gasto-items-table td {
-    padding: 8px 10px;
-    border-bottom: 1px solid #e2e8f0;
-}
-.gasto-items-table tr:nth-child(even) {
-    background-color: #f8fafc;
-}
-.gasto-items-table .total-row td {
-    border-bottom: none;
-    padding-top: 12px;
-}
-.gasto-total-highlight {
-    font-size: 13pt;
-    font-weight: 800;
-    color: #1e3a8a;
-    background: #eff6ff;
-    padding: 6px 12px !important;
-    border-radius: 4px;
-    border: 1px solid #bfdbfe !important;
-}
-.gasto-card-obs {
-    margin-top: 15px;
-    border: 1px dashed #cbd5e1;
-    border-radius: 6px;
-    padding: 10px 12px;
-    font-size: 8pt;
-    background: #fdfdfd;
-    line-height: 1.5;
-}
+    /* Estilos replicados del formato Premium */
+    .gasto-invoice-box {
+        max-width: 950px;
+        margin: auto;
+        padding: 20px;
+        background: #fff;
+        font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+        color: #334155;
+        box-sizing: border-box;
+    }
 
-/* ==========================================================================
+    .gasto-table-layout {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 10px;
+    }
+
+    .gasto-logo-container {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .gasto-brand-title {
+        font-size: 16pt;
+        font-weight: 800;
+        color: #1e3a8a;
+        line-height: 1.1;
+        letter-spacing: -0.5px;
+    }
+
+    .gasto-company-address {
+        font-size: 8.5pt;
+        color: #64748b;
+        line-height: 1.4;
+        text-align: center;
+    }
+
+    .gasto-remision-badge {
+        background: #0f172a;
+        color: #fff;
+        padding: 6px 12px;
+        text-align: center;
+        font-size: 8pt;
+        font-weight: 700;
+        letter-spacing: 1px;
+        border-radius: 4px;
+        float: right;
+        min-width: 140px;
+    }
+
+    .gasto-remision-badge span {
+        display: block;
+        font-size: 13pt;
+        font-weight: 800;
+        color: #38bdf8;
+        margin-top: 2px;
+    }
+
+    .gasto-date-tile {
+        width: 140px;
+        float: right;
+        margin-top: 5px;
+        border-collapse: collapse;
+        font-size: 8.5pt;
+    }
+
+    .gasto-date-tile td {
+        padding: 4px 8px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .gasto-date-tile .title-td {
+        background: #f1f5f9;
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    .gasto-card-info {
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 10px 12px;
+        min-height: 90px;
+        background-color: #ffffff;
+    }
+
+    .gasto-card-title {
+        font-size: 7.5pt;
+        font-weight: 800;
+        color: #64748b;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 3px;
+        text-transform: uppercase;
+    }
+
+    .gasto-items-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+        font-size: 9pt;
+    }
+
+    .gasto-items-table th {
+        background: #0f172a;
+        color: #fff;
+        font-weight: 600;
+        font-size: 8pt;
+        text-transform: uppercase;
+        padding: 7px 10px;
+        letter-spacing: 0.5px;
+    }
+
+    .gasto-items-table td {
+        padding: 8px 10px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .gasto-items-table tr:nth-child(even) {
+        background-color: #f8fafc;
+    }
+
+    .gasto-items-table .total-row td {
+        border-bottom: none;
+        padding-top: 12px;
+    }
+
+    .gasto-total-highlight {
+        font-size: 13pt;
+        font-weight: 800;
+        color: #1e3a8a;
+        background: #eff6ff;
+        padding: 6px 12px !important;
+        border-radius: 4px;
+        border: 1px solid #bfdbfe !important;
+    }
+
+    .gasto-card-obs {
+        margin-top: 15px;
+        border: 1px dashed #cbd5e1;
+        border-radius: 6px;
+        padding: 10px 12px;
+        font-size: 8pt;
+        background: #fdfdfd;
+        line-height: 1.5;
+    }
+
+    /* ==========================================================================
    IMPRESIÓN EXCLUSIVA DEL CONTENIDO INTERNO (DESMONTA EL MARCO DEL MODAL)
    ========================================================================== */
-@media print {
-    @page {
-        size: auto;
-        margin: 5mm; /* Margen básico de seguridad */
-    }
+    @media print {
+        @page {
+            size: auto;
+            margin: 5mm;
+            /* Margen básico de seguridad */
+        }
 
-    /* Ocultar el resto del sitio */
-    body * {
-        visibility: hidden !important;
-    }
+        /* Ocultar el resto del sitio */
+        body * {
+            visibility: hidden !important;
+        }
 
-    /* Ocultar elementos de UI del Modal */
-    .modal-backdrop,
-    .modal-header,
-    .modal-footer,
-    .btn,
-    .btn-close {
-        display: none !important;
-    }
+        /* Ocultar elementos de UI del Modal */
+        .modal-backdrop,
+        .modal-header,
+        .modal-footer,
+        .btn,
+        .btn-close {
+            display: none !important;
+        }
 
-    /* Desarmar la estructura visual del modal Bootstrap */
-    #gastoDetalle_modalPrincipal,
-    .modal-dialog,
-    .modal-content,
-    .modal-body {
-        position: static !important;
-        display: block !important;
-        visibility: visible !important;
-        background: transparent !important;
-        border: none !important;
-        box-shadow: none !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        overflow: visible !important;
-    }
+        /* Desarmar la estructura visual del modal Bootstrap */
+        #gastoDetalle_modalPrincipal,
+        .modal-dialog,
+        .modal-content,
+        .modal-body {
+            position: static !important;
+            display: block !important;
+            visibility: visible !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow: visible !important;
+        }
 
-    /* Hacer visible ÚNICAMENTE el contenedor interno del ticket */
-    #gastoDetalle_areaCapturaPDF,
-    #gastoDetalle_areaCapturaPDF * {
-        visibility: visible !important;
-    }
+        /* Hacer visible ÚNICAMENTE el contenedor interno del ticket */
+        #gastoDetalle_areaCapturaPDF,
+        #gastoDetalle_areaCapturaPDF * {
+            visibility: visible !important;
+        }
 
-    /* Posicionar el ticket en la esquina superior izquierda de la página */
-    #gastoDetalle_areaCapturaPDF {
-        position: absolute !important;
-        left: 0 !important;
-        top: 0 !important;
-        width: 100% !important;
-        margin: 0 !important;
-        padding: 10px !important;
-        background: #ffffff !important;
-    }
+        /* Posicionar el ticket en la esquina superior izquierda de la página */
+        #gastoDetalle_areaCapturaPDF {
+            position: absolute !important;
+            left: 0 !important;
+            top: 0 !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 10px !important;
+            background: #ffffff !important;
+        }
 
-    /* Asegurar renderizado correcto de tablas */
-    .gasto-table-layout, 
-    .gasto-items-table,
-    .gasto-date-tile {
-        display: table !important;
-        width: 100% !important;
-    }
+        /* Asegurar renderizado correcto de tablas */
+        .gasto-table-layout,
+        .gasto-items-table,
+        .gasto-date-tile {
+            display: table !important;
+            width: 100% !important;
+        }
 
-    tr { page-break-inside: avoid !important; }
-}
+        tr {
+            page-break-inside: avoid !important;
+        }
+    }
 </style>
 
 <script>
-    let observaciones='';
+    let observaciones = '';
     let filasHtmlGastoIVA = '';
-function gastoDetalle_cargarVista(gastoTipo, gastoId) {
-    if (gastoTipo === 'compra') return;
+    function gastoDetalle_cargarVista(gastoTipo, gastoId) {
+        if (gastoTipo === 'compra') return;
 
-    $.get(`/cfsistem/app/controllers/egresosController.php?action=obtenerDetalleMovimiento&tipo=${gastoTipo}&id=${gastoId}`, function(responseDetalle) {
-        if (!responseDetalle.success) return Swal.fire('Error', responseDetalle.message, 'error');
+        $.get(`/cfsistem/app/controllers/egresosController.php?action=obtenerDetalleMovimiento&tipo=${gastoTipo}&id=${gastoId}`, function (responseDetalle) {
+            if (!responseDetalle.success) return Swal.fire('Error', responseDetalle.message, 'error');
 
-        const cabeceraGasto = responseDetalle.cabecera;
-        let filasHtmlGasto = '';
+            const cabeceraGasto = responseDetalle.cabecera;
+            let filasHtmlGasto = '';
+            console.log(responseDetalle);
 
-        responseDetalle.items.forEach(itemGasto => {
-            filasHtmlGasto += `
+            responseDetalle.items.forEach(itemGasto => {
+                filasHtmlGasto += `
                 <tr>
                     <td style="font-family: monospace; color: #64748b; font-size: 9pt;">${itemGasto.sku || 'N/A'}</td>
                     <td class="fw-bold" style="color: #475569; text-transform: uppercase;">UNIDAD</td>
@@ -239,24 +264,24 @@ function gastoDetalle_cargarVista(gastoTipo, gastoId) {
                     <td class="text-end" style="color: #475569;">$${parseFloat(itemGasto.precio_unitario).toFixed(2)}</td>
                     <td class="text-end fw-bold" style="color: #1e3a8a;">$${parseFloat(itemGasto.subtotal).toFixed(2)}</td>
                 </tr>`;
-                 filasHtmlGastoIVA += `
+                filasHtmlGastoIVA += `
                 <tr>
                     <td style="font-family: monospace; color: #64748b; font-size: 9pt;">${itemGasto.sku || 'N/A'}</td>
                     <td class="fw-bold" style="color: #475569; text-transform: uppercase;">UNIDAD</td>
                     <td class="fw-bold" style="color: #0f172a;">${itemGasto.descripcion}</td>
                     <td class="text-end fw-bold" style="color: #0f172a;">${parseFloat(itemGasto.cantidad || 0).toFixed(4)}</td>
-                    <td class="text-end" style="color: #475569;">$${parseFloat((itemGasto.precio_unitario)*(.84)).toFixed(2)}</td>
-                     <td class="text-end" style="color: #475569;">$${parseFloat((itemGasto.precio_unitario)*(.16)).toFixed(2)}</td>
+                    <td class="text-end" style="color: #475569;">$${parseFloat((itemGasto.precio_unitario) * (.84)).toFixed(2)}</td>
+                     <td class="text-end" style="color: #475569;">$${parseFloat((itemGasto.precio_unitario) * (.16)).toFixed(2)}</td>
                     <td class="text-end fw-bold" style="color: #1e3a8a;">$${parseFloat(itemGasto.subtotal).toFixed(2)}</td>
                 </tr>`;
-        });
+            });
 
-        let htmlCategoriaGasto = '';
-        if (cabeceraGasto.categoria_nombre) {
-            htmlCategoriaGasto = `
+            let htmlCategoriaGasto = '';
+            if (cabeceraGasto.categoria_nombre) {
+                htmlCategoriaGasto = `
                 <br><strong>Categoría:</strong> <span style="color:#0284c7; font-weight:600;">${cabeceraGasto.categoria_nombre.toUpperCase()}</span>`;
-        }
-        observaciones=`<div id="datos" class="gasto-card-obs">
+            }
+            observaciones = `<div id="datos" class="gasto-card-obs">
         <strong>Observaciones:</strong>
          ${cabeceraGasto.observaciones ? `
                         <div style="margin-top: 3px; border-top: 1px solid #e2e8f0; padding-top: 2px;">
@@ -265,12 +290,13 @@ function gastoDetalle_cargarVista(gastoTipo, gastoId) {
                     ` : ' Sin observaciones registradas.'}
                     <div style="font-weight: 700; color: #334155; margin-bottom: 2px; text-transform: uppercase; font-size: 7.5pt; letter-spacing: 0.3px;">Validación de Operación</div>
                     <strong>Método de Pago:</strong> ${cabeceraGasto.metodo_pago || 'N/A'} &nbsp;|&nbsp; 
-                    <strong>Control Interno:</strong> Sistema Egresos Premium<br>
+                   
+                    
                     
                    
                 </div>`;
 
-        const estructuraTicketHTML = `
+            const estructuraTicketHTML = `
             <div class="gasto-invoice-box" id="gastoDetalle_areaCapturaPDF">
                 <table class="gasto-table-layout">
                     <tr>
@@ -349,7 +375,7 @@ function gastoDetalle_cargarVista(gastoTipo, gastoId) {
                         <tr class="total-row">
                             <td colspan="4"></td>
                             <td class="text-right" style="color: #475569; font-size: 10pt; font-weight: 600; vertical-align: middle;">TOTAL MXN</td>
-                            <td class="text-right gasto-total-highlight">$${parseFloat(cabeceraGasto.total).toLocaleString('es-MX', {minimumFractionDigits: 2})}</td>
+                            <td class="text-right gasto-total-highlight">$${parseFloat(cabeceraGasto.total).toLocaleString('es-MX', { minimumFractionDigits: 2 })}</td>
                         </tr>
                     </tbody>
                 </table>
@@ -357,45 +383,45 @@ function gastoDetalle_cargarVista(gastoTipo, gastoId) {
                 ${observaciones}
             </div>`;
 
-        $('#gastoDetalle_contenedorContenido').html(estructuraTicketHTML);
-        const refModalGasto = document.getElementById('gastoDetalle_modalPrincipal');
-        const instanciaModalGasto = bootstrap.Modal.getOrCreateInstance(refModalGasto);
-        instanciaModalGasto.show();
-    });
-}
-function gastoDetalle_ejecutarImpresion() {
-    // 1. Extraer datos actuales dinámicamente del modal o respuesta
-    const folio = document.querySelector('.gasto-remision-badge span')?.innerText || '000';
-    const fecha = document.querySelector('.gasto-date-tile td.fw-bold')?.innerText || new Date().toLocaleDateString('es-MX');
-    const beneficiario = document.querySelector('.gasto-card-info td.fw-bold')?.innerText || 'N/A';
-    const usuario = document.querySelector('.gasto-card-info td[style*="color:#475569"]')?.innerText || 'N/A';
-    const totalMxn = document.querySelector('.gasto-total-highlight')?.innerText || '$0.00';
-   
-    
-    // Extraer filas de la tabla de productos/servicios
-    const filasTabla = document.querySelector('.gasto-items-table tbody')?.innerHTML || '';
-    const observaciones2=observaciones;
-    
-    // Detectar si el dispositivo es móvil para usar el visor nativo o PDF
-    const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    if (esMovil) {
-        const elemento = document.getElementById('gastoDetalle_areaCapturaPDF');
-        const opciones = {
-            margin:       [8, 8, 8, 8],
-            filename:     `Comprobante_Gasto_${folio}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
-            jsPDF:        { unit: 'mm', format: 'a5', orientation: 'landscape' }
-        };
-        html2pdf().set(opciones).from(elemento).save();
-        return;
+            $('#gastoDetalle_contenedorContenido').html(estructuraTicketHTML);
+            const refModalGasto = document.getElementById('gastoDetalle_modalPrincipal');
+            const instanciaModalGasto = bootstrap.Modal.getOrCreateInstance(refModalGasto);
+            instanciaModalGasto.show();
+        });
     }
+    function gastoDetalle_ejecutarImpresion() {
+        // 1. Extraer datos actuales dinámicamente del modal o respuesta
+        const folio = document.querySelector('.gasto-remision-badge span')?.innerText || '000';
+        const fecha = document.querySelector('.gasto-date-tile td.fw-bold')?.innerText || new Date().toLocaleDateString('es-MX');
+        const beneficiario = document.querySelector('.gasto-card-info td.fw-bold')?.innerText || 'N/A';
+        const usuario = document.querySelector('.gasto-card-info td[style*="color:#475569"]')?.innerText || 'N/A';
+        const totalMxn = document.querySelector('.gasto-total-highlight')?.innerText || '$0.00';
 
-    // 2. Abrir ventana emergente dedicada para impresión limpia
-    const ventana = window.open('', '_blank', 'height=700,width=900');
 
-    ventana.document.write(`
+        // Extraer filas de la tabla de productos/servicios
+        const filasTabla = document.querySelector('.gasto-items-table tbody')?.innerHTML || '';
+        const observaciones2 = observaciones;
+
+        // Detectar si el dispositivo es móvil para usar el visor nativo o PDF
+        const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        if (esMovil) {
+            const elemento = document.getElementById('gastoDetalle_areaCapturaPDF');
+            const opciones = {
+                margin: [8, 8, 8, 8],
+                filename: `Comprobante_Gasto_${folio}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a5', orientation: 'landscape' }
+            };
+            html2pdf().set(opciones).from(elemento).save();
+            return;
+        }
+
+        // 2. Abrir ventana emergente dedicada para impresión limpia
+        const ventana = window.open('', '_blank', 'height=700,width=900');
+
+        ventana.document.write(`
     <!DOCTYPE html>
     <html lang="es">
         <head>
@@ -534,42 +560,42 @@ ${observaciones2}
     </html>
     `);
 
-    ventana.document.close();
-} 
-
-function gastoDetalle_ejecutarImpresionIVA() {
-    // 1. Extraer datos actuales dinámicamente del modal o respuesta
-    const folio = document.querySelector('.gasto-remision-badge span')?.innerText || '000';
-    const fecha = document.querySelector('.gasto-date-tile td.fw-bold')?.innerText || new Date().toLocaleDateString('es-MX');
-    const beneficiario = document.querySelector('.gasto-card-info td.fw-bold')?.innerText || 'N/A';
-    const usuario = document.querySelector('.gasto-card-info td[style*="color:#475569"]')?.innerText || 'N/A';
-    const totalMxn = document.querySelector('.gasto-total-highlight')?.innerText || '$0.00';
-   
-    
-    // Extraer filas de la tabla de productos/servicios
-    const filasTabla = document.querySelector('.gasto-items-table tbody')?.innerHTML || '';
-    const observaciones2=observaciones;
-    
-    // Detectar si el dispositivo es móvil para usar el visor nativo o PDF
-    const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    
-    if (esMovil) {
-        const elemento = document.getElementById('gastoDetalle_areaCapturaPDF');
-        const opciones = {
-            margin:       [8, 8, 8, 8],
-            filename:     `Comprobante_Gasto_${folio}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
-            jsPDF:        { unit: 'mm', format: 'a5', orientation: 'landscape' }
-        };
-        html2pdf().set(opciones).from(elemento).save();
-        return;
+        ventana.document.close();
     }
 
-    // 2. Abrir ventana emergente dedicada para impresión limpia
-    const ventana = window.open('', '_blank', 'height=700,width=900');
+    function gastoDetalle_ejecutarImpresionIVA() {
+        // 1. Extraer datos actuales dinámicamente del modal o respuesta
+        const folio = document.querySelector('.gasto-remision-badge span')?.innerText || '000';
+        const fecha = document.querySelector('.gasto-date-tile td.fw-bold')?.innerText || new Date().toLocaleDateString('es-MX');
+        const beneficiario = document.querySelector('.gasto-card-info td.fw-bold')?.innerText || 'N/A';
+        const usuario = document.querySelector('.gasto-card-info td[style*="color:#475569"]')?.innerText || 'N/A';
+        const totalMxn = document.querySelector('.gasto-total-highlight')?.innerText || '$0.00';
 
-    ventana.document.write(`
+
+        // Extraer filas de la tabla de productos/servicios
+        const filasTabla = document.querySelector('.gasto-items-table tbody')?.innerHTML || '';
+        const observaciones2 = observaciones;
+
+        // Detectar si el dispositivo es móvil para usar el visor nativo o PDF
+        const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        if (esMovil) {
+            const elemento = document.getElementById('gastoDetalle_areaCapturaPDF');
+            const opciones = {
+                margin: [8, 8, 8, 8],
+                filename: `Comprobante_Gasto_${folio}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a5', orientation: 'landscape' }
+            };
+            html2pdf().set(opciones).from(elemento).save();
+            return;
+        }
+
+        // 2. Abrir ventana emergente dedicada para impresión limpia
+        const ventana = window.open('', '_blank', 'height=700,width=900');
+
+        ventana.document.write(`
     <!DOCTYPE html>
     <html lang="es">
         <head>
@@ -708,6 +734,6 @@ ${observaciones2}
     </html>
     `);
 
-    ventana.document.close();
-} 
+        ventana.document.close();
+    } 
 </script>

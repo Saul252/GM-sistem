@@ -179,6 +179,7 @@ const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
 <?php require_once __DIR__ . '/modalProveedoresCompra.php'; ?>
 
 <script>
+    
 /**
  * LÓGICA DE COMPRAS - CF SISTEM
  */

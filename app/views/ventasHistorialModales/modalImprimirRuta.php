@@ -69,7 +69,19 @@
         const v = parseFloat(n) || 0;
         return Number.isInteger(v) ? v.toString() : v.toFixed(3).replace(/\.?0+$/, '');
     }
+    function limpiarDireccion(dir) {
+        if (!dir) return '-';
 
+        // Quita los prefijos "calle", "col", "colonia", "pueblo", "ciudad", "cp", etc.
+        // al inicio de cada segmento separado por coma.
+        const prefijos = /^(calle|col\.?|colonia|pueblo|ciudad|cp|c\.p\.|estado|municipio|delegaci[oó]n|entre calles?)\s+/i;
+
+        return String(dir)
+            .split(',')
+            .map(seg => seg.trim().replace(prefijos, '').trim())
+            .filter(seg => seg.length > 0)
+            .join(', ');
+    }
     // ═══════════════════════════════════════════════════════════════
     // RENDER DE RUTA DE REPARTO
     // ═══════════════════════════════════════════════════════════════
@@ -115,7 +127,6 @@
                 <td style="max-width:250px;" class="fw-bold text-primary">
                     ${fmtNumRuta(fmt.cantidad)} <span class="text-body-secondary fw-normal small">${fmt.unidad}</span>
                 </td>
-                <td style="max-width:250px;" class="text-body-secondary small">${prod.direccion_entrega ?? '-'}</td>
                 <td class="text-center">
                     <span class="badge ${badgeColor} text-uppercase font-monospace">${prod.estatus_logistico}</span>
                 </td>
@@ -126,9 +137,15 @@
         // =========================================
         // SECCIONES ADAPTATIVAS SEGÚN EL TIPO
         // =========================================
-        const tituloDoc = esEntregaPatio
-            ? '🏬 Venta ' + datos[0].folio_venta + ': Vales / Entrega en Patio'
-            : '🚚 Venta ' + datos[0].folio_venta + ': Hoja de Ruta';
+        const iconoLogo = `
+    <span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;flex-shrink:0;vertical-align:middle;">
+        <img src="/cfsistem/public/assets/logo.ico" alt="Logo"
+             style="width:100%;height:100%;object-fit:contain;display:block;">
+    </span>
+`;
+
+        const tituloPrincipal = esEntregaPatio ? 'BFC Entrega en Patio' : 'BFC Hoja de Ruta';
+        const subtituloVenta = `Venta ${datos[0].folio_venta}`;
 
         const bloqueOperador = esEntregaPatio ? `
         <div class="info-card">
@@ -138,30 +155,41 @@
                 <div class="info-meta">
                     <span class="meta-title">Entrego :</span>
                     <span class="meta-value">${datos[0].nombre_chofer ?? '-'}</span>
+                    
                 </div>
+                
             </div>
         </div>
     ` : `
-        <div class="info-card">
-            <div class="info-card-body info-split">
-                <div class="info-col">
-                    <span class="info-label">Operador / Chofer</span>
-                    <div class="info-value">${datos[0].nombre_chofer ?? '-'}</div>
-                    <div class="info-meta">
-                        <span class="meta-tag">Asignado de ruta</span>
-                    </div>
-                </div>
-                <div class="info-divider-v"></div>
-                <div class="info-col">
-                    <span class="info-label">Unidad de Transporte</span>
-                    <div class="info-value">${datos[0].unidad_nombre ?? '-'}</div>
-                    <div class="info-meta">
-                        <span class="meta-title">Placas</span>
-                        <span class="meta-badge">${datos[0].unidad_placas ?? '-'}</span>
-                    </div>
+  <div class="info-card">
+    <div class="info-card-body">
+
+        <!-- Fila superior: Chofer | Vehículo -->
+        <div class="info-split">
+
+            <div class="info-col" style="flex:1 1 0; width:100%; display:flex; flex-direction:column; align-items:center; text-align:center;">
+                <span class="info-label" style="display:block; width:100%;">Operador / Chofer</span>
+                <div class="info-value" style="width:100%;">${datos[0].nombre_chofer ?? '-'}</div>
+                <div class="info-meta" style="justify-content:center; width:100%;">
+                    <span class="meta-tag">Asignado de ruta</span>
                 </div>
             </div>
+
+            <div class="info-divider-v"></div>
+
+            <div class="info-col" style="flex:1 1 0; width:100%; display:flex; flex-direction:column; align-items:center; text-align:center;">
+                <span class="info-label" style="display:block; width:100%;">Unidad de Transporte</span>
+                <div class="info-value" style="width:100%;">${datos[0].unidad_nombre ?? '-'}</div>
+                <div class="info-meta" style="justify-content:center; width:100%;">
+                    <span class="meta-title">Placas</span>
+                    <span class="meta-badge">${datos[0].unidad_placas ?? '-'}</span>
+                </div>
+            </div>
+
         </div>
+
+    </div>
+</div>
     `;
 
         const fechasHeader = esEntregaPatio ? `
@@ -217,6 +245,19 @@
             </div>
         </div>
     `;
+        let direccion = esEntregaPatio ? `` : `
+     <div style="margin-top:6px; padding-top:5px; border-top:1px dashed rgba(0,0,0,0.08);">
+    <span style="display:block; font-size:8px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:#8c98a4; margin-bottom:2px;">
+        Dirección de Entrega
+    </span>
+    <div style="display:flex; align-items:flex-start; gap:4px; font-size:9.5px; line-height:1.3; font-weight:500; color:#1e293b; word-break:break-word; white-space:normal;">
+        <svg width="9" height="9" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"
+             style="flex-shrink:0; margin-top:1px; color:#94a3b8;">
+            <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/>
+        </svg>
+    <span> ${limpiarDireccion(datos?.[0]?.direccion_entrega)}</span>
+    </div>
+    </div>`;
 
         // =========================================
         // HTML GENERADO
@@ -224,26 +265,24 @@
         let html = `
         <div class="hoja-ruta-container p-4">
 
-            <!-- HEADER INTERNO -->
-            <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
-                <div>
-                    <h4 class="fw-bold text-body m-0 d-flex align-items-center gap-2">
-                        ${tituloDoc}
-                    </h4>
+           <!-- HEADER INTERNO -->
+<div class="mb-3 pb-2 border-bottom">
+    <div class="d-flex align-items-center justify-content-center gap-2">
+        ${iconoLogo}
+        <h4 class="fw-bold text-body m-0">${tituloPrincipal}</h4>
+        <span class="text-body-secondary fw-normal">·</span>
+       
+    </div><div class="d-flex align-items-center justify-content-center gap-2">
+        
+        <span class="fs-6 fw-semibold text-dark font-monospace">${subtituloVenta}</span>
+    </div>
 
-                    <div class="text-body-secondary small mt-1">
-                        Folio de viaje / Folio despacho: <span class="fw-bold text-body font-monospace">${datos[0].folio_viaje}</span>
-                    </div>
-                    <div class="text-body-secondary small mt-1">
-                        Registro: <span class="fw-bold text-body font-monospace">${datos[0].fecha_viaje ?? '-'}</span>
-                    </div>
-                </div>
-
-                <div class="text-end">
-                    ${fechasHeader}
-                </div>
-            </div>
-
+    <div class="d-flex justify-content-center gap-3 mt-2 small text-body-secondary">
+        <span>Folio: <span class="fw-semibold text-body font-monospace">${datos[0].folio_viaje}</span></span>
+        <span class="text-body-tertiary">|</span>
+        <span>Registro: <span class="fw-semibold text-body font-monospace">${datos[0].fecha_viaje ?? '-'}</span></span>
+    </div>
+</div>
             <style>
                 * {
                     text-transform: uppercase !important;
@@ -298,12 +337,12 @@
                 }
 
                 :root {
-                    --card-bg: #ffffff;
+                    --card-bg: #ffffff27;
                     --text-primary: #1e2022;
                     --text-secondary: #8c98a4;
                     --text-muted: #b0b7c0;
                     --border-color: rgba(0, 0, 0, 0.05);
-                    --accent-bg: #f8fafc;
+                    --accent-bg: #f8fafc32;
                 }
 
                 .info-grid {
@@ -430,6 +469,9 @@
                             <span class="meta-title">Teléfono</span>
                             <span class="meta-value">${datos[0].tel_cliente ?? 'Sin teléfono'}</span>
                         </div>
+                         <!-- Dirección debajo, ancho completo -->
+   
+
                     </div>
                 </div>
 
@@ -445,7 +487,7 @@
                             <th style="width: 5%">#</th>
                             <th style="width: 40%">Producto descripción</th>
                             <th style="width: 20%">Cantidad total</th>
-                            <th style="width: 23%">Ubicación / Dirección</th>
+                           
                             <th style="width: 12%" class="text-center">Estado</th>
                         </tr>
                     </thead>
@@ -454,6 +496,9 @@
                     </tbody>
                 </table>
             </div>
+             <div class="text-end">
+                    ${fechasHeader}
+                </div>
 
             <!-- ÁREA DE FIRMAS FORMALIZADA -->
             <div class="firmas-container pt-4">
@@ -486,7 +531,7 @@
             <style>
                 body {
                     font-family: 'Segoe UI', Arial, sans-serif;
-                    background: #f8f9fa;
+                    background: #f8f9fa3c;
                     color: #333;
                     padding: 15px;
                     font-size: 11.5px;
@@ -496,7 +541,7 @@
                     width: 100%;
                     max-width: 820px;
                     margin: auto;
-                    background: #fff;
+                    background: #ffffff10;
                     border: 1px solid #e0e0e0;
                     border-radius: 12px;
                     box-shadow: 0 4px 12px rgba(0,0,0,0.05);
@@ -537,14 +582,14 @@
                 }
 
                 table thead th {
-                    background-color: #f1f5f9 !important;
+                    background-color: #f1f5f952 !important;
                     color: #475569 !important;
                     font-size: 10px;
                     text-transform: uppercase;
                     letter-spacing: .5px;
                     font-weight: 700;
                     padding: 8px 10px !important;
-                    border-bottom: 2px solid #e2e8f0 !important;
+                    border-bottom: 2px solid #e2e8f05f !important;
                 }
 
                 table tbody td {
@@ -583,7 +628,7 @@
                         gap: 10px !important;
                     }
                     body {
-                        background: #ffffff !important;
+                        background: transparent !important;
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
                         padding: 0 !important;
@@ -591,8 +636,8 @@
                     .ticket {
                         width: 100% !important;
                         max-width: 100% !important;
-                        background: #ffffff !important;
-                        border: 1px solid #e0e0e0 !important;
+                        background: transparent !important;
+                        border: 1px solid #e0e0e06c !important;
                         border-radius: 12px !important;
                         box-shadow: none !important;
                         margin: 0 auto !important;
@@ -604,12 +649,92 @@
                         page-break-inside: avoid !important;
                     }
                     .info-box {
-                        background: #f8fafc !important;
-                        border: 1px solid #e2e8f0 !important;
+                        background:transparent!important;
+                        border: 1px solid   important;
                     }
                     table thead th {
-                        background-color: #f1f5f9 !important;
+                        background-color:transparent !important;
                     }
+                
+
+    /* TÍTULO MÁS PEQUEÑO */
+    .hoja-ruta-container h4 {
+        font-size: 13px !important;
+        font-weight: 700 !important;
+        margin: 0 !important;
+        gap: 4px !important;
+    }
+
+    /* Subtítulos de folio / registro */
+    .hoja-ruta-container .small,
+    .hoja-ruta-container .text-body-secondary.small {
+        font-size: 9.5px !important;
+        line-height: 1.25 !important;
+    }
+
+    /* TARJETAS: reducir paddings y tipografía a ~1/3 */
+    .info-card-body {
+        padding: 6px 10px !important;
+    }
+
+    .info-label {
+        font-size: 8px !important;
+        margin-bottom: 2px !important;
+        letter-spacing: .04em !important;
+    }
+
+    .info-value-main {
+        font-size: 11px !important;
+        line-height: 1.15 !important;
+    }
+
+    .info-value {
+        font-size: 10px !important;
+        line-height: 1.15 !important;
+    }
+
+    .info-meta {
+        margin-top: 2px !important;
+        font-size: 8.5px !important;
+        gap: 3px !important;
+    }
+
+    .meta-title,
+    .meta-value,
+    .meta-tag {
+        font-size: 8.5px !important;
+    }
+
+    .meta-badge {
+        font-size: 8px !important;
+        padding: 1px 4px !important;
+    }
+
+    /* Grid más compacto */
+    .info-grid {
+        gap: 8px !important;
+    }
+
+    .info-divider-v {
+        height: 26px !important;
+        margin: 0 10px !important;
+    }
+
+    /* Separador del header */
+    .hoja-ruta-container .mb-4.border-bottom {
+        margin-bottom: 8px !important;
+        padding-bottom: 6px !important;
+    }
+
+    /* Área de firmas más compacta */
+    .firma-linea {
+        margin: 22px auto 4px auto !important;
+    }
+
+    .firma-nombre {
+        font-size: 9px !important;
+    }
+
                 }
 
                 table {
@@ -624,6 +749,10 @@
                 table br {
                     display: none !important;
                 }
+                    @page {
+    size: auto;
+    margin: 0mm;
+}
             </style>
         </head>
         <body>

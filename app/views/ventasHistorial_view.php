@@ -392,9 +392,10 @@
 
                                 <th class="ps-3">Fecha</th>
                                 <th>Folio</th>
+                                 <th>Cliente</th>
                                 <th>Almacén</th>
                                 <th>Vendedor</th>
-                                <th>Cliente</th>
+                               
                                 <th>Total</th>
                                 <th>Saldo Cobro</th>
                                 <th>Facturada</th>
@@ -760,9 +761,9 @@
             return `<tr>
         <td class="ps-3 small">${v.fecha}</td>
         <td class="fw-bold">${v.folio}</td>
+        <td><div class="small fw-bold">${v.cliente}</div></td>       
         <td><span class="badge bg-light text-dark border fw-normal">${v.almacen_nombre}</span></td>
-        <td><div class="small fw-bold">${v.vendedor}</div></td>
-        <td><div class="small fw-bold">${v.cliente}</div></td>
+         <td><div class="small fw-bold">${v.vendedor}</div></td>        
         <td class="fw-bold card-title-text">$${total.toFixed(2)}</td>
         <td>${v.estado_general == 'activa' ? badgeCobro : '<span class="text-danger small fw-bold"><i class="bi bi-check-circle"></i> Cancelado</span>'}</td>
         <td><div class="small fw-bold">${factura}</div></td>

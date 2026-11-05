@@ -806,6 +806,7 @@
     <?php require_once __DIR__ . '/egresosComponets/cuentasPendientes.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/historialCuentasPorPagar.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/modalDetallePago.php'; ?>
+    <?php require_once __DIR__ . '/solicitudesCompra/imprimirModal.php'; ?>
 
 
 

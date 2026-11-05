@@ -274,7 +274,9 @@
             tbody.innerHTML = '';
 
             detalles.forEach(item => {
+                console.log(detalles);
                 const cantidadOriginal = parseFloat(item.cantidad) || 0;
+                const unidadOriginal = parseFloat(item.cantidad) / parseFloat(item.factor) || 0;
                 const equivalencia = parseFloat(item.odmaEquivalencia) || 1;
                 const division = equivalencia > 0 ? (cantidadOriginal * equivalencia) : cantidadOriginal;
                 const esCasiUno = Math.abs(division - 1) <= 0.01;
@@ -286,7 +288,7 @@
                     cantidadMostrar = 1;
                     unidadMostrar = item.odmaNombre || '';
                 } else {
-                    cantidadMostrar = division >= 1 ? division : cantidadOriginal;
+                    cantidadMostrar = division;
                     unidadMostrar = item.odmaNombre || '';
                 }
 

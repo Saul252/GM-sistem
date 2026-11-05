@@ -130,60 +130,78 @@
                 </div>
 
                 <!-- Acciones -->
-                <!-- Herramientas -->
-                <div class="dropdown position-relative flex-grow-1 flex-md-grow-0">
-                    <button type="button"
-                        class="btn btn-sm btn-light px-3 rounded-pill fw-medium d-flex align-items-center justify-content-center gap-2 btn-apple dropdown-toggle w-100"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class="bi bi-tools"></i> Herramientas
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end shadow-sm rounded-3 border-0 p-2">
+                <div class="col-12 col-md-auto ms-md-auto">
+                    <div class="d-flex gap-2 align-items-center flex-wrap flex-md-nowrap justify-content-end">
 
-                        <!-- ===== SECCIÓN: EXPORTAR ===== -->
-                        <li>
-                            <h6 class="dropdown-header text-uppercase small fw-bold text-muted mb-1"
-                                style="font-size:.7rem; letter-spacing:.5px;">
-                                <i class="bi bi-file-earmark-arrow-down me-1"></i> Exportar
-                            </h6>
-                        </li>
-                        <li>
-                            <button class="dropdown-item d-flex align-items-center gap-2 rounded-2"
-                                onclick="exportarTablaExcel()">
-                                <i class="bi bi-file-earmark-excel text-success"></i> Exportar Inventario a Excel
-                            </button>
-                        </li>
+                        <!-- Agregar Producto -->
+                        <button type="button"
+                            class="btn btn-sm btn-dark px-3 rounded-pill fw-medium d-flex align-items-center gap-2 btn-apple flex-grow-1 flex-md-grow-0 justify-content-center"
+                            data-bs-toggle="modal" data-bs-target="#modalAgregarProducto">
+                            <i class="bi bi-plus-lg"></i> Agregar Producto
+                        </button>
 
-                        <li>
-                            <hr class="dropdown-divider my-2">
-                        </li>
+                        <!-- Herramientas -->
+                        <div class="dropdown position-relative flex-grow-1 flex-md-grow-0">
+                            <button type="button"
+                                class="btn btn-sm btn-light px-3 rounded-pill fw-medium d-flex align-items-center justify-content-center gap-2 btn-apple dropdown-toggle w-100"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-tools"></i> Herramientas
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm rounded-3 border-0">
+                                <li>
+                                    <button class="btn btn-success dropdown-item d-flex align-items-center gap-2"
+                                        onclick="exportarTablaExcel()">
+                                        <i class="bi bi-file-earmark-excel me-1"></i> Exportar Inventario a Excel
+                                    </button>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="modal"
+                                        onclick="abrirModalInventarioInicial()">
+                                        <i class="bi bi-sliders"></i> Cargar Inventario por producto
+                                    </button>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item d-flex align-items-center gap-2"
+                                        onclick="descargarProductos()">
+                                        <i class="bi bi-download"></i> Descargar Excel para carga masiva
+                                    </button>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li>
+                                    <button class="dropdown-item d-flex align-items-center gap-2"
+                                        onclick="abrirModalCargarCSV()">
+                                        <i class="bi bi-filetype-csv"></i> Cargar Inventario masivo
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
 
-                        <!-- ===== SECCIÓN: CARGA DE INVENTARIO ===== -->
-                        <li>
-                            <h6 class="dropdown-header text-uppercase small fw-bold text-muted mb-1"
-                                style="font-size:.7rem; letter-spacing:.5px;">
-                                <i class="bi bi-box-arrow-in-down me-1"></i> Carga de Inventario
-                            </h6>
-                        </li>
-                        <li>
-                            <button class="dropdown-item d-flex align-items-center gap-2 rounded-2"
-                                data-bs-toggle="modal" onclick="abrirModalInventarioInicial()">
-                                <i class="bi bi-sliders text-primary"></i> Cargar Inventario por producto
+                        <!-- Traspasos -->
+                        <div class="dropdown position-relative flex-grow-1 flex-md-grow-0">
+                            <button type="button"
+                                class="btn btn-sm btn-light px-3 rounded-pill fw-medium d-flex align-items-center justify-content-center gap-2 btn-apple dropdown-toggle w-100"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-arrow-left-right"></i> Traspasos
                             </button>
-                        </li>
-                        <li>
-                            <button class="dropdown-item d-flex align-items-center gap-2 rounded-2"
-                                onclick="descargarProductos()">
-                                <i class="bi bi-download text-info"></i> Descargar Excel para carga masiva
-                            </button>
-                        </li>
-                        <li>
-                            <button class="dropdown-item d-flex align-items-center gap-2 rounded-2"
-                                onclick="abrirModalCargarCSV()">
-                                <i class="bi bi-filetype-csv text-warning"></i> Cargar Inventario masivo
-                            </button>
-                        </li>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm rounded-3 border-0">
+                                <li>
+                                    <button class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="modal"
+                                        data-bs-target="#modalTraspaso">
+                                        <i class="bi bi-plus-circle"></i> Nuevo Traspaso
+                                    </button>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="modal"
+                                        data-bs-target="#modalTraspasosGestion" onclick="cargarTraspasos()">
+                                        <i class="bi bi-check2-circle"></i> Autorizar Traspasos
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
 
-                    </ul>
+                    </div>
                 </div>
             </div>
 

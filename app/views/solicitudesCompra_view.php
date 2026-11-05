@@ -433,51 +433,53 @@ error_reporting(E_ALL);
                         <!-- DATOS PROVEEDOR -->
                         <div class="border rounded p-2 mb-3">
 
-
                             <div class="row g-1">
                                 <!-- BODEGA FORTALEZA CHALCO S.A DE C,V RFC:BFC121126CKA DOMICILIO EMILIANO ZAPATA S/N SAN MARTIN CUAUTLALPAN CHALCO ESTADO DE MEXICO CP:56644 -->
                                 <div class="col-12">
-                                    <small style="font-size:11px;" class="text-dark-secondary">Proveedor</small><br>
-                                    <span style="font-size:11px;" class="fw-bold" id="print-proveedor"></span>
+                                    <small style="font-size:11px;"
+                                        class="text-dark-secondary text-uppercase">PROVEEDOR</small><br>
+                                    <span style="font-size:11px;" class="fw-bold text-uppercase"
+                                        id="print-proveedor"></span>
                                 </div>
 
                                 <div class="col-6">
-                                    <small style="font-size:11px;" class="text-dark-secondary">RFC</small><br>
-                                    <span style="font-size:11px;" id="print-rfc"></span>
+                                    <small style="font-size:11px;"
+                                        class="text-dark-secondary text-uppercase">RFC</small><br>
+                                    <span style="font-size:11px;" class="text-uppercase" id="print-rfc"></span>
                                 </div>
 
                                 <div class="col-6">
-                                    <small style="font-size:11px;" class="text-dark-secondary">Teléfono</small><br>
-                                    <span style="font-size:11px;" id="print-telefono"></span>
+                                    <small style="font-size:11px;"
+                                        class="text-dark-secondary text-uppercase">TELÉFONO</small><br>
+                                    <span style="font-size:11px;" class="text-uppercase" id="print-telefono"></span>
                                 </div>
 
                                 <div class="col-8">
-                                    <small style="font-size:11px;" class="text-dark-secondary">Dirección
-                                        Fiscal</small><br>
-                                    <span style="font-size:11px;" id="print-direccion"></span>
+                                    <small style="font-size:11px;" class="text-dark-secondary text-uppercase">DIRECCIÓN
+                                        FISCAL</small><br>
+                                    <span style="font-size:11px;" class="text-uppercase" id="print-direccion"></span>
                                 </div>
 
                                 <div class="col-2">
-                                    <small style="font-size:11px;" class="text-dark-secondary">Tel. 2</small><br>
-                                    <span style="font-size:11px;" id="print-telefono2"></span>
+                                    <small style="font-size:11px;" class="text-dark-secondary text-uppercase">TEL.
+                                        2</small><br>
+                                    <span style="font-size:11px;" class="text-uppercase" id="print-telefono2"></span>
                                 </div>
 
                                 <div class="col-2">
-                                    <small style="font-size:11px;" class="text-dark-secondary">Ext.</small><br>
-                                    <span style="font-size:11px;" id="print-extencion"></span>
+                                    <small style="font-size:11px;"
+                                        class="text-dark-secondary text-uppercase">EXT.</small><br>
+                                    <span style="font-size:11px;" class="text-uppercase" id="print-extencion"></span>
                                 </div>
-
-
-
 
                                 <div class="col-8">
-                                    <small style="font-size: 11px;" class="text-dark-secondary d-block mb-1">Dirección
-                                        de recolección</small>
-                                    <spam type="text" id="print-direccion-recogida"
+                                    <small style="font-size: 11px;"
+                                        class="text-dark-secondary text-uppercase d-block mb-1">DIRECCIÓN DE
+                                        RECOLECCIÓN</small>
+                                    <span type="text" id="print-direccion-recogida"
                                         class="form-control form-control-sm border-0 bg-transparent p-0 text-dark shadow-none w-100 fw-semibold text-uppercase"
-                                        style="font-size: 11px;" readonly></spam>
+                                        style="font-size: 11px;" readonly></span>
                                 </div>
-
 
                             </div>
 
@@ -491,9 +493,9 @@ error_reporting(E_ALL);
 
                                 <tr>
 
-                                    <th style="width:48%;">Descripción</th>
-                                    <th width="14%" class="text-center">Cant.</th>
-                                    <th width="19%" class="text-end">P. Unit.</th>
+                                    <th style="width:48%;">DESCRIPCIÓN</th>
+                                    <th width="14%" class="text-center">CANT.</th>
+                                    <th width="19%" class="text-end">P. UNIT.</th>
                                     <th width="19%" class="text-end">Importe</th>
 
                                 </tr>
@@ -857,6 +859,7 @@ error_reporting(E_ALL);
 
 
     <?php require_once __DIR__ . '/solicitudesCompra/ModalSolicitud.php'; ?>
+    <?php require_once __DIR__ . '/solicitudesCompra/imprimirModal.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/agregarPoductoModal.php'; ?>
     <?php require_once __DIR__ . '/solicitudesCompra/modalProveedoresCompra.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/modalAjuste.php'; ?>
@@ -1206,10 +1209,10 @@ error_reporting(E_ALL);
                     ${cantMayoreo}.${cantSueltas} ${uRep}
                 </div>
                     <input type="hidden" class="form-control form-control-sm i-mayoreo border-success" 
-                        value="${cantMayoreo}" step=".01" oninput="recalcularFila(${index})" readonly>
+                        value="${cantMayoreo}" step=".001" oninput="recalcularFila(${index})" readonly>
                
                     <input type="hidden" class="form-control form-control-sm i-sueltas border-primary" 
-                        value="${cantSueltas}" step="0.01" oninput="recalcularFila(${index})" readonly>
+                        value="${cantSueltas}" step="0.001" oninput="recalcularFila(${index})" readonly>
                 </td>
 
                 
@@ -1222,7 +1225,7 @@ error_reporting(E_ALL);
         class="form-control form-control-sm border-success shadow-sm i-llegado"
         name="items[${index}][cantidad_llegado]"
         value="${cantidadSolicitada}"
-        step=".01"
+        step=".001"
         min="0"
         oninput="recalcularFila(${index})">
 
@@ -1231,7 +1234,7 @@ error_reporting(E_ALL);
         class="form-control form-control-sm border-danger shadow-sm i-faltante"
         name="items[${index}][cantidad_faltante]"
         value="0"
-        step=".01"
+        step=".001"
         min="0"
         >
 
@@ -1242,7 +1245,7 @@ error_reporting(E_ALL);
         class="form-control form-control-sm border-success shadow-sm i-excedente"
         value="0"
         min="0"
-        step="0.01"
+        step="0.001"
         >
 </td>
 
@@ -1250,7 +1253,7 @@ error_reporting(E_ALL);
                     <label class="small text-body-secondary fw-bold">Costo Total Renglón</label>
                     <div class="input-group input-group-sm">
                         <span class="input-group-text ">$</span>
-                        <input type="number" step="0.01" class="form-control i-costo-total" 
+                        <input type="number" step="0.001" class="form-control i-costo-total" 
                             placeholder="0.00" required value="${costo}"
                             oninput="recalcularFila(${index})">
                     </div>
@@ -1693,157 +1696,6 @@ error_reporting(E_ALL);
                     console.error(err);
                     Swal.fire('Error', 'Fallo de conexión al buscar ubicación', 'error');
                 });
-        }
-        function prepararImpresion(id) {
-            fetch(`${URL_CONTROLADOR_SOLICITUD}?action=obtenerDetalle&id=${id}`)
-                .then(async (res) => {
-                    const text = await res.text(); // 👈 primero ver crudo
-
-                    console.log('RAW TEXT RESPONSE:', text);
-
-                    try {
-                        return JSON.parse(text); // 👈 intento manual
-                    } catch (e) {
-                        console.error('ERROR JSON:', e);
-                        throw new Error('Respuesta no es JSON válido');
-                    }
-                })
-                .then(res => {
-
-                    console.log('RAW RESPONSE OBJ:', res);
-                    console.log('STATUS:', res.status);
-                    console.log('DATA:', res.data);
-                    console.log('COSTO:', res.costo);
-
-                    if (res.status !== 'success') return;
-
-                    const data = res.data;
-                    const infoBase = data[0];
-                    const costo = res.costo;
-
-
-                    console.log(infoBase);
-                    if (infoBase.ubicacion_destino > 0) {
-                        cargarUbicacionParaEditar(infoBase.ubicacion_destino);
-
-                    }
-
-
-
-                    $('#print-folio').text(` #${id.toString().padStart(5, '0')}`);
-                    $('#print-fecha').text(`Fecha: ${new Date().toLocaleDateString()}`);
-                    $('#print-almacen').text(infoBase.almacen_nombre);
-                    $('#print-proveedor').text(infoBase.proveedor_nombre || 'No especificado');
-                    $('#print-direccion').text(infoBase.dp_direccion || 'No especificado');
-                    $('#print-rfc').text(infoBase.dp_rfc || 'No especificado');
-                    $('#print-telefono').text(infoBase.dp_telefono || 'No especificado');
-                    $('#print-direccion-recoleccion').text(infoBase.ubicacion_destino || 'No especificado');
-                    $('#dp_correo').val(infoBase.dp_correo);
-
-                    $('#costo_total').text(costo.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) || 'nohay costo');
-
-                    let html = '';
-
-                    data.forEach(i => {
-
-                        const factor = parseFloat(i.factor_conversion) || 1;
-                        const uBase = i.unidad_medida || 'pzas';
-                        const uRep = i.unidad_reporte || 'Mayoreo';
-                        const costo = parseFloat(i.costo) || 0;
-
-                        const cantidad = parseFloat(i.cantidad) || 0;
-
-                        const costoUnitario = cantidad > 0 ? (costo / cantidad) : 0;
-
-                        html += `
-                <tr>
-                    <td class="fw-bold">${i.producto_nombre}</td>
-
-                    <td class="text-center">
-                        ${cantidad} ${uRep}
-                    </td>
-
-                    <td class="text-center">
-                        ${costoUnitario.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
-                    </td>
-
-                    <td class="text-center">
-                        ${costo.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
-                    </td>
-                </tr>`;
-                    });
-
-                    $('#print-tabla-cuerpo').html(html);
-
-                    new bootstrap.Modal(document.getElementById('modalImprimirSolicitud')).show();
-                })
-                .catch(err => {
-                    console.error('FETCH ERROR:', err);
-                });
-        }
-        /**
-         * Llama al comando de impresión del navegador
-         */
-        function ejecutarImpresion() {
-            // 1. Obtener el contenido del área de impresión
-            const contenido = document.getElementById('areaImpresion').innerHTML;
-            const folio = $('#print-folio').text();
-            const recoleccion = $('#print-direccion-recoleccion');
-
-            // 2. Crear una ventana nueva
-            const ventana = window.open('', '_blank', 'height=600,width=800');
-
-            // 3. Escribir el HTML necesario para que se vea bien
-            ventana.document.write(`
-        <html>
-            <head>
-                <title>Imprimir ${folio}</title>
-      <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
-
-    <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
-
-                <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-                <style>
-                    body { font-family: 'Inter', sans-serif; padding: 30px; }
-                    .table{
-                    background-color: #efefef00 !important;
-                    }
-                    .table-bordered th, .table-bordered td { border: 1px solid #000 !important; }
-                    .fw-bold { font-weight: bold !important; }
-                    @media print {
-                        .no-print { display: none; }
-                        @page { margin: 0 !important; }
-                    }
-                    .firma-linea { border-top: 1px solid #000; margin-top: 50px; text-align: center; padding-top: 5px; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-             <img
-    src="/cfsistem/public/assets/logo.ico"
-    style="
-        position: fixed;
-        top: 19.5%;
-        left: 50%;
-        transform: translate(-70%, -70%);
-        width: 180px;
-        opacity: 0.08;
-        z-index: -1;
-    "
->
-      
-                ${contenido}
-                <script>
-                    // Esperar a que cargue el CSS y luego imprimir
-                    window.onload = function() {
-                        window.print();
-                        window.onafterprint = function() { window.close(); };
-                    };
-                <\/script>
-            </body>
-        </html>
-    `);
-
-            ventana.document.close();
         }
         function actualizarListaProveedores() {
             fetch('egresosController.php?action=getProveedoresJSON')

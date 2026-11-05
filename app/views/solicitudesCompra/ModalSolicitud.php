@@ -677,6 +677,95 @@
         $('#emptyState').removeClass('d-none');
 
         $('#modalSolicitud').modal('show');
-        recargarProductos();
+        rec
+        function prepararImpresion(id) {
+            fetch(`/cfsistem/app/controllers/solicitudesCompraController.php?action=obtenerDetalle&id=${id}`)
+                .then(async (res) => {
+                    const text = await res.text(); // 👈 primero ver crudo
+
+                    console.log('RAW TEXT RESPONSE:', text);
+
+                    try {
+                        return JSON.parse(text); // 👈 intento manual
+                    } catch (e) {
+                        console.error('ERROR JSON:', e);
+                        throw new Error('Respuesta no es JSON válido');
+                    }
+                })
+                .then(res => {
+
+                    console.log('RAW RESPONSE OBJ:', res);
+                    console.log('STATUS:', res.status);
+                    console.log('DATA:', res.data);
+                    console.log('COSTO:', res.costo);
+
+                    if (res.status !== 'success') return;
+
+                    const data = res.data;
+                    const infoBase = data[0];
+                    const costo = res.costo;
+
+
+                    console.log(infoBase);
+                    if (infoBase.ubicacion_destino > 0) {
+                        cargarUbicacionParaEditar(infoBase.ubicacion_destino);
+
+                    }
+
+
+
+                    $('#print-folio').text(` #${id.toString().padStart(5, '0')}`);
+                    $('#print-fecha').text(`Fecha: ${new Date().toLocaleDateString()}`);
+                    $('#print-almacen').text(infoBase.almacen_nombre);
+                    $('#print-proveedor').text(infoBase.proveedor_nombre || 'No especificado');
+                    $('#print-direccion').text(infoBase.dp_direccion || 'No especificado');
+                    $('#print-rfc').text(infoBase.dp_rfc || 'No especificado');
+                    $('#print-telefono').text(infoBase.dp_telefono || 'No especificado');
+                    $('#print-direccion-recoleccion').text(infoBase.ubicacion_destino || 'No especificado');
+                    $('#dp_correo').val(infoBase.dp_correo);
+
+                    $('#costo_total').text(costo.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' }) || 'nohay costo');
+
+                    let html = '';
+
+                    data.forEach(i => {
+
+                        const factor = parseFloat(i.factor_conversion) || 1;
+                        const uBase = i.unidad_medida || 'pzas';
+                        const uRep = i.unidad_reporte || 'Mayoreo';
+                        const costo = parseFloat(i.costo) || 0;
+
+                        const cantidad = parseFloat(i.cantidad) || 0;
+
+                        const costoUnitario = cantidad > 0 ? (costo / cantidad) : 0;
+
+                        html += `
+                <tr>
+                    <td class="fw-bold">${i.producto_nombre}</td>
+
+                    <td class="text-center">
+                        ${cantidad} ${uRep}
+                    </td>
+
+                    <td class="text-center">
+                        ${costoUnitario.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                    </td>
+
+                    <td class="text-center">
+                        ${costo.toLocaleString('es-MX', { style: 'currency', currency: 'MXN' })}
+                    </td>
+                </tr>`;
+                    });
+
+                    $('#print-tabla-cuerpo').html(html);
+
+                    new bootstrap.Modal(document.getElementById('modalImprimirSolicitud')).show();
+                })
+                .catch(err => {
+                    console.error('FETCH ERROR:', err);
+                });
+        }
+        argarProductos();
     }
+
 </script>

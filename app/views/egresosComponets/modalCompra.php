@@ -530,166 +530,77 @@
     // 🔥 RECALCULAR TOTALES
     // =====================================================
 
+
     function recalcularTotales(id, origen = '') {
-
-        // 🔥 evitar loops
         if (recalculandoTotales) return;
-
         recalculandoTotales = true;
 
         try {
-
             const card = $(`#card_item_${id}`);
 
-            const factor = parseFloat(
-                card.find('.hidden-factor').val()
-            ) || 0;
+            let factor = parseFloat(card.find('.hidden-factor').val());
+            if (!factor || factor <= 0 || !isFinite(factor)) {
+                factor = 1;
+                card.find('.hidden-factor').val(1);
+            }
 
-            const inputFaltante =
-                card.find('.input-faltante');
+            const inputFaltante = card.find('.input-faltante');
+            const inputExcedente = card.find('.input-excedente');
 
-            const inputExcedente =
-                card.find('.input-excedente');
+            const mayoreo = parseFloat(card.find('.input-mayoreo').val()) || 0;
+            const sueltas = parseFloat(card.find('.input-sueltas').val()) || 0;
 
-            // =====================================================
-            // 🔥 CANTIDADES
-            // =====================================================
+            // 🔥 Piezas físicas (stock / reparto) — mayoreo*factor + sueltas
+            const cantidadFacturada = (mayoreo * factor) + sueltas;
 
-            const mayoreo = parseFloat(
-                card.find('.input-mayoreo').val()
-            ) || 0;
+            const faltante = inputFaltante.is(':disabled') ? 0 : (parseFloat(inputFaltante.val()) || 0);
+            const excedente = inputExcedente.is(':disabled') ? 0 : (parseFloat(inputExcedente.val()) || 0);
 
-            const sueltas = parseFloat(
-                card.find('.input-sueltas').val()
-            ) || 0;
+            const totalReal = cantidadFacturada - faltante + excedente;
 
-            const cantidadFacturada =
-                (mayoreo * factor) + sueltas;
+            let precioUnitario = parseFloat(card.find('.input-precioUnitario').val()) || 0;
+            let costoTotal = parseFloat(card.find('.input-costo-total').val()) || 0;
 
-            // =====================================================
-            // 🔥 FALTANTES / EXCEDENTES
-            // =====================================================
+            // 🔥 COSTO:
+            //   - Si hay mayoreo: mayoreo * precio (bloque completo, menudeo no suma)
+            //   - Si NO hay mayoreo: sueltas * precio (precio por pieza)
+            const calcularCosto = () => {
+                if (mayoreo > 0) {
+                    return mayoreo * precioUnitario;
+                }
+                return sueltas * precioUnitario;
+            };
 
-            const faltante = inputFaltante.is(':disabled')
-                ? 0
-                : (parseFloat(inputFaltante.val()) || 0);
-
-            const excedente = inputExcedente.is(':disabled')
-                ? 0
-                : (parseFloat(inputExcedente.val()) || 0);
-
-            // =====================================================
-            // 🔥 TOTAL REAL
-            // =====================================================
-
-            const totalReal =
-                cantidadFacturada - faltante + excedente;
-
-            // =====================================================
-            // 🔥 PRECIOS
-            // =====================================================
-
-            let precioUnitario = parseFloat(
-                card.find('.input-precioUnitario').val()
-            ) || 0;
-
-            let costoTotal = parseFloat(
-                card.find('.input-costo-total').val()
-            ) || 0;
-
-            // =====================================================
-            // 🔥 SI EL USUARIO MODIFICÓ COSTO TOTAL
-            // recalcular precio unitario
-            // =====================================================
+            // 🔥 Unidades "de costo" para la inversa (costo total -> precio unitario)
+            const unidadesCosto = mayoreo > 0 ? mayoreo : sueltas;
 
             if (origen === 'costoTotal') {
-
-                if (
-                    costoTotal > 0 &&
-                    cantidadFacturada > 0
-                ) {
-
-                    precioUnitario =
-                        costoTotal / cantidadFacturada;
-
-                    if (precioUnitario % 1 != 0) {
-                        card.find('.input-precioUnitario')
-                            .val(precioUnitario.toFixed(2));
-
-                    }
-                    else {
-                        card.find('.input-precioUnitario')
-                            .val(precioUnitario);
-
-                    }
-
-
-                    // 🔥 SOLO AQUÍ actualizamos precio unitario
-
+                if (costoTotal > 0 && unidadesCosto > 0) {
+                    precioUnitario = costoTotal / unidadesCosto;
+                    card.find('.input-precioUnitario')
+                        .val(Number.isInteger(precioUnitario) ? precioUnitario : precioUnitario.toFixed(2));
                 }
             }
 
-            // =====================================================
-            // 🔥 SI EL USUARIO MODIFICÓ PRECIO UNITARIO
-            // recalcular costo total
-            // =====================================================
-
-            if (origen === 'precioUnitario') {
-
-                const subtotalMayoreo = mayoreo > 0 ? (mayoreo * precioUnitario) : 0;
-                const subtotalSueltas = (sueltas !== 0 && factor > 0) ? ((sueltas / factor) * precioUnitario) : 0;
-
-                costoTotal = subtotalMayoreo + subtotalSueltas;
-
-                // 🔥 SOLO AQUÍ actualizamos costo total
-                card.find('.input-costo-total')
-                    .val(costoTotal.toFixed(2));
+            if (origen === 'precioUnitario' || origen === '') {
+                if (precioUnitario > 0) {
+                    costoTotal = calcularCosto();
+                    card.find('.input-costo-total').val(costoTotal.toFixed(2));
+                } else if (origen === 'precioUnitario') {
+                    card.find('.input-costo-total').val('0.00');
+                }
             }
 
-            // =====================================================
-            // 🔥 SI CAMBIARON CANTIDADES
-            // =====================================================
-
-            if (
-                origen === '' &&
-                precioUnitario > 0
-            ) {
-
-                const subtotalMayoreo = mayoreo > 0 ? (mayoreo * precioUnitario) : 0;
-                const subtotalSueltas = (sueltas !== 0 && factor > 0) ? ((sueltas / factor) * precioUnitario) : 0;
-
-                costoTotal = subtotalMayoreo + subtotalSueltas;
-
-                card.find('.input-costo-total')
-                    .val(costoTotal.toFixed(2));
-            }
-
-            // =====================================================
-            // 🔥 ACTUALIZAR CAMPOS
-            // =====================================================
-
-            card.find('.span-total-base')
-                .text(totalReal.toLocaleString());
-
-            card.find('.hidden-total-piezas')
-                .val(totalReal);
-
-            card.find('.hidden-faltante')
-                .val(faltante);
-
-            card.find('.hidden-precio-lote')
-                .val(precioUnitario.toFixed(4));
-
-            // =====================================================
-            // 🔥 VALIDACIONES
-            // =====================================================
+            // Actualizar campos
+            card.find('.span-total-base').text(totalReal.toLocaleString());
+            card.find('.hidden-total-piezas').val(totalReal);
+            card.find('.hidden-faltante').val(faltante);
+            card.find('.hidden-precio-lote').val(precioUnitario.toFixed(4));
 
             validarReparto(id);
-
             actualizarGranTotal();
 
         } finally {
-
             recalculandoTotales = false;
         }
     }

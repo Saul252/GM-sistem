@@ -116,14 +116,14 @@ $modulos = [
                 <span class="texto" id="themeLabel">Modo Oscuro</span>
             </button>
 
+            <!-- ===== CAMPANA DE NOTIFICACIONES (solo lista) ===== -->
             <div class="dropdown">
                 <a href="javascript:void(0);" class="text-white position-relative p-2" id="btnNotif"
-                    data-bs-toggle="dropdown">
+                    data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-bell fs-4"></i>
                     <span id="notif-badge"
                         class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
                 </a>
-                <!-- Menú desplegable con bg-body y border adaptable -->
                 <ul class="dropdown-menu dropdown-menu-end shadow-lg border p-0" id="menuNotif"
                     style="width: 320px; max-width: 90vw; max-height: 400px; overflow-y: auto;">
                     <li class="p-3 border-bottom bg-body-tertiary">
@@ -132,6 +132,26 @@ $modulos = [
                     <div id="lista-notificaciones">
                         <li class="p-3 text-center text-body-secondary small">Cargando...</li>
                     </div>
+                </ul>
+            </div>
+
+            <!-- ===== BOTÓN CONFIG DE AVISOS (checkbox por tipo) ===== -->
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-light border-0 dropdown-toggle" type="button" id="btnConfigNotif"
+                    data-bs-toggle="dropdown" data-bs-auto-close="outside" title="Configurar avisos">
+                    <i id="notifIcon" class="bi bi-sliders"></i>
+                    <span id="notifLabel" class="d-none d-md-inline">Avisos</span>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end p-3 shadow"
+                    aria-labelledby="btnConfigNotif" data-bs-theme="dark" style="min-width: 280px;">
+                    <li class="small text-muted mb-2">Avisos activos:</li>
+                    <li id="listaNotificaciones"></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li>
+                        <button class="btn btn-sm btn-primary w-100" id="btnAplicarNotif">Aplicar</button>
+                    </li>
                 </ul>
             </div>
 
@@ -250,7 +270,6 @@ $modulos = [
                 </div>
             </div>
             <div class="modal-footer d-flex justify-content-between">
-                <!-- Botón Cancelar: SOLO CIERRA EL MODAL MEDIANTE BOOTSTRAP -->
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="bi bi-x-lg"></i> Regresar
                 </button>
@@ -261,14 +280,11 @@ $modulos = [
         </div>
     </div>
 </div>
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>';
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <script>
     /**
      * CF SYSTEM - LÓGICA GLOBAL DE INTERFAZ Y NOTIFICACIONES
-     * Versión: 2.0 (Optimizado para Móvil y Escritorio - No jQuery)
-     */
-    /* CF SYSTEM - LÓGICA GLOBAL DE INTERFAZ Y NOTIFICACIONES
-     * Versión: 2.0 (Optimizado para Móvil y Escritorio - No jQuery)
+     * Versión: 2.1 (Dropdowns separados + config de avisos)
      */
     let usuario = <?= intval($_SESSION['usuario_id'] ?? 0) ?>;
 
@@ -290,14 +306,11 @@ $modulos = [
 
     document.addEventListener('DOMContentLoaded', () => {
 
-
         inyectarEstilosToast();
 
         // UI Elements
         const toggleBtn = document.getElementById('toggleSidebar');
         const sidebar = document.getElementById('sidebar');
-        const btnNotif = document.getElementById('btnNotif');
-        const menuNotif = document.getElementById('menuNotif');
 
         let overlay = document.querySelector('.sidebar-overlay') || document.createElement('div');
         if (!overlay.parentElement) {
@@ -305,9 +318,8 @@ $modulos = [
             document.body.appendChild(overlay);
         }
 
-        // Eventos UI
+        // Sidebar responsive
         if (sidebar) {
-            // 1. OCULTAR EN AUTOMÁTICO AL CARGAR LA PÁGINA
             if (window.innerWidth <= 992) {
                 sidebar.classList.remove('show');
                 if (overlay) overlay.classList.remove('active');
@@ -318,7 +330,6 @@ $modulos = [
         }
 
         if (toggleBtn) {
-            // 2. EVENTO PARA ALTERNAR VISIBILIDAD EN CADA CLIC
             toggleBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
@@ -332,21 +343,12 @@ $modulos = [
             });
         }
 
-        if (btnNotif && menuNotif) {
-            btnNotif.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                menuNotif.style.display = (menuNotif.style.display === 'block') ? 'none' : 'block';
-            });
+        // ✅ Inicializar módulo de avisos ANTES del polling
+        if (typeof initModuloNotificaciones === 'function') {
+            initModuloNotificaciones();
         }
 
-        document.addEventListener('click', (e) => {
-            if (menuNotif && btnNotif && !menuNotif.contains(e.target) && !btnNotif.contains(e.target)) {
-                menuNotif.style.display = 'none';
-            }
-        });
-
-        // Iniciar Polling
+        // Polling
         mantenimientoSistema();
         setInterval(mantenimientoSistema, 35000);
     });
@@ -358,7 +360,6 @@ $modulos = [
         const lista = document.getElementById('lista-notificaciones');
         const badge = document.getElementById('notif-badge');
 
-        // Concatenar todos los HTMLs generados por cada módulo
         const todosLosHTML = [
             ...almacenNotificaciones.traspasos,
             ...almacenNotificaciones.cancelaciones,
@@ -368,7 +369,6 @@ $modulos = [
 
         const totalNotificaciones = todosLosHTML.length;
 
-        // 1. Actualizar el Badge con la suma total
         if (badge) {
             if (totalNotificaciones > 0) {
                 badge.innerText = totalNotificaciones;
@@ -380,7 +380,6 @@ $modulos = [
             }
         }
 
-        // 2. Renderizar la lista consolidada sin borrar los otros tipos
         if (lista) {
             if (totalNotificaciones === 0) {
                 lista.innerHTML = '<div class="p-4 text-center text-body-secondary small">Sin notificaciones pendientes</div>';
@@ -394,19 +393,35 @@ $modulos = [
        CONSULTAS AL BACKEND
        ========================================================================== */
     function mantenimientoSistema() {
-        verificarCancelacionesRecientes();
-        verificarNotificaciones();
-        if (usuario <= 2) {
+        if (typeof usuario === 'undefined' || !usuario) return;
+        if (typeof Notificaciones === 'undefined') return;
 
-            verificarMantenimientos();
-            verificarSolicitudesCancelacion();
-            verificarVerificaciones();
-        }
+        const activas = Notificaciones.getActivas(usuario);
+
+        const puedeVerTodas = usuario <= 2;
+        const permitidas = puedeVerTodas
+            ? NOTIFICACIONES.map(n => n.id)
+            : NOTIFICACIONES.slice(0, 2).map(n => n.id);
+
+        const mapaFn = {
+            cancelaciones: verificarCancelacionesRecientes,
+            notificaciones: verificarNotificaciones,
+            mantenimientos: verificarMantenimientos,
+            solicitudes: verificarSolicitudesCancelacion,
+            verificaciones: verificarVerificaciones,
+        };
+
+        activas
+            .filter(id => permitidas.includes(id))
+            .forEach(id => {
+                const fn = mapaFn[id];
+                if (typeof fn === 'function') fn();
+            });
     }
+
     /* ==========================================================================
-       CONSULTA DE CANCELACIONES/ELIMINACIONES RECIENTES (RANGO 5 MINUTOS)
+       CANCELACIONES RECIENTES
        ========================================================================== */
-    // Set en memoria para evitar que se repita la notificación durante los 5 minutos
     const idsCancelacionesNotificadas = new Set();
 
     function verificarCancelacionesRecientes() {
@@ -416,13 +431,10 @@ $modulos = [
                 if (res.status === 'success' && Array.isArray(res.data) && res.data.length > 0) {
 
                     res.data.forEach(item => {
-                        // Si el ID de la solicitud no ha sido notificado aún en este navegador
                         if (!idsCancelacionesNotificadas.has(item.id)) {
 
-                            // 1. Guardar en memoria local
                             idsCancelacionesNotificadas.add(item.id);
 
-                            // 2. Disparar Toastify único para todos los usuarios
                             if (typeof Toastify === "function") {
                                 Toastify({
                                     text: `🗑️ VENTA ELIMINADA\nSe canceló la venta #${item.id_venta}\nMotivo: ${item.razon || 'Sin motivo especificado'}`,
@@ -442,7 +454,6 @@ $modulos = [
                                 }).showToast();
                             }
 
-                            // 3. Recargar el listado de ventas si la pantalla del usuario la contiene
                             if (typeof getVentas === 'function') getVentas();
                         }
                     });
@@ -459,7 +470,6 @@ $modulos = [
                 const cantidad = items.length;
                 const estado = estadoToasts.cancelacion;
 
-                // Alerta Toastify individual
                 if (cantidad > 0 && (estado.primeraCarga || cantidad > estado.ultimoConteo)) {
                     if (typeof Toastify === "function") {
                         const u = items[0] || {};
@@ -478,7 +488,6 @@ $modulos = [
                 }
                 estado.ultimoConteo = cantidad;
 
-                // Guardar HTMLs en el almacén
                 almacenNotificaciones.cancelaciones = items.map(item => `
                 <div class="d-flex align-items-center justify-content-between p-3 border-bottom bg-body-tertiary hover-notif">
                     <div style="flex: 1; line-height: 1.4;">
@@ -509,7 +518,7 @@ $modulos = [
                     if (typeof Toastify === "function") {
                         const u = items[0] || {};
                         Toastify({
-                            text: `📦 TRASPASO RECIBIDO\n${u.emisor} envió ${u.cantidad_texto || u.cantidad} de ${u.producto}`,
+                            text: `📦 TRASPASO EN PUERTA\n${u.emisor} envió ${u.cantidad_texto || u.cantidad} de ${u.producto} a ${u.destino}`,
                             duration: 1500,
                             close: true,
                             gravity: "top",
@@ -523,17 +532,29 @@ $modulos = [
                 }
                 estado.ultimoConteo = cantidad;
 
-                // Guardar HTMLs en el almacén
                 almacenNotificaciones.traspasos = items.map(item => `
-                <div class="d-flex align-items-center justify-content-between p-3 border-bottom bg-white hover-notif">
-                    <div style="flex: 1; line-height: 1.4;">
-                        <b class="text-primary d-block small text-uppercase text-success">${item.producto}</b>
-                        <b class="d-block text-body-secondary text-success" style="font-size: 0.75rem;">De: ${item.emisor}</b>
-                        <div class="mt-1"><b class="text-primary d-block small text-uppercase text-success">${item.cantidad_texto || (item.cantidad + ' PZA')}</b></div>
+                <div class="row align-items-center ROW p-3 border-bottom hover-notif">
+                    <div class="col-12 mb-2">
+                        <b class="d-block text-body-secondary text-success" style="font-size: 0.75rem;">TRASPASO PARA 
+                        <spam class="text-success text-uppercase">${item.destino}</spam></b>
                     </div>
-                    <button onclick="procesarRecepcionRapida(${item.id})" class="btn btn-success btn-sm rounded-circle shadow-sm" style="width:32px; height:32px;"><i class="bi bi-check-lg"></i></button>
+                    <div class="col-8" style="line-height: 1.4;">
+                        <b class="text-primary d-block small text-uppercase text-success">${item.producto}</b>
+                        <b class="d-block text-body-secondary text-success" style="font-size: 0.75rem
+                                                <b class="d-block text-body-secondary text-success" style="font-size: 0.75rem;">De: ${item.emisor}</b>
+                        <div class="mt-1">
+                            <b class="text-primary d-block small text-uppercase text-success">${item.cantidad_texto || (item.cantidad + ' PZA')}</b>
+                        </div>
+                    </div>
+                    <div class="col-4 text-end">
+                        <button onclick="procesarRecepcionRapida(${item.id})"
+                            class="btn btn-success btn-sm rounded-circle shadow-sm"
+                            style="width:32px; height:32px;"
+                            title="Recibir traspaso">
+                            <i class="bi bi-check-lg"></i>
+                        </button>
+                    </div>
                 </div>`);
-
                 renderizarListaNotificaciones();
             })
             .catch(err => console.error("Error traspasos:", err));
@@ -561,7 +582,6 @@ $modulos = [
                 }
                 estado.ultimoConteo = cantidad;
 
-                // Guardar HTMLs en el almacén
                 almacenNotificaciones.mantenimientos = items.map(item => {
                     const dias = parseInt(item.dias_restantes);
                     const color = dias <= 0 ? "danger" : (dias <= 3 ? "warning" : "success");
@@ -582,8 +602,8 @@ $modulos = [
             })
             .catch(err => console.error("Error mantenimientos:", err));
     }
+
     function verificarVerificaciones() {
-        // 1. Se corrigió la acción de la URL a "listarProximaVerificacion"
         fetch("/cfsistem/app/controllers/verificacionesController.php?action=listarProximaVerificacion")
             .then(r => r.json())
             .then(data => {
@@ -591,7 +611,6 @@ $modulos = [
                 const cantidad = items.length;
                 const estado = estadoToasts.verificacion;
 
-                // 2. Notificación Toastify con la misma estructura visual
                 if (cantidad > 0 && (estado.primeraCarga || cantidad > estado.ultimoConteo)) {
                     const item = items[0];
                     Toastify({
@@ -612,7 +631,6 @@ $modulos = [
                 }
                 estado.ultimoConteo = cantidad;
 
-                // 3. Guardar HTMLs en el almacén global (Igual que Mantenimientos)
                 almacenNotificaciones.verificaciones = items.map(item => {
                     const dias = parseInt(item.dias_restantes);
                     const color = dias <= 0 ? "danger" : (dias <= 3 ? "warning" : "success");
@@ -620,7 +638,6 @@ $modulos = [
                     <div class="d-flex justify-content-between align-items-center p-3 border-bottom hover-notif">
                         <div>
                             <div class="small"><b>Proxima verificacion: ${item.estado}</b></div>
-
                             <div class="fw-bold text-${color}">Vehículo: ${item.vehiculo}</div>
                             <div class="small text-secondary">${item.placas}</div>
                         </div>
@@ -630,17 +647,17 @@ $modulos = [
                     </div>`;
                 });
 
-                // 4. Renderizar la lista desde la función global
                 renderizarListaNotificaciones();
             })
             .catch(err => console.error("Error verificaciones:", err));
-    } let ultimoIdVentaEliminadaNotificada = 0;
+    }
+
+    let ultimoIdVentaEliminadaNotificada = 0;
 
     function verificarVentasEliminadasGlobales() {
         fetch('/cfsistem/app/controllers/ventasHistorialController.php?action=obtenerUltimaVentaEliminada')
             .then(res => res.json())
             .then(data => {
-                // Si hay una venta eliminada reciente y no la hemos notificado aún en esta sesión
                 if (data && data.id_venta && data.id_venta !== ultimoIdVentaEliminadaNotificada) {
 
                     Toastify({
@@ -661,7 +678,6 @@ $modulos = [
 
                     ultimoIdVentaEliminadaNotificada = data.id_venta;
 
-                    // Actualizar tablas en pantalla si el usuario está viendo el listado
                     if (typeof getVentas === 'function') getVentas();
                 }
             })
@@ -682,7 +698,9 @@ $modulos = [
         `;
             document.head.appendChild(style);
         }
-    } function procesarAceptarCancelacion(idVenta, id, pagado, total, folio, razon) {
+    }
+
+    function procesarAceptarCancelacion(idVenta, id, pagado, total, folio, razon) {
         const montoPagado = parseFloat(pagado) || 0;
         const modalElem = document.getElementById('modalConfirmarCancelacion');
         const modalBs = bootstrap.Modal.getOrCreateInstance(modalElem);
@@ -694,7 +712,6 @@ $modulos = [
 
         textoDetalle.textContent = `¿Aceptar y Cancelar Venta ${folio || '#' + idVenta}?`;
 
-        // Configurar estado según pago
         if (montoPagado > 0) {
             textoSub.textContent = `Motivo reportado: "${razon}". Selecciona si deseas reintegrar el dinero al saldo del cliente o solo anular la venta.`;
             wrapperMotivo.classList.add('d-none');
@@ -722,7 +739,6 @@ $modulos = [
         modalBs.show();
     }
 
-    // Handler auxiliar cuando no hay pago
     function confirmarSinPago(idVenta, id) {
         const motivoInput = document.getElementById('inputMotivoSinPago').value.trim();
         if (!motivoInput) {
@@ -732,9 +748,7 @@ $modulos = [
         ejecutarCancelacionEncadenada(idVenta, id, false, motivoInput);
     }
 
-    // Ejecuta las peticiones backend tras cerrar el modal
     async function ejecutarCancelacionEncadenada(idVenta, id, conSaldo, motivo) {
-        // Cerrar modal Bootstrap
         const modalElem = document.getElementById('modalConfirmarCancelacion');
         const modalBs = bootstrap.Modal.getInstance(modalElem);
         if (modalBs) modalBs.hide();
@@ -754,7 +768,6 @@ $modulos = [
         });
 
         try {
-            // 1. Aceptar solicitud
             const formData = new FormData();
             formData.append('id', id);
 
@@ -769,7 +782,6 @@ $modulos = [
                 return;
             }
 
-            // 2. Anular / Reintegrar
             const accion = conSaldo ? 'cancelarVenta' : 'cancelarVentaSinSaldo';
             const urlController = typeof URL_CONTROLLER !== 'undefined' ? URL_CONTROLLER : '/cfsistem/app/controllers/ventasHistorialController.php';
 
@@ -800,6 +812,7 @@ $modulos = [
             Swal.fire({ icon: 'error', title: 'Error de conexión', text: 'No se pudo conectar con el servidor.' });
         }
     }
+
     async function procesarEliminarCancelacion(id) {
         const esOscuro = document.documentElement.getAttribute('data-bs-theme') === 'dark';
         const confirm = await Swal.fire({
@@ -840,7 +853,6 @@ $modulos = [
             })
             .catch(err => console.error(err));
     };
-
 </script>
 <script>
     function actualizarBotonTema(tema) {
@@ -858,16 +870,11 @@ $modulos = [
     }
     function alternarModoOscuro() {
         const html = document.documentElement;
-        // Si está en 'dark' lo cambia a 'light', si no, a 'dark'
         const nuevoTema = html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
 
-        // 1. Aplica el atributo en el HTML (esto activa tus estilos CSS)
         html.setAttribute('data-bs-theme', nuevoTema);
-
-        // 2. Guarda la elección en el navegador
         localStorage.setItem('theme', nuevoTema);
 
-        // 3. Actualiza el icono/texto del botón si existe en la vista
         if (typeof actualizarBotonTema === 'function') {
             actualizarBotonTema(nuevoTema);
         }
@@ -879,4 +886,96 @@ $modulos = [
         const savedTheme = localStorage.getItem('theme') || 'light';
         document.documentElement.setAttribute('data-bs-theme', savedTheme);
     })();
+</script>
+<script>
+    const NOTIFICACIONES = [
+        { id: 'cancelaciones', nombre: 'Cancelaciones recientes', fn: 'verificarCancelacionesRecientes' },
+        { id: 'notificaciones', nombre: 'Traspasos', fn: 'verificarNotificaciones' },
+        { id: 'mantenimientos', nombre: 'Mantenimientos', fn: 'verificarMantenimientos' },
+        { id: 'solicitudes', nombre: 'Solicitudes de cancelación', fn: 'verificarSolicitudesCancelacion' },
+        { id: 'verificaciones', nombre: 'Verificaciones', fn: 'verificarVerificaciones' },
+    ];
+    const Notificaciones = {
+        NOTIFICACIONES,
+        _key(usuario) { return `notifActivas_u${usuario}`; },
+
+        getActivas(usuario) {
+            try {
+                const raw = JSON.parse(localStorage.getItem(this._key(usuario)) || '[]');
+                return Array.isArray(raw) ? raw : [];
+            } catch { return []; }
+        },
+
+        setActivas(usuario, ids) {
+            localStorage.setItem(this._key(usuario), JSON.stringify(ids));
+            document.dispatchEvent(new CustomEvent('notificaciones:change', {
+                detail: { usuario, activas: ids }
+            }));
+        },
+
+        puedeActivar(usuario, id) {
+            if (usuario <= 2) return true;
+            return NOTIFICACIONES.slice(0, 2).some(n => n.id === id);
+        },
+
+        inicializar(usuario) {
+            const yaGuardado = localStorage.getItem(this._key(usuario));
+            if (yaGuardado !== null) return;
+            const defaultIds = usuario <= 2
+                ? NOTIFICACIONES.map(n => n.id)
+                : NOTIFICACIONES.slice(0, 2).map(n => n.id);
+            this.setActivas(usuario, defaultIds);
+        }
+    };
+
+    window.Notificaciones = Notificaciones;
+
+    function renderDropdown(usuario) {
+        const cont = document.getElementById('listaNotificaciones');
+        if (!cont) return;
+
+        const activas = Notificaciones.getActivas(usuario);
+
+        cont.innerHTML = NOTIFICACIONES.map(n => {
+            const permitido = Notificaciones.puedeActivar(usuario, n.id);
+            const checked = activas.includes(n.id) ? 'checked' : '';
+            const disabled = permitido ? '' : 'disabled';
+            const candado = permitido ? '' : '<i class="bi bi-lock-fill ms-auto text-muted" style="font-size:10px;"></i>';
+
+            return `
+      <label class="form-check d-flex align-items-center gap-2 mb-1 ${permitido ? '' : 'opacity-50'}">
+        <input class="form-check-input m-0 notif-item" type="checkbox"
+               value="${n.id}" ${checked} ${disabled}>
+        <span class="text-body">${n.nombre}</span>
+        ${candado}
+      </label>
+    `;
+        }).join('');
+    }
+    function initModuloNotificaciones() {
+        if (typeof usuario === 'undefined' || !usuario) return;
+
+        Notificaciones.inicializar(usuario);
+        renderDropdown(usuario);
+
+        const btnAplicar = document.getElementById('btnAplicarNotif');
+        if (btnAplicar && !btnAplicar.dataset.bound) {
+            btnAplicar.dataset.bound = '1';
+            btnAplicar.addEventListener('click', () => {
+                const seleccionadas = [...document.querySelectorAll('.notif-item:checked')]
+                    .map(cb => cb.value)
+                    .filter(id => Notificaciones.puedeActivar(usuario, id));
+
+                Notificaciones.setActivas(usuario, seleccionadas);
+                renderDropdown(usuario);
+
+                const btn = document.getElementById('btnConfigNotif');
+                if (btn && window.bootstrap?.Dropdown) {
+                    bootstrap.Dropdown.getOrCreateInstance(btn).hide();
+                }
+            });
+        }
+    }
+
+    window.initModuloNotificaciones = initModuloNotificaciones;
 </script>
