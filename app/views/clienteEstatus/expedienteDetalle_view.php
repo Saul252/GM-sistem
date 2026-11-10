@@ -757,7 +757,9 @@
                 padding-bottom:12px;
                 margin-bottom:20px;
             ">
-                <h2 style="margin:0;color:#1f2937;">
+                <h1 style="margin:0; color: #007aff">
+                    ESTADO DE CUENTA
+                </h1> <h2 style="margin:0;color:#1f2937;">
                     ${cliente.nombre_comercial}
                 </h2>
 

@@ -1,24 +1,22 @@
 <html lang="es">
 <head>
-    <meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Usuarios | Sistema</title>
-      <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
-
+    <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
     <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-     <?php require_once __DIR__ . '/layout/icono.php' ?>
+    <?php require_once __DIR__ . '/layout/icono.php' ?>
     <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
 
-  
     <style>
         :root { --sidebar-width: 260px; --navbar-height: 20px; }
         body { background-color: #f4f7f6; font-family: 'Inter', sans-serif; }
-        
+
         .main-content {
             margin-left: var(--sidebar-width);
             padding: 40px;
@@ -28,21 +26,17 @@
 
         .card-table { border: none; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); background: white; }
         .badge-role { padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 0.8rem; display: inline-block; }
-        
-        /* Colores de Roles dinámicos */
-        .role-1 { background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; } /* Admin */
-        .role-2 { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; } /* Almacén */
-        .role-3 { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; } /* Vendedor */
+
+        .role-1 { background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; }
+        .role-2 { background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; }
+        .role-3 { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
 
         .avatar-circle { font-weight: bold; text-transform: uppercase; flex-shrink: 0; }
-        
+
         @media (max-width: 768px) { .main-content { margin-left: 0; padding: 20px; } }
     </style>
 </head>
 <body>
-
-     <?php require_once __DIR__ . '/layout/icono.php' ?>
-    <?php if (function_exists('cargarEstilos')) { cargarEstilos(); } ?>
 
     <?php renderizarLayout($paginaActual); ?>
 
@@ -93,14 +87,14 @@
                                         <span class="fw-bold "><?= htmlspecialchars($u['nombre']) ?></span>
                                     </div>
                                 </td>
-                                <td><span class="badge  text-body-secondary border">@<?= htmlspecialchars($u['username']) ?></span></td>
+                                <td><span class="badge text-body-secondary border">@<?= htmlspecialchars($u['username']) ?></span></td>
                                 <td>
                                     <span class="badge-role role-<?= $u['rol_id'] ?>">
                                         <?= htmlspecialchars($u['rol_nombre']) ?>
                                     </span>
                                 </td>
                                 <td>
-                                    <small class="text-body-secondary"><i class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($u['almacen_nombre']) ?></small>
+                                    <small class="text-body-secondary"><i class="bi bi-geo-alt me-1"></i><?= htmlspecialchars($u['almacen_nombre'] ?? 'Global') ?></small>
                                 </td>
                                 <td class="text-center">
                                     <div class="form-check form-switch d-inline-block">
@@ -108,7 +102,9 @@
                                     </div>
                                 </td>
                                 <td class="text-end">
-                                    <button class="btn btn-sm btn-light border" onclick="editarUsuario(<?= htmlspecialchars(json_encode($u)) ?>)">
+                                    <button type="button"
+                                            class="btn btn-sm btn-light border btn-editar"
+                                            data-usuario='<?= htmlspecialchars(json_encode($u), ENT_QUOTES, 'UTF-8') ?>'>
                                         <i class="bi bi-pencil-square text-primary"></i>
                                     </button>
                                 </td>
@@ -123,7 +119,10 @@
 
     <div class="modal fade" id="modalUsuario" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
-            <form id="formUsuario" class="modal-content border-0 shadow-lg">
+            <form id="formUsuario"
+                  class="modal-content border-0 shadow-lg"
+                  method="POST"
+                  action="/cfsistem/app/backend/usuarios/crud_usuarios.php">
                 <div class="modal-header bg-dark text-white p-4">
                     <h5 class="modal-title fw-bold" id="modalTitle">Nuevo Usuario</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -131,24 +130,24 @@
                 <div class="modal-body p-4">
                     <input type="hidden" name="id" id="userId">
                     <input type="hidden" name="accion" value="guardar">
-                    
+
                     <div class="row g-3">
                         <div class="col-12">
                             <label class="form-label small fw-bold">Nombre Completo</label>
-                            <input type="text" name="nombre" id="userName" class="form-control text-uppercase " placeholder="Ej. Juan Pérez" required>
+                            <input type="text" name="nombre" id="userName" class="form-control text-uppercase" placeholder="Ej. Juan Pérez" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Nombre de Usuario</label>
-                            <input type="text" name="username" id="userLogin" class="form-control " placeholder="juan.perez" required>
+                            <input type="text" name="username" id="userLogin" class="form-control" placeholder="juan.perez" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Contraseña</label>
-                            <input type="password" name="password" id="userPass" class="form-control " placeholder="••••••••">
+                            <input type="password" name="password" id="userPass" class="form-control" placeholder="••••••••">
                             <small class="text-body-secondary d-block mt-1" id="passNote" style="display:none;">Vacío para no cambiar</small>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Rol de Acceso</label>
-                            <select name="rol_id" id="userRol" class="form-select " required>
+                            <select name="rol_id" id="userRol" class="form-select" required>
                                 <option value="">Seleccione...</option>
                                 <?php foreach($rolesArray as $r): ?>
                                     <option value="<?= $r['id'] ?>"><?= $r['nombre'] ?></option>
@@ -157,8 +156,17 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold">Almacén Asignado</label>
-                            <select name="almacen_id" id="userAlmacen" class="form-select ">
+                            <select name="almacen_id" id="userAlmacen" class="form-select">
                                 <option value="">Acceso Global</option>
+                                <?php foreach($almacenesArray as $a): ?>
+                                    <option value="<?= $a['id'] ?>"><?= $a['nombre'] ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">Almacén por Defecto</label>
+                            <select name="almacen_id_defecto" id="almacen_id_defecto" class="form-select">
+                                <option value="">-- Sin defecto --</option>
                                 <?php foreach($almacenesArray as $a): ?>
                                     <option value="<?= $a['id'] ?>"><?= $a['nombre'] ?></option>
                                 <?php endforeach; ?>
@@ -166,7 +174,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer  p-3">
+                <div class="modal-footer p-3">
                     <button type="button" class="btn btn-secondary border-0" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-primary px-4 shadow-sm">Guardar Usuario</button>
                 </div>
@@ -176,15 +184,15 @@
 
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <script>
         const modalEl = new bootstrap.Modal('#modalUsuario');
 
-        // Buscador Instantáneo
+        // Buscador instantáneo
         $("#busquedaReal").on("keyup", function() {
             let value = $(this).val().toLowerCase();
             $("#listaUsuarios tr").filter(function() {
-                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
             });
         });
 
@@ -202,14 +210,27 @@
             $('#userName').val(u.nombre);
             $('#userLogin').val(u.username);
             $('#userRol').val(u.rol_id);
-            $('#userAlmacen').val(u.almacen_id);
+            $('#userAlmacen').val(u.almacen_id || '');
+            $('#almacen_id_defecto').val(u.almacen_defecto || '');
             $('#userPass').prop('required', false).val('');
             $('#modalTitle').text('Actualizar Usuario');
             $('#passNote').show();
             modalEl.show();
         }
 
-        // Envío de Formulario
+        // Enlazar botones de editar (evita romper el HTML con comillas en el onclick)
+        document.querySelectorAll('.btn-editar').forEach(btn => {
+            btn.addEventListener('click', () => {
+                try {
+                    editarUsuario(JSON.parse(btn.dataset.usuario));
+                } catch (e) {
+                    console.error('Error al parsear usuario:', e);
+                    Swal.fire('Error', 'No se pudo cargar el usuario.', 'error');
+                }
+            });
+        });
+
+        // Envío del formulario
         $('#formUsuario').on('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
@@ -226,6 +247,10 @@
                 } else {
                     Swal.fire('Error', res.message, 'error');
                 }
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire('Error', 'Error de conexión con el servidor', 'error');
             });
         });
 
@@ -244,6 +269,10 @@
                 if(res.status !== 'success') {
                     Swal.fire('Error', res.message, 'error').then(() => location.reload());
                 }
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire('Error', 'Error de conexión', 'error').then(() => location.reload());
             });
         }
     </script>

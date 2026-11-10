@@ -8,13 +8,14 @@ protegerPagina('movimientos'); // o quítalo si será público con token
 $modelo = new MovimientoModel($conexion);
 
 // 🔹 Limpiar salida SIEMPRE
-while (ob_get_level()) ob_end_clean();
+while (ob_get_level())
+    ob_end_clean();
 header('Content-Type: application/json; charset=utf-8');
 
 $action = $_GET['action'] ?? '';
 
 $usuario_id = $_SESSION['usuario_id'] ?? 0;
-$rol_id     = $_SESSION['rol_id'] ?? 0;
+$rol_id = $_SESSION['rol_id'] ?? 0;
 
 try {
 
@@ -46,58 +47,58 @@ try {
                 ]);
             }
 
-        break;
+            break;
         case 'traspasar':
 
-    // 🔹 Datos POST
-    $producto_id = $_POST['producto_id'] ?? 0;
-    $origen_id   = $_POST['almacen_origen_id'] ?? 0;
-    $destino_id  = $_POST['almacen_destino_id'] ?? 0;
-    $cantidad    = $_POST['cantidad'] ?? 0;
-    $obs         = $_POST['observaciones'] ?? '';
-    $usuario_id  = $_SESSION['usuario_id'] ?? 0;
+            // 🔹 Datos POST
+            $producto_id = $_POST['producto_id'] ?? 0;
+            $origen_id = $_POST['almacen_origen_id'] ?? 0;
+            $destino_id = $_POST['almacen_destino_id'] ?? 0;
+            $cantidad = $_POST['cantidad'] ?? 0;
+            $obs = $_POST['observaciones'] ?? '';
+            $usuario_id = $_SESSION['usuario_id'] ?? 0;
 
-    // 🔹 Validación
-    if (!$producto_id || !$origen_id || !$destino_id || $cantidad <= 0) {
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'Datos incompletos para el traspaso'
-        ]);
-        break;
-    }
+            // 🔹 Validación
+            if (!$producto_id || !$origen_id || !$destino_id || $cantidad <= 0) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Datos incompletos para el traspaso'
+                ]);
+                break;
+            }
 
-    if ($origen_id == $destino_id) {
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'Origen y destino no pueden ser iguales'
-        ]);
-        break;
-    }
+            if ($origen_id == $destino_id) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Origen y destino no pueden ser iguales'
+                ]);
+                break;
+            }
 
-    // 🔹 Llamar al modelo
-    $resultado = $modelo->registrarTraspaso(
-        $producto_id,
-        $origen_id,
-        $destino_id,
-        $cantidad,
-        $usuario_id,
-        $obs
-    );
+            // 🔹 Llamar al modelo
+            $resultado = $modelo->registrarTraspaso(
+                $producto_id,
+                $origen_id,
+                $destino_id,
+                $cantidad,
+                $usuario_id,
+                $obs
+            );
 
-    // 🔹 Respuesta
-    if ($resultado['status']) {
-        echo json_encode([
-            'status' => 'success',
-            'message' => $resultado['msg']
-        ]);
-    } else {
-        echo json_encode([
-            'status' => 'error',
-            'message' => $resultado['msg']
-        ]);
-    }
+            // 🔹 Respuesta
+            if ($resultado['status']) {
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => $resultado['msg']
+                ]);
+            } else {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => $resultado['msg']
+                ]);
+            }
 
-break;
+            break;
 
 
         /**
@@ -110,51 +111,96 @@ break;
                 'status' => 'error',
                 'message' => 'Endpoint no implementado aún'
             ]);
-        break;
+            break;
 
-case 'recibirTraspaso':
+        case 'recibirTraspaso':
 
-    // 🔹 Validar método POST
-    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'Método no permitido'
-        ]);
-        exit;
-    }
+            // 🔹 Validar método POST
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Método no permitido'
+                ]);
+                exit;
+            }
 
-    $movimiento_id = $_POST['id'] ?? 0;
-   
-    if (!$movimiento_id) {
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'ID de movimiento requerido'
-        ]);
-        exit;
-    }
+            $movimiento_id = $_POST['id'] ?? 0;
 
-    // 🔹 Ejecutar lógica en el modelo
-    $resultado = $modelo->recibirTraspaso(
-        intval($movimiento_id),
-        intval($usuario_id),
-        intval($rol_id),
-        
-    );
+            if (!$movimiento_id) {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'ID de movimiento requerido'
+                ]);
+                exit;
+            }
 
-    // 🔹 Respuesta JSON estándar
-    if ($resultado['status']) {
-        echo json_encode([
-            'status' => 'success',
-            'message' => $resultado['message']
-        ]);
-    } else {
-        echo json_encode([
-            'status' => 'error',
-            'message' => $resultado['message']
-        ]);
-    }
+            // 🔹 Ejecutar lógica en el modelo
+            $resultado = $modelo->recibirTraspaso(
+                intval($movimiento_id),
+                intval($usuario_id),
+                intval($rol_id),
 
-break;
+            );
+
+            // 🔹 Respuesta JSON estándar
+            if ($resultado['status']) {
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => $resultado['message']
+                ]);
+            } else {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => $resultado['message']
+                ]);
+            }
+
+            break;
+        case 'recibirTraspasoMasivo':
+
+            // 🔹 Validar método POST
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'Método no permitido'
+                ]);
+                exit;
+            }
+
+            // 🔹 Aceptar id_traspaso_id o codigo_traspaso
+            $id_traspaso_id = isset($_POST['id_traspaso_id']) ? intval($_POST['id_traspaso_id']) : 0;
+            $codigo_traspaso = trim($_POST['codigo_traspaso'] ?? '');
+
+            if ($id_traspaso_id <= 0 && $codigo_traspaso === '') {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => 'ID o código de traspaso masivo requerido'
+                ]);
+                exit;
+            }
+
+            // 🔹 Ejecutar lógica en el modelo
+            $resultado = $modelo->recibirTraspasoMasivo(
+                $id_traspaso_id,
+
+                intval($usuario_id),
+                intval($rol_id)
+            );
+
+            // 🔹 Respuesta JSON estándar
+            if ($resultado['status']) {
+                echo json_encode([
+                    'status' => 'success',
+                    'message' => $resultado['message']
+                ]);
+            } else {
+                echo json_encode([
+                    'status' => 'error',
+                    'message' => $resultado['message']
+                ]);
+            }
+
+            break;
         /**
          * =========================================
          * 🔹 DEFAULT
@@ -165,7 +211,7 @@ break;
                 'status' => 'error',
                 'message' => 'Acción no válida'
             ]);
-        break;
+            break;
     }
 
 } catch (Exception $e) {
@@ -177,5 +223,6 @@ break;
         'message' => 'Error interno del servidor'
     ]);
 }
+
 
 exit;

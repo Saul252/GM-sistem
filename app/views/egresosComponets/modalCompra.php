@@ -1,5 +1,5 @@
 <script>
-    // PHP le pasa estos valores a JS una sola vez al cargar la página
+
     const USER_ALMACEN_ID = <?= json_encode($_SESSION['almacen_id']) ?>;
     const ES_ADMIN = <?= ($_SESSION['rol_id'] == 1) ? 'true' : 'false' ?>;
 </script>

@@ -193,6 +193,12 @@
                                     </button>
                                 </li>
                                 <li>
+                                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal"
+                                        data-bs-target="#modalTraspasoMasivo">
+                                        <i class="bi bi-boxes me-1"></i> Traspaso Masivo
+                                    </button>
+                                </li>
+                                <li>
                                     <button class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="modal"
                                         data-bs-target="#modalTraspasosGestion" onclick="cargarTraspasos()">
                                         <i class="bi bi-check2-circle"></i> Autorizar Traspasos
@@ -246,6 +252,7 @@
     <?php require_once __DIR__ . '/almacenes/ModalAgregarCantidadesIniciales.php'; ?>
     <?php require_once __DIR__ . '/almacenes/ModalCategoria.php'; ?>
     <?php require_once __DIR__ . '/almacenes/ModalTraspasos.php'; ?>
+    <?php require_once __DIR__ . '/almacenes/ModalTraspasoMasivo.php'; ?>
     <?php require_once __DIR__ . '/almacenes/ModalAgregarProducto.php'; ?>
     <?php require_once __DIR__ . '/almacenes/ModalEditarProducto.php'; ?>
     <?php require_once __DIR__ . '/productos/modalMedidasAdicionales.php' ?>

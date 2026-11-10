@@ -1,16 +1,19 @@
 <?php
-class AuthModel {
+class AuthModel
+{
     private $conexion;
 
-    public function __construct($conexion) {
+    public function __construct($conexion)
+    {
         $this->conexion = $conexion;
     }
 
     /**
      * Obtiene los datos del usuario por username uniendo con la tabla roles
      */
-    public function obtenerPorUsername(string $username): ?array {
-        $sql = "SELECT u.id, u.nombre, u.username, u.password, u.rol_id, u.almacen_id, u.activo, r.nombre AS rol
+    public function obtenerPorUsername(string $username): ?array
+    {
+        $sql = "SELECT u.id, u.nombre, u.username, u.password, u.rol_id, u.almacen_id, u.activo,u.almacen_defecto, r.nombre AS rol
                 FROM usuarios u
                 INNER JOIN roles r ON u.rol_id = r.id
                 WHERE u.username = ? 
@@ -31,7 +34,8 @@ class AuthModel {
     /**
      * Obtiene la hora de cierre de un almacén específico
      */
-    public function obtenerHoraCierreAlmacen(int $almacenId): string {
+    public function obtenerHoraCierreAlmacen(int $almacenId): string
+    {
         $sql = "SELECT hora_cierre_programada FROM almacenes WHERE id = ? LIMIT 1";
         $stmt = $this->conexion->prepare($sql);
         if (!$stmt) {
@@ -48,7 +52,8 @@ class AuthModel {
     /**
      * Busca la coincidencia de un trabajador por su nombre limpio
      */
-    public function buscarTrabajadorPorNombre(string $nombreLimpio): ?array {
+    public function buscarTrabajadorPorNombre(string $nombreLimpio): ?array
+    {
         $sql = "SELECT id, almacen_id FROM trabajadores WHERE nombre LIKE ? LIMIT 1";
         $stmt = $this->conexion->prepare($sql);
         if (!$stmt) {

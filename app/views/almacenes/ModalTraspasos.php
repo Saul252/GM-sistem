@@ -289,7 +289,7 @@
             productosDisponibles.forEach(p => {
                 const option = document.createElement('option');
                 option.value = p.producto_id ?? p.id;
-                option.text = `${p.sku} - ${p.nombre}`;
+                option.text = `${p.nombre} [ ${p.sku} ]`;
                 option.dataset.stock = p.stock;
                 option.dataset.factor = p.factor_conversion || 1;
                 option.dataset.unidad = p.unidad_reporte || 'Unid.';

@@ -8,7 +8,7 @@
 </style>
 
 <div class="modal fade" id="modalDespachoVentaTotal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered" style="width: 70vw; max-width: 70vw;">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 25px;">
             <div class="modal-header border-0 border border-subtle"
                 style="border-radius: 25px 25px 0 0; padding: 1.5rem 2rem;">
@@ -221,7 +221,9 @@
 
             idsParaProcesar.forEach((item, index) => {
                 const cantidadRealFaltante = (Number(item.cantidad) || 0) - (Number(item.cantidad_entregada) || 0);
-                const sinFaltante = cantidadRealFaltante <= 0;
+
+                // ✅ Si ya no hay faltante, no se pinta esta fila
+                if (cantidadRealFaltante <= 0) return;
 
                 const cantidad_maxima = Math.min(
                     Number(item.disponible) || 0,
@@ -254,44 +256,42 @@
                 const tr = document.createElement('tr');
                 tr.dataset.dvid = dvid;
                 tr.innerHTML = `
-                    <td>
-                        <span class="fw-bold card-title-text">
-                            <i class="bi bi-box-seam me-1 text-success"></i>
-                            ${item.producto}
-                        </span>
-                    </td>
-                    <td><span class="bg-info-subtle card-title-text">${stockMostrar.toFixed(3)} ${unidadMostrar}</span></td>
-                    <td><span class="bg-primary-subtle card-title-text">${compradaMostrar.toFixed(3)} ${unidadMostrar}</span></td>
-                    <td><span class="bg-warning-subtle card-title-text">${faltanteMostrar.toFixed(3)} ${unidadMostrar}</span></td>
-                    <td style="width:140px;">
-                        <input type="number"
-                               step="0.0001"
-                               min="0"
-                               max="${maxInput}"
-                               id="${inputId}"
-                               class="form-control form-control-sm entregador"
-                               data-factor="${factorFila}"
-                               data-dvid="${dvid}"
-                               data-id="${item.producto_id}"
-                               data-max="${maxInput}"
-                               ${sinFaltante ? 'disabled' : ''}>
-                        <input type="hidden"
-                               id="${hiddenId}"
-                               class="input-entrega"
-                               data-dvid="${dvid}"
-                               data-id="${item.producto_id}">
-                    </td>
-                    <td style="min-width:220px;">
-                        <select id="${loteSelectId}"
-                                name="${loteSelectId}"
-                                class="form-select form-select-sm lote-select"
-                                data-dvid="${dvid}"
-                                ${sinFaltante ? 'disabled' : ''}
-                                required>
-                            <option value="">Seleccione lote</option>
-                        </select>
-                    </td>
-                `;
+        <td>
+            <span class="fw-bold card-title-text">
+                <i class="bi bi-box-seam me-1 text-success"></i>
+                ${item.producto}
+            </span>
+        </td>
+        <td><span class="bg-info-subtle card-title-text">${stockMostrar.toFixed(3)} ${unidadMostrar}</span></td>
+        <td><span class="bg-primary-subtle card-title-text">${compradaMostrar.toFixed(3)} ${unidadMostrar}</span></td>
+        <td><span class="bg-warning-subtle card-title-text">${faltanteMostrar.toFixed(3)} ${unidadMostrar}</span></td>
+        <td style="width:140px;">
+            <input type="number"
+                   step="0.0001"
+                   min="0"
+                   max="${maxInput}"
+                   id="${inputId}"
+                   class="form-control form-control-sm entregador"
+                   data-factor="${factorFila}"
+                   data-dvid="${dvid}"
+                   data-id="${item.producto_id}"
+                   data-max="${maxInput}">
+            <input type="hidden"
+                   id="${hiddenId}"
+                   class="input-entrega"
+                   data-dvid="${dvid}"
+                   data-id="${item.producto_id}">
+        </td>
+        <td style="min-width:220px;">
+            <select id="${loteSelectId}"
+                    name="${loteSelectId}"
+                    class="form-select form-select-sm lote-select"
+                    data-dvid="${dvid}"
+                    required>
+                <option value="">Seleccione lote</option>
+            </select>
+        </td>
+    `;
 
                 const select = tr.querySelector('select');
                 const lotesData = todos_los_lotes[index]?.data || [];
@@ -317,7 +317,6 @@
                     loteNombre: null
                 };
             });
-
             // 3. Recursos
             const [respDetalle, respRecursos] = await Promise.all([
                 fetch(`${URL_ENTREGAS}?ajax=get_recursos_reparto&id=${primerId}`),

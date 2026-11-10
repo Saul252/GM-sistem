@@ -123,21 +123,20 @@
         let texto = String(direccion);
 
         etiquetas.forEach(etq => {
-            // Elimina "etiqueta:" o "etiqueta" (con o sin dos puntos y espacios)
             const regex = new RegExp(`\\b${etq}\\s*:?\\s*`, 'gi');
             texto = texto.replace(regex, '');
         });
 
-        // Limpiar comas duplicadas o sueltas al inicio/final
         texto = texto
-            .replace(/,\s*,/g, ',')     // ", ," → ","
-            .replace(/^\s*,\s*/, '')    // coma al inicio
-            .replace(/\s*,\s*$/, '')    // coma al final
-            .replace(/\s+/g, ' ')       // espacios múltiples → uno
+            .replace(/,\s*,/g, ',')
+            .replace(/^\s*,\s*/, '')
+            .replace(/\s*,\s*$/, '')
+            .replace(/\s+/g, ' ')
             .trim();
 
         return texto.toUpperCase();
     }
+
     async function prepararImpresion(id) {
         try {
 
@@ -147,7 +146,7 @@
 
             const resp = await fetch(`${URL_CONTROLADOR}?action=obtenerDetalle&id=${id}`);
 
-            const datos = await resp.json(); // 👈 AQUÍ
+            const datos = await resp.json();
             const data = datos.data;
 
             console.log('DATA REAL:', data);
@@ -253,23 +252,197 @@
             console.error(e);
         }
     }
+
+    /**
+     * Construye el HTML interno del área imprimible (sin <html>, sin <head>).
+     * Se reutiliza tanto para el iframe de escritorio como para el contenedor
+     * temporal que se usa en móvil para generar el PDF.
+     */
+    function cotizacion_buildAreaHTML(vendedor, cliente, html, id, totalGeneral, fecha) {
+        return `
+<div id="areaImpresion" class="text-uppercase bg-white" style="min-height: 650px; font-size: 0.95rem;">
+
+    <!-- ENCABEZADO -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <!-- Logo + Título -->
+        <div class="d-flex align-items-center">
+
+            <img src="/cfsistem/public/assets/logo.ico"
+                 alt="Logo"
+                 width="55"
+                 height="55"
+                 class="me-3">
+
+            <div>
+                <h2 class="fw-bold text-uppercase mb-0" style="color:#1f2a37; letter-spacing:1px;">
+                    COTIZACIÓN
+                </h2>
+
+                <div class="text-body-secondary small mt-1 text-uppercase" id="print-folio">
+                    Folio: <span class="fw-semibold">${id}</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Empresa -->
+        <div class="text-end text-uppercase">
+            <div class="fw-bold fs-5" style="color:#1f2a37;">
+                CFSistem
+            </div>
+
+            <div class="text-uppercase text-body-secondary small" id="print-fecha">
+                Fecha: ${fecha}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- INFO -->
+    <div class="row p-3" style="background: #ffffff02 !important;">
+        <div style="background: #ffffff02 !important;" class="col-5 border rounded-3 bg-light shadow-sm">
+            <div class="  ">
+                <small class="text-uppercase text-body-secondary fw-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">
+                    
+                </small>
+                <div class="text-uppercase fw-bold text-black" id="vende" style="background: #ffffff02 !important;font-size: 0.9rem;">${vendedor}</div>
+            </div>
+        </div>
+        
+        <div style="background: #ffffff02 !important;" class="col-7 border rounded-3 bg-light shadow-sm">
+            
+                <small class="text-uppercase text-body-secondary fw-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">
+                  
+                </small>
+                <div class="row fw-bold text-blackcard border-0 bg-light " id="clienteD"style="background: #ffffff02 !important;font-size: 0.9rem;">${cliente}</div>
+             
+        </div>
+    </div>
+
+    <!-- TABLA -->
+    <div class="table-responsive mb-3">
+        <table class="table align-middle">
+
+            <thead style="background: #ffffff02 !important; color:#fff;">
+                <tr style="background: #ffffff02 !important;">
+                     <th class="text-uppercase text-center">Cantidad</th>
+                    <th class="text-uppercase text-center">UNIDAD</th>
+                     <th>Producto</th>
+                  
+                    <th class="text-uppercase text-center">Costo Unitario</th>
+                    <th class="text-uppercase text-center">Costo Total</th>
+                </tr>
+            </thead>
+
+            <tbody id="print-tabla"></tbody>
+           
+${html}
+        </table>
+    </div>
+
+    <!-- TOTAL -->
+    <div class="text-end mb-4">
+        <div class="fw-bold fs-5">
+            Total: <span id="costo_total">${totalGeneral.toLocaleString('es-MX', {
+            style: 'currency',
+            currency: 'MXN'
+        })}</span>
+        </div>
+    </div>
+
+   <div class="mt-4 p-3 bg-light border rounded-3 shadow-sm" style="background-color: #f8f9fa !important; border-color: #dee2e6 !important;">
+        <div class="fw-bold mb-2 text-uppercase text-secondary" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+            Notas y Condiciones de Venta:
+        </div>
+        <ul class="mb-0 text-body-secondary" style="font-size: 0.85rem; padding-left: 1.2rem; line-height: 1.5;">
+            <li>Los precios están sujetos a cambios sin previo aviso.</li>
+            <li>Los precios ya incluyen IVA.</li>
+            <li>Las descargas son a pie de carro.</li>
+            <li>Para programar un pedido se debe liquidar primero y debe estar en firme.</li>
+            <li>No hay cambios ni devoluciones una vez descargado.</li>
+            <li>Una vez liquidado se entregará de 1 a 2 días hábiles.</li>
+        </ul>
+    </div>
+
+</div>`;
+    }
+
+    /**
+     * Carga html2pdf dinámicamente si aún no está en la página.
+     */
+    function cotizacion_cargarHtml2pdf() {
+        if (typeof html2pdf !== 'undefined') return Promise.resolve();
+        return new Promise((resolve, reject) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+            s.onload = () => resolve();
+            s.onerror = () => reject(new Error('No se pudo cargar html2pdf'));
+            document.head.appendChild(s);
+        });
+    }
+
     function ejecutarImpresion(vendedor, cliente, html, id, totalGeneral) {
-        // 1. Obtener el contenido del área de impresión
+        const fecha = "<?= date('d/m/Y') ?>";
+        const contenidoArea = cotizacion_buildAreaHTML(vendedor, cliente, html, id, totalGeneral, fecha);
 
+        const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-        // 2. Crear una ventana nueva
-        const ventana = window.open('', '_blank', 'height=600,width=800');
-        let fecha = "<?= date('d/m/Y') ?>"; // Resultado: 01/07/2026
+        // ---------- MÓVIL: PDF con html2pdf sobre un contenedor temporal en la misma página ----------
+        if (esMovil) {
+            cotizacion_cargarHtml2pdf().then(() => {
+                // Contenedor temporal fuera de pantalla
+                const temp = document.createElement('div');
+                temp.id = 'cotizacion_temp_pdf';
+                temp.style.cssText = 'position: fixed; left: -9999px; top: 0; width: 900px; background:#fff; padding: 20px; box-sizing: border-box;';
+                temp.innerHTML = contenidoArea;
+                document.body.appendChild(temp);
 
+                // Esperar un poco a que carguen imágenes y estilos
+                setTimeout(() => {
+                    const elementoParaConvertir = temp.querySelector('#areaImpresion');
+                    const opciones = {
+                        margin: 1,
+                        filename: `Cotizacion_${id}.pdf`,
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: { scale: 2, useCORS: true },
+                        jsPDF: { unit: 'cm', format: 'letter', orientation: 'portrait' }
+                    };
 
-        ventana.document.write(`
+                    html2pdf().set(opciones).from(elementoParaConvertir).save()
+                        .then(() => temp.remove())
+                        .catch(err => {
+                            console.error('Error generando PDF:', err);
+                            temp.remove();
+                        });
+                }, 500);
+            }).catch(err => {
+                console.error('Error cargando html2pdf:', err);
+                Swal.fire('Error', 'No se pudo cargar el generador de PDF.', 'error');
+            });
+            return;
+        }
+
+        // ---------- ESCRITORIO: iframe oculto (no abre ventana, no traba el sistema) ----------
+        const iframe = document.createElement('iframe');
+        iframe.setAttribute('aria-hidden', 'true');
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        iframe.style.visibility = 'hidden';
+        document.body.appendChild(iframe);
+
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(`
         <html>
             <head>
-                <title>COTIZACION </title>
-      <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
-
-    <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
-
+                <title>COTIZACION ${id}</title>
+                <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
+                <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
                 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
                 <style>
                     body { font-family: 'Inter', sans-serif;  }
@@ -277,179 +450,80 @@
                     .fw-bold { font-weight: bold !important; }
                     @media print {
                         .no-print { display: none; }
-                        
                     }
-                        @page { 
-                        margin: 0; /* Esto elimina el título de arriba y la fecha/hora de abajo */
+                    @page { 
+                        margin: 0;
                     }
-                    
                     body { 
-                        padding: 1.5cm; /* Le da margen al contenido para que no se pegue al borde del papel */
+                        padding: 1.5cm;
                     }
                     .firma-linea { border-top: 1px solid #000; margin-top: 50px; text-align: center; padding-top: 5px; font-size: 12px; }
                 </style>
-               </head>
+            </head>
             <body>
-   <img
-    src="/cfsistem/public/assets/logo.ico"
-    style="
-        position: fixed;
-        top: 30%;                  /* Centro vertical */
-        left: 50%;                 /* Centro horizontal */
-        transform: translate(-50%, -50%); /* Compensa el propio tamaño de la imagen */
-        width: 240px;
-        opacity: 0.08;
-        z-index: 1;               /* Cambiado a -1 para que quede detrás del texto y no tape los clics */
-        pointer-events: none;      /* Evita que interfiera si alguien intenta hacer clic sobre ella */
-    "
->
-<div id="areaImpresion" class="text-uppercase  bg-white" style="min-height: 650px; font-size: 0.95rem;">
-
-                        <!-- ENCABEZADO -->
-                        
-<div class="d-flex justify-content-between align-items-center mb-4">
-
-    <!-- Logo + Título -->
-    <div class="d-flex align-items-center">
-
-        <img src="/cfsistem/public/assets/logo.ico"
-             alt="Logo"
-             width="55"
-             height="55"
-             class="me-3">
-
-        <div>
-            <h2 class="fw-bold text-uppercase mb-0" style="color:#1f2a37; letter-spacing:1px;">
-                COTIZACIÓN
-            </h2>
-
-            <div class="text-body-secondary small mt-1 text-uppercase" id="print-folio">
-                Folio: <span class="fw-semibold">${id}</span>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- Empresa -->
-    <div class="text-end text-uppercase">
-        <div class="fw-bold fs-5" style="color:#1f2a37;">
-            CFSistem
-        </div>
-
-        <div class="text-uppercase text-body-secondary small" id="print-fecha">
-            Fecha: ${fecha}
-        </div>
-    </div>
-
-</div>
-                       
-
-                        <!-- INFO -->
-<div class="row p-3"style="background: #ffffff02 !important;">
-    <div style="background: #ffffff02 !important;"class="col-5 border rounded-3 bg-light  shadow-sm">
-        <div class="  ">
-            <small class="text-uppercase text-body-secondary fw-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">
-                
-            </small>
-            <div class="text-uppercase fw-bold text-black" id="vende" style="background: #ffffff02 !important;font-size: 0.9rem;">${vendedor}</div>
-        </div>
-    </div>
-    
-    <div style="background: #ffffff02 !important;" class="col-7 border rounded-3 bg-light  shadow-sm">
-        
-            <small class="text-uppercase text-body-secondary fw-bold d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.5px;">
-              
-            </small>
-            <div class="row fw-bold text-blackcard border-0 bg-light " id="clienteD"style="background: #ffffff02 !important;font-size: 0.9rem;">${cliente}</div>
-         
-    </div>
-    </div>
-
-
-                        <!-- TABLA -->
-                        <div class="table-responsive mb-3">
-                            <table class="table align-middle">
-
-                                <thead style="background: #ffffff02 !important; color:#fff;">
-                                    <tr style="background: #ffffff02 !important;">
-                                         <th class="text-uppercase text-center">Cantidad</th>
-                                        <th class="text-uppercase text-center">UNIDAD</th>
-                                         <th>Producto</th>
-                                      
-                                        <th class="text-uppercase text-center">Costo Unitario</th>
-                                        <th class="text-uppercase text-center">Costo Total</th>
-                                    </tr>
-                                </thead>
-
-                                <tbody id="print-tabla"></tbody>
-                               
-${html}
-                            </table>
-                        </div>
-
-                        <!-- TOTAL -->
-                        <div class="text-end mb-4">
-                            <div class="fw-bold fs-5">
-                                Total: <span id="costo_total">${totalGeneral.toLocaleString('es-MX', {
-            style: 'currency',
-            currency: 'MXN'
-        })}</span>
-                
-
-                            </div>
-                        </div>
-
-                       <div class="mt-4 p-3 bg-light border rounded-3 shadow-sm" style="background-color: #f8f9fa !important; border-color: #dee2e6 !important;">
-    <div class="fw-bold mb-2 text-uppercase text-secondary" style="font-size: 0.75rem; letter-spacing: 0.5px;">
-        Notas y Condiciones de Venta:
-    </div>
-    <ul class="mb-0 text-body-secondary" style="font-size: 0.85rem; padding-left: 1.2rem; line-height: 1.5;">
-        <li>Los precios están sujetos a cambios sin previo aviso.</li>
-        <li>Los precios ya incluyen IVA.</li>
-        <li>Las descargas son a pie de carro.</li>
-        <li>Para programar un pedido se debe liquidar primero y debe estar en firme.</li>
-        <li>No hay cambios ni devoluciones una vez descargado.</li>
-        <li>Una vez liquidado se entregará de 1 a 2 días hábiles.</li>
-    </ul>
-</div>
-                        
-
-                    </div>
-           <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script> 
-                <script>
-   window.addEventListener('DOMContentLoaded', () => {
-        // 1. Detectar si el usuario está en un dispositivo móvil
-        const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-        // 2. Esperar 1 segundo a que carguen estilos, fuentes e imágenes
-        setTimeout(() => {
-            if (esMovil) {
-                // --- COMPORTAMIENTO EN CELULARES: DESCARGA DE PDF AUTOMÁTICA ---
-                const elementoParaConvertir = document.getElementById('areaImpresion');
-
-                const opciones = {
-                    margin:       1,
-                    filename:     'Cotizacion_${id}.pdf',
-                    image:        { type: 'jpeg', quality: 0.98 },
-                    html2canvas:  { scale: 2, useCORS: true }, // Mayor calidad visual
-                    jsPDF:        { unit: 'cm', format: 'letter', orientation: 'portrait' }
-                };
-
-                // Generar y descargar el PDF directamente
-                html2pdf().set(opciones).from(elementoParaConvertir).save();
-                
-            } else {
-                // --- COMPORTAMIENTO EN COMPUTADORAS: DIÁLOGO NATIVO DE IMPRESIÓN ---
-                window.print();
-            }
-        }, 1000); // 1000 milisegundos = 1 segundo de espera
-    });
- <\/script>
+                <img
+                    src="/cfsistem/public/assets/logo.ico"
+                    style="
+                        position: fixed;
+                        top: 30%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        width: 240px;
+                        opacity: 0.08;
+                        z-index: -1;
+                        pointer-events: none;
+                    "
+                >
+                ${contenidoArea}
             </body>
         </html>
-    `);
+        `);
+        doc.close();
 
-        ventana.document.close();
+        const win = iframe.contentWindow;
+
+        // Limpieza idempotente: elimina el iframe del DOM una sola vez
+        let limpiado = false;
+        const limpiar = () => {
+            if (limpiado) return;
+            limpiado = true;
+            if (iframe && iframe.parentNode) {
+                iframe.parentNode.removeChild(iframe);
+            }
+        };
+
+        // Registrar el cierre ANTES de imprimir (esto es lo que antes fallaba)
+        win.onafterprint = limpiar;
+
+        // Esperar a que carguen las imágenes (logo, marca de agua) antes de imprimir
+        const imgs = Array.from(iframe.contentDocument.images || []);
+        const esperarImagenes = Promise.all(
+            imgs.map(img =>
+                img.complete && img.naturalWidth > 0
+                    ? Promise.resolve()
+                    : new Promise(res => {
+                        img.onload = res;
+                        img.onerror = res;
+                        setTimeout(res, 2000);
+                    })
+            )
+        );
+
+        // Carrera: o cargan todas las imágenes, o pasan 1.5 s como máximo
+        Promise.race([esperarImagenes, new Promise(res => setTimeout(res, 1500))])
+            .then(() => {
+                requestAnimationFrame(() => {
+                    try {
+                        win.focus();
+                        win.print();
+                    } catch (e) {
+                        console.error('Error al imprimir:', e);
+                        limpiar();
+                    }
+
+                    // Respaldo: si onafterprint no se disparó, limpiar igualmente
+                    setTimeout(limpiar, 2000);
+                });
+            });
     }
-
 </script>

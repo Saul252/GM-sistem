@@ -83,7 +83,7 @@
 
 
 <div class="modal fade" id="modalDetalle" tabindex="-1">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered" style="width: 80vw; max-width: 80vw;">
         <div class="modal-content border-0">
             <div class="modal-header">
                 <h6 class="modal-title fw-bold">Gestión de Venta: <span id="spanFolio"></span></h6>
@@ -533,30 +533,43 @@
 
         repartos.forEach(g => {
             const tr = `
-                <tr>
-                    <td class="fw-bold">${g.entrega_id}</td>
-                    <td class="fw-bold">${g.viaje_folio}</td>
-                    <td>${g.fecha}</td>
-                    <td><span>${g.direccion_entrega}</span></td>
-                    <td class="text-center align-middle py-2">
-                        <div class="d-inline-flex gap-1 bg-light p-1 rounded-pill border border-translucent shadow-xs">
-                            <button type="button"
-                                    class="btn btn-xs btn-primary rounded-pill px-2.5 py-1 d-inline-flex align-items-center border-0 fw-semibold"
-                                    style="font-size: 0.75rem; transition: all 0.2s;"
-                                    onclick="imprimirRuta('${g.entrega_id}','${g.folio}')">
-                                <i class="bi bi-truck me-1" style="font-size: 0.85rem;"></i>
-                                <span>Ver Despacho</span>
-                            </button>
-                            <button type="button"
-                                    class="btn btn-xs btn-dark rounded-pill px-2.5 py-1 d-inline-flex align-items-center border-0 fw-semibold"
-                                    style="font-size: 0.75rem; transition: all 0.2s;"
-                                    onclick="abrirModalEvidencias(${g.entrega_id})">
-                                <i class="bi bi-images me-1" style="font-size: 0.85rem;"></i>
-                                <span>Evidencias</span>
-                            </button>
-                        </div>
-                    </td>
-                </tr>`;
+               <tr>
+    <td class="fw-semibold text-body" style="letter-spacing:-0.01em;">${g.entrega_id}</td>
+    <td class="fw-semibold text-body" style="letter-spacing:-0.01em;">${g.viaje_folio}</td>
+    <td class="text-body-secondary" style="font-variant-numeric: tabular-nums;">${g.fecha}</td>
+    <td class="text-body-secondary text-truncate" style="max-width:320px;">${g.direccion_entrega}</td>
+    <td class="text-center align-middle py-2">
+        <div class="d-inline-flex gap-1 p-1 rounded-pill border"
+             style="background: var(--bs-secondary-bg);
+                    border-color: var(--bs-border-color-translucent) !important;
+                    box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+            <button type="button"
+                    class="btn btn-sm rounded-pill px-3 py-1 d-inline-flex align-items-center border-0 fw-semibold"
+                    style="font-size: 0.75rem;
+                           background: var(--bs-primary);
+                           color: #fff;
+                           transition: transform .15s ease, box-shadow .15s ease;"
+                    onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 2px 6px rgba(13,110,253,.35)'"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'"
+                    onclick="imprimirRuta('${g.entrega_id}','${g.folio}')">
+                <i class="bi bi-truck me-1" style="font-size: 0.85rem;"></i>
+                <span>Ver Despacho</span>
+            </button>
+            <button type="button"
+                    class="btn btn-sm rounded-pill px-3 py-1 d-inline-flex align-items-center border-0 fw-semibold"
+                    style="font-size: 0.75rem;
+                           background: var(--bs-body-color);
+                           color: var(--bs-body-bg);
+                           transition: transform .15s ease, box-shadow .15s ease;"
+                    onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 2px 6px rgba(0,0,0,.25)'"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'"
+                    onclick="abrirModalEvidencias(${g.entrega_id})">
+                <i class="bi bi-images me-1" style="font-size: 0.85rem;"></i>
+                <span>Evidencias</span>
+            </button>
+        </div>
+    </td>
+</tr>`;
             tbody.insertAdjacentHTML('beforeend', tr);
         });
     }

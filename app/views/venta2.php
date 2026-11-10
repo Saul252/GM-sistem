@@ -201,7 +201,7 @@
 
                 <div class="p-4">
                     <!-- Controles y Filtros Principal -->
-                    <div class="card-filter-box p-4 mb-4 shadow-sm border-0 rounded-4 ">
+                    <div class="card-filter-box p-2 mb-2 shadow-sm border-0 rounded-4 ">
                         <div class="row g-3">
                             <!-- 1. Almacén -->
                             <div class="col-md-6 col-lg-3">
@@ -210,8 +210,11 @@
                                 </label>
                                 <select name="almacen_id_editar" id="almacen_id_editar"
                                     class="form-select border-0 shadow-sm rounded-3 py-2" required>
+                                    <?php if (count($almacenes) > 2): ?>
+                                        <option value="">-- Seleccione --</option>
+                                    <?php endif; ?>
                                     <?php foreach ($almacenes as $a): ?>
-                                        <option value="<?= $a['id'] ?>">
+                                        <option value="<?= $a['id'] ?>" <?= (isset($_SESSION['almacen_id_defecto']) && (int) $_SESSION['almacen_id_defecto'] === (int) $a['id']) ? 'selected' : '' ?>>
                                             <?= htmlspecialchars(mb_strtoupper($a['nombre'], 'UTF-8')) ?>
                                         </option>
                                     <?php endforeach; ?>
@@ -267,8 +270,8 @@
                     </div>
 
                     <!-- Tabla de Artículos -->
-                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-                        <div class="table-responsive" style="min-height:280px !important; max-height: 340px;">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-2">
+                        <div class="table-responsive" style="min-height:400px !important; max-height: 440px;">
                             <table class="table table-hover align-middle mb-0" id="tablaDetalleEditar">
                                 <thead class=" border-bottom">
                                     <tr class="text-secondary small fw-bold text-uppercase tracking-wider">
@@ -302,65 +305,74 @@
                     </div>
 
                     <!-- Sección Inferior: Pagos, Notas y Total -->
-                    <div class="row g-4 align-items-stretch">
+                    <div class="row g-3 align-items-stretch">
                         <!-- Panel Izquierdo: Formas de Pago y Observaciones -->
                         <div class="col-lg-7">
-                            <div class="card border-0 shadow-sm rounded-4 h-100 p-4 ">
-                                <h6 class="fw-bold  mb-3 d-flex align-items-center">
+                            <div class="card border-0 shadow-sm rounded-3 h-100 p-3 d-flex flex-column">
+                                <h6 class="fw-bold mb-3 d-flex align-items-center" style="font-size:0.9rem;">
                                     <i class="bi bi-credit-card-2-front text-primary me-2"></i> Datos del Pago y
                                     Observaciones
                                 </h6>
 
-                                <div class="row g-3 mb-3">
+                                <div class="row g-2 mb-2">
                                     <div class="col-sm-6">
-                                        <label class="form-label small fw-semibold text-body-secondary">Monto
-                                            Pagado</label>
-                                        <div class="input-group">
+                                        <label class="form-label small fw-semibold text-body-secondary mb-1"
+                                            style="font-size:0.72rem;">Monto Pagado</label>
+                                        <div class="input-group input-group-sm">
                                             <span
                                                 class="input-group-text bg-success-subtle text-success border-0 fw-bold">$</span>
                                             <input type="number" id="monto_pagar"
-                                                class="form-control border-light-subtle fw-bold fs-5 text-success"
-                                                placeholder="0.0" step="0.01" min="0" oninput="calcularCambio()"
+                                                class="form-control border-light-subtle fw-bold text-success"
+                                                style="font-size:0.95rem;" placeholder="0.0" step="0.01" min="0"
+                                                oninput="calcularCambio()"
                                                 onkeydown="if(event.key==='Enter'){ event.preventDefault(); calcularCambio(); }"
                                                 required>
                                         </div>
-
                                     </div>
                                     <div class="col-sm-6">
-                                        <label class="form-label small fw-semibold text-body-secondary">Método de
-                                            Pago</label>
-                                        <select id="metodo_pago" class="form-select border-light-subtle  fw-semibold"
+                                        <label class="form-label small fw-semibold text-body-secondary mb-1"
+                                            style="font-size:0.72rem;">Método de Pago</label>
+                                        <select id="metodo_pago"
+                                            class="form-select form-select-sm border-light-subtle fw-semibold"
                                             onchange="verificarMetodoPago(this.value)">
                                             <option value="Efectivo">💵 Efectivo</option>
                                             <option value="Transferencia">🏦 Transferencia</option>
                                             <option value="Tarjeta">💳 Tarjeta</option>
                                         </select>
                                     </div>
-                                    <div id="contenedor_cambio" class=" rounded-4 text-center "
-                                        style="background: #e1fcef; border: 1px dashed #34c759;">
-                                        <span class="text-success small fw-bold text-uppercase"
-                                            style="font-size: 0.6rem; letter-spacing: 1px;">Cambio para el
-                                            cliente</span>
-                                        <h3 class="fw-bold text-success mb-0" id="texto_cambio">$0.00</h3>
+
+                                    <!-- Cambio compacto, mismo ancho que los inputs -->
+                                    <div class="col-12">
+                                        <div id="contenedor_cambio"
+                                            class="rounded-3 text-center py-2 d-flex flex-column justify-content-center"
+                                            style="background: #e1fcef; border: 1px dashed #34c759;">
+                                            <span class="text-success fw-bold text-uppercase"
+                                                style="font-size:0.58rem; letter-spacing:1px;">Cambio para el
+                                                cliente</span>
+                                            <h5 class="fw-bold text-success mb-0" id="texto_cambio"
+                                                style="font-size:1.1rem;">$0.00</h5>
+                                        </div>
                                     </div>
                                 </div>
 
-
                                 <!-- Referencia condicional -->
-                                <div class="mb-3" id="contenedorReferencia" style="display:none;">
-                                    <label class="form-label small fw-bold text-secondary text-uppercase">
-                                        Referencia de Transacción
-                                    </label>
-                                    <input type="text" id="inputReferencia" class="form-control border-light-subtle "
+                                <div class="mb-2" id="contenedorReferencia" style="display:none;">
+                                    <label class="form-label small fw-bold text-secondary text-uppercase mb-1"
+                                        style="font-size:0.7rem;">Referencia de Transacción</label>
+                                    <input type="text" id="inputReferencia"
+                                        class="form-control form-control-sm border-light-subtle"
                                         placeholder="Ej. N° de Rastreo / Voucher">
                                 </div>
 
-                                <div id="pago_aviso" class="small mb-3 fw-semibold"></div>
+                                <div id="pago_aviso" class="small mb-2 fw-semibold"></div>
 
-                                <div>
-                                    <label class="form-label small fw-semibold text-body-secondary">Notas /
-                                        Observaciones</label>
-                                    <textarea id="obsVenta" class="form-control border-light-subtle  rounded-3" rows="2"
+                                <!-- Notas: crece para llenar el alto y equilibrar con el panel derecho -->
+                                <div class="flex-grow-1 d-flex flex-column">
+                                    <label class="form-label small fw-semibold text-body-secondary mb-1"
+                                        style="font-size:0.72rem;">Notas / Observaciones</label>
+                                    <textarea id="obsVenta"
+                                        class="form-control form-control-sm border-light-subtle rounded-3 flex-grow-1"
+                                        rows="3"
                                         placeholder="Agrega detalles o instrucciones sobre esta orden..."></textarea>
                                 </div>
                             </div>
@@ -369,50 +381,49 @@
                         <!-- Panel Derecho: Resumen Total y Finalización -->
                         <div class="col-lg-5">
                             <div
-                                class="card border-0 shadow-sm rounded-4 h-100 p-4 bg-gradient-dark d-flex flex-column justify-content-between">
+                                class="card border-0 shadow-sm rounded-3 h-100 p-3 bg-gradient-dark d-flex flex-column justify-content-between">
 
-                                <!-- Bloque de Información Superior -->
+                                <!-- Bloque superior: badge + reiniciar + monto en una sola línea compacta -->
                                 <div>
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
                                         <span
-                                            class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 small"
-                                            style="font-size: 0.75rem;">
+                                            class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 small flex-shrink-0"
+                                            style="font-size:0.68rem;">
                                             <i class="bi bi-receipt me-1"></i> Resumen Final
                                         </span>
-                                        <span
-                                            class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 small">
-                                            Orden Lista
-                                        </span>
+
+                                        <button type="button" onclick="location.reload()"
+                                            class="btn btn-outline-dark rounded-pill px-2 py-0 fw-semibold border-white-10 btn-hover-light d-flex align-items-center justify-content-center flex-shrink-0"
+                                            style="font-size:0.62rem;">
+                                            <i class="bi bi-arrow-clockwise me-1" style="font-size:0.65rem;"></i>
+                                            Reiniciar
+                                        </button>
+
+                                        <div id="costoTotalCompraEditar"
+                                            class="fw-black text-success mb-0 tracking-tight lh-1 ms-auto"
+                                            style="font-size:1.8rem;">
+                                            $0.00
+                                        </div>
                                     </div>
 
-                                    <p class="text-success-50 small mb-1 text-uppercase fw-semibold tracking-wider">
+                                    <p class="text-success-50 small mb-3 text-uppercase fw-semibold tracking-wider text-end"
+                                        style="font-size:0.6rem;">
                                         Monto Total de la Operación
                                     </p>
 
-                                    <div id="costoTotalCompraEditar"
-                                        class="display-4 fw-black text-success mb-2 tracking-tight">
-                                        $0.00
-                                    </div>
-
-
                                     <input type="hidden" id="totalCotizacionEditar" name="totalCotizacionEditar"
                                         value="0">
+                                    <!-- Botón Finalizar Venta anclado al fondo, alineado con el borde inferior izquierdo -->
+                                    <div class="pt-2 border-top border-white-10">
+                                        <button type="submit" id="botonEnviar"
+                                            class="btn btn-success rounded-pill px-3 py-2 fw-bold w-100 shadow d-flex align-items-center justify-content-center text-nowrap"
+                                            style="font-size:0.88rem;">
+                                            <i class="bi bi-check2-circle me-2" style="font-size:1rem;"></i> Finalizar
+                                            Venta
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <!-- Bloque de Botones Inferior -->
-                                <div class="pt-4 mt-3 border-top border-white-10 d-flex gap-3 align-items-center">
-                                    <!-- Botón Reiniciar (Estilo neutro/secundario) -->
-                                    <button type="button" onclick="location.reload()"
-                                        class="btn btn-outline-dark rounded-pill px-4 py-2.5 fw-semibold border-white-10 btn-hover-light d-flex align-items-center justify-content-center">
-                                        <i class="bi bi-arrow-clockwise me-1 fs-6"></i> Reiniciar
-                                    </button>
-
-                                    <!-- Botón Principal (Destacado en Verde) -->
-                                    <button type="submit" id="botonEnviar"
-                                        class="btn btn-success btn-lg rounded-pill px-4 py-3 fw-bold flex-grow-1 shadow-lg d-flex align-items-center justify-content-center text-nowrap">
-                                        <i class="bi bi-check2-circle me-2 fs-5"></i> Finalizar Venta
-                                    </button>
-                                </div>
 
                             </div>
                         </div>
@@ -732,11 +743,7 @@
                     });
 
                     // SELECCIÓN AUTOMÁTICA DEL PRIMER REGISTRO
-                    if (clientesFiltrados.length > 0) {
-                        $(select).val(clientesFiltrados[0].id).trigger('change');
-                    } else {
-                        $(select).val(null).trigger('change');
-                    }
+
 
                 } else {
                     select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
@@ -815,10 +822,7 @@
             $('#tablaDetalleEditar tbody').append(`
     <tr id="filaEditar-${id}">
 
-        <td>
-            <b>${d.nombre}</b><br>
-            <small class="text-body-secondary">${d.sku}</small>
-        </td>
+      <td><b>${d.nombre}</b> <small class="text-body-secondary text-truncate" style="font-size:0.75em;">[${d.sku}]</small></td>
 
         <td class="ps-4">
             <input
@@ -1395,7 +1399,7 @@
             try {
 
                 const response = await fetch(
-                    `${rutaControlador}?action=get_recursos_sucursal&almacen_id=${alm}`
+                    `/cfsistem/app/controllers/cajaRapidaController.php?action=get_recursos_sucursal&almacen_id=${alm}`
                 );
 
                 const res = await response.json();

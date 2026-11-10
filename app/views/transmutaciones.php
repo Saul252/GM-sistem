@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8" name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transmutaciones | JSEA Sistem</title>
+    <title>Conversiones | CFSistem</title>
     <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
     <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
 
@@ -80,7 +80,7 @@
                                             <div class="mb-3">
                                                 <label class="form-label text-xs">Almacén de Trabajo</label>
                                                 <select name="almacen_id" id="trans_almacen"
-                                                    class="form-select shadow-sm" required style="width: 100%;">
+                                                    class="form-select select2 shadow-sm" required style="width: 100%;">
                                                     <option value="">Seleccione Almacén...</option>
                                                     <?php foreach ($almacenes as $a): ?>
                                                         <option value="<?= $a['id'] ?>">
@@ -93,7 +93,7 @@
                                             <div class="mb-3">
                                                 <label class="form-label text-xs">Producto a Transformar</label>
                                                 <select name="producto_origen_id" id="trans_producto_origen"
-                                                    class="form-select" disabled required style="width: 100%;">
+                                                    class="form-select select2" disabled required style="width: 100%;">
                                                     <option value="">Seleccione almacén primero</option>
                                                 </select>
                                             </div>
@@ -102,7 +102,7 @@
                                                 <div class="col-md-7">
                                                     <label class="form-label text-xs">Lote Origen</label>
                                                     <select name="lote_origen_id" id="trans_lote_origen"
-                                                        class="form-select" disabled required
+                                                        class="form-select select2" disabled required
                                                         style="width: 100%;"></select>
                                                 </div>
                                                 <div class="col-md-5">
@@ -135,7 +135,7 @@
                                             <div class="mb-3">
                                                 <label class="form-label text-xs">Convertir a:</label>
                                                 <select name="producto_destino_id" id="trans_producto_destino"
-                                                    class="form-select" disabled required style="width: 100%;">
+                                                    class="form-select select2" disabled required style="width: 100%;">
                                                     <option value="">Seleccione origen primero</option>
                                                 </select>
                                             </div>
@@ -143,7 +143,7 @@
                                             <div class="mb-3">
                                                 <label class="form-label text-xs">Lote Destino</label>
                                                 <select name="lote_destino_id" id="trans_lote_destino"
-                                                    class="form-select" disabled style="width: 100%;">
+                                                    class="form-select select2" disabled style="width: 100%;">
                                                     <option value="0">-- Crear Lote Nuevo --</option>
                                                 </select>
                                             </div>
@@ -409,6 +409,19 @@
         const baseUrl = '/cfsistem/app/controllers/transmutacionesController.php';
         let tablaHistorial;
 
+        // ✅ Helper para refrescar Select2 tras rellenar opciones dinámicamente
+        function refrescarSelect2(selector) {
+            const $el = $(selector);
+            if ($el.hasClass('select2-hidden-accessible')) {
+                $el.select2('destroy');
+            }
+            $el.select2({
+                width: '100%',
+                placeholder: "Seleccione una opción...",
+                allowClear: true
+            });
+        }
+
         $(document).ready(function () {
             // Inicializar DataTable con AJAX dinámico y Filtros
             tablaHistorial = $('#tablaHistorial').DataTable({
@@ -528,33 +541,36 @@
                 tablaHistorial.ajax.reload();
             });
         });
+
         $(document).ready(function () {
-            // Inicialización general de Select2
-            $('.').select2({
+            // ✅ Select2 para los selects del FORMULARIO de transmutación
+            $('.select2').select2({
                 width: '100%',
-                placeholder: "Seleccione una opción..."
+                placeholder: "Seleccione una opción...",
+                allowClear: true
             });
 
-            // Inicialización de Select2 dentro de Modal
+            // ✅ Select2 SOLO para los selects dentro del modal de equivalencias
             $('.select2-modal').select2({
                 dropdownParent: $('#modalEquivalencia'),
                 width: '100%',
-                placeholder: "Seleccione una opción..."
+                placeholder: "Seleccione una opción...",
+                allowClear: true
             });
 
-            // Inicializar DataTable
-            $('#tablaHistorial').DataTable({
-                "destroy": true,
-                "language": {
-                    "url": "https://cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
-                },
-                "order": [[0, "desc"]],
-                "pageLength": 10,
-                "responsive": true,
-                "dom": '<"d-flex justify-content-between"f>rt<"d-flex justify-content-between"ip>',
-                "drawCallback": function () {
-                    $('.dataTables_paginate > .pagination').addClass('pagination-sm');
-                }
+            // ✅ Re-inicializar Select2 del modal al abrirse (Bootstrap 5)
+            $('#modalEquivalencia').on('shown.bs.modal', function () {
+                $(this).find('.select2-modal').each(function () {
+                    if ($(this).hasClass('select2-hidden-accessible')) {
+                        $(this).select2('destroy');
+                    }
+                    $(this).select2({
+                        dropdownParent: $('#modalEquivalencia'),
+                        width: '100%',
+                        placeholder: "Seleccione una opción...",
+                        allowClear: true
+                    });
+                });
             });
         });
 
@@ -604,7 +620,9 @@
                         transProdOrigen.add(option);
                     });
 
-                    $(transProdOrigen).prop('disabled', false).trigger('change');
+                    $(transProdOrigen).prop('disabled', false);
+                    refrescarSelect2('#trans_producto_origen');
+                    $(transProdOrigen).trigger('change');
                 } catch (e) { console.error("Error cargando productos", e); }
             });
 
@@ -623,7 +641,9 @@
                     opt.dataset.stock = l.cantidad_actual;
                     transLoteOrigen.add(opt);
                 });
-                $(transLoteOrigen).prop('disabled', false).trigger('change');
+                $(transLoteOrigen).prop('disabled', false);
+                refrescarSelect2('#trans_lote_origen');
+                $(transLoteOrigen).trigger('change');
 
                 // Cargar Destinos Compatibles
                 const resDest = await fetch(`${baseUrl}?action=obtenerDestinosCompatibles&producto_id=${pId}`);
@@ -635,7 +655,9 @@
                     opt.dataset.unidad = d.unidad_medida;
                     transProdDestino.add(opt);
                 });
-                $(transProdDestino).prop('disabled', false).trigger('change');
+                $(transProdDestino).prop('disabled', false);
+                refrescarSelect2('#trans_producto_destino');
+                $(transProdDestino).trigger('change');
             });
 
             // 3. Al cambiar Lote Origen -> Actualizar Stock Disponible
@@ -657,7 +679,9 @@
                 lotes.forEach(l => {
                     transLoteDestino.add(new Option(`Sumar a: ${l.codigo_lote} (Disp: ${l.cantidad_actual})`, l.id));
                 });
-                $(transLoteDestino).prop('disabled', false).trigger('change');
+                $(transLoteDestino).prop('disabled', false);
+                refrescarSelect2('#trans_lote_destino');
+                $(transLoteDestino).trigger('change');
                 calcularTeorico();
             });
 

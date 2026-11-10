@@ -18,7 +18,7 @@
                             <select name="almacen_id" class="form-select border border-subtle"
                                 style="border-radius: 12px;" <?= ($_SESSION['rol_id'] != 1) ? 'readonly style="pointer-events: none;"' : '' ?> required>
                                 <?php foreach ($almacenes as $alm): ?>
-                                    <option value="<?= $alm['id'] ?>" <?= ($_SESSION['almacen_id'] == $alm['id']) ? 'selected' : '' ?>>
+                                    <option value="<?= $alm['id'] ?>" <?= (isset($_SESSION['almacen_id_defecto']) && (int) $_SESSION['almacen_id_defecto'] === (int) $alm['id']) ? 'selected' : '' ?>>
                                         <?= $alm['nombre'] ?>
                                     </option>
                                 <?php endforeach; ?>

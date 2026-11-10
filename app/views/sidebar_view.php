@@ -101,28 +101,29 @@ $modulos = [
 
 <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-<nav class="navbar fixed-top navbar-expand navbar-dark navbar-premium shadow-sm">
+<nav class="navbar fixed-top navbar-expand navbar-dark navbar-premium shadow-sm py-0" style="min-height:56px;">
     <div class="container-fluid px-2 px-md-4">
         <div class="d-flex align-items-center gap-2 gap-md-3">
-            <button class="btn btn-toggle border-0" id="toggleSidebar" aria-label="Abrir Menú">
-                <i class="bi bi-list fs-2 text-white"></i>
+            <button class="btn btn-toggle border-0 py-1" id="toggleSidebar" aria-label="Abrir Menú">
+                <i class="bi bi-list fs-5 text-white"></i>
             </button>
         </div>
 
         <div class="d-flex align-items-center gap-2 gap-md-3">
-            <button type="button" class="btn  d-flex align-items-center gap-2" id="btnThemeToggle"
+            <button type="button" class="btn d-flex align-items-center gap-2 py-1 fw-normal" id="btnThemeToggle"
                 onclick="alternarModoOscuro()">
-                <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
-                <span class="texto" id="themeLabel">Modo Oscuro</span>
+                <i class="bi bi-moon-stars-fill fs-6" id="themeIcon"></i>
+                <span class="texto fw-normal" id="themeLabel" style="font-size:0.8rem;">Modo Oscuro</span>
             </button>
 
             <!-- ===== CAMPANA DE NOTIFICACIONES (solo lista) ===== -->
             <div class="dropdown">
-                <a href="javascript:void(0);" class="text-white position-relative p-2" id="btnNotif"
+                <a href="javascript:void(0);" class="text-white position-relative" id="btnNotif"
                     data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-bell fs-4"></i>
+                    <i class="bi bi-bell fs-6"></i>
                     <span id="notif-badge"
-                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
+                        class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none"
+                        style="font-size:0.6rem;">0</span>
                 </a>
                 <ul class="dropdown-menu dropdown-menu-end shadow-lg border p-0" id="menuNotif"
                     style="width: 320px; max-width: 90vw; max-height: 400px; overflow-y: auto;">
@@ -137,10 +138,11 @@ $modulos = [
 
             <!-- ===== BOTÓN CONFIG DE AVISOS (checkbox por tipo) ===== -->
             <div class="dropdown">
-                <button class="btn btn-sm btn-outline-light border-0 dropdown-toggle" type="button" id="btnConfigNotif"
-                    data-bs-toggle="dropdown" data-bs-auto-close="outside" title="Configurar avisos">
-                    <i id="notifIcon" class="bi bi-sliders"></i>
-                    <span id="notifLabel" class="d-none d-md-inline">Avisos</span>
+                <button class="btn btn-sm btn-outline-light border-0 dropdown-toggle py-1 fw-normal" type="button"
+                    id="btnConfigNotif" data-bs-toggle="dropdown" data-bs-auto-close="outside"
+                    title="Configurar avisos">
+                    <i id="notifIcon" class="bi bi-sliders fs-6"></i>
+                    <span id="notifLabel" class="d-none d-md-inline fw-normal" style="font-size:0.8rem;">Avisos</span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end p-3 shadow"
                     aria-labelledby="btnConfigNotif" data-bs-theme="dark" style="min-width: 280px;">
@@ -156,13 +158,14 @@ $modulos = [
             </div>
 
             <div class="user-badge d-flex align-items-center text-white bg-white bg-opacity-10 px-3 py-1 rounded-pill">
-                <i class="bi bi-person-circle fs-5"></i>
-                <span class="ms-2 d-none d-md-inline small"><?= $_SESSION['nombre'] ?? 'Usuario' ?></span>
+                <i class="bi bi-person-circle fs-6"></i>
+                <span class="ms-2 d-none d-md-inline fw-normal"
+                    style="font-size:0.8rem;"><?= $_SESSION['nombre'] ?? 'Usuario' ?></span>
             </div>
 
-            <a href="/cfsistem/logout.php" class="btn btn-sm btn-outline-light border-0 rounded-circle"
+            <a href="/cfsistem/logout.php" class="btn btn-sm btn-outline-light border-0 rounded-circle py-1"
                 title="Cerrar Sesión">
-                <i class="bi bi-box-arrow-right fs-4"></i>
+                <i class="bi bi-box-arrow-right fs-5"></i>
             </a>
         </div>
     </div>
@@ -505,7 +508,6 @@ $modulos = [
             })
             .catch(err => console.error("Error cancelaciones:", err));
     }
-
     function verificarNotificaciones() {
         fetch('/cfsistem/app/backend/movimientos/get_notificaciones_traspaso.php?t=' + Date.now())
             .then(res => res.json())
@@ -514,17 +516,47 @@ $modulos = [
                 const cantidad = parseInt(data.cantidad) || 0;
                 const estado = estadoToasts.traspaso;
 
+                // -------- 1) TOAST (solo si hay nuevos) --------
                 if (cantidad > 0 && (estado.primeraCarga || cantidad > estado.ultimoConteo)) {
+
                     if (typeof Toastify === "function") {
                         const u = items[0] || {};
+
+                        // Texto del toast según tipo
+                        let textoToast;
+                        if (u.tipo === 'masivo') {
+                            const listaProd = (u.productos || [])
+                                .slice(0, 3)
+                                .map(p => `• ${p.nombre} (${p.cantidad_texto})`)
+                                .join('\n');
+                            const extra = (u.productos || []).length > 3
+                                ? `\n… y ${u.productos.length - 3} más`
+                                : '';
+                            textoToast =
+                                `📦 DESPACHO MASIVO ${u.codigo_traspaso || ''}\n` +
+                                `${u.emisor} → ${u.destino}\n` +
+                                `${u.total_productos || 0} productos:\n${listaProd}${extra}`;
+                        } else {
+                            textoToast =
+                                `📦 TRASPASO EN PUERTA\n` +
+                                `${u.emisor} envió ${u.cantidad_texto || u.cantidad} de ${u.producto} a ${u.destino}`;
+                        }
+
                         Toastify({
-                            text: `📦 TRASPASO EN PUERTA\n${u.emisor} envió ${u.cantidad_texto || u.cantidad} de ${u.producto} a ${u.destino}`,
-                            duration: 1500,
+                            text: textoToast,
+                            duration: 3500,
                             close: true,
                             gravity: "top",
                             position: "right",
                             className: "toast-traspaso toast-red-close",
-                            style: { background: "#ffffff", color: "#000", borderRadius: "14px", padding: "16px 20px" },
+                            style: {
+                                background: "#ffffff",
+                                color: "#000",
+                                borderRadius: "14px",
+                                padding: "16px 20px",
+                                whiteSpace: "pre-line",
+                                maxWidth: "360px"
+                            },
                             onClick: () => window.location.href = "/cfsistem/app/controllers/almacenes.php"
                         }).showToast();
                     }
@@ -532,18 +564,75 @@ $modulos = [
                 }
                 estado.ultimoConteo = cantidad;
 
-                almacenNotificaciones.traspasos = items.map(item => `
+                // -------- 2) LISTA DE NOTIFICACIONES --------
+                almacenNotificaciones.traspasos = items.map(item => {
+
+                    // ========== CASO MASIVO ==========
+                    if (item.tipo === 'masivo') {
+                        const listaProductos = (item.productos || []).map(p => `
+                        <li class="d-flex justify-content-between align-items-start small">
+                            <b class="text-success text-nowrap">${p.nombre}
+                            ${p.cantidad_texto}</b>
+                        </li>
+                    `).join('');
+
+                        return `
+                    <div class="row align-items-start ROW p-3 border-bottom hover-notif">
+
+                        <div class="col-12 mb-2 d-flex justify-content-between align-items-center">
+                            <b class="text-success text-uppercase" style="font-size:0.72rem;">
+                                <i class="bi bi-boxes me-1"></i> DESPACHO MASIVO
+                                <span class="text-body-secondary ms-1">→ ${item.destino}</span>
+                            </b>
+                            <span class="badge bg-primary-subtle text-success border border-primary-subtle rounded-pill"
+                                  style="font-size:0.6rem;">
+                                ${item.total_productos || 0} productos
+                            </span>
+                        </div>
+
+                        <div class="col-12 mb-1">
+                            <small class="text-body-secondary d-block" style="font-size:0.7rem;">
+                                <i class="bi bi-upc-scan me-1"></i>
+                                Folio: <b class="text-body">${item.codigo_traspaso || '—'}</b>
+                            </small>
+                            <small class="text-body-secondary d-block" style="font-size:0.7rem;">
+                                <i class="bi bi-person me-1"></i> De: ${item.emisor}
+                            </small>
+                        </div>
+
+                        <div class="col-12">
+                            <ul class="list-unstyled mb-2 ps-1" style="max-height:120px; overflow-y:auto;">
+                                ${listaProductos}
+                            </ul>
+                        </div>
+
+                        <div class="col-12 d-flex justify-content-end">
+                            <button onclick="procesarRecepcionMasiva(${item.id_traspaso_id})"
+                                class="btn btn-success btn-sm rounded-pill shadow-sm px-3"
+                                title="Recibir todo el lote">
+                                <i class="bi bi-check2-all me-1"></i> Recibir lote
+                            </button>
+                        </div>
+                    </div>`;
+                    }
+
+                    // ========== CASO SIMPLE ==========
+                    return `
                 <div class="row align-items-center ROW p-3 border-bottom hover-notif">
                     <div class="col-12 mb-2">
-                        <b class="d-block text-body-secondary text-success" style="font-size: 0.75rem;">TRASPASO PARA 
-                        <spam class="text-success text-uppercase">${item.destino}</spam></b>
+                        <b class="d-block text-success text-uppercase" style="font-size: 0.75rem;">
+                            TRASPASO PARA <span class="text-success">${item.destino}</span>
+                        </b>
                     </div>
                     <div class="col-8" style="line-height: 1.4;">
                         <b class="text-primary d-block small text-uppercase text-success">${item.producto}</b>
-                        <b class="d-block text-body-secondary text-success" style="font-size: 0.75rem
-                                                <b class="d-block text-body-secondary text-success" style="font-size: 0.75rem;">De: ${item.emisor}</b>
+                        <b class="d-block text-body-secondary text-success" style="font-size: 0.75rem;">
+                            De: ${item.emisor}
+                        </b>
                         <div class="mt-1">
-                            <b class="text-primary d-block small text-uppercase text-success">${item.cantidad_texto || (item.cantidad + ' PZA')}</b>
+                            <b class="text-primary d-block small text-uppercase text-success">
+                                ${item.cantidad_texto || (item.cantidad + ' PZA')}
+                            </b>
                         </div>
                     </div>
                     <div class="col-4 text-end">
@@ -554,12 +643,13 @@ $modulos = [
                             <i class="bi bi-check-lg"></i>
                         </button>
                     </div>
-                </div>`);
+                </div>`;
+                });
+
                 renderizarListaNotificaciones();
             })
             .catch(err => console.error("Error traspasos:", err));
     }
-
     function verificarMantenimientos() {
         fetch("/cfsistem/app/controllers/mantenimientosController.php?action=listarProximoMantenimiento")
             .then(r => r.json())
@@ -841,17 +931,125 @@ $modulos = [
     }
 
     window.procesarRecepcionRapida = function (id) {
-        if (!confirm("¿Confirmar recepción de material?")) return;
-        const formData = new FormData();
-        formData.append('id', id);
+        Swal.fire({
+            title: '¿Confirmar recepción?',
+            text: 'Se registrará la entrada del material en el almacén destino.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, recibir',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (!result.isConfirmed) return;
 
-        fetch('/cfsistem/app/controllers/traspasosController.php?action=recibirTraspaso', { method: 'POST', body: formData })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success || data.status === 'success') location.reload();
-                else alert("Error: " + (data.message || "No se pudo procesar"));
+            // Loader mientras procesa
+            Swal.fire({
+                title: 'Procesando...',
+                text: 'Registrando recepción de material',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            const formData = new FormData();
+            formData.append('id', id);
+
+            fetch('/cfsistem/app/controllers/traspasosController.php?action=recibirTraspaso', {
+                method: 'POST',
+                body: formData
             })
-            .catch(err => console.error(err));
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success || data.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Recepción registrada',
+                            text: data.message || 'Material recibido correctamente.',
+                            confirmButtonColor: '#28a745'
+                        }).then(() => location.reload());
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'No se pudo procesar',
+                            text: data.message || 'Ocurrió un error inesperado.',
+                            confirmButtonColor: '#dc3545'
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de conexión',
+                        text: 'No se pudo contactar al servidor. Intenta de nuevo.',
+                        confirmButtonColor: '#dc3545'
+                    });
+                });
+        });
+    };
+
+    window.procesarRecepcionMasiva = function (idTraspasoId) {
+        Swal.fire({
+            title: '¿Confirmar recepción masiva?',
+            html: 'Se recibirán <b>todos los movimientos</b> de este traspaso masivo.<br>Esta acción no se puede revertir.',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, recibir todo',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (!result.isConfirmed) return;
+
+            // Loader mientras procesa
+            Swal.fire({
+                title: 'Procesando...',
+                text: 'Registrando recepción masiva de material',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            const formData = new FormData();
+            formData.append('id_traspaso_id', idTraspasoId);
+
+            fetch('/cfsistem/app/controllers/traspasosController.php?action=recibirTraspasoMasivo', {
+                method: 'POST',
+                body: formData
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success || data.status === 'success') {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Recepción masiva registrada',
+                            text: data.message || 'Todos los movimientos fueron recibidos correctamente.',
+                            confirmButtonColor: '#28a745'
+                        }).then(() => location.reload());
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'No se pudo procesar',
+                            text: data.message || 'Ocurrió un error inesperado.',
+                            confirmButtonColor: '#dc3545'
+                        });
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de conexión',
+                        text: 'No se pudo contactar al servidor. Intenta de nuevo.',
+                        confirmButtonColor: '#dc3545'
+                    });
+                });
+        });
     };
 </script>
 <script>

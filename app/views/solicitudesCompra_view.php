@@ -156,13 +156,45 @@ error_reporting(E_ALL);
                                 <th>Fecha</th>
                                 <th>Proveedor</th>
                                 <th>Almacén</th>
-                                <th>Estado</th>
-                                <th class="text-end">Acciones</th>
+                                <th class="text-center align-middle">Costo</th>
+                                <th class="text-center align-middle">Estado</th>
+                                <th class="text-center">Acciones</th>
                             </tr>
                         </thead>
                         <tbody id="tablaSolicitudes">
                         </tbody>
                     </table>
+                </div>
+                <div class="row g-3">
+
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm rounded-3 bg-danger-subtle">
+                            <div class="card-body py-2">
+                                <small class="text-danger fw-bold text-uppercase"
+                                    style="font-size:0.65rem;">Cancelados</small>
+                                <h5 class="fw-bold text-danger mb-0">$<span id="totalGastoCancelados">0.00</span></h5>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm rounded-3 bg-warning-subtle">
+                            <div class="card-body py-2">
+                                <small class="text-warning fw-bold text-uppercase"
+                                    style="font-size:0.65rem;">Pendientes</small>
+                                <h5 class="fw-bold text-warning mb-0">$<span id="totalGastoPendientes">0.00</span></h5>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm rounded-3 bg-success-subtle">
+                            <div class="card-body py-2">
+                                <small class="text-success fw-bold text-uppercase"
+                                    style="font-size:0.65rem;">Aceptados</small>
+                                <h5 class="fw-bold text-success mb-0">$<span id="totalGastoAceptados">0.00</span></h5>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -910,6 +942,12 @@ error_reporting(E_ALL);
                 // Variable tipo String que irá acumulando el código HTML de cada fila generada
                 let tablaHTML = '';
 
+                // ✅ ACUMULADORES DE GASTOS POR ESTADO
+                let totalAceptados = 0;   // RECIBIDA
+                let totalPendientes = 0;   // PENDIENTE
+                let totalCancelados = 0;   // CANCELADA / CANCELADO
+                let gastoTotal = 0;   // Suma global de todas las mostradas
+
                 // Petición AJAX (Fetch) enviando la ruta del controlador acompañada de los parámetros de búsqueda
                 const res = await fetch(
                     `/cfsistem/app/controllers/solicitudesCompraController.php?${params.toString()}`
@@ -922,7 +960,9 @@ error_reporting(E_ALL);
                 // Validación de seguridad: Comprueba si la respuesta no trae datos o el arreglo viene totalmente vacío
                 if (!data.data || data.data.length === 0) {
                     // Inserta una fila única con un mensaje centralizado indicando que no hay registros y frena el script
-                    $('#tablaSolicitudes').html('<tr><td colspan="6" class="text-center text-dark-secondary py-3">No se encontraron registros</td></tr>');
+                    $('#tablaSolicitudes').html('<tr><td colspan="7" class="text-center text-dark-secondary py-3">No se encontraron registros</td></tr>');
+                    // ✅ Resetear contadores en pantalla si usas el bloque de resumen
+                    actualizarResumenGastos(0, 0, 0, 0);
                     return;
                 }
 
@@ -930,96 +970,129 @@ error_reporting(E_ALL);
                 data.data.forEach(s => {
 
                     // 1. FORMATEO DEL FOLIO NUMÉRICO
-                    // Transforma el ID a texto y rellena con ceros a la izquierda hasta asegurar un tamaño fijo de 5 dígitos
-                    // Hace exactamente lo mismo que el método de PHP: str_pad($s['id'], 5, "0", STR_PAD_LEFT)
                     const folio = String(s.id).padStart(5, '0');
 
                     // 2. PROCESAMIENTO DE FECHA UNIVERSAL
                     let fechaFormateada = s.fecha_creacion || '';
                     if (s.fecha_creacion) {
-                        // Reemplaza los espacios por una "T" para forzar la compatibilidad con el estándar ISO.
-                        // Esto previene fallos silenciosos de "Invalid Date" en entornos estrictos como Safari de Apple o iOS.
                         const date = new Date(s.fecha_creacion.replace(/\s/, 'T'));
-
-                        // Si la fecha se pudo interpretar de manera completamente correcta
                         if (!isNaN(date.getTime())) {
                             const day = String(date.getDate()).padStart(2, '0');
-                            const month = String(date.getMonth() + 1).padStart(2, '0'); // Se suma 1 porque en JS Enero es 0
+                            const month = String(date.getMonth() + 1).padStart(2, '0');
                             const year = date.getFullYear();
                             const hours = String(date.getHours()).padStart(2, '0');
                             const minutes = String(date.getMinutes()).padStart(2, '0');
-
-                            // Une los fragmentos en el formato final legible para el usuario: dd/mm/aaaa hh:mm
                             fechaFormateada = `${day}/${month}/${year} ${hours}:${minutes}`;
                         }
                     }
 
                     // 3. CONTROL DE ESTADOS Y COLORES (Insignias / Badges)
-                    // Convierte a mayúsculas el estado del registro. Si es nulo, asigna 'PENDIENTE' de manera preventiva
                     const status = (s.estado || 'PENDIENTE').toUpperCase();
-                    let claseEstado = 'bg-secondary text-white'; // Estilo gris predeterminado por si ocurre un estado desconocido
+                    let claseEstado = 'bg-secondary text-white';
 
-                    // Estructura de control Switch que emula el bloque 'match' original de tu código PHP
                     switch (status) {
                         case 'PENDIENTE':
-                            claseEstado = 'bg-warning text-dark';   // Insignia Amarilla
+                            claseEstado = 'bg-warning text-dark';
                             break;
                         case 'PROCESADA':
-                            claseEstado = 'bg-primary text-white';  // Insignia Azul
+                            claseEstado = 'bg-primary text-white';
                             break;
                         case 'RECIBIDA':
-                            claseEstado = 'bg-success text-white';  // Insignia Verde
+                            claseEstado = 'bg-success text-white';
+                            break;
+                        case 'CANCELADA':
+                        case 'CANCELADO':
+                            claseEstado = 'bg-danger text-white';
+                            break;
+                    }
+
+                    // ✅ ACUMULAR COSTO SEGÚN ESTADO
+                    const costo = parseFloat(s.costo_total || 0);
+                    gastoTotal += costo;
+
+                    switch (status) {
+                        case 'RECIBIDO':
+                            totalAceptados += costo;
+                            break;
+                        case 'PENDIENTE':
+                            totalPendientes += costo;
+                            break;
+                        case 'CANCELADA':
+                        case 'CANCELADO':
+                            totalCancelados += costo;
                             break;
                     }
 
                     // 4. GENERACIÓN DE ACCIONES EXCLUSIVAS
-                    // Variable temporal para guardar botones que solo deben aparecer bajo condiciones estrictas
                     let botonesAccion = '';
                     if (status === 'PENDIENTE') {
-                        // Si la solicitud está PENDIENTE, concatena los botones de Gestionar y Eliminar inyectando sus ID reales
                         botonesAccion = `
-                    <button class="btn btn-sm btn-white border shadow-sm" onclick="gestionarSolicitud(${s.id})">
-                        <i class="bi bi-eye text-primary"></i> Gestionar
-                    </button>
-                    <button class="btn btn-sm btn-white border shadow-sm" onclick="eliminarSolicitud(${s.id})">
-                        <i class="bi bi-trash text-danger"></i>
-                    </button>
-                `;
+            <button class="btn btn-sm btn-white border shadow-sm" onclick="gestionarSolicitud(${s.id})">
+                <i class="bi bi-eye text-primary"></i> Gestionar
+            </button>
+            <button class="btn btn-sm btn-white border shadow-sm" onclick="eliminarSolicitud(${s.id})">
+                <i class="bi bi-trash text-danger"></i>
+            </button>
+        `;
                     }
 
                     // 5. ARMADO E INYECCIÓN DE LA FILA (HTML Template Literal)
-                    // Se va acumulando dinámicamente la estructura completa de la fila actual dentro de 'tablaHTML'
                     tablaHTML += `
-                <tr>
-                    <td><span class=" fw-bold">#${folio}</span></td>
-                    <td class="text-body-secondary small">${fechaFormateada}</td>
-                    <td class="fw-medium">${escapeHtml(s.proveedor_nombre || 'Sin asignar')}</td>
-                    <td><span class="badge bg-light text-dark border">${escapeHtml(s.almacen_nombre || '')}</span></td>
-                    <td>
-                        <span class="badge badge-status ${claseEstado} rounded-pill">${status}</span>
-                    </td>
-                    <td class="text-end">
-                        ${botonesAccion}
-                        <button class="btn btn-sm btn-white border shadow-sm rounded-pill px-3"
-                            onclick="prepararImpresion(${s.id})" title="Imprimir solicitud">
-                            <i class="bi bi-printer text-primary me-1"></i>
-                            <span class="fw-medium">Imprimir</span>
-                        </button>
-                    </td>
-                </tr>
-            `;
+        <tr>
+            <td><span class=" fw-bold">#${folio}</span></td>
+            <td class="text-body-secondary small">${fechaFormateada}</td>
+            <td class="fw-medium">${escapeHtml(s.proveedor_nombre || 'Sin asignar')}</td>
+            <td><span class="badge bg-light text-dark border">${escapeHtml(s.almacen_nombre || '')}</span></td>
+            <td class="text-center align-middle">
+                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1">
+                    <i class="bi bi-currency-dollar me-1"></i>
+                    ${costo.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+            </td>
+            <td class="text-center align-middle">
+                <span class="badge badge-status ${claseEstado} rounded-pill">${status}</span>
+            </td>
+            <td class="text-center align-middle">
+                ${botonesAccion}
+                <button class="btn btn-sm btn-white border shadow-sm rounded-pill px-3"
+                    onclick="prepararImpresion(${s.id})" title="Imprimir solicitud">
+                    <i class="bi bi-printer text-primary me-1"></i>
+                    <span class="fw-medium">Imprimir</span>
+                </button>
+            </td>
+        </tr>
+    `;
                 });
 
                 // 6. ACTUALIZACIÓN DIRECTA DEL DOM DE LA TABLA
-                // CORRECCIÓN: Al tener el id="tablaSolicitudes" en el <tbody>, inyectamos directamente con $('#tablaSolicitudes')
                 $('#tablaSolicitudes').html(tablaHTML);
 
+                // ✅ IMPRIMIR RESUMEN EN CONSOLA
+                console.log("💰 RESUMEN DE GASTOS:");
+                console.log("   Aceptados :", totalAceptados.toFixed(2));
+                console.log("   Pendientes:", totalPendientes.toFixed(2));
+                console.log("   Cancelados:", totalCancelados.toFixed(2));
+                console.log("   Total     :", gastoTotal.toFixed(2));
+
+                // ✅ ACTUALIZAR RESUMEN EN EL DOM
+                actualizarResumenGastos(totalAceptados, totalPendientes, totalCancelados, gastoTotal);
+
             } catch (error) {
-                // Atrapa cualquier error de red, fallos del servidor o inconsistencias de código y lo imprime de forma limpia
                 console.error("Error crítico capturado en cargarSolicitudes:", error);
             }
         }
 
+        // ✅ Función auxiliar que pinta el resumen de gastos en el DOM
+        function actualizarResumenGastos(aceptados, pendientes, cancelados, total) {
+            const fmt = (n) => n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+            // Si tienes elementos con estos IDs en tu HTML, se actualizarán automáticamente.
+            // Si no existen, no pasa nada (jQuery ignora .text() en selectores vacíos).
+            $('#totalGastoAceptados').text(fmt(aceptados));
+            $('#totalGastoPendientes').text(fmt(pendientes));
+            $('#totalGastoCancelados').text(fmt(cancelados));
+            //  $('#totalGastoGeneral').text(fmt(total));
+        }
         /**
          * Función auxiliar de Sanitización (Escape de Entidades HTML)
          * Recibe una cadena de texto y reemplaza caracteres especiales peligrosos (<, >, &, ", ') por texto plano seguro.

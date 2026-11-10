@@ -194,20 +194,23 @@
                     </div>
                 </div>
 
-                <div class="p-4">
+                <div class="p-2">
                     <!-- Controles y Filtros Principal -->
-                    <div class="card-filter-box p-4 mb-4 shadow-sm border-0 rounded-4 ">
+                    <div class="card-filter-box p-4 mb-2 shadow-sm border-0 rounded-4 ">
                         <div class="row g-3">
                             <!-- 1. Almacén -->
 
                             <div class="col-md-6 col-lg-3">
-                                <label class="form-label text-body-secondary fw-semibold small mb-1 text-uppercase ">
+                                <label class="form-label text-body-secondary fw-semibold small mb-1">
                                     <i class="bi bi-box-seam me-1 text-primary"></i> Almacén de Cargo
                                 </label>
                                 <select name="almacen_id_editar" id="almacen_id_editar"
                                     class="form-select border-0 shadow-sm rounded-3 py-2" required>
+                                    <?php if (count($almacenes) > 2): ?>
+                                        <option value="">-- Seleccione --</option>
+                                    <?php endif; ?>
                                     <?php foreach ($almacenes as $a): ?>
-                                        <option value="<?= $a['id'] ?>">
+                                        <option value="<?= $a['id'] ?>" <?= (isset($_SESSION['almacen_id_defecto']) && (int) $_SESSION['almacen_id_defecto'] === (int) $a['id']) ? 'selected' : '' ?>>
                                             <?= htmlspecialchars(mb_strtoupper($a['nombre'], 'UTF-8')) ?>
                                         </option>
                                     <?php endforeach; ?>
@@ -263,8 +266,8 @@
                     </div>
 
                     <!-- Tabla de Artículos -->
-                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-                        <div class="table-responsive" style="min-height:300px !important; max-height: 340px;">
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-2">
+                        <div class="table-responsive" style="min-height:440px !important; max-height: 480px;">
                             <table class="table table-hover align-middle mb-0" id="tablaDetalleEditar">
                                 <thead class=" border-bottom">
                                     <tr class="text-secondary small fw-bold text-uppercase tracking-wider">
@@ -301,60 +304,63 @@
                     <!-- ==============================
      PANEL FINAL DE LA VENTA
 ================================ -->
-                    <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                    <div class="card border-0 shadow rounded-3 overflow-hidden">
 
-                        <div class="card-body p-3 p-lg-4">
+                        <div class="card-body p-2 p-lg-3">
 
-                            <div class="row g-4 align-items-stretch">
+                            <div class="row g-2 align-items-start">
 
                                 <!-- ==================================
                  PANEL IZQUIERDO: OBSERVACIONES
             =================================== -->
                                 <div class="col-lg-7">
 
-                                    <div class="h-100 rounded-4 border bg-body-tertiary p-4 d-flex flex-column">
+                                    <div class="rounded-3 border bg-body-tertiary px-3 py-2 d-flex flex-column">
 
                                         <!-- Encabezado -->
-                                        <div class="d-flex align-items-center mb-3">
+                                        <div class="d-flex align-items-center ">
 
-                                            <div class="venta-icono-notas me-3">
+                                            <div class="venta-icono-notas me-2"
+                                                style="width:28px;height:28px;font-size:0.8rem;display:flex;align-items:center;justify-content:center;border-radius:8px;">
                                                 <i class="bi bi-chat-left-text-fill"></i>
                                             </div>
 
                                             <div>
-                                                <h6 class="fw-bold mb-1">
-                                                    Notas y observaciones
+                                                <h6 class="fw-bold mb-0" style="font-size:0.82rem;">
+                                                    Notas y observaciones:
+                                                    <small class="text-body-secondary" style="font-size:0.68rem;">
+                                                        Agrega información adicional sobre la venta
+                                                    </small>
                                                 </h6>
 
-                                                <small class="text-body-secondary">
-                                                    Agrega información adicional sobre la venta
-                                                </small>
+
                                             </div>
 
                                         </div>
 
                                         <!-- Campo -->
-                                        <div class="flex-grow-1">
+                                        <div>
 
                                             <label for="obsVenta"
-                                                class="form-label small fw-semibold text-body-secondary">
+                                                class="form-label fw-semibold text-body-secondary mb-1"
+                                                style="font-size:0.7rem;">
 
                                                 Detalles de la operación
                                             </label>
 
                                             <input type="text" value=" " id="obsVenta" name="obsVenta"
-                                                class="form-control venta-observaciones" rows="5"
+                                                class="form-control form-control-sm venta-observaciones"
                                                 placeholder="Ejemplo: entrega pendiente, instrucciones especiales, comentarios del cliente...">
-                                            </>
 
                                         </div>
 
                                         <!-- Texto inferior -->
-                                        <div class="d-flex align-items-center mt-3">
+                                        <div class="d-flex align-items-center mt-2">
 
-                                            <i class="bi bi-info-circle me-2 text-primary"></i>
+                                            <i class="bi bi-info-circle me-1 text-primary"
+                                                style="font-size:0.72rem;"></i>
 
-                                            <small class="text-body-secondary">
+                                            <small class="text-body-secondary" style="font-size:0.68rem;">
                                                 Esta información quedará registrada en la venta.
                                             </small>
 
@@ -370,81 +376,83 @@
             =================================== -->
                                 <div class="col-lg-5">
 
-                                    <div class="h-100 rounded-4 venta-resumen p-4 d-flex flex-column">
+                                    <div class="rounded-3 venta-resumen px-3 py-2 d-flex flex-column">
 
-                                        <!-- Encabezado -->
-                                        <div class="d-flex justify-content-between align-items-center mb-4">
+                                        <!-- Encabezado + Total en la misma línea -->
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
 
+                                            <!-- Izquierda: ícono + título + subtítulo + badge -->
                                             <div class="d-flex align-items-center">
 
-                                                <div class="venta-icono-total me-3">
+                                                <div class="venta-icono-total me-2"
+                                                    style="width:28px;height:28px;font-size:0.8rem;display:flex;align-items:center;justify-content:center;border-radius:8px;">
                                                     <i class="bi bi-receipt-cutoff"></i>
                                                 </div>
 
                                                 <div>
-                                                    <h6 class="fw-bold mb-0">
+                                                    <h6 class="fw-bold mb-0" style="font-size:0.82rem;">
                                                         Resumen de venta
                                                     </h6>
 
-                                                    <small class="text-body-secondary">
-                                                        Total de la operación
-                                                    </small>
+                                                    <div class="d-flex align-items-center gap-1">
+                                                        <small class="text-body-secondary" style="font-size:0.68rem;">
+                                                            Total de la operación
+                                                        </small>
+
+                                                        <span class="badge rounded-pill venta-badge-lista"
+                                                            style="font-size:0.55rem;">
+
+                                                            <i class="bi bi-check-circle-fill me-1"></i>
+
+                                                            Lista
+
+                                                        </span>
+                                                    </div>
                                                 </div>
 
                                             </div>
 
-                                            <span class="badge rounded-pill venta-badge-lista">
+                                            <!-- Derecha: Total grande -->
+                                            <div class="text-end">
 
-                                                <i class="bi bi-check-circle-fill me-1"></i>
+                                                <p class="text-success-50 mb-0 text-uppercase fw-semibold tracking-wider"
+                                                    style="font-size:0.6rem;">
+                                                    Monto Total
+                                                </p>
 
-                                                Lista
+                                                <div id="costoTotalCompraEditar"
+                                                    class="fw-black text-success tracking-tight"
+                                                    style="font-size:1.8rem;line-height:1;">
+                                                    $0.00
+                                                </div>
 
-                                            </span>
-
-                                        </div>
-
-
-                                        <!-- Total -->
-                                        <div>
-
-
-                                            <p
-                                                class="text-success-50 small mb-1 text-uppercase fw-semibold tracking-wider">
-                                                Monto Total de la Operación
-                                            </p>
-
-                                            <div id="costoTotalCompraEditar"
-                                                class="display-4 fw-black text-success mb-2 tracking-tight">
-                                                $0.00
+                                                <input type="hidden" id="totalCotizacionEditar"
+                                                    name="totalCotizacionEditar" value="0">
                                             </div>
 
-
-                                            <input type="hidden" id="totalCotizacionEditar" name="totalCotizacionEditar"
-                                                value="0">
                                         </div>
 
                                         <!-- Bloque de Botones Inferior -->
                                         <div
-                                            class="pt-4 mt-3 border-top border-white-10 d-flex gap-3 align-items-center">
-                                            <!-- Botón Reiniciar (Estilo neutro/secundario) -->
+                                            class="pt-2 mt-2 border-top border-white-10 d-flex gap-2 align-items-center">
+
+                                            <!-- Botón Reiniciar -->
                                             <button type="button" onclick="location.reload()"
-                                                class="btn btn-outline-dark rounded-pill px-4 py-2.5 fw-semibold border-white-10 btn-hover-light d-flex align-items-center justify-content-center">
-                                                <i class="bi bi-arrow-clockwise me-1 fs-6"></i> Reiniciar
+                                                class="btn btn-outline-dark rounded-pill px-3 py-1 fw-semibold border-white-10 btn-hover-light d-flex align-items-center justify-content-center"
+                                                style="font-size:0.72rem;">
+                                                <i class="bi bi-arrow-clockwise me-1" style="font-size:0.78rem;"></i>
+                                                Reiniciar
                                             </button>
 
-                                            <!-- Botón Principal (Destacado en Verde) -->
+                                            <!-- Botón Principal -->
                                             <button type="submit" id="botonEnviar"
-                                                class="btn btn-success btn-lg rounded-pill px-4 py-3 fw-bold flex-grow-1 shadow-lg d-flex align-items-center justify-content-center text-nowrap">
-                                                <i class="bi bi-check2-circle me-2 fs-5"></i> Finalizar Venta
+                                                class="btn btn-success rounded-pill px-3 py-1 fw-bold flex-grow-1 shadow d-flex align-items-center justify-content-center text-nowrap"
+                                                style="font-size:0.78rem;">
+                                                <i class="bi bi-check2-circle me-1" style="font-size:0.85rem;"></i>
+                                                Finalizar Venta
                                             </button>
+
                                         </div>
-
-
-                                        <input type="hidden" id="totalCotizacionEditar" name="totalCotizacionEditar"
-                                            value="0">
-
-
-                                        <!-- Botones -->
 
                                     </div>
 
@@ -741,12 +749,7 @@
                         }
                     });
 
-                    // SELECCIÓN AUTOMÁTICA DEL PRIMER REGISTRO
-                    if (clientesFiltrados.length > 0) {
-                        $(select).val(clientesFiltrados[0].id).trigger('change');
-                    } else {
-                        $(select).val(null).trigger('change');
-                    }
+
 
                 } else {
                     select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
@@ -828,11 +831,9 @@
             $('#tablaDetalleEditar tbody').append(`
     <tr id="filaEditar-${id}">
 
-        <td>
-            <b>${d.nombre}</b><br>
-            <small class="text-body-secondary">${d.sku}</small>
-        </td>
-
+      <td style="max-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+    <b>${d.nombre}</b> <small class="text-body-secondary" style="font-size:0.75em;">[${d.sku}]</small>
+</td>
         <td class="ps-4">
             <input
                 type="hidden"

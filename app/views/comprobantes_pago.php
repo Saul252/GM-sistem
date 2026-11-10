@@ -462,92 +462,114 @@ error_reporting(E_ALL);
                 </div>
 
                 <div class="modal-body p-0 bg-secondary bg-opacity-10">
-                    <div id="areaImpresion" class="my-3 mx-auto p-4 shadow-sm"
-                        style="width: 320px; font-family: 'Courier New', Courier, monospace; font-size: 0.85rem; border-radius: 4px; background-color: #fff; color: #000000;">
+                    <div id="areaImpresion" class="my-3 mx-auto p-4 shadow-sm" style="width: 320px;
+                           font-family: 'Courier New', Courier, monospace;
+                           font-size: 0.85rem;
+                           border-radius: 4px;
+                           background-color: #fff;
+                           color: #000000;
+                           position: relative;
+                           overflow: hidden;">
 
-                        <div style="text-align: center; margin-bottom: 8px;">
-                            <h4
-                                style="font-family: sans-serif; font-weight: 800; text-transform: uppercase; margin-bottom: 0; letter-spacing: 1px; color: #1f2a37; font-size: 1.3rem;">
-                                CF SYSTEM
-                            </h4>
-                            <p
-                                style="font-family: sans-serif; font-size: 0.7rem; color: #6b7280; margin-top: 4px; margin-bottom: 4px;">
-                                COMPROBANTE DE PAGO</p>
+                        <!-- ✅ Logo como marca de agua (dentro del área, absoluto) -->
+                        <img src="/cfsistem/public/assets/logo.png" crossorigin="anonymous" alt="" style="position: absolute;
+                                top: 50%;
+                                left: 50%;
+                                transform: translate(-50%, -50%);
+                                width: 70%;
+                                opacity: 0.10;
+                                z-index: 0;
+                                pointer-events: none;">
 
-                            <div id="print-folio"
-                                style="font-size: 0.85rem; font-weight: bold; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 4px 0; margin: 8px 0;">
-                                FOLIO: #00000
+                        <!-- ✅ Contenido encima del logo -->
+                        <div style="position: relative; z-index: 1;">
+
+                            <div style="text-align: center; margin-bottom: 8px;">
+                                <h4
+                                    style="font-family: sans-serif; font-weight: 800; text-transform: uppercase; margin-bottom: 0; letter-spacing: 1px; color: #1f2a37; font-size: 1.3rem;">
+                                    BODEGA FORTALEZA CENTRO
+                                </h4>
+                                <p
+                                    style="font-family: sans-serif; font-size: 0.7rem; color: #6b7280; margin-top: 4px; margin-bottom: 4px;">
+                                    COMPROBANTE DE PAGO</p>
+
+                                <div id="print-folio"
+                                    style="font-size: 0.85rem; font-weight: bold; border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 4px 0; margin: 8px 0;">
+                                    FOLIO: #00000
+                                </div>
+                                <input type="hidden" id="print-id">
                             </div>
-                            <input type="hidden" id="print-id">
-                        </div>
 
-                        <div style="font-family: sans-serif; padding: 4px 0;">
-                            <span
-                                style="font-size: 0.65rem; font-weight: bold; text-transform: uppercase; color: #6b7280; display: block; letter-spacing: 0.5px;">Cliente:</span>
-                            <div id="print-cliente"
-                                style="font-weight: bold; font-size: 1rem; color: #000000; line-height: 1.2;">---</div>
-                        </div>
+                            <div style="font-family: sans-serif; padding: 4px 0;">
+                                <span
+                                    style="font-size: 0.65rem; font-weight: bold; text-transform: uppercase; color: #6b7280; display: block; letter-spacing: 0.5px;">Cliente:</span>
+                                <div id="print-cliente"
+                                    style="font-weight: bold; font-size: 1rem; color: #000000; line-height: 1.2;">---
+                                </div>
+                            </div>
 
-                        <div style="margin-bottom: 8px;">
-                            <table class="style-ticket-table"
-                                style="width: 100%; font-size: 0.8rem; line-height: 1.4; border-collapse: collapse;">
-                                <tr>
-                                    <td style="width: 40%; color: #6b7280; padding: 4px 0;">NÚMERO VENTA:</td>
-                                    <td id="print-numero_venta"
-                                        style="width: 60%; font-weight: bold; text-align: right; color: #000000; padding: 4px 0;">
-                                        ---</td>
-                                </tr>
-                                <tr>
-                                    <td style="color: #6b7280; padding: 4px 0;">FECHA:</td>
-                                    <td id="print-fecha_dep"
-                                        style="font-weight: 600; text-align: right; color: #000000; padding: 4px 0;">---
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="color: #6b7280; padding: 4px 0;">REFERENCIA:</td>
-                                    <td id="print-referencia"
-                                        style="text-align: right; color: #000000; padding: 4px 0;">---</td>
-                                </tr>
-                            </table>
-                        </div>
+                            <div style="margin-bottom: 8px;">
+                                <table class="style-ticket-table"
+                                    style="width: 100%; font-size: 0.8rem; line-height: 1.4; border-collapse: collapse;">
+                                    <tr>
+                                        <td style="width: 40%; color: #6b7280; padding: 4px 0;">NÚMERO VENTA:</td>
+                                        <td id="print-numero_venta"
+                                            style="width: 60%; font-weight: bold; text-align: right; color: #000000; padding: 4px 0;">
+                                            ---</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color: #6b7280; padding: 4px 0;">FECHA:</td>
+                                        <td id="print-fecha_dep"
+                                            style="font-weight: 600; text-align: right; color: #000000; padding: 4px 0;">
+                                            ---
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="color: #6b7280; padding: 4px 0;">REFERENCIA:</td>
+                                        <td id="print-referencia"
+                                            style="text-align: right; color: #000000; padding: 4px 0;">---</td>
+                                    </tr>
+                                </table>
+                            </div>
 
-                        <div>
-                            <table
-                                style="width: 100%; font-family: sans-serif; table-layout: fixed; font-size: 11px; line-height: 1.2; border-collapse: collapse;">
-                                <tr>
-                                    <td
-                                        style="width: 45%; color: #6b7280; font-weight: bold; text-transform: uppercase; padding-bottom: 4px;">
-                                        MÉTODO PAGO:
-                                    </td>
-                                    <td id="metodo_pago_dep"
-                                        style="width: 55%; font-weight: bold; text-align: right; text-transform: uppercase; color: #000000; font-size: 12px; padding-bottom: 4px;">
-                                        ---
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td
-                                        style="width: 45%; color: #6b7280; font-weight: bold; text-transform: uppercase;">
-                                        TOTAL RECIBIDO:
-                                    </td>
-                                    <td id="costo_total"
-                                        style="width: 55%; font-weight: bold; text-align: right; color: #000000; font-size: 14px;">
-                                        $0.00
-                                    </td>
-                                </tr>
-                            </table>
-                        </div>
+                            <div>
+                                <table
+                                    style="width: 100%; font-family: sans-serif; table-layout: fixed; font-size: 11px; line-height: 1.2; border-collapse: collapse;">
+                                    <tr>
+                                        <td
+                                            style="width: 45%; color: #6b7280; font-weight: bold; text-transform: uppercase; padding-bottom: 4px;">
+                                            MÉTODO PAGO:
+                                        </td>
+                                        <td id="metodo_pago_dep"
+                                            style="width: 55%; font-weight: bold; text-align: right; text-transform: uppercase; color: #000000; font-size: 12px; padding-bottom: 4px;">
+                                            ---
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td
+                                            style="width: 45%; color: #6b7280; font-weight: bold; text-transform: uppercase;">
+                                            TOTAL RECIBIDO:
+                                        </td>
+                                        <td id="costo_total"
+                                            style="width: 55%; font-weight: bold; text-align: right; color: #000000; font-size: 14px;">
+                                            $0.00
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
 
-                        <div
-                            style="text-align: center; margin-top: 16px; padding-top: 8px; border-top: 1px dashed #000; font-family: sans-serif; font-size: 0.7rem;">
-                            <p style="color: #6b7280; text-transform: uppercase; margin: 0;">*** Gracias por su
-                                confianza ***</p>
-                        </div>
+                            <div
+                                style="text-align: center; margin-top: 16px; padding-top: 8px; border-top: 1px dashed #000; font-family: sans-serif; font-size: 0.7rem;">
+                                <p style="color: #6b7280; text-transform: uppercase; margin: 0;">*** Gracias por su
+                                    confianza ***</p>
+                            </div>
 
-                        <div style="display:none;">
-                            <div id="print-almacen">---</div>
-                            <div id="print-usuario">---</div>
-                        </div>
+                            <div style="display:none;">
+                                <div id="print-almacen">---</div>
+                                <div id="print-usuario">---</div>
+                            </div>
 
+                        </div>
                     </div>
                 </div>
 
@@ -971,13 +993,19 @@ error_reporting(E_ALL);
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
         }
+
+        /* ============================================================
+    COMPROBANTE DE PAGO — VISTA PREVIA E IMPRESIÓN
+    - imprmirComprobante(id)  → Abre el modal con el detalle
+    - prepararImpresion(id)   → Refresca y lanza la impresión
+    - ejecutarImpresion()     → iframe (escritorio) / PDF (móvil)
+ ============================================================ */
+
         async function imprmirComprobante(id) {
             try {
                 console.log("Solicitando ID:", id);
 
                 const resp = await fetch(`/cfsistem/app/controllers/comprobantesPagoController.php?action=obtenerDetalle&id=${id}`);
-
-                // CORRECCIÓN 1: Cambiado .data() por .json()
                 const datos = await resp.json();
 
                 console.log('RESPUESTA DEL SERVIDOR:', datos);
@@ -989,48 +1017,37 @@ error_reporting(E_ALL);
 
                 const data = datos.data;
 
-                // 1. FORMATEAR EL MONTO A MONEDA (MXN)
                 const montoFormateado = parseFloat(data.monto).toLocaleString('es-MX', {
                     style: 'currency',
                     currency: 'MXN'
                 });
 
-                // 2. INYECTAR LOS DATOS DIRECTAMENTE EN EL MODAL
                 $('#print-folio').text(`#${String(data.id).padStart(5, '0')}`);
                 $('#print-id').val(data.correo);
                 $('#print-cliente').text(data.nombre_comercial);
-
-                // CORRECCIÓN 2: Se usa 'nombre_almacen' que es el alias que viene del SQL
                 $('#print-almacen').text(data.nombre_almacen);
-
                 $('#print-usuario').text(data.usuario);
                 $('#print-referencia').text(data.referencia || 'Sin referencia');
                 $('#print-fecha_dep').text(data.fecha);
-
                 $('#costo_total').text(montoFormateado);
                 $('#metodo_pago_dep').text(data.metodo_pago);
                 $('#print-numero_venta').text(data.numero_ventas);
 
-                // 3. GENERAR EL BOTÓN EN EL FOOTER
                 const footer = `
-        
-            
             <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">
-    Cerrar
-</button>
-<button type="button" class="btn btn-success rounded-pill px-4"
-                        onclick="enviarComprobantePorCorreo(${data.id})">
-                        📧 Enviar por correo
-                    </button>
-<button type="button" class="btn btn-dark rounded-pill px-4" onclick="prepararImpresion(${data.id})">
-    Imprimir
-</button>
-
-
+                Cerrar
+            </button>
+            <button type="button" class="btn btn-success rounded-pill px-4"
+                    onclick="enviarComprobantePorCorreo(${data.id})">
+                📧 Enviar por correo
+            </button>
+            <button type="button" class="btn btn-dark rounded-pill px-4"
+                    onclick="prepararImpresion(${data.id})">
+                Imprimir
+            </button>
         `;
                 $('#footer').html(footer);
 
-                // 4. LEVANTAR EL MODAL
                 const miModal = new bootstrap.Modal(document.getElementById('modalImprimirSolicitud'));
                 miModal.show();
 
@@ -1040,74 +1057,49 @@ error_reporting(E_ALL);
             }
         }
 
+
         async function prepararImpresion(id) {
             try {
-
-                $('#tablaConversion tbody').empty();
-
-                console.log("Solicitando ID:", id);
+                console.log("Preparando impresión ID:", id);
 
                 const resp = await fetch(`/cfsistem/app/controllers/comprobantesPagoController.php?action=obtenerDetalle&id=${id}`);
-
-                // CORRECCIÓN 1: Cambiado .data() por .json()
                 const datos = await resp.json();
-
-                console.log('RESPUESTA DEL SERVIDOR:', datos);
 
                 if (datos.status !== 'success') {
                     Swal.fire('Error', datos.message || 'No se encontraron datos', 'error');
                     return;
                 }
 
-
                 const data = datos.data;
-                let ref = $('#print-referencia').val();
-                console.log(ref);
-                referencia = data;
-
-
-
-
-                const infoBase = data[0];
                 const montoFormateado = parseFloat(data.monto).toLocaleString('es-MX', {
                     style: 'currency',
                     currency: 'MXN'
                 });
 
-                // 2. INYECTAR LOS DATOS DIRECTAMENTE EN EL MODAL
                 $('#print-folio').text(`#${String(data.id).padStart(5, '0')}`);
                 $('#print-cliente').text(data.nombre_comercial);
-
-                // CORRECCIÓN 2: Se usa 'nombre_almacen' que es el alias que viene del SQL
                 $('#print-almacen').text(data.nombre_almacen);
-
                 $('#print-usuario').text(data.usuario);
-
-                $('#print-referencia').text(referencia.referencia);
+                $('#print-referencia').text(data.referencia || 'Sin referencia');
                 $('#print-fecha_dep').text(data.fecha);
-
                 $('#costo_total').text(montoFormateado);
                 $('#metodo_pago_dep').text(data.metodo_pago);
-                $('#numero_venta').text(data.numero_ventas);
-
-
-
-
-
+                $('#print-numero_venta').text(data.numero_ventas);
 
                 ejecutarImpresion();
 
             } catch (e) {
-                console.error(e);
+                console.error('Error en prepararImpresion:', e);
             }
         }
 
 
-        function ejecutarImpresion() {
-
-
-
-
+        /**
+         * Imprime el comprobante.
+         * - ESCRITORIO: iframe oculto (sin ventana emergente, autolimpieza al terminar).
+         * - MÓVIL:     genera y descarga PDF (html2canvas + jsPDF) usando un contenedor temporal.
+         */
+        async function ejecutarImpresion() {
             const contenedorOriginal = document.getElementById('areaImpresion');
 
             if (!contenedorOriginal) {
@@ -1115,165 +1107,207 @@ error_reporting(E_ALL);
                 return;
             }
 
-            // Clonar
+            // Clonar y copiar valores de inputs / selects / textareas
             const clon = contenedorOriginal.cloneNode(true);
-
-            // Copiar valores de inputs
             contenedorOriginal.querySelectorAll('input, textarea, select').forEach((elemento, i) => {
-
                 const copia = clon.querySelectorAll('input, textarea, select')[i];
-
                 if (!copia) return;
-
                 if (elemento.tagName === "SELECT") {
                     copia.value = elemento.value;
                 } else {
                     copia.setAttribute("value", elemento.value);
                     copia.value = elemento.value;
                 }
-
             });
 
             const contenido = clon.outerHTML;
+            const folio = document.getElementById("print-folio")?.innerText || "Comprobante";
+            const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-            const folio = document.getElementById("print-folio")
-                ? document.getElementById("print-folio").innerText
-                : "";
+            // Estilos del ticket (los mismos de siempre)
+            const estilosTicket = `
+        body {
+            margin: 0; padding: 5mm;
+            font-family: 'Courier New', monospace;
+            background: #FFF; color: #000;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        #areaImpresion { width: 80mm; margin: auto; position: relative; z-index: 1; }
+        #areaImpresion > .contenido-impresion { position: relative; z-index: 1; }
+        .logo-marca-agua {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70%; opacity: 0.10;
+            z-index: 0; pointer-events: none;
+        }
+        @page { size: 80mm auto; margin: 2mm; }
+        table { width: 100%; }
+        img { max-width: 100%; }
+    `;
 
-            const ventana = window.open("", "_blank");
+            // Estructura interna del ticket (logo de marca de agua + contenido)
+            const ticketHTML = `
+        <div id="areaImpresion">
+            <img src="/cfsistem/public/assets/logo.png"
+                 crossorigin="anonymous"
+                 class="logo-marca-agua"
+                 alt="">
+            <div class="contenido-impresion">
+                ${contenido}
+            </div>
+        </div>
+    `;
 
-            if (!ventana) {
-                alert("El navegador bloqueó la ventana emergente.");
+            // ============================================================
+            // MÓVIL: generar y descargar PDF (sin ventana emergente)
+            // ============================================================
+            if (esMovil) {
+                const cargarScript = (src) => new Promise((resolve, reject) => {
+                    if (document.querySelector(`script[src="${src}"]`)) return resolve();
+                    const s = document.createElement('script');
+                    s.src = src;
+                    s.onload = resolve;
+                    s.onerror = reject;
+                    document.head.appendChild(s);
+                });
+
+                try {
+                    if (typeof html2canvas === 'undefined') {
+                        await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+                    }
+                    if (typeof window.jspdf === 'undefined') {
+                        await cargarScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+                    }
+
+                    // Contenedor temporal fuera de pantalla
+                    const temp = document.createElement('div');
+                    temp.style.cssText = 'position:fixed;left:-9999px;top:0;width:80mm;background:#fff;';
+                    temp.innerHTML = `<style>${estilosTicket}</style>${ticketHTML}`;
+                    document.body.appendChild(temp);
+
+                    // Esperar a que cargue el logo
+                    await Promise.all(Array.from(temp.querySelectorAll('img')).map(img =>
+                        img.complete && img.naturalWidth > 0
+                            ? Promise.resolve()
+                            : new Promise(res => {
+                                img.onload = res; img.onerror = res; setTimeout(res, 2000);
+                            })
+                    ));
+
+                    // 2 frames de paint
+                    await new Promise(res => requestAnimationFrame(() => requestAnimationFrame(res)));
+
+                    const area = temp.querySelector('#areaImpresion');
+                    const canvas = await html2canvas(area, {
+                        scale: 2,
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: '#FFFFFF'
+                    });
+
+                    const imgData = canvas.toDataURL('image/jpeg', 0.75);
+
+                    const anchoPdf = 80;
+                    const altoPdf = (canvas.height * anchoPdf) / canvas.width;
+
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF({
+                        orientation: 'portrait',
+                        unit: 'mm',
+                        format: [anchoPdf, altoPdf]
+                    });
+                    pdf.addImage(imgData, 'JPEG', 0, 0, anchoPdf, altoPdf);
+
+                    const blob = pdf.output('blob');
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'Comprobante.pdf';
+                    a.style.display = 'none';
+                    document.body.appendChild(a);
+                    a.click();
+
+                    setTimeout(() => {
+                        a.remove();
+                        URL.revokeObjectURL(url);
+                        temp.remove();
+                    }, 3000);
+
+                } catch (e) {
+                    console.error('Error generando PDF:', e);
+                    alert('No se pudo generar el PDF. Intenta de nuevo.');
+                }
                 return;
             }
 
-            ventana.document.open();
+            // ============================================================
+            // ESCRITORIO: iframe oculto (no abre ventana, no traba el sistema)
+            // ============================================================
+            const iframe = document.createElement('iframe');
+            iframe.setAttribute('aria-hidden', 'true');
+            iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;';
+            document.body.appendChild(iframe);
 
-            ventana.document.write(`
-<!DOCTYPE html>
+            const doc = iframe.contentWindow.document;
+            doc.open();
+            doc.write(`<!DOCTYPE html>
 <html>
 <head>
-
-<meta charset="UTF-8"name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>${folio}</title>
-      <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
-
-    <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
-
-
-<link rel="stylesheet"
-href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
-
-<style>
-
-body{
-    margin:0;
-    padding:5mm;
-    font-family:Courier New, monospace;
-    background:#FFF;
-    color:#000;
-    -webkit-print-color-adjust:exact;
-    print-color-adjust:exact;
-}
-
-#areaImpresion{
-    width:80mm;
-    margin:auto;
-}
-
-@page{
-    size:80mm auto;
-    margin:2mm;
-}
-
-table{
-    width:100%;
-}
-
-img{
-    max-width:100%;
-}
-
-</style>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${folio}</title>
+    <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
+    <link rel="shortcut icon" href="/cfsistem/public/assets/logo.png" type="image/png">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <style>${estilosTicket}</style>
 </head>
-
 <body>
-
-${contenido}
-<script>
-window.onload = async function(){
-
-    const { jsPDF } = window.jspdf;
-
-    const area = document.getElementById("areaImpresion");
-
-    // 1. Bajamos la escala a 2. Esto reduce el tamaño de los píxeles a la mitad y aligera el proceso de guardado.
-    const canvas = await html2canvas(area, {
-        scale: 2,
-        useCORS: true
-    });
-
-    // 2. Cambiamos a JPEG y comprimimos al 75% (0.75). Esto reduce el peso drásticamente.
-    const img = canvas.toDataURL("image/jpeg", 0.75);
-
-    const anchoPdf = 80;
-    const altoPdf = (canvas.height * anchoPdf) / canvas.width;
-
-    const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: [anchoPdf, altoPdf]
-    });
-
-    // 3. Importante pasarle 'JPEG' aquí también para que jsPDF no intente reconvertirlo a algo pesado.
-    pdf.addImage(img, 'JPEG', 0, 0, anchoPdf, altoPdf);
-
-    // 4. Forzar la descarga del archivo en el navegador
-    pdf.save("Comprobante.pdf");
-}
-<\/script>
+    ${ticketHTML}
 </body>
+</html>`);
+            doc.close();
 
-</html>
-`);
+            const win = iframe.contentWindow;
 
-            ventana.document.close();
-
-            ventana.onload = function () {
-
-                setTimeout(function () {
-                    const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-                    // 2. Esperar 1 segundo a que carguen estilos, fuentes e imágenes
-
-                    if (esMovil) {
-                        // --- COMPORTAMIENTO EN CELULARES: DESCARGA DE PDF AUTOMÁTICA ---
-
-
-                    } else {
-                        // --- COMPORTAMIENTO EN COMPUTADORAS: DIÁLOGO NATIVO DE IMPRESIÓN ---
-                        ventana.focus();
-
-                        ventana.print();
-                    }
-
-
-
-                    // No cerrar automáticamente en móviles
-                    if (!/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                        setTimeout(() => ventana.close(), 500);
-                    }
-
-                }, 1000);
-
+            // Limpieza idempotente (elimina el iframe una sola vez)
+            let limpiado = false;
+            const limpiar = () => {
+                if (limpiado) return;
+                limpiado = true;
+                if (iframe && iframe.parentNode) {
+                    iframe.parentNode.removeChild(iframe);
+                }
             };
 
+            // Registrar el cierre ANTES de imprimir (esto es lo que antes fallaba)
+            win.onafterprint = limpiar;
+
+            // Esperar a que carguen las imágenes (logo)
+            const imgs = Array.from(iframe.contentDocument.images || []);
+            const esperarImagenes = Promise.all(imgs.map(img =>
+                img.complete && img.naturalWidth > 0
+                    ? Promise.resolve()
+                    : new Promise(res => {
+                        img.onload = res; img.onerror = res; setTimeout(res, 2000);
+                    })
+            ));
+
+            // Carrera: o cargan todas las imágenes, o pasan 1.5 s como máximo
+            Promise.race([esperarImagenes, new Promise(res => setTimeout(res, 1500))])
+                .then(() => {
+                    requestAnimationFrame(() => {
+                        try {
+                            win.focus();
+                            win.print();
+                        } catch (e) {
+                            console.error('Error al imprimir:', e);
+                            limpiar();
+                        }
+                        // Respaldo: si onafterprint no se disparó, limpiar igualmente
+                        setTimeout(limpiar, 2000);
+                    });
+                });
         }
         $(document).ready(function () {
             const table = $('#tablaSolicitudes').DataTable({

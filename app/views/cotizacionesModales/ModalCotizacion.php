@@ -1,6 +1,6 @@
 <div class="modal fade" id="modalCotizacion" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-custom">
-        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+        <div class="modal-content border-0 shadow-lg rounded-4">
             <form id="formSolicitud">
                 <!-- Encabezado -->
                 <div class="modal-header  border-0 pt-4 px-4 align-items-center">
@@ -46,7 +46,6 @@
                                 <select name="cliente_id" id="cliente_id"
                                     class="form-select select2-modal border-slate-200" required>
                                     <option value="">Seleccionar cliente...</option>
-
                                 </select>
                                 <button
                                     class="btn btn-outline-primary px-3 d-flex align-items-center justify-content-center flex-shrink-0"
@@ -99,23 +98,24 @@
 
                     </div>
 
-                    <!-- Tabla de Detalle -->
-                    <div class="table-responsive border rounded-4 ">
+                    <!-- =========================================================
+                         TABLA DE DETALLE CON SCROLL (horizontal + vertical + sticky header)
+                    ========================================================= -->
+                    <div class="cotizacion-tabla-scroll">
                         <table class="table align-middle mb-0" id="tablaDetalle">
-                            <thead class="">
+                            <thead>
                                 <tr class="text-body-secondary small uppercase">
-                                    <th class="ps-4" style="width: 45%;">Producto</th>
-                                    <th style="width: 20%;">Cantidad</th>
-                                    <th style="width: 25%;">Presentación / Unidad</th>
-                                    <th style="width: 25%;">Tipo de precio</th>
-                                    <th class="ps-4">Precio Unitario</th>
-                                    <th style="width: 50%" ;>TOTAL</th>
-                                    <th style="width: 10%;" class="text-end pe-4">Acción</th>
+                                    <th class="ps-4" style="width: 30%;">Producto</th>
+                                    <th style="width: 12%;">Cantidad</th>
+                                    <th style="width: 18%;">Presentación / Unidad</th>
+                                    <th style="width: 15%;">Tipo de precio</th>
+                                    <th style="width: 12%;">Precio Unitario</th>
+                                    <th style="width: 15%;">TOTAL</th>
+                                    <th style="width: 8%;" class="text-end pe-4">Acción</th>
                                 </tr>
                             </thead>
                             <tbody>
                             </tbody>
-
                         </table>
 
                         <div id="emptyState" class="text-center py-5 text-body-secondary">
@@ -160,7 +160,9 @@
 </div>
 
 <style>
-    /* Ampliación del Modal */
+    /* ============================================================
+       BASE Y LAYOUT
+       ============================================================ */
     @media (min-width: 1200px) {
         .modal-dialog-custom {
             max-width: 92% !important;
@@ -188,7 +190,6 @@
         letter-spacing: 0.5px !important;
     }
 
-    /* Forzar anchos de Input Group y Select2 */
     .input-group-fixed {
         width: 100% !important;
         max-width: 100% !important;
@@ -200,14 +201,15 @@
         min-width: 0 !important;
     }
 
-    /* Control de altura universal */
     .control-fixed-height,
     .modal-body .form-select,
     .modal-body .input-group-fixed .btn {
         height: var(--control-height) !important;
     }
 
-    /* Reglas estrictas Select2 para evitar desbordamientos */
+    /* ============================================================
+       SELECT2: estilos de control
+       ============================================================ */
     .modal-body .select2-container--bootstrap-5 .select2-selection,
     .modal-body .select2-container .select2-selection--single {
         height: var(--control-height) !important;
@@ -232,17 +234,130 @@
         width: 100% !important;
     }
 
-    /* Tabla Fija */
-    .table-fixed {
-        table-layout: fixed !important;
-        width: 100% !important;
+    /* Dropdown de Select2: por encima del modal y del backdrop */
+    .select2-container--open {
+        z-index: 10050 !important;
+    }
+
+    .select2-container--open .select2-dropdown {
+        z-index: 10050 !important;
+    }
+
+    /* Scroll interno de la lista de Select2 */
+    .select2-results__options {
+        max-height: 260px !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+
+    .select2-results__options::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .select2-results__options::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+
+    .select2-results__options::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+
+    @media (max-width: 768px) {
+        .select2-results__options {
+            max-height: 200px !important;
+        }
+    }
+
+    /* ============================================================
+       ESQUINAS REDONDEADAS SIN OVERFLOW:HIDDEN
+       ============================================================ */
+    #modalCotizacion .modal-content {
+        border-radius: 1rem !important;
+    }
+
+    #modalCotizacion .modal-header {
+        border-top-left-radius: 1rem !important;
+        border-top-right-radius: 1rem !important;
+    }
+
+    #modalCotizacion .modal-footer {
+        border-bottom-left-radius: 1rem !important;
+        border-bottom-right-radius: 1rem !important;
+    }
+
+    /* ============================================================
+       TABLA DE COTIZACIÓN CON SCROLL
+       (horizontal + vertical + header sticky)
+       Altura mínima 200px, altura máxima 300px.
+       A partir de 300px aparece el scroll vertical.
+       ============================================================ */
+    .cotizacion-tabla-scroll {
+        min-height: 200px;
+        /* ✅ altura mínima */
+        max-height: 300px;
+        /* ✅ altura máxima (aquí empieza el scroll) */
+        overflow-y: auto;
+        /* scroll vertical */
+        overflow-x: auto;
+        /* scroll horizontal */
+        border: 1px solid var(--bs-border-color, #dee2e6);
+        border-radius: 1rem;
+        background: #fff;
+    }
+
+    .cotizacion-tabla-scroll #tablaDetalle {
+        min-width: 900px;
+        /* fuerza scroll horizontal en pantallas pequeñas */
+    }
+
+    .cotizacion-tabla-scroll #tablaDetalle thead th {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+        background-color: #f8f9fa;
+        box-shadow: inset 0 -2px 0 var(--bs-border-color, #dee2e6);
+        white-space: nowrap;
+    }
+
+    .cotizacion-tabla-scroll #tablaDetalle td,
+    .cotizacion-tabla-scroll #tablaDetalle th {
+        vertical-align: middle;
+    }
+
+    /* Scrollbar delgada */
+    .cotizacion-tabla-scroll::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .cotizacion-tabla-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+
+    .cotizacion-tabla-scroll::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+
+    .cotizacion-tabla-scroll::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+    }
+
+    @media (max-width: 768px) {
+        .cotizacion-tabla-scroll {
+            min-height: 160px;
+            max-height: 250px;
+        }
     }
 </style>
+
 <script>
     const URL_CONTROLADOR = '/cfsistem/app/controllers/cotizacionesController.php';
 
     /* =========================================================
-       CARGAR CLIENTES (solo llena <option>, NO toca Select2)
+       CARGAR CLIENTES
        ========================================================= */
     async function cargarClientes() {
         console.log("cargo clientes");
@@ -262,7 +377,6 @@
 
             if (resultado.success && Array.isArray(resultado.data)) {
 
-                // FILTRADO
                 const clientesFiltrados = resultado.data.filter(cliente => {
                     const nombreNorm = String(cliente.nombre_comercial || '').toLowerCase().trim();
                     const esPublicoGeneral = nombreNorm.includes('publico en general') || nombreNorm.includes('público en general');
@@ -270,11 +384,9 @@
                     if (esPublicoGeneral) {
                         return cliente.almacen_id == almacenId;
                     }
-
                     return true;
                 });
 
-                // 🔥 Construir opciones con data-* forzados a string
                 const fragment = document.createDocumentFragment();
 
                 const first = document.createElement('option');
@@ -295,11 +407,8 @@
                 });
 
                 select.replaceChildren(fragment);
-
-                // 🔥 SOLO refrescar Select2 (NO destruir, NO re-inicializar)
                 $(select).trigger('change.select2');
 
-                // Autoselección del primer cliente
                 if (clientesFiltrados.length > 0) {
                     const primerClienteId = clientesFiltrados[0].id;
                     $('#cliente_id').val(primerClienteId).trigger('change');
@@ -364,6 +473,8 @@
 
             const select = document.getElementById('buscadorProductos');
 
+            $(select).val(null).trigger('change.select2');
+
             const fragment = document.createDocumentFragment();
             fragment.appendChild(new Option('Escribe para buscar...', '', true, true));
 
@@ -393,24 +504,32 @@
     }
 
     /* =========================================================
-       INICIALIZACIÓN ÚNICA
+       INICIALIZACIÓN
        ========================================================= */
     $(function () {
-        // 1. Al abrir el modal, inicializar Select2 con templates y dropdownParent
+
+        let procesandoSeleccionProducto = false;
+        let timeoutBloqueo = null;          // ✅ guarda de seguridad
+        let seAgregoFila = false;           // ✅ controla auto-foco
+
         $('#modalCotizacion').on('shown.bs.modal', function () {
 
-            // Destruir Select2 previo si existe (evita duplicados)
+            // Destruir Select2 previo (evita duplicados)
             ['#cliente_id', '#vendedor-select', '#buscadorProductos'].forEach(sel => {
                 if ($(sel).hasClass('select2-hidden-accessible')) {
                     $(sel).select2('destroy');
                 }
             });
 
-            // 🔥 Cliente con templates + matcher + dropdownParent al modal
+            // ✅ DROPDOWN DENTRO DEL MODAL (evita el focus trap de Bootstrap)
+            const DROPDOWN_PARENT = $('#modalCotizacion .modal-content');
+
+            // Cliente
             $('#cliente_id').select2({
                 theme: 'bootstrap-5',
                 width: 'resolve',
-                dropdownParent: $('#modalCotizacion'),
+                dropdownParent: DROPDOWN_PARENT,
+                focus: true,
                 matcher: function (params, data) {
                     if (!params.term || params.term.trim() === '') return data;
 
@@ -424,7 +543,6 @@
                     if (text.includes(term) || razonSocial.includes(term) || contacto.includes(term)) {
                         return data;
                     }
-
                     return null;
                 },
                 templateResult: function (state) {
@@ -459,17 +577,49 @@
             // Vendedor
             $('#vendedor-select').select2({
                 theme: 'bootstrap-5',
-                dropdownParent: $('#modalCotizacion')
+                dropdownParent: DROPDOWN_PARENT,
+                focus: true
             });
 
             // Buscador de productos
             $('#buscadorProductos').select2({
                 theme: 'bootstrap-5',
-                dropdownParent: $('#modalCotizacion')
+                dropdownParent: DROPDOWN_PARENT,
+                placeholder: 'Escribe SKU o nombre...',
+                allowClear: false,
+                selectOnClose: false,
+                minimumResultsForSearch: 0,
+                focus: true
+            });
+
+            // Anti click-through: enfocar el campo de búsqueda al abrir
+            $('#buscadorProductos').on('select2:open', function () {
+                setTimeout(function () {
+                    const search = document.querySelector(
+                        '.select2-container--open .select2-search__field'
+                    );
+                    if (search) search.focus();
+                }, 80);
             });
         });
 
-        // 2. Cambio de almacén → recargar productos y clientes
+        // Cerrar dropdowns al cerrar el modal
+        $('#modalCotizacion').on('hidden.bs.modal', function () {
+            ['#buscadorProductos', '#cliente_id', '#vendedor-select'].forEach(sel => {
+                try { $(sel).select2('close'); } catch (e) { /* noop */ }
+            });
+        });
+
+        // Cerrar dropdowns al hacer scroll en el modal
+        $('#modalCotizacion .modal-body').on('scroll', function () {
+            if (document.querySelector('.select2-container--open')) {
+                ['#buscadorProductos', '#cliente_id', '#vendedor-select'].forEach(sel => {
+                    try { $(sel).select2('close'); } catch (e) { /* noop */ }
+                });
+            }
+        });
+
+        // Cambio de almacén → recargar productos y clientes
         $('#almacen_id').on('change', function () {
             const almacenId = this.value;
             if (!almacenId) return;
@@ -479,109 +629,152 @@
             cargarClientes();
         });
 
-        // 3. Carga inicial de clientes (sin tocar Select2)
+        // Carga inicial de clientes
         cargarClientes();
 
-        // 4. Producto seleccionado → agregar fila
-        $('#buscadorProductos').on('select2:select', function (e) {
-            const d = e.params.data.element.dataset;
-            const id = $(this).val();
-
-            if ($(`#fila-${id}`).length) {
-                Swal.fire('Aviso', 'El producto ya está en la lista', 'info');
-                return;
+        // No permitir abrir el dropdown mientras se procesa una selección
+        $('#buscadorProductos').on('select2:opening', function (e) {
+            if (procesandoSeleccionProducto) {
+                e.preventDefault();
+                return false;
             }
-
-            $('#emptyState').addClass('d-none');
-
-            const medidas = JSON.parse(d.medidas || '[]');
-            const opcionesUnidad = medidas.map(m =>
-                `<option value="${m.id}" data-equivalencia="${m.equivalencia}" data-medida-id="${m.id}">${m.nombre}</option>`
-            ).join('');
-
-            const preMin = parseFloat(d.preMin) || 0;
-            const preMat = parseFloat(d.preMat) || 0;
-            const preDis = parseFloat(d.preDis) || 0;
-            const factor = parseFloat(d.factor) || 1;
-
-            $('#tablaDetalle tbody').append(`
-        <tr id="fila-${id}">
-            <td class="ps-4">
-                <b>${d.nombre}</b><br>
-                <small class="text-body-secondary">${d.sku}</small>
-            </td>
-            <td>
-                <input type="number" name="items[${id}][cant]" class="form-control cantidad"
-                    step="0.01" value="1" min="0.01" required oninput="calcularTotalSol(this)">
-            </td>
-            <td>
-                <select name="items[${id}][unidad]" class="form-select unidad-select"
-                    onchange="calcularPreciosugerido(this)">
-                 
-                    ${opcionesUnidad}
-                </select>
-            </td>
-            <td>
-                <select name="items[${id}][tipoPrecio]" class="form-select tipoPrecio-select"
-                    onchange="calcularPreciosugerido(this)">
-                    <option value="seleccionar" data-precio="0">Seleccione</option>
-                    <option value="minorista" data-precio="${preMin}">Min $${(preMin * factor).toFixed(2)} x ${d.ur}</option>
-                    <option value="mayorista" data-precio="${preMat}">May $${(preMat * factor).toFixed(2)} x ${d.ur}</option>
-                    <option value="distribuidor" data-precio="${preDis}">Dis $${(preDis * factor).toFixed(2)} x ${d.ur}</option>
-                </select>
-            </td>
-            <td>
-                <input type="number" lang="en-US" name="items[${id}][precioUnitario]"
-                    class="form-control precio-unitario"
-                    step="0.01" min="0" placeholder="0.00" required
-                    onkeydown="if(event.key==='Enter'){ event.preventDefault(); $('#buscadorProductos').select2('open'); }"
-                    oninput="calcularTotalSol(this)">
-            </td>
-            <td style="min-width:160px;">
-                <input type="number" lang="en-US" name="items[${id}][precio]"
-                    class="form-control precio-total fw-bold text-success"
-                    step="0.01" min="0" placeholder="0.00"
-                    onkeydown="if(event.key==='Enter'){ event.preventDefault(); $('#buscadorProductos').select2('open'); }"
-                    oninput="calcularTotalSol(this)"
-                    style="font-size:1.1rem; height:45px; min-width:140px;">
-            </td>
-            <td>
-                <button type="button" class="btn btn-link text-danger" onclick="quitarFila(${id})">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </td>
-        </tr>
-    `);
-
-            // 🔥 Enfocar y seleccionar el input de cantidad de la fila recién creada
-            setTimeout(() => {
-                const $fila = $(`#fila-${id}`);
-                const $cantidad = $fila.find('.cantidad');
-
-                if ($cantidad.length) {
-                    const inputCantidad = $cantidad[0];
-                    inputCantidad.focus();
-                    inputCantidad.select();
-
-                    $cantidad.css({
-                        'box-shadow': '0 0 0 3px rgba(37, 99, 235, 0.25)',
-                        'border-color': '#2563eb',
-                        'transition': 'all 0.3s'
-                    });
-
-                    setTimeout(() => {
-                        $cantidad.css({
-                            'box-shadow': '',
-                            'border-color': '',
-                            'transition': 'all 0.3s'
-                        });
-                    }, 1500);
-                }
-            }, 30);
-
-            $(this).val(null).trigger('change');
         });
-        // 5. Submit
+
+        // Producto seleccionado → agregar fila
+        $('#buscadorProductos').on('select2:select', function (e) {
+
+            if (procesandoSeleccionProducto) return;
+            procesandoSeleccionProducto = true;
+
+            // ✅ Guarda de seguridad: si por cualquier razón el flujo falla,
+            //    el flag se libera solo a los 3 segundos.
+            clearTimeout(timeoutBloqueo);
+            timeoutBloqueo = setTimeout(() => {
+                procesandoSeleccionProducto = false;
+                console.warn('Flag procesandoSeleccionProducto liberado por timeout de seguridad');
+            }, 3000);
+
+            seAgregoFila = true;   // ✅ marca que SÍ se seleccionó un producto
+
+            const $select = $(this);
+
+            try {
+                const d = e.params.data.element.dataset;
+                const id = e.params.data.id;
+
+                if ($(`#fila-${id}`).length) {
+                    Swal.fire('Aviso', 'El producto ya está en la lista', 'info');
+                    return;
+                }
+
+                $('#emptyState').addClass('d-none');
+
+                const medidas = JSON.parse(d.medidas || '[]');
+                const opcionesUnidad = medidas.map(m =>
+                    `<option value="${m.id}" data-equivalencia="${m.equivalencia}" data-medida-id="${m.id}">${m.nombre}</option>`
+                ).join('');
+
+                const preMin = parseFloat(d.preMin) || 0;
+                const preMat = parseFloat(d.preMat) || 0;
+                const preDis = parseFloat(d.preDis) || 0;
+                const factor = parseFloat(d.factor) || 1;
+
+                $('#tablaDetalle tbody').append(`
+            <tr id="fila-${id}">
+                <td class="ps-4">
+                    <b>${d.nombre}</b><br>
+                    <small class="text-body-secondary">${d.sku}</small>
+                </td>
+                <td>
+                    <input type="number" name="items[${id}][cant]" class="form-control cantidad"
+                        step="0.01" value="1" min="0.01" required oninput="calcularTotalSol(this)">
+                </td>
+                <td>
+                    <select name="items[${id}][unidad]" class="form-select unidad-select"
+                        onchange="calcularPreciosugerido(this)">
+                        ${opcionesUnidad}
+                    </select>
+                </td>
+                <td>
+                    <select name="items[${id}][tipoPrecio]" class="form-select tipoPrecio-select"
+                        onchange="calcularPreciosugerido(this)">
+                        <option value="seleccionar" data-precio="0">Seleccione</option>
+                        <option value="minorista" data-precio="${preMin}">Min $${(preMin * factor).toFixed(2)} x ${d.ur}</option>
+                        <option value="mayorista" data-precio="${preMat}">May $${(preMat * factor).toFixed(2)} x ${d.ur}</option>
+                        <option value="distribuidor" data-precio="${preDis}">Dis $${(preDis * factor).toFixed(2)} x ${d.ur}</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="number" lang="en-US" name="items[${id}][precioUnitario]"
+                        class="form-control precio-unitario"
+                        step="0.01" min="0" placeholder="0.00" required
+                        onkeydown="if(event.key==='Enter'){ event.preventDefault(); $('#buscadorProductos').select2('open'); }"
+                        oninput="calcularTotalSol(this)">
+                </td>
+                <td style="min-width:140px;">
+                    <input type="number" lang="en-US" name="items[${id}][precio]"
+                        class="form-control precio-total fw-bold text-success"
+                        step="0.01" min="0" placeholder="0.00"
+                        onkeydown="if(event.key==='Enter'){ event.preventDefault(); $('#buscadorProductos').select2('open'); }"
+                        oninput="calcularTotalSol(this)"
+                        style="font-size:1.1rem; height:45px; min-width:120px;">
+                </td>
+                <td>
+                    <button type="button" class="btn btn-link text-danger" onclick="quitarFila(${id})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `);
+
+                // ✅ Scroll automático al final del contenedor para que la nueva fila sea visible
+                const contenedorScroll = document.querySelector('.cotizacion-tabla-scroll');
+                if (contenedorScroll) {
+                    requestAnimationFrame(() => {
+                        contenedorScroll.scrollTo({
+                            top: contenedorScroll.scrollHeight,
+                            behavior: 'smooth'
+                        });
+                    });
+                }
+
+            } finally {
+                try { $select.select2('close'); } catch (_) { /* noop */ }
+                try { $select.val(null).trigger('change.select2'); } catch (_) { /* noop */ }
+
+                clearTimeout(timeoutBloqueo);
+                setTimeout(() => { procesandoSeleccionProducto = false; }, 250);
+            }
+        });
+
+        // Foco en la última fila cuando Select2 cierra (SOLO si se agregó fila)
+        $('#buscadorProductos').on('select2:close', function () {
+            if (!seAgregoFila) return;   // ✅ solo si agregaste producto
+            seAgregoFila = false;
+
+            const $cantidad = $('#tablaDetalle tbody tr').last().find('.cantidad');
+            if (!$cantidad.length) return;
+
+            const inputCantidad = $cantidad[0];
+            inputCantidad.focus();
+            inputCantidad.select();
+
+            $cantidad.css({
+                'box-shadow': '0 0 0 3px rgba(37, 99, 235, 0.25)',
+                'border-color': '#2563eb',
+                'transition': 'all 0.3s'
+            });
+
+            setTimeout(() => {
+                $cantidad.css({
+                    'box-shadow': '',
+                    'border-color': '',
+                    'transition': 'all 0.3s'
+                });
+            }, 1500);
+        });
+
+        // Submit
         $('#formSolicitud').on('submit', async function (e) {
             e.preventDefault();
 
@@ -741,7 +934,6 @@
 
         $('#modalCotizacion').modal('show');
 
-        // Cargar datos después de que el modal se abra
         $('#modalCotizacion').one('shown.bs.modal', function () {
             cargarClientes();
             recargarProductos();

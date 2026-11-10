@@ -667,17 +667,62 @@
             $('#emptyState').removeClass('d-none');
         }
     }
+    /**
+     * Limpia por completo el formulario de solicitud y sus Select2.
+     * Se usa al abrir el modal y al cerrarlo, para que NUNCA quede un
+     * proveedor/ubicación/producto seleccionado de la vez anterior.
+     */
+    function resetFormSolicitud() {
+        const form = document.getElementById('formSolicitud');
+        if (!form) return;
 
+        // 1) Reset nativo (regresa <select> e <input> a su valor por defecto)
+        form.reset();
+
+        // 2) Reset explícito de Select2 (el reset nativo NO limpia Select2)
+        //    Proveedor
+        if (window.jQuery && $('#proveedor_id').data('select2')) {
+            $('#proveedor_id').val(null).trigger('change');
+        } else {
+            $('#proveedor_id').val('');
+        }
+
+        // 3) Ubicación: se vacían las opciones y se deja el placeholder original
+        const selUbic = document.getElementById('ubicacion_proveedor_id');
+        if (selUbic) {
+            selUbic.innerHTML = '<option value="">Seleccione un proveedor primero...</option>';
+            if (window.jQuery && $(selUbic).data('select2')) {
+                $(selUbic).val(null).trigger('change.select2');
+            }
+        }
+
+        // 4) Buscador de productos
+        if (window.jQuery && $('#buscadorProductos').data('select2')) {
+            $('#buscadorProductos').val(null).trigger('change.select2');
+        } else {
+            $('#buscadorProductos').val('');
+        }
+
+        // 5) Limpiar tabla, estado vacío y total
+        $('#tablaDetalle tbody').empty();
+        $('#emptyState').removeClass('d-none');
+        $('#costoTotalCompra').text('$0.00');
+
+        // 6) Reiniciar acumuladores globales por si quedaron sucios
+        totaLCompra = 0;
+        recalculandoFila = false;
+    }
     // =====================================================
     // NUEVA SOLICITUD
     // =====================================================
     function nuevaSolicitud() {
+        resetFormSolicitud();
         $('#formSolicitud')[0].reset();
         $('#tablaDetalle tbody').empty();
         $('#emptyState').removeClass('d-none');
 
         $('#modalSolicitud').modal('show');
-        rec
+
         function prepararImpresion(id) {
             fetch(`/cfsistem/app/controllers/solicitudesCompraController.php?action=obtenerDetalle&id=${id}`)
                 .then(async (res) => {
@@ -765,7 +810,7 @@
                     console.error('FETCH ERROR:', err);
                 });
         }
-        argarProductos();
+        recargarProductos();
     }
 
 </script>

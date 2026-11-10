@@ -58,6 +58,9 @@ if (isset($_GET['action']) && $_GET['action'] === 'login') {
         $_SESSION['rol_id'] = $row['rol_id'];
         $_SESSION['rol'] = $row['rol'];
         $_SESSION['almacen_id'] = $row['almacen_id'] ?? 0;
+        $_SESSION['almacen_id_defecto'] = ($_SESSION['almacen_id'] == 0)
+            ? ($row['almacen_defecto'] ?? 0)
+            : $_SESSION['almacen_id'];
         $_SESSION['login'] = true;
 
         // 🔹 5. Configuración de Almacén y Hora de Cierre

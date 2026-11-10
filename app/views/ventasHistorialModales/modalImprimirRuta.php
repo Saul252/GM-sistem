@@ -35,12 +35,6 @@
 <script>
     // ═══════════════════════════════════════════════════════════════
     // HELPERS DE CONVERSIÓN
-    // Regla:
-    //   factor = cuántas unidades base hay en 1 unidad de reporte
-    //   (ej: 1000 kg = 1 tonelada  →  factor = 1000)
-    //
-    //   base → reporte:  cantidadBase / factor
-    //   reporte → base:  cantidadReporte * factor
     // ═══════════════════════════════════════════════════════════════
 
     function formatearCantidadRuta(cantidadBase, prod) {
@@ -49,19 +43,16 @@
         const uBase = prod.unidadMedida || '';
         const uRep = prod.unidadReporte || uBase;
 
-        // Sin conversión real → quedarse en unidad base
         if (factor <= 1) {
             return { cantidad: cantBase, unidad: uBase };
         }
 
         const enReporte = cantBase / factor;
 
-        // Si alcanza al menos 1 unidad de reporte → mostrar en unidad de reporte
         if (enReporte >= 1) {
             return { cantidad: enReporte, unidad: uRep };
         }
 
-        // Si no alcanza → mostrar en unidad base
         return { cantidad: cantBase, unidad: uBase };
     }
 
@@ -72,8 +63,6 @@
     function limpiarDireccion(dir) {
         if (!dir) return '-';
 
-        // Quita los prefijos "calle", "col", "colonia", "pueblo", "ciudad", "cp", etc.
-        // al inicio de cada segmento separado por coma.
         const prefijos = /^(calle|col\.?|colonia|pueblo|ciudad|cp|c\.p\.|estado|municipio|delegaci[oó]n|entre calles?)\s+/i;
 
         return String(dir)
@@ -82,6 +71,7 @@
             .filter(seg => seg.length > 0)
             .join(', ');
     }
+
     // ═══════════════════════════════════════════════════════════════
     // RENDER DE RUTA DE REPARTO
     // ═══════════════════════════════════════════════════════════════
@@ -101,16 +91,10 @@
         const cont = document.getElementById('contenidoRutaPrint');
         const datos = data.data;
 
-        // =========================================
-        // DETECTAR PREFIJO 'EN_PAT' DENTRO DEL FOLIO
-        // =========================================
         const stringEntrega = String(entrega_ida || '').toUpperCase();
         const stringFolio = String(datos[0]?.folio_viaje || '').toUpperCase();
         const esEntregaPatio = stringEntrega.includes('EN_PAT') || stringFolio.includes('EN_PAT');
 
-        // =========================================
-        // GENERAR FILAS (CONVERSIÓN CORREGIDA)
-        // =========================================
         let filas = '';
 
         datos.forEach((prod, i) => {
@@ -134,9 +118,6 @@
         `;
         });
 
-        // =========================================
-        // SECCIONES ADAPTATIVAS SEGÚN EL TIPO
-        // =========================================
         const iconoLogo = `
     <span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;flex-shrink:0;vertical-align:middle;">
         <img src="/cfsistem/public/assets/logo.ico" alt="Logo"
@@ -164,7 +145,6 @@
   <div class="info-card">
     <div class="info-card-body">
 
-        <!-- Fila superior: Chofer | Vehículo -->
         <div class="info-split">
 
             <div class="info-col" style="flex:1 1 0; width:100%; display:flex; flex-direction:column; align-items:center; text-align:center;">
@@ -259,13 +239,9 @@
     </div>
     </div>`;
 
-        // =========================================
-        // HTML GENERADO
-        // =========================================
         let html = `
         <div class="hoja-ruta-container p-4">
 
-           <!-- HEADER INTERNO -->
 <div class="mb-3 pb-2 border-bottom">
     <div class="d-flex align-items-center justify-content-center gap-2">
         ${iconoLogo}
@@ -458,9 +434,7 @@
                 }
             </style>
 
-            <!-- BLOQUES DE INFORMACIÓN PRINCIPAL -->
             <div class="info-grid">
-                <!-- Tarjeta 1: Cliente -->
                 <div class="info-card">
                     <div class="info-card-body">
                         <span class="info-label">Cliente Destino</span>
@@ -469,17 +443,13 @@
                             <span class="meta-title">Teléfono</span>
                             <span class="meta-value">${datos[0].tel_cliente ?? 'Sin teléfono'}</span>
                         </div>
-                         <!-- Dirección debajo, ancho completo -->
-   
 
                     </div>
                 </div>
 
-                <!-- Tarjeta 2: Dinámica (Chofer o Patio) -->
                 ${bloqueOperador}
             </div>
 
-            <!-- SECCIÓN DE DETALLES / TABLA -->
             <div class="table-responsive border rounded mb-4 mt-3">
                 <table class="table align-middle mb-0">
                     <thead>
@@ -500,7 +470,6 @@
                     ${fechasHeader}
                 </div>
 
-            <!-- ÁREA DE FIRMAS FORMALIZADA -->
             <div class="firmas-container pt-4">
                 ${firmasSeccion}
             </div>
@@ -514,17 +483,37 @@
         modal.show();
     }
 
+    /**
+     * Imprime el contenido de #contenidoRutaPrint usando un iframe oculto.
+     * Al terminar de imprimir (o cancelar), el iframe se elimina automáticamente
+     * para que el sistema NO se trabe si el diálogo de impresión queda abierto.
+     */
     function imprimirModalRuta() {
         const contenido = document.getElementById('contenidoRutaPrint').innerHTML;
-        const ventana = window.open('', '_blank', 'width=950,height=650');
+        const folio = document.getElementById('folioRutaPrint')?.textContent?.trim() || 'RUTA';
 
-        ventana.document.write(`
+        // 1. Crear iframe oculto dentro de la misma página (no abre ventana nueva)
+        const iframe = document.createElement('iframe');
+        iframe.setAttribute('aria-hidden', 'true');
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        iframe.style.visibility = 'hidden';
+        document.body.appendChild(iframe);
+
+        // 2. Escribir el HTML dentro del iframe
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(`
         <!DOCTYPE html>
         <html lang="es">
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Hoja de Entrega / Ruta</title>
+            <title>Hoja de Entrega / Ruta - ${folio}</title>
             <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
             <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
             <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -655,9 +644,7 @@
                     table thead th {
                         background-color:transparent !important;
                     }
-                
 
-    /* TÍTULO MÁS PEQUEÑO */
     .hoja-ruta-container h4 {
         font-size: 13px !important;
         font-weight: 700 !important;
@@ -665,14 +652,12 @@
         gap: 4px !important;
     }
 
-    /* Subtítulos de folio / registro */
     .hoja-ruta-container .small,
     .hoja-ruta-container .text-body-secondary.small {
         font-size: 9.5px !important;
         line-height: 1.25 !important;
     }
 
-    /* TARJETAS: reducir paddings y tipografía a ~1/3 */
     .info-card-body {
         padding: 6px 10px !important;
     }
@@ -710,7 +695,6 @@
         padding: 1px 4px !important;
     }
 
-    /* Grid más compacto */
     .info-grid {
         gap: 8px !important;
     }
@@ -720,13 +704,11 @@
         margin: 0 10px !important;
     }
 
-    /* Separador del header */
     .hoja-ruta-container .mb-4.border-bottom {
         margin-bottom: 8px !important;
         padding-bottom: 6px !important;
     }
 
-    /* Área de firmas más compacta */
     .firma-linea {
         margin: 22px auto 4px auto !important;
     }
@@ -758,30 +740,60 @@
         <body>
             <img src="/cfsistem/public/assets/logo.ico" style="position: fixed; top: 22.5%; left: 50%; transform: translate(-50%, -50%); width: 300px; opacity: 0.08; z-index: -1;">
 
-            <div class="text-end mb-3 no-print" style="max-width: 850px; margin: auto;">
-                <button class="btn btn-dark px-4 shadow-sm fw-semibold" onclick="window.print()">
-                    🖨 Enviar a Impresora
-                </button>
-            </div>
-
             <div class="ticket">
                 <div class="hoja-ruta-container">
                     ${contenido}
                 </div>
             </div>
-
-            <script>
-                window.onload = function() {
-                    setTimeout(function() {
-                        window.print();
-                    }, 300);
-                };
-            <\/script>
         </body>
         </html>
     `);
+        doc.close();
 
-        ventana.document.close();
-        ventana.focus();
+        const win = iframe.contentWindow;
+
+        // 3. Limpieza idempotente: elimina el iframe del DOM una sola vez
+        let limpiado = false;
+        const limpiar = () => {
+            if (limpiado) return;
+            limpiado = true;
+            if (iframe && iframe.parentNode) {
+                iframe.parentNode.removeChild(iframe);
+            }
+        };
+
+        // 4. Registrar el cierre ANTES de imprimir (esto es lo que antes fallaba)
+        win.onafterprint = limpiar;
+
+        // 5. Esperar a que carguen las imágenes (logo, marca de agua)
+        const imgs = Array.from(iframe.contentDocument.images || []);
+        const esperarImagenes = Promise.all(
+            imgs.map(img =>
+                img.complete && img.naturalWidth > 0
+                    ? Promise.resolve()
+                    : new Promise(res => {
+                        img.onload = res;
+                        img.onerror = res;
+                        setTimeout(res, 2000);
+                    })
+            )
+        );
+
+        // 6. Carrera: o cargan todas las imágenes, o pasan 1.5 s como máximo
+        Promise.race([esperarImagenes, new Promise(res => setTimeout(res, 1500))])
+            .then(() => {
+                requestAnimationFrame(() => {
+                    try {
+                        win.focus();
+                        win.print();
+                    } catch (e) {
+                        console.error('Error al imprimir:', e);
+                        limpiar();
+                    }
+
+                    // 7. Respaldo: si onafterprint no se disparó, limpiar igualmente
+                    setTimeout(limpiar, 2000);
+                });
+            });
     }
 </script>

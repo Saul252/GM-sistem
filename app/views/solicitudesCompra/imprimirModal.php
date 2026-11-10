@@ -322,33 +322,42 @@
                 console.error('FETCH ERROR:', err);
             });
     }
+
     /**
-     * Llama al comando de impresión del navegador
+     * Imprime el contenido de #areaImpresion usando un iframe oculto.
+     * Al terminar de imprimir (o al cancelar), el iframe se elimina automáticamente
+     * para que el sistema NO se trabe si el diálogo de impresión queda abierto.
      */
     function ejecutarImpresion() {
         // 1. Obtener el contenido del área de impresión
         const contenido = document.getElementById('areaImpresion').innerHTML;
         const folio = $('#print-folio').text();
-        const recoleccion = $('#print-direccion-recoleccion');
 
-        // 2. Crear una ventana nueva
-        const ventana = window.open('', '_blank', 'height=600,width=800');
+        // 2. Crear iframe oculto dentro de la misma página (no abre ventana nueva)
+        const iframe = document.createElement('iframe');
+        iframe.setAttribute('aria-hidden', 'true');
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        iframe.style.visibility = 'hidden';
+        document.body.appendChild(iframe);
 
-        // 3. Escribir el HTML necesario para que se vea bien
-        ventana.document.write(`
+        // 3. Escribir el HTML dentro del iframe
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(`
         <html>
             <head>
                 <title>Imprimir ${folio}</title>
-      <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
-
-    <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
-
+                <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
+                <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
                 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
                 <style>
                     body { font-family: 'Inter', sans-serif; padding: 30px; }
-                    .table{
-                    background-color: #efefef00 !important;
-                    }
+                    .table { background-color: #efefef00 !important; }
                     .table-bordered th, .table-bordered td { border: 1px solid #000 !important; }
                     .fw-bold { font-weight: bold !important; }
                     @media print {
@@ -359,32 +368,54 @@
                 </style>
             </head>
             <body>
-             <img
-    src="/cfsistem/public/assets/logo.ico"
-    style="
-        position: fixed;
-        top: 19.5%;
-        left: 50%;
-        transform: translate(-70%, -70%);
-        width: 180px;
-        opacity: 0.08;
-        z-index: -1;
-    "
->
-      
+                <img
+                    src="/cfsistem/public/assets/logo.ico"
+                    style="
+                        position: fixed;
+                        top: 19.5%;
+                        left: 50%;
+                        transform: translate(-70%, -70%);
+                        width: 180px;
+                        opacity: 0.08;
+                        z-index: -1;
+                    "
+                >
+
                 ${contenido}
-                <script>
-                    // Esperar a que cargue el CSS y luego imprimir
-                    window.onload = function() {
-                        window.print();
-                        window.onafterprint = function() { window.close(); };
-                    };
-                <\/script>
             </body>
         </html>
     `);
+        doc.close();
 
-        ventana.document.close();
+        const win = iframe.contentWindow;
+
+        // 4. Función de limpieza: elimina el iframe del DOM (se ejecuta UNA sola vez)
+        let limpiado = false;
+        const limpiar = () => {
+            if (limpiado) return;
+            limpiado = true;
+            if (iframe && iframe.parentNode) {
+                iframe.parentNode.removeChild(iframe);
+            }
+
+        };
+
+        // 5. Registrar el cierre ANTES de imprimir
+        win.onafterprint = limpiar;
+
+        // 6. Esperar un instante a que carguen estilos/imágenes y luego imprimir
+        setTimeout(() => {
+            try {
+                win.focus();
+                win.print();
+            } catch (e) {
+                console.error('Error al imprimir:', e);
+                limpiar();
+            }
+
+            // 7. Respaldo: si onafterprint no se disparó, limpiar igualmente
+            setTimeout(limpiar, 2000);
+        }, 500);
     }
 
 </script>

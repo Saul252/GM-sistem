@@ -84,14 +84,23 @@ class SolicitudCompra
         $buscador = null
     ) {
         // 1. Agregamos "WHERE 1=1" al final de la consulta base
-        $sql = "SELECT s.*, c.tiene_faltantes as faltantes, p.nombre_comercial as proveedor_nombre, 
-                   a.nombre as almacen_nombre, u.nombre as admin_nombre
-            FROM solicitudes_compra s
-            LEFT JOIN proveedores p ON s.proveedor_id = p.id
-            LEFT JOIN compras c ON s.compra_id_final = c.id
-            LEFT JOIN almacenes a ON s.almacen_id = a.id
-            LEFT JOIN usuarios u ON s.administrador_id = u.id
-            WHERE 1=1"; // <-- Clave para que los "AND" funcionen directamente
+        $sql = "SELECT 
+    s.*, 
+    c.tiene_faltantes AS faltantes, 
+    p.nombre_comercial AS proveedor_nombre, 
+    a.nombre AS almacen_nombre, 
+    u.nombre AS admin_nombre,
+    (
+        SELECT COALESCE(SUM(d.costo), 0)
+        FROM detalle_solicitud_compra d
+        WHERE d.solicitud_id = s.id
+    ) AS costo_total
+FROM solicitudes_compra s
+LEFT JOIN proveedores p ON s.proveedor_id = p.id
+LEFT JOIN compras c ON s.compra_id_final = c.id
+LEFT JOIN almacenes a ON s.almacen_id = a.id
+LEFT JOIN usuarios u ON s.administrador_id = u.id
+WHERE 1=1"; // <-- Clave para que los "AND" funcionen directamente
 
         $params = [];
         $types = "";
