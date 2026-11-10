@@ -23,9 +23,9 @@ if ($movimiento_id <= 0) {
 $conexion->begin_transaction();
 
 try {
-    // 1. Buscar el movimiento y bloquearlo
+    // 1. Buscar el movimiento, la cantidad, el lote origen (en referencia_id) y bloquearlo
     $stmt = $conexion->prepare("
-        SELECT id, producto_id, cantidad, almacen_origen_id, tipo, usuario_recibe_id
+        SELECT id, producto_id, cantidad, almacen_origen_id, tipo, usuario_recibe_id, referencia_id
         FROM movimientos
         WHERE id = ?
         FOR UPDATE
@@ -44,7 +44,7 @@ try {
         throw new Exception("No se puede eliminar: el traspaso ya fue recibido en destino.");
     }
 
-    // 2. Devolver el stock al almacén de origen
+    // 2. Devolver el stock global al almacén de origen en la tabla inventario
     $stmtStock = $conexion->prepare("
         UPDATE inventario
         SET stock = stock + ?
@@ -53,7 +53,33 @@ try {
     $stmtStock->bind_param("dii", $mov['cantidad'], $mov['producto_id'], $mov['almacen_origen_id']);
     $stmtStock->execute();
 
-    // 3. Eliminar el movimiento
+    // 3. Devolver la cantidad al lote específico usando referencia_id
+    $lote_id = intval($mov['referencia_id'] ?? 0);
+    $cantidad_a_regresar = (float) $mov['cantidad'];
+
+    if ($lote_id > 0 && $cantidad_a_regresar > 0) {
+        // Consultar el lote para asegurar que existe y calcular su nuevo estado
+        $stmtLoteCheck = $conexion->prepare("SELECT cantidad_actual FROM lotes_stock WHERE id = ? FOR UPDATE");
+        $stmtLoteCheck->bind_param("i", $lote_id);
+        $stmtLoteCheck->execute();
+        $loteInfo = $stmtLoteCheck->get_result()->fetch_assoc();
+
+        if ($loteInfo) {
+            $nuevo_stock_lote = (float) $loteInfo['cantidad_actual'] + $cantidad_a_regresar;
+            // Si vuelve a tener stock, pasa a activo (o se mantiene activo)
+            $nuevo_estado = ($nuevo_stock_lote > 0) ? 'activo' : 'agotado';
+
+            $stmtUpLote = $conexion->prepare("
+                UPDATE lotes_stock 
+                SET cantidad_actual = ?, estado_lote = ? 
+                WHERE id = ?
+            ");
+            $stmtUpLote->bind_param("dsi", $nuevo_stock_lote, $nuevo_estado, $lote_id);
+            $stmtUpLote->execute();
+        }
+    }
+
+    // 4. Eliminar el movimiento principal
     $stmtDel = $conexion->prepare("DELETE FROM movimientos WHERE id = ?");
     $stmtDel->bind_param("i", $movimiento_id);
     $stmtDel->execute();
@@ -62,7 +88,7 @@ try {
 
     echo json_encode([
         'status' => 'success',
-        'message' => 'Traspaso eliminado. Stock devuelto al almacén de origen.'
+        'message' => 'Traspaso cancelado. Stock general e inventario del lote devueltos al origen correctamente.'
     ]);
 
 } catch (Exception $e) {

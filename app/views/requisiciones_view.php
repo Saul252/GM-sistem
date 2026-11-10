@@ -1033,7 +1033,7 @@
             }
         });
         document.addEventListener('DOMContentLoaded', () => {
-            cargarUsuariosSelect();
+            //  cargarUsuariosSelect();
             cargarClientes();
         });
 

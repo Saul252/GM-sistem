@@ -101,19 +101,43 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
+
                 <?php if ($_SESSION['rol_id'] == 1): ?>
-                    <div class="row mb-4 border-subtle p-3 rounded border">
+                    <div class="row mb-3 border-subtle p-3 rounded border">
                         <div class="col-md-6">
                             <label class="form-label fw-bold">Ver movimientos del Almacén:</label>
                             <select id="admin_filtro_almacen" class="form-select" onchange="cargarTraspasos()">
                                 <option value="">Seleccione un almacén para autorizar...</option>
                                 <?php foreach ($almacenes as $a): ?>
-                                    <option value="<?= $a['id'] ?>"><?= $a['nombre'] ?></option>
+                                    <option value="<?= $a['id'] ?>">
+                                        <?= $a['nombre'] ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
                 <?php endif; ?>
+
+                <!-- ✅ FIX: Inputs de fecha con valores por defecto = mes actual -->
+                <div class="row g-3 mb-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small text-uppercase">
+                            <i class="bi bi-calendar3 me-1"></i> Desde
+                        </label>
+                        <input type="date" id="filtro_fecha_inicio" class="form-control" value="<?= date('Y-m-01') ?>">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold small text-uppercase">
+                            <i class="bi bi-calendar3 me-1"></i> Hasta
+                        </label>
+                        <input type="date" id="filtro_fecha_fin" class="form-control" value="<?= date('Y-m-t') ?>">
+                    </div>
+                    <div class="col-md-4">
+                        <button type="button" class="btn btn-primary w-100" onclick="cargarTraspasos()">
+                            <i class="bi bi-funnel-fill"></i> Filtrar
+                        </button>
+                    </div>
+                </div>
 
                 <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
                     <li class="nav-item" role="presentation">

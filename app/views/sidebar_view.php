@@ -577,43 +577,53 @@ $modulos = [
                     `).join('');
 
                         return `
-                    <div class="row align-items-start ROW p-3 border-bottom hover-notif">
+<div class="col-12 mb-2 p-3 rounded-3 border bg-body-tertiary shadow-sm">
+    <!-- Encabezado: Despacho Masivo y Total de Productos -->
+    <div class="d-flex justify-content-between align-items-center mb-1">
+        <b class="badge text-success  border border-success-subtle rounded-pill px-2 py-1" style="font-size:0.65rem;">
+            <i class="bi bi-boxes me-1"></i> DESPACHO MASIVO
+        </b>
+        <b class="badge  text-primary rounded-pill" style="font-size:0.6rem;">
+            ${item.total_productos || 0} productos
+        </b>
+    </div>
 
-                        <div class="col-12 mb-2 d-flex justify-content-between align-items-center">
-                            <b class="text-success text-uppercase" style="font-size:0.72rem;">
-                                <i class="bi bi-boxes me-1"></i> DESPACHO MASIVO
-                                <span class="text-body-secondary ms-1">→ ${item.destino}</span>
-                            </b>
-                            <span class="badge bg-primary-subtle text-success border border-primary-subtle rounded-pill"
-                                  style="font-size:0.6rem;">
-                                ${item.total_productos || 0} productos
-                            </span>
-                        </div>
+    <!-- Ruta (Origen → Destino) -->
+    <div class="mb-2">
+        <div class="text-sencondary fw-semibold text-truncate" style="font-size:0.75rem;">
+            ${item.origen} -> ${item.destino}
+        </div>
+    </div>
 
-                        <div class="col-12 mb-1">
-                            <small class="text-body-secondary d-block" style="font-size:0.7rem;">
-                                <i class="bi bi-upc-scan me-1"></i>
-                                Folio: <b class="text-body">${item.codigo_traspaso || '—'}</b>
-                            </small>
-                            <small class="text-body-secondary d-block" style="font-size:0.7rem;">
-                                <i class="bi bi-person me-1"></i> De: ${item.emisor}
-                            </small>
-                        </div>
+    <hr class="my-2 opacity-50">
 
-                        <div class="col-12">
-                            <ul class="list-unstyled mb-2 ps-1" style="max-height:120px; overflow-y:auto;">
-                                ${listaProductos}
-                            </ul>
-                        </div>
+    <!-- Metadatos (Folio y Emisor) -->
+    <div class="mb-2 d-flex flex-column gap-1">
+        <small class="text-body-secondary" style="font-size:0.7rem;">
+            <i class="bi bi-upc-scan text-muted me-1"></i> Folio:${item.codigo_traspaso || '—'}
+        </small>
+        <small class="text-body-secondary" style="font-size:0.7rem;">
+            <i class="bi bi-person text-muted me-1"></i> De: ${item.emisor}
+        </small>
+    </div>
 
-                        <div class="col-12 d-flex justify-content-end">
-                            <button onclick="procesarRecepcionMasiva(${item.id_traspaso_id})"
-                                class="btn btn-success btn-sm rounded-pill shadow-sm px-3"
-                                title="Recibir todo el lote">
-                                <i class="bi bi-check2-all me-1"></i> Recibir lote
-                            </button>
-                        </div>
-                    </div>`;
+    <!-- Lista de Productos -->
+    <div class="mb-2">
+        <ul class="list-unstyled mb-0 ps-1" style="max-height:120px; overflow-y:auto; font-size:0.75rem;">
+            ${listaProductos}
+        </ul>
+    </div>
+
+    <!-- Botón de Acción -->
+    <div class="d-flex justify-content-end pt-1">
+        <button onclick="procesarRecepcionMasiva(${item.id_traspaso_id})"
+            class="btn btn-success btn-sm rounded-pill shadow-sm px-3"
+            style="font-size:0.75rem;"
+            title="Recibir todo el lote">
+            <i class="bi bi-check2-all me-1"></i> Recibir lote
+        </button>
+    </div>
+</div>`;
                     }
 
                     // ========== CASO SIMPLE ==========
@@ -621,7 +631,7 @@ $modulos = [
                 <div class="row align-items-center ROW p-3 border-bottom hover-notif">
                     <div class="col-12 mb-2">
                         <b class="d-block text-success text-uppercase" style="font-size: 0.75rem;">
-                            TRASPASO PARA <span class="text-success">${item.destino}</span>
+                            TRASPASO PARA ${item.destino}
                         </b>
                     </div>
                     <div class="col-8" style="line-height: 1.4;">

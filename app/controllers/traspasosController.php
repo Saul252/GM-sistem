@@ -30,12 +30,16 @@ try {
          */
         case 'resumen':
 
-            $almacen_id = $_GET['almacen_id'] ?? 0;
+            $almacen_id = intval($_GET['almacen_id'] ?? 0);
+            $fecha_inicio = $_GET['fecha_inicio'] ?? null;
+            $fecha_fin = $_GET['fecha_fin'] ?? null;
 
             $resultado = $modelo->obtenerMovimientosPorRol(
                 $usuario_id,
                 $rol_id,
-                $almacen_id
+                $almacen_id,
+                $fecha_inicio,
+                $fecha_fin
             );
 
             if ($resultado['status']) {

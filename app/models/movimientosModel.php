@@ -199,7 +199,7 @@ class MovimientoModel
 
         return $ids; // Ahora regresa un array, ej: [45, 46, 47]
     }
-    public function obtenerMovimientosPorRol($usuario_id, $rol_id, $almacen_id = null)
+    public function obtenerMovimientosPorRol($usuario_id, $rol_id, $almacen_id = null, $fecha_inicio = null, $fecha_fin = null)
     {
         try {
 
@@ -213,7 +213,6 @@ class MovimientoModel
 
             // 🔥 SI NO ES ADMIN Y NO TIENE ALMACÉN
             if (!$esAdmin && !$almacen_id) {
-
                 return [
                     'status' => true,
                     'data' => $response
@@ -223,18 +222,46 @@ class MovimientoModel
             $id_almacen = intval($almacen_id);
 
             // =====================================================
-            // 🔹 ARRIBOS
+            // 🔹 FECHAS POR DEFECTO = MES ACTUAL
             // =====================================================
+            $hoy = new DateTime();
 
-            $whereArribos = "";
-
-            if (!$esAdmin) {
-
-                $whereArribos = "
-                AND m.almacen_destino_id = $id_almacen
-            ";
+            // Si no viene inicio → primer día del mes actual
+            if (empty($fecha_inicio)) {
+                $fecha_inicio = $hoy->format('Y-m-01');
             }
 
+            // Si no viene fin → último día del mes actual
+            if (empty($fecha_fin)) {
+                $fecha_fin = $hoy->format('Y-m-t');
+            }
+
+            // Validar formato
+            $fi = DateTime::createFromFormat('Y-m-d', $fecha_inicio);
+            $ff = DateTime::createFromFormat('Y-m-d', $fecha_fin);
+
+            if (!$fi || !$ff) {
+                throw new Exception("Formato de fecha inválido. Usa YYYY-MM-DD.");
+            }
+
+            if ($fi > $ff) {
+                throw new Exception("La fecha de inicio no puede ser mayor que la fecha fin.");
+            }
+
+            // Rango completo (incluye el día fin)
+            $fechaIniSql = $fi->format('Y-m-d') . ' 00:00:00';
+            $fechaFinSql = $ff->format('Y-m-d') . ' 23:59:59';
+            $whereFecha = " AND m.fecha BETWEEN '$fechaIniSql' AND '$fechaFinSql' ";
+
+            // =====================================================
+            // 🔹 FILTROS POR ALMACÉN
+            // =====================================================
+            $whereArribos = $esAdmin ? "" : "AND m.almacen_destino_id = $id_almacen";
+            $whereEnvios = $esAdmin ? "" : "AND m.almacen_origen_id  = $id_almacen";
+
+            // =====================================================
+            // 🔹 ARRIBOS INDIVIDUALES
+            // =====================================================
             $sqlArribos = "
             SELECT 
                 m.id, 
@@ -245,6 +272,7 @@ class MovimientoModel
                 p.unidad_reporte, 
                 m.cantidad, 
                 ao.nombre AS origen, 
+                a.nombre as destino,
                 u.nombre AS enviado_por,
                 m.referencia_id
 
@@ -255,45 +283,104 @@ class MovimientoModel
 
             JOIN almacenes ao 
                 ON m.almacen_origen_id = ao.id
+JOIN almacenes a 
+                ON m.almacen_destino_id = a.id
 
             JOIN usuarios u 
                 ON m.usuario_envia_id = u.id
 
+            LEFT JOIN traspaso_masivo tm_ind 
+                ON tm_ind.movimiento_id = m.id
+
             WHERE m.tipo = 'traspaso' 
             AND m.usuario_recibe_id IS NULL
+            AND tm_ind.movimiento_id IS NULL
 
             $whereArribos
+            $whereFecha
 
             ORDER BY m.fecha DESC
         ";
 
             $resA = $this->db->query($sqlArribos);
-
             if ($resA) {
-
                 while ($row = $resA->fetch_assoc()) {
-
+                    $row['tipo'] = 'individual';
                     $row['cantidad'] = (float) $row['cantidad'];
-
                     $row['factor_conversion'] = (float) $row['factor_conversion'];
-
                     $response['arribos'][] = $row;
                 }
             }
 
             // =====================================================
-            // 🔹 ENVÍOS
+            // 🔹 ARRIBOS MASIVOS
             // =====================================================
+            $sqlArribosMasivos = "
+            SELECT
+                tm.id_traspaso_id,
+                tm.codigo_traspaso,
+                MIN(m.fecha) AS fecha,
+                m.almacen_destino_id,
+                a.nombre  AS destino,
+                ao.nombre AS origen,
+                u.nombre  AS enviado_por,
+                SUM(m.cantidad) AS cant_total,
+                COUNT(*)        AS total_productos,
+                MAX(p.factor_conversion) AS factor_conversion,
+                MAX(p.unidad_reporte)    AS unidad_reporte,
+                GROUP_CONCAT(
+                    CONCAT(p.nombre, '§', m.cantidad, '§', p.factor_conversion, '§', p.unidad_reporte)
+                    SEPARATOR '|'
+                ) AS productos_lista
 
-            $whereEnvios = "";
+            FROM movimientos m
 
-            if (!$esAdmin) {
+            INNER JOIN productos p 
+                ON m.producto_id = p.id
 
-                $whereEnvios = "
-                AND m.almacen_origen_id = $id_almacen
-            ";
+            INNER JOIN traspaso_masivo tm 
+                ON tm.movimiento_id = m.id
+
+            LEFT JOIN almacenes ao 
+                ON m.almacen_origen_id = ao.id
+
+            LEFT JOIN almacenes a 
+                ON m.almacen_destino_id = a.id
+
+            LEFT JOIN usuarios u 
+                ON m.usuario_registra_id = u.id
+
+            WHERE m.tipo = 'traspaso'
+            AND m.usuario_recibe_id IS NULL
+
+            $whereArribos
+            $whereFecha
+
+            GROUP BY
+                tm.id_traspaso_id,
+                tm.codigo_traspaso,
+                m.almacen_destino_id,
+                a.nombre,
+                ao.nombre,
+                u.nombre
+
+            ORDER BY fecha DESC
+        ";
+
+            $resAM = $this->db->query($sqlArribosMasivos);
+            if ($resAM) {
+                while ($row = $resAM->fetch_assoc()) {
+                    $row['tipo'] = 'masivo';
+                    $row['cant_total'] = (float) $row['cant_total'];
+                    $row['total_productos'] = (int) $row['total_productos'];
+                    $row['factor_conversion'] = (float) $row['factor_conversion'];
+                    $response['arribos'][] = $row;
+                }
             }
 
+            // =====================================================
+            // 🔹 ENVÍOS INDIVIDUALES
+            // =====================================================
             $sqlEnvios = "
             SELECT 
                 m.id, 
@@ -313,9 +400,14 @@ class MovimientoModel
             JOIN almacenes ad 
                 ON m.almacen_destino_id = ad.id
 
+            LEFT JOIN traspaso_masivo tm_ind 
+                ON tm_ind.movimiento_id = m.id
+
             WHERE m.tipo = 'traspaso'
+            AND tm_ind.movimiento_id IS NULL
 
             $whereEnvios
+            $whereFecha
 
             ORDER BY m.fecha DESC
 
@@ -323,26 +415,101 @@ class MovimientoModel
         ";
 
             $resE = $this->db->query($sqlEnvios);
-
             if ($resE) {
-
                 while ($row = $resE->fetch_assoc()) {
-
+                    $row['tipo'] = 'individual';
                     $row['cantidad'] = (float) $row['cantidad'];
-
                     $row['factor_conversion'] = (float) $row['factor_conversion'];
-
-                    $row['estado'] = ($row['usuario_recibe_id'])
-                        ? 'Completado'
-                        : 'En Tránsito';
-
+                    $row['estado'] = ($row['usuario_recibe_id']) ? 'Completado' : 'En Tránsito';
                     $response['envios'][] = $row;
                 }
             }
 
+            // =====================================================
+            // 🔹 ENVÍOS MASIVOS
+            // =====================================================
+            $sqlEnviosMasivos = "
+            SELECT
+                tm.id_traspaso_id,
+                tm.codigo_traspaso,
+                tm.estado AS estado_grupo,
+                MIN(m.fecha) AS fecha,
+                m.almacen_origen_id,
+                ao.nombre AS origen,
+                ad.nombre AS destino,
+                SUM(m.cantidad) AS cant_total,
+                COUNT(*)        AS total_productos,
+                SUM(CASE WHEN m.usuario_recibe_id IS NOT NULL THEN 1 ELSE 0 END) AS recibidos,
+                MAX(p.factor_conversion) AS factor_conversion,
+                MAX(p.unidad_reporte)    AS unidad_reporte,
+                GROUP_CONCAT(
+                    CONCAT(p.nombre, '§', m.cantidad, '§', p.factor_conversion, '§', p.unidad_reporte)
+                    SEPARATOR '|'
+                ) AS productos_lista
+
+            FROM movimientos m
+
+            INNER JOIN productos p 
+                ON m.producto_id = p.id
+
+            INNER JOIN traspaso_masivo tm 
+                ON tm.movimiento_id = m.id
+
+            LEFT JOIN almacenes ao 
+                ON m.almacen_origen_id = ao.id
+
+            LEFT JOIN almacenes ad 
+                ON m.almacen_destino_id = ad.id
+
+            WHERE m.tipo = 'traspaso'
+
+            $whereEnvios
+            $whereFecha
+
+            GROUP BY
+                tm.id_traspaso_id,
+                tm.codigo_traspaso,
+                tm.estado,
+                m.almacen_origen_id,
+                ao.nombre,
+                ad.nombre
+
+            ORDER BY fecha DESC
+
+            LIMIT 20
+        ";
+
+            $resEM = $this->db->query($sqlEnviosMasivos);
+            if ($resEM) {
+                while ($row = $resEM->fetch_assoc()) {
+                    $row['tipo'] = 'masivo';
+                    $row['cant_total'] = (float) $row['cant_total'];
+                    $row['total_productos'] = (int) $row['total_productos'];
+                    $row['recibidos'] = (int) $row['recibidos'];
+                    $row['factor_conversion'] = (float) $row['factor_conversion'];
+
+                    $estadoGrupo = strtolower($row['estado_grupo'] ?? '');
+                    if ($estadoGrupo === 'cancelado') {
+                        $row['estado'] = 'Cancelado';
+                    } elseif ($estadoGrupo === 'recibido' || $row['recibidos'] === $row['total_productos']) {
+                        $row['estado'] = 'Completado';
+                    } else {
+                        $row['estado'] = 'En Tránsito';
+                    }
+
+                    unset($row['estado_grupo']);
+                    $response['envios'][] = $row;
+                }
+            }
+
+            // Devolver las fechas usadas para que el frontend las muestre
             return [
                 'status' => true,
-                'data' => $response
+                'data' => $response,
+                'filtros' => [
+                    'fecha_inicio' => $fi->format('Y-m-d'),
+                    'fecha_fin' => $ff->format('Y-m-d')
+                ]
             ];
 
         } catch (Exception $e) {
