@@ -10,12 +10,19 @@
     <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
 
 
+
+
+
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+        rel="stylesheet" />
     <style>
         :root {
             --bs-primary: #007aff;
@@ -152,6 +159,12 @@
                 $fechaInicio = $_GET['fecha_inicio'] ?? date('Y-m-01');
                 $fechaFin = $_GET['fecha_fin'] ?? date('Y-m-t');
                 ?>
+
+                <div style="min-width: 200px;">
+                    <select name="cliente_id_editar" id="cliente_id_editar"
+                        class="form-select form-select-sm select2-pagina" required>
+                    </select>
+                </div>
 
                 <div>
                     <label style="font-size:12px;">Fecha inicio</label>
@@ -492,15 +505,156 @@
                         </div>
                     </div>
                 </div>
-
+                <!-- 2. Despúes carga tu archivo modal.js -->
+                <!-- ✅ jQuery PRIMERO -->
                 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+
+                <!-- ✅ Select2 DESPUÉS -->
+                <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+                <!-- ✅ Otros que dependan de jQuery -->
                 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>>
 
                 <?php require_once __DIR__ . '/../ventasHistorialModales/registarAbonoCliente.php' ?>
 
 
                 <script>
+                    cargarClientes();
+                    async function cargarClientes() {
+                        console.log("cargo clientes");
+
+                        const select = document.getElementById('cliente_id_editar');
+                        if (!select) return;
+
+                        // 🔥 1. Capturamos el ID del cliente desde la URL
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const clienteIdUrl = urlParams.get('id');
+                        console.log('[cargarClientes] ID desde URL:', clienteIdUrl);
+
+                        try {
+                            const url = '/cfsistem/app/controllers/accesoController.php?action=obtenerClientes';
+                            const respuesta = await fetch(url);
+
+                            if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
+
+                            const resultado = await respuesta.json();
+                            console.log(resultado);
+
+                            if (resultado.success && Array.isArray(resultado.data)) {
+
+                                const clientes = resultado.data;
+
+                                // 🔥 2. Construir y vaciar opciones en el select nativo primero
+                                const fragment = document.createDocumentFragment();
+
+                                const first = document.createElement('option');
+                                first.value = '';
+                                first.textContent = '-- Seleccione un cliente --';
+                                fragment.appendChild(first);
+
+                                clientes.forEach(cliente => {
+                                    const opcion = document.createElement('option');
+                                    opcion.value = cliente.id;
+                                    opcion.textContent = String(cliente.nombre_comercial || '').toUpperCase();
+
+                                    opcion.dataset.nombre = String(cliente.nombre_comercial || '');
+                                    opcion.dataset.razonSocial = String(cliente.razon_social || '');
+                                    opcion.dataset.contacto = String(cliente.contacto || '');
+
+                                    fragment.appendChild(opcion);
+                                });
+
+                                select.replaceChildren(fragment);
+
+                                // 🔥 3. Destruir Select2 si ya estaba inicializado previamente
+                                if ($(select).hasClass('select2-hidden-accessible')) {
+                                    $(select).select2('destroy');
+                                }
+
+                                // 🔥 4. Inicializar Select2 con el DOM ya completamente poblado
+                                $(select).select2({
+                                    theme: 'bootstrap-5',
+                                    width: '100%',
+                                    dropdownParent: $(select).parent(),
+                                    matcher: function (params, data) {
+                                        if (!params.term || params.term.trim() === '') return data;
+
+                                        const term = String(params.term).toLowerCase().trim();
+                                        const text = String(data.text || '').toLowerCase();
+
+                                        const $el = $(data.element);
+                                        const razonSocial = String($el.data('razonSocial') || '').toLowerCase();
+                                        const contacto = String($el.data('contacto') || '').toLowerCase();
+
+                                        if (text.includes(term) || razonSocial.includes(term) || contacto.includes(term)) {
+                                            return data;
+                                        }
+
+                                        return null;
+                                    },
+                                    templateResult: function (state) {
+                                        if (!state.id) return state.text;
+
+                                        const $opt = $(state.element);
+                                        const nombre = String($opt.data('nombre') || state.text || '');
+                                        const razonSocial = String($opt.data('razonSocial') || '');
+                                        const contacto = String($opt.data('contacto') || '');
+
+                                        if (!razonSocial && !contacto) {
+                                            return $(`<span class="fw-semibold">${nombre.toUpperCase()}</span>`);
+                                        }
+
+                                        return $(`
+                        <div class="d-flex flex-column">
+                            <span class="fw-semibold">${nombre.toUpperCase()}</span>
+                            <div class="d-flex justify-content-between align-items-center gap-2 mt-1">
+                                <small class="text-truncate" style="max-width:65%;">${razonSocial.toUpperCase()}</small>
+                                <small class="fw-semibold text-nowrap">${contacto ? `👤 ${contacto.toUpperCase()}` : ''}</small>
+                            </div>
+                        </div>
+                    `);
+                                    },
+                                    templateSelection: function (state) {
+                                        if (!state.id) return state.text;
+                                        const nombre = String($(state.element).data('nombre') || state.text || '');
+                                        return nombre.toUpperCase();
+                                    }
+                                });
+
+                                // 🔥 5. Validar la coincidencia con el ID de la URL una vez cargado y pintado todo el sistema
+                                const targetId = clienteIdUrl ? String(clienteIdUrl).trim() : null;
+
+                                if (targetId) {
+                                    let coincide = false;
+
+                                    Array.from(select.options).forEach(opt => {
+                                        if (String(opt.value).trim() === targetId) {
+                                            coincide = true;
+                                        }
+                                    });
+
+                                    if (coincide) {
+                                        console.log("coincidencia:", targetId);
+                                        // Asignamos el valor directamente y actualizamos Select2
+                                        $(select).val(targetId).trigger('change.select2');
+                                        console.log('[cargarClientes] Selección final:', $(select).val());
+                                    } else {
+                                        console.warn('[cargarClientes] Cliente id', targetId, 'no está en la lista.');
+                                    }
+                                }
+
+                            } else {
+                                select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
+                                $(select).trigger('change.select2');
+                            }
+                        } catch (error) {
+                            select.innerHTML = '<option value="">Error al cargar la lista</option>';
+                            $(select).trigger('change.select2');
+                            console.error('Error al ejecutar cargarClientes:', error);
+                        }
+                    }
+
                     const modalNuevoAbonoObj = new bootstrap.Modal('#modalNuevoAbono');
 
 
@@ -888,7 +1042,9 @@
                         const fechaFin = document.getElementById('fecha_fin').value;
 
                         const urlParams = new URLSearchParams(window.location.search);
-                        const id = urlParams.get('id');
+
+                        const id = $('#cliente_id_editar').val();
+                        //urlParams.get('id');
 
                         console.log("ID:", id);
 

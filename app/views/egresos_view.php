@@ -392,7 +392,7 @@
                                 </select>
                             </div>
 
-                            <?php if ($_SESSION['rol_id'] == 1 || $_SESSION['rol_id'] == 3): ?>
+                           
                                 <div class="col-6 col-md-2">
                                     <label class="form-label fw-bold small text-uppercase text-body-secondary">Almacén</label>
                                     <select id="almacen_filtro" name="almacen_filtro"
@@ -405,7 +405,7 @@
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
-                            <?php endif; ?>
+                          
 
                             <div class="col-6 col-md-auto">
                                 <button type="submit"
@@ -497,21 +497,34 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <?php
-                                            $bg_tipo = match ($e['tipo']) {
-                                                'compra' => 'bg-info bg-opacity-10 text-info border-info',
-                                                'gasto' => 'bg-warning bg-opacity-10 text-warning-emphasis border-warning',
-                                                'pago_deuda' => 'bg-purple bg-opacity-10 text-purple border-purple',
-                                                default => 'bg-secondary bg-opacity-10 text-secondary'
-                                            };
-                                            if ($e['tipo'] == 'pago_deuda')
-                                                $bg_tipo = 'bg-primary bg-opacity-10 text-primary border-primary';
-                                            ?>
-                                            <span class="border py-1.5 px-2 fw-semibold text-uppercase <?= $bg_tipo ?>"
-                                                style="font-size: 0.65rem;">
-                                                <?= str_replace('_', ' ', strtoupper($e['tipo'])) ?>
-                                            </span>
-                                        </td>
+    <?php
+    $bg_tipo = match ($e['tipo']) {
+        'compra' => 'bg-info bg-opacity-10 text-info border-info',
+        'gasto' => 'bg-warning bg-opacity-10 text-warning-emphasis border-warning',
+        'pago_deuda' => 'bg-purple bg-opacity-10 text-purple border-purple',
+        default => 'bg-secondary bg-opacity-10 text-secondary'
+    };
+    if ($e['tipo'] == 'pago_deuda')
+        $bg_tipo = 'bg-primary bg-opacity-10 text-primary border-primary';
+    ?>
+    
+    <!-- Contenedor centrado -->
+    <div class="d-flex justify-content-center align-items-center gap-1 flex-wrap">
+        <!-- Etiqueta del tipo existente -->
+        <span class="border py-1.5 px-2 fw-semibold text-uppercase <?= $bg_tipo ?>"
+              style="font-size: 0.65rem; border-radius: 6px;">
+            <?= str_replace('_', ' ', strtoupper($e['tipo'])) ?>
+        </span>
+
+        <!-- Tarjeta para la solicitud si existe -->
+        <?php if (!empty($e['solicitud_id']) && $e['solicitud_id'] != 0): ?>
+            <span class="border bg-success bg-opacity-10 text-success border-success py-1.5 px-2 fw-bold text-uppercase shadow-sm"
+                  style="font-size: 0.65rem; border-radius: 6px; letter-spacing: 0.5px;">
+                SC #<?= htmlspecialchars($e['solicitud_id']) ?>
+            </span>
+        <?php endif; ?>
+    </div>
+</td>
                                         <td>
                                             <div class="card-title-text fw-medium small text-truncate" style="max-width: 150px;">
                                                 <?= htmlspecialchars($e['entidad']) ?>

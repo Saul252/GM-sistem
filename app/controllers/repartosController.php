@@ -326,6 +326,42 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
             }
             exit;
         }
+        if ($action === 'cancelar_entrega') {
+            if (ob_get_level())
+                ob_clean();
+            header('Content-Type: application/json');
+
+            // Recibimos el ID (puede venir por POST o REQUEST)
+            $id = trim($_REQUEST['id'] ?? '');
+
+            if (empty($id)) {
+                echo json_encode(["success" => false, "message" => "ID de entrega no válido."]);
+                exit;
+            }
+
+            try {
+                // Llamamos al método del modelo que hace toda la transacción (revertir lotes, inventario y limpiar tablas)
+                $resultado = $repartoM->cancelarEntrega($id);
+
+                if ($resultado) {
+                    echo json_encode([
+                        "success" => true,
+                        "message" => "Entrega cancelada correctamente. Stock e inventario devueltos al origen."
+                    ]);
+                } else {
+                    echo json_encode([
+                        "success" => false,
+                        "message" => "No se pudo completar la cancelación de la entrega."
+                    ]);
+                }
+            } catch (Exception $e) {
+                echo json_encode([
+                    "success" => false,
+                    "message" => "Error en el servidor: " . $e->getMessage()
+                ]);
+            }
+            exit;
+        }
         if ($action === 'get_detalle_ruta_completa') {
             if (ob_get_level())
                 ob_clean();

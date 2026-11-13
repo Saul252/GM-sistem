@@ -72,10 +72,12 @@ class EgresoModel
             IFNULL((SELECT SUM(cantidad_pendiente) FROM faltantes_ingreso WHERE compra_id = c.id), 0) AS piezas_faltantes,
             a.nombre AS almacen_nombre, 
             c.estado,
+            sol.id AS solicitud_id,
             CASE WHEN cpp.id IS NOT NULL AND cpp.estado != 'pagado' THEN 1 ELSE 0 END AS tiene_deuda,
             CASE WHEN cpp.id IS NOT NULL AND cpp.estado = 'pagado' THEN 1 ELSE 0 END AS pagado_cpp
         FROM compras c
         JOIN almacenes a ON c.almacen_id = a.id
+        LEFT JOIN solicitudes_compra sol ON sol.compra_id_final = c.folio
         LEFT JOIN cuentas_por_pagar cpp ON cpp.id_referencia_origen = c.id
         LEFT JOIN proveedores pro ON c.proveedor = pro.id
        
@@ -112,7 +114,7 @@ class EgresoModel
             IFNULL(nombre,''),
             '|||',
             IFNULL(direccion,''),
-             '|||',
+            '|||',
             IFNULL(id,'')
            
         )
@@ -122,6 +124,7 @@ class EgresoModel
     WHERE de.gasto_id = g.id and de.activo=1
 ) AS documento_url, g.categoria_id,
             0 AS piezas_faltantes, a.nombre AS almacen_nombre, g.estado,
+            NULL AS solicitud_id,
             0 AS tiene_deuda, 0 AS pagado_cpp
         FROM gastos g
         JOIN almacenes a ON g.almacen_id = a.id
@@ -158,6 +161,7 @@ class EgresoModel
             p.monto AS total, COALESCE(p.metodo_pago, 'efectivo') AS metodo_pago,
             'pago_deuda' AS tipo, NULL AS documento_url, 0 AS categoria_id,
             0 AS piezas_faltantes, a.nombre AS almacen_nombre, 'confirmado' AS estado,
+            NULL AS solicitud_id,
             0 AS tiene_deuda, 1 AS pagado_cpp
         FROM pagos_cuentas_por_pagar p
         JOIN almacenes a ON p.almacen_id = a.id

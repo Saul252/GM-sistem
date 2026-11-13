@@ -157,39 +157,31 @@
             $.ajax({
                 url: '/cfsistem/app/controllers/clientesEstatusController.php',
                 type: 'GET',
-                // Usamos 'action' como definimos en el switch del controlador
                 data: { action: 'listar' },
                 dataType: 'json',
                 success: function (res) {
                     if (res.success) {
                         let html = '';
                         console.log(res.data, res.admin);
-                        const clientes = res.data.filter(c => {
 
+                        const clientes = res.data.filter(c => {
                             const excluir =
                                 c.nombre === 'PÚBLICO EN GENERAL' &&
                                 c.rfc === "XAXX010101000" &&
                                 res.admin == false &&
                                 c.almacen_id != res.sesion;
 
-                            if (excluir) {
-                                console.log("j");
-                            }
-
                             return !excluir;
                         });
+
                         console.log(clientes);
+
                         clientes.forEach(c => {
-
-
-
                             const sDeuda = parseFloat(c.saldo_deuda || 0);
                             const pEntregas = parseInt(c.entregas_pendientes || 0);
                             const tieneVentas = parseInt(c.total_ventas || 0);
-                            let saldoFavor = parseFloat(c.saldo_a_favor);
-                            let saldoEnContra = parseFloat(c.saldo_en_contra);
-
-
+                            let saldoFavor = parseFloat(c.saldo_a_favor || 0);
+                            let saldoEnContra = parseFloat(c.saldo_en_contra || 0);
 
                             let badgePago, badgeEntrega, btnAccion;
 
@@ -198,43 +190,42 @@
                                 badgePago = '<span class="badge bg-light text-body-secondary border rounded-pill px-3">SIN COMPRAS</span>';
                                 badgeEntrega = '<span class="badge bg-light text-body-secondary border rounded-pill px-3">-</span>';
                                 btnAccion = `<button class="btn btn-sm btn-light disabled rounded-pill px-3">
-                                                <i class="bi bi-eye-slash"></i>
-                                             </button>`;
+                                        <i class="bi bi-eye-slash"></i>
+                                     </button>`;
                             } else {
-                                if (sDeuda > 0) {
+                                // 🛠️ LÓGICA DE SALDOS CORREGIDA Y JERARQUIZADA
+                                if (sDeuda > 0 || saldoEnContra > 0) {
                                     badgePago = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-3">CON DEUDA</span>';
-                                } else if (sDeuda < 0) {
+                                } else if (saldoFavor > 0) {
                                     badgePago = '<span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3">SALDO A FAVOR</span>';
                                 } else {
                                     badgePago = '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3">AL CORRIENTE</span>';
                                 }
+
                                 badgeEntrega = pEntregas > 0
                                     ? `<span class="badge bg-warning-subtle text-warning-dark border border-warning-subtle rounded-pill px-3">PENDIENTE (${pEntregas})</span>`
-                                    : '<span class="badge  text-body-secondary border rounded-pill px-3 text-uppercase small">Completo</span>';
+                                    : '<span class="badge text-body-secondary border rounded-pill px-3 text-uppercase small">Completo</span>';
 
-                                // CORRECCIÓN AQUÍ: Apuntamos al controlador del expediente con el ID del cliente
                                 btnAccion = `<a href="/cfsistem/app/controllers/clienteExpedienteController.php?id=${c.id}" 
-                    class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">
-                    <i class="bi bi-graph-up-arrow me-1"></i> Analizar
-                 </a><a href="/cfsistem/app/controllers/expedienteClienteProdutosController.php?id=${c.id}" 
-                    class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">
-                    <i class="bi bi-graph-up-arrow me-1"></i> Analizar Ventas Detalladas
-                 </a>
-                 `;
+                            class="btn btn-sm btn-success rounded-pill px-3 shadow-sm">
+                            <i class="bi bi-wallet2" style="font-size: 0.85rem;"></i> Estado de Cuenta
+                         </a>
+                         <a href="/cfsistem/app/controllers/expedienteClienteProdutosController.php?id=${c.id}" 
+                            class="btn btn-sm btn-primary rounded-pill px-3 shadow-sm">
+                            <i class="bi bi-graph-up-arrow me-1"></i> Ventas detalladas
+                         </a>`;
                             }
 
                             html += `
-                            <tr>
-                                <td>
-                                    <div class="fw-bold card-title-text">${c.nombre == 'PÚBLICO EN GENERAL' ? c.nombre + ' (' + c.almacen + ')' : c.nombre}</div>
-                                    <small class="text-body-secondary font-monospace">${c.rfc}</small>
-                                </td>
-                                <td class="text-center">${badgePago}</td>
-                                <td class="text-center">${badgeEntrega}</td>
-                                
-                               
-                                <td class="text-center">${btnAccion}</td>
-                            </tr>`;
+                    <tr>
+                        <td>
+                            <div class="fw-bold card-title-text">${c.nombre == 'PÚBLICO EN GENERAL' ? c.nombre + ' (' + c.almacen + ')' : c.nombre}</div>
+                            <small class="text-body-secondary font-monospace">${c.rfc}</small>
+                        </td>
+                        <td class="text-center">${badgePago}</td>
+                        <td class="text-center">${badgeEntrega}</td>
+                        <td class="text-center">${btnAccion}</td>
+                    </tr>`;
                         });
 
                         $('#listaEstatus').html(html);
@@ -244,7 +235,7 @@
                             "language": { "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json" },
                             "dom": 'rtp',
                             "pageLength": 15,
-                            "order": [[3, "desc"]] // Ordenar por mayor saldo pendiente
+                            "order": [[3, "desc"]]
                         });
 
                         // Buscador reactivo
@@ -257,13 +248,12 @@
                     }
                 },
                 error: function (xhr) {
-                    $('#listaEstatus').html(`<tr><td colspan="5" class="text-center text-danger py-4">
-                        <i class="bi bi-exclamation-triangle me-1"></i> Error al cargar datos del servidor.
-                    </td></tr>`);
+                    $('#listaEstatus').html(`<tr><td colspan="4" class="text-center text-danger py-4">
+                <i class="bi bi-exclamation-triangle me-1"></i> Error al cargar datos del servidor.
+            </td></tr>`);
                 }
             });
-        }
-    </script>
+        } </script>
 
     <script>
         $(document).ready(function () {

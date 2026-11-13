@@ -3,78 +3,94 @@
        MODAL DESPACHO VENTA TOTAL — z-index 100080
        ═══════════════════════════════════════════════════════════ */
     #modalDespachoVentaTotal {
-        z-index: 100080 !important;
+        z-index: 10080 !important;
+    }
+
+    /* 🔥 Forzar que SweetAlert2 y su fondo oscuro aparezcan siempre arriba (por encima del modal 10110) */
+    .swal2-container {
+        z-index: 10120 !important;
     }
 </style>
 
 <div class="modal fade" id="modalDespachoVentaTotal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="width: 70vw; max-width: 70vw;">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 25px;">
-            <div class="modal-header border-0 border border-subtle"
-                style="border-radius: 25px 25px 0 0; padding: 1.5rem 2rem;">
-                <div class="bg-success text-white rounded p-2 d-flex align-items-center justify-content-center me-3"
-                    style="width: 45px; height: 45px; border-radius: 12px !important;">
-                    <i class="bi bi-box-seam-fill fs-4"></i>
-                </div>
-                <div>
-                    <h5 class="modal-title fw-bold mb-0">Despacho Masivo Por Venta</h5>
-                    <span class="bg-light card-title-text border mt-1" id="txtFolioVenta">Cargando...</span>
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content border-0 shadow-lg bg-body text-body" style="border-radius: 24px; overflow: hidden;">
+
+            <!-- HEADER -->
+            <div class="modal-header border-bottom border-secondary-subtle px-4 py-3 bg-body-tertiary">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="bg-success text-white d-flex align-items-center justify-content-center shadow-sm"
+                        style="width: 48px; height: 48px; border-radius: 14px;">
+                        <i class="bi bi-box-seam-fill fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-1">Despacho Masivo Por Venta</h5>
+                        <span class="badge bg-secondary-subtle text-secondary border px-2 py-1 fw-semibold"
+                            id="txtFolioVenta">Cargando...</span>
+                    </div>
                 </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
-            <div class="modal-body px-4 py-3">
-                <div class="table-responsive">
-                    <table class="table table-hover table-bordered align-middle">
-                        <thead class="table-light">
+            <!-- BODY -->
+            <div class="modal-body px-4 py-4">
+                <!-- Tabla limpia y adaptable a modo oscuro -->
+                <div class="table-responsive rounded-4 border border-secondary-subtle shadow-sm mb-4">
+                    <table class="table table-hover align-middle mb-0 text-body">
+                        <thead class="table-light border-bottom border-secondary-subtle">
                             <tr>
-                                <th>Producto</th>
-                                <th>Disponible</th>
-                                <th>Comprada</th>
-                                <th>Restante</th>
-                                <th>Entregar</th>
-                                <th>Lote</th>
+                                <th class="py-3 px-3">Producto</th>
+                                <th class="py-3 px-3">Disponible</th>
+                                <th class="py-3 px-3">Comprada</th>
+                                <th class="py-3 px-3">Restante</th>
+                                <th class="py-3 px-3" style="width: 130px;">Entregar</th>
+                                <th class="py-3 px-3">Lote</th>
                             </tr>
                         </thead>
                         <tbody id="listaItemsDespacho"></tbody>
                     </table>
                 </div>
 
+                <!-- SECCIÓN LOGÍSTICA -->
                 <div id="seccionLogisticaMasiva" class="d-none animate__animated animate__fadeIn">
-                    <hr class="my-4 opacity-10">
+                    <hr class="my-4 border-secondary-subtle opacity-50">
 
-                    <div class="p-3 border rounded-4 border border-subtle shadow-sm mb-3">
+                    <!-- Selector de método -->
+                    <div class="p-3 bg-body-secondary rounded-4 border border-secondary-subtle shadow-sm mb-3">
                         <label class="text-uppercase fw-bold text-primary mb-2 d-block"
                             style="font-size: 0.7rem; letter-spacing: 1.2px;">Método de Salida</label>
-                        <div class="btn-group w-100" role="group">
+                        <div class="btn-group w-100 shadow-sm" role="group">
                             <input type="radio" class="btn-check" name="tipo_entrega_masiva" id="optPatio" value="patio"
                                 checked onchange="toggleFormRuta(false)">
-                            <label class="btn btn-outline-success rounded-start-pill py-2 fw-bold" for="optPatio">
+                            <label class="btn btn-outline-success py-2 fw-bold" for="optPatio">
                                 <i class="bi bi-box-seam me-2"></i>ENTREGA EN PATIO
                             </label>
 
                             <input type="radio" class="btn-check" name="tipo_entrega_masiva" id="optRuta" value="ruta"
                                 onchange="toggleFormRuta(true)">
-                            <label class="btn btn-outline-primary rounded-end-pill py-2 fw-bold" for="optRuta">
+                            <label class="btn btn-outline-primary py-2 fw-bold" for="optRuta">
                                 <i class="bi bi-truck me-2"></i>ASIGNAR RUTA
                             </label>
                         </div>
                     </div>
 
+                    <!-- Formulario de Ruta / Logística -->
                     <div id="formRutaIntegrado" class="animate__animated animate__fadeInUp">
-                        <div id="wrapperLogistica" class="p-4 rounded-4 shadow-sm"
-                            style="transition: all 0.3s ease; border: 1px solid;">
+                        <div id="wrapperLogistica"
+                            class="p-4 rounded-4 shadow-sm bg-body-tertiary border border-secondary-subtle"
+                            style="transition: all 0.3s ease;">
                             <div class="row g-3">
                                 <div class="col-12">
                                     <div id="contenedorDireccion"
-                                        class="p-3 rounded-4 mb-1 border border border-subtle shadow-sm">
+                                        class="p-3 rounded-4 bg-body border border-secondary-subtle shadow-sm">
                                         <label id="lblDinamicoPrincipal" class="small fw-bold text-body-secondary mb-1"
                                             style="font-size: 0.65rem;">PUNTO DE ENTREGA / OBRA</label>
                                         <div class="input-group">
-                                            <span class="input-group-text border border-subtle border-0">
-                                                <i id="iconDinamico" class="bi bi-geo-alt-fill text-danger"></i>
+                                            <span class="input-group-text bg-transparent border-0 pe-2">
+                                                <i id="iconDinamico" class="bi bi-geo-alt-fill text-danger fs-5"></i>
                                             </span>
-                                            <textarea id="mv_direccion" class="form-control border-0 p-2 text-uppercase"
+                                            <textarea id="mv_direccion"
+                                                class="form-control bg-transparent border-0 text-body p-1 text-uppercase shadow-none"
                                                 rows="2" style="font-size: 0.9rem; resize: none;"
                                                 placeholder="Dirección exacta..."></textarea>
                                         </div>
@@ -83,23 +99,25 @@
                                 <div class="col-md-6" id="colVehiculo">
                                     <label class="small fw-bold text-body-secondary mb-1">UNIDAD / VEHÍCULO</label>
                                     <select id="mv_vehiculo_id"
-                                        class="form-select border-0 shadow-sm rounded-3 p-3 border border-subtle"></select>
+                                        class="form-select bg-body shadow-sm rounded-3 p-2.5 border-secondary-subtle text-body"></select>
                                 </div>
                                 <div class="col-md-6">
                                     <label id="lblPersonal" class="small fw-bold text-body-secondary mb-1">CHOFER
                                         RESPONSABLE</label>
                                     <select id="mv_chofer_id"
-                                        class="form-select border-0 shadow-sm rounded-3 p-3 border border-subtle"></select>
+                                        class="form-select bg-body shadow-sm rounded-3 p-2.5 border-secondary-subtle text-body"></select>
                                 </div>
 
                                 <div class="col-12">
                                     <label class="small fw-bold text-body-secondary mb-1">AYUDANTES DE CARGA
                                         (OPCIONAL)</label>
                                     <select id="mv_tripulantes"
-                                        class="form-select border-0 shadow-sm rounded-3 p-2 border border-subtle"
+                                        class="form-select bg-body shadow-sm rounded-3 p-2 border-secondary-subtle text-body"
                                         style="font-size: 0.85rem;"></select>
-                                    <small class="text-body-secondary mt-2 d-block" style="font-size: 0.6rem;">* Mantén
-                                        presionada la tecla <b>Ctrl</b> para elegir varios.</small>
+                                    <small class="text-body-secondary mt-1 d-block" style="font-size: 0.65rem;">
+                                        <i class="bi bi-info-circle me-1"></i>Mantén presionada la tecla <b>Ctrl</b>
+                                        para elegir varios.
+                                    </small>
                                 </div>
                             </div>
                         </div>
@@ -107,11 +125,12 @@
                 </div>
             </div>
 
-            <div class="modal-footer border-0 border border-subtle py-3 px-4" style="border-radius: 0 0 25px 25px;">
-                <button type="button" class="btn btn-light rounded-pill px-4 fw-bold"
+            <!-- FOOTER -->
+            <div class="modal-footer border-top border-secondary-subtle py-3 px-4 bg-body-tertiary">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4 fw-bold"
                     data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" id="btnEjecutarDespachoMasivo"
-                    class="btn btn-success rounded-pill px-5 fw-bold shadow" disabled>
+                    class="btn btn-success rounded-pill px-5 fw-bold shadow-sm" disabled>
                     <i class="bi bi-check-circle me-2"></i>Confirmar Despacho
                 </button>
             </div>
@@ -157,6 +176,10 @@
             $('#lblPersonal').text('CHOFER RESPONSABLE');
             $('#colVehiculo').fadeIn();
             btnConfirmar.removeClass('btn-success').addClass('btn-primary');
+
+            // 🔥 SI ES RUTA: El vehículo pasa a ser obligatorio
+            $('#mv_vehiculo_id').prop('required', true);
+
         } else {
             $('#lblDinamicoPrincipal').text('NOTAS / QUIÉN RECIBE (OPCIONAL)');
             $('#iconDinamico').removeClass('bi-geo-alt-fill text-danger').addClass('bi-person-fill text-success');
@@ -164,6 +187,11 @@
             $('#lblPersonal').text('DESPACHADOR RESPONSABLE (PATIO)');
             $('#colVehiculo').hide();
             btnConfirmar.removeClass('btn-primary').addClass('btn-success');
+
+            // 🔥 SI NO ES RUTA (ES PATIO): Quitamos la obligatoriedad del vehículo para que no bloquee
+            $('#mv_vehiculo_id').prop('required', false);
+            // Limpiamos su valor por si se quedó seleccionado algo antes
+            $('#mv_vehiculo_id').val('');
         }
     }
 
@@ -176,6 +204,8 @@
         );
         return await resp.json();
     }
+
+
 
     async function abrirModalDespachoVentaTotal(almacenId, ventaId) {
         console.log('[Despacho] almacenId:', almacenId, 'ventaId:', ventaId);
@@ -320,7 +350,7 @@
             // 3. Recursos
             const [respDetalle, respRecursos] = await Promise.all([
                 fetch(`${URL_ENTREGAS}?ajax=get_recursos_reparto&id=${primerId}`),
-                fetch(`${URL_ENTREGAS}?ajax=get_recursos_sucursal&almacen_id=${almacenId}`)
+                fetch(`${URL_ENTREGAS}?ajax=get_recursos_sucursal&almacen_id=${0}`)
             ]);
 
             const resDetalle = await respDetalle.json();
@@ -418,13 +448,31 @@
             contenedor.innerHTML = `<div class="alert alert-danger mx-2 small">${err.message}</div>`;
         }
     }
+    document.addEventListener('change', function (e) {
+        if (!e.target.matches('select.lote-select')) return;
+
+        const dvid = window.extraerDvid(e.target.dataset.dvid);
+        const item = window.carrito[dvid];
+        if (!item) {
+            console.warn(`[Lote] No existe carrito[${dvid}]`);
+            return;
+        }
+
+        const optionSeleccionada = e.target.options[e.target.selectedIndex];
+        const stockLote = parseFloat(optionSeleccionada.dataset.stock || 0);
+
+        item.lote = e.target.value;
+        item.loteNombre = optionSeleccionada.textContent;
+
+        console.log('dvid:', dvid, '| Producto:', item.nombre, '| Lote:', item.lote, '| Stock:', stockLote);
+    });
 
     async function procesarEntregaFinal() {
         const fd = new FormData();
         const itemsValidos = [];
         const errores = [];
 
-        // 1) Sincronizar hidden + recolectar valores
+        // 1) Sincronizar hidden + recolectar valores del DOM
         $('#listaItemsDespacho tr').each(function () {
             const $tr = $(this);
             const $inputVisible = $tr.find('input.entregador');
@@ -432,7 +480,6 @@
 
             if (!$inputVisible.length || $inputVisible.prop('disabled')) return;
 
-            // ✅ dvid seguro usando el helper global
             const dvid = window.extraerDvid($inputVisible.attr('data-dvid'))
                 || window.extraerDvid($tr.attr('data-dvid'));
 
@@ -464,7 +511,17 @@
             const cantBase = (v * factor).toFixed(4);
             $inputHidden.val(cantBase);
 
-            itemsValidos.push({ dvid, cantVisible: v, cantBase, factor });
+            // Obtenemos el lote seleccionado desde window.carrito
+            const loteSeleccionado = window.carrito[dvid]?.lote || null;
+
+            itemsValidos.push({
+                dvid,
+                nombreProducto: window.carrito[dvid]?.nombre || 'Desconocido',
+                cantVisible: v,
+                cantBase,
+                factor,
+                loteId: loteSeleccionado
+            });
         });
 
         if (errores.length) {
@@ -482,48 +539,46 @@
             return false;
         }
 
-        // 2) Validar lote por dvid
+        // 2) Validar que cada ítem válido tenga su lote asignado
         for (const it of itemsValidos) {
-            const dvid = window.extraerDvid(it.dvid);
-            if (!dvid) {
-                Swal.fire('Error', 'Identificador de fila inválido. Recarga el modal.', 'error');
+            if (!it.loteId) {
+                Swal.fire('Atención', `Debes seleccionar un lote para el producto con cantidad (dvid ${it.dvid}).`, 'warning');
                 return false;
             }
-            it.dvid = dvid;
-
-            const $lote = $(`#merma_lote_${dvid}`);
-            if (!$lote.length) {
-                Swal.fire('Error', `No se encontró el selector de lote para dvid=${dvid}.`, 'error');
-                return false;
-            }
-            const loteVal = $lote.val();
-            if (!loteVal) {
-                Swal.fire('Atención', `Debes seleccionar un lote para el producto con cantidad (dvid ${dvid}).`, 'warning');
-                return false;
-            }
-            it.loteId = loteVal;
         }
 
         // 3) Datos del formulario
-        const tipo = $('input[name="tipo_entrega_masiva"]:checked').val();
+        const tipo = $('input[name="tipo_entrega_masiva"]:checked').val(); // 'ruta' o 'patio' (o el valor que maneje tu input)
         const vehiculoId = $('#mv_vehiculo_id').val();
         const choferId = $('#mv_chofer_id').val();
         const tripulanteId = $('#mv_tripulantes').val();
         const direccion = ($('#mv_direccion').val() || '').trim();
 
+        // 🔥 Validación dinámica basada en el tipo de entrega seleccionado
         if (tipo === 'ruta') {
-            if (!vehiculoId) { Swal.fire({ icon: 'error', title: 'Campos incompletos', text: 'Por favor, selecciona un vehículo.', confirmButtonColor: '#d33' }); return false; }
-            if (!choferId) { Swal.fire({ icon: 'error', title: 'Campos incompletos', text: 'Por favor, selecciona un chofer.', confirmButtonColor: '#d33' }); return false; }
+            if (!vehiculoId) {
+                Swal.fire({ icon: 'error', title: 'Campos incompletos', text: 'Por favor, selecciona un vehículo para la ruta.', confirmButtonColor: '#d33' });
+                return false;
+            }
+            if (!choferId) {
+                Swal.fire({ icon: 'error', title: 'Campos incompletos', text: 'Por favor, selecciona un chofer responsable.', confirmButtonColor: '#d33' });
+                return false;
+            }
+            if (!direccion) {
+                Swal.fire({ icon: 'error', title: 'Campos incompletos', text: 'Por favor, escribe la dirección de entrega.', confirmButtonColor: '#d33' });
+                return false;
+            }
+        } else {
+            // Validación para modo PATIO (el vehículo ya no se valida porque está oculto/desactivado)
+            if (!choferId) {
+                Swal.fire({ icon: 'error', title: 'Campos incompletos', text: 'Por favor, selecciona un despachador responsable.', confirmButtonColor: '#d33' });
+                return false;
+            }
+            // Si en patio la dirección es opcional, omitimos su validación estricta aquí.
         }
-        if (!direccion) {
-            Swal.fire({ icon: 'error', title: 'Campos incompletos', text: 'Por favor, escribe una dirección.', confirmButtonColor: '#d33' });
-            return false;
-        }
-
-        // 4) Armar FormData
+        // 4) Armar FormData para el primer endpoint (`guardarEntregaMasiva`)
         itemsValidos.forEach(it => {
             fd.append(`productos[${it.dvid}]`, it.cantBase);
-            fd.append(`lotes[${it.dvid}]`, it.loteId);
         });
 
         fd.append('tipo_logistica', tipo);
@@ -534,19 +589,20 @@
         fd.append('venta_id', ventaActual.info.id);
 
         try {
+            // 🔥 LLAMADA AL PRIMER CONTROLADOR (guardarEntregaMasiva)
             const res = await fetch(`${URL_CONTROLLER}?action=guardarEntregaMasiva`, { method: 'POST', body: fd });
             const result = await res.json();
-            console.log('[Despacho] result.ids =', result.ids);
+
+            console.log('[Despacho] Respuesta de guardarEntregaMasiva (result.ids):', result.ids);
 
             if (result.status === 'success') {
-                if (typeof modalObj !== 'undefined' && modalObj && typeof modalObj.hide === 'function') modalObj.hide();
-                if (modal && typeof modal.hide === 'function') modal.hide();
-                if (typeof getVentas === 'function') getVentas();
-
-                Swal.fire({ title: '¡Listo!', text: 'Entrega guardada correctamente', icon: 'success' });
-
                 if (Array.isArray(result.ids) && result.ids.length) {
-                    await ejecutarSalidaMasivaFinal(result.ids, itemsValidos);
+                    // 🔥 LLAMAMOS A LA SEGUNDA FUNCIÓN PASÁNDOLE LOS IDS DEL SERVIDOR Y LOS LOTES LOCALES
+                    if (typeof ejecutarSalidaMasivaFinal === 'function') {
+                        await ejecutarSalidaMasivaFinal(result.ids, itemsValidos);
+                    } else {
+                        console.error("La función ejecutarSalidaMasivaFinal no está definida.");
+                    }
                 }
                 return true;
             } else {
@@ -554,32 +610,11 @@
                 return false;
             }
         } catch (e) {
-            console.error("Error al procesar entrega:", e);
+            console.error("Error al procesar entrega masiva:", e);
             Swal.fire('Error Técnico', 'Hubo un problema de conexión con el servidor', 'error');
             return false;
         }
     }
-
-    // Listener de lote con dvid
-    document.addEventListener('change', function (e) {
-        if (!e.target.matches('select.lote-select')) return;
-
-        const dvid = window.extraerDvid(e.target.dataset.dvid);
-        const item = window.carrito[dvid];
-        if (!item) {
-            console.warn(`[Lote] No existe carrito[${dvid}]`);
-            return;
-        }
-
-        const optionSeleccionada = e.target.options[e.target.selectedIndex];
-        const stockLote = parseFloat(optionSeleccionada.dataset.stock || 0);
-
-        item.lote = e.target.value;
-        item.loteNombre = optionSeleccionada.textContent;
-
-        console.log('dvid:', dvid, '| Producto:', item.nombre, '| Lote:', item.lote, '| Stock:', stockLote);
-    });
-
     async function ejecutarSalidaMasivaFinal(result_ids, itemsValidos) {
         const tipo = $('input[name="tipo_entrega_masiva"]:checked').val();
 
@@ -599,35 +634,26 @@
             formData.append('direccion', $('#mv_direccion').val() || '');
             formData.append('tripulante_id', $('#mv_tripulantes').val() || 0);
 
-            // ✅ FIX: extraer movId y dvid de forma segura
-            result_ids.forEach(row => {
+            // ───────────────────────────────────────────────────────────
+            // movId  → viene del servidor:   result_ids[i].movimiento_id
+            // loteId → viene de itemsValidos: itemsValidos[i].loteId
+            // Se cruzan por índice (ambos se armaron en el mismo orden)
+            // ───────────────────────────────────────────────────────────
+            result_ids.forEach((row, index) => {
                 if (row == null) return;
 
-                let movId, dvid;
-
-                if (typeof row === 'object') {
-                    movId = row.movimiento_id ?? row.movId ?? row.id ?? null;
-                    dvid = window.extraerDvid(row.dvid ?? row.dvid_id ?? row);
-                } else {
-                    movId = row;
-                    dvid = '';
-                }
-
-                // fallback: buscar dvid por movimiento_id en itemsValidos
-                if (!dvid && movId != null && Array.isArray(itemsValidos)) {
-                    const match = itemsValidos.find(it => String(it.dvid) === String(movId));
-                    if (match) dvid = window.extraerDvid(match.dvid);
-                }
-
-                const loteVal = (dvid && dvid !== '[object Object]')
-                    ? ($(`#merma_lote_${dvid}`).val() || '')
-                    : '';
+                const movId = row.movimiento_id ?? row.movId ?? row.id ?? null;
+                const loteVal = itemsValidos[index]?.loteId ?? '';
 
                 if (movId != null) formData.append('ids_movimientos[]', movId);
                 formData.append('lotes[]', loteVal);
 
-                console.log('[SalidaMasiva] movId:', movId, '| dvid:', dvid, '| lote:', loteVal);
+                console.log('[SalidaMasiva] movId:', movId, '| lote:', loteVal);
             });
+
+            // Debug: confirma alineación y que los lotes viajan con valor
+            console.log('[SalidaMasiva] ids_movimientos:', formData.getAll('ids_movimientos[]'));
+            console.log('[SalidaMasiva] lotes:', formData.getAll('lotes[]'));
 
             const resp = await fetch('entregasController.php', { method: 'POST', body: formData });
             const res = await resp.json();
@@ -650,7 +676,6 @@
             Swal.fire('Error de Despacho', e.message, 'error');
         }
     }
-
     async function cargarRepartos2(idVenta) {
         try {
             const resp = await fetch(`/cfsistem/app/controllers/repartosController.php?action=get_repartos_entrega&id=${idVenta}`);

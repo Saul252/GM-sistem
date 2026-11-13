@@ -2,6 +2,11 @@
     #modalImprimirRuta {
         z-index: 10110 !important;
     }
+
+    /* 🔥 Forzar que SweetAlert2 y su fondo oscuro aparezcan siempre arriba (por encima del modal 10110) */
+    .swal2-container {
+        z-index: 10120 !important;
+    }
 </style>
 
 <div class="modal fade" id="modalImprimirRuta" tabindex="-1">
@@ -19,6 +24,7 @@
                         onclick="imprimirModalRuta()">
                         <span>🖨</span> Imprimir
                     </button>
+                    <div id="contenedorBotonCancelar"></div>
                 </div>
 
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -63,13 +69,70 @@
     function limpiarDireccion(dir) {
         if (!dir) return '-';
 
-        const prefijos = /^(calle|col\.?|colonia|pueblo|ciudad|cp|c\.p\.|estado|municipio|delegaci[oó]n|entre calles?)\s+/i;
+        // Palabras comunes a omitir si están solas o al inicio
+        const prefijos = /^(calle|col\.?|colonia|pueblo|ciudad|cp|c\.p\.|estado|municipio|delegaci[oó]n|entre calles?)\b/i;
 
         return String(dir)
             .split(',')
-            .map(seg => seg.trim().replace(prefijos, '').trim())
-            .filter(seg => seg.length > 0)
+            .map(seg => {
+                let limpio = seg.trim();
+                // Quitamos el prefijo si está al inicio
+                limpio = limpio.replace(prefijos, '').trim();
+                // Quitamos signos de puntuación sobrantes al inicio o final del segmento (:, ;, ., etc.)
+                limpio = limpio.replace(/^[:;.,\s]+|[:;.,\s]+$/g, '');
+                return limpio;
+            })
+            // Filtramos segmentos vacíos o que hayan quedado reducidos a palabras genéricas o símbolos
+            .filter(seg => seg.length > 0 && !/^(pueblo|colonia|calle|cp)$/i.test(seg))
             .join(', ');
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // CANCELAR ENTREGA
+    // ═══════════════════════════════════════════════════════════════
+    function cancelarEntrega(idEntrega) {
+        Swal.fire({
+            title: '¿Estás seguro?',
+            text: "¡Se cancelará la entrega y se devolverá el stock al inventario y lotes!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Sí, cancelar entrega',
+            cancelButtonText: 'No'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '/cfsistem/app/controllers/repartosController.php',
+                    type: 'GET',
+                    dataType: 'json',
+                    data: {
+                        action: 'cancelar_entrega',
+                        id: idEntrega
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire(
+                                '¡Cancelado!',
+                                response.message,
+                                'success'
+                            ).then(() => {
+                                // Cerrar el modal actual y refrescar la vista
+                                const modalElement = document.getElementById('modalImprimirRuta');
+                                const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                                if (modalInstance) modalInstance.hide();
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire('Error', response.message || 'No se pudo procesar la solicitud.', 'error');
+                        }
+                    },
+                    error: function () {
+                        Swal.fire('Error de red', 'Ocurrió un error al comunicarse con el servidor.', 'error');
+                    }
+                });
+            }
+        });
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -78,6 +141,12 @@
     async function imprimirRuta(entrega_ida, folioViaje) {
 
         document.getElementById('folioRutaPrint').textContent = entrega_ida;
+        // Inyectamos el botón con su respectivo ID en la cabecera
+        document.getElementById('contenedorBotonCancelar').innerHTML = `
+    <button type="button" class="btn btn-outline-danger btn-sm px-2 d-flex align-items-center gap-1" onclick="cancelarEntrega('${entrega_ida}')">
+        <i class="bi bi-x-circle"></i> Cancelar Entrega
+    </button>
+`;
 
         const respuesta = await fetch(
             `/cfsistem/app/controllers/repartosController.php?action=get_ruta_entrega_por_despacho&entrega_id=${entrega_ida}&id=${encodeURIComponent(folioViaje)}`
@@ -112,7 +181,10 @@
                     ${fmtNumRuta(fmt.cantidad)} <span class="text-body-secondary fw-normal small">${fmt.unidad}</span>
                 </td>
                 <td class="text-center">
-                    <span class="badge ${badgeColor} text-uppercase font-monospace">${prod.estatus_logistico}</span>
+                    <div class="d-flex align-items-center justify-content-center gap-2">
+                        <span class="badge ${badgeColor} text-uppercase font-monospace">${prod.estatus_logistico}</span>
+                        
+                    </div>
                 </td>
             </tr>
         `;
@@ -381,7 +453,7 @@
                 }
 
                 .info-value-main {
-                    font-size: 1.25rem;
+                   
                     font-weight: 400;
                     color: var(--text-primary);
                     letter-spacing: -0.01em;
@@ -389,7 +461,7 @@
                 }
 
                 .info-value {
-                    font-size: 1rem;
+                    
                     font-weight: 500;
                     color: var(--text-primary);
                     letter-spacing: -0.01em;
@@ -437,11 +509,15 @@
             <div class="info-grid">
                 <div class="info-card">
                     <div class="info-card-body">
-                        <span class="info-label">Cliente Destino</span>
-                        <div class="info-value-main">${datos[0].cliente ?? '-'}</div>
+                        
+                        <div class="">Cliente Destino: ${datos[0].cliente ?? '-'}</div>
                         <div class="info-meta">
                             <span class="meta-title">Teléfono</span>
                             <span class="meta-value">${datos[0].tel_cliente ?? 'Sin teléfono'}</span>
+                            </div>
+                       <div class="info-meta">
+                            <span class="meta-title">Direccion</span>
+                            <span class="meta-value">${direccion ?? ''}</span>
                         </div>
 
                     </div>
@@ -492,7 +568,7 @@
         const contenido = document.getElementById('contenidoRutaPrint').innerHTML;
         const folio = document.getElementById('folioRutaPrint')?.textContent?.trim() || 'RUTA';
 
-        // 1. Crear iframe oculto dentro de la misma página (no abre ventana nueva)
+        1.         //Crear iframe oculto dentro de la misma página (no abre ventana nueva)
         const iframe = document.createElement('iframe');
         iframe.setAttribute('aria-hidden', 'true');
         iframe.style.position = 'fixed';

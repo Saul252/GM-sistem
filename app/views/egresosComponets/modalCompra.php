@@ -62,7 +62,7 @@
                                         <i class="bi bi-box-seam"></i> Almacén de Cargo
                                     </label>
 
-                                    <?php $es_admin = ($_SESSION['rol_id'] == 1); ?>
+                                    <?php $es_admin = ($_SESSION['rol_id'] == 1 || $_SESSION['almacen_id'] == 0); ?>
 
                                     <div class="input-group shadow-sm">
                                         <select id="almacen_id_cabecera_visual"

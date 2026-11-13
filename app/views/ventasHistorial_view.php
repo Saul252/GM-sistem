@@ -166,77 +166,88 @@
                 padding: 1rem;
             }
         }
+
         /* ============================================================
    PAGE LOADER — Overlay de carga a pantalla completa
    ============================================================ */
 
-#pageLoader {
-    position: fixed;
-    inset: 0;
-    z-index: 9998;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: rgba(245, 245, 247, 0.85);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    transition: opacity .35s ease, visibility .35s ease;
-}
+        #pageLoader {
+            position: fixed;
+            inset: 0;
+            z-index: 9998;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(245, 245, 247, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            transition: opacity .35s ease, visibility .35s ease;
+        }
 
-#pageLoader.oculto {
-    opacity: 0;
-    visibility: hidden;
-    pointer-events: none;
-}
+        #pageLoader.oculto {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
 
-.page-loader-logo {
-    width: 68px;
-    height: 68px;
-    border-radius: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #376bd8, #2855b8);
-    color: #fff;
-    font-size: 1.8rem;
-    box-shadow: 0 12px 30px rgba(55, 107, 216, .35);
-    animation: pulseLogo 1.6s ease-in-out infinite;
-}
+        .page-loader-logo {
+            width: 68px;
+            height: 68px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #376bd8, #2855b8);
+            color: #fff;
+            font-size: 1.8rem;
+            box-shadow: 0 12px 30px rgba(55, 107, 216, .35);
+            animation: pulseLogo 1.6s ease-in-out infinite;
+        }
 
-.page-loader-spinner {
-    margin-top: 22px;
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    border: 3px solid rgba(55, 107, 216, .15);
-    border-top-color: #376bd8;
-    animation: girar .85s linear infinite;
-}
+        .page-loader-spinner {
+            margin-top: 22px;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 3px solid rgba(55, 107, 216, .15);
+            border-top-color: #376bd8;
+            animation: girar .85s linear infinite;
+        }
 
-.page-loader-text {
-    margin-top: 16px;
-    font-weight: 600;
-    font-size: .9rem;
-    color: #3a3a3c;
-}
+        .page-loader-text {
+            margin-top: 16px;
+            font-weight: 600;
+            font-size: .9rem;
+            color: #3a3a3c;
+        }
 
-@keyframes girar {
-    to { transform: rotate(360deg); }
-}
+        @keyframes girar {
+            to {
+                transform: rotate(360deg);
+            }
+        }
 
-@keyframes pulseLogo {
-    0%, 100% { transform: scale(1); }
-    50%      { transform: scale(1.06); }
-}
+        @keyframes pulseLogo {
 
-/* Dark mode */
-[data-bs-theme="dark"] #pageLoader {
-    background: rgba(28, 28, 30, .85);
-}
-[data-bs-theme="dark"] .page-loader-text {
-    color: #f5f5f7;
-}
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.06);
+            }
+        }
+
+        /* Dark mode */
+        [data-bs-theme="dark"] #pageLoader {
+            background: rgba(28, 28, 30, .85);
+        }
+
+        [data-bs-theme="dark"] .page-loader-text {
+            color: #f5f5f7;
+        }
     </style>
 </head>
 
@@ -282,24 +293,27 @@
                         </button>
                     </div>
 
-                    <!-- Filtros -->
-                    <div class="row g-3 align-items-end">
+                    <!-- Filtros optimizados -->
+                    <div class="row g-2 align-items-end">
 
-                        <div class="col-md-3">
-                            <label
-                                class="form-label small fw-semibold text-body-secondary text-uppercase mb-1">Buscador</label>
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-body-tertiary border-end-0 rounded-start-3">
-                                    <i class="bi bi-search text-body-secondary"></i>
-                                </span>
-                                <input type="text" id="f_search" class="form-control border-start-0 rounded-end-3"
-                                    placeholder="Folio o Cliente..." onkeyup="getVentas()">
-                            </div>
-                        </div>
+                        <!-- Buscador súper compacto (aprox. 1/4 o menos de ancho en pantallas grandes) -->
+                      <div class="col-xxl-2 col-xl-2 col-lg-3 col-md-4 col-sm-6" style="min-width: 150px;">
+    <label class="form-label small fw-semibold text-body-secondary text-uppercase mb-1"
+        style="font-size: 0.7rem;">Buscador</label>
+    <div class="input-group input-group-sm">
+        <span class="input-group-text bg-body-tertiary border-end-0 rounded-start-3 px-2">
+            <i class="bi bi-search text-body-secondary" style="font-size: 0.75rem;"></i>
+        </span>
+        <!-- Cambiamos onkeyup por oninput y apuntamos a la función con delay -->
+        <input type="text" id="f_search" class="form-control border-start-0 rounded-end-3"
+            placeholder="Folio..." oninput="filtrarConDebounce()">
+    </div>
+</div>
 
-                        <div class="col-md-2">
-                            <label class="form-label small fw-semibold text-body-secondary text-uppercase mb-1">Estatus
-                                Entrega</label>
+                        <!-- Selectores compactos distribuidos equitativamente -->
+                        <div class="col-xxl col-xl col-lg col-md-3 col-sm-6" style="min-width: 120px;">
+                            <label class="form-label small fw-semibold text-body-secondary text-uppercase mb-1"
+                                style="font-size: 0.7rem;">Entrega</label>
                             <select id="f_status" class="form-select form-select-sm rounded-3" onchange="getVentas()">
                                 <option value="">Todos</option>
                                 <option value="pendiente">Pendiente</option>
@@ -308,18 +322,19 @@
                             </select>
                         </div>
 
-                        <div class="col-md-2">
+                        <div class="col-xxl col-xl col-lg col-md-3 col-sm-6" style="min-width: 130px;">
                             <label for="select-usuarios"
-                                class="form-label small fw-semibold text-body-secondary text-uppercase mb-1">Vendedor</label>
+                                class="form-label small fw-semibold text-body-secondary text-uppercase mb-1"
+                                style="font-size: 0.7rem;">Vendedor</label>
                             <select class="form-select form-select-sm rounded-3" id="select-usuarios" name="usuario_id"
                                 onchange="getVentas()">
-                                <option value="">Seleccione vendedor</option>
+                                <option value="">Todos...</option>
                             </select>
                         </div>
 
-                        <div class="col-md-2">
-                            <label class="form-label small fw-semibold text-body-secondary text-uppercase mb-1">Estatus
-                                Pago</label>
+                        <div class="col-xxl col-xl col-lg col-md-3 col-sm-6" style="min-width: 120px;">
+                            <label class="form-label small fw-semibold text-body-secondary text-uppercase mb-1"
+                                style="font-size: 0.7rem;">Pago</label>
                             <select id="f_pago" class="form-select form-select-sm rounded-3" onchange="getVentas()">
                                 <option value="">Todos</option>
                                 <option value="deuda">Con Deuda</option>
@@ -327,22 +342,21 @@
                             </select>
                         </div>
 
-                        <div class="col-md-2">
-                            <label
-                                class="form-label small fw-semibold text-body-secondary text-uppercase mb-1">Periodo</label>
+                        <div class="col-xxl col-xl col-lg col-md-3 col-sm-6" style="min-width: 120px;">
+                            <label class="form-label small fw-semibold text-body-secondary text-uppercase mb-1"
+                                style="font-size: 0.7rem;">Periodo</label>
                             <select id="f_rango" class="form-select form-select-sm rounded-3" onchange="togglePerso()">
                                 <option value="hoy">Hoy</option>
                                 <option value="ayer">Ayer</option>
                                 <option value="semana" selected>Semana</option>
                                 <option value="mes">Mes</option>
-                                <option value="todos">Historial Completo</option>
+                                <option value="todos">Historial</option>
                                 <option value="personalizado">Rango...</option>
                             </select>
                         </div>
-
-                        <div class="col-md-3 d-none" id="div_p">
-                            <label
-                                class="form-label small fw-semibold text-body-secondary text-uppercase mb-1">Fechas</label>
+                        <div class="col-xxl-3 col-xl-4 col-lg-5 col-md-6 col-sm-12 d-none" id="div_p">
+                            <label class="form-label small fw-semibold text-body-secondary text-uppercase mb-1"
+                                style="font-size: 0.7rem;">Rango de Fechas</label>
                             <div class="input-group input-group-sm">
                                 <input type="date" id="f_ini" class="form-control rounded-start-3"
                                     value="<?= date('Y-m-d') ?>" onchange="getVentas()">
@@ -353,10 +367,9 @@
                                     value="<?= date('Y-m-d') ?>" onchange="getVentas()">
                             </div>
                         </div>
-
-                        <div class="col-md-2">
-                            <label
-                                class="form-label small fw-semibold text-body-secondary text-uppercase mb-1">Ubicación</label>
+                        <div class="col-xxl col-xl col-lg col-md-3 col-sm-6" style="min-width: 120px;">
+                            <label class="form-label small fw-semibold text-body-secondary text-uppercase mb-1"
+                                style="font-size: 0.7rem;">Ubicación</label>
                             <select id="f_almacen" class="form-select form-select-sm rounded-3" onchange="getVentas()">
                                 <?php if ($esadmin): ?>
                                     <option value="0">Todos</option>
@@ -369,9 +382,9 @@
                             </select>
                         </div>
 
-                        <div class="col-md-2">
-                            <label class="form-label small fw-semibold text-body-secondary text-uppercase mb-1">Estatus
-                                Factura</label>
+                        <div class="col-xxl col-xl col-lg col-md-3 col-sm-6" style="min-width: 120px;">
+                            <label class="form-label small fw-semibold text-body-secondary text-uppercase mb-1"
+                                style="font-size: 0.7rem;">Factura</label>
                             <select id="estado_factura" class="form-select form-select-sm rounded-3"
                                 onchange="getVentas()">
                                 <option value="">Todos</option>
@@ -380,30 +393,34 @@
                             </select>
                         </div>
 
+                        <!-- Fechas Personalizadas -->
+
+
                     </div>
                 </div>
             </div>
 
             <div class="scroll-table shadow-sm">
-                <div class="table-responsive" style="max-height: 60vh;">
+                <div class="table-responsive" style="max-height: 60vh; overflow-y: auto;">
                     <table class="table table-hover align-middle mb-0" id="tablaVentas">
-                        <thead>
+                        <!-- Agregamos position: sticky y background al thead o a los th -->
+                        <thead class="sticky-top bg-white shadow-sm" style="top: 0; z-index: 10;">
                             <tr>
-
                                 <th class="ps-3">Fecha</th>
                                 <th>Folio</th>
-                                 <th>Cliente</th>
+                                <th>Cliente</th>
                                 <th>Almacén</th>
                                 <th>Vendedor</th>
-                               
                                 <th>Total</th>
                                 <th>Saldo Cobro</th>
-                                <th>Facturada</th>
+                                <th style="width: 90px; text-align: center;">Facturada</th>
                                 <th class="text-center">Estado Entrega</th>
                                 <th class="text-end pe-3">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody></tbody>
+                        <tbody>
+                            <!-- Tus filas de datos aquí -->
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -465,6 +482,17 @@
         <?php require_once __DIR__ . '/entregasComponets/modalEntregaVentas.php'; ?>
 
         <script>
+            let timerDebounce = null;
+
+function filtrarConDebounce() {
+    // Si el usuario vuelve a escribir antes de que pasen los 400ms, cancelamos el temporizador anterior
+    clearTimeout(timerDebounce);
+
+    // Creamos un nuevo temporizador
+    timerDebounce = setTimeout(() => {
+        getVentas(); // Aquí mandas a llamar tu función de búsqueda original
+    }, 400); // 400 milisegundos de espera tras dejar de teclear
+}
             let modalCancelarVenta;
 
             document.addEventListener('DOMContentLoaded', () => {
@@ -605,72 +633,85 @@
             // La ruta al controlador (ajusta si el nombre del archivo varía)
             const URL_CONTROLLER = '/cfsistem/app/controllers/ventasHistorialController.php';
 
-           async function getVentas() {
+            async function getVentas() {
 
-    /* ------------------------------------------------------------------
-       1. ESTADO DE CARGA
-       ------------------------------------------------------------------ */
-    $('#pageLoader').removeClass('oculto');
-    $('#loader').removeClass('d-none');
+                /* ------------------------------------------------------------------
+                   1. ESTADO DE CARGA
+                   ------------------------------------------------------------------ */
+                $('#pageLoader').removeClass('oculto');
+                $('#loader').removeClass('d-none');
 
-    /* ------------------------------------------------------------------
-       2. PARÁMETROS DE BÚSQUEDA
-       ------------------------------------------------------------------ */
-    const params = new URLSearchParams({
-        action: 'listar',
-        // <--- Nuevo parámetro para el ID de venta
-        f_search: $('#f_search').val(),
-        f_rango: $('#f_rango').val(),
-        f_inicio: $('#f_ini').val(),
-        f_fin: $('#f_fin').val(),
-        f_almacen: $('#f_almacen').val(),
-        f_status: $('#f_status').val(),
-        f_pago: $('#f_pago').val(),
-        f_vendedor: $('#select-usuarios').val() ?? '',
-        f_factura: $('#estado_factura').val() ?? ''
-    });
+                /* ------------------------------------------------------------------
+                   2. PARÁMETROS DE BÚSQUEDA
+                   ------------------------------------------------------------------ */
+                const params = new URLSearchParams({
+                    action: 'listar',
+                    // <--- Nuevo parámetro para el ID de venta
+                    f_search: $('#f_search').val(),
+                    f_rango: $('#f_rango').val(),
+                    f_inicio: $('#f_ini').val(),
+                    f_fin: $('#f_fin').val(),
+                    f_almacen: $('#f_almacen').val(),
+                    f_status: $('#f_status').val(),
+                    f_pago: $('#f_pago').val(),
+                    f_vendedor: $('#select-usuarios').val() ?? '',
+                    f_factura: $('#estado_factura').val() ?? ''
+                });
 
-    try {
-        const res = await fetch(`${URL_CONTROLLER}?${params.toString()}`);
-        const data = await res.json();
-        //<td class="ps-3 small">${v.id}</td>
+                try {
+                    const res = await fetch(`${URL_CONTROLLER}?${params.toString()}`);
+                    const data = await res.json();
+                    //<td class="ps-3 small">${v.id}</td>
 
-        let totalVendido = 0;
-        let deuda = 0;
+                    let totalVendido = 0;
+                    let deuda = 0;
 
-        $('#tablaVentas tbody').html(data.map(v => {
-            let total = 0;
-            let pagado = 0;
-            if (v.estado_general != 'cancelada') {
-                total = parseFloat(v.total) || 0;
-                pagado = parseFloat(v.pagado) || 0;
-            }
-            let saldo = total - pagado;
+                    $('#tablaVentas tbody').html(data.map(v => {
+                        let total = 0;
+                        let pagado = 0;
+                        if (v.estado_general != 'cancelada') {
+                            total = parseFloat(v.total) || 0;
+                            pagado = parseFloat(v.pagado) || 0;
+                        }
+                        let saldo = total - pagado;
 
-            if (v.estado_general == 'activa') {
-                totalVendido += total;
-                deuda += (total - pagado);
-            }
+                        if (v.estado_general == 'activa') {
+                            totalVendido += total;
+                            deuda += (total - pagado);
+                        }
+let fechaFormateada = '-';
+if (v.fecha) {
+    const fechaObj = new Date(v.fecha);
+    
+    const horas = String(fechaObj.getHours()).padStart(2, '0');
+    const minutos = String(fechaObj.getMinutes()).padStart(2, '0');
+    const dia = String(fechaObj.getDate()).padStart(2, '0');
+    const mes = String(fechaObj.getMonth() + 1).padStart(2, '0');
+    const anio = fechaObj.getFullYear();
 
-            let badgeCobro = (saldo <= 0) ?
-                '<span class="text-success small fw-bold"><i class="bi bi-check-circle"></i> Pagado</span>' :
-                `<span class="text-danger small fw-bold">Debe: $${saldo.toFixed(2)}</span>`;
+    fechaFormateada = `${dia}/${mes}/${anio} ${horas}:${minutos}`;
+}
 
-            let entrega = (v.estado_general == 'activa') ?
-                `<span class="badge ${v.estado_entrega == 'entregado' ? 'bg-success' : (v.estado_entrega == 'parcial' ? 'bg-warning card-title-text' : 'bg-danger')}">
+
+                        let badgeCobro = (saldo <= 0) ?
+                            '<span class="text-success small fw-bold"><i class="bi bi-check-circle"></i> Pagado</span>' :
+                            `<span class="text-danger small fw-bold">Debe: $${saldo.toFixed(2)}</span>`;
+
+                        let entrega = (v.estado_general == 'activa') ?
+                            `<span class="badge ${v.estado_entrega == 'entregado' ? 'bg-success' : (v.estado_entrega == 'parcial' ? 'bg-warning card-title-text' : 'bg-danger')}">
             ${v.estado_entrega.toUpperCase()}
         </span>` :
-                '<span class="text-danger small fw-bold"><i class="bi bi-check-circle"></i> Cancelado</span>';
+                            '<span class="text-danger small fw-bold"><i class="bi bi-check-circle"></i> Cancelado</span>';
 
-            let factura = (v.estado_general == 'activa') ?
-                `${v.factura}
+                        let factura = (v.estado_general == 'activa') ?
+                            `${v.factura}
         <button type="button" class="btn btn-link text-primary p-1 border-0" onclick="modalFactura(${v.id},${v.factura})" title="Agregar Factura">
             <i class="bi bi-pencil-square me-2"></i>
         </button>` : '';
 
-            let rolAct = <?= $rol ?>;
+                        let rolAct = <?= $rol ?>;
 
-            let botonCancelar = rolAct == 1 ? `<button type="button" 
+                        let botonCancelar = rolAct == 1 ? `<button type="button" 
         class="btn btn-glass-danger rounded-3 border-0 d-inline-flex align-items-center justify-content-center" 
         onclick="abrirModalCancelacion('${v.id}','${v.folio}')" 
         data-bs-toggle="tooltip" 
@@ -718,7 +759,7 @@
 }
 </style>`;
 
-            let cancelada = (v.estado_general == 'activa') ? `
+                        let cancelada = (v.estado_general == 'activa') ? `
         
 
         <div class="btn-group" role="group">
@@ -758,8 +799,8 @@
             </ul>
         </div>${botonCancelar}` : ``;
 
-            return `<tr>
-        <td class="ps-3 small">${v.fecha}</td>
+                        return `<tr>
+        <td class="ps-3 small">${fechaFormateada}</td>
         <td class="fw-bold">${v.folio}</td>
         <td><div class="small fw-bold">${v.cliente}</div></td>       
         <td><span class="badge bg-light text-dark border fw-normal">${v.almacen_nombre}</span></td>
@@ -798,10 +839,10 @@
             </div>
         </td>
     </tr>`;
-        }).join(''));
+                    }).join(''));
 
-        // Fila de totales corregida (Sin 'v.almacen_nombre' para evitar errores)
-        let totales = `<tr class="table-light fw-bold border-top border-dark">
+                    // Fila de totales corregida (Sin 'v.almacen_nombre' para evitar errores)
+                    let totales = `<tr class="table-light fw-bold border-top border-dark">
     <td class="ps-3 small"></td>
     <td class="fw-bold">TOTALES</td>
     <td></td>
@@ -814,20 +855,20 @@
     <td></td>
 </tr>`;
 
-        // CORRECCIÓN AQUÍ: Agregamos la fila al final del tbody usando .append() sin .join()
-        $('#tablaVentas tbody').append(totales);
+                    // CORRECCIÓN AQUÍ: Agregamos la fila al final del tbody usando .append() sin .join()
+                    $('#tablaVentas tbody').append(totales);
 
-    } catch (e) {
-        console.error("Error al cargar ventas:", e);
-    } finally {
-        /* SIEMPRE: ocultar loaders */
-        $('#loader').addClass('d-none');
+                } catch (e) {
+                    console.error("Error al cargar ventas:", e);
+                } finally {
+                    /* SIEMPRE: ocultar loaders */
+                    $('#loader').addClass('d-none');
 
-        setTimeout(() => {
-            $('#pageLoader').addClass('oculto');
-        }, 300);
-    }
-} document.addEventListener('input', e => {
+                    setTimeout(() => {
+                        $('#pageLoader').addClass('oculto');
+                    }, 300);
+                }
+            } document.addEventListener('input', e => {
 
                 if (e.target.classList.contains('input-entrega1')) {
 

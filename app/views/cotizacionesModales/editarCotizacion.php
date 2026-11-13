@@ -791,7 +791,6 @@
 
             cliente_id_edi = infoBase.cliente_id;
 
-            // Cargar selects
             await Promise.allSettled([
                 cargarClienteseditar(),
                 cargarVendedores3(infoBase.vendedor_id),
@@ -803,62 +802,132 @@
             data.forEach(i => {
                 const prodId = i.producto_id;
 
-                const opcionesUnidadHtml = `
-                    <option value="${i.unidadMedida}" data-equivalencia="${i.equivalencia}" data-medida-id="${i.unidadMedida}" selected>
-                        ${i.nombre}
-                    </option>
-                `;
+                // ── Leer del catálogo (dataset → kebab-case) ──
+                const optEl = document.querySelector(
+                    `#buscadorProductosEditar option[value="${prodId}"]`
+                );
+                const ds = optEl?.dataset || {};
+
+                const ur = ds.ur || i.unidad_reporte || '';
+                const factor = parseFloat(ds.factor) || parseFloat(i.factor_conversion) || 1;
+
+                const preMinCat = parseFloat(ds.preMin) || 0;
+                const preMatCat = parseFloat(ds.preMat) || 0;
+                const preDisCat = parseFloat(ds.preDis) || 0;
+
+                // ── Precio y tipo de la cotización (lo que "ya viene") ──
+                const precioCot = parseFloat(i.precio_unitario) || 0;
+                const tipoCot = String(i.tipo_precio || '').toLowerCase();
+
+                // Debug útil
+                console.log(`[gestionarSolicitud] Prod ${prodId}`, {
+                    ur, factor,
+                    catalogo: { preMinCat, preMatCat, preDisCat },
+                    cotizado: { precioCot, tipoCot },
+                    datasetRaw: { ...ds }
+                });
+
+                // ── Construye la opción: prioriza precio cotizado para su tipo ──
+                const buildPrecioOption = (tipo, label, precioCatalogo) => {
+                    const esCotizado = tipo === tipoCot && precioCot > 0;
+
+                    if (esCotizado) {
+                        // El que ya viene → se muestra tal cual (sin × factor)
+                        return `<option value="${tipo}" data-precio="${precioCot}">
+                                ${label} $${precioCot.toFixed(2)} x ${ur}
+                            </option>`;
+                    }
+
+                    if (precioCatalogo <= 0) {
+                        // Sin precio de catálogo → mostramos guion
+                        return `<option value="${tipo}" data-precio="0">${label} —</option>`;
+                    }
+
+                    // Catálogo → precio × factor (como el flujo original)
+                    return `<option value="${tipo}" data-precio="${precioCatalogo}">
+                            ${label} $${(precioCatalogo * factor).toFixed(2)} x ${ur}
+                        </option>`;
+                };
+
+                const opcionesPrecioHtml = `
+                <option value="seleccionar" data-precio="0">Seleccione</option>
+                ${buildPrecioOption('minorista', 'Min', preMinCat)}
+                ${buildPrecioOption('mayorista', 'May', preMatCat)}
+                ${buildPrecioOption('distribuidor', 'Dis', preDisCat)}
+            `;
+
+                // ── Unidades: todas las del producto ──
+                let medidas = [];
+                try { medidas = JSON.parse(ds.medidas || '[]'); }
+                catch (err) { medidas = []; }
+
+                if (!medidas.some(m => String(m.id) === String(i.unidadMedida)) && i.unidadMedida) {
+                    medidas = [{
+                        id: i.unidadMedida,
+                        equivalencia: i.equivalencia,
+                        nombre: i.nombre || String(i.unidadMedida)
+                    }, ...medidas];
+                }
+
+                const opcionesUnidadHtml = medidas.map(m => {
+                    const sel = String(m.id) === String(i.unidadMedida) ? 'selected' : '';
+                    return `<option value="${m.id}"
+                                data-equivalencia="${m.equivalencia}"
+                                data-medida-id="${m.id}" ${sel}>${m.nombre}</option>`;
+                }).join('');
 
                 const nuevaFilaHtml = `
-                    <tr id="filaEditar-${prodId}">
-                        <td class="ps-4">
-                            <b>${i.producto_nombre}</b><br>
-                            <small class="text-body-secondary">${i.sku}</small>
-                        </td>
-                        <td>
-                            <input type="number" name="itemsEditar[${prodId}][cant]" class="form-control cantidad-editar"
-                                step="0.01" value="${parseFloat(i.cantidad)}" min="0.01" required
-                                oninput="calcularTotalSolEditar(this)">
-                        </td>
-                        <td>
-                            <select name="itemsEditar[${prodId}][unidad]" class="form-select unidad-select-editar"
-                                onchange="calcularPrecioSugeridoEditar(this)">
-                                ${opcionesUnidadHtml}
-                            </select>
-                        </td>
-                        <td>
-                            <select name="itemsEditar[${prodId}][tipoPrecio]" class="form-select tipoPrecio-select-editar"
-                                id="tipoPrecio_editar_${prodId}" onchange="calcularPrecioSugeridoEditar(this)">
-                                <option value="seleccionar" data-precio="0">Seleccione</option>
-                                <option value="minorista" data-precio="${i.precio_unitario}">
-                                    Min $${(parseFloat(i.precio_unitario) * parseFloat(i.factor_conversion || 1)).toFixed(2)} x ${i.unidad_reporte}
-                                </option>
-                            </select>
-                        </td>
-                        <td>
-                            <input type="number" lang="en-US" name="itemsEditar[${prodId}][precioUnitario]"
-                                class="form-control precio-unitario-editar"
-                                step="0.01" min="0" value="${parseFloat(i.precio_unitario).toFixed(2)}" required
-                                onkeydown="if(event.key==='Enter'){ event.preventDefault(); $('#buscadorProductosEditar').select2('open'); }"
-                                oninput="calcularTotalSolEditar(this)">
-                        </td>
-                        <td style="min-width:160px;">
-                            <input type="number" lang="en-US" name="itemsEditar[${prodId}][precio]"
-                                class="form-control precio-total-editar fw-bold text-success"
-                                step="0.01" min="0" value="${parseFloat(i.subtotal).toFixed(2)}" readonly
-                                onkeydown="if(event.key==='Enter'){ event.preventDefault(); $('#buscadorProductosEditar').select2('open'); }"
-                                style="font-size:1.1rem; height:45px; min-width:140px;">
-                        </td>
-                        <td>
-                            <button type="button" class="btn btn-link text-danger" onclick="quitarFilaEditar(${prodId})">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
+                <tr id="filaEditar-${prodId}">
+                    <td class="ps-4">
+                        <b>${i.producto_nombre}</b><br>
+                        <small class="text-body-secondary">${i.sku}</small>
+                    </td>
+                    <td>
+                        <input type="number" name="itemsEditar[${prodId}][cant]" class="form-control cantidad-editar"
+                            step="0.01" value="${parseFloat(i.cantidad)}" min="0.01" required
+                            oninput="calcularTotalSolEditar(this)">
+                    </td>
+                    <td>
+                        <select name="itemsEditar[${prodId}][unidad]" class="form-select unidad-select-editar"
+                            onchange="calcularPrecioSugeridoEditar(this)">
+                            ${opcionesUnidadHtml}
+                        </select>
+                    </td>
+                    <td>
+                        <select name="itemsEditar[${prodId}][tipoPrecio]" class="form-select tipoPrecio-select-editar"
+                            id="tipoPrecio_editar_${prodId}" onchange="calcularPrecioSugeridoEditar(this)">
+                            ${opcionesPrecioHtml}
+                        </select>
+                    </td>
+                    <td>
+                        <input type="number" lang="en-US" name="itemsEditar[${prodId}][precioUnitario]"
+                            class="form-control precio-unitario-editar"
+                            step="0.01" min="0" value="${parseFloat(i.precio_unitario).toFixed(2)}" required
+                            onkeydown="if(event.key==='Enter'){ event.preventDefault(); $('#buscadorProductosEditar').select2('open'); }"
+                            oninput="calcularTotalSolEditar(this)">
+                    </td>
+                    <td style="min-width:160px;">
+                        <input type="number" lang="en-US" name="itemsEditar[${prodId}][precio]"
+                            class="form-control precio-total-editar fw-bold text-success"
+                            step="0.01" min="0" value="${parseFloat(i.subtotal).toFixed(2)}" readonly
+                            onkeydown="if(event.key==='Enter'){ event.preventDefault(); $('#buscadorProductosEditar').select2('open'); }"
+                            style="font-size:1.1rem; height:45px; min-width:140px;">
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-link text-danger" onclick="quitarFilaEditar(${prodId})">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
 
                 $('#tablaDetalleEditar tbody').append(nuevaFilaHtml);
-                $(`#tipoPrecio_editar_${prodId}`).val(i.tipo_precio);
+
+                // Preseleccionar el tipo que ya trae la cotización
+                const $tipo = $(`#tipoPrecio_editar_${prodId}`);
+                if (i.tipo_precio && $tipo.find(`option[value="${i.tipo_precio}"]`).length) {
+                    $tipo.val(i.tipo_precio);
+                }
             });
 
             let totalCompraEditar = 0;
@@ -878,10 +947,9 @@
             Swal.fire('Error', 'No se pudo estructurar el editor de la cotización', 'error');
         }
     }
-
     /* =========================================================
-       PROCEDER PAGO
-       ========================================================= */
+ PROCEDER PAGO
+ ========================================================= */
     async function procederPago(total, id) {
         cargarUsuariosSelectPago();
         totalGlobalPago = total;
@@ -971,12 +1039,38 @@
             const datos = await resp.json();
 
             if (datos.status === 'success') {
+                // id de venta recién creada (ajusta la propiedad según tu backend)
+                const idVenta = datos.id_venta ?? datos.venta_id ?? datos.id ?? null;
+
                 Swal.fire({
                     icon: 'success',
                     title: 'Venta guardada',
                     text: `Folio: ${datos.folio || ''}`,
-                    confirmButtonText: 'OK'
-                }).then(() => location.reload());
+                    showDenyButton: true,
+                    showCancelButton: true,
+                    confirmButtonText: 'Ticket simple',
+                    denyButtonText: 'Ticket formal',
+                    cancelButtonText: 'Cerrar',
+                    confirmButtonColor: '#198754',
+                    denyButtonColor: '#0d6efd',
+                    cancelButtonColor: '#6c757d'
+                }).then((result) => {
+                    let url = null;
+
+                    if (result.isConfirmed) {
+                        url = `/cfsistem/app/backend/ventas/ticket_venta.php?id=${idVenta}`;
+                    } else if (result.isDenied) {
+                        url = `/cfsistem/app/backend/ventas/ticketFormal.php?id=${idVenta}`;
+                    }
+
+                    // Si eligió un ticket → abrir en pestaña nueva
+                    if (url) {
+                        window.open(url, '_blank');
+                    }
+
+                    // Recargar siempre al cerrar el alert (eligió o canceló)
+                    setTimeout(() => location.reload(), 400);
+                });
             } else {
                 Swal.fire({
                     icon: 'error',
@@ -989,5 +1083,4 @@
         } catch (e) {
             console.error(e);
         }
-    }
-</script>
+    }</script>

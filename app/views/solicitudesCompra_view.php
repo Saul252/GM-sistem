@@ -892,9 +892,11 @@ error_reporting(E_ALL);
 
     <?php require_once __DIR__ . '/solicitudesCompra/ModalSolicitud.php'; ?>
     <?php require_once __DIR__ . '/solicitudesCompra/imprimirModal.php'; ?>
+    <?php require_once __DIR__ . '/solicitudesCompra/modalAjuste.php'; ?>
+
     <?php require_once __DIR__ . '/egresosComponets/agregarPoductoModal.php'; ?>
     <?php require_once __DIR__ . '/solicitudesCompra/modalProveedoresCompra.php'; ?>
-    <?php require_once __DIR__ . '/egresosComponets/modalAjuste.php'; ?>
+
     <?php require_once __DIR__ . '/egresosComponets/direccionUbicacionModal.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/verEditarUbicaciones.php'; ?>
     <script>
@@ -919,63 +921,71 @@ error_reporting(E_ALL);
          */
         async function cargarSolicitudes() {
             try {
-                // Almacenamos los valores actuales de los filtros de la pantalla para enviarlos al servidor
-                let almacen = $('#filtroAlmacen').val();
-                let fechaInicio = $('#fechaInicio').val();
-                let fechaFin = $('#fechaFin').val();
+                // ── 1. Leer filtros una sola vez ──
+                const almacen = $('#filtroAlmacen').val() || '';
+                const fechaInicio = $('#fechaInicio').val() || '';
+                const fechaFin = $('#fechaFin').val() || '';
+                const estado = $('#filtroEstado').val() || '';
+                const buscador = $('#buscadorGeneral').val() || '';
 
-                // Mensaje de control informativo en la consola para confirmar qué almacén se está procesando
                 console.log("Almacén filtrado:", almacen);
 
-                // Agrupación y formateo seguro de todos los parámetros de filtrado que viajarán en la URL
+                // ── 2. Parámetros de la petición ──
                 const params = new URLSearchParams({
-                    action: 'listarSolicitudes',                     // Acción que mapea al método del controlador PHP
-                    almacen: $('#filtroAlmacen').val() || '',        // ID del almacén seleccionado
-                    fechaInicio: $('#fechaInicio').val() || '',      // Rango de fecha inicial
-                    fechaFin: $('#fechaFin').val() || '',            // Rango de fecha final
-                    estado: $('#filtroEstado').val() || '',          // Estado actual (Pendiente, Procesada, Recibida)
-                    buscador: $('#buscadorGeneral').val() || ''      // Texto de búsqueda libre escrito por el usuario
+                    action: 'listarSolicitudes',
+                    almacen,
+                    fechaInicio,
+                    fechaFin,
+                    estado,
+                    buscador
                 });
 
-                // Captura del ID de rol de usuario desde las sesiones nativas de PHP
-                let rol = <?= isset($_SESSION['rol_id']) ? (int) $_SESSION['rol_id'] : 0 ?>;
-                // Variable tipo String que irá acumulando el código HTML de cada fila generada
-                let tablaHTML = '';
-
-                // ✅ ACUMULADORES DE GASTOS POR ESTADO
+                // ── 3. Acumuladores de gastos por estado ──
                 let totalAceptados = 0;   // RECIBIDA
                 let totalPendientes = 0;   // PENDIENTE
+                let totalProcesados = 0;   // PROCESADA (opcional, para no perderlo)
                 let totalCancelados = 0;   // CANCELADA / CANCELADO
-                let gastoTotal = 0;   // Suma global de todas las mostradas
+                let gastoTotal = 0;   // Suma global
 
-                // Petición AJAX (Fetch) enviando la ruta del controlador acompañada de los parámetros de búsqueda
+                // ── 4. Petición al backend ──
                 const res = await fetch(
                     `/cfsistem/app/controllers/solicitudesCompraController.php?${params.toString()}`
                 );
+                const data = await res.json();
 
-                // Transforma la respuesta cruda del servidor en un formato de Objeto JSON legible por JavaScript
-                let data = await res.json();
-                console.log("Datos recibidos del servidor:", data.data);
+                console.log("Datos recibidos del servidor:", data);
 
-                // Validación de seguridad: Comprueba si la respuesta no trae datos o el arreglo viene totalmente vacío
-                if (!data.data || data.data.length === 0) {
-                    // Inserta una fila única con un mensaje centralizado indicando que no hay registros y frena el script
-                    $('#tablaSolicitudes').html('<tr><td colspan="7" class="text-center text-dark-secondary py-3">No se encontraron registros</td></tr>');
-                    // ✅ Resetear contadores en pantalla si usas el bloque de resumen
+                // ── 5. Validar respuesta del backend ──
+                if (!data || data.success === false) {
+                    console.error('Backend error:', data?.message);
+                    $('#tablaSolicitudes').html(
+                        `<tr><td colspan="7" class="text-center text-danger py-3">
+                    ${escapeHtml(data?.message || 'Error al cargar solicitudes')}
+                 </td></tr>`
+                    );
                     actualizarResumenGastos(0, 0, 0, 0);
                     return;
                 }
 
-                // Bucle que recorre uno a uno cada objeto "s" (Solicitud) dentro del arreglo de datos
-                data.data.forEach(s => {
+                if (!Array.isArray(data.data) || data.data.length === 0) {
+                    $('#tablaSolicitudes').html(
+                        '<tr><td colspan="7" class="text-center text-dark-secondary py-3">No se encontraron registros</td></tr>'
+                    );
+                    actualizarResumenGastos(0, 0, 0, 0);
+                    return;
+                }
 
-                    // 1. FORMATEO DEL FOLIO NUMÉRICO
+                // ── 6. Construir filas ──
+                let tablaHTML = '';
+
+                data.data.forEach(s => {
+                    // 6.1 Folio
                     const folio = String(s.id).padStart(5, '0');
 
-                    // 2. PROCESAMIENTO DE FECHA UNIVERSAL
+                    // 6.2 Fecha formateada
                     let fechaFormateada = s.fecha_creacion || '';
                     if (s.fecha_creacion) {
-                        const date = new Date(s.fecha_creacion.replace(/\s/, 'T'));
+                        const date = new Date(String(s.fecha_creacion).replace(/\s/, 'T'));
                         if (!isNaN(date.getTime())) {
                             const day = String(date.getDate()).padStart(2, '0');
                             const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -985,9 +995,20 @@ error_reporting(E_ALL);
                             fechaFormateada = `${day}/${month}/${year} ${hours}:${minutes}`;
                         }
                     }
+                    // 6.6 Botón: ajustar faltantes (si aplica)
+                    const tieneFaltantes = Number(s.faltantes) == 1 ? 1 : 0;
+                    console.log(tieneFaltantes);
+                    const botonFaltantes = tieneFaltantes == 1 ? `
+                <button class="btn btn-sm btn-white border shadow-sm"
+                        onclick="abrirModalAjuste(${Number(s.compra_id)}, '${escapeHtml(String(s.folio))}')">
+                    <i class="bi bi-box-seam text-warning"></i> Ajustar faltantes
+                </button>
+            ` : '';
+                    let textoFaltanate = tieneFaltantes == 1 ? '/faltantes' : '';
 
-                    // 3. CONTROL DE ESTADOS Y COLORES (Insignias / Badges)
-                    const status = (s.estado || 'PENDIENTE').toUpperCase();
+
+                    // 6.3 Estado + color
+                    const status = String(s.estado || 'PENDIENTE').toUpperCase();
                     let claseEstado = 'bg-secondary text-white';
 
                     switch (status) {
@@ -997,8 +1018,10 @@ error_reporting(E_ALL);
                         case 'PROCESADA':
                             claseEstado = 'bg-primary text-white';
                             break;
-                        case 'RECIBIDA':
-                            claseEstado = 'bg-success text-white';
+                        case 'RECIBIDO':
+
+                            claseEstado = tieneFaltantes == 1 ? 'bg-dark text-white' : 'bg-success text-white';
+
                             break;
                         case 'CANCELADA':
                         case 'CANCELADO':
@@ -1006,16 +1029,19 @@ error_reporting(E_ALL);
                             break;
                     }
 
-                    // ✅ ACUMULAR COSTO SEGÚN ESTADO
+                    // 6.4 Acumular costo según estado
                     const costo = parseFloat(s.costo_total || 0);
                     gastoTotal += costo;
 
                     switch (status) {
-                        case 'RECIBIDO':
+                        case 'RECIBIDA':                       // ✅ antes decía RECIBIDO
                             totalAceptados += costo;
                             break;
                         case 'PENDIENTE':
                             totalPendientes += costo;
+                            break;
+                        case 'PROCESADA':
+                            totalProcesados += costo;
                             break;
                         case 'CANCELADA':
                         case 'CANCELADO':
@@ -1023,65 +1049,72 @@ error_reporting(E_ALL);
                             break;
                     }
 
-                    // 4. GENERACIÓN DE ACCIONES EXCLUSIVAS
-                    let botonesAccion = '';
-                    if (status === 'PENDIENTE') {
-                        botonesAccion = `
-            <button class="btn btn-sm btn-white border shadow-sm" onclick="gestionarSolicitud(${s.id})">
-                <i class="bi bi-eye text-primary"></i> Gestionar
-            </button>
-            <button class="btn btn-sm btn-white border shadow-sm" onclick="eliminarSolicitud(${s.id})">
-                <i class="bi bi-trash text-danger"></i>
-            </button>
-        `;
-                    }
-
-                    // 5. ARMADO E INYECCIÓN DE LA FILA (HTML Template Literal)
-                    tablaHTML += `
-        <tr>
-            <td><span class=" fw-bold">#${folio}</span></td>
-            <td class="text-body-secondary small">${fechaFormateada}</td>
-            <td class="fw-medium">${escapeHtml(s.proveedor_nombre || 'Sin asignar')}</td>
-            <td><span class="badge bg-light text-dark border">${escapeHtml(s.almacen_nombre || '')}</span></td>
-            <td class="text-center align-middle">
-                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1">
-                    <i class="bi bi-currency-dollar me-1"></i>
-                    ${costo.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
-            </td>
-            <td class="text-center align-middle">
-                <span class="badge badge-status ${claseEstado} rounded-pill">${status}</span>
-            </td>
-            <td class="text-center align-middle">
-                ${botonesAccion}
-                <button class="btn btn-sm btn-white border shadow-sm rounded-pill px-3"
-                    onclick="prepararImpresion(${s.id})" title="Imprimir solicitud">
-                    <i class="bi bi-printer text-primary me-1"></i>
-                    <span class="fw-medium">Imprimir</span>
+                    // 6.5 Botones: acción principal (solo PENDIENTE)
+                    const botonesAccion = status === 'PENDIENTE' ? `
+                <button class="btn btn-sm btn-white border shadow-sm"
+                        onclick="gestionarSolicitud(${s.id})">
+                    <i class="bi bi-eye text-primary"></i> Gestionar
                 </button>
-            </td>
-        </tr>
-    `;
+                <button class="btn btn-sm btn-white border shadow-sm"
+                        onclick="eliminarSolicitud(${s.id})">
+                    <i class="bi bi-trash text-danger"></i>
+                </button>
+            ` : '';
+
+
+                    // 6.7 Fila final
+                    tablaHTML += `
+                <tr>
+                    <td><span class="fw-bold">#${folio}</span></td>
+                    <td class="text-body-secondary small">${fechaFormateada}</td>
+                    <td class="fw-medium">${escapeHtml(s.proveedor_nombre || 'Sin asignar')}</td>
+                    <td><span class="badge bg-light text-dark border">${escapeHtml(s.almacen_nombre || '')}</span></td>
+                    <td class="text-center align-middle">
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1">
+                            <i class="bi bi-currency-dollar me-1"></i>
+                            ${costo.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </span>
+                    </td>
+                    <td class="text-center align-middle">
+                        <span class="badge badge-status ${claseEstado} rounded-pill">${status}${textoFaltanate}</span>
+                    </td>
+                    <td class="text-center align-middle">
+                        ${botonFaltantes}
+                        ${botonesAccion}
+                        <button class="btn btn-sm btn-white border shadow-sm rounded-pill px-3"
+                                onclick="prepararImpresion(${s.id})"
+                                title="Imprimir solicitud">
+                            <i class="bi bi-printer text-primary me-1"></i>
+                            <span class="fw-medium">Imprimir</span>
+                        </button>
+                    </td>
+                </tr>
+            `;
                 });
 
-                // 6. ACTUALIZACIÓN DIRECTA DEL DOM DE LA TABLA
+                // ── 7. Pintar tabla ──
                 $('#tablaSolicitudes').html(tablaHTML);
 
-                // ✅ IMPRIMIR RESUMEN EN CONSOLA
+                // ── 8. Log + resumen ──
                 console.log("💰 RESUMEN DE GASTOS:");
                 console.log("   Aceptados :", totalAceptados.toFixed(2));
                 console.log("   Pendientes:", totalPendientes.toFixed(2));
+                console.log("   Procesados:", totalProcesados.toFixed(2));
                 console.log("   Cancelados:", totalCancelados.toFixed(2));
                 console.log("   Total     :", gastoTotal.toFixed(2));
 
-                // ✅ ACTUALIZAR RESUMEN EN EL DOM
                 actualizarResumenGastos(totalAceptados, totalPendientes, totalCancelados, gastoTotal);
 
             } catch (error) {
                 console.error("Error crítico capturado en cargarSolicitudes:", error);
+                $('#tablaSolicitudes').html(
+                    `<tr><td colspan="7" class="text-center text-danger py-3">
+                Error al cargar solicitudes: ${escapeHtml(error.message || 'desconocido')}
+             </td></tr>`
+                );
+                actualizarResumenGastos(0, 0, 0, 0);
             }
         }
-
         // ✅ Función auxiliar que pinta el resumen de gastos en el DOM
         function actualizarResumenGastos(aceptados, pendientes, cancelados, total) {
             const fmt = (n) => n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });

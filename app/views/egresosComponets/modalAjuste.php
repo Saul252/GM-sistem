@@ -107,8 +107,7 @@
                     onclick="cancelarExcedente()">
                     Cancelar edición
                 </button>
-                <button type="button" class="btn btn-warning rounded-pill px-4 fw-bold"
-                    onclick="asignarExtra()">
+                <button type="button" class="btn btn-warning rounded-pill px-4 fw-bold" onclick="asignarExtra()">
                     Continuar y Asignar Excedente
                 </button>
             </div>
@@ -117,237 +116,237 @@
 </div>
 
 <style>
-.pointer {
-    cursor: pointer;
-}
+    .pointer {
+        cursor: pointer;
+    }
 
-.form-switch .form-check-input:checked {
-    background-color: #dc3545;
-    border-color: #dc3545;
-}
+    .form-switch .form-check-input:checked {
+        background-color: #dc3545;
+        border-color: #dc3545;
+    }
 </style>
 
 <script>
-async function asignarExtra() {
-    // 1. Loader de SweetAlert mientras se realiza la consulta
-    Swal.fire({
-        title: 'Consultando servidor...',
-        text: 'Por favor espere un momento',
-        allowOutsideClick: false,
-        didOpen: () => {
-            Swal.showLoading();
-        }
-    });
-
-    // 2. Obtener valores de los inputs
-    let id = idFinal;
-    console.log(id);
-    let cantidad = document.getElementById('cantidadReal').value;
-    let prodId = prod_id_temp;
-     console.log(cantidad);
-     console.log(prodId);
-
-    // 3. Crear el objeto FormData y agregar los datos
-    const formData = new FormData();
-    formData.append('compra_id', id);
-    formData.append('producto_id', prodId);
-    formData.append('excedente', cantidad);
-
-    try {
-        // Mantenemos la acción en la URL o puedes meterla también al formData
-        const url = '/cfsistem/app/controllers/egresosController.php?action=actualizarExcedente';
-
-        // 4. Configurar fetch con el método POST y el body con FormData
-        const respuesta = await fetch(url, {
-            method: 'POST',
-            body: formData
-            // NOTA: No agregues 'Content-Type', la API de FormData lo establece automáticamente con el boundary.
-        });
-
-        if (!respuesta.ok) {
-            throw new Error(`Respuesta no válida del servidor (HTTP ${respuesta.status})`);
-        }
-
-        const resultado = await respuesta.json();
-        console.log('Respuesta del servidor:', resultado);
-
-        // 5. Evaluar respuesta del backend
-        if (resultado.success) {
-            Swal.fire({
-                icon: 'success',
-                title: '¡Operación Exitosa!',
-                text: resultado.message || 'La consulta se procesó correctamente.',
-                timer: 2000,
-                showConfirmButton: false
-            });
-            aplicarFaltantesCompra();
-        } else {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Aviso del Servidor',
-                text: resultado.message || 'No se pudo completar la solicitud.',
-                confirmButtonColor: '#3085d6'
-            });
-        }
-
-    } catch (error) {
-        console.error('Error al consultar el servidor:', error);
-
-        // 6. Alerta en caso de falla de red o error de servidor
+    async function asignarExtra() {
+        // 1. Loader de SweetAlert mientras se realiza la consulta
         Swal.fire({
-            icon: 'error',
-            title: 'Error de Conexión',
-            text: 'No se pudo establecer comunicación con el servidor.',
-            confirmButtonColor: '#d33'
-        });
-    }
-}
-let almacenesGlobal = [];
-let excedenteTemp = {
-    prodId: null,
-    cantidad: 0,
-    factor: 1,
-    inputElem: null
-};
-
-function toggleAlmacen(check, prodId, almId) {
-    const inputVisible = document.querySelector(`input[name="distribucion[${prodId}][${almId}]1"]`);
-    const inputHidden = document.querySelector(`input[name="distribucion[${prodId}][${almId}]"]`);
-
-    if (!inputVisible || !inputHidden) return;
-
-    if (check.checked) {
-        inputVisible.disabled = false;
-        inputHidden.disabled = false;
-        inputVisible.focus();
-    } else {
-        inputVisible.disabled = true;
-        inputHidden.disabled = true;
-        inputVisible.value = '';
-        inputHidden.value = '';
-
-        const factor = parseFloat(inputVisible.dataset.factor) || 1;
-        recalcularRestante(prodId, factor, inputVisible);
-    }
-}
-let prod_id_temp=0;
-function recalcularRestante(prodId, factor = 1, inputModificado = null) {
-    const inputs = document.querySelectorAll(`input[name^="distribucion[${prodId}]"][name$="]1"]`);
-
-    let suma = 0;
-    let maximo = 0;
-    prod_id_temp=prodId;
-
-    inputs.forEach(input => {
-        if (!input.disabled) {
-            const valor = parseFloat(input.value) || 0;
-            suma += valor * factor;
-            maximo = parseFloat(input.dataset.max) || 0;
-
-            // Actualizar hidden
-            const hiddenName = input.name.replace(']1', ']');
-            const hidden = document.querySelector(`input[name="${hiddenName}"]`);
-            if (hidden) {
-                hidden.value = (valor * factor).toFixed(2);
+            title: 'Consultando servidor...',
+            text: 'Por favor espere un momento',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading();
             }
-        }
-    });
-
-    suma = Math.round(suma * 1000) / 1000;
-
-    // SI LA SUMA EXCEDE EL MÁXIMO MOSTRAR MODAL DE CONFIRMACIÓN
-    if (suma > maximo) {
-        const exceso = (suma - maximo) / factor;
-
-        excedenteTemp = {
-            prodId: prodId,
-            cantidad: exceso,
-            factor: factor,
-            inputElem: inputModificado || document.activeElement
-        };
-
-        // Rellenar datos en el modal de excedente
-        document.getElementById('lblCantidadExcedente').innerText = exceso.toFixed(2);
-        document.getElementById('cantidadReal').value = exceso*factor;
-        
-
-
-
-        const selAlmacen = document.getElementById('selAlmacenExcedente');
-        selAlmacen.innerHTML = '';
-        almacenesGlobal.forEach(alm => {
-            selAlmacen.innerHTML += `<option value="${alm.id}">${alm.nombre}</option>`;
         });
 
-        const modalExcedente = new bootstrap.Modal(document.getElementById('modalConfirmarExcedente'));
-        modalExcedente.show();
-        return;
+        // 2. Obtener valores de los inputs
+        let id = idFinal;
+        console.log(id);
+        let cantidad = document.getElementById('cantidadReal').value;
+        let prodId = prod_id_temp;
+        console.log(cantidad);
+        console.log(prodId);
+
+        // 3. Crear el objeto FormData y agregar los datos
+        const formData = new FormData();
+        formData.append('compra_id', id);
+        formData.append('producto_id', prodId);
+        formData.append('excedente', cantidad);
+
+        try {
+            // Mantenemos la acción en la URL o puedes meterla también al formData
+            const url = '/cfsistem/app/controllers/egresosController.php?action=actualizarExcedente';
+
+            // 4. Configurar fetch con el método POST y el body con FormData
+            const respuesta = await fetch(url, {
+                method: 'POST',
+                body: formData
+                // NOTA: No agregues 'Content-Type', la API de FormData lo establece automáticamente con el boundary.
+            });
+
+            if (!respuesta.ok) {
+                throw new Error(`Respuesta no válida del servidor (HTTP ${respuesta.status})`);
+            }
+
+            const resultado = await respuesta.json();
+            console.log('Respuesta del servidor:', resultado);
+
+            // 5. Evaluar respuesta del backend
+            if (resultado.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Operación Exitosa!',
+                    text: resultado.message || 'La consulta se procesó correctamente.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                aplicarFaltantesCompra();
+            } else {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Aviso del Servidor',
+                    text: resultado.message || 'No se pudo completar la solicitud.',
+                    confirmButtonColor: '#3085d6'
+                });
+            }
+
+        } catch (error) {
+            console.error('Error al consultar el servidor:', error);
+
+            // 6. Alerta en caso de falla de red o error de servidor
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de Conexión',
+                text: 'No se pudo establecer comunicación con el servidor.',
+                confirmButtonColor: '#d33'
+            });
+        }
+    }
+    let almacenesGlobal = [];
+    let excedenteTemp = {
+        prodId: null,
+        cantidad: 0,
+        factor: 1,
+        inputElem: null
+    };
+
+    function toggleAlmacen(check, prodId, almId) {
+        const inputVisible = document.querySelector(`input[name="distribucion[${prodId}][${almId}]1"]`);
+        const inputHidden = document.querySelector(`input[name="distribucion[${prodId}][${almId}]"]`);
+
+        if (!inputVisible || !inputHidden) return;
+
+        if (check.checked) {
+            inputVisible.disabled = false;
+            inputHidden.disabled = false;
+            inputVisible.focus();
+        } else {
+            inputVisible.disabled = true;
+            inputHidden.disabled = true;
+            inputVisible.value = '';
+            inputHidden.value = '';
+
+            const factor = parseFloat(inputVisible.dataset.factor) || 1;
+            recalcularRestante(prodId, factor, inputVisible);
+        }
+    }
+    let prod_id_temp = 0;
+    function recalcularRestante(prodId, factor = 1, inputModificado = null) {
+        const inputs = document.querySelectorAll(`input[name^="distribucion[${prodId}]"][name$="]1"]`);
+
+        let suma = 0;
+        let maximo = 0;
+        prod_id_temp = prodId;
+
+        inputs.forEach(input => {
+            if (!input.disabled) {
+                const valor = parseFloat(input.value) || 0;
+                suma += valor * factor;
+                maximo = parseFloat(input.dataset.max) || 0;
+
+                // Actualizar hidden
+                const hiddenName = input.name.replace(']1', ']');
+                const hidden = document.querySelector(`input[name="${hiddenName}"]`);
+                if (hidden) {
+                    hidden.value = (valor * factor).toFixed(2);
+                }
+            }
+        });
+
+        suma = Math.round(suma * 1000) / 1000;
+
+        // SI LA SUMA EXCEDE EL MÁXIMO MOSTRAR MODAL DE CONFIRMACIÓN
+        if (suma > maximo) {
+            const exceso = (suma - maximo) / factor;
+
+            excedenteTemp = {
+                prodId: prodId,
+                cantidad: exceso,
+                factor: factor,
+                inputElem: inputModificado || document.activeElement
+            };
+
+            // Rellenar datos en el modal de excedente
+            document.getElementById('lblCantidadExcedente').innerText = exceso.toFixed(2);
+            document.getElementById('cantidadReal').value = exceso * factor;
+
+
+
+
+            const selAlmacen = document.getElementById('selAlmacenExcedente');
+            selAlmacen.innerHTML = '';
+            almacenesGlobal.forEach(alm => {
+                selAlmacen.innerHTML += `<option value="${alm.id}">${alm.nombre}</option>`;
+            });
+
+            const modalExcedente = new bootstrap.Modal(document.getElementById('modalConfirmarExcedente'));
+            modalExcedente.show();
+            return;
+        }
+
+        const restante = Math.max(0, (Math.round((maximo - suma) * 1000) / 1000) / factor);
+
+        // Actualizar texto de restante
+        const textos = document.querySelectorAll(`.restante-prod[data-restante="${prodId}"]`);
+        textos.forEach(texto => {
+            texto.innerHTML = `Restante por asignar: <b>${restante.toFixed(2)}</b>`;
+        });
     }
 
-    const restante = Math.max(0, (Math.round((maximo - suma) * 1000) / 1000) / factor);
+    function guardarExcedenteModal() {
+        const almacenId = document.getElementById('selAlmacenExcedente').value;
 
-    // Actualizar texto de restante
-    const textos = document.querySelectorAll(`.restante-prod[data-restante="${prodId}"]`);
-    textos.forEach(texto => {
-        texto.innerHTML = `Restante por asignar: <b>${restante.toFixed(2)}</b>`;
-    });
-}
+        document.getElementById('excedente_confirmado').value = "1";
+        document.getElementById('excedente_almacen_id').value = almacenId;
+        document.getElementById('excedente_cantidad').value = excedenteTemp.cantidad;
+        document.getElementById('excedente_producto_id').value = excedenteTemp.prodId;
 
-function guardarExcedenteModal() {
-    const almacenId = document.getElementById('selAlmacenExcedente').value;
+        const modalExcedenteElem = document.getElementById('modalConfirmarExcedente');
+        const modalExcedente = bootstrap.Modal.getInstance(modalExcedenteElem);
+        if (modalExcedente) modalExcedente.hide();
 
-    document.getElementById('excedente_confirmado').value = "1";
-    document.getElementById('excedente_almacen_id').value = almacenId;
-    document.getElementById('excedente_cantidad').value = excedenteTemp.cantidad;
-    document.getElementById('excedente_producto_id').value = excedenteTemp.prodId;
-
-    const modalExcedenteElem = document.getElementById('modalConfirmarExcedente');
-    const modalExcedente = bootstrap.Modal.getInstance(modalExcedenteElem);
-    if (modalExcedente) modalExcedente.hide();
-
-    // Actualizar interfaz para reflejar cero restante
-    const textos = document.querySelectorAll(`.restante-prod[data-restante="${excedenteTemp.prodId}"]`);
-    textos.forEach(texto => {
-        texto.innerHTML =
-            `Restante por asignar: <b>0.00</b> <span class="badge bg-warning text-dark ms-2">Excedente asignado</span>`;
-    });
-}
-
-function cancelarExcedente() {
-    if (excedenteTemp.inputElem) {
-        excedenteTemp.inputElem.value = '';
-        const hiddenName = excedenteTemp.inputElem.name.replace(']1', ']');
-        const hidden = document.querySelector(`input[name="${hiddenName}"]`);
-        if (hidden) hidden.value = '0';
-
-        recalcularRestante(excedenteTemp.prodId, excedenteTemp.factor, excedenteTemp.inputElem);
+        // Actualizar interfaz para reflejar cero restante
+        const textos = document.querySelectorAll(`.restante-prod[data-restante="${excedenteTemp.prodId}"]`);
+        textos.forEach(texto => {
+            texto.innerHTML =
+                `Restante por asignar: <b>0.00</b> <span class="badge bg-warning text-dark ms-2">Excedente asignado</span>`;
+        });
     }
 
-    document.getElementById('excedente_confirmado').value = "0";
-    document.getElementById('excedente_almacen_id').value = "";
-    document.getElementById('excedente_cantidad').value = "0";
-    document.getElementById('excedente_producto_id').value = "";
-}
-let idFinal=0;
-function abrirModalAjuste(id, folio) {
-    const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalAjusteFaltante'));
-    document.getElementById('folioAjuste').innerText = folio;
-    document.getElementById('ajuste_compra_id').value = id;
-    idFinal=id;
+    function cancelarExcedente() {
+        if (excedenteTemp.inputElem) {
+            excedenteTemp.inputElem.value = '';
+            const hiddenName = excedenteTemp.inputElem.name.replace(']1', ']');
+            const hidden = document.querySelector(`input[name="${hiddenName}"]`);
+            if (hidden) hidden.value = '0';
 
-    const contenedor = document.getElementById('listaProductosFaltantes');
-    contenedor.innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border text-danger"></div></div>';
+            recalcularRestante(excedenteTemp.prodId, excedenteTemp.factor, excedenteTemp.inputElem);
+        }
 
-    modal.show();
-    almacenesGlobal = <?= json_encode($almacenUsuario) ?>;
+        document.getElementById('excedente_confirmado').value = "0";
+        document.getElementById('excedente_almacen_id').value = "";
+        document.getElementById('excedente_cantidad').value = "0";
+        document.getElementById('excedente_producto_id').value = "";
+    }
+    let idFinal = 0;
+    function abrirModalAjuste(id, folio) {
+        const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalAjusteFaltante'));
+        document.getElementById('folioAjuste').innerText = folio;
+        document.getElementById('ajuste_compra_id').value = id;
+        idFinal = id;
 
-    fetch(`/cfsistem/app/controllers/egresosController.php?action=obtenerFaltantes&compra_id=${id}`)
-        .then(res => res.json())
-        .then(data => {
-            contenedor.innerHTML = '';
+        const contenedor = document.getElementById('listaProductosFaltantes');
+        contenedor.innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border text-danger"></div></div>';
 
-            data.forEach(p => {
-                let tablaAlmacenes = `
+        modal.show();
+        almacenesGlobal = <?= json_encode($almacenUsuario ?? 0) ?>;
+
+        fetch(`/cfsistem/app/controllers/egresosController.php?action=obtenerFaltantes&compra_id=${id}`)
+            .then(res => res.json())
+            .then(data => {
+                contenedor.innerHTML = '';
+
+                data.forEach(p => {
+                    let tablaAlmacenes = `
                     <table class="table table-sm align-middle mb-0">
                         <thead class="text-body-secondary" style="font-size: 0.75rem;">
                             <tr>
@@ -358,8 +357,8 @@ function abrirModalAjuste(id, folio) {
                         </thead>
                         <tbody>`;
 
-                almacenesGlobal.forEach(alm => {
-                    tablaAlmacenes += `
+                    almacenesGlobal.forEach(alm => {
+                        tablaAlmacenes += `
                         <tr>
                             <td class="text-center">
                                 <div class="form-check form-switch d-inline-block">
@@ -389,13 +388,13 @@ function abrirModalAjuste(id, folio) {
                                        disabled>
                             </td>
                         </tr>`;
-                });
+                    });
 
-                tablaAlmacenes += `</tbody></table>`;
+                    tablaAlmacenes += `</tbody></table>`;
 
-                const restanteInicial = ((p.cantidad_pendiente) / p.factor_conversion).toFixed(2);
+                    const restanteInicial = ((p.cantidad_pendiente) / p.factor_conversion).toFixed(2);
 
-                contenedor.innerHTML += `
+                    contenedor.innerHTML += `
                     <div class="col-lg-6">
                         <div class="card border-0 shadow-sm h-100">
                             <div class="card-header border-bottom-0 py-3 d-flex justify-content-between align-items-center">
@@ -414,110 +413,110 @@ function abrirModalAjuste(id, folio) {
                             </div>
                         </div>
                     </div>`;
+                });
+            })
+            .catch(err => {
+                contenedor.innerHTML =
+                    '<div class="col-12 text-center text-danger py-4">Error al cargar los productos faltantes.</div>';
+                console.error(err);
             });
-        })
-        .catch(err => {
-            contenedor.innerHTML =
-                '<div class="col-12 text-center text-danger py-4">Error al cargar los productos faltantes.</div>';
-            console.error(err);
-        });
-}
+    }
 
-function aplicarFaltantesCompra() {
-    const compra_id = document.getElementById('ajuste_compra_id').value;
+    function aplicarFaltantesCompra() {
+        const compra_id = document.getElementById('ajuste_compra_id').value;
 
-    Swal.fire({
-        title: '¿Aplicar faltantes?',
-        text: 'Se descontarán del total y los faltantes se pondrán en 0.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, aplicar',
-        cancelButtonText: 'Cancelar',
-        confirmButtonColor: '#3085d6',
-        cancelButtonColor: '#d33'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            Swal.fire({
-                title: 'Procesando...',
-                text: 'Aplicando cambios',
-                allowOutsideClick: false,
-                didOpen: () => Swal.showLoading()
-            });
+        Swal.fire({
+            title: '¿Aplicar faltantes?',
+            text: 'Se descontarán del total y los faltantes se pondrán en 0.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sí, aplicar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                Swal.fire({
+                    title: 'Procesando...',
+                    text: 'Aplicando cambios',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
 
-            fetch(
+                fetch(
                     `/cfsistem/app/controllers/egresosController.php?action=aplicarFaltantesCompras&compra_id=${compra_id}`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Actualizado',
-                            timer: 2000,
-                            showConfirmButton: false
-                        }).then(() => {
-                            location.reload();
-                        });
-                    } else {
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Actualizado',
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => {
+                                location.reload();
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: data.message || 'No se pudo aplicar'
+                            });
+                        }
+                    })
+                    .catch(err => {
                         Swal.fire({
                             icon: 'error',
-                            title: 'Error',
-                            text: data.message || 'No se pudo aplicar'
+                            title: 'Error de conexión',
+                            text: 'No se pudo conectar con el servidor'
                         });
-                    }
-                })
-                .catch(err => {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error de conexión',
-                        text: 'No se pudo conectar con el servidor'
+                        console.error(err);
                     });
-                    console.error(err);
-                });
-        }
-    });
-}
+            }
+        });
+    }
 
-function procesarAjuste() {
-    const form = document.getElementById('formAjusteFaltante');
-    const formData = new FormData(form);
+    function procesarAjuste() {
+        const form = document.getElementById('formAjusteFaltante');
+        const formData = new FormData(form);
 
-    let hayDatos = false;
+        let hayDatos = false;
 
-    form.querySelectorAll('.input-dist:not(:disabled)').forEach(input => {
-        const cant = parseFloat(input.value) || 0;
-        if (cant > 0) {
-            hayDatos = true;
-        }
-    });
+        form.querySelectorAll('.input-dist:not(:disabled)').forEach(input => {
+            const cant = parseFloat(input.value) || 0;
+            if (cant > 0) {
+                hayDatos = true;
+            }
+        });
 
-    if (!hayDatos) return Swal.fire('Sin datos', 'Habilite al menos un almacén e ingrese cantidad.', 'warning');
+        if (!hayDatos) return Swal.fire('Sin datos', 'Habilite al menos un almacén e ingrese cantidad.', 'warning');
 
-    Swal.fire({
-        title: '¿Confirmar Ingreso?',
-        text: "Se afectará el stock de los almacenes habilitados.",
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#dc3545',
-        confirmButtonText: 'Sí, registrar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            fetch('/cfsistem/app/controllers/egresosController.php?action=procesarAjusteFaltante', {
+        Swal.fire({
+            title: '¿Confirmar Ingreso?',
+            text: "Se afectará el stock de los almacenes habilitados.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            confirmButtonText: 'Sí, registrar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('/cfsistem/app/controllers/egresosController.php?action=procesarAjusteFaltante', {
                     method: 'POST',
                     body: formData
                 })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        Swal.fire('¡Éxito!', data.message, 'success').then(() => location.reload());
-                    } else {
-                        Swal.fire('Error', data.message, 'error');
-                    }
-                })
-                .catch(err => {
-                    Swal.fire('Error', 'No se pudo procesar la solicitud.', 'error');
-                    console.error(err);
-                });
-        }
-    });
-}
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire('¡Éxito!', data.message, 'success').then(() => location.reload());
+                        } else {
+                            Swal.fire('Error', data.message, 'error');
+                        }
+                    })
+                    .catch(err => {
+                        Swal.fire('Error', 'No se pudo procesar la solicitud.', 'error');
+                        console.error(err);
+                    });
+            }
+        });
+    }
 </script>

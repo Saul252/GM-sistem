@@ -24,6 +24,18 @@
 
                             <img src="/cfsistem/public/assets/logo.ico" alt="Logo" width="55" height="55" class="me-3">
 
+                            <div class="fw-bold fs-5" style="color:#1f2a37;">
+                                BODEGA FORTALEZA CENTRO
+                            </div>
+
+                            <div class="text-body-secondary small" id="print-fecha">
+                                Fecha: --/--/----
+                            </div>
+
+                        </div>
+
+                        <!-- Empresa -->
+                        <div class="text-end">
                             <div>
                                 <h2 class="fw-bold text-uppercase mb-0" style="color:#1f2a37; letter-spacing:1px;">
                                     COTIZACIÓN
@@ -34,17 +46,6 @@
                                 </div>
                             </div>
 
-                        </div>
-
-                        <!-- Empresa -->
-                        <div class="text-end">
-                            <div class="fw-bold fs-5" style="color:#1f2a37;">
-                                CFSistem
-                            </div>
-
-                            <div class="text-body-secondary small" id="print-fecha">
-                                Fecha: --/--/----
-                            </div>
                         </div>
 
                     </div>
@@ -262,34 +263,21 @@
         return `
 <div id="areaImpresion" class="text-uppercase bg-white" style="min-height: 650px; font-size: 0.95rem;">
 
-    <!-- ENCABEZADO -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+   <!-- ENCABEZADO -->
+<div class="d-flex justify-content-between align-items-center mb-4">
 
-        <!-- Logo + Título -->
-        <div class="d-flex align-items-center">
+    <!-- Logo + Título (Alineado a la Izquierda) -->
+    <div class="d-flex align-items-center">
 
-            <img src="/cfsistem/public/assets/logo.ico"
-                 alt="Logo"
-                 width="55"
-                 height="55"
-                 class="me-3">
+        <img src="/cfsistem/public/assets/logo.ico"
+             alt="Logo"
+             width="55"
+             height="55"
+             class="me-3">
 
-            <div>
-                <h2 class="fw-bold text-uppercase mb-0" style="color:#1f2a37; letter-spacing:1px;">
-                    COTIZACIÓN
-                </h2>
-
-                <div class="text-body-secondary small mt-1 text-uppercase" id="print-folio">
-                    Folio: <span class="fw-semibold">${id}</span>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Empresa -->
-        <div class="text-end text-uppercase">
+        <div class="text-start text-uppercase"> <!-- 🔥 Cambiado a text-start para alinear a la izquierda -->
             <div class="fw-bold fs-5" style="color:#1f2a37;">
-                CFSistem
+                BODEGA FORTALEZA CENTRO
             </div>
 
             <div class="text-uppercase text-body-secondary small" id="print-fecha">
@@ -298,6 +286,19 @@
         </div>
 
     </div>
+
+    <!-- Cotización / Folio (Alineado a la Derecha) -->
+    <div class="text-end">
+        <div class="fw-bold fs-5" style="color:#1f2a37;">
+            COTIZACIÓN
+        </div>
+
+        <div class="text-body-secondary small mt-1 text-uppercase" id="print-folio">
+            Folio: <span class="fw-semibold">${id}</span>
+        </div>
+    </div>
+
+</div>
 
     <!-- INFO -->
     <div class="row p-3" style="background: #ffffff02 !important;">

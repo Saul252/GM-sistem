@@ -15,6 +15,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- Select2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+        rel="stylesheet" />
+
+    <!-- Select2 JS (Colócalo después de jQuery) -->
+
 
     <style>
         :root {
@@ -38,27 +45,28 @@
             padding: 1rem 2rem;
         }
 
+        /* ===== KPIs: solo tamaños, layout lo hace Bootstrap ===== */
         .kpi-widget {
-            background: white;
-            border-radius: 12px;
-            padding: 1.25rem;
+            background: transparent;
             border: none;
-            border-left: 4px solid #e3e6f0;
-            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.1);
-            height: 100%;
+            padding: 0.25rem;
+            text-align: center;
         }
 
         .kpi-label {
-            font-size: 0.7rem;
+            font-size: 9px;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 5px;
+            line-height: 1.1;
+            margin-bottom: 2px;
+            color: #8a92a3;
         }
 
         .kpi-value {
-            font-size: 1.4rem;
+            font-size: 13px;
             font-weight: 700;
+            line-height: 1.2;
             color: #5a5c69;
         }
 
@@ -132,7 +140,7 @@
             }
         }
 
-        /* ===== Sub-tabla de productos por venta ===== */
+        /* ===== Fila de productos (fila intercalada) ===== */
         .productos-row {
             background: transparent;
         }
@@ -142,44 +150,96 @@
             border-top: none !important;
         }
 
-        /* Desactiva hover de Bootstrap sobre la fila de productos */
         .table-hover>tbody>tr.productos-row:hover>td {
             background-color: transparent !important;
         }
 
+        /* ===== Contenedor de productos ===== */
         .productos-container {
-            padding: 0.6rem 1.5rem 1rem 2rem;
+            padding: 0.4rem 1rem 0.75rem 1rem;
             background: #fafbfc;
-            border-left: 4px solid #007aff;
-            border-radius: 0 0 10px 10px;
-            margin: 0 0.75rem 0.9rem 0.75rem;
-            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.03);
+            border-left: 3px solid #007aff;
+            border-radius: 0 0 8px 8px;
+            margin: 0 0.5rem 0.75rem 0.5rem;
         }
 
         .productos-container table {
-            font-size: 0.8rem;
+            font-size: 12.5px;
+            width: 100%;
+            table-layout: fixed;
             margin-bottom: 0;
         }
 
         .productos-container thead th {
-            font-size: 0.68rem;
+            font-size: 10px;
             text-transform: uppercase;
-            color: #858796;
+            color: #5a6272;
             font-weight: 700;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.4px;
             border-bottom: 1px solid #e3e6f0;
-            padding: 0.35rem 0.5rem;
-            background: transparent;
+            padding: 6px 10px;
+            background: #f3f6fa;
         }
 
         .productos-container tbody td {
-            padding: 0.4rem 0.5rem;
+            font-size: 12.5px;
+            padding: 6px 10px;
             border-bottom: 1px solid #f0f1f5;
             vertical-align: middle;
         }
 
         .productos-container tbody tr:last-child td {
             border-bottom: none;
+        }
+
+        .productos-container tbody td b {
+            font-size: 13px;
+        }
+
+        .productos-container tbody td small {
+            font-size: 10.5px;
+        }
+
+        .productos-container .badge {
+            font-size: 10px;
+            padding: 3px 8px;
+        }
+
+        /* Alineación por columna de productos (6 columnas) */
+        .productos-container thead th:nth-child(1),
+        .productos-container tbody td:nth-child(1) {
+            width: 36%;
+            text-align: left;
+        }
+
+        .productos-container thead th:nth-child(2),
+        .productos-container tbody td:nth-child(2) {
+            width: 15%;
+            text-align: center;
+        }
+
+        .productos-container thead th:nth-child(3),
+        .productos-container tbody td:nth-child(3) {
+            width: 13%;
+            text-align: right;
+        }
+
+        .productos-container thead th:nth-child(4),
+        .productos-container tbody td:nth-child(4) {
+            width: 14%;
+            text-align: center;
+        }
+
+        .productos-container thead th:nth-child(5),
+        .productos-container tbody td:nth-child(5) {
+            width: 12%;
+            text-align: center;
+        }
+
+        .productos-container thead th:nth-child(6),
+        .productos-container tbody td:nth-child(6) {
+            width: 10%;
+            text-align: center;
         }
 
         /* Separador visual entre cada venta */
@@ -190,48 +250,134 @@
         .venta-row:not(:first-child)>td {
             border-top: 2px solid #e3e6f0 !important;
         }
+
+        /* ===== Card de Folios (estilo impresión) ===== */
+        .card.w-lg-60 {
+            background: transparent;
+            box-shadow: none !important;
+            padding: 0;
+        }
+
+        .card.w-lg-60>h5 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            color: #007aff;
+            text-align: center;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #dfe3ea;
+            margin: 12px auto 6px;
+            max-width: 100%;
+            font-weight: 800;
+        }
+
+        .card.w-lg-60 .table {
+            font-size: 11px;
+        }
+
+        .card.w-lg-60 .table thead th {
+            font-size: 9px;
+            padding: 5px 10px;
+            background: #f3f6fa;
+            color: #5a6272;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-weight: 700;
+            border-bottom: 1px solid #e9edf3;
+        }
+
+        .card.w-lg-60 .table tbody td {
+            padding: 5px 10px;
+        }
+
+        .card.w-lg-60 .table tbody tr.venta-row:not(:first-child)>td {
+            border-top: 1px solid #dfe3ea !important;
+        }
+
+        .card.w-lg-60 .table tbody tr.venta-row>td {
+            border-bottom: none !important;
+        }
+
+        .card.w-lg-60 .table tbody tr.productos-row>td {
+            padding: 0 !important;
+            border-top: none !important;
+            border-bottom: none !important;
+        }
+
+        /* ===== Banner saldo a favor compacto ===== */
+        @media (min-width: 992px) {
+            .alert.alert-info {
+                max-width: 60%;
+                margin-left: auto;
+                margin-right: auto;
+            }
+        }
+
+        .alert.alert-info {
+            box-shadow: none;
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-size: 11px;
+        }
+
+        .alert.alert-info h5 {
+            font-size: 12px;
+        }
+
+        .alert.alert-info .bi-info-square-fill {
+            font-size: 1.5rem;
+        }
     </style>
 </head>
 
 <body>
 
     <header class="header-expediente shadow-sm mb-4">
-        <div class="container-fluid d-flex justify-content-between align-items-center">
+        <div class="container-fluid d-flex align-items-center flex-wrap gap-2">
+
+            <!-- Título + RFC -->
+            <div class="d-flex align-items-center gap-2 me-auto">
+                <h5 class="fw-bold mb-0 text-dark text-nowrap">
+                    <?= htmlspecialchars($cliente['nombre_comercial']) ?>
+                </h5>
+                <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1 fw-semibold">
+                    RFC:
+                    <?= htmlspecialchars($cliente['rfc']) ?>
+                </span>
+            </div>
+
+            <?php
+            date_default_timezone_set('America/Mexico_City');
+            $fechaInicio = $_GET['fecha_inicio'] ?? date('Y-m-01');
+            $fechaFin = $_GET['fecha_fin'] ?? date('Y-m-t');
+            ?>
+
+            <!-- Cliente -->
+            <div style="min-width: 200px;">
+                <select name="cliente_id_editar" id="cliente_id_editar"
+                    class="form-select form-select-sm select2-pagina" onchange="filtrarExpediente()" required>
+                </select>
+            </div>
+
+            <!-- Desde -->
             <div>
-                <h4 class="fw-bold mb-0 text-dark"><?= htmlspecialchars($cliente['nombre_comercial']) ?></h4>
-                <span class="badge bg-primary-subtle text-primary">RFC: <?= htmlspecialchars($cliente['rfc']) ?></span>
+                <input type="date" id="fecha_inicio" class="form-control form-control-sm"
+                    value="<?= htmlspecialchars($fechaInicio) ?>" title="Fecha inicio">
             </div>
 
-            <div style="display:flex; gap:10px; align-items:end; margin-bottom:15px; flex-wrap:wrap;">
-
-
-
-                <?php
-                date_default_timezone_set('America/Mexico_City');
-                $fechaInicio = $_GET['fecha_inicio'] ?? date('Y-m-01');
-                $fechaFin = $_GET['fecha_fin'] ?? date('Y-m-t');
-                ?>
-
-                <div>
-                    <label style="font-size:12px;">Fecha inicio</label>
-                    <input type="date" id="fecha_inicio" class="form-control"
-                        value="<?= htmlspecialchars($fechaInicio) ?>">
-                </div>
-
-                <div>
-                    <label style="font-size:12px;">Fecha fin</label>
-                    <input type="date" id="fecha_fin" class="form-control" value="<?= htmlspecialchars($fechaFin) ?>">
-                </div>
-
-                <button class="btn btn-primary" onclick="filtrarExpediente()">
-                    Filtrar
-                </button>
-
-
-                <button class="btn btn-dark btn-sm" onclick="imprimirEstadoCuenta() ">
-                    <i class="bi bi-printer"></i> Imprimir
-                </button>
+            <!-- Hasta -->
+            <div>
+                <input type="date" id="fecha_fin" class="form-control form-control-sm"
+                    value="<?= htmlspecialchars($fechaFin) ?>" title="Fecha fin">
             </div>
+
+            <!-- Botones -->
+            <button class="btn btn-primary btn-sm px-3" onclick="filtrarExpediente()" title="Filtrar">
+                <i class="bi bi-funnel"></i>
+            </button>
+            <button class="btn btn-dark btn-sm px-3" onclick="imprimirEstadoCuenta()" title="Imprimir">
+                <i class="bi bi-printer"></i>
+            </button>
 
         </div>
     </header>
@@ -240,8 +386,7 @@
     <div class="container-fluid px-4">
 
         <?php if ($resumen['saldo_total'] < -0.01): ?>
-            <div class="alert alert-info border-0 shadow-sm mb-4 d-flex align-items-center p-3"
-                style="border-radius: 12px;">
+            <div class="alert alert-info border-0 mb-4 d-flex align-items-center p-3" style="border-radius: 6px;">
                 <i class="bi bi-info-square-fill fs-3 me-3 text-info"></i>
                 <div>
                     <h5 class="mb-0 fw-bold">Saldo a Favor General</h5>
@@ -249,19 +394,15 @@
                 </div>
             </div>
         <?php endif; ?>
-        <div class="row g-3 mb-4">
-            <div class="col-md-3">
-                <div class="kpi-widget border-left-primary">
-                    <div class="kpi-label text-primary">Compras Totales</div>
-                    <div class="kpi-value">$ <?= number_format($resumen['total_comprado'], 2) ?></div>
-                </div>
+        <div class="d-flex justify-content-center align-items-center flex-wrap gap-4 mb-4">
+            <div class="kpi-widget border-left-primary text-center">
+                <div class="kpi-label text-uppercase text-secondary fw-bold">Compras Totales</div>
+                <div class="kpi-value fw-bold text-primary">$ <?= number_format($resumen['total_comprado'], 2) ?></div>
             </div>
 
-            <div class="col-md-3">
-                <div class="kpi-widget border-left-success">
-                    <div class="kpi-label text-success">Total Pagado</div>
-                    <div class="kpi-value">$ <?= number_format($resumen['total_pagado'], 2) ?></div>
-                </div>
+            <div class="kpi-widget border-left-success text-center">
+                <div class="kpi-label text-uppercase text-secondary fw-bold">Total Pagado</div>
+                <div class="kpi-value fw-bold text-success">$ <?= number_format($resumen['total_pagado'], 2) ?></div>
             </div>
 
             <?php
@@ -270,1171 +411,528 @@
             $claseColor = $esSaldoAFavor ? 'border-left-info' : 'border-left-danger';
             ?>
 
-            <div class="col-md-3">
-                <div class="kpi-widget <?= $claseColor ?>">
-                    <div class="kpi-label <?= $esSaldoAFavor ? 'text-info' : 'text-danger' ?>">
-                        <?= $esSaldoAFavor ? 'A Favor' : 'Saldo Pendiente' ?>
-                    </div>
-                    <div class="kpi-value <?= $esSaldoAFavor ? 'text-info' : 'text-danger' ?>">
-                        $ <?= number_format(abs($saldoReal), 2) ?>
-                    </div>
+            <div class="kpi-widget <?= $claseColor ?> text-center">
+                <div class="kpi-label text-uppercase text-secondary fw-bold">
+                    <?= $esSaldoAFavor ? 'A Favor' : 'Saldo Pendiente' ?>
                 </div>
-            </div>
-
-            <div class="col-md-3">
-                <div class="kpi-widget d-flex align-items-center justify-content-between border-left-primary">
-                    <div style="width: 60px; height: 60px;"><canvas id="chartDona"></canvas></div>
-                    <div class="text-end">
-                        <div class="kpi-label">Estatus</div>
-                        <div class="fw-bold text-dark">
-                            <?= round(($resumen['total_pagado'] / max($resumen['total_comprado'], 1)) * 100) ?>%
-                        </div>
-                    </div>
+                <div class="kpi-value fw-bold <?= $esSaldoAFavor ? 'text-info' : 'text-danger' ?>">
+                    $ <?= number_format(abs($saldoReal), 2) ?>
                 </div>
             </div>
 
 
+        </div>
 
-            <div class="d-flex justify-content-center px-2">
-                <div class="card border-0 shadow-sm mb-3 w-100 w-lg-60" style="max-width: 1200px;">
-                    <h5 class="fw-bold mb-3 text-dark">Folios Detallados</h5>
 
-                    <div class="table-responsive">
-                        <table class="table align-middle table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th scope="col" class="ps-3">Fecha</th>
-                                    <th scope="col">Folio Interno</th>
-                                    <th scope="col" class="text-end">Total Facturado</th>
-                                    <th scope="col" class="text-end">Total Abonado</th>
-                                    <th scope="col" class="text-end">Saldo</th>
-                                    <th scope="col" class="text-center">Estado / Acción</th>
-                                    <th scope="col" class="text-center pe-3">Opciones</th>
+        <div class="d-flex justify-content-center px-2">
+            <div class="card border-0 mb-3 w-100 w-lg-60">
+
+
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="ps-3">Fecha</th>
+                                <th scope="col">Folio </th>
+                                <th scope="col" class="text-end">Total</th>
+                                <th scope="col" class="text-end">Pagado</th>
+                                <th scope="col" class="text-end">Saldo</th>
+
+                                <th scope="col" class="text-center pe-3">Opciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($expediente as $v):
+                                $idActual = $v['venta_id'] ?? $v['id'];
+                                $esCancelada = (isset($v['estado_general']) && $v['estado_general'] == 'cancelada');
+                                $saldoFolio = floatval($v['total']) - floatval($v['total_pagado']);
+                                $folioLiquidado = abs($saldoFolio) <= 0.01;
+                                $folioAFavorIndividual = $saldoFolio < -0.01;
+                                ?>
+                                <!-- FILA PRINCIPAL DE LA VENTA -->
+                                <tr class="venta-row p-4">
+                                    <td class="ps-3">
+                                        <small
+                                            class="text-body-secondary"><?= date('d/m/Y', strtotime($v['fecha'])) ?></small>
+                                    </td>
+
+                                    <td>
+                                        <span class="badge bg-light text-dark border">
+                                            <?= htmlspecialchars($v['folio']) ?>
+                                        </span>
+                                    </td>
+
+                                    <td class="text-end fw-semibold text-dark">
+                                        $<?= number_format($v['total'], 2) ?>
+                                    </td>
+
+                                    <td class="text-end fw-semibold text-success">
+                                        $<?= number_format($v['total_pagado'], 2) ?>
+                                    </td>
+
+                                    <td class="text-end fw-bold <?= $saldoFolio > 0 ? 'text-danger' : 'text-info' ?>">
+                                        $<?= number_format(abs($saldoFolio), 2) ?>
+                                    </td>
+
+
+
+                                    <td class="text-center pe-3">
+                                        <div class="d-flex gap-1 justify-content-center">
+                                            <a class="btn btn-outline-primary btn-sm"
+                                                href="/cfsistem/app/backend/ventas/ticket_venta.php?id=<?= $idActual ?>"
+                                                target="_blank" title="Ticket">
+                                                <i class="bi bi-receipt"></i>
+                                            </a>
+                                            <a class="btn btn-outline-secondary btn-sm"
+                                                href="/cfsistem/app/backend/ventas/ticketFormal.php?id=<?= $idActual ?>"
+                                                target="_blank" title="Remisión">
+                                                <i class="bi bi-file-earmark-text"></i>
+                                            </a>
+
+                                        </div>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($expediente as $v):
-                                    $idActual = $v['venta_id'] ?? $v['id'];
-                                    $esCancelada = (isset($v['estado_general']) && $v['estado_general'] == 'cancelada');
-                                    $saldoFolio = floatval($v['total']) - floatval($v['total_pagado']);
-                                    $folioLiquidado = abs($saldoFolio) <= 0.01;
-                                    $folioAFavorIndividual = $saldoFolio < -0.01;
-                                    ?>
-                                    <!-- FILA PRINCIPAL DE LA VENTA -->
-                                    <tr class="venta-row">
-                                        <td class="ps-3">
-                                            <small
-                                                class="text-body-secondary"><?= date('d/m/Y', strtotime($v['fecha'])) ?></small>
-                                        </td>
 
-                                        <td>
-                                            <span class="badge bg-light text-dark border">
-                                                <?= htmlspecialchars($v['folio']) ?>
-                                            </span>
-                                        </td>
-
-                                        <td class="text-end fw-semibold text-dark">
-                                            $<?= number_format($v['total'], 2) ?>
-                                        </td>
-
-                                        <td class="text-end fw-semibold text-success">
-                                            $<?= number_format($v['total_pagado'], 2) ?>
-                                        </td>
-
-                                        <td class="text-end fw-bold <?= $saldoFolio > 0 ? 'text-danger' : 'text-info' ?>">
-                                            $<?= number_format(abs($saldoFolio), 2) ?>
-                                        </td>
-
-                                        <td class="text-center">
-                                            <?php if ($esCancelada): ?>
-                                                <span class="badge bg-secondary px-3 py-2">CANCELADA</span>
-                                            <?php elseif ($folioLiquidado): ?>
-                                                <span class="badge bg-success px-3 py-2">LIQUIDADO</span>
-                                            <?php elseif ($folioAFavorIndividual): ?>
-                                                <span class="badge bg-info px-3 py-2">A FAVOR</span>
-                                            <?php else: ?>
-                                                <span class="badge bg-danger px-3 py-2">PENDIENTE</span>
-                                            <?php endif; ?>
-                                        </td>
-
-                                        <td class="text-center pe-3">
-                                            <div class="d-flex gap-1 justify-content-center">
-                                                <a class="btn btn-outline-primary btn-sm"
-                                                    href="/cfsistem/app/backend/ventas/ticket_venta.php?id=<?= $idActual ?>"
-                                                    target="_blank" title="Ticket">
-                                                    <i class="bi bi-receipt"></i>
-                                                </a>
-                                                <a class="btn btn-outline-secondary btn-sm"
-                                                    href="/cfsistem/app/backend/ventas/ticketFormal.php?id=<?= $idActual ?>"
-                                                    target="_blank" title="Remisión">
-                                                    <i class="bi bi-file-earmark-text"></i>
-                                                </a>
-                                                <button class="btn btn-sm btn-dark"
-                                                    onclick="verDetalle(<?= intval($idActual) ?>)" title="Ver Detalle">
-                                                    <i class="bi bi-eye-fill"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-
-                                    <!-- FILA DE PRODUCTOS (se llena automáticamente vía JS) -->
-                                    <tr class="productos-row" id="productos-row-<?= $idActual ?>">
-                                        <td colspan="7">
-                                            <div class="productos-container" data-venta-id="<?= $idActual ?>">
-                                                <div class="text-center py-2">
-                                                    <div class="spinner-border spinner-border-sm text-primary"></div>
-                                                    <small class="text-muted ms-2">Cargando productos...</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="modal fade" id="modalDetalle" tabindex="-1">
-                    <div class="modal-dialog modal-xl modal-dialog-centered">
-                        <div class="modal-content border-0 shadow">
-
-                            <div class="modal-header bg-dark text-white">
-                                <h6 class="modal-title fw-bold">
-                                    Información Venta: <span id="spanFolio" class="text-warning"></span>
-                                </h6>
-                                <button type="button" class="btn-close btn-close-white"
-                                    data-bs-dismiss="modal"></button>
-                            </div>
-
-                            <div class="modal-body p-0">
-                                <div class="row g-0">
-
-                                    <div class="col-md-3 bg-light border-end p-4">
-
-                                        <div class="mb-3">
-                                            <small class="text-uppercase text-body-secondary fw-bold">Cliente</small>
-                                            <div id="detCliente" class="fw-semibold"></div>
-                                        </div>
-
-                                        <div class="mb-4">
-                                            <small class="text-uppercase text-body-secondary fw-bold">Almacén</small>
-                                            <div id="detAlmacen" class="fw-semibold"></div>
-                                        </div>
-
-                                        <div class="card border-0 shadow-sm mb-3">
-                                            <div class="card-body text-center">
-
-                                                <div class="mb-3">
-                                                    <small class="text-uppercase text-body-secondary fw-bold d-block">
-                                                        Total de Venta
-                                                    </small>
-                                                    <span id="detTotalLabel" class="fs-5 fw-bold text-primary">
-                                                        $0.00
-                                                    </span>
-                                                </div>
-
-                                                <hr>
-
-                                                <div>
-                                                    <small class="text-uppercase text-body-secondary fw-bold d-block">
-                                                        Saldo Pendiente
-                                                    </small>
-                                                    <span id="detSaldoLabel" class="fs-4 fw-bold text-danger">
-                                                        $0.00
-                                                    </span>
-                                                </div>
-
-
+                                <!-- FILA DE PRODUCTOS (se llena automáticamente vía JS) -->
+                                <tr class="productos-row" id="productos-row-<?= $idActual ?>">
+                                    <td colspan="7">
+                                        <div class="productos-container" data-venta-id="<?= $idActual ?>">
+                                            <div class="text-center py-2">
+                                                <div class="spinner-border spinner-border-sm text-primary"></div>
+                                                <small class="text-muted ms-2">Cargando productos...</small>
                                             </div>
                                         </div>
-                                        <button type="button" class="btn btn-outline-primary rounded-pill px-3"
-                                            onclick="imprimirContenidoModal()">
-                                            <i class="bi bi-printer-fill me-1"></i> Imprimir a PDF
-                                        </button>
-
-                                        <!-- <div id="boton"></div> -->
-                                    </div>
-
-                                    <div class="col-md-9 p-4">
-
-                                        <div class="card border-0 shadow-sm mb-3">
-                                            <div
-                                                class="card-header bg-white fw-bold small text-uppercase text-body-secondary">
-                                                Productos
-                                            </div>
-                                            <div class="table-responsive" style="max-height: 180px;">
-                                                <table class="table table-sm align-middle mb-0">
-                                                    <thead class="table-light">
-                                                        <tr class="small text-uppercase">
-                                                            <th>Producto</th>
-                                                            <th class="text-center">Venta</th>
-                                                            <th class="text-center">Surtido</th>
-                                                            <th class="text-center text-danger">Falta</th>
-                                                            <th class="text-center d-none">Entrega</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody id="tbodyDetalle"></tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-
-                                        <div class="row g-3">
-
-                                            <div class="col-12">
-                                                <div class="card border-0 shadow-sm">
-                                                    <div
-                                                        class="card-header bg-white fw-bold small text-uppercase text-body-secondary">
-                                                        Historial de Pagos
-                                                    </div>
-                                                    <div class="table-responsive" style="max-height: 180px;">
-                                                        <table class="table table-sm align-middle mb-0">
-                                                            <thead class="table-light">
-                                                                <tr class="small text-uppercase">
-                                                                    <th>Fecha</th>
-                                                                    <th>Monto</th>
-                                                                    <th>Método</th>
-                                                                    <th>REFERENCIA</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody id="tbodyPagos"></tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="col-12 d-none">
-                                                <div class="card border-0 shadow-sm">
-                                                    <div
-                                                        class="card-header bg-white fw-bold small text-uppercase text-body-secondary">
-                                                        Historial de Entregas
-                                                    </div>
-                                                    <div class="table-responsive" style="max-height: 180px;">
-                                                        <table class="table table-sm align-middle mb-0">
-                                                            <thead class="table-light">
-                                                                <tr class="small text-uppercase">
-                                                                    <th>Fecha</th>
-                                                                    <th>Responsable</th>
-                                                                    <th>Producto</th>
-                                                                    <th class="text-center">Cant</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody id="tbodyHistorial"></tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="col-12 d-none">
-                                                <div class="card border-0 shadow-sm">
-                                                    <div
-                                                        class="card-header bg-white fw-bold small text-uppercase text-body-secondary">
-                                                        Repartos
-                                                    </div>
-                                                    <div class="table-responsive" style="max-height: 220px;">
-                                                        <table class="table table-sm align-middle mb-0">
-                                                            <thead class="table-light">
-                                                                <tr class="small text-uppercase">
-                                                                    <th># Reparto</th>
-                                                                    <th>Fecha Entrega</th>
-                                                                    <th>Estado</th>
-                                                                    <th class="text-center">Ruta</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody id="tbodyRepartos"></tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                        </div>
-
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-
-                <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
-                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-                <?php require_once __DIR__ . '/../ventasHistorialModales/registarAbonoCliente.php' ?>
-
-
-                <script>
-                    const modalNuevoAbonoObj = new bootstrap.Modal('#modalNuevoAbono');
-
-
-                    let ventaActual = null;
-                    // La ruta al controlador (ajusta si el nombre del archivo varía)
-                    const URL_CONTROLLER = '/cfsistem/app/controllers/ventasHistorialController.php';
-                    $(document).ready(function () {
-                        renderCharts();
-                    });
-
-                    function renderCharts() {
-                        const ctx = document.getElementById('chartDona');
-                        if (!ctx) return;
-
-                        new Chart(ctx, {
-                            type: 'doughnut',
-                            data: {
-                                datasets: [{
-                                    data: [
-                                        <?= isset($resumen['total_pagado']) ? floatval($resumen['total_pagado']) : 0 ?>,
-                                        <?= isset($resumen['saldo_total']) ? max(0, floatval($resumen['saldo_total'])) : 0 ?>
-                                    ],
-                                    backgroundColor: ['#1cc88a', '#e74a3b'],
-                                    borderWidth: 0
-                                }]
-                            },
-                            options: {
-                                cutout: '75%',
-                                plugins: {
-                                    legend: {
-                                        display: false
-                                    }
-                                },
-                                responsive: true,
-                                maintainAspectRatio: false
-                            }
-                        });
-                    }
-
-                    function abrirModalSaldarFavor(favorDisponible, deudaPendiente) {
-                        // Calculamos el límite: no podemos usar más de lo que hay, ni pagar más de lo que se debe
-                        const montoMaximo = Math.min(favorDisponible, deudaPendiente);
-
-                        Swal.fire({
-                            title: 'Compensación de Saldos',
-                            icon: 'info',
-                            html: `
-            <div class="text-start border-bottom pb-2 mb-3" style="font-size: 0.9rem;">
-                <div class="d-flex justify-content-between mb-1">
-                    <span>Saldo a Favor:</span>
-                    <b class="text-success">$ ${favorDisponible.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</b>
-                </div>
-                <div class="d-flex justify-content-between">
-                    <span>Deuda en Contra:</span>
-                    <b class="text-danger">$ ${deudaPendiente.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</b>
-                </div>
-            </div>
-            <div class="text-start">
-                <label class="form-label fw-bold small">Monto a compensar:</label>
-                <div class="input-group">
-                    <span class="input-group-text">$</span>
-                    <input type="number" id="monto_cruce" class="form-control form-control-lg fw-bold" 
-                           value="${montoMaximo.toFixed(2)}" 
-                           max="${montoMaximo}" min="0.01" step="0.01">
-                </div>
-                <p class="text-body-secondary mt-2" style="font-size: 0.75rem;">
-                    <i class="bi bi-info-circle"></i> Este ajuste restará el monto de ambas cuentas para limpiar el historial del cliente.
-                </p>
-            </div>
-        `,
-                            showCancelButton: true,
-                            confirmButtonText: 'Aplicar Ajuste',
-                            cancelButtonText: 'Cancelar',
-                            confirmButtonColor: '#f6c23e',
-                            reverseButtons: true,
-                            preConfirm: () => {
-                                const monto = document.getElementById('monto_cruce').value;
-                                if (!monto || monto <= 0 || monto > montoMaximo) {
-                                    Swal.showValidationMessage(
-                                        `Monto inválido. Máximo permitido: $${montoMaximo.toFixed(2)}`);
-                                }
-                                return monto;
-                            }
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                procesarAjusteContable(result.value);
-                            }
-                        });
-                    }
-
-                    function procesarAjusteContable(monto) {
-                        Swal.fire({
-                            title: 'Procesando ajuste...',
-                            allowOutsideClick: false,
-                            didOpen: () => Swal.showLoading()
-                        });
-
-                        // Ajustamos la llamada para que coincida con tu estructura de 'accion'
-                        $.post('/cfsistem/app/controllers/clienteExpedienteController.php', {
-                            accion: 'saldar_deuda_con_favor', // El nombre del case que definimos
-                            id_cliente: <?= json_encode($id_cliente ?? 0) ?>,
-                            monto_a_usar: monto
-                        }, function (res) {
-                            if (res.status === 'success') {
-                                Swal.fire({
-                                    title: '¡Éxito!',
-                                    text: res.message,
-                                    icon: 'success',
-                                    confirmButtonColor: '#007aff'
-                                }).then(() => {
-                                    location.reload(); // Recarga para actualizar los KPIs con los nuevos saldos
-                                });
-                            } else {
-                                Swal.fire('Error', res.message || 'Error al procesar el ajuste.', 'error');
-                            }
-                        }, 'json').fail(function () {
-                            Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
-                        });
-                    }
-                </script>
-
-                <script>
-                    function filtrarExpediente() {
-                        const fechaInicio = document.getElementById('fecha_inicio').value;
-                        const fechaFin = document.getElementById('fecha_fin').value;
-
-                        const urlParams = new URLSearchParams(window.location.search);
-                        const id = urlParams.get('id');
-
-                        console.log("ID:", id);
-
-                        // REDIRECCIÓN
-                        window.location.href =
-                            `/cfsistem/app/controllers/clienteExpedienteController.php?id=${id}&fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
-
-
-                    }
-                </script>
-                <script>
-                    async function verDetalle(id) {
-                        console.log(id);
-                        let venta = parseInt(id);
-                        try {
-                            // 🔥 OBTENER IDS PENDIENTES
-                            const respIds = await fetch(
-                                `/cfsistem/app/controllers/accesoController.php?action=get_ids_pendientes_venta&venta_id=${id}`
-                            );
-                            const resNAlmacen = await fetch(
-                                `/cfsistem/app/controllers/accesoController.php?action=obtener_id_almacen&id=${id}`
-                            );
-
-                            const dataAlmacen = await resNAlmacen.json();
-                            const almacen_id_conseguido = dataAlmacen.almacen.almacen_id;
-                            console.log(dataAlmacen.almacen.almacen_id);
-
-                            const dataIds = await respIds.json();
-                            console.log(dataIds.ids);
-
-                            // =====================================================
-                            // 🔥 HABILITAR / DESHABILITAR BOTÓN GESTIÓN
-                            // =====================================================
-                            if (Array.isArray(dataIds.ids) && dataIds.ids.length > 0) {
-                                console.log('hola');
-                                $('#btnGestionVenta')
-                                    .removeClass('d-none')
-                                    .prop('disabled', false)
-                                    .attr(
-                                        'onclick',
-                                        `abrirModalDespachoVentaTotal(${id}, ${almacen_id_conseguido})`
-                                    );
-                            } else {
-                                $('#btnGestionVenta')
-                                    .addClass('d-none')
-                                    .prop('disabled', true)
-                                    .removeAttr('onclick');
-                            }
-
-                            const res = await fetch(`/cfsistem/app/controllers/historialPedidosVendedorController.php?action=obtenerDetalle&id=${id}`);
-                            cargarRepartos(id);
-                            const data = await res.json();
-
-
-
-                            $('#spanFolio').text(data.info.folio);
-                            $('#detCliente').text(data.info.nombre_comercial);
-                            $('#detAlmacen').text(data.info.almacen);
-
-                            // =====================================================
-                            // CORRECCIÓN: PRIMERO INYECTAMOS EL BOTÓN EN EL DOM
-                            // =====================================================
-                            const htmlboton = `
-            <button id="btnAbonar"
-                class="btn btn-primary w-100 fw-bold shadow-sm"
-                onclick="abrirNuevoAbono(${id})">
-                <i class="bi bi-cash-coin me-1"></i> Registrar Abono
-            </button>
-        `;
-                            $('#boton').html(htmlboton);
-
-                            // =====================================================
-                            // AHORA QUE EXISTE, VALIDAMOS EL SALDO Y SU VISIBILIDAD
-                            // =====================================================
-                            const total = parseFloat(data.info.total) || 0;
-                            const pagado = parseFloat(data.info.total_pagado) || 0;
-                            const deuda = total - pagado;
-                            $('#detTotalLabel').text('$' + total.toFixed(2));
-
-                            if (deuda <= 0) {
-                                $('#detSaldoLabel').text('LIQUIDADO').removeClass('text-danger').addClass('text-success');
-                                $('#btnAbonar').addClass('d-none'); // <-- Ya funciona porque el botón ya existe
-                            } else {
-                                $('#detSaldoLabel').text('$' + deuda.toFixed(2)).removeClass('text-success').addClass('text-danger');
-                                $('#btnAbonar').removeClass('d-none');
-                            }
-
-                            // --- RENDERIZADO DE PRODUCTOS CON CONVERSIÓN ---
-                            $('#tbodyDetalle').html(data.productos.map(p => {
-                                let cant = parseFloat(p.cantidad) || 0;
-                                let pendiente = (cant - (parseFloat(p.cantidad_entregada) || 0)).toFixed(3);
-
-                                let factor = parseFloat(p.factor_conversion) || 1;
-                                let cantPendiente = pendiente / factor;
-
-                                let pen = Number(pendiente);
-                                let pendi = Number(cantPendiente);
-                                let disponible = (p.disponible / factor);
-                                console.log(disponible);
-                                let entregada = p.cantidad_entregada / factor;
-
-                                console.log({
-                                    pen,
-                                    tipo: typeof pen,
-                                    comparacion: pen > 0
-                                });
-
-                                let visualizacionVenta = "";
-                                let infoEquivalenciaSub = "";
-                                let unm = (parseFloat(p.cantidad_entregada) / (1 / parseFloat(p.equivalencia)));
-                                console.log(unm);
-                                unm = unm % 1 !== 0 ? unm.toFixed(0) : unm;
-
-                                if (factor > 1 && cant >= factor) {
-                                    let unidadesMayores = (cant / factor);
-                                    let totalUnidadesStr = Number.isInteger(unidadesMayores) ? unidadesMayores : unidadesMayores.toFixed(2);
-
-                                    visualizacionVenta = `<span class="fw-bold">${totalUnidadesStr} ${p.unidad_reporte}</span> <br> <small class="text-body-secondary">(${cant} ${p.unidad_medida})</small>`;
-                                    infoEquivalenciaSub = `<div class="text-body-secondary small" style="font-size: 0.65rem;">1 ${p.unidad_reporte} = ${factor} ${p.unidad_medida}</div>`;
-                                } else {
-                                    visualizacionVenta = `<span>${cant} ${p.unidad_medida}</span>`;
-                                }
-
-                                return `<tr>
-                <td>
-                    <div class="fw-bold text-dark">${p.producto}</div>
-                    ${infoEquivalenciaSub}
-                </td>
-                <td class="text-center">
-                    ${cant} ${p.unidad_medida} 
-                    (${p.equivalencia >= 1 ? cant / (1 / p.equivalencia).toFixed(2) : (cant * (p.equivalencia)).toFixed(2)} ${p.nombre})
-                </td>
-                <td class="text-center">${entregada > 1 ? entregada + p.unidad_reporte : p.cantidad_entregada + p.unidad_medida}</td>
-                <td class="text-center text-danger fw-bold">${(cantPendiente >= 1 ? cantPendiente.toFixed(3) : pen)} ${cantPendiente >= 1 ? p.unidad_reporte : p.unidad_medida}</td>
-                <td class="text-center col-input d-none">
-                    ${pen.toFixed(4) > 0 ?
-                                        `<input type="number"
-                            class="form-control form-control-sm input-entrega1 mx-auto"
-                            max="${pen <= p.disponible ? (pendi >= 1 ? pendi : pen) : (disponible > 1 ? disponible : p.disponible)}"
-                            min="0"
-                            step="0.01"
-                            value="0.00"
-                            data-dvid="${p.dvid}"
-                            data-id="${p.producto_id}"
-                            data-factor="${(pendi >= 1 && disponible >= 1) ? factor : 1}"
-                            style="width:70px">
-                        <input type="hidden" class="form-control form-control-sm input-entrega mx-auto" 
-                            value="0" data-dvid=${p.dvid} data-id="${p.producto_id}" style="width:70px" step="0.01" min="0">
-                        <span class="badge bg-success">${(pendi >= 1 && disponible >= 1) ? p.unidad_reporte : p.unidad_medida}</span>`
-                                        : '<span class="badge bg-success">Completo</span>'}
-                </td>
-            </tr>`;
-                            }).join(''));
-
-                            // --- RENDERIZADO DE HISTORIAL DE ENTREGAS ---
-                            $('#tbodyHistorial').html(data.historial && data.historial.length > 0 ? data.historial.map(h => {
-                                let cantH = parseFloat(h.cantidad) || 0;
-                                let factorH = parseFloat(h.factor_conversion) || 1;
-                                let uReporteH = h.unidad_reporte || '';
-                                let uMedidaH = h.unidad_medida || '';
-                                let visualizacionHistorial = "";
-
-                                if (factorH > 1 && cantH >= factorH) {
-                                    let unidadesMayoresH = (cantH / factorH);
-                                    let totalUnidadesStrH = Number.isInteger(unidadesMayoresH) ? unidadesMayoresH : unidadesMayoresH.toFixed(2);
-                                    visualizacionHistorial = `<span class="fw-bold text-primary">${totalUnidadesStrH} ${uReporteH}</span><br><small class="text-body-secondary">(${cantH} ${uMedidaH})</small>`;
-                                } else {
-                                    visualizacionHistorial = `<span>${cantH} ${uMedidaH}</span>`;
-                                }
-
-                                return `<tr>
-                    <td class="small">${h.fecha}</td>
-                    <td class="small">${h.usuario_nombre}</td>
-                    <td><div class="fw-bold" style="font-size:0.85rem;">${h.producto}</div></td>
-                    <td class="text-center">${visualizacionHistorial}</td>
-                </tr>`;
-                            }).join('') :
-                                '<tr><td colspan="4" class="text-center text-body-secondary p-3">No hay entregas registradas</td></tr>'
-                            );
-
-                            // --- RENDERIZADO DE HISTORIAL DE PAGOS ---
-                            if (data.pagos && data.pagos.length > 0) {
-                                $('#tbodyPagos').html(data.pagos.map(p => `
-                <tr>
-                    <td class="small">${p.fecha}</td>
-                    <td class="fw-bold text-success">$${parseFloat(p.monto).toFixed(2)}</td>
-                    <td>
-                        <span class="badge bg-light text-dark border fw-normal">${p.metodo_pago}</span>
-                        <div class="text-body-secondary" style="font-size:0.65rem">Recibió: ${p.usuario_nombre}</div>
-                    </td>
-                    <td>
-                     <span>
-    ${p.metodo_pago !== 'Efectivo' &&
-                                        p.metodo_pago !== 'Saldo a Favor'
-                                        ? (p.referencia ?? '')
-                                        : '-'
-                                    }
-</span> 
-                </tr>
-            `).join(''));
-                            } else {
-                                $('#tbodyPagos').html('<tr><td colspan="3" class="text-center text-body-secondary p-3">No hay abonos registrados</td></tr>');
-                            }
-
-                            const modalObj = new bootstrap.Modal('#modalDetalle');
-                            modalObj.show();
-                        } catch (error) {
-                            console.error("Error al obtener detalle:", error);
-                        }
-                    }
-                    async function cargarRepartos(idVenta) {
-
-                        const resp = await fetch(
-                            `/cfsistem/app/controllers/repartosController.php?action=get_repartos_venta&id=${idVenta}`
-                        );
-
-                        const repartoViaje = await resp.json();
-
-                        const tbody = document.getElementById('tbodyRepartos');
-                        tbody.innerHTML = '';
-
-                        if (!repartoViaje.success) return;
-
-                        // ================================
-                        // AGRUPAR POR FOLIO VIAJE
-                        // ================================
-                        const grupos = {};
-
-                        repartoViaje.data.forEach(item => {
-
-                            if (!grupos[item.folio_viaje]) {
-
-                                grupos[item.folio_viaje] = {
-                                    folio_viaje: item.folio_viaje,
-                                    fecha_viaje: item.fecha_viaje,
-                                    estatus_logistico: item.estatus_logistico,
-                                    productos: [],
-                                    clientes: new Set()
-                                };
-                            }
-
-                            grupos[item.folio_viaje].productos.push(item.productos);
-                            grupos[item.folio_viaje].clientes.add(item.cliente);
-                        });
-
-                        // ================================
-                        // RENDER TABLA
-                        // ================================
-                        Object.values(grupos).forEach(g => {
-
-                            const estadoClass =
-                                g.estatus_logistico === 'completado'
-                                    ? 'bg-success'
-                                    : 'bg-warning text-dark';
-
-                            const tr = `
-            <tr>
-
-                <td class="fw-bold">
-                    ${g.folio_viaje}
-                </td>
-
-                <td>
-                    ${g.fecha_viaje}
-                </td>
-
-                <td>
-                    <span class="badge ${estadoClass}">
-                        ${g.estatus_logistico}
-                    </span>
-                </td>
-
-                <td class="text-center">
-
-                    <button class="btn btn-sm btn-outline-primary"
-                      onclick="imprimirRuta('${idVenta}','${g.folio_viaje}')">
-
-                      
-                        Ver Reparto 
-                    </button>
-
-                </td>
-
-            </tr>
-        `;
-
-                            tbody.insertAdjacentHTML('beforeend', tr);
-                        });
-                    }
-
-                    function togglePerso() {
-                        $('#div_p').toggleClass('d-none', $('#f_rango').val() !== 'personalizado');
-                        getVentas();
-                    }
-                    function imprimirContenidoModal() {
-                        // 1. Obtener los elementos clave del modal actual
-                        const folio = $('#spanFolio').text();
-                        const cliente = $('#detCliente').text();
-                        const almacen = $('#detAlmacen').text();
-
-                        // 2. Clonar las tablas de datos para no alterar el modal visual
-                        const tablaProductos = $('#tbodyDetalle').html();
-                        const tablaEntregas = $('#tbodyHistorial').html();
-                        const tablaPagos = $('#tbodyPagos').html();
-
-                        const total = $('#detTotalLabel').text();
-                        const saldo = $('#detSaldoLabel').text();
-
-                        // 3. Crear una nueva ventana temporal en el navegador
-                        const ventanaImpresion = window.open('', '_blank');
-
-                        // 4. Inyectar el HTML estructurado con estilos limpios y profesionales
-                        ventanaImpresion.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Venta - Folio ${folio}</title>
-      <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
-
-    <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
-
-            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-            <style>
-                body {font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 30px; color: #333; }
-                .ticket-header { border-bottom: 2px solid #007aff; padding-bottom: 15px; margin-bottom: 20px; }
-                .meta-box { background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 15px; }
-                .section-title { font-size: 0.85rem; font-weight: bold; text-transform: uppercase; color: #666; margin-top: 25px; margin-bottom: 10px; letter-spacing: 0.5px; }
-                .table-responsive { max-height: none !important; overflow: visible !important; }
-                .d-none { display: none !important; } /* Oculta columnas de inputs si están activas */
-                @media print {
-                    body { padding: 20px;  }
-                    .btn-imprimir { display: none; }
-                }
-                     @page { 
-                        margin: 0; /* Esto elimina el título de arriba y la fecha/hora de abajo */
-                    }
-            </style>
-        </head>
-        <body>
-         <div id="areaImpresion" class="text-uppercase  bg-white" style="min-height: 650px; font-size: 0.95rem;">
- <img
-    src="/cfsistem/public/assets/logo.ico"
-    style="
-        position: fixed;
-        top: 30%;                  /* Centro vertical */
-        left: 50%;                 /* Centro horizontal */
-        transform: translate(-50%, -50%); /* Compensa el propio tamaño de la imagen */
-        width: 240px;
-        opacity: 0.08;
-        z-index: 1;               /* Cambiado a -1 para que quede detrás del texto y no tape los clics */
-        pointer-events: none;      /* Evita que interfiera si alguien intenta hacer clic sobre ella */
-    "
->
-                        <!-- ENCABEZADO -->
-                        
-<div class=" ">
-
-    <!-- Logo + Título -->
-    <div class="">
-
-        <img src="/cfsistem/public/assets/logo.ico"
-             alt="Logo"
-             width="55"
-             height="55"
-             class="me-3">
-
-         <div class="ticket-header d-flex justify-content-between align-items-center">
-                <div>
-                    <h4 class="fw-bold m-0">CF SYSTEM</h4>
-                    <small class="text-body-secondary">Reporte de Operación de Venta</small>
-                </div>
-                <div class="text-end">
-                    <h5 class="text-primary fw-bold m-0">Folio: ${folio}</h5>
-                </div>
-            </div>
-
-            
-    </div>
-
-  
-
-
-                        </div>
-                        <div class="row g-3">
-                <div class="col-6">
-                    <div class="meta-box">
-                        <small class="text-body-secondary d-block text-uppercase fw-semibold" style="font-size:0.7rem;">Cliente</small>
-                        <span class="fw-bold">${cliente}</span>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="meta-box">
-                        <small class="text-body-secondary d-block text-uppercase fw-semibold" style="font-size:0.7rem;">Almacén Origen</small>
-                        <span class="fw-bold">${almacen}</span>
-                    </div>
-                </div>
-            </div>
-<div class="section-title">📦 Productos</div>
-            <div class="table-responsive" style="max-height: 180px;">
-                                <table class="table table-sm align-middle mb-0">
-                                    <thead class="table-light">
-                                        <tr class="small text-uppercase">
-                                            <th>Producto</th>
-                                            <th class="text-center">Venta</th>
-                                            <th class="text-center">Surtido</th>
-                                            <th class="text-center text-danger">Falta</th>
-                                            <th class="text-center d-none">Entrega</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody >${tablaProductos}</tbody>
-                                </table>
-                            </div>
-                        <div class="row g-3 py-5">
-
-                            <div class="col-12">
-                                <div class="card border-0 shadow-sm">
-                                    <div class="card-header bg-white fw-bold small text-uppercase text-body-secondary">
-                                        Historial de Pagos
-                                    </div>
-                                    <div class="table-responsive" style="max-height: 180px;">
-                                        <table class="table table-sm align-middle mb-0">
-                                            <thead class="table-light">
-                                                <tr class="small text-uppercase">
-                                                    <th>Fecha</th>
-                                                    <th>Monto</th>
-                                                    <th>Método</th>
-                                                    <th>REFERENCIA</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>${tablaPagos}</tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="col-12  d-none">
-                           
-                                <div class="card border-0 shadow-sm">
-                                    <div class="card-header bg-white fw-bold small text-uppercase text-body-secondary">
-                                        Historial de Entregas
-                                    </div>
-                                    <div class="table-responsive" style="max-height: 180px;">
-                                        <table class="table table-sm align-middle mb-0">
-                                            <thead class="table-light">
-                                                <tr class="small text-uppercase">
-                                                    <th>Fecha</th>
-                                                    <th>Responsable</th>
-                                                    <th>Producto</th>
-                                                    <th class="text-center">Cant</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody ">${tablaEntregas}</tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-            
-            
-
-            <div class="row justify-content-end mt-4">
-                <div class="col-5">
-                    <table class="table table-sm table-borderless border-top pt-2">
-                        <tr>
-                            <td class="text-end text-body-secondary">Total Venta:</td>
-                            <td class="text-end fw-bold">${total}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-end text-body-secondary">Saldo Pendiente:</td>
-                            <td class="text-end fw-bold text-danger">${saldo}</td>
-                        </tr>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
                     </table>
                 </div>
             </div>
 
 
-</div>
-                       
+        </div>
 
-                        
+        <!-- 2. Despúes carga tu archivo modal.js -->
+        <!-- ✅ jQuery PRIMERO -->
+        <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 
-                    </div>
-             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script> 
-                <script>
-   window.addEventListener('DOMContentLoaded', () => {
-        // 1. Detectar si el usuario está en un dispositivo móvil
-        const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        <!-- ✅ Select2 DESPUÉS -->
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-        // 2. Esperar 1 segundo a que carguen estilos, fuentes e imágenes
-        setTimeout(() => {
-            if (esMovil) {
-                // --- COMPORTAMIENTO EN CELULARES: DESCARGA DE PDF AUTOMÁTICA ---
-                const elementoParaConvertir = document.getElementById('areaImpresion');
+        <!-- ✅ Otros que dependan de jQuery -->
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <?php require_once __DIR__ . '/../ventasHistorialModales/registarAbonoCliente.php' ?>
 
-                const opciones = {
-                    margin:       1,
-                    filename:     'expediente_${folio}.pdf',
-                    image:        { type: 'jpeg', quality: 0.98 },
-                    html2canvas:  { scale: 2, useCORS: true }, // Mayor calidad visual
-                    jsPDF:        { unit: 'cm', format: 'letter', orientation: 'portrait' }
-                };
 
-                // Generar y descargar el PDF directamente
-                html2pdf().set(opciones).from(elementoParaConvertir).save();
-                
-            } else {
-                // --- COMPORTAMIENTO EN COMPUTADORAS: DIÁLOGO NATIVO DE IMPRESIÓN ---
-                window.print();
-            }
-        }, 1000); // 1000 milisegundos = 1 segundo de espera
-    });
- <\/script>
-        </body>
-        </html>
-    `);
+        <script>
+            cargarClientes();
+            // CALCULAR TOTAL EDITAR
+            // =====================================================
+            async function cargarClientes() {
+                console.log("cargo clientes");
 
-                        ventanaImpresion.document.close();
-                    }
+                const select = document.getElementById('cliente_id_editar');
+                if (!select) return;
 
-                </script>
+                // 🔥 1. Capturamos el ID del cliente desde la URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const clienteIdUrl = urlParams.get('id');
+                console.log('[cargarClientes] ID desde URL:', clienteIdUrl);
 
-                <!-- ======================================================= -->
-                <!-- CARGA AUTOMÁTICA DE PRODUCTOS EN CADA FILA DE VENTA     -->
-                <!-- ======================================================= -->
-                <script>
-                    document.addEventListener('DOMContentLoaded', function () {
-                        cargarProductosDeTodasLasVentas();
-                    });
+                try {
+                    const url = '/cfsistem/app/controllers/accesoController.php?action=obtenerClientes';
+                    const respuesta = await fetch(url);
 
-                    async function cargarProductosDeTodasLasVentas() {
-                        const contenedores = document.querySelectorAll('.productos-container[data-venta-id]');
+                    if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
 
-                        // Carga escalonada para no saturar el servidor
-                        const tareas = Array.from(contenedores).map((contenedor, index) =>
-                            (async () => {
-                                await new Promise(r => setTimeout(r, index * 40));
-                                const ventaId = contenedor.dataset.ventaId;
-                                if (!ventaId) return;
+                    const resultado = await respuesta.json();
+                    console.log(resultado);
 
-                                try {
-                                    const res = await fetch(
-                                        `/cfsistem/app/controllers/historialPedidosVendedorController.php?action=obtenerDetalle&id=${ventaId}`
-                                    );
-                                    const data = await res.json();
-                                    contenedor.innerHTML = renderProductosInline(data.productos);
-                                } catch (e) {
-                                    console.error('Error cargando productos de venta', ventaId, e);
-                                    contenedor.innerHTML =
-                                        '<div class="text-danger small p-2"><i class="bi bi-exclamation-triangle"></i> No se pudieron cargar los productos.</div>';
-                                }
-                            })()
-                        );
+                    if (resultado.success && Array.isArray(resultado.data)) {
 
-                        await Promise.all(tareas);
-                    }
+                        const clientes = resultado.data;
 
-                    function renderProductosInline(productos) {
-                        if (!productos || productos.length === 0) {
-                            return '<div class="text-muted small p-2"><i class="bi bi-inbox"></i> Sin productos registrados</div>';
+                        // 🔥 2. Construir y vaciar opciones en el select nativo primero
+                        const fragment = document.createDocumentFragment();
+
+                        const first = document.createElement('option');
+                        first.value = '';
+                        first.textContent = '-- Seleccione un cliente --';
+                        fragment.appendChild(first);
+
+                        clientes.forEach(cliente => {
+                            const opcion = document.createElement('option');
+                            opcion.value = cliente.id;
+                            opcion.textContent = String(cliente.nombre_comercial || '').toUpperCase();
+
+                            opcion.dataset.nombre = String(cliente.nombre_comercial || '');
+                            opcion.dataset.razonSocial = String(cliente.razon_social || '');
+                            opcion.dataset.contacto = String(cliente.contacto || '');
+
+                            fragment.appendChild(opcion);
+                        });
+
+                        select.replaceChildren(fragment);
+
+                        // 🔥 3. Destruir Select2 si ya estaba inicializado previamente
+                        if ($(select).hasClass('select2-hidden-accessible')) {
+                            $(select).select2('destroy');
                         }
 
-                        const rows = productos.map(p => {
-                            const cant = parseFloat(p.cantidad) || 0;
-                            const entregada = parseFloat(p.cantidad_entregada) || 0;
-                            const pendiente = Math.max(0, cant - entregada);
-                            const factor = parseFloat(p.factor_conversion) || 1;
-                            const uRep = p.unidad_reporte || p.unidad_medida || '';
-                            const uMed = p.unidad_medida || '';
+                        // 🔥 4. Inicializar Select2 con el DOM ya completamente poblado
+                        $(select).select2({
+                            theme: 'bootstrap-5',
+                            width: '100%',
+                            dropdownParent: $(select).parent(),
+                            matcher: function (params, data) {
+                                if (!params.term || params.term.trim() === '') return data;
 
-                            // ---- Vendido ----
-                            let vendidoTxt;
-                            if (factor > 1 && cant >= factor) {
-                                const um = cant / factor;
-                                vendidoTxt = `<b>${Number.isInteger(um) ? um : um.toFixed(2)}</b> ${uRep}
-                                              <small class="text-muted">(${cant} ${uMed})</small>`;
-                            } else {
-                                vendidoTxt = `${cant} ${uMed}`;
-                            }
+                                const term = String(params.term).toLowerCase().trim();
+                                const text = String(data.text || '').toLowerCase();
 
-                            // ---- Entregado ----
-                            let entregadoTxt;
-                            if (factor > 1 && entregada >= factor) {
-                                const um = entregada / factor;
-                                entregadoTxt = `<b>${Number.isInteger(um) ? um : um.toFixed(2)}</b> ${uRep}
-                                                <small class="text-muted">(${entregada} ${uMed})</small>`;
-                            } else {
-                                entregadoTxt = `${entregada} ${uMed}`;
-                            }
+                                const $el = $(data.element);
+                                const razonSocial = String($el.data('razonSocial') || '').toLowerCase();
+                                const contacto = String($el.data('contacto') || '').toLowerCase();
 
-                            // ---- Pendiente ----
-                            let pendienteTxt;
-                            if (factor > 1 && pendiente >= factor) {
-                                const um = pendiente / factor;
-                                pendienteTxt = `<b>${Number.isInteger(um) ? um : um.toFixed(2)}</b> ${uRep}
-                                                <small class="text-muted">(${pendiente.toFixed(2)} ${uMed})</small>`;
-                            } else {
-                                pendienteTxt = `${pendiente.toFixed(2)} ${uMed}`;
-                            }
+                                if (text.includes(term) || razonSocial.includes(term) || contacto.includes(term)) {
+                                    return data;
+                                }
 
-                            // ---- Estado ----
-                            let estado;
-                            if (pendiente <= 0.001) {
-                                estado = '<span class="badge bg-success">Entregado</span>';
-                            } else if (entregada > 0.001) {
-                                estado = '<span class="badge bg-warning text-dark">Parcial</span>';
-                            } else {
-                                estado = '<span class="badge bg-secondary">Pendiente</span>';
-                            }
+                                return null;
+                            },
+                            templateResult: function (state) {
+                                if (!state.id) return state.text;
 
-                            return `<tr>
-                                <td class="fw-semibold text-dark">${p.producto}</td>
-                                <td class="text-center">${vendidoTxt}</td>
-                                <td class="text-center text-success">${entregadoTxt}</td>
-                                <td class="text-center ${pendiente > 0.001 ? 'text-danger fw-bold' : 'text-success fw-semibold'}">${pendienteTxt}</td>
-                                <td class="text-center">${estado}</td>
-                            </tr>`;
-                        }).join('');
+                                const $opt = $(state.element);
+                                const nombre = String($opt.data('nombre') || state.text || '');
+                                const razonSocial = String($opt.data('razonSocial') || '');
+                                const contacto = String($opt.data('contacto') || '');
 
-                        return `
-                            <div class="d-flex align-items-center mb-2 pt-1">
-                                <i class="bi bi-box-seam text-primary me-2"></i>
-                                <span class="fw-bold small text-uppercase text-primary" style="letter-spacing:0.5px;">
-                                    Productos de esta venta
-                                </span>
+                                if (!razonSocial && !contacto) {
+                                    return $(`<span class="fw-semibold">${nombre.toUpperCase()}</span>`);
+                                }
+
+                                return $(`
+                        <div class="d-flex flex-column">
+                            <span class="fw-semibold">${nombre.toUpperCase()}</span>
+                            <div class="d-flex justify-content-between align-items-center gap-2 mt-1">
+                                <small class="text-truncate" style="max-width:65%;">${razonSocial.toUpperCase()}</small>
+                                <small class="fw-semibold text-nowrap">${contacto ? `👤 ${contacto.toUpperCase()}` : ''}</small>
                             </div>
-                            <table class="table table-sm table-borderless mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>Producto</th>
-                                        <th class="text-center">Vendido</th>
-                                        <th class="text-center">Entregado</th>
-                                        <th class="text-center">Pendiente</th>
-                                        <th class="text-center">Estado</th>
-                                    </tr>
-                                </thead>
-                                <tbody>${rows}</tbody>
-                            </table>
-                        `;
+                        </div>
+                    `);
+                            },
+                            templateSelection: function (state) {
+                                if (!state.id) return state.text;
+                                const nombre = String($(state.element).data('nombre') || state.text || '');
+                                return nombre.toUpperCase();
+                            }
+                        });
+
+                        // 🔥 5. Validar la coincidencia con el ID de la URL una vez cargado y pintado todo el sistema
+                        const targetId = clienteIdUrl ? String(clienteIdUrl).trim() : null;
+
+                        if (targetId) {
+                            let coincide = false;
+
+                            Array.from(select.options).forEach(opt => {
+                                if (String(opt.value).trim() === targetId) {
+                                    coincide = true;
+                                }
+                            });
+
+                            if (coincide) {
+                                console.log("coincidencia:", targetId);
+                                // Asignamos el valor directamente y actualizamos Select2
+                                $(select).val(targetId).trigger('change.select2');
+                                console.log('[cargarClientes] Selección final:', $(select).val());
+                            } else {
+                                console.warn('[cargarClientes] Cliente id', targetId, 'no está en la lista.');
+                            }
+                        }
+
+                    } else {
+                        select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
+                        $(select).trigger('change.select2');
                     }
-                </script>
-                <script>
-                    function imprimirEstadoCuenta() {
-                        // ─────────────────────────────────────────────────
-                        // 1. EXTRAER DATOS DEL DOM
-                        // ─────────────────────────────────────────────────
-                        const header = document.querySelector('.header-expediente');
-                        const cliente = header.querySelector('h4')?.textContent.trim() || '';
-                        const rfc = header.querySelector('.badge')?.textContent.replace(/RFC:\s*/i, '').trim() || '';
+                } catch (error) {
+                    select.innerHTML = '<option value="">Error al cargar la lista</option>';
+                    $(select).trigger('change.select2');
+                    console.error('Error al ejecutar cargarClientes:', error);
+                }
+            }
+            let ventaActual = null;
+            // La ruta al controlador (ajusta si el nombre del archivo varía)
+            const URL_CONTROLLER = '/cfsistem/app/controllers/ventasHistorialController.php';
+            $(document).ready(function () {
+                renderCharts();
+            });
 
-                        const fechaInicio = document.getElementById('fecha_inicio')?.value || '';
-                        const fechaFin = document.getElementById('fecha_fin')?.value || '';
+            function renderCharts() {
+                const ctx = document.getElementById('chartDona');
+                if (!ctx) return;
 
-                        const _fmt = (s) => {
-                            if (!s) return '';
-                            const p = s.split('-');
-                            return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : s;
-                        };
-
-                        // ── KPIs ──
-                        const kpis = [];
-                        document.querySelectorAll('.kpi-widget').forEach((k) => {
-                            const label = k.querySelector('.kpi-label')?.textContent.trim() || '';
-                            let value = k.querySelector('.kpi-value')?.textContent.trim() || '';
-                            if (!value) {
-                                // KPI Estatus (widget con canvas)
-                                value = k.querySelector('.text-end .fw-bold')?.textContent.trim() || '';
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        datasets: [{
+                            data: [
+                                <?= isset($resumen['total_pagado']) ? floatval($resumen['total_pagado']) : 0 ?>,
+                                <?= isset($resumen['saldo_total']) ? max(0, floatval($resumen['saldo_total'])) : 0 ?>
+                            ],
+                            backgroundColor: ['#1cc88a', '#e74a3b'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        cutout: '75%',
+                        plugins: {
+                            legend: {
+                                display: false
                             }
-                            let tipo = 'primary';
-                            if (k.classList.contains('border-left-success')) tipo = 'success';
-                            else if (k.classList.contains('border-left-danger')) tipo = 'danger';
-                            else if (k.classList.contains('border-left-info')) tipo = 'info';
-                            if (label) kpis.push({ label, value, tipo });
+                        },
+                        responsive: true,
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+
+        </script>
+
+        <script>
+            function filtrarExpediente() {
+                const fechaInicio = document.getElementById('fecha_inicio').value;
+                const fechaFin = document.getElementById('fecha_fin').value;
+
+                const urlParams = new URLSearchParams(window.location.search);
+
+                const id = $('#cliente_id_editar').val();
+
+                console.log("ID:", id);
+
+                // REDIRECCIÓN
+                window.location.href =
+                    `/cfsistem/app/controllers/expedienteClienteProdutosController.php?id=${id}&fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
+
+
+            }
+        </script>
+        <script>
+            function togglePerso() {
+                $('#div_p').toggleClass('d-none', $('#f_rango').val() !== 'personalizado');
+                getVentas();
+            }
+        </script>
+
+        <!-- ======================================================= -->
+        <!-- CARGA AUTOMÁTICA DE PRODUCTOS EN CADA FILA DE VENTA     -->
+        <!-- ======================================================= -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                cargarProductosDeTodasLasVentas();
+            });
+
+            async function cargarProductosDeTodasLasVentas() {
+                const contenedores = document.querySelectorAll('.productos-container[data-venta-id]');
+
+                // Carga escalonada para no saturar el servidor
+                const tareas = Array.from(contenedores).map((contenedor, index) =>
+                    (async () => {
+                        await new Promise(r => setTimeout(r, index * 40));
+                        const ventaId = contenedor.dataset.ventaId;
+                        if (!ventaId) return;
+
+                        try {
+                            const res = await fetch(
+                                `/cfsistem/app/controllers/historialPedidosVendedorController.php?action=obtenerDetalle&id=${ventaId}`
+                            );
+                            const data = await res.json();
+                            contenedor.innerHTML = renderProductosInline(data.productos);
+                        } catch (e) {
+                            console.error('Error cargando productos de venta', ventaId, e);
+                            contenedor.innerHTML =
+                                '<div class="text-danger small p-2"><i class="bi bi-exclamation-triangle"></i> No se pudieron cargar los productos.</div>';
+                        }
+                    })()
+                );
+
+                await Promise.all(tareas);
+            }
+
+            function renderProductosInline(productos) {
+                if (!productos || productos.length === 0) {
+                    return '<div class="text-muted small p-2"><i class="bi bi-inbox"></i> Sin productos registrados</div>';
+                }
+                console.log(productos);
+
+                const rows = productos.map(p => {
+                    const cant = parseFloat(p.cantidad) || 0;
+                    const entregada = parseFloat(p.cantidad_entregada) || 0;
+                    const pendiente = Math.max(0, cant - entregada);
+                    const factor = parseFloat(p.factor_conversion) || 1;
+                    const uRep = p.unidad_reporte || p.unidad_medida || '';
+                    const uMed = p.unidad_medida || '';
+
+                    // Cálculo del costo total por producto (Cantidad * Precio Unitario)
+                    const precioVenta = parseFloat(p.precio_unitario
+                    ) || 0;
+                    const costoTotal = cant * precioVenta;
+                    const costo = `$${costoTotal.toFixed(2)}`;
+
+                    // ---- Vendido ----
+                    let vendidoTxt;
+                    if (factor > 1 && cant >= factor) {
+                        const um = cant / factor;
+                        vendidoTxt = `<b>${Number.isInteger(um) ? um : um.toFixed(2)}</b> ${uRep}
+                          <small class="text-muted">(${cant} ${uMed})</small>`;
+                    } else {
+                        vendidoTxt = `${cant} ${uMed}`;
+                    }
+
+                    // ---- Entregado ----
+                    let entregadoTxt;
+                    if (factor > 1 && entregada >= factor) {
+                        const um = entregada / factor;
+                        entregadoTxt = `<b>${Number.isInteger(um) ? um : um.toFixed(2)}</b> ${uRep}
+                            <small class="text-muted">(${entregada} ${uMed})</small>`;
+                    } else {
+                        entregadoTxt = `${entregada} ${uMed}`;
+                    }
+
+                    // ---- Pendiente ----
+                    let pendienteTxt;
+                    if (factor > 1 && pendiente >= factor) {
+                        const um = pendiente / factor;
+                        pendienteTxt = `<b>${Number.isInteger(um) ? um : um.toFixed(2)}</b> ${uRep}
+                            <small class="text-muted">(${pendiente.toFixed(2)} ${uMed})</small>`;
+                    } else {
+                        pendienteTxt = `${pendiente.toFixed(2)} ${uMed}`;
+                    }
+
+                    // ---- Estado ----
+                    let estado;
+                    if (pendiente <= 0.001) {
+                        estado = '<span class="badge bg-success">Entregado</span>';
+                    } else if (entregada > 0.001) {
+                        estado = '<span class="badge bg-warning text-dark">Parcial</span>';
+                    } else {
+                        estado = '<span class="badge bg-secondary">Pendiente</span>';
+                    }
+
+                    return `<tr>
+            <td class="fw-semibold text-dark">${p.producto}</td>
+            <td class="text-center">${vendidoTxt}</td>
+             <td class="text-center fw-bold text-dark">${costo}</td>
+            <td class="text-center text-success">${entregadoTxt}</td>
+            <td class="text-center ${pendiente > 0.001 ? 'text-danger fw-bold' : 'text-success fw-semibold'}">${pendienteTxt}</td>
+            <td class="text-center">${estado}</td>
+           
+        </tr>`;
+                }).join('');
+
+                return `
+       
+        <table class="table table-sm table-borderless mb-0">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th class="text-center">Vendido</th>
+                     <th class="text-center">Costo</th>
+                    <th class="text-center">Entregado</th>
+                    <th class="text-center">Pendiente</th>
+                    <th class="text-center">Estado</th>
+                   
+                </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+        </table>
+    `;
+            } 
+        </script>
+        <script>
+
+
+            function imprimirEstadoCuenta() {
+                // ─────────────────────────────────────────────────
+                // 1. EXTRAER DATOS DEL DOM
+                // ─────────────────────────────────────────────────
+                const header = document.querySelector('.header-expediente');
+                const cliente = header.querySelector('h4, h5')?.textContent.trim() || '';
+                const rfc = header.querySelector('.badge')?.textContent.replace(/RFC:\s*/i, '').trim() || '';
+
+                const fechaInicio = document.getElementById('fecha_inicio')?.value || '';
+                const fechaFin = document.getElementById('fecha_fin')?.value || '';
+
+                const _fmt = (s) => {
+                    if (!s) return '';
+                    const p = s.split('-');
+                    return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : s;
+                };
+
+                // ── Ventas + productos ──
+                const ventas = [];
+                document.querySelectorAll('.venta-row').forEach((row) => {
+                    const tds = row.querySelectorAll('td');
+                    if (tds.length < 6) return;
+
+                    const badge = tds[5].querySelector('.badge');
+                    let estadoClass = '';
+                    if (badge) {
+                        if (badge.classList.contains('bg-success')) estadoClass = 'liquidado';
+                        else if (badge.classList.contains('bg-danger')) estadoClass = 'pendiente';
+                        else if (badge.classList.contains('bg-info')) estadoClass = 'favor';
+                        else if (badge.classList.contains('bg-secondary')) estadoClass = 'cancelada';
+                    }
+
+                    const venta = {
+                        fecha: tds[0].textContent.trim(),
+                        folio: tds[1].textContent.trim(),
+                        total: tds[2].textContent.trim(),
+                        pagado: tds[3].textContent.trim(),
+                        saldo: tds[4].textContent.trim(),
+                        estado: badge ? badge.textContent.trim() : '',
+                        estadoClass,
+                        productos: []
+                    };
+
+                    const productosRow = row.nextElementSibling;
+                    if (productosRow && productosRow.classList.contains('productos-row')) {
+                        const cont = productosRow.querySelector('.productos-container');
+                        cont?.querySelectorAll('tbody tr').forEach((tr) => {
+                            const c = tr.querySelectorAll('td');
+                            if (c.length < 6) return;
+                            venta.productos.push({
+                                producto: c[0].querySelector('.fw-semibold')?.textContent.trim() || c[0].textContent.trim(),
+                                vendido: c[1].innerHTML.trim(),
+                                costo: c[2].innerHTML.trim(),
+                                entregado: c[3].innerHTML.trim(),
+                                pendiente: c[4].innerHTML.trim(),
+                                estado: c[5].textContent.trim()
+                            });
                         });
+                    }
+                    ventas.push(venta);
+                });
 
-                        // ── Ventas + productos ──
-                        const ventas = [];
-                        document.querySelectorAll('.venta-row').forEach((row) => {
-                            const tds = row.querySelectorAll('td');
-                            if (tds.length < 6) return;
+                // ── Saldo a favor (banner) ──
+                const alertFavor = document.querySelector('.alert.alert-info');
+                const saldoFavorMsg = alertFavor ? alertFavor.textContent.replace(/\s+/g, ' ').trim() : '';
 
-                            const badge = tds[5].querySelector('.badge');
-                            let estadoClass = '';
-                            if (badge) {
-                                if (badge.classList.contains('bg-success')) estadoClass = 'liquidado';
-                                else if (badge.classList.contains('bg-danger')) estadoClass = 'pendiente';
-                                else if (badge.classList.contains('bg-info')) estadoClass = 'favor';
-                                else if (badge.classList.contains('bg-secondary')) estadoClass = 'cancelada';
-                            }
+                // ─────────────────────────────────────────────────
+                // 2. GENERAR HTML BASE (SIN script de auto-print)
+                // ─────────────────────────────────────────────────
+                const fechaGen = new Date().toLocaleString('es-MX', { dateStyle: 'long', timeStyle: 'short' });
 
-                            const venta = {
-                                fecha: tds[0].textContent.trim(),
-                                folio: tds[1].textContent.trim(),
-                                total: tds[2].textContent.trim(),
-                                pagado: tds[3].textContent.trim(),
-                                saldo: tds[4].textContent.trim(),
-                                estado: badge ? badge.textContent.trim() : '',
-                                estadoClass,
-                                productos: []
-                            };
-
-                            const productosRow = row.nextElementSibling;
-                            if (productosRow && productosRow.classList.contains('productos-row')) {
-                                const cont = productosRow.querySelector('.productos-container');
-                                cont?.querySelectorAll('tbody tr').forEach((tr) => {
-                                    const c = tr.querySelectorAll('td');
-                                    if (c.length < 5) return;
-                                    venta.productos.push({
-                                        producto: c[0].querySelector('.fw-semibold')?.textContent.trim() || c[0].textContent.trim(),
-                                        vendido: c[1].innerHTML.trim(),
-                                        entregado: c[2].innerHTML.trim(),
-                                        pendiente: c[3].innerHTML.trim(),
-                                        estado: c[4].textContent.trim()
-                                    });
-                                });
-                            }
-                            ventas.push(venta);
-                        });
-
-                        // ── Saldo a favor (banner) ──
-                        const alertFavor = document.querySelector('.alert.alert-info');
-                        const saldoFavorMsg = alertFavor ? alertFavor.textContent.replace(/\s+/g, ' ').trim() : '';
-
-                        // ─────────────────────────────────────────────────
-                        // 2. GENERAR HTML CON CSS PURO
-                        // ─────────────────────────────────────────────────
-                        const fechaGen = new Date().toLocaleString('es-MX', { dateStyle: 'long', timeStyle: 'short' });
-
-                        const kpisHTML = kpis.map(k => `
-        <div class="kpi kpi--${k.tipo}">
-            <div class="kpi__lbl">${k.label}</div>
-            <div class="kpi__val">${k.value}</div>
-        </div>
-    `).join('');
-
-                        const ventasHTML = ventas.map(v => {
-                            const productosHTML = v.productos.length ? `
+                const ventasHTML = ventas.map(v => {
+                    const productosHTML = v.productos.length ? `
             <table class="tbl-prod">
                 <thead>
                     <tr>
                         <th>Producto</th>
                         <th class="tc">Vendido</th>
-                        <th class="tc">Entregado</th>
-                        <th class="tc">Pendiente</th>
-                        <th class="tc">Estado</th>
+                        <th class="tc">Costo</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1442,33 +940,37 @@
                         <tr>
                             <td class="prod-name">${p.producto}</td>
                             <td class="tc">${p.vendido}</td>
-                            <td class="tc">${p.entregado}</td>
-                            <td class="tc">${p.pendiente}</td>
-                            <td class="tc">${p.estado}</td>
+                            <td class="tc">${p.costo}</td>
                         </tr>
                     `).join('')}
                 </tbody>
             </table>` : `<div class="empty">Sin productos registrados</div>`;
 
-                            return `
-        <article class="venta venta--${v.estadoClass}">
-            <header class="venta__head">
-                <div>
-                    <span class="venta__folio">Folio: ${v.folio}</span>
-                    <span class="venta__fecha">${v.fecha}</span>
-                </div>
-                <span class="pill pill--${v.estadoClass}">${v.estado}</span>
-            </header>
-            <div class="venta__nums">
-                <span>Facturado: <b>${v.total}</b></span>
-                <span>Abonado: <b class="c-success">${v.pagado}</b></span>
-                <span>Saldo: <b class="${v.estadoClass === 'favor' ? 'c-info' : 'c-danger'}">${v.saldo}</b></span>
-            </div>
-            <div class="venta__prods">${productosHTML}</div>
-        </article>`;
-                        }).join('');
+                    const saldoClass = v.estadoClass === 'favor'
+                        ? 'c-info'
+                        : (v.estadoClass === 'liquidado' ? 'c-success' : 'c-danger');
 
-                        const html = `<!DOCTYPE html>
+                    const estadoExtra = v.estadoClass === 'cancelada'
+                        ? ' <span class="tag-cancel">CANCELADA</span>'
+                        : '';
+
+                    return `
+        <div class="folio-block">
+            <div class="folio-line">
+                <div class="folio-info">
+                    <span class="folio-num">#${v.folio}</span>
+                    <span class="folio-fecha">${v.fecha}${estadoExtra}</span>
+                </div>
+                <div class="folio-nums">
+                    <span>Pagado: <b class="c-success">${v.pagado}</b></span>
+                    <span>Deuda: <b class="${saldoClass}">${v.saldo}</b></span>
+                </div>
+            </div>
+            ${productosHTML}
+        </div>`;
+                }).join('');
+
+                const htmlBase = `<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -1478,156 +980,211 @@
     body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:#2c3038;background:#fff;
          font-size:12px;line-height:1.45;padding:26px 32px}
 
-    /* ── Encabezado ── */
-    .head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:14px;
-          padding-bottom:14px;border-bottom:3px solid #007aff;margin-bottom:24px}
-    .head__brand h1{font-size:22px;color:#007aff;letter-spacing:.5px}
-    .head__brand small{color:#8b93a4;font-size:11px;display:block;margin-top:2px}
-    .head__meta{text-align:right}
-    .head__meta .cliente{font-size:15px;font-weight:700;color:#1b1f27}
-    .head__meta .rfc{font-size:11px;color:#6b7280;margin-top:2px}
-    .head__meta .periodo{font-size:10.5px;color:#9aa1af;margin-top:3px}
-
-    /* ── Banner saldo a favor ── */
     .banner-favor{background:#e8f5fd;border-left:4px solid #3abaf4;color:#1a7fa4;
-                  padding:11px 16px;border-radius:6px;margin-bottom:22px;font-size:11.5px;font-weight:600}
+                  padding:10px 14px;border-radius:6px;margin:0 auto 12px;max-width:60%;
+                  font-size:11px;font-weight:600}
 
-    /* ── KPIs ── */
-    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:26px}
-    .kpi{border:1px solid #e6e9f0;border-left:4px solid #007aff;border-radius:7px;
-         padding:11px 14px;background:#fafbfd}
-    .kpi--success{border-left-color:#1cc88a}
-    .kpi--danger {border-left-color:#e74a3b}
-    .kpi--info   {border-left-color:#3abaf4}
-    .kpi__lbl{font-size:9px;text-transform:uppercase;letter-spacing:.7px;font-weight:800;color:#8a92a3}
-    .kpi__val{font-size:16px;font-weight:700;color:#1b1f27;margin-top:4px}
+    .section-title{font-size:11px;font-weight:800;color:#007aff;text-transform:uppercase;
+                   letter-spacing:.7px;text-align:center;margin:12px auto 6px;max-width:60%;
+                   padding-bottom:4px;border-bottom:1px solid #dfe3ea}
 
-    /* ── Título de sección ── */
-    .section-title{font-size:12.5px;font-weight:800;color:#007aff;text-transform:uppercase;
-                   letter-spacing:.7px;margin:22px 0 12px;padding-bottom:6px;border-bottom:1px solid #dfe3ea}
+    .folio-block{max-width:60%;margin:0 auto 6px;page-break-inside:avoid;break-inside:avoid}
+    .folio-line{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;
+                padding:4px 2px;border-bottom:1px solid #cfd5e0;margin-bottom:3px}
+    .folio-info{display:flex;align-items:baseline;gap:10px}
+    .folio-num{font-weight:700;color:#1b1f27;font-size:12px}
+    .folio-fecha{color:#8a92a3;font-size:10px}
+    .folio-nums{display:flex;gap:18px;font-size:11px;color:#6b7280}
+    .folio-nums b{font-weight:700;font-size:11.5px}
+    .tag-cancel{background:#e8e9ee;color:#4e5665;padding:1px 7px;border-radius:8px;
+                font-size:8.5px;font-weight:800;letter-spacing:.6px;margin-left:4px}
 
-    /* ── Bloque venta ── */
-    .venta{border:1px solid #e6e9f0;border-radius:8px;margin-bottom:16px;overflow:hidden;
-           page-break-inside:avoid;break-inside:avoid}
-    .venta__head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;
-                 padding:10px 14px;background:#f4f6fa;border-left:4px solid #e74a3b}
-    .venta--liquidado .venta__head{border-left-color:#1cc88a;background:#f3fcf8}
-    .venta--favor     .venta__head{border-left-color:#3abaf4;background:#f3faff}
-    .venta--cancelada .venta__head{border-left-color:#8790a1;background:#f6f7fa}
-    .venta__folio{font-weight:700;color:#1b1f27;font-size:12px}
-    .venta__fecha{color:#8a92a3;font-size:10.5px;margin-left:12px}
-
-    .pill{display:inline-block;padding:3px 11px;border-radius:12px;font-size:9px;font-weight:800;
-          text-transform:uppercase;letter-spacing:.7px}
-    .pill--pendiente{background:#fbe0dd;color:#a32b1e}
-    .pill--liquidado{background:#d4f5e5;color:#0d7a4e}
-    .pill--favor    {background:#d4effc;color:#1a7fa4}
-    .pill--cancelada{background:#e8e9ee;color:#4e5665}
-
-    .venta__nums{display:flex;gap:22px;flex-wrap:wrap;padding:10px 14px;font-size:11.5px;
-                 border-bottom:1px solid #eef0f5;background:#fff}
-    .venta__nums b{color:#1b1f27}
     .c-success{color:#1cc88a!important}
     .c-danger {color:#e74a3b!important}
     .c-info   {color:#3abaf4!important}
 
-    .venta__prods{padding:0 10px 10px;background:#fafbfd}
-
-    /* ── Tabla productos ── */
-    .tbl-prod{width:100%;border-collapse:collapse;font-size:10.5px;background:#fff;
-              border-radius:5px;overflow:hidden}
-    .tbl-prod thead th{background:#eef2f7;text-align:left;padding:6px 10px;font-size:9px;
+    .tbl-prod{width:100%;table-layout:fixed;border-collapse:collapse;font-size:10.5px;background:#fff;
+              border:1px solid #e9edf3;border-radius:5px;overflow:hidden}
+    .tbl-prod thead th{background:#f3f6fa;padding:5px 10px;font-size:9px;
                        text-transform:uppercase;letter-spacing:.5px;color:#5a6272;font-weight:700}
-    .tbl-prod tbody td{padding:6px 10px;border-top:1px solid #f0f2f7;color:#495261;vertical-align:middle}
+    .tbl-prod tbody td{padding:5px 10px;border-top:1px solid #f0f2f7;color:#495261;vertical-align:middle}
     .tbl-prod tbody tr:first-child td{border-top:none}
     .prod-name{font-weight:600;color:#1b1f27}
     .tc{text-align:center}
     .empty{padding:10px;color:#9aa1af;font-style:italic;text-align:center;font-size:10.5px}
 
-    /* ── Compatibilidad con HTML inyectado (badges y textos) ── */
+    .tbl-prod th:first-child,
+    .tbl-prod td:first-child{ width:45%; text-align:left; }
+    .tbl-prod th:nth-child(2),
+    .tbl-prod td:nth-child(2){ width:30%; text-align:center; white-space:nowrap; }
+    .tbl-prod th:nth-child(3),
+    .tbl-prod td:nth-child(3){ width:25%; text-align:right;  white-space:nowrap; }
+
     b{font-weight:700;color:#1b1f27}
     small{font-size:.85em}
     .text-muted{color:#8a92a3}
     .text-danger{color:#e74a3b}
     .text-success{color:#1cc88a}
     .text-primary{color:#007aff}
-    .text-warning{color:#c68a00}
     .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700}
-    .badge.bg-success  {background:#d4f5e5;color:#0d7a4e}
-    .badge.bg-warning  {background:#fff3cd;color:#7a5e00}
+    .badge.bg-success   {background:#d4f5e5;color:#0d7a4e}
+    .badge.bg-warning   {background:#fff3cd;color:#7a5e00}
     .badge.bg-secondary{background:#e8e9ee;color:#4e5665}
     .badge.bg-danger   {background:#fbe0dd;color:#a32b1e}
     .badge.bg-info     {background:#d4effc;color:#1a7fa4}
 
-    /* ── Footer ── */
-    .footer{margin-top:30px;padding-top:12px;border-top:1px solid #dfe3ea;
-            text-align:center;font-size:9.5px;color:#9aa1af}
+    .footer{margin-top:16px;padding-top:10px;border-top:1px solid #dfe3ea;
+            text-align:center;font-size:9px;color:#9aa1af}
     .footer strong{color:#007aff}
 
-    /* ── Print ── */
-    @page{margin:12mm}
+    /* 🔥 Eliminados los bordes por defecto del navegador al imprimir */
+    @page{margin: 0;}
     @media print{
-        body{padding:0;font-size:11px}
-        .venta{page-break-inside:avoid;break-inside:avoid}
-        .kpi{background:#fff}
+        body{padding: 12mm; font-size: 11px}
+        .folio-block{page-break-inside:avoid}
     }
 </style>
 </head>
 <body>
 
 <header class="head">
+    <style>
+        .head {
+            background: #ffffff;
+            border: none; /* 🔥 Sin bordes exteriores */
+            border-bottom: 2px solid #cbd5e1; /* Solo una línea abajo */
+            padding: 10px 0;
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 0.85rem;
+            color: #334155;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .head__brand {
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+        }
+        .head__brand .empresa {
+            font-weight: 700;
+            color: #0f172a;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+        .head__brand .titulo {
+            color: #64748b;
+            font-weight: 400;
+        }
+        .head__info {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+            color: #475569;
+        }
+        .head__info span strong {
+            color: #1e293b;
+            font-weight: 600;
+        }
+    </style>
+
     <div class="head__brand">
-        <h1>CF SYSTEM</h1>
-        <small>Estado de Cuenta del Cliente</small>
+        <span class="empresa">BODEGA FORTALEZA CENTRO</span>
+        <span class="titulo">/ Estado de Cuenta</span>
     </div>
-    <div class="head__meta">
-        <div class="cliente">${cliente}</div>
-        <div class="rfc">RFC: ${rfc}</div>
-        <div class="periodo">Periodo: ${_fmt(fechaInicio)} &mdash; ${_fmt(fechaFin)}</div>
+
+    <div class="head__info">
+        <span class="cliente"><strong>Cliente:</strong> ${cliente}</span>
+        <span class="rfc"><strong>RFC:</strong> ${rfc}</span>
+        <span class="periodo"><strong>Periodo:</strong> ${_fmt(fechaInicio)} &mdash; ${_fmt(fechaFin)}</span>
     </div>
 </header>
+ <img src="/cfsistem/public/assets/logo.ico" style="
+                        position: fixed;
+                        top: 19.5%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        width: 180px;
+                        opacity: 0.08;
+                        z-index: -1;
+                    ">
 
 ${saldoFavorMsg ? `<div class="banner-favor">💰 ${saldoFavorMsg}</div>` : ''}
 
-<section class="kpis">${kpisHTML}</section>
-
-<h2 class="section-title">Folios Detallados</h2>
 ${ventasHTML || '<div class="empty">No hay folios en este periodo</div>'}
 
 <footer class="footer">
     Documento generado el ${fechaGen} &middot; <strong>CF SYSTEM</strong>
 </footer>
 
-<script>
-    window.addEventListener('load', () => {
-        const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        setTimeout(() => {
-            if (esMovil) {
-                const s = document.createElement('script');
-                s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-                s.onload = () => html2pdf().set({
-                    margin: 1,
-                    filename: 'estado_cuenta.pdf',
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, useCORS: true },
-                    jsPDF: { unit: 'cm', format: 'letter', orientation: 'portrait' }
-                }).from(document.body).save();
-                document.head.appendChild(s);
-            } else {
-                window.print();
-            }
-        }, 400);
-    });
-<\/script>
 </body>
 </html>`;
 
-                        const win = window.open('', '_blank');
-                        win.document.write(html);
-                        win.document.close();
-                    }
-                </script>
+                // ─────────────────────────────────────────────────
+                // 3. DETECTAR DISPOSITIVO Y EJECUTAR
+                // ─────────────────────────────────────────────────
+                const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
+                if (esMovil) {
+                    const autoScript = `
+<script>
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            const s = document.createElement('script');
+            s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+            s.onload = () => html2pdf().set({
+                margin: 1,
+                filename: 'estado_cuenta.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'cm', format: 'letter', orientation: 'portrait' }
+            }).from(document.body).save();
+            document.head.appendChild(s);
+        }, 400);
+    });
+<\/script>`;
+
+                    const htmlFull = htmlBase.replace('</body>', autoScript + '</body>');
+
+                    const win = window.open('', '_blank');
+                    win.document.write(htmlFull);
+                    win.document.close();
+
+                } else {
+                    const prev = document.getElementById('printFrameExpediente');
+                    if (prev) prev.remove();
+
+                    const iframe = document.createElement('iframe');
+                    iframe.id = 'printFrameExpediente';
+                    iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;';
+                    document.body.appendChild(iframe);
+
+                    const doc = iframe.contentWindow.document;
+                    doc.open();
+                    doc.write(htmlBase);
+                    doc.close();
+
+                    setTimeout(() => {
+                        try {
+                            iframe.contentWindow.focus();
+                            iframe.contentWindow.print();
+                        } catch (e) {
+                            console.error('Error al imprimir desde iframe:', e);
+                        }
+                        setTimeout(() => iframe.remove(), 2000);
+                    }, 600);
+                }
+            }
+
+
+
+        </script>
+
+    </div>
 </body>
 
 </html>
