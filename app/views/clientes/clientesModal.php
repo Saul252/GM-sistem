@@ -1,5 +1,5 @@
 <style>
-    /* Estilo iOS / Apple Look & Feel con soporte Modo Oscuro */
+    /* Estilo iOS / Apple Look & Feel con soporte Modo Oscuro adaptado a compacto */
     .modalc .modal-content {
         border-radius: 20px;
         background-color: var(--bs-body-bg, #ffffff);
@@ -13,17 +13,16 @@
     body.dark-mode .modalc .modal-content,
     .dark-theme .modalc .modal-content {
         background-color: #1c1c1e;
-        /* Gris oscuro clásico de iOS */
         border: 1px solid rgba(255, 255, 255, 0.1);
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
     }
 
-    /* Inputs y Selects estilo Cupertino */
+    /* Inputs y Selects estilizados y más finos */
     .modalc .form-control,
     .modalc .form-select {
-        border-radius: 12px;
-        padding: 0.65rem 1rem;
-        font-size: 0.95rem;
+        border-radius: 8px;
+        padding: 0.35rem 0.65rem;
+        font-size: 0.85rem;
         background-color: rgba(0, 0, 0, 0.02);
         border: 1px solid rgba(0, 0, 0, 0.12);
         transition: all 0.2s ease-in-out;
@@ -38,30 +37,33 @@
         color: #f5f5f7;
     }
 
-    /* Efecto Focus muy suave tipo iOS (Gris/Azul difuminado) */
+    /* Efecto Focus estilo iOS */
     .modalc .form-control:focus,
     .modalc .form-select:focus {
         background-color: transparent;
         border-color: #007aff;
-        /* Azul sistema iOS */
-        box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.15);
+        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
     }
 
-    /* Tipografías y etiquetas delicadas */
+    /* Etiquetas alineadas a la derecha y con estilo serio tipo ERP */
     .modalc .form-label {
-        font-size: 0.75rem;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        font-weight: 600;
-        color: #86868b;
-        /* Gris sutil de Apple */
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: #6c757d;
+        margin-bottom: 0;
+    }
+
+    [data-bs-theme="dark"] .modalc .form-label,
+    body.dark-mode .modalc .form-label {
+        color: #98989f;
     }
 
     /* Botones refinados */
     .modalc .btn {
-        border-radius: 12px;
-        padding: 0.6rem 1.2rem;
+        border-radius: 10px;
+        padding: 0.5rem 1rem;
         font-weight: 500;
+        font-size: 0.85rem;
         transition: transform 0.1s ease, background-color 0.2s;
     }
 
@@ -81,9 +83,10 @@
         border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
 </style>
+
 <div class="modal fade modalc" id="modalNuevoCliente" tabindex="-1" aria-labelledby="modalNuevoClienteLabel"
     aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
 
             <!-- Cabecera minimalista tipo iOS -->
@@ -98,100 +101,159 @@
                 <div class="modal-body px-4 py-3">
                     <input type="hidden" name="almacen_id" value="<?= $almacen_usuario ?>">
 
-                    <div class="row g-3">
-                        <div class="col-md-12">
-                            <label class="form-label">Nombre Comercial *</label>
-                            <input type="text" name="nombre_comercial" id="nombre_comercial"
-                                class="form-control text-uppercase" placeholder="EJ. MATERIALES EL CENTRO" required>
+                    <div class="d-flex flex-column gap-2">
+
+                        <div class="row align-items-center g-0 mb-2">
+                            <div class="col-md-4 text-md-end pe-md-3 mb-1 mb-md-0">
+                                <label class="form-label">Nombre Comercial *</label>
+                            </div>
+                            <div class="col-md-8">
+                                <input type="text" name="nombre_comercial" id="nombre_comercial"
+                                    class="form-control text-uppercase" placeholder="EJ. MATERIALES EL CENTRO" required>
+                            </div>
                         </div>
 
-                        <div class="col-md-12">
-                            <label class="form-label">Razón Social</label>
-                            <input type="text" name="razon_social" class="form-control text-uppercase"
-                                placeholder="NOMBRE LEGAL COMPLETO">
+                        <div class="row align-items-center g-0 mb-2">
+                            <div class="col-md-4 text-md-end pe-md-3 mb-1 mb-md-0">
+                                <label class="form-label">Razón Social</label>
+                            </div>
+                            <div class="col-md-8">
+                                <input type="text" name="razon_social" class="form-control text-uppercase"
+                                    placeholder="NOMBRE LEGAL COMPLETO">
+                            </div>
                         </div>
 
-                        <div class="col-md-12">
-                            <label class="form-label">Contacto *</label>
-                            <input type="text" name="contacto" class="form-control text-uppercase"
-                                placeholder="NOMBRE DEL CONTACTO">
+                        <div class="row align-items-center g-0 mb-2">
+                            <div class="col-md-4 text-md-end pe-md-3 mb-1 mb-md-0">
+                                <label class="form-label">Contacto *</label>
+                            </div>
+                            <div class="col-md-8">
+                                <input type="text" name="contacto" class="form-control text-uppercase"
+                                    placeholder="NOMBRE DEL CONTACTO">
+                            </div>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">RFC</label>
-                            <input type="text" name="rfc" id="rfc" class="form-control text-uppercase" maxlength="13"
-                                placeholder="ABCD000000XXX">
+                        <div class="row align-items-center g-0 mb-2">
+                            <div class="col-md-4 text-md-end pe-md-3 mb-1 mb-md-0">
+                                <label class="form-label">RFC</label>
+                            </div>
+                            <div class="col-md-8">
+                                <input type="text" name="rfc" id="rfc" class="form-control text-uppercase"
+                                    maxlength="13" placeholder="ABCD000000XXX">
+                            </div>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Código Postal *</label>
-                            <input type="text" name="codigo_postal" class="form-control" maxlength="5"
-                                placeholder="00000" required>
+
+
+                        <div class="row align-items-start g-0 mb-2 d-none">
+                            <div class="col-md-4 text-md-end pe-md-3 pt-1 mb-1 mb-md-0">
+                                <label class="form-label">Régimen Fiscal</label>
+                            </div>
+                            <div class="col-md-8">
+                                <input type="text" name="regimen_fiscal" class="form-control text-uppercase"
+                                    maxlength="3" placeholder="601">
+                                <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">
+                                    Clave del catálogo del SAT
+                                </small>
+                            </div>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Régimen Fiscal</label>
-                            <input type="text" name="regimen_fiscal" class="form-control text-uppercase" maxlength="3"
-                                placeholder="601">
-                            <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">Clave del catálogo del
-                                SAT</small>
+                        <div class="row align-items-center g-0 mb-2 d-none">
+                            <div class="col-md-4 text-md-end pe-md-3 mb-1 mb-md-0">
+                                <label class="form-label">Uso de CFDI</label>
+                            </div>
+                            <div class="col-md-8">
+                                <select name="uso_cfdi" class="form-select">
+                                    <option value="G03" selected>G03 - Gastos en general</option>
+                                    <option value="S01">S01 - Sin efectos fiscales</option>
+                                    <option value="G01">G01 - Adquisición de mercancías</option>
+                                    <option value="P01">P01 - Por definir</option>
+                                </select>
+                            </div>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Uso de CFDI</label>
-                            <select name="uso_cfdi" class="form-select">
-                                <option value="G03" selected>G03 - Gastos en general</option>
-                                <option value="S01">S01 - Sin efectos fiscales</option>
-                                <option value="G01">G01 - Adquisición de mercancías</option>
-                                <option value="P01">P01 - Por definir</option>
-                            </select>
+                        <div class="row align-items-center g-0 mb-2">
+                            <div class="col-md-4 text-md-end pe-md-3 mb-1 mb-md-0">
+                                <label class="form-label">Correo Electrónico</label>
+                            </div>
+                            <div class="col-md-8">
+                                <input type="email" name="correo" class="form-control" placeholder="CLIENTE@CORREO.COM">
+                            </div>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Correo Electrónico</label>
-                            <input type="email" name="correo" class="form-control" placeholder="CLIENTE@CORREO.COM">
+                        <div class="row align-items-center g-0 mb-2">
+                            <div class="col-md-4 text-md-end pe-md-3 mb-1 mb-md-0">
+                                <label class="form-label">Teléfono</label>
+                            </div>
+                            <div class="col-md-8">
+                                <input type="tel" name="telefono" class="form-control" placeholder="55 0000 0000">
+                            </div>
                         </div>
 
-                        <div class="col-md-6">
-                            <label class="form-label">Teléfono</label>
-                            <input type="tel" name="telefono" class="form-control" placeholder="55 0000 0000">
+                        <div class="row align-items-start g-0 mb-2">
+                            <div class="col-md-4 text-md-end pe-md-3 pt-1 mb-1 mb-md-0">
+                                <label class="form-label">Calle</label>
+                            </div>
+                            <div class="col-md-8">
+                                <textarea name="calle" class="form-control text-uppercase" rows="2"
+                                    placeholder="CALLE Y NÚMERO"></textarea>
+                            </div>
                         </div>
 
-                        <div class="col-md-12">
-                            <label class="form-label">Calle</label>
-                            <textarea name="calle" class="form-control text-uppercase" rows="2"
-                                placeholder="CALLE Y NÚMERO"></textarea>
+                        <div class="row align-items-start g-0 mb-2">
+                            <div class="col-md-4 text-md-end pe-md-3 pt-1 mb-1 mb-md-0">
+                                <label class="form-label">Colonia</label>
+                            </div>
+                            <div class="col-md-8">
+                                <textarea name="colonia" class="form-control text-uppercase" rows="2"
+                                    placeholder="COLONIA..."></textarea>
+                            </div>
                         </div>
 
-                        <div class="col-md-12">
-                            <label class="form-label">Colonia</label>
-                            <textarea name="colonia" class="form-control text-uppercase" rows="2"
-                                placeholder="COLONIA..."></textarea>
+                        <div class="row align-items-start g-0 mb-2">
+                            <div class="col-md-4 text-md-end pe-md-3 pt-1 mb-1 mb-md-0">
+                                <label class="form-label">Poblacion</label>
+                            </div>
+                            <div class="col-md-8">
+                                <textarea name="pueblo" class="form-control text-uppercase" rows="2"
+                                    placeholder="POBLACION"></textarea>
+                            </div>
                         </div>
 
-                        <div class="col-md-12">
-                            <label class="form-label">Pueblo</label>
-                            <textarea name="pueblo" class="form-control text-uppercase" rows="2"
-                                placeholder="PUEBLO"></textarea>
+                        <div class="row align-items-start g-0 mb-2">
+                            <div class="col-md-4 text-md-end pe-md-3 pt-1 mb-1 mb-md-0">
+                                <label class="form-label">Ciudad</label>
+                            </div>
+                            <div class="col-md-8">
+                                <textarea name="ciudad" class="form-control text-uppercase" rows="2"
+                                    placeholder="CIUDAD"></textarea>
+                            </div>
                         </div>
-
-                        <div class="col-md-12">
-                            <label class="form-label">Ciudad</label>
-                            <textarea name="ciudad" class="form-control text-uppercase" rows="2"
-                                placeholder="CIUDAD"></textarea>
+                        <div class="row align-items-center g-0 mb-2">
+                            <div class="col-md-4 text-md-end pe-md-3 mb-1 mb-md-0">
+                                <label class="form-label">Código Postal *</label>
+                            </div>
+                            <div class="col-md-8">
+                                <input type="text" name="codigo_postal" class="form-control" maxlength="5"
+                                    placeholder="00000" required>
+                            </div>
                         </div>
 
                         <?php if ($almacen_usuario == 0): ?>
-                            <div class="col-md-12 mb-2" style="display: none;">
-                                <label class="form-label text-primary">Asignar a Almacén *</label>
-                                <select name="almacen_id" class="form-select">
-                                    <option value="1">-- Selecciona un almacén --</option>
-                                    <?php foreach ($almacenes as $alm): ?>
-                                        <option value="<?= $alm['id'] ?>">
-                                            <?= htmlspecialchars($alm['nombre']) ?>
-                                        </option>
-                                    <?php endforeach; ?>
-                                </select>
+                            <div class="row align-items-center g-0 mb-2" style="display: none;">
+                                <div class="col-md-4 text-md-end pe-md-3 mb-1 mb-md-0">
+                                    <label class="form-label text-primary">Asignar a Almacén *</label>
+                                </div>
+                                <div class="col-md-8">
+                                    <select name="almacen_id" class="form-select">
+                                        <option value="1">-- Selecciona un almacén --</option>
+                                        <?php foreach ($almacenes as $alm): ?>
+                                            <option value="<?= $alm['id'] ?>">
+                                                <?= htmlspecialchars($alm['nombre']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
                             </div>
                         <?php endif; ?>
                     </div>

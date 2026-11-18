@@ -9,13 +9,13 @@
                         <i class="bi bi-printer me-2"></i>IMPRIMIR COMPRA
                     </button>
                     <button type="button" class="btn btn-outline-secondary btn-sm px-4 rounded-pill"
-                        data-bs-dismiss="modal">Cerrar</button>
+                        onclick="setTimeout(() => location.reload(), 300)">Cerrar</button>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/html3pdf@0.12.1/dist/html3pdf.bundle.min.js"></script>
 <style>
     /* Estilos formato Premium para compras */
     .compra-invoice-box {
@@ -383,32 +383,90 @@
             modalInstance.show();
         });
     }
+    // Reemplaza 'modalEditarVenta' con el ID exacto que tenga tu modal en el HTML
+    const modalElement = document.getElementById('modalEditarVenta');
+
+    if (modalElement) {
+        modalElement.addEventListener('hidden.bs.modal', function () {
+            location.reload();
+        });
+    }
 
     function compraDetalle_ejecutarImpresion() {
         const elemento = document.getElementById('compraDetalle_areaCapturaPDF');
         if (!elemento) return;
 
-        // Extraer folio para el título de la ventana / archivo
+        // Extraer folio para el nombre del archivo
         const folioEl = document.querySelector('.compra-remision-badge span');
         const folio = folioEl ? folioEl.innerText.trim() : '000';
 
-        // Detección de dispositivos móviles para exportar PDF directamente
-        const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        // ---------- DETECCIÓN ROBUSTA DE MÓVIL ----------
+        // Incluye iPad con iPadOS 13+ (que se reporta como MacIntel)
+        const esMovil =
+            /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Mobile|Tablet/i.test(navigator.userAgent) ||
+            (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform));
 
-        // ---------- MÓVIL: html2pdf (sin cambios) ----------
+        // ---------- MÓVIL: generar PDF y descargar ----------
         if (esMovil) {
+
+            // Aviso visual (la generación puede tardar unos segundos)
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: 'Generando PDF…',
+                    text: 'Espera un momento mientras se prepara el archivo.',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    didOpen: () => Swal.showLoading()
+                });
+            }
+
             const opciones = {
-                margin: [8, 8, 8, 8],
+                margin: [5, 5, 5, 5],
                 filename: `Compra_${folio}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-                jsPDF: { unit: 'mm', format: 'a5', orientation: 'landscape' }
+                image: { type: 'jpeg', quality: 0.95 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    letterRendering: true,
+                    logging: false,
+                    scrollY: 0
+                },
+                // A4 horizontal es más seguro que A5 para que no se corte la tabla
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+                pagebreak: { mode: ['css', 'legacy'] }
             };
-            html2pdf().set(opciones).from(elemento).save();
-            return;
+
+            // Preferir html3pdf (más estable en iOS); si no está, usar html2pdf
+            const generador = (typeof html3pdf !== 'undefined') ? html3pdf : window.html2pdf;
+
+            if (typeof generador !== 'function') {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire('Error', 'La librería de PDF no está cargada. Revisa la consola.', 'error');
+                } else {
+                    alert('La librería de PDF no está cargada.');
+                }
+                return;
+            }
+
+            generador()
+                .set(opciones)
+                .from(elemento)
+                .save()
+                .then(() => {
+                    if (typeof Swal !== 'undefined') Swal.close();
+                    console.log('PDF generado:', `Compra_${folio}.pdf`);
+                })
+                .catch((err) => {
+                    console.error('Error al generar PDF:', err);
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire('Error', 'No se pudo generar el PDF. Intenta de nuevo.', 'error');
+                    }
+                });
+
+            return; // No continuar al iframe en móvil
         }
 
-        // ---------- ESCRITORIO: iframe oculto (no abre ventana, no traba el sistema) ----------
+        // ---------- ESCRITORIO: iframe oculto (tu código actual) ----------
         const iframe = document.createElement('iframe');
         iframe.setAttribute('aria-hidden', 'true');
         iframe.style.position = 'fixed';
@@ -423,179 +481,58 @@
         const doc = iframe.contentWindow.document;
         doc.open();
         doc.write(`
-    <!DOCTYPE html>
-    <html lang="es">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>COMPRA - ${folio}</title>
-            <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
-            <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
-            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-            <style>
-                @page { 
-                    margin: 0;
-                }
-                body { 
-                    font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
-                    padding: 10px;
-                    background-color: #ffffff;
-                    color: #334155;
-                    -webkit-print-color-adjust: exact !important;
-                    print-color-adjust: exact !important;
-                }
-
-                .compra-invoice-box {
-                    width: 100%;
-                    margin: auto;
-                    background: #fff;
-                }
-                .compra-table-layout {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-bottom: 10px;
-                }
-                .compra-logo-container {
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                }
-                .compra-brand-title {
-                    font-size: 16pt;
-                    font-weight: 800;
-                    color: #1e3a8a;
-                    line-height: 1.1;
-                    letter-spacing: -0.5px;
-                }
-                .compra-company-address {
-                    font-size: 8.5pt;
-                    color: #64748b;
-                    line-height: 1.4;
-                    text-align: center;
-                }
-                .compra-remision-badge {
-                    background: #0f172a !important;
-                    color: #fff !important;
-                    padding: 6px 12px;
-                    text-align: center;
-                    font-size: 8pt;
-                    font-weight: 700;
-                    letter-spacing: 1px;
-                    border-radius: 4px;
-                    float: right;
-                    min-width: 140px;
-                }
-                .compra-remision-badge span {
-                    display: block;
-                    font-size: 13pt;
-                    font-weight: 800;
-                    color: #38bdf8 !important;
-                    margin-top: 2px;
-                }
-                .compra-date-tile {
-                    width: 140px;
-                    float: right;
-                    margin-top: 5px;
-                    border-collapse: collapse;
-                    font-size: 8.5pt;
-                }
-                .compra-date-tile td {
-                    padding: 4px 8px;
-                    border: 1px solid #e2e8f0;
-                }
-                .compra-date-tile .title-td {
-                    background: #f1f5f9 !important;
-                    color: #64748b;
-                    font-weight: 600;
-                }
-                .compra-card-info {
-                    border: 1px solid #e2e8f0;
-                    border-radius: 6px;
-                    padding: 10px 12px;
-                    min-height: 90px;
-                    background-color: #ffffff;
-                }
-                .compra-card-title {
-                    font-size: 7.5pt;
-                    font-weight: 800;
-                    color: #64748b;
-                    letter-spacing: 0.5px;
-                    margin-bottom: 6px;
-                    border-bottom: 1px solid #f1f5f9;
-                    padding-bottom: 3px;
-                    text-transform: uppercase;
-                }
-                .compra-items-table {
-                    width: 100%;
-                    border-collapse: collapse;
-                    margin-top: 15px;
-                    font-size: 8.5pt;
-                }
-                .compra-items-table th {
-                    background: #0f172a !important;
-                    color: #fff !important;
-                    font-weight: 600;
-                    font-size: 7.5pt;
-                    text-transform: uppercase;
-                    padding: 7px 8px;
-                    letter-spacing: 0.5px;
-                }
-                .compra-items-table td {
-                    padding: 8px;
-                    border-bottom: 1px solid #e2e8f0;
-                    vertical-align: top;
-                }
-                .compra-items-table tr:nth-child(even) {
-                    background-color: #f8fafc !important;
-                }
-                .compra-items-table .total-row td {
-                    border-bottom: none;
-                    padding-top: 12px;
-                }
-                .compra-total-highlight {
-                    font-size: 13pt;
-                    font-weight: 800;
-                    color: #1e3a8a !important;
-                    background: #eff6ff !important;
-                    padding: 6px 12px !important;
-                    border-radius: 4px;
-                    border: 1px solid #bfdbfe !important;
-                }
-                .compra-card-obs {
-                    margin-top: 15px;
-                    border: 1px dashed #cbd5e1;
-                    border-radius: 6px;
-                    padding: 10px 12px;
-                    font-size: 8pt;
-                    background: #fdfdfd;
-                    line-height: 1.5;
-                }
-                .compra-signatures {
-                    margin-top: 40px;
-                    padding-top: 10px;
-                    text-align: center;
-                }
-                .compra-signature-line {
-                    border-top: 2px solid #334155;
-                    margin: 0 15px;
-                    padding-top: 5px;
-                    font-size: 7.5pt;
-                    font-weight: 700;
-                    color: #334155;
-                }
-            </style>
-        </head>
-        <body>
-            ${elemento.outerHTML}
-        </body>
-    </html>
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>COMPRA - ${folio}</title>
+        <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
+        <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        <style>
+            @page { margin: 0; }
+            body {
+                font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+                padding: 10px;
+                background-color: #ffffff;
+                color: #334155;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .compra-invoice-box { width: 100%; margin: auto; background: #fff; }
+            .compra-table-layout { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+            .compra-logo-container { display: flex; align-items: center; gap: 10px; }
+            .compra-brand-title { font-size: 16pt; font-weight: 800; color: #1e3a8a; line-height: 1.1; letter-spacing: -0.5px; }
+            .compra-company-address { font-size: 8.5pt; color: #64748b; line-height: 1.4; text-align: center; }
+            .compra-remision-badge { background: #0f172a !important; color: #fff !important; padding: 6px 12px; text-align: center; font-size: 8pt; font-weight: 700; letter-spacing: 1px; border-radius: 4px; float: right; min-width: 140px; }
+            .compra-remision-badge span { display: block; font-size: 13pt; font-weight: 800; color: #38bdf8 !important; margin-top: 2px; }
+            .compra-date-tile { width: 140px; float: right; margin-top: 5px; border-collapse: collapse; font-size: 8.5pt; }
+            .compra-date-tile td { padding: 4px 8px; border: 1px solid #e2e8f0; }
+            .compra-date-tile .title-td { background: #f1f5f9 !important; color: #64748b; font-weight: 600; }
+            .compra-card-info { border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 12px; min-height: 90px; background-color: #ffffff; }
+            .compra-card-title { font-size: 7.5pt; font-weight: 800; color: #64748b; letter-spacing: 0.5px; margin-bottom: 6px; border-bottom: 1px solid #f1f5f9; padding-bottom: 3px; text-transform: uppercase; }
+            .compra-items-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 8.5pt; }
+            .compra-items-table th { background: #0f172a !important; color: #fff !important; font-weight: 600; font-size: 7.5pt; text-transform: uppercase; padding: 7px 8px; letter-spacing: 0.5px; }
+            .compra-items-table td { padding: 8px; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+            .compra-items-table tr:nth-child(even) { background-color: #f8fafc !important; }
+            .compra-items-table .total-row td { border-bottom: none; padding-top: 12px; }
+            .compra-total-highlight { font-size: 13pt; font-weight: 800; color: #1e3a8a !important; background: #eff6ff !important; padding: 6px 12px !important; border-radius: 4px; border: 1px solid #bfdbfe !important; }
+            .compra-card-obs { margin-top: 15px; border: 1px dashed #cbd5e1; border-radius: 6px; padding: 10px 12px; font-size: 8pt; background: #fdfdfd; line-height: 1.5; }
+            .compra-signatures { margin-top: 40px; padding-top: 10px; text-align: center; }
+            .compra-signature-line { border-top: 2px solid #334155; margin: 0 15px; padding-top: 5px; font-size: 7.5pt; font-weight: 700; color: #334155; }
+        </style>
+    </head>
+    <body>
+        ${elemento.outerHTML}
+    </body>
+</html>
     `);
         doc.close();
 
         const win = iframe.contentWindow;
 
-        // Limpieza idempotente: elimina el iframe del DOM una sola vez
         let limpiado = false;
         const limpiar = () => {
             if (limpiado) return;
@@ -603,13 +540,10 @@
             if (iframe && iframe.parentNode) {
                 iframe.parentNode.removeChild(iframe);
             }
-            setTimeout(() => window.location.reload(), 300);
         };
 
-        // Registrar el cierre ANTES de imprimir (esto es lo que antes fallaba)
         win.onafterprint = limpiar;
 
-        // Esperar a que carguen las imágenes (logo) antes de imprimir
         const imgs = Array.from(iframe.contentDocument.images || []);
         const esperarImagenes = Promise.all(
             imgs.map(img =>
@@ -623,10 +557,8 @@
             )
         );
 
-        // Carrera: o cargan todas las imágenes, o pasan 1.5 s como máximo
         Promise.race([esperarImagenes, new Promise(res => setTimeout(res, 1500))])
             .then(() => {
-                // Un frame extra para asegurar el paint
                 requestAnimationFrame(() => {
                     try {
                         win.focus();
@@ -635,8 +567,6 @@
                         console.error('Error al imprimir:', e);
                         limpiar();
                     }
-
-                    // Respaldo: si onafterprint no se disparó, limpiar igualmente
                     setTimeout(limpiar, 2000);
                 });
             });

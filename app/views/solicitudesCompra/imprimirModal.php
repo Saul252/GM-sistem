@@ -224,6 +224,7 @@
         </div>
     </div>
 </div>
+<script src="https://cdn.jsdelivr.net/npm/html3pdf@0.12.1/dist/html3pdf.bundle.min.js"></script>
 <script>
     function prepararImpresion(id) {
         fetch(`/cfsistem/app/controllers/solicitudesCompraController.php?action=obtenerDetalle&id=${id}`)
@@ -329,11 +330,51 @@
      * para que el sistema NO se trabe si el diálogo de impresión queda abierto.
      */
     function ejecutarImpresion() {
-        // 1. Obtener el contenido del área de impresión
-        const contenido = document.getElementById('areaImpresion').innerHTML;
-        const folio = $('#print-folio').text();
+        // 1. Detectar si es un dispositivo móvil
+        const esMovil = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+            (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform));
 
-        // 2. Crear iframe oculto dentro de la misma página (no abre ventana nueva)
+        const elementoAImprimir = document.getElementById('areaImpresion');
+        const folio = $('#print-folio').text().trim() || 'solicitud';
+
+        // ==========================================
+        // OPCIÓN A: En móvil, generar PDF y descargar
+        // ==========================================
+        if (esMovil) {
+            // Configuración del PDF (ajusta según necesites)
+            const opciones = {
+                margin: [10, 10, 10, 10], // márgenes en mm
+                filename: `Solicitud_${folio}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Mostrar un aviso al usuario (opcional)
+            // alert('Generando PDF para descargar...');
+
+            // Generar y descargar el PDF
+            html3pdf()
+                .set(opciones)
+                .from(elementoAImprimir)
+                .save()
+                .then(() => {
+                    console.log('PDF generado y descargado correctamente.');
+                })
+                .catch((err) => {
+                    console.error('Error al generar el PDF:', err);
+                    alert('No se pudo generar el PDF. Intenta de nuevo.');
+                });
+
+            return; // Salir para no ejecutar la impresión por iframe
+        }
+
+        // ==========================================
+        // OPCIÓN B: En escritorio, mantener tu impresión por iframe
+        // ==========================================
+        // (Tu código actual del iframe, que funciona bien en PC)
+        const contenido = elementoAImprimir.innerHTML;
+
         const iframe = document.createElement('iframe');
         iframe.setAttribute('aria-hidden', 'true');
         iframe.style.position = 'fixed';
@@ -345,7 +386,6 @@
         iframe.style.visibility = 'hidden';
         document.body.appendChild(iframe);
 
-        // 3. Escribir el HTML dentro del iframe
         const doc = iframe.contentWindow.document;
         doc.open();
         doc.write(`
@@ -380,7 +420,6 @@
                         z-index: -1;
                     "
                 >
-
                 ${contenido}
             </body>
         </html>
@@ -389,7 +428,6 @@
 
         const win = iframe.contentWindow;
 
-        // 4. Función de limpieza: elimina el iframe del DOM (se ejecuta UNA sola vez)
         let limpiado = false;
         const limpiar = () => {
             if (limpiado) return;
@@ -397,13 +435,10 @@
             if (iframe && iframe.parentNode) {
                 iframe.parentNode.removeChild(iframe);
             }
-
         };
 
-        // 5. Registrar el cierre ANTES de imprimir
         win.onafterprint = limpiar;
 
-        // 6. Esperar un instante a que carguen estilos/imágenes y luego imprimir
         setTimeout(() => {
             try {
                 win.focus();
@@ -412,10 +447,7 @@
                 console.error('Error al imprimir:', e);
                 limpiar();
             }
-
-            // 7. Respaldo: si onafterprint no se disparó, limpiar igualmente
             setTimeout(limpiar, 2000);
         }, 500);
     }
-
 </script>

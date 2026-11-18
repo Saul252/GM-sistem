@@ -5,17 +5,17 @@
  */
 
 require_once __DIR__ . '/../../includes/auth.php';
- // Tu función de seguridad
+// Tu función de seguridad
 require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../controllers/LayoutController.php';
 require_once __DIR__ . '/../models/ventasHistorialModel.php';
 require_once __DIR__ . '/../models/ventas_model.php';
 require_once __DIR__ . '/../models/clientesModel.php';
 require_once __DIR__ . '/../models/RepartosModel.php';
-require_once __DIR__ . '/../models/almacen_model.php'; 
+require_once __DIR__ . '/../models/almacen_model.php';
 
 protegerPagina('ventasVendedor');
-$almacenModel   = new AlmacenModel($conexion);
+$almacenModel = new AlmacenModel($conexion);
 $ventasModel = new VentaHistorialModel($conexion);
 $clientesModel = new ClientesModel($conexion);
 $repartosModel = new RepartoModel($conexion);
@@ -25,40 +25,41 @@ $paginaActual = 'ventasVendedor';
 // --- ACCIÓN: LISTADO AJAX (Con filtros) ---
 if (isset($_GET['action']) && $_GET['action'] === 'listar') {
     // Limpiamos cualquier salida previa en el buffer
-    while (ob_get_level()) ob_end_clean(); 
+    while (ob_get_level())
+        ob_end_clean();
     header('Content-Type: application/json; charset=utf-8');
-    
+
     try {
         $filtros = [
-            'search'   => $_GET['f_search'] ?? '',
-            'status'   => $_GET['f_status'] ?? '',
-            'pago'     => $_GET['f_pago'] ?? '',
-            'rango'    => $_GET['f_rango'] ?? 'todos',
-            'inicio'   => $_GET['f_inicio'] ?? '',
-            'fin'      => $_GET['f_fin'] ?? '',
-            'almacen'  => intval($_GET['f_almacen'] ?? 0),
+            'search' => $_GET['f_search'] ?? '',
+            'status' => $_GET['f_status'] ?? '',
+            'pago' => $_GET['f_pago'] ?? '',
+            'rango' => $_GET['f_rango'] ?? 'todos',
+            'inicio' => $_GET['f_inicio'] ?? '',
+            'fin' => $_GET['f_fin'] ?? '',
+            'almacen' => intval($_GET['f_almacen'] ?? 0),
             'vendedor' => intval($_GET['f_vendedor'] ?? 0)
         ];
 
-        $rol_id  = $_SESSION['rol_id'] ?? 2;
+        $rol_id = $_SESSION['rol_id'] ?? 2;
         $usuario = $_SESSION['usuario_id'] ?? 0;
 
         // 1. Obtener la lista de clientes con sus sumatorias agrupadas
         $data = $ventasModel->obtenerVentasFiltradasVendedor($filtros, $rol_id, $usuario);
-        
+
         // 2. Obtener los totales generales del reporte (opcional para mostrar en tarjetas/footers)
         $total = $ventasModel->obtenerVentasFiltradasVendedorTotal($filtros, $rol_id, $usuario);
 
         // 3. Agrupamos en una sola estructura limpia para el Frontend
         echo json_encode([
             'status' => 'success',
-            'data'   => $data,
+            'data' => $data,
             'totales' => $total
         ]);
 
     } catch (Throwable $e) {
         echo json_encode([
-            'status'  => 'error',
+            'status' => 'error',
             'message' => $e->getMessage()
         ]);
     }
@@ -67,18 +68,20 @@ if (isset($_GET['action']) && $_GET['action'] === 'listar') {
 
 if (isset($_GET['action']) && $_GET['action'] === 'guardarEntrega') {
     // Limpiamos cualquier salida previa para que solo salga el JSON
-    if (ob_get_level()) ob_clean();
+    if (ob_get_level())
+        ob_clean();
     header('Content-Type: application/json');
 
     try {
-        if (empty($_POST['venta_id'])) throw new Exception("ID de venta no recibido.");
-        
+        if (empty($_POST['venta_id']))
+            throw new Exception("ID de venta no recibido.");
+
         $venta_id = intval($_POST['venta_id']);
         $productos = $_POST['productos'] ?? [];
         $usuario_id = $_SESSION['usuario_id'] ?? 1;
 
         $resultado = $ventasModel->procesarEntrega($venta_id, $productos, $usuario_id);
-        
+
         echo json_encode(['status' => 'success', 'message' => 'Entrega procesada correctamente']);
 
     } catch (Exception $e) {
@@ -92,7 +95,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardarEntrega') {
 
 /// --- ACCIÓN: GUARDAR ABONO ---
 if (isset($_GET['action']) && $_GET['action'] === 'guardarAbono') {
-    if (ob_get_level()) ob_clean();
+    if (ob_get_level())
+        ob_clean();
     header('Content-Type: application/json');
 
     try {
@@ -100,20 +104,22 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardarAbono') {
 
         // --- 0. CAPTURA DE DATOS ---
         $v_id = intval($_POST['venta_id'] ?? 0);
-        $amt  = floatval($_POST['monto'] ?? 0);
-        $met  = $_POST['metodo_pago'] ?? 'Efectivo'; 
-        $ref =$_POST['referencia'] ?? '';
+        $amt = floatval($_POST['monto'] ?? 0);
+        $met = $_POST['metodo_pago'] ?? 'Efectivo';
+        $ref = $_POST['referencia'] ?? '';
         $u_id = $_SESSION['usuario_id'] ?? 1;
-        $fec  = !empty($_POST['fecha_pago']) ? $_POST['fecha_pago'] : date('Y-m-d H:i:s');
+        $fec = !empty($_POST['fecha_pago']) ? $_POST['fecha_pago'] : date('Y-m-d H:i:s');
         $c_id = intval($_POST['cliente_id'] ?? 0);
 
         // --- 1. VALIDACIÓN ---
-        if ($amt <= 0) throw new Exception("El monto debe ser mayor a 0.");
-        
+        if ($amt <= 0)
+            throw new Exception("El monto debe ser mayor a 0.");
+
         if (!$c_id && $v_id > 0) {
             $c_id = $ventasModel->obtenerClientePorVenta($conexion, $v_id);
         }
-        if (!$c_id) throw new Exception("No se halló cliente para procesar el abono.");
+        if (!$c_id)
+            throw new Exception("No se halló cliente para procesar el abono.");
 
         // --- 2. LÓGICA DE SALDOS ---
         if ($met === 'Saldo a Favor') {
@@ -132,7 +138,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardarAbono') {
         }
 
         // --- 3. REGISTRO EN HISTORIAL ---
-        if (!$ventasModel->registrarAbono($v_id, $amt, $u_id, $met, $fec,$ref)) {
+        if (!$ventasModel->registrarAbono($v_id, $amt, $u_id, $met, $fec, $ref)) {
             throw new Exception("Error al registrar el movimiento en el historial.");
         }
 
@@ -140,17 +146,17 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardarAbono') {
         $conexion->commit(); // <--- SE GUARDAN LOS CAMBIOS REALMENTE
 
         echo json_encode([
-            'status'   => 'success', 
-            'message'  => 'Abono procesado correctamente.',
+            'status' => 'success',
+            'message' => 'Abono procesado correctamente.',
             'detalles' => ['monto' => number_format($amt, 2), 'metodo' => $met]
         ]);
 
     } catch (Throwable $e) {
         // SI ALGO FALLA, DESHACEMOS TODO LO QUE SE HIZO EN LAS TABLAS
-        if ($conexion->connect_errno == 0) { 
-            $conexion->rollback(); 
+        if ($conexion->connect_errno == 0) {
+            $conexion->rollback();
         }
-        
+
         error_log("FALLO EN GUARDAR ABONO: " . $e->getMessage());
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }
@@ -158,15 +164,16 @@ if (isset($_GET['action']) && $_GET['action'] === 'guardarAbono') {
 }
 // --- ACCIÓN: OBTENER DETALLE ---
 if (isset($_GET['action']) && $_GET['action'] === 'obtenerDetalle') {
-    if (ob_get_level()) ob_clean();
+    if (ob_get_level())
+        ob_clean();
     header('Content-Type: application/json');
 
     try {
         $id = intval($_GET['id'] ?? 0);
-        
+
         // 1. Obtener el detalle completo de la venta
         $detalle = $ventasModel->obtenerDetalleCompleto($id);
-        
+
         // 2. Extraer el id_cliente de la información obtenida
         // Accedemos a ['info'] y luego a ['id_cliente']
         $id_cliente = intval($detalle['info']['id_cliente'] ?? 0);
@@ -245,35 +252,36 @@ if (isset($_GET['action']) && $_GET['action'] === 'obtenerPagoFaltante') {
 
 // --- ACCIÓN: CANCELAR VENTA (POST) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['action'] === 'cancelarVentaSinSaldo') {
-    if (ob_get_level()) ob_clean();
+    if (ob_get_level())
+        ob_clean();
     header('Content-Type: application/json');
 
     try {
         // Leemos el cuerpo de la petición (JSON)
         $input = json_decode(file_get_contents("php://input"), true);
-        
-        $venta_id   = intval($input['id_venta'] ?? 0);
-        $motivo     = trim($input['motivo'] ?? 'Cancelación desde historial');
+
+        $venta_id = intval($input['id_venta'] ?? 0);
+        $motivo = trim($input['motivo'] ?? 'Cancelación desde historial');
         $usuario_id = $_SESSION['usuario_id'] ?? 1;
 
         if ($venta_id <= 0) {
             throw new Exception("ID de venta no proporcionado o inválido.");
         }
-       $repartosactivos = $repartosModel->contarEntregasActivasPorVenta($venta_id);
+        $repartosactivos = $repartosModel->contarEntregasActivasPorVenta($venta_id);
 
-if ($repartosactivos > 0) {
-    // Mensaje descriptivo y real
-    throw new Exception("No es posible procesar la solicitud: Esta venta cuenta con $repartosactivos despacho(s) activo(s) en el módulo de logística.");
-}
+        if ($repartosactivos > 0) {
+            // Mensaje descriptivo y real
+            throw new Exception("No es posible procesar la solicitud: Esta venta cuenta con $repartosactivos despacho(s) activo(s) en el módulo de logística.");
+        }
 
         // Ejecutamos la lógica en el modelo
         $resultado = VentasModel::cancelarVenta($conexion, $venta_id, $usuario_id, $motivo);
-        
+
         echo json_encode($resultado);
 
     } catch (Throwable $e) {
         echo json_encode([
-            'status'  => 'error', 
+            'status' => 'error',
             'message' => $e->getMessage()
         ]);
     }
@@ -282,73 +290,75 @@ if ($repartosactivos > 0) {
 
 // --- ACCIÓN: CANCELAR VENTA (POST) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['action']) && $_GET['action'] === 'cancelarVenta') {
-    if (ob_get_level()) ob_clean();
+    if (ob_get_level())
+        ob_clean();
     header('Content-Type: application/json');
 
     try {
         $input = json_decode(file_get_contents("php://input"), true);
-        $venta_id   = intval($input['id_venta'] ?? 0);
-        $motivo     = trim($input['motivo'] ?? 'Cancelación de venta');
+        $venta_id = intval($input['id_venta'] ?? 0);
+        $motivo = trim($input['motivo'] ?? 'Cancelación de venta');
         $usuario_id = $_SESSION['usuario_id'] ?? 1;
-        $fecha_act  = date('Y-m-d H:i:s');
+        $fecha_act = date('Y-m-d H:i:s');
 
-        if ($venta_id <= 0) throw new Exception("ID de venta no válido.");
-       $repartosactivos = $repartosModel->contarEntregasActivasPorVenta($venta_id);
+        if ($venta_id <= 0)
+            throw new Exception("ID de venta no válido.");
+        $repartosactivos = $repartosModel->contarEntregasActivasPorVenta($venta_id);
 
-if ($repartosactivos > 0) {
-    // Mensaje descriptivo y real
-    throw new Exception("No es posible procesar la solicitud: Esta venta cuenta con $repartosactivos despacho(s) activo(s) en el módulo de logística.");
-}
+        if ($repartosactivos > 0) {
+            // Mensaje descriptivo y real
+            throw new Exception("No es posible procesar la solicitud: Esta venta cuenta con $repartosactivos despacho(s) activo(s) en el módulo de logística.");
+        }
         // --- PASO 1: OBTENER DETALLE COMPLETO ---
         // Aprovechamos tu función que ya suma los pagos automáticamente
         $detalle = $ventasModel->obtenerDetalleCompleto($venta_id);
-        
+
         if (!$detalle || empty($detalle['info'])) {
             throw new Exception("No se encontró la información de la venta #$venta_id");
         }
 
-       // 1. Datos base
-$infoVenta      = $detalle['info'];
-$cliente_id     = intval($infoVenta['id_cliente']);
-$total_venta    = floatval($infoVenta['total'] ?? 0);        // Ej: 20
-$total_pagado   = floatval($infoVenta['total_pagado'] ?? 0); // Ej: 10
-$pendiente_pago = $total_venta - $total_pagado;            // Ej: 10 (Lo que aún debe)
+        // 1. Datos base
+        $infoVenta = $detalle['info'];
+        $cliente_id = intval($infoVenta['id_cliente']);
+        $total_venta = floatval($infoVenta['total'] ?? 0);        // Ej: 20
+        $total_pagado = floatval($infoVenta['total_pagado'] ?? 0); // Ej: 10
+        $pendiente_pago = $total_venta - $total_pagado;            // Ej: 10 (Lo que aún debe)
 
-error_log("Cancelación Especial - Venta: $venta_id. Pagado: $total_pagado, Deuda a limpiar: $pendiente_pago");
+        error_log("Cancelación Especial - Venta: $venta_id. Pagado: $total_pagado, Deuda a limpiar: $pendiente_pago");
 
-// --- PASO A: DEVOLVER LO PAGADO AL SALDO A FAVOR ---
-if ($total_pagado > 0) {
-    $clientesModel->abono_saldos_log(
-        $cliente_id, 
-        $venta_id, 
-        $total_pagado, 
-        $usuario_id, 
-        'DEVOLUCION_PAGO_CANCELACION', 
-        $fecha_act
-    );
+        // --- PASO A: DEVOLVER LO PAGADO AL SALDO A FAVOR ---
+        if ($total_pagado > 0) {
+            $clientesModel->abono_saldos_log(
+                $cliente_id,
+                $venta_id,
+                $total_pagado,
+                $usuario_id,
+                'DEVOLUCION_PAGO_CANCELACION',
+                $fecha_act
+            );
 
-    // Sumamos lo pagado: tu función lo pondrá en saldo_a_favor (o reducirá otras deudas)
-    $clientesModel->abono_saldosAFavor($cliente_id, $total_pagado, $venta_id, $fecha_act);
-}
+            // Sumamos lo pagado: tu función lo pondrá en saldo_a_favor (o reducirá otras deudas)
+            $clientesModel->abono_saldosAFavor($cliente_id, $total_pagado, $venta_id, $fecha_act);
+        }
 
-// --- PASO B: LIMPIAR LA DEUDA PENDIENTE DE ESTA VENTA ---
-if ($pendiente_pago > 0) {
-    $clientesModel->abono_saldos_log(
-        $cliente_id, 
-        $venta_id, 
-        $pendiente_pago, 
-        $usuario_id, 
-        'LIMPIEZA_DEUDA_CANCELACION', 
-        $fecha_act
-    );
+        // --- PASO B: LIMPIAR LA DEUDA PENDIENTE DE ESTA VENTA ---
+        if ($pendiente_pago > 0) {
+            $clientesModel->abono_saldos_log(
+                $cliente_id,
+                $venta_id,
+                $pendiente_pago,
+                $usuario_id,
+                'LIMPIEZA_DEUDA_CANCELACION',
+                $fecha_act
+            );
 
-    /**
-     * Al sumar el 'pendiente_pago' como positivo, tu función abono_saldosAFavor 
-     * subirá el Neto exactamente lo necesario para que la deuda de ESTA venta
-     * en el Saldo en Contra global se vuelva 0.
-     */
-    $clientesModel->abono_saldosAFavor($cliente_id, $pendiente_pago, $venta_id, $fecha_act);
-}
+            /**
+             * Al sumar el 'pendiente_pago' como positivo, tu función abono_saldosAFavor 
+             * subirá el Neto exactamente lo necesario para que la deuda de ESTA venta
+             * en el Saldo en Contra global se vuelva 0.
+             */
+            $clientesModel->abono_saldosAFavor($cliente_id, $pendiente_pago, $venta_id, $fecha_act);
+        }
 
         // --- PASO 3: CANCELAR LA VENTA ---
         // Cambiamos el estado a 'cancelada' en la tabla ventas
@@ -364,7 +374,7 @@ if ($pendiente_pago > 0) {
     } catch (Throwable $e) {
         error_log("Error en cancelación de venta: " . $e->getMessage());
         echo json_encode([
-            'status'  => 'error', 
+            'status' => 'error',
             'message' => 'Error al cancelar: ' . $e->getMessage()
         ]);
     }
@@ -373,13 +383,12 @@ if ($pendiente_pago > 0) {
 // --- CARGA DE VISTA ---
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && !isset($_GET['action'])) {
     $tituloPagina = "Control de Entregas";
-     $rol_id = $_SESSION['rol_id'] ?? 2;
-       $almacenes   = $almacenModel->getAlmacenes(0); 
-     $puede=false;
-    if( $rol_id<3)
-            {
-                $puede=true;
-            }
+    $rol_id = $_SESSION['rol_id'] ?? 2;
+    $almacenes = $almacenModel->getAlmacenes(0);
+    $puede = false;
+    if ($rol_id < 3) {
+        $puede = true;
+    }
 
     require_once __DIR__ . '/../views/historialPedidosVendedor_view.php';
 }

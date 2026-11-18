@@ -37,7 +37,7 @@
         </div>
     </div>
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/html3pdf@0.12.1/dist/html3pdf.bundle.min.js"></script>
 <script>
     // ═══════════════════════════════════════════════════════════════
     // HELPERS DE CONVERSIÓN
@@ -138,419 +138,344 @@
     // ═══════════════════════════════════════════════════════════════
     // RENDER DE RUTA DE REPARTO
     // ═══════════════════════════════════════════════════════════════
-    async function imprimirRuta(entrega_ida, folioViaje) {
 
+    async function imprimirRuta(entrega_ida, folioViaje) {
         document.getElementById('folioRutaPrint').textContent = entrega_ida;
-        // Inyectamos el botón con su respectivo ID en la cabecera
         document.getElementById('contenedorBotonCancelar').innerHTML = `
-    <button type="button" class="btn btn-outline-danger btn-sm px-2 d-flex align-items-center gap-1" onclick="cancelarEntrega('${entrega_ida}')">
-        <i class="bi bi-x-circle"></i> Cancelar Entrega
-    </button>
-`;
+        <button type="button" class="btn btn-outline-danger btn-sm px-2 d-flex align-items-center gap-1" onclick="cancelarEntrega('${entrega_ida}')">
+            <i class="bi bi-x-circle"></i> Cancelar Entrega
+        </button>
+    `;
 
         const respuesta = await fetch(
             `/cfsistem/app/controllers/repartosController.php?action=get_ruta_entrega_por_despacho&entrega_id=${entrega_ida}&id=${encodeURIComponent(folioViaje)}`
         );
 
         const data = await respuesta.json();
-        console.log(data);
-
         if (!data.success) return;
 
         const cont = document.getElementById('contenidoRutaPrint');
         const datos = data.data;
+        const info = datos[0] || {};
 
         const stringEntrega = String(entrega_ida || '').toUpperCase();
-        const stringFolio = String(datos[0]?.folio_viaje || '').toUpperCase();
+        const stringFolio = String(info.folio_viaje || '').toUpperCase();
         const esEntregaPatio = stringEntrega.includes('EN_PAT') || stringFolio.includes('EN_PAT');
 
         let filas = '';
-
         datos.forEach((prod, i) => {
             const fmt = formatearCantidadRuta(prod.totalCantidad, prod);
-
-            let badgeColor = 'bg-warning text-dark';
-            if (prod.estatus_logistico === 'completado') badgeColor = 'bg-success text-white';
-            if (prod.estatus_logistico === 'en_transito') badgeColor = 'bg-primary text-white';
+            const codigoProd = prod.codigo || prod.sku || (i + 1);
 
             filas += `
             <tr>
-                <td class="text-body-secondary fw-semibold">${i + 1}</td>
-                <td style="max-width:350px;" class="fw-medium text-body">${prod.nombreProducto}</td>
-                <td style="max-width:250px;" class="fw-bold text-primary">
-                    ${fmtNumRuta(fmt.cantidad)} <span class="text-body-secondary fw-normal small">${fmt.unidad}</span>
-                </td>
-                <td class="text-center">
-                    <div class="d-flex align-items-center justify-content-center gap-2">
-                        <span class="badge ${badgeColor} text-uppercase font-monospace">${prod.estatus_logistico}</span>
-                        
-                    </div>
-                </td>
+                <td class=" info-value font-monospace fw-semibold text-body">${codigoProd}</td>
+                <td class="info-value text-body">${prod.nombreProducto}</td>
+                <td class="info-value text-end ">${fmtNumRuta(fmt.cantidad)}</td>
+                <td class="info-value text-center ">${fmt.unidad}</td>
             </tr>
         `;
         });
 
-        const iconoLogo = `
-    <span style="display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;flex-shrink:0;vertical-align:middle;">
-        <img src="/cfsistem/public/assets/logo.ico" alt="Logo"
-             style="width:100%;height:100%;object-fit:contain;display:block;">
-    </span>
+        const tituloDocumento = esEntregaPatio ? 'ORDEN DE ENTREGA EN PATIO' : 'ORDEN DE ENTREGA / HOJA DE RUTA';
+        const direccionLimpia = limpiarDireccion(info.direccion_entrega) || '-';
+
+        // Bloque operador unificado con el mismo tono de texto
+        const bloqueOperador = esEntregaPatio ? `
+    <div class="info-card h-100">
+        <span class="info-value text-body">Punto de Entrega</span>
+        <div class="info-value text-body mb-1">ENTREGA EN PATIO / MOSTRADOR</div>
+        <div class="info-meta">
+            <span class="meta-title text-body">Entrego:</span>
+            <span class="meta-value text-body">${info.nombre_chofer ?? '-'}</span>
+        </div>
+    </div>
+` : `
+    <div class="info-card h-100">
+        <div class="info-split d-flex align-items-center justify-content-between">
+            <div class="info-col text-center" style="flex:1;">
+                <span class="info-value text-body">Operador / Chofer</span>
+                <div class="info-value text-body">${info.nombre_chofer ?? '-'}</div>
+               
+            </div>
+            <div class="info-divider-v mx-2"></div>
+            <div class="info-col text-center" style="flex:1;">
+                <span class="info-value text-body">Unidad de Transporte</span>
+                <div class="info-value text-body">${info.unidad_nombre ?? '-'}</div>
+                <div class="info-meta justify-content-center gap-1">
+                    <span class="meta-title text-body">Placas:</span>
+                    <span class="meta-value text-body">${info.unidad_placas ?? '-'}</span>
+                </div>
+            </div>
+        </div>
+    </div>
 `;
 
-        const tituloPrincipal = esEntregaPatio ? 'BFC Entrega en Patio' : 'BFC Hoja de Ruta';
-        const subtituloVenta = `Venta ${datos[0].folio_venta}`;
-
-        const bloqueOperador = esEntregaPatio ? `
-        <div class="info-card">
-            <div class="info-card-body">
-                <span class="info-label">Punto de Entrega</span>
-                <div class="info-value-main">ENTREGA EN PATIO / MOSTRADOR</div>
-                <div class="info-meta">
-                    <span class="meta-title">Entrego :</span>
-                    <span class="meta-value">${datos[0].nombre_chofer ?? '-'}</span>
-                    
-                </div>
-                
-            </div>
-        </div>
-    ` : `
-  <div class="info-card">
-    <div class="info-card-body">
-
-        <div class="info-split">
-
-            <div class="info-col" style="flex:1 1 0; width:100%; display:flex; flex-direction:column; align-items:center; text-align:center;">
-                <span class="info-label" style="display:block; width:100%;">Operador / Chofer</span>
-                <div class="info-value" style="width:100%;">${datos[0].nombre_chofer ?? '-'}</div>
-                <div class="info-meta" style="justify-content:center; width:100%;">
-                    <span class="meta-tag">Asignado de ruta</span>
-                </div>
-            </div>
-
-            <div class="info-divider-v"></div>
-
-            <div class="info-col" style="flex:1 1 0; width:100%; display:flex; flex-direction:column; align-items:center; text-align:center;">
-                <span class="info-label" style="display:block; width:100%;">Unidad de Transporte</span>
-                <div class="info-value" style="width:100%;">${datos[0].unidad_nombre ?? '-'}</div>
-                <div class="info-meta" style="justify-content:center; width:100%;">
-                    <span class="meta-title">Placas</span>
-                    <span class="meta-badge">${datos[0].unidad_placas ?? '-'}</span>
-                </div>
-            </div>
-
-        </div>
-
-    </div>
-</div>
-    `;
-
         const fechasHeader = esEntregaPatio ? `
-        <div class="small text-body-secondary mb-1">Fecha Despacho:____________________</div>
-        <div class="small text-body-secondary mb-1">Hora Entrega:____________________</div>
+        <div class="info-value mb-1" >Fecha Despacho:____________________</div>
+        <div class="info-value mb-1" >Hora Entrega:____________________</div>
     ` : `
-        <div class="small text-body-secondary mb-1">Fecha de Salida:____________________</div>
-        <div class="small text-body-secondary mb-1">Fecha de llegada:____________________</div>
+        <div class="info-value mb-1" >Fecha de Salida:____________________</div>
+        <div class="info-value mb-1" >Fecha de llegada:____________________</div>
     `;
 
         const firmasSeccion = esEntregaPatio ? `
-        <div class="row g-5">
+        <div class="row g-4">
             <div class="col-4">
                 <div class="firma-box text-center">
                     <div class="firma-linea"></div>
-                    <div class="firma-nombre">Firma Despachador / Patio</div>
-                    <div class="text-body-secondary small">Entrega Material</div>
+                    <div class="info-value text-body">Firma Despachador / Patio</div>
+                    <div class="text-body info-value">Entrega Material</div>
                 </div>
             </div>
             <div class="col-4">
                 <div class="firma-box text-center">
                     <div class="firma-linea"></div>
-                    <div class="firma-nombre">Firma Cliente / Recibe</div>
-                    <div class="text-body-secondary small">Sello y Firma de conformidad</div>
+                    <div class="info-value text-body">Firma Cliente / Recibe</div>
+                    <div class="text-body info-value">Sello y Firma de conformidad</div>
                 </div>
             </div>
             <div class="col-4">
-                <div class="info-box">
-                    <div class="info-sub mt-1">Observaciones / Check Patio:</div>
+                <div class="info-box p-2 border rounded bg-body-tertiary" style="min-height: 80px;">
+                    <div class="info-value">Observaciones / Check Patio:</div>
                 </div>
             </div>
         </div>
     ` : `
-        <div class="row g-5">
+        <div class="row g-4">
             <div class="col-4">
                 <div class="firma-box text-center">
                     <div class="firma-linea"></div>
-                    <div class="firma-nombre">Firma Chofer / Transportista</div>
-                    <div class="text-body-secondary small">Nombre y Fecha</div>
+                    <div class="firma-nombre text-body">Firma Chofer / Transportista</div>
+                    <div class="text-body small">Nombre y Fecha</div>
                 </div>
             </div>
             <div class="col-4">
                 <div class="firma-box text-center">
                     <div class="firma-linea"></div>
-                    <div class="firma-nombre">Firma Cliente / Recibe</div>
-                    <div class="text-body-secondary small">Sello y Firma de conformidad</div>
+                    <div class="firma-nombre text-body">Firma Cliente / Recibe</div>
+                    <div class="text-body small">Sello y Firma de conformidad</div>
                 </div>
             </div>
             <div class="col-4">
-                <div class="info-box">
-                    <div class="info-sub mt-1">Observaciones y Comentarios:</div>
+                <div class="info-box p-2 border rounded bg-body-tertiary" style="min-height: 80px;">
+                    <div class="info-sub small text-body">Observaciones y Comentarios:</div>
                 </div>
             </div>
         </div>
     `;
-        let direccion = esEntregaPatio ? `` : `
-     <div style="margin-top:6px; padding-top:5px; border-top:1px dashed rgba(0,0,0,0.08);">
-    <span style="display:block; font-size:8px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:#8c98a4; margin-bottom:2px;">
-        Dirección de Entrega
-    </span>
-    <div style="display:flex; align-items:flex-start; gap:4px; font-size:9.5px; line-height:1.3; font-weight:500; color:#1e293b; word-break:break-word; white-space:normal;">
-        <svg width="9" height="9" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"
-             style="flex-shrink:0; margin-top:1px; color:#94a3b8;">
-            <path d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 1 0-6 3 3 0 0 1 0 6z"/>
-        </svg>
-    <span> ${limpiarDireccion(datos?.[0]?.direccion_entrega)}</span>
-    </div>
-    </div>`;
 
         let html = `
-        <div class="hoja-ruta-container p-4">
+    <div class="hoja-ruta-container p-2">
+        <style>
+            .hoja-ruta-container * {
+                text-transform: uppercase !important;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            }
+            .font-monospace {
+                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+            }
+            .header-orden {
+                display: grid;
+                grid-template-columns: 1fr 1.2fr 1.1fr;
+                gap: 10px;
+                align-items: center;
+                padding-bottom: 8px;
+                border-bottom: 2px solid var(--bs-border-color);
+                margin-bottom: 8px;
+            }
+            .sucursal-info {
+                text-align: center;
+                font-size: 9px;
+                line-height: 1.25;
+                color: var(--bs-body-color);
+                font-weight: 500;
+            }
+            .folios-grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 4px;
+            }
+            .folio-box {
+                border: 1px solid var(--bs-border-color);
+                border-radius: 6px;
+                overflow: hidden;
+                text-align: center;
+                background: var(--bs-body-bg);
+            }
+            .folio-box.full-span {
+                grid-column: span 2;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 3px 8px;
+            }
+            .folio-box-header {
+                background: var(--bs-tertiary-bg);
+                font-size: 8.5px;
+                font-weight: 700;
+                letter-spacing: 0.05em;
+                padding: 2px 4px;
+                border-bottom: 1px solid var(--bs-border-color);
+                color: var(--bs-body-color);
+            }
+            .folio-box-val {
+                padding: 3px 6px;
+                font-size: 11.5px;
+                font-weight: 700;
+                color: var(--bs-body-color);
+            }
+            .info-card {
+                background: var(--bs-tertiary-bg);
+                border-radius: 10px;
+                border: 1px solid var(--bs-border-color);
+                padding: 8px 12px;
+            }
+            .info-label {
+                display: block;
+                font-size: 9.5px;
+                font-weight: 700;
+                letter-spacing: 0.08em;
+                color: var(--bs-body-color);
+                margin-bottom: 2px;
+            }
+            .info-value {
+                font-size: 11.5px;
+                font-weight: 600;
+                line-height: 1.25;
+                color: var(--bs-body-color);
+            }
+            .info-meta {
+                margin-top: 2px;
+                font-size: 10px;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 4px;
+                align-items: center;
+            }
+            .meta-title {
+                color: var(--bs-body-color);
+                font-weight: 500;
+            }
+            .meta-value {
+                color: var(--bs-body-color);
+                font-weight: 600;
+            }
+            .meta-badge {
+                background: var(--bs-body-bg);
+                border: 1px solid var(--bs-border-color);
+                padding: 1px 4px;
+                border-radius: 4px;
+                font-size: 9.5px;
+                font-weight: 700;
+                color: var(--bs-body-color);
+            }
+            .tabla-orden th {
+                font-size: 10px;
+                font-weight: 700;
+                letter-spacing: 0.05em;
+                color: var(--bs-body-color);
+                border-bottom: 2px solid var(--bs-border-color) !important;
+                padding: 6px 6px;
+            }
+            .tabla-orden td {
+                font-size: 11px;
+                padding: 6px 6px;
+                border-bottom: 1px solid var(--bs-border-color);
+                color: var(--bs-body-color);
+            }
+            .firma-linea {
+                width: 85%;
+                margin: 25px auto 4px auto;
+                border-top: 1px solid var(--bs-body-color);
+            }
+            .firma-nombre {
+                font-size: 10px;
+                font-weight: 700;
+                color: var(--bs-body-color);
+            }
+        </style>
 
-<div class="mb-3 pb-2 border-bottom">
-    <div class="d-flex align-items-center justify-content-center gap-2">
-        ${iconoLogo}
-        <h4 class="fw-bold text-body m-0">${tituloPrincipal}</h4>
-        <span class="text-body-secondary fw-normal">·</span>
        
-    </div><div class="d-flex align-items-center justify-content-center gap-2">
-        
-        <span class="fs-6 fw-semibold text-dark font-monospace">${subtituloVenta}</span>
-    </div>
 
-    <div class="d-flex justify-content-center gap-3 mt-2 small text-body-secondary">
-        <span>Folio: <span class="fw-semibold text-body font-monospace">${datos[0].folio_viaje}</span></span>
-        <span class="text-body-tertiary">|</span>
-        <span>Registro: <span class="fw-semibold text-body font-monospace">${datos[0].fecha_viaje ?? '-'}</span></span>
-    </div>
-</div>
-            <style>
-                * {
-                    text-transform: uppercase !important;
-                }
-                .info-grid {
-                    display: grid;
-                    grid-template-columns: repeat(2, minmax(0, 1fr));
-                    gap: 12px;
-                    width: 100%;
-                }
+        <div class="header-orden">
+            <div class="d-flex align-items-center gap-2">
+                <img src="/cfsistem/public/assets/logo.ico" alt="Logo" style="width:30px; height:30px; object-fit:contain;">
+                <div>
+                    <div class="fw-bold text-body lh-1" style="font-size: 14.5px; letter-spacing: -0.01em;">BODEGA FORTALEZA</div>
+                    <div class="fw-bold text-body lh-1 mt-1" style="font-size: 12px; letter-spacing: 0.04em;">CENTRO</div>
+                </div>
+            </div>
 
-                .info-box {
-                    border: 1px solid var(--bs-border-color);
-                    border-radius: 8px;
-                    padding: 10px 12px;
-                    background: var(--bs-tertiary-bg);
-                    min-width: 0;
-                }
+            <div class="sucursal-info">
+                <div class=" info-value fw-bold text-body">BODEGA FORTALEZA CENTRO</div>
+                <div class="info-value text-body">ÁLVARO OBREGÓN #13 COLONIA CENTRO</div>
+                <div class="info-value text-body">SAN MARTÍN CUAUTLALPAN C.P. 62574, CHALCO, EDOMEX</div>
+            </div>
 
-                .info-title {
-                    font-size: 10.5px;
-                    color: var(--bs-secondary-color);
-                    text-transform: uppercase;
-                    letter-spacing: .5px;
-                    margin-bottom: 4px;
-                }
+            <div class="folios-grid">
+                <div class="folio-box">
+                    <div class="info-value folio-box-header"># ENTREGA</div>
+                    <div class=" info-value folio-box-val font-monospace">${info.folio_viaje ?? entrega_ida}</div>
+                </div>
+                <div class="folio-box">
+                    <div class="info-value folio-box-header"># VENTA</div>
+                    <div class=" info-value folio-box-val font-monospace">${info.folio_venta ?? '-'}</div>
+                </div>
+                <div class="folio-box full-span">
+                    <span class="info-value p-0" >FECHA</span>
+                    <span class="info-value " >${info.fecha_viaje ?? '-'}</span>
+                </div>
+            </div>
+        </div>
 
-                .info-value {
-                    font-size: 13px;
-                    font-weight: 600;
-                    line-height: 1.2;
-                    color: var(--bs-body-color);
-                    white-space: normal;
-                    word-break: break-word;
-                }
-
-                .info-sub {
-                    font-size: 11.5px;
-                    color: var(--bs-secondary-color);
-                }
-
-                .firma-linea {
-                    width: 75%;
-                    margin: 35px auto 5px auto;
-                    border-top: 1px solid var(--bs-border-color);
-                }
-
-                .firma-nombre {
-                    font-size: 11px;
-                    font-weight: 600;
-                    color: var(--bs-body-color);
-                }
-
-                :root {
-                    --card-bg: #ffffff27;
-                    --text-primary: #1e2022;
-                    --text-secondary: #8c98a4;
-                    --text-muted: #b0b7c0;
-                    --border-color: rgba(0, 0, 0, 0.05);
-                    --accent-bg: #f8fafc32;
-                }
-
-                .info-grid {
-                    display: grid;
-                    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-                    gap: 1.5rem;
-                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-                    -webkit-font-smoothing: antialiased;
-                }
-
-                .info-card {
-                    background: var(--card-bg);
-                    border-radius: 16px;
-                    border: 1px solid var(--border-color);
-                    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.04),
-                                0 4px 12px -2px rgba(0, 0, 0, 0.02);
-                    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-                    backdrop-filter: blur(10px);
-                }
-
-                .info-card:hover {
-                    transform: translateY(-2px);
-                    box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.07);
-                }
-
-                .info-card-body {
-                    padding: 1.5rem 1.75rem;
-                }
-
-                .info-split {
-                    display: flex;
-                    align-items: center;
-                    justify-content: space-between;
-                }
-
-                .info-col {
-                    flex: 1;
-                }
-
-                .info-divider-v {
-                    width: 1px;
-                    height: 48px;
-                    background: linear-gradient(
-                        180deg,
-                        rgba(0,0,0,0) 0%,
-                        rgba(0,0,0,0.07) 50%,
-                        rgba(0,0,0,0) 100%
-                    );
-                    margin: 0 1.5rem;
-                }
-
-                .info-label {
-                    display: block;
-                    font-size: 0.6875rem;
-                    font-weight: 600;
-                    text-transform: uppercase;
-                    letter-spacing: 0.08em;
-                    color: var(--text-secondary);
-                    margin-bottom: 0.35rem;
-                }
-
-                .info-value-main {
-                   
-                    font-weight: 400;
-                    color: var(--text-primary);
-                    letter-spacing: -0.01em;
-                    line-height: 1.2;
-                }
-
-                .info-value {
-                    
-                    font-weight: 500;
-                    color: var(--text-primary);
-                    letter-spacing: -0.01em;
-                    line-height: 1.2;
-                }
-
-                .info-meta {
-                    margin-top: 0.6rem;
-                    display: flex;
-                    align-items: center;
-                    gap: 0.4rem;
-                    font-size: 0.8125rem;
-                }
-
-                .meta-title {
-                    color: var(--text-muted);
-                    font-weight: 400;
-                }
-
-                .meta-value {
-                    color: var(--text-primary);
-                    font-weight: 500;
-                }
-
-                .meta-tag {
-                    color: var(--text-secondary);
-                    font-size: 0.75rem;
-                    font-weight: 400;
-                    font-style: italic;
-                }
-
-                .meta-badge {
-                    color: #475569;
-                    background: var(--accent-bg);
-                    border: 1px solid rgba(0, 0, 0, 0.04);
-                    padding: 0.15rem 0.5rem;
-                    border-radius: 6px;
-                    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-                    font-size: 0.75rem;
-                    letter-spacing: 0.05em;
-                    font-weight: 600;
-                }
-            </style>
-
-            <div class="info-grid">
-                <div class="info-card">
-                    <div class="info-card-body">
-                        
-                        <div class="">Cliente Destino: ${datos[0].cliente ?? '-'}</div>
-                        <div class="info-meta">
-                            <span class="meta-title">Teléfono</span>
-                            <span class="meta-value">${datos[0].tel_cliente ?? 'Sin teléfono'}</span>
-                            </div>
-                       <div class="info-meta">
-                            <span class="meta-title">Direccion</span>
-                            <span class="meta-value">${direccion ?? ''}</span>
-                        </div>
-
+        <div class="row g-2 mb-2">
+            <div class="col-6">
+                <div class="info-card h-100">
+                    <span class="info-value text-body">Vendido a</span>
+                    <div class="info-value text-body mb-1">${info.cliente ?? '-'}</div>
+                    <div class="info-meta">
+                        <span class="meta-title text-body">Teléfono:</span>
+                        <span class="meta-value text-body font-monospace">${info.tel_cliente ?? 'SIN TELÉFONO'}</span>
+                    </div>
+                  
+                    <div class="info-meta">
+                        <span class="meta-title text-body">Dirección:</span>
+                        <span class="meta-value text-body">${direccionLimpia}</span>
                     </div>
                 </div>
+            </div>
 
+            <div class="col-6">
                 ${bloqueOperador}
             </div>
-
-            <div class="table-responsive border rounded mb-4 mt-3">
-                <table class="table align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th style="width: 5%">#</th>
-                            <th style="width: 40%">Producto descripción</th>
-                            <th style="width: 20%">Cantidad total</th>
-                           
-                            <th style="width: 12%" class="text-center">Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${filas}
-                    </tbody>
-                </table>
-            </div>
-             <div class="text-end">
-                    ${fechasHeader}
-                </div>
-
-            <div class="firmas-container pt-4">
-                ${firmasSeccion}
-            </div>
-
         </div>
+
+        <div class="table-responsive mb-1">
+            <table class="table tabla-orden align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th style="width: 15%">CÓDIGO</th>
+                        <th style="width: 53%">PRODUCTO</th>
+                        <th style="width: 16%" class="text-end">CANTIDAD</th>
+                        <th style="width: 16%" class="text-center">UNIDAD</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${filas}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="text-end my-2">
+            ${fechasHeader}
+        </div>
+
+        <div class="mt-2 pt-1">
+            ${firmasSeccion}
+        </div>
+
+    </div>
     `;
 
         cont.innerHTML = html;
@@ -559,317 +484,142 @@
         modal.show();
     }
 
+
+
     /**
      * Imprime el contenido de #contenidoRutaPrint usando un iframe oculto.
      * Al terminar de imprimir (o cancelar), el iframe se elimina automáticamente
      * para que el sistema NO se trabe si el diálogo de impresión queda abierto.
      */
+
+
     function imprimirModalRuta() {
+        // Detectar si es un dispositivo móvil (por User-Agent o ancho de pantalla menor a 768px)
+        const esMovil = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
+
+        if (esMovil) {
+            // 📱 EN MÓVILES: Descarga directa en PDF usando html3pdf
+            descargarPDFModalRuta();
+        } else {
+            // 💻 EN COMPUTADORA: Tu método original con iframe y diálogo de impresión
+            imprimirConIframeEscritorio();
+        }
+    }
+
+    // 1. Función para móviles (Genera y descarga el PDF)
+    function descargarPDFModalRuta() {
+        const elemento = document.getElementById('contenidoRutaPrint');
+        const folio = document.getElementById('folioRutaPrint')?.textContent?.trim() || 'RUTA';
+
+        if (!elemento) {
+            Swal.fire('Error', 'No se encontró el contenido para generar el PDF.', 'error');
+            return;
+        }
+
+        const opt = {
+            margin: [5, 5, 5, 5],
+            filename: `Orden_Entrega_${folio}.pdf`,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        Swal.fire({
+            title: 'Generando PDF...',
+            text: 'Por favor espere un momento.',
+            allowOutsideClick: false,
+            didOpen: () => { Swal.showLoading(); }
+        });
+
+        html3pdf().from(elemento).set(opt).save().then(() => {
+            Swal.close();
+        }).catch(err => {
+            console.error('Error al generar PDF:', err);
+            Swal.fire('Error', 'No se pudo generar el archivo PDF en este dispositivo.', 'error');
+        });
+    }
+
+    // 2. Tu función original de iframe para computadora (sin cambios)
+    function imprimirConIframeEscritorio() {
         const contenido = document.getElementById('contenidoRutaPrint').innerHTML;
         const folio = document.getElementById('folioRutaPrint')?.textContent?.trim() || 'RUTA';
 
-        1.         //Crear iframe oculto dentro de la misma página (no abre ventana nueva)
         const iframe = document.createElement('iframe');
         iframe.setAttribute('aria-hidden', 'true');
-        iframe.style.position = 'fixed';
-        iframe.style.right = '0';
-        iframe.style.bottom = '0';
-        iframe.style.width = '0';
-        iframe.style.height = '0';
-        iframe.style.border = '0';
-        iframe.style.visibility = 'hidden';
+        Object.assign(iframe.style, {
+            position: 'fixed', right: '0', bottom: '0',
+            width: '0', height: '0', border: '0', visibility: 'hidden'
+        });
         document.body.appendChild(iframe);
 
-        // 2. Escribir el HTML dentro del iframe
         const doc = iframe.contentWindow.document;
         doc.open();
         doc.write(`
-        <!DOCTYPE html>
-        <html lang="es">
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Hoja de Entrega / Ruta - ${folio}</title>
-            <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
-            <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
-            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-            <style>
-                body {
-                    font-family: 'Segoe UI', Arial, sans-serif;
-                    background: #f8f9fa3c;
-                    color: #333;
-                    padding: 15px;
-                    font-size: 11.5px;
-                }
-
-                .ticket {
-                    width: 100%;
-                    max-width: 820px;
-                    margin: auto;
-                    background: #ffffff10;
-                    border: 1px solid #e0e0e0;
-                    border-radius: 12px;
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-                    overflow: hidden;
-                }
-
-                .hoja-ruta-container {
-                    padding: 20px !important;
-                }
-
-                .info-box {
-                    border: 1px solid #e2e8f0;
-                    border-radius: 8px;
-                    padding: 10px 12px;
-                    background: #f8fafc;
-                    height: 100%;
-                }
-
-                .info-title {
-                    font-size: 10px;
-                    color: #64748b;
-                    text-transform: uppercase;
-                    letter-spacing: .6px;
-                    font-weight: 700;
-                    margin-bottom: 3px;
-                }
-
-                .info-value {
-                    font-size: 12.5px;
-                    font-weight: 600;
-                    color: #1e293b;
-                    line-height: 1.2;
-                }
-
-                .info-sub {
-                    font-size: 11px;
-                    color: #64748b;
-                }
-
-                table thead th {
-                    background-color: #f1f5f952 !important;
-                    color: #475569 !important;
-                    font-size: 10px;
-                    text-transform: uppercase;
-                    letter-spacing: .5px;
-                    font-weight: 700;
-                    padding: 8px 10px !important;
-                    border-bottom: 2px solid #e2e8f05f !important;
-                }
-
-                table tbody td {
-                    font-size: 11.5px;
-                    padding: 2px 6px !important;
-                    margin: 0 !important;
-                    line-height: 1.1 !important;
-                    vertical-align: middle !important;
-                }
-
-                .firmas-container {
-                    page-break-inside: avoid;
-                }
-
-                .firma-box {
-                    text-align: center;
-                    padding: 5px;
-                }
-
-                .firma-linea {
-                    width: 75%;
-                    margin: 35px auto 5px auto;
-                    border-top: 1px solid #94a3b8;
-                }
-
-                .firma-nombre {
-                    font-size: 11px;
-                    font-weight: 600;
-                    color: #1e293b;
-                }
-
-                @media print {
-                    .info-grid {
-                        display: grid !important;
-                        grid-template-columns: repeat(2, 1fr) !important;
-                        gap: 10px !important;
-                    }
-                    body {
-                        background: transparent !important;
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
-                        padding: 0 !important;
-                    }
-                    .ticket {
-                        width: 100% !important;
-                        max-width: 100% !important;
-                        background: transparent !important;
-                        border: 1px solid #e0e0e06c !important;
-                        border-radius: 12px !important;
-                        box-shadow: none !important;
-                        margin: 0 auto !important;
-                    }
-                    .no-print {
-                        display: none !important;
-                    }
-                    tr {
-                        page-break-inside: avoid !important;
-                    }
-                    .info-box {
-                        background:transparent!important;
-                        border: 1px solid   important;
-                    }
-                    table thead th {
-                        background-color:transparent !important;
-                    }
-
-    .hoja-ruta-container h4 {
-        font-size: 13px !important;
-        font-weight: 700 !important;
-        margin: 0 !important;
-        gap: 4px !important;
-    }
-
-    .hoja-ruta-container .small,
-    .hoja-ruta-container .text-body-secondary.small {
-        font-size: 9.5px !important;
-        line-height: 1.25 !important;
-    }
-
-    .info-card-body {
-        padding: 6px 10px !important;
-    }
-
-    .info-label {
-        font-size: 8px !important;
-        margin-bottom: 2px !important;
-        letter-spacing: .04em !important;
-    }
-
-    .info-value-main {
-        font-size: 11px !important;
-        line-height: 1.15 !important;
-    }
-
-    .info-value {
-        font-size: 10px !important;
-        line-height: 1.15 !important;
-    }
-
-    .info-meta {
-        margin-top: 2px !important;
-        font-size: 8.5px !important;
-        gap: 3px !important;
-    }
-
-    .meta-title,
-    .meta-value,
-    .meta-tag {
-        font-size: 8.5px !important;
-    }
-
-    .meta-badge {
-        font-size: 8px !important;
-        padding: 1px 4px !important;
-    }
-
-    .info-grid {
-        gap: 8px !important;
-    }
-
-    .info-divider-v {
-        height: 26px !important;
-        margin: 0 10px !important;
-    }
-
-    .hoja-ruta-container .mb-4.border-bottom {
-        margin-bottom: 8px !important;
-        padding-bottom: 6px !important;
-    }
-
-    .firma-linea {
-        margin: 22px auto 4px auto !important;
-    }
-
-    .firma-nombre {
-        font-size: 9px !important;
-    }
-
-                }
-
-                table {
-                    border-collapse: collapse !important;
-                }
-
-                table p {
-                    margin: 0 !important;
-                    padding: 0 !important;
-                }
-
-                table br {
-                    display: none !important;
-                }
-                    @page {
-    size: auto;
-    margin: 0mm;
-}
-            </style>
-        </head>
-        <body>
-            <img src="/cfsistem/public/assets/logo.ico" style="position: fixed; top: 22.5%; left: 50%; transform: translate(-50%, -50%); width: 300px; opacity: 0.08; z-index: -1;">
-
-            <div class="ticket">
-                <div class="hoja-ruta-container">
-                    ${contenido}
-                </div>
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Hoja de Entrega / Ruta - ${folio}</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <style>
+            *, *::before, *::after { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important; }
+            html, body { margin: 0; padding: 0; }
+            body { background: #ffffff; color: #000000; font-size: 11px; line-height: 1.35; }
+            .ticket { width: 100%; max-width: 820px; margin: 0 auto; background: #ffffff; border: 1px solid #000000; border-radius: 6px; overflow: hidden; }
+            .hoja-ruta-container { padding: 10px 14px !important; }
+            .info-card { background: #ffffff; border: 1px solid #333333; border-radius: 6px; overflow: hidden; }
+            table { border-collapse: collapse !important; width: 100%; }
+            table thead th { background: #e5e7eb !important; color: #000000 !important; font-size: 9.5px; font-weight: 700; padding: 6px 8px !important; border-bottom: 2px solid #000000 !important; }
+            table tbody td { padding: 5px 8px !important; font-size: 11px; color: #000000; border-bottom: 1px solid #cccccc; }
+            @media print {
+                html, body { margin: 0 !important; padding: 0 !important; background: transparent !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                .ticket { width: 100% !important; max-width: 100% !important; border: none !important; box-shadow: none !important; margin: 0 !important; }
+                .hoja-ruta-container { padding: 0 !important; }
+                .no-print { display: none !important; }
+            }
+            @page { size: A4 portrait; margin: 10mm; }
+        </style>
+    </head>
+    <body>
+        <div class="ticket">
+            <div class="hoja-ruta-container">
+                ${contenido}
             </div>
-        </body>
-        </html>
+        </div>
+    </body>
+    </html>
     `);
         doc.close();
 
         const win = iframe.contentWindow;
-
-        // 3. Limpieza idempotente: elimina el iframe del DOM una sola vez
         let limpiado = false;
         const limpiar = () => {
             if (limpiado) return;
             limpiado = true;
-            if (iframe && iframe.parentNode) {
-                iframe.parentNode.removeChild(iframe);
-            }
+            if (iframe && iframe.parentNode) iframe.parentNode.removeChild(iframe);
         };
 
-        // 4. Registrar el cierre ANTES de imprimir (esto es lo que antes fallaba)
         win.onafterprint = limpiar;
 
-        // 5. Esperar a que carguen las imágenes (logo, marca de agua)
         const imgs = Array.from(iframe.contentDocument.images || []);
         const esperarImagenes = Promise.all(
-            imgs.map(img =>
-                img.complete && img.naturalWidth > 0
-                    ? Promise.resolve()
-                    : new Promise(res => {
-                        img.onload = res;
-                        img.onerror = res;
-                        setTimeout(res, 2000);
-                    })
-            )
+            imgs.map(img => img.complete && img.naturalWidth > 0 ? Promise.resolve() : new Promise(res => {
+                img.onload = res; img.onerror = res; setTimeout(res, 2500);
+            }))
         );
 
-        // 6. Carrera: o cargan todas las imágenes, o pasan 1.5 s como máximo
-        Promise.race([esperarImagenes, new Promise(res => setTimeout(res, 1500))])
-            .then(() => {
-                requestAnimationFrame(() => {
-                    try {
-                        win.focus();
-                        win.print();
-                    } catch (e) {
-                        console.error('Error al imprimir:', e);
-                        limpiar();
-                    }
-
-                    // 7. Respaldo: si onafterprint no se disparó, limpiar igualmente
-                    setTimeout(limpiar, 2000);
-                });
-            });
+        Promise.race([esperarImagenes, new Promise(res => setTimeout(res, 2000))])
+            .then(() => requestAnimationFrame(() => {
+                try {
+                    win.focus();
+                    win.print();
+                } catch (e) {
+                    console.error('Error al imprimir:', e);
+                    limpiar();
+                }
+                setTimeout(limpiar, 2500);
+            }));
     }
+
 </script>

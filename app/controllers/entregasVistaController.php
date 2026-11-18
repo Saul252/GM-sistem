@@ -8,8 +8,8 @@ require_once __DIR__ . '/../models/vehiculos_model.php';
 require_once __DIR__ . '/../models/trabajadores_model.php';
 require_once __DIR__ . '/../controllers/LayoutController.php';
 
-protegerPagina('entregasVista');
-$paginaActual = 'entregasVista';
+protegerPagina('entregas');
+$paginaActual = 'entregas';
 
 // Instanciación de modelos
 $modelo = new EntregaModel($conexion);
@@ -82,7 +82,7 @@ if (isset($_GET['ajax'])) {
                 break;
                 ;
             case 'get_recursos_sucursal':
-                $almacen_id = intval($_GET['almacen_id'] ?? 0);
+                $almacen_id = $_SESSION['rol_id'] == 1 ? 0 : intval($_GET['almacen_id'] ?? 0);
                 echo json_encode([
                     "success" => true,
                     "unidades" => $vehiculoM->listarPorAlmacen($almacen_id),
@@ -400,15 +400,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             if ($tipoLogistica === 'ruta') {
                                 $rutaActiva = $repartoM->buscarRutaAbierta($vehiculoId);
 
-                                if ($rutaActiva) {
-                                    $folioViaje = $rutaActiva['viaje_folio'];
-                                } else {
-                                    $folioViaje = "RUT-" . date('ymd') . "-" . str_pad($vehiculoId, 2, "0", STR_PAD_LEFT) . "-" . rand(10, 99);
+                                // if ($rutaActiva) {
+                                //     $folioViaje = $rutaActiva['viaje_folio'];
+                                // } else {
+                                $folioViaje = "RUT-" . date('ymd') . "-" . str_pad($vehiculoId, 2, "0", STR_PAD_LEFT) . "-" . rand(10, 99);
 
-                                    if (method_exists($vehiculoM, 'actualizarEstado')) {
-                                        $vehiculoM->actualizarEstado($vehiculoId, 'en_ruta');
-                                    }
+                                if (method_exists($vehiculoM, 'actualizarEstado')) {
+                                    $vehiculoM->actualizarEstado($vehiculoId, 'en_ruta');
                                 }
+                                //}
                             }
 
                             foreach ($ids as $idMov) {
@@ -772,6 +772,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     exit;
 }
+;
 // --- CARGA NORMAL DE LA VISTA ---
 $paginaActual = 'Entregas';
 require_once __DIR__ . '/../views/entregas_view.php';

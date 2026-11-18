@@ -355,7 +355,7 @@
             <!-- Cliente -->
             <div style="min-width: 200px;">
                 <select name="cliente_id_editar" id="cliente_id_editar"
-                    class="form-select form-select-sm select2-pagina" onchange="filtrarExpediente()" required>
+                    class="form-select form-select-sm select2-pagina" required>
                 </select>
             </div>
 
@@ -777,7 +777,7 @@
 
                     // Cálculo del costo total por producto (Cantidad * Precio Unitario)
                     const precioVenta = parseFloat(p.precio_unitario
-                    ) || 0;
+                    ) * p.equivalencia || 0;
                     const costoTotal = cant * precioVenta;
                     const costo = `$${costoTotal.toFixed(2)}`;
 
@@ -839,7 +839,7 @@
                 <tr>
                     <th>Producto</th>
                     <th class="text-center">Vendido</th>
-                     <th class="text-center">Costo</th>
+                     <th class="text-center">Precio</th>
                     <th class="text-center">Entregado</th>
                     <th class="text-center">Pendiente</th>
                     <th class="text-center">Estado</th>

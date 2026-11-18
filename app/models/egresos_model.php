@@ -35,7 +35,6 @@ class EgresoModel
         $hasta_f = $hasta . " 23:59:59";
 
         /* --- BLOQUE 1: COMPRAS --- */
-        // Solo entra si no filtramos específicamente por categorías de gastos
         if (($tipo_filtro === 'todos' || $tipo_filtro === 'compra') && $categoria_gasto_id == 0) {
             $whereAlmacen = ($almacen_id > 0) ? " AND c.almacen_id = ?" : "";
             $whereMetodo = ($metodo_filtro !== 'todos') ? " AND LOWER(COALESCE(c.metodo_pago,'efectivo')) LIKE ?" : "";
@@ -99,7 +98,6 @@ class EgresoModel
         }
 
         /* --- BLOQUE 2: GASTOS --- */
-        // Solo entra si no estamos buscando específicamente deudas de compras
         if (($tipo_filtro === 'todos' || $tipo_filtro === 'gasto') && $deuda_filtro === 'todos') {
             $whereAlmacen = ($almacen_id > 0) ? " AND g.almacen_id = ?" : "";
             $whereCat = ($categoria_gasto_id > 0) ? " AND g.categoria_id = ?" : "";
@@ -150,7 +148,6 @@ class EgresoModel
         }
 
         /* --- BLOQUE 3: PAGOS DE DEUDAS --- */
-        // Solo entra si no hay filtros específicos de otros tipos
         if (($tipo_filtro === 'todos' || $tipo_filtro === 'pago_deuda') && $categoria_gasto_id == 0 && $deuda_filtro === 'todos') {
             $whereAlmacen = ($almacen_id > 0) ? " AND p.almacen_id = ?" : "";
             $whereMetodo = ($metodo_filtro !== 'todos') ? " AND LOWER(COALESCE(p.metodo_pago,'efectivo')) LIKE ?" : "";
@@ -184,14 +181,14 @@ class EgresoModel
         if (empty($parts))
             return [];
 
-        // Unir todo con UNION ALL
-        $sql = implode(" UNION ALL ", $parts) . " ORDER BY fecha DESC, id DESC";
+        // 🔹 Envolver el UNION en un SELECT externo para que el ORDER BY aplique a TODO
+        $union = implode(" UNION ALL ", $parts);
+        $sql = "SELECT * FROM ($union) AS eg ORDER BY fecha DESC, id DESC";
 
         $stmt = $this->db->prepare($sql);
         if (!$stmt)
             return [];
 
-        // Vinculación dinámica
         $stmt->bind_param($types, ...$params);
         $stmt->execute();
 

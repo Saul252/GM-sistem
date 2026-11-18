@@ -1,14 +1,14 @@
-:root { 
-    --nav-height: 65px; 
+:root {
+    --nav-height: 60px;
     --sidebar-width: 260px;
-    
+
     /* Paleta Claro (Default) */
-    --negro-delicado: #334155; 
-    --azul-clarito-bg: #eff6ff; 
+    --negro-delicado: #334155;
+    --azul-clarito-bg: #eff6ff;
     --azul-enlace-active: #2563eb;
     --borde-suave: #e2e8f0;
     --navbar-dark: #0f172a;
-    
+
     --sidebar-bg: #ffffff;
     --sidebar-hover-bg: #f1f5f9;
     --sidebar-hover-text: #0f172a;
@@ -18,12 +18,13 @@
 
 /* Sobrescritura de variables para Modo Oscuro */
 [data-bs-theme="dark"] {
-    --negro-delicado: #cbd5e1; 
-    --azul-clarito-bg: rgba(37, 99, 235, 0.2); 
+    --negro-delicado: #cbd5e1;
+    --azul-clarito-bg: rgba(37, 99, 235, 0.2);
     --azul-enlace-active: #60a5fa;
     --borde-suave: #334155;
-    --navbar-dark: #020617; /* Navbar un poco más oscura en modo noche */
-    
+    --navbar-dark: #020617;
+    /* Navbar un poco más oscura en modo noche */
+
     --sidebar-bg: #1e293b;
     --sidebar-hover-bg: #334155;
     --sidebar-hover-text: #f8fafc;
@@ -32,21 +33,22 @@
 }
 
 /* --- NAVBAR PREMIUM & EFECTOS --- */
-.navbar-premium { 
-    background: var(--navbar-dark) !important; 
-    height: var(--nav-height); 
+.navbar-premium {
+    background: var(--navbar-dark) !important;
+    height: var(--nav-height);
     position: fixed;
     top: 0;
     width: 100%;
-    z-index: 1050; /* Por encima de todo */
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1050;
+    /* Por encima de todo */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     padding: 0 1rem;
     transition: background-color 0.3s ease;
 }
 
 /* Forzamos colores base */
-.navbar-premium .nav-link, 
-.navbar-premium span, 
+.navbar-premium .nav-link,
+.navbar-premium span,
 .navbar-premium i {
     color: rgba(255, 255, 255, 0.85) !important;
     transition: all 0.3s ease;
@@ -58,7 +60,7 @@
 .navbar-premium .dropdown-toggle:hover {
     color: #ffffff !important;
     transform: translateY(-1px);
-    filter: drop-shadow(0 0 8px rgba(255,255,255,0.3));
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
 }
 
 /* Badge de usuario */
@@ -66,34 +68,37 @@
     transition: all 0.3s ease;
     cursor: pointer;
 }
+
 .user-badge:hover {
     background-color: rgba(255, 255, 255, 0.15) !important;
     transform: scale(1.02);
 }
 
 /* --- SIDEBAR CORREGIDO --- */
-#sidebar { 
-    width: var(--sidebar-width); 
+#sidebar {
+    width: var(--sidebar-width);
     height: 100vh;
-    position: fixed; 
-    top: 0; 
-    left: 0; 
+    position: fixed;
+    top: 0;
+    left: 0;
     padding-top: var(--nav-height);
     background: var(--sidebar-bg);
-    border-right: 1px solid var(--borde-suave); 
-    transition: all .3s cubic-bezier(0.4, 0, 0.2, 1); 
-    z-index: 1040; 
+    border-right: 1px solid var(--borde-suave);
+    transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1040;
     overflow-y: auto;
-    padding-bottom: 100px !important; 
+    padding-bottom: 100px !important;
 }
 
 /* Scrollbar Estético para el Sidebar */
 #sidebar::-webkit-scrollbar {
     width: 5px;
 }
+
 #sidebar::-webkit-scrollbar-track {
     background: transparent;
 }
+
 #sidebar::-webkit-scrollbar-thumb {
     background: var(--scrollbar-thumb);
     border-radius: 10px;
@@ -104,8 +109,8 @@
     color: var(--negro-delicado) !important;
     font-weight: 500;
     font-size: 0.92rem;
-    padding: 10px 16px;
-    margin: 4px 12px;
+    padding: 5px 8px;
+    margin: 2px 6px;
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -115,7 +120,7 @@
 
 #sidebar .nav-link i {
     font-size: 1.15rem;
-    color: #94a3b8; 
+    color: #94a3b8;
 }
 
 #sidebar .nav-link:hover {
@@ -133,9 +138,9 @@
 }
 
 /* --- CONTENIDO PRINCIPAL --- */
-.main-content { 
-    margin-left: var(--sidebar-width); 
-    padding-top: calc(var(--nav-height) + 20px); 
+.main-content {
+    margin-left: var(--sidebar-width);
+    padding-top: calc(var(--nav-height) + 20px);
     padding-left: 20px;
     padding-right: 20px;
     transition: all .3s ease;
@@ -153,7 +158,7 @@
 
     #sidebar.show {
         left: 0;
-        box-shadow: 10px 0 30px rgba(0,0,0,0.3);
+        box-shadow: 10px 0 30px rgba(0, 0, 0, 0.3);
     }
 
     .main-content {
@@ -171,11 +176,12 @@
         z-index: 1035;
         display: none;
     }
-    
+
     .sidebar-overlay.active {
         display: block;
     }
 }
+
 /* Adaptación global de SweetAlert2 al modo claro/oscuro de Bootstrap */
 [data-bs-theme="dark"] .swal2-popup {
     background-color: var(--bs-body-bg) !important;
@@ -194,6 +200,12 @@
     background-color: var(--bs-tertiary-bg) !important;
     color: var(--bs-body-color) !important;
 }
+
 /* Ocultar sidebar en escritorio */
-#sidebar.hidden { transform: translateX(-100%); }
-body.sidebar-hidden .main-content { margin-left: 0 !important; }
+#sidebar.hidden {
+    transform: translateX(-100%);
+}
+
+body.sidebar-hidden .main-content {
+    margin-left: 0 !important;
+}

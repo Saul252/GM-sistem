@@ -154,8 +154,9 @@
                             <div class="row g-2">
                                 <div class="col-6">
                                     <label class="form-label small fw-semibold text-secondary">Fecha Emisión</label>
-                                    <input type="date" id="fecha" name="fecha" value="<?= date("Y-m-d") ?>"
-                                        class="form-control  " style="border-radius: 12px; height: 40px;">
+                                    <input type="datetime-local" id="fecha" name="fecha"
+                                        value="<?= date('Y-m-d\TH:i') ?>" class="form-control"
+                                        style="border-radius: 12px; height: 40px;">
                                 </div>
                                 <div class="col-12">
                                     <label class="form-label small fw-semibold text-secondary">Observaciones

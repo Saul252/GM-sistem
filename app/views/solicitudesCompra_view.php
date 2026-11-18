@@ -34,9 +34,9 @@ error_reporting(E_ALL);
 
     <main class="main-content">
 
-        <div class="glass-card p-4 mb-4">
+        <div class="glass-card p-4 ">
 
-            <div class="row align-items-center mb-5">
+            <div class="row align-items-center">
                 <div class="col-md-8">
                     <h1 class="h3 fw-bold mb-1">Solicitudes de Compra</h1>
                     <p class="text-body-secondary small">Gestión de requerimientos de materiales</p>
@@ -48,7 +48,7 @@ error_reporting(E_ALL);
                 </div>
             </div>
 
-            <div class="glass-card p-4 mb-4">
+            <div class="glass-card ">
 
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <div>
@@ -56,9 +56,7 @@ error_reporting(E_ALL);
                             <i class="bi bi-funnel-fill text-primary me-2"></i>
                             Filtros de búsqueda
                         </h5>
-                        <small class="text-body-secondary">
-                            Filtra las cotizaciones por fecha, almacén, estado o cliente.
-                        </small>
+
                     </div>
                 </div>
 
@@ -148,9 +146,11 @@ error_reporting(E_ALL);
             </div>
 
             <div class="glass-card p-4">
-                <div class="table-responsive">
-                    <table class="table align-middle w-100">
-                        <thead>
+                <!-- Contenedor con scroll vertical (max-height) y horizontal -->
+                <div class="table-responsive" style="max-height: 380px; overflow-y: auto; overflow-x: auto;">
+                    <table class="table align-middle w-100 mb-0" id="solicitudesTabla">
+                        <!-- sticky-top mantiene la cabecera fija al hacer scroll -->
+                        <thead class="table-light sticky-top" style="top: 0; z-index: 10; background-color: #ffffff;">
                             <tr>
                                 <th>Folio</th>
                                 <th>Fecha</th>
@@ -162,11 +162,13 @@ error_reporting(E_ALL);
                             </tr>
                         </thead>
                         <tbody id="tablaSolicitudes">
+                            <!-- Los registros se cargan dinámicamente aquí -->
                         </tbody>
                     </table>
                 </div>
-                <div class="row g-3">
 
+                <!-- Tarjetas de resumen de totales -->
+                <div class="row g-3 mt-3">
                     <div class="col-md-4">
                         <div class="card border-0 shadow-sm rounded-3 bg-danger-subtle">
                             <div class="card-body py-2">
@@ -186,6 +188,7 @@ error_reporting(E_ALL);
                             </div>
                         </div>
                     </div>
+
                     <div class="col-md-4">
                         <div class="card border-0 shadow-sm rounded-3 bg-success-subtle">
                             <div class="card-body py-2">
@@ -426,28 +429,28 @@ error_reporting(E_ALL);
                                     </div>
                                     <div class="col-6">
                                         <div class="fw-bold text-uppercase text-end mb-0" style="letter-spacing:.5px;">
-                                            Solicitud de Compra <spam class="fw-bold text-uppercase mb-0"
+                                            Solicitud de Compra <span class="fw-bold text-uppercase mb-0"
                                                 id="print-folio">
 
-                                            </spam>
+                                            </span>
                                         </div>
 
                                     </div>
                                     <div class="col-6">
                                         <div style="letter-spacing:.5px; font-size:11px;">
-                                            <spam class="fw-bold text-uppercase mb-0">RFC:</spam> BFC121126CKA
+                                            <span class="fw-bold text-uppercase mb-0">RFC:</span> BFC121126CKA
                                         </div>
                                         <div style="letter-spacing:.5px; font-size:11px;">
-                                            <spam class="fw-bold text-uppercase mb-0">DOMICILIO:</spam> EMILIANO ZAPATA
-                                            S/N SAN MARTIN CUAUTLALPAN CHALCO ESTADO DE MEXICO <spam
-                                                class="fw-bold text-uppercase mb-0"> CP:</spam> 56644
+                                            <span class="fw-bold text-uppercase mb-0">DOMICILIO:</span> EMILIANO ZAPATA
+                                            S/N SAN MARTIN CUAUTLALPAN CHALCO ESTADO DE MEXICO <span
+                                                class="fw-bold text-uppercase mb-0"> CP:</span> 56644
                                         </div>
                                     </div>
                                     <div class="col-6 text-end">
                                         <div class="fw-bold text-uppercase mb-0" style="letter-spacing:.5px;">
                                             <div class="">
 
-                                                <spam class="text-body-secondary text end" id="print-fecha"></spam>
+                                                <span class="text-body-secondary text end" id="print-fecha"></span>
                                                 <input type="hidden" id="dp_correo">
                                             </div>
                                         </div>
@@ -961,7 +964,7 @@ error_reporting(E_ALL);
                     $('#tablaSolicitudes').html(
                         `<tr><td colspan="7" class="text-center text-danger py-3">
                     ${escapeHtml(data?.message || 'Error al cargar solicitudes')}
-                 </td></tr>`
+                   </td></tr>`
                     );
                     actualizarResumenGastos(0, 0, 0, 0);
                     return;
@@ -1004,28 +1007,28 @@ error_reporting(E_ALL);
                     <i class="bi bi-box-seam text-warning"></i> Ajustar faltantes
                 </button>
             ` : '';
-                    let textoFaltanate = tieneFaltantes == 1 ? '/faltantes' : '';
+                    let textoFaltanate = tieneFaltantes == 1 ? ' / Faltantes' : '';
+                    let compraIdTexto = s.compra_id_final > 0 ? `<span class="badge badge-status bg-success text-white ">FC-${s.compra_id_final}</span >` : '-';
 
 
-                    // 6.3 Estado + color
+                    // 6.3 Estado + color en texto (sin tarjeta/badge)
                     const status = String(s.estado || 'PENDIENTE').toUpperCase();
-                    let claseEstado = 'bg-secondary text-white';
+                    let claseEstado = 'text-secondary';
 
                     switch (status) {
                         case 'PENDIENTE':
-                            claseEstado = 'bg-warning text-dark';
+                            claseEstado = 'text-warning fw-bold';
                             break;
                         case 'PROCESADA':
-                            claseEstado = 'bg-primary text-white';
+                            claseEstado = 'text-primary fw-bold';
                             break;
                         case 'RECIBIDO':
-
-                            claseEstado = tieneFaltantes == 1 ? 'bg-dark text-white' : 'bg-success text-white';
-
+                        case 'RECIBIDA':
+                            claseEstado = tieneFaltantes == 1 ? 'text-dark fw-bold' : 'text-success fw-bold';
                             break;
                         case 'CANCELADA':
                         case 'CANCELADO':
-                            claseEstado = 'bg-danger text-white';
+                            claseEstado = 'text-danger fw-bold';
                             break;
                     }
 
@@ -1034,7 +1037,8 @@ error_reporting(E_ALL);
                     gastoTotal += costo;
 
                     switch (status) {
-                        case 'RECIBIDA':                       // ✅ antes decía RECIBIDO
+                        case 'RECIBIDA':                     // ✅ antes decía RECIBIDO
+                        case 'RECIBIDO':
                             totalAceptados += costo;
                             break;
                         case 'PENDIENTE':
@@ -1069,27 +1073,33 @@ error_reporting(E_ALL);
                     <td class="text-body-secondary small">${fechaFormateada}</td>
                     <td class="fw-medium">${escapeHtml(s.proveedor_nombre || 'Sin asignar')}</td>
                     <td><span class="badge bg-light text-dark border">${escapeHtml(s.almacen_nombre || '')}</span></td>
+                    
+                    <!-- Total en color verde -->
                     <td class="text-center align-middle">
-                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1">
-                            <i class="bi bi-currency-dollar me-1"></i>
-                            ${costo.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        <span class="text-success fw-bold">
+                            $ ${costo.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </span>
                     </td>
+
+                    <!-- Estado como texto de color plano sin tarjeta -->
                     <td class="text-center align-middle">
-                        <span class="badge badge-status ${claseEstado} rounded-pill">${status}${textoFaltanate}</span>
+                        <span class="${claseEstado}">${status}${textoFaltanate}</span> 
                     </td>
-                    <td class="text-center align-middle">
-                        ${botonFaltantes}
-                        ${botonesAccion}
-                        <button class="btn btn-sm btn-white border shadow-sm rounded-pill px-3"
+                    
+                    <td class="text-end">
+                        <div class="d-flex justify-content-end align-items-center gap-1">
+                            ${botonFaltantes}
+                            ${botonesAccion}
+                            <button class="btn btn-sm btn-white border shadow-sm rounded-pill px-3"
                                 onclick="prepararImpresion(${s.id})"
                                 title="Imprimir solicitud">
-                            <i class="bi bi-printer text-primary me-1"></i>
-                            <span class="fw-medium">Imprimir</span>
-                        </button>
+                                <i class="bi bi-printer text-primary me-1"></i>
+                                <span class="fw-medium">Imprimir</span>
+                            </button>
+                        </div>
                     </td>
                 </tr>
-            `;
+                    `;
                 });
 
                 // ── 7. Pintar tabla ──
@@ -1109,13 +1119,12 @@ error_reporting(E_ALL);
                 console.error("Error crítico capturado en cargarSolicitudes:", error);
                 $('#tablaSolicitudes').html(
                     `<tr><td colspan="7" class="text-center text-danger py-3">
-                Error al cargar solicitudes: ${escapeHtml(error.message || 'desconocido')}
-             </td></tr>`
+                        Error al cargar solicitudes: ${escapeHtml(error.message || 'desconocido')}
+                    </td></tr>`
                 );
                 actualizarResumenGastos(0, 0, 0, 0);
             }
-        }
-        // ✅ Función auxiliar que pinta el resumen de gastos en el DOM
+        } // ✅ Función auxiliar que pinta el resumen de gastos en el DOM
         function actualizarResumenGastos(aceptados, pendientes, cancelados, total) {
             const fmt = (n) => n.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -1183,7 +1192,7 @@ error_reporting(E_ALL);
         // ENVÍO DEL FORMULARIO DE CONVERSIÓN
 
         function quitarFila(id) {
-            $(`#fila-${id}`).remove();
+            $(`#fila - ${id}`).remove();
             if (!$('#tablaDetalle tbody tr').length) $('#emptyState').removeClass('d-none');
         }
 
@@ -1194,27 +1203,79 @@ error_reporting(E_ALL);
                 text: 'No podrás revertir esto',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: 'Sí, borrar'
+                confirmButtonText: 'Sí, borrar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#d33'
             });
-            if (r.isConfirmed) {
+
+            if (!r.isConfirmed) return;
+
+            // Spinner mientras procesa
+            Swal.fire({
+                title: 'Eliminando...',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            try {
                 const fd = new FormData();
                 fd.append('id', id);
-                const resp = await fetch(`${URL_CONTROLADOR_SOLICITUD}?action=eliminar`, {
-                    method: 'POST',
-                    body: fd
+
+                const resp = await fetch(
+                    `/cfsistem/app/controllers/solicitudesCompraController.php?action=eliminar`,
+                    { method: 'POST', body: fd }
+                );
+
+                // ⚠️ Verificar que la respuesta sea JSON antes de parsear
+                const contentType = resp.headers.get('content-type') || '';
+                const texto = await resp.text();
+
+                if (!contentType.includes('application/json')) {
+                    // El backend devolvió HTML → probablemente un error PHP o URL mal
+                    console.error('Respuesta NO JSON:', texto.slice(0, 300));
+                    throw new Error('El servidor devolvió una respuesta inesperada (HTML). Revisa la consola.');
+                }
+
+                const res = JSON.parse(texto);
+                console.log('Respuesta eliminar:', res);
+
+                // ⚠️ Aceptar ambos formatos posibles del backend
+                const ok = res.status === 'success' || res.success === true;
+
+                if (ok) {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Eliminada',
+                        text: res.message || 'La solicitud fue eliminada correctamente',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    cargarSolicitudes();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'No se pudo eliminar',
+                        text: res.message || 'El servidor no confirmó la eliminación'
+                    });
+                }
+
+            } catch (err) {
+                console.error('Error eliminarSolicitud:', err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: err.message || 'Fallo de conexión al eliminar'
                 });
-                const res = await resp.json();
-                if (res.status === 'success') location.reload();
-                else Swal.fire('Error', res.message, 'error');
             }
-        }
-    </script>
+        } </script>
     <script>
 
         function asignarSiguienteFolioCompra() {
             const inputFolio = document.getElementsByName('folio')[0];
             if (!inputFolio) return;
-            fetch(`${URL_CONTROLADOR_SOLICITUD}?action=getSiguienteFolio`)
+            fetch(`/cfsistem/app/controllers/solicitudesCompraController.php?action=getSiguienteFolio`)
                 .then(res => res.json())
                 .then(data => {
                     if (data.success) inputFolio.value = data.folio;
@@ -1222,12 +1283,14 @@ error_reporting(E_ALL);
                 .catch(err => console.error("Error al obtener folio:", err));
         }
         let solicitudIDI = 0;
+
         async function gestionarSolicitud(id) {
             try {
                 $('#tablaConversion tbody').empty();
-                console.log(id); solicitudIDI = id;
+                console.log(id);
+                solicitudIDI = id;
 
-                const resp = await fetch(`${URL_CONTROLADOR_SOLICITUD}?action=obtenerDetalle&id=${id}`);
+                const resp = await fetch(`/cfsistem/app/controllers/solicitudesCompraController.php?action=obtenerDetalle&id=${id}`);
                 asignarSiguienteFolioCompra();
 
                 if (!resp.ok) throw new Error(`Error de servidor: ${resp.status}`);
@@ -1247,47 +1310,27 @@ error_reporting(E_ALL);
                     return;
                 }
 
-                // 🔥 MANEJO SEGURO DE DEUDA (UNA SOLA VEZ)
                 const deuda = Number(res?.deuda?.[0]?.pendiente) || 0;
 
-                // 🔹 Datos generales
                 $('#uni-solicitud-id').val(id);
                 $('#uni-folio').text(`#${id.toString().padStart(5, '0')}`);
                 $('#uni-proveedor').val(items[0].proveedor_nombre || 'Sin Proveedor');
                 $('#uni-proveedor-nombre').val(items[0].proveedor_nombre || '');
                 $('#almacen_id2').val(items[0].almacen_origen_id);
 
-                // 🔹 Deuda segura
                 $('#uni-proveedor-deuda').val(deuda);
                 $('#input_pagar_deuda').val(0);
                 $('#input_pagar_deuda').attr('max', deuda);
                 $('.label-abono-info').text(`Máximo: ${deuda}`);
+                $('#input_pagar_deuda').prop('disabled', deuda <= 0);
 
-
-
-                // 🔥 DESACTIVAR SI NO HAY DEUDA
-                if (deuda <= 0) {
-
-                    $('#input_pagar_deuda')
-                        .prop('disabled', true)
-
-
-                } else {
-
-                    $('#input_pagar_deuda')
-                        .prop('disabled', false)
-
-                }
                 const almacenInput = document.getElementById('almacen_id2');
-
                 const almacen_id2 = almacenInput ? almacenInput.value : 0;
 
                 console.log('ALMACEN:', almacen_id2);
                 let html = '';
 
                 items.forEach((i, index) => {
-
-
                     const factor = parseFloat(i.factor_conversion) || 1;
                     const uBase = i.unidad_medida || 'pzas';
                     const uRep = i.unidad_reporte || 'Mayoreo';
@@ -1295,101 +1338,75 @@ error_reporting(E_ALL);
                     const cantidadSolicitada = parseFloat(i.cantidad) || 0;
                     const cantidad = parseFloat(i.cantidad);
 
-                    const cantMayoreo = Math.floor(cantidad); // 1
-                    const cantSueltas = ((cantidad - cantMayoreo) * factor);    // 0.5
+                    const cantMayoreo = Math.floor(cantidad);
+                    const cantSueltas = ((cantidad - cantMayoreo) * factor);
 
-
-                    const totalUnidad = cantidadSolicitada / factor;
-
+                    // ✅ FIX: <tr> y data-index SIN espacios
                     html += `
             <tr class="fila-item" data-index="${index}">
                 <td>
                     <input type="hidden" name="items[${index}][producto_id]" value="${i.producto_id}">
                     <input type="hidden" class="h-factor" value="${factor}">
-                    <div class="fw-bold text-dark">${i.producto_nombre} </div>
-                     <small class="text-body-secondary d-block">1 ${uRep} = ${factor} ${uBase}</small>
+                    <input type="hidden" value="${almacen_id2}" class="i-almacen-id">
+                    <div class="fw-bold text-dark">${i.producto_nombre}</div>
+                    <small class="text-body-secondary d-block">1 ${uRep} = ${factor} ${uBase}</small>
                 </td>
 
                 <td>
-                 <div class="fw-bold ">
-                    ${cantMayoreo}.${cantSueltas} ${uRep}
-                </div>
-                    <input type="hidden" class="form-control form-control-sm i-mayoreo border-success" 
-                        value="${cantMayoreo}" step=".001" oninput="recalcularFila(${index})" readonly>
-               
-                    <input type="hidden" class="form-control form-control-sm i-sueltas border-primary" 
-                        value="${cantSueltas}" step="0.001" oninput="recalcularFila(${index})" readonly>
+                    <div class="fw-bold">${cantidadSolicitada} ${uRep}</div>
+                    <input type="hidden" class="i-mayoreo" value="${cantMayoreo}" readonly>
+                    <input type="hidden" class="i-sueltas" value="${cantSueltas}" readonly>
                 </td>
 
-                
-                    
-          <td>
-    <label class="form-label small text-success fw-semibold mb-1">Llegado</label>
-
-    <input type="number"
-        id="llegado_${index}"
-        class="form-control form-control-sm border-success shadow-sm i-llegado"
-        name="items[${index}][cantidad_llegado]"
-        value="${cantidadSolicitada}"
-        step=".001"
-        min="0"
-        oninput="recalcularFila(${index})">
-
-    <input type="hidden"
-        id="faltante_${index}"
-        class="form-control form-control-sm border-danger shadow-sm i-faltante"
-        name="items[${index}][cantidad_faltante]"
-        value="0"
-        step=".001"
-        min="0"
-        >
-
-
-
-    <input type="hidden"
-        name="items[${index}][cantidad_excedente]"
-        class="form-control form-control-sm border-success shadow-sm i-excedente"
-        value="0"
-        min="0"
-        step="0.001"
-        >
-</td>
+                <td>
+                    <label class="form-label small text-success fw-semibold mb-1">Llegado</label>
+                    <input type="number"
+                           id="llegado_${index}"
+                           class="form-control form-control-sm border-success shadow-sm i-llegado"
+                           name="items[${index}][cantidad_llegado]"
+                           value="${cantidadSolicitada}"
+                           step=".001"
+                           min="0"
+                           oninput="recalcularFila(${index})">
+                    <input type="hidden"
+                           id="faltante_${index}"
+                           class="i-faltante"
+                           name="items[${index}][cantidad_faltante]"
+                           value="0"
+                           step=".001"
+                           min="0">
+                    <input type="hidden"
+                           name="items[${index}][cantidad_excedente]"
+                           class="i-excedente"
+                           value="0"
+                           min="0"
+                           step="0.001">
+                </td>
 
                 <td>
                     <label class="small text-body-secondary fw-bold">Costo Total Renglón</label>
                     <div class="input-group input-group-sm">
-                        <span class="input-group-text ">$</span>
-                        <input type="number" step="0.001" class="form-control i-costo-total" 
-                            placeholder="0.00" required value="${costo}"
-                            oninput="recalcularFila(${index})">
+                        <span class="input-group-text">$</span>
+                        <input type="number" step="0.001"
+                               class="form-control i-costo-total"
+                               placeholder="0.00" required
+                               value="${costo}"
+                               oninput="recalcularFila(${index})">
                     </div>
-
                     <input type="hidden" class="h-precio-lote">
-
                     <div class="mt-1" style="font-size:0.75rem">
-                        Cost. Unit: 
-                        <span class="s-precio-lote fw-bold text-secondary">$ 0.00</span>
+                        Cost. Unit: <span class="s-precio-lote fw-bold text-secondary">$ 0.00</span>
                     </div>
-                </td>
-
-               
-    
-    <input 
-        type="hidden"
-        value="${almacen_id2}"
-        class="form-control i-almacen-id"
-    >
-</td>       
                 </td>
 
                 <td class="text-end bg-light-subtle">
                     <div class="h5 mb-0 fw-bold text-primary s-total-piezas">0</div>
-                    
-                    <small class="text-body-secondary umedida" >${cantMayoreo >= 1 ? uRep : uBase}</small>
-                    <div>                    <small class=" mb-0 text-danger s-faltantes-piezas"></small>
-                    <small class=" mb-0  text-success s-exedentes-piezas"></small>
-                    <small class=" mb-0  text-dark s-unidad-piezas"></small>
-                    <input type="hidden" class="h-total-piezas">
+                    <small class="text-body-secondary umedida">${cantMayoreo >= 1 ? uRep : uBase}</small>
+                    <div>
+                        <small class="mb-0 text-danger s-faltantes-piezas"></small>
+                        <small class="mb-0 text-success s-exedentes-piezas"></small>
+                        <small class="mb-0 text-dark s-unidad-piezas"></small>
+                        <input type="hidden" class="h-total-piezas">
                     </div>
                 </td>
             </tr>`;
@@ -1678,7 +1695,7 @@ error_reporting(E_ALL);
 
                     $.ajax({
 
-                        url: URL_CONTROLADOR_SOLICITUD,
+                        url: '/cfsistem/app/controllers/solicitudesCompraController.php',
 
                         type: 'POST',
 
@@ -1892,47 +1909,47 @@ error_reporting(E_ALL);
                     const recogida = $clon.find('#print-direccion-recogida').text() || '';
 
                     const tablaProv = `
-                <table style="width:100%;border-collapse:collapse;border:1px solid #cbd5e1;margin-bottom:12px;font-family:Arial,sans-serif;font-size:11px;">
-                    <tbody>
-                        <tr>
-                            <td colspan="4" style="padding:6px 10px;vertical-align:top;">
-                                <div style="font-size:10px;color:#6b7280;margin-bottom:2px;">Proveedor</div>
-                                <div style="font-weight:700;text-transform:uppercase;">${nombre}</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td style="width:50%;padding:6px 10px;border-top:1px solid #e5e7eb;vertical-align:top;">
-                                <div style="font-size:10px;color:#6b7280;margin-bottom:2px;">RFC</div>
-                                <div style="font-weight:700;text-transform:uppercase;">${rfc}</div>
-                            </td>
-                            <td style="width:50%;padding:6px 10px;border-top:1px solid #e5e7eb;vertical-align:top;">
-                                <div style="font-size:10px;color:#6b7280;margin-bottom:2px;">Teléfono</div>
-                                <div style="font-weight:700;text-transform:uppercase;">${tel}</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="2" style="width:68%;padding:6px 10px;border-top:1px solid #e5e7eb;vertical-align:top;">
-                                <div style="font-size:10px;color:#6b7280;margin-bottom:2px;">Dirección Fiscal</div>
-                                <div style="font-weight:700;text-transform:uppercase;">${direccion}</div>
-                            </td>
-                            <td style="width:16%;padding:6px 10px;border-top:1px solid #e5e7eb;vertical-align:top;">
-                                <div style="font-size:10px;color:#6b7280;margin-bottom:2px;">Tel. 2</div>
-                                <div style="font-weight:700;text-transform:uppercase;">${tel2}</div>
-                            </td>
-                            <td style="width:16%;padding:6px 10px;border-top:1px solid #e5e7eb;vertical-align:top;">
-                                <div style="font-size:10px;color:#6b7280;margin-bottom:2px;">Ext.</div>
-                                <div style="font-weight:700;text-transform:uppercase;">${ext}</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="4" style="padding:6px 10px;border-top:1px solid #e5e7eb;vertical-align:top;">
-                                <div style="font-size:10px;color:#6b7280;margin-bottom:2px;">Dirección de recolección</div>
-                                <div style="font-weight:700;text-transform:uppercase;">${recogida}</div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            `;
+                                            <table style="width:100%;border-collapse:collapse;border:1px solid #cbd5e1;margin-bottom:12px;font-family:Arial,sans-serif;font-size:11px;">
+                                                <tbody>
+                                                    <tr>
+                                                        <td colspan="4" style="padding:6px 10px;vertical-align:top;">
+                                                            <div style="font-size:10px;color:#6b7280;margin-bottom:2px;">Proveedor</div>
+                                                            <div style="font-weight:700;text-transform:uppercase;">${nombre}</div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="width:50%;padding:6px 10px;border-top:1px solid #e5e7eb;vertical-align:top;">
+                                                            <div style="font-size:10px;color:#6b7280;margin-bottom:2px;">RFC</div>
+                                                            <div style="font-weight:700;text-transform:uppercase;">${rfc}</div>
+                                                        </td>
+                                                        <td style="width:50%;padding:6px 10px;border-top:1px solid #e5e7eb;vertical-align:top;">
+                                                            <div style="font-size:10px;color:#6b7280;margin-bottom:2px;">Teléfono</div>
+                                                            <div style="font-weight:700;text-transform:uppercase;">${tel}</div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colspan="2" style="width:68%;padding:6px 10px;border-top:1px solid #e5e7eb;vertical-align:top;">
+                                                            <div style="font-size:10px;color:#6b7280;margin-bottom:2px;">Dirección Fiscal</div>
+                                                            <div style="font-weight:700;text-transform:uppercase;">${direccion}</div>
+                                                        </td>
+                                                        <td style="width:16%;padding:6px 10px;border-top:1px solid #e5e7eb;vertical-align:top;">
+                                                            <div style="font-size:10px;color:#6b7280;margin-bottom:2px;">Tel. 2</div>
+                                                            <div style="font-weight:700;text-transform:uppercase;">${tel2}</div>
+                                                        </td>
+                                                        <td style="width:16%;padding:6px 10px;border-top:1px solid #e5e7eb;vertical-align:top;">
+                                                            <div style="font-size:10px;color:#6b7280;margin-bottom:2px;">Ext.</div>
+                                                            <div style="font-weight:700;text-transform:uppercase;">${ext}</div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td colspan="4" style="padding:6px 10px;border-top:1px solid #e5e7eb;vertical-align:top;">
+                                                            <div style="font-size:10px;color:#6b7280;margin-bottom:2px;">Dirección de recolección</div>
+                                                            <div style="font-weight:700;text-transform:uppercase;">${recogida}</div>
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                            `;
                     $bloqueProv.replaceWith(tablaProv);
                 }
 
@@ -1945,35 +1962,35 @@ error_reporting(E_ALL);
                     const metaRfc = $header.find('.tk-meta, [style*="letter-spacing"]').eq(0).text().trim();
 
                     // Extrae manualmente los datos del header original
-                    const rfcLine = $clon.find('spam.fw-bold').filter(function () {
+                    const rfcLine = $clon.find('span.fw-bold').filter(function () {
                         return $(this).text().trim().toUpperCase() === 'RFC:';
                     }).parent().text().trim();
 
-                    const domLine = $clon.find('spam.fw-bold').filter(function () {
+                    const domLine = $clon.find('span.fw-bold').filter(function () {
                         return $(this).text().trim().toUpperCase() === 'DOMICILIO:';
                     }).parent().text().trim();
 
                     const tablaHeader = `
-                <table style="width:100%;border-collapse:collapse;border-bottom:1px solid #cbd5e1;margin-bottom:12px;font-family:Arial,sans-serif;font-size:11px;">
-                    <tbody>
-                        <tr>
-                            <td style="width:55%;padding:4px 0;vertical-align:top;">
-                                <div style="font-weight:700;text-transform:uppercase;letter-spacing:.5px;font-size:13px;">${titulo}</div>
-                            </td>
-                            <td style="width:45%;padding:4px 0;vertical-align:top;text-align:right;">
-                                <div style="font-weight:700;text-transform:uppercase;letter-spacing:.5px;font-size:13px;">Solicitud de Compra ${folioTxt}</div>
-                                <div style="font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;margin-top:4px;">Fecha: ${fechaTxt}</div>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td colspan="2" style="padding:4px 0;vertical-align:top;font-size:11px;letter-spacing:.5px;line-height:1.4;">
-                                <div>${rfcLine}</div>
-                                <div>${domLine}</div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            `;
+                                                <table style="width:100%;border-collapse:collapse;border-bottom:1px solid #cbd5e1;margin-bottom:12px;font-family:Arial,sans-serif;font-size:11px;">
+                                                    <tbody>
+                                                        <tr>
+                                                            <td style="width:55%;padding:4px 0;vertical-align:top;">
+                                                                <div style="font-weight:700;text-transform:uppercase;letter-spacing:.5px;font-size:13px;">${titulo}</div>
+                                                            </td>
+                                                            <td style="width:45%;padding:4px 0;vertical-align:top;text-align:right;">
+                                                                <div style="font-weight:700;text-transform:uppercase;letter-spacing:.5px;font-size:13px;">Solicitud de Compra ${folioTxt}</div>
+                                                                <div style="font-size:11px;color:#6b7280;font-weight:700;text-transform:uppercase;margin-top:4px;">Fecha: ${fechaTxt}</div>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td colspan="2" style="padding:4px 0;vertical-align:top;font-size:11px;letter-spacing:.5px;line-height:1.4;">
+                                                                <div>${rfcLine}</div>
+                                                                <div>${domLine}</div>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                                `;
                     $header.replaceWith(tablaHeader);
                 }
 
@@ -1982,75 +1999,75 @@ error_reporting(E_ALL);
 
                 // 4) CSS mínimo (ya no importan las clases del bloque, porque lo reemplazamos)
                 const CSS_PDF = `
-            * { box-sizing: border-box; }
-            body {
-                font-family: Arial, Helvetica, sans-serif;
-                font-size: 12px;
-                color: #1f2937;
-                background: #fff;
-                margin: 0;
-                padding: 12px;
+                                                * {box - sizing: border-box; }
+                                                body {
+                                                    font - family: Arial, Helvetica, sans-serif;
+                                                font-size: 12px;
+                                                color: #1f2937;
+                                                background: #fff;
+                                                margin: 0;
+                                                padding: 12px;
             }
-            table { border-collapse: collapse; width: 100%; }
+                                                table {border - collapse: collapse; width: 100%; }
 
-            /* Tabla de productos */
-            .table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 12px; }
-            .table th, .table td {
-                padding: 5px 6px;
-                border: 1px solid #000;
-                vertical-align: top;
+                                                /* Tabla de productos */
+                                                .table {width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 12px; }
+                                                .table th, .table td {
+                                                    padding: 5px 6px;
+                                                border: 1px solid #000;
+                                                vertical-align: top;
             }
-            .table thead th {
-                background: #1f2a37 !important;
-                color: #fff !important;
-                font-weight: 700;
-                text-align: left;
+                                                .table thead th {
+                                                    background: #1f2a37 !important;
+                                                color: #fff !important;
+                                                font-weight: 700;
+                                                text-align: left;
             }
-            .table thead th.text-center { text-align: center !important; }
-            .table thead th.text-end { text-align: right !important; }
-            .table tbody td { text-align: left; }
-            .table tbody td.text-center { text-align: center !important; }
-            .table tbody td.text-end { text-align: right !important; }
+                                                .table thead th.text-center {text - align: center !important; }
+                                                .table thead th.text-end {text - align: right !important; }
+                                                .table tbody td {text - align: left; }
+                                                .table tbody td.text-center {text - align: center !important; }
+                                                .table tbody td.text-end {text - align: right !important; }
 
-            /* Total */
-            .d-flex.justify-content-end { text-align: right; margin-bottom: 16px; }
-            .d-flex.justify-content-end table { width: 220px; margin-left: auto; }
-            .d-flex.justify-content-end td { padding: 4px 6px; }
-            .fw-bold { font-weight: 700 !important; }
-            .fs-6 { font-size: 14px !important; }
-            .text-end { text-align: right !important; }
+                                                /* Total */
+                                                .d-flex.justify-content-end {text - align: right; margin-bottom: 16px; }
+                                                .d-flex.justify-content-end table {width: 220px; margin-left: auto; }
+                                                .d-flex.justify-content-end td {padding: 4px 6px; }
+                                                .fw-bold {font - weight: 700 !important; }
+                                                .fs-6 {font - size: 14px !important; }
+                                                .text-end {text - align: right !important; }
 
-            /* Firmas */
-            .mt-5 { margin-top: 50px; }
-            .row { display: table; width: 100%; }
+                                                /* Firmas */
+                                                .mt-5 {margin - top: 50px; }
+                                                .row {display: table; width: 100%; }
             .row > .col-4 {
-                display: table-cell;
-                width: 33.333%;
-                text-align: center;
-                padding: 0 10px;
-                vertical-align: top;
+                                                    display: table-cell;
+                                                width: 33.333%;
+                                                text-align: center;
+                                                padding: 0 10px;
+                                                vertical-align: top;
             }
             .row > .col-4 > div {
-                border-top: 1px solid #444 !important;
-                padding-top: 6px !important;
-                font-size: 11px;
-                text-transform: uppercase;
-                font-weight: 600;
+                                                    border - top: 1px solid #444 !important;
+                                                padding-top: 6px !important;
+                                                font-size: 11px;
+                                                text-transform: uppercase;
+                                                font-weight: 600;
             }
 
-            @page { margin: 10mm; }
-        `;
+                                                @page {margin: 10mm; }
+                                                `;
 
                 const html = `
-            <!DOCTYPE html>
-            <html lang="es">
-            <head>
-                <meta charset="UTF-8">
-                <style>${CSS_PDF}</style>
-            </head>
-            <body>${$clon.prop('outerHTML')}</body>
-            </html>
-        `;
+                                                <!DOCTYPE html>
+                                                <html lang="es">
+                                                    <head>
+                                                        <meta charset="UTF-8">
+                                                            <style>${CSS_PDF}</style>
+                                                    </head>
+                                                    <body>${$clon.prop('outerHTML')}</body>
+                                                </html>
+                                                `;
 
                 const resp = await fetch('/cfsistem/app/controllers/correoController.php', {
                     method: 'POST',

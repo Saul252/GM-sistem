@@ -270,7 +270,14 @@
                 const compradaMostrar = (Number(item.cantidad) || 0) / factorFila;
                 const faltanteMostrar = cantidadRealFaltante / factorFila;
                 const unidadMostrar = usaUnidadReporte ? item.unidad_reporte : item.unidad_medida;
-                const maxInput = (cantidad_maxima / factorFila).toFixed(4);
+
+                // 🔥 CÁLCULO DEL MÁXIMO CON MARGEN DE TOLERANCIA
+                const maxCalculadoUnidades = cantidad_maxima;
+                const maxCalculadoFila = maxCalculadoUnidades / factorFila;
+
+                // Le damos un pequeño rango extra (holgura) de 0.02 unidades de reporte o un 1% extra
+                // para que el navegador jamás bloquee al usuario al teclear decimales de redondeo.
+                const maxInputConTolerancia = maxCalculadoFila + 0.02;
 
                 // ✅ dvid seguro desde el backend
                 const dvid = window.extraerDvid(item.dvid ?? item);
@@ -299,13 +306,13 @@
             <input type="number"
                    step="0.0001"
                    min="0"
-                   max="${maxInput}"
+                   max="${maxInputConTolerancia.toFixed(4)}"
                    id="${inputId}"
                    class="form-control form-control-sm entregador"
                    data-factor="${factorFila}"
                    data-dvid="${dvid}"
                    data-id="${item.producto_id}"
-                   data-max="${maxInput}">
+                   data-max="${maxCalculadoUnidades.toFixed(4)}"> <!-- Guardamos el límite real estricto en data-max -->
             <input type="hidden"
                    id="${hiddenId}"
                    class="input-entrega"
@@ -346,9 +353,7 @@
                     lote: null,
                     loteNombre: null
                 };
-            });
-            // 3. Recursos
-            const [respDetalle, respRecursos] = await Promise.all([
+            }); const [respDetalle, respRecursos] = await Promise.all([
                 fetch(`${URL_ENTREGAS}?ajax=get_recursos_reparto&id=${primerId}`),
                 fetch(`${URL_ENTREGAS}?ajax=get_recursos_sucursal&almacen_id=${0}`)
             ]);
@@ -466,7 +471,6 @@
 
         console.log('dvid:', dvid, '| Producto:', item.nombre, '| Lote:', item.lote, '| Stock:', stockLote);
     });
-
     async function procesarEntregaFinal() {
         const fd = new FormData();
         const itemsValidos = [];
@@ -493,7 +497,7 @@
             const maxLimit = isNaN(max) ? Infinity : max;
 
             const raw = String($inputVisible.val() || '').trim().replace(',', '.');
-            const v = parseFloat(raw);
+            let v = parseFloat(raw);
 
             if (raw === '') { $inputHidden.val(''); return; }
 
@@ -502,13 +506,34 @@
                 $inputHidden.val('');
                 return;
             }
-            if (v > maxLimit) {
-                errores.push(`"${window.carrito[dvid]?.nombre || dvid}": ${v} excede el máximo ${maxLimit}.`);
-                $inputHidden.val('');
-                return;
-            }
 
-            const cantBase = (v * factor).toFixed(4);
+            // --- 💡 LÓGICA DE TOLERANCIA INTELIGENTE Y REDONDEO AL LÍMITE ---
+            let cantBaseCalculada = v * factor;
+            let cantBaseFinal;
+
+            if (maxLimit !== Infinity) {
+                const diferenciaUnidades = Math.abs(cantBaseCalculada - maxLimit);
+                const diferenciaBultos = Math.abs(v - (maxLimit / factor));
+
+                if (diferenciaUnidades <= 0.20 || diferenciaBultos <= 0.008) {
+                    // ¡Es un ajuste por redondeo! Forzamos el límite máximo exacto
+                    cantBaseFinal = maxLimit;
+
+                    v = maxLimit / factor;
+                    $inputVisible.val(v.toFixed(4));
+                } else if (cantBaseCalculada > maxLimit) {
+                    errores.push(`"${window.carrito[dvid]?.nombre || dvid}": ${v} excede el máximo permitido.`);
+                    $inputHidden.val('');
+                    return;
+                } else {
+                    cantBaseFinal = cantBaseCalculada;
+                }
+            } else {
+                cantBaseFinal = cantBaseCalculada;
+            }
+            // -------------------------------------------------------------
+
+            const cantBase = cantBaseFinal.toFixed(4);
             $inputHidden.val(cantBase);
 
             // Obtenemos el lote seleccionado desde window.carrito
@@ -548,13 +573,12 @@
         }
 
         // 3) Datos del formulario
-        const tipo = $('input[name="tipo_entrega_masiva"]:checked').val(); // 'ruta' o 'patio' (o el valor que maneje tu input)
+        const tipo = $('input[name="tipo_entrega_masiva"]:checked').val();
         const vehiculoId = $('#mv_vehiculo_id').val();
         const choferId = $('#mv_chofer_id').val();
         const tripulanteId = $('#mv_tripulantes').val();
         const direccion = ($('#mv_direccion').val() || '').trim();
 
-        // 🔥 Validación dinámica basada en el tipo de entrega seleccionado
         if (tipo === 'ruta') {
             if (!vehiculoId) {
                 Swal.fire({ icon: 'error', title: 'Campos incompletos', text: 'Por favor, selecciona un vehículo para la ruta.', confirmButtonColor: '#d33' });
@@ -569,13 +593,12 @@
                 return false;
             }
         } else {
-            // Validación para modo PATIO (el vehículo ya no se valida porque está oculto/desactivado)
             if (!choferId) {
                 Swal.fire({ icon: 'error', title: 'Campos incompletos', text: 'Por favor, selecciona un despachador responsable.', confirmButtonColor: '#d33' });
                 return false;
             }
-            // Si en patio la dirección es opcional, omitimos su validación estricta aquí.
         }
+
         // 4) Armar FormData para el primer endpoint (`guardarEntregaMasiva`)
         itemsValidos.forEach(it => {
             fd.append(`productos[${it.dvid}]`, it.cantBase);
@@ -589,15 +612,11 @@
         fd.append('venta_id', ventaActual.info.id);
 
         try {
-            // 🔥 LLAMADA AL PRIMER CONTROLADOR (guardarEntregaMasiva)
             const res = await fetch(`${URL_CONTROLLER}?action=guardarEntregaMasiva`, { method: 'POST', body: fd });
             const result = await res.json();
 
-            console.log('[Despacho] Respuesta de guardarEntregaMasiva (result.ids):', result.ids);
-
             if (result.status === 'success') {
                 if (Array.isArray(result.ids) && result.ids.length) {
-                    // 🔥 LLAMAMOS A LA SEGUNDA FUNCIÓN PASÁNDOLE LOS IDS DEL SERVIDOR Y LOS LOTES LOCALES
                     if (typeof ejecutarSalidaMasivaFinal === 'function') {
                         await ejecutarSalidaMasivaFinal(result.ids, itemsValidos);
                     } else {
@@ -610,12 +629,10 @@
                 return false;
             }
         } catch (e) {
-            console.error("Error al procesar entrega masiva:", e);
             Swal.fire('Error Técnico', 'Hubo un problema de conexión con el servidor', 'error');
             return false;
         }
-    }
-    async function ejecutarSalidaMasivaFinal(result_ids, itemsValidos) {
+    } async function ejecutarSalidaMasivaFinal(result_ids, itemsValidos) {
         const tipo = $('input[name="tipo_entrega_masiva"]:checked').val();
 
         if (!$('#mv_chofer_id').val()) {

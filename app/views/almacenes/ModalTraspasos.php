@@ -351,6 +351,7 @@
         const resp = await fetch(
             `/cfsistem/app/controllers/entregasController.php?ajax=despachar&prodId=${producto_id}&almacen=${almacenId}`
         );
+        console.log(resp);
 
         let data;
         try {
@@ -367,9 +368,10 @@
         select.innerHTML = '';
 
         data.data.forEach(lote => {
+            const cant = lote.cantidad_actual / lote.factor_conversion;
             const option = document.createElement('option');
             option.value = lote.id;
-            option.textContent = `${lote.codigo_lote} (${lote.cantidad_actual})`;
+            option.textContent = `${lote.codigo_lote} (${cant} ${lote.unidad_reporte})`;
             select.appendChild(option);
         });
 

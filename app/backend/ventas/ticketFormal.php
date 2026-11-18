@@ -346,7 +346,8 @@
                     </td>
 
                     <td style="width: 38%;" class="company-address">
-                        <span style="font-weight: 600; color: #1e293b;" id="almacen-nombre"></span><br>
+                        <span style="font-weight: 600; color: #1e293b;">SUCURSAL </span> <span
+                            style="font-weight: 600; color: #1e293b;" id="almacen-nombre"></span><br>
                         <span id="almacen-direccion"></span><br>
                         <span style="font-size: 7.5pt; color: #94a3b8;">Control de Distribución Interna</span>
                     </td>

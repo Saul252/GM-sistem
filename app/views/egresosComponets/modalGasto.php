@@ -125,7 +125,9 @@
                             <label class="form-label small fw-bold">Observaciones</label>
                             <textarea name="observaciones" class="form-control text-uppercase border border-subtle"
                                 style="border-radius: 12px;" rows="2" placeholder="Notas internas..."></textarea>
-                            <input type="date" id="fecha" name="fecha" value="<?= date("Y-m-d") ?>"
+
+                            <!-- 🔹 Cambiado a datetime-local para incluir hora -->
+                            <input type="datetime-local" id="fecha" name="fecha" value="<?= date('Y-m-d\TH:i') ?>"
                                 class="form-control border border-subtle mt-2" style="border-radius: 12px;">
                         </div>
                         <div class="col-md-5 text-end">
@@ -345,7 +347,17 @@
                     }).then(() => {
                         const inst = bootstrap.Modal.getInstance(modalGastoEl);
                         if (inst) inst.hide();
+
+                        // Mostrar el comprobante del gasto recién creado
                         gastoDetalle_cargarVista('gasto', data.id);
+
+                        // 🔥 Cuando se cierre el modal de detalle, recargar para actualizar la lista
+                        const modalDetalle = document.getElementById('gastoDetalle_modalPrincipal');
+                        if (modalDetalle) {
+                            modalDetalle.addEventListener('hidden.bs.modal', () => {
+                                window.location.reload();
+                            }, { once: true });   // once: true → solo se ejecuta 1 vez
+                        }
                     });
                 } else {
                     throw new Error(data.message || 'Error al procesar el gasto');

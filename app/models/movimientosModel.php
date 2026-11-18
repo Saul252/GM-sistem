@@ -635,9 +635,46 @@ JOIN almacenes a
             $loteSeleccionado = (float) $mov['referencia_id'];
 
             // =========================================
-            // 🔻 CREAR LOTE EN DESTINO
+            // 🔹 1.b Producto (SKU) con lock + conteo de lotes
             // =========================================
-            $codigo_lote = "L-TR-" . $movimiento_id . "-" . date('His');
+            $stmtProd = $this->db->prepare("
+            SELECT id, sku, nombre
+            FROM productos
+            WHERE id = ?
+            FOR UPDATE
+        ");
+            $stmtProd->bind_param("i", $p_id);
+            $stmtProd->execute();
+            $prod = $stmtProd->get_result()->fetch_assoc();
+
+            if (!$prod) {
+                throw new Exception("El producto $p_id no existe.");
+            }
+
+            $skuRaw = $prod['sku'] ?? '';
+
+            $stmtCount = $this->db->prepare("
+            SELECT COUNT(*) AS total
+            FROM lotes_stock
+            WHERE producto_id = ?
+        ");
+            $stmtCount->bind_param("i", $p_id);
+            $stmtCount->execute();
+            $totalLotes = (int) ($stmtCount->get_result()->fetch_assoc()['total'] ?? 0);
+
+            // Prefijo: primeros 4 caracteres alfanuméricos del SKU, en mayúsculas
+            $skuLimpio = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $skuRaw));
+            $skuPrefix = substr($skuLimpio, 0, 4);
+            if ($skuPrefix === '' || $skuPrefix === false) {
+                $skuPrefix = 'PROD';
+            }
+
+            $siguienteLote = $totalLotes + 1;
+
+            // =========================================
+            // 🔻 CREAR LOTE EN DESTINO — T-<SKU4>-<N>
+            // =========================================
+            $codigo_lote = 'T-' . $skuPrefix . '-' . $siguienteLote;
             $precio_final = 0;
 
             $stmtNewLote = $this->db->prepare("
@@ -678,7 +715,6 @@ JOIN almacenes a
             ) VALUES (?, ?, ?, ?, ?, ?, ?)
         ");
 
-            // Sin desglose PEPS en recepción: un solo registro con lote_origen_id = 0
             $loteOrigen = 0;
 
             $stmtKardex->bind_param(
@@ -830,11 +866,11 @@ JOIN almacenes a
 
                 // 3.1 Obtener movimiento
                 $stmt = $this->db->prepare("
-                SELECT producto_id, cantidad, almacen_origen_id, almacen_destino_id, usuario_recibe_id, referencia_id
-                FROM movimientos 
-                WHERE id = ? 
-                FOR UPDATE
-            ");
+        SELECT producto_id, cantidad, almacen_origen_id, almacen_destino_id, usuario_recibe_id, referencia_id
+        FROM movimientos 
+        WHERE id = ? 
+        FOR UPDATE
+    ");
                 $stmt->bind_param("i", $movimiento_id);
                 $stmt->execute();
                 $mov = $stmt->get_result()->fetch_assoc();
@@ -851,18 +887,56 @@ JOIN almacenes a
                 $dest_id = (int) $mov['almacen_destino_id'];
                 $orig_id = (int) $mov['almacen_origen_id'];
                 $cantidad = (float) $mov['cantidad'];
+                $loteOrigenRef = (int) ($mov['referencia_id'] ?? 0);
 
-                // 3.2 Crear lote en destino
-                $codigo_lote = "L-TR-" . $movimiento_id . "-" . date('His');
+                // 3.1.b Producto (SKU + nombre) con lock para numerar lotes sin colisiones
+                $stmtProd = $this->db->prepare("
+        SELECT id, sku, nombre
+        FROM productos
+        WHERE id = ?
+        FOR UPDATE
+    ");
+                $stmtProd->bind_param("i", $p_id);
+                $stmtProd->execute();
+                $prod = $stmtProd->get_result()->fetch_assoc();
+
+                if (!$prod) {
+                    throw new Exception("El producto $p_id no existe.");
+                }
+
+                $skuRaw = $prod['sku'] ?? '';
+                $nombreProd = $prod['nombre'] ?? 'Producto';
+
+                // Conteo de lotes existentes de este producto (para el siguiente número)
+                $stmtCount = $this->db->prepare("
+        SELECT COUNT(*) AS total
+        FROM lotes_stock
+        WHERE producto_id = ?
+    ");
+                $stmtCount->bind_param("i", $p_id);
+                $stmtCount->execute();
+                $totalLotes = (int) ($stmtCount->get_result()->fetch_assoc()['total'] ?? 0);
+
+                // Prefijo: primeros 4 caracteres alfanuméricos del SKU, en mayúsculas
+                $skuLimpio = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $skuRaw));
+                $skuPrefix = substr($skuLimpio, 0, 4);
+                if ($skuPrefix === '' || $skuPrefix === false) {
+                    $skuPrefix = 'PROD'; // fallback si el producto no tiene SKU
+                }
+
+                $siguienteLote = $totalLotes + 1;
+
+                // 3.2 Crear lote en destino — código: T-<SKU4>-<N>
+                $codigo_lote = 'T-' . $skuPrefix . '-' . $siguienteLote;
                 $precio_final = 0;
 
                 $stmtNewLote = $this->db->prepare("
-                INSERT INTO lotes_stock (
-                    producto_id, almacen_id, codigo_lote,
-                    cantidad_inicial, cantidad_actual,
-                    precio_compra_unitario, estado_lote
-                ) VALUES (?, ?, ?, ?, ?, ?, 'activo')
-            ");
+        INSERT INTO lotes_stock (
+            producto_id, almacen_id, codigo_lote,
+            cantidad_inicial, cantidad_actual,
+            precio_compra_unitario, estado_lote
+        ) VALUES (?, ?, ?, ?, ?, ?, 'activo')
+    ");
                 $stmtNewLote->bind_param(
                     "iisddd",
                     $p_id,
@@ -877,26 +951,24 @@ JOIN almacenes a
                 $idLoteNuevo = $this->db->insert_id;
 
                 // 3.3 Kardex
-                $observaciones = 'Arribo autorizado (masivo)';
+                $observaciones = 'Arribo autorizado (masivo) - ' . $nombreProd;
 
                 $stmtKardex = $this->db->prepare("
-                INSERT INTO kardex_movimientos_lotes (
-                    movimiento_id,
-                    lote_origen_id,
-                    lote_destino_id,
-                    producto_id,
-                    cantidad,
-                    usuario_id,
-                    observaciones
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
-            ");
-
-                $loteOrigen = 0;
+        INSERT INTO kardex_movimientos_lotes (
+            movimiento_id,
+            lote_origen_id,
+            lote_destino_id,
+            producto_id,
+            cantidad,
+            usuario_id,
+            observaciones
+        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    ");
 
                 $stmtKardex->bind_param(
                     "iiiidis",
                     $movimiento_id,
-                    $loteOrigen,
+                    $loteOrigenRef,
                     $idLoteNuevo,
                     $p_id,
                     $cantidad,
@@ -907,36 +979,36 @@ JOIN almacenes a
 
                 // 3.4 Inventario destino
                 $stmtInv = $this->db->prepare("
-                INSERT INTO inventario (almacen_id, producto_id, stock, stock_minimo, stock_maximo)
-                VALUES (?, ?, ?, 0, 0)
-                ON DUPLICATE KEY UPDATE stock = stock + ?
-            ");
+        INSERT INTO inventario (almacen_id, producto_id, stock, stock_minimo, stock_maximo)
+        VALUES (?, ?, ?, 0, 0)
+        ON DUPLICATE KEY UPDATE stock = stock + ?
+    ");
                 $stmtInv->bind_param("iidd", $dest_id, $p_id, $cantidad, $cantidad);
                 $stmtInv->execute();
 
                 // 3.5 Precios (si no existen)
                 $check = $this->db->prepare("
-                SELECT id 
-                FROM precios_producto 
-                WHERE producto_id = ? AND almacen_id = ?
-            ");
+        SELECT id 
+        FROM precios_producto 
+        WHERE producto_id = ? AND almacen_id = ?
+    ");
                 $check->bind_param("ii", $p_id, $dest_id);
                 $check->execute();
 
                 if ($check->get_result()->num_rows === 0) {
 
                     $copy = $this->db->prepare("
-                    INSERT INTO precios_producto (
-                        producto_id, almacen_id, 
-                        precio_minorista, precio_mayorista, precio_distribuidor
-                    )
-                    SELECT 
-                        producto_id, ?, 
-                        precio_minorista, precio_mayorista, precio_distribuidor
-                    FROM precios_producto 
-                    WHERE producto_id = ? AND almacen_id = ?
-                    LIMIT 1
-                ");
+            INSERT INTO precios_producto (
+                producto_id, almacen_id, 
+                precio_minorista, precio_mayorista, precio_distribuidor
+            )
+            SELECT 
+                producto_id, ?, 
+                precio_minorista, precio_mayorista, precio_distribuidor
+            FROM precios_producto 
+            WHERE producto_id = ? AND almacen_id = ?
+            LIMIT 1
+        ");
                     $copy->bind_param("iii", $dest_id, $p_id, $orig_id);
                     $copy->execute();
                 }
@@ -944,17 +1016,17 @@ JOIN almacenes a
                 // 3.6 Finalizar movimiento
                 if ($rol_id == 1) {
                     $stmtFin = $this->db->prepare("
-                    UPDATE movimientos 
-                    SET usuario_recibe_id = ?, usuario_autoriza_id = ?, fecha = CURRENT_TIMESTAMP
-                    WHERE id = ?
-                ");
+            UPDATE movimientos 
+            SET usuario_recibe_id = ?, usuario_autoriza_id = ?, fecha = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ");
                     $stmtFin->bind_param("iii", $usuario_id, $usuario_id, $movimiento_id);
                 } else {
                     $stmtFin = $this->db->prepare("
-                    UPDATE movimientos 
-                    SET usuario_recibe_id = ?, fecha = CURRENT_TIMESTAMP
-                    WHERE id = ?
-                ");
+            UPDATE movimientos 
+            SET usuario_recibe_id = ?, fecha = CURRENT_TIMESTAMP
+            WHERE id = ?
+        ");
                     $stmtFin->bind_param("ii", $usuario_id, $movimiento_id);
                 }
                 $stmtFin->execute();

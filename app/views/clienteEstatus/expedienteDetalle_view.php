@@ -6,20 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Expediente: <?= htmlspecialchars($cliente['nombre_comercial']) ?> | CF System</title>
     <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
-
     <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
-
-
-
-
-
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
         rel="stylesheet" />
@@ -152,8 +145,6 @@
 
             <div style="display:flex; gap:10px; align-items:end; margin-bottom:15px; flex-wrap:wrap;">
 
-
-
                 <?php
                 date_default_timezone_set('America/Mexico_City');
                 $fechaInicio = $_GET['fecha_inicio'] ?? date('Y-m-01');
@@ -181,7 +172,6 @@
                     Filtrar
                 </button>
 
-
                 <button class="btn btn-dark btn-sm" onclick="imprimirEstadoCuenta()">
                     <i class="bi bi-printer"></i> Imprimir
                 </button>
@@ -189,7 +179,6 @@
 
         </div>
     </header>
-
 
     <div class="container-fluid px-4">
 
@@ -203,6 +192,7 @@
                 </div>
             </div>
         <?php endif; ?>
+
         <div class="row g-3 mb-4">
             <div class="col-md-3">
                 <div class="kpi-widget border-left-primary">
@@ -246,15 +236,15 @@
                     </div>
                 </div>
             </div>
+        </div>
 
+        <div class="d-flex justify-content-center px-2">
+            <div class="card border-0 shadow-sm mb-3 w-100 w-lg-60" style="max-width: 1200px;">
+                <h5 class="fw-bold mb-3 text-dark">Folios Detallados</h5>
 
-
-            <div class="d-flex justify-content-center px-2">
-                <div class="card border-0 shadow-sm mb-3 w-100 w-lg-60" style="max-width: 1200px;">
-                    <h5 class="fw-bold mb-3 text-dark">Folios Detallados</h5>
-
-                    <div class="table-responsive">
-                        <table class="table align-middle table-hover mb-0">
+                <div class="table-responsive">
+                    <table class="table align-middle table-hover mb-0">
+                        <thead>
                             <tr>
                                 <th scope="col" class="ps-3">Fecha</th>
                                 <th scope="col">Folio Interno</th>
@@ -264,1201 +254,939 @@
                                 <th scope="col" class="text-center">Estado / Acción</th>
                                 <th scope="col" class="text-center pe-3">Opciones</th>
                             </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($expediente as $v):
-                                    $idActual = $v['venta_id'] ?? $v['id'];
-                                    $esCancelada = (isset($v['estado_general']) && $v['estado_general'] == 'cancelada');
-                                    $saldoFolio = floatval($v['total']) - floatval($v['total_pagado']);
-                                    $folioLiquidado = abs($saldoFolio) <= 0.01;
-                                    $folioAFavorIndividual = $saldoFolio < -0.01;
-                                    ?>
-                                    <tr>
-                                        <td class="ps-3">
+                        </thead>
+                        <tbody>
+                            <?php foreach ($expediente as $v):
+                                $idActual = $v['venta_id'] ?? $v['id'];
+                                $esCancelada = (isset($v['estado_general']) && $v['estado_general'] == 'cancelada');
+                                $saldoFolio = floatval($v['total']) - floatval($v['total_pagado']);
+                                $folioLiquidado = abs($saldoFolio) <= 0.01;
+                                $folioAFavorIndividual = $saldoFolio < -0.01;
+                                ?>
+                                <tr>
+                                    <td class="ps-3">
+                                        <small
+                                            class="text-body-secondary"><?= date('d/m/Y', strtotime($v['fecha'])) ?></small>
+                                    </td>
 
-                                            <small
-                                                class="text-body-secondary"><?= date('d/m/Y', strtotime($v['fecha'])) ?></small>
-                                        </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border">
+                                            <?= htmlspecialchars($v['folio']) ?>
+                                        </span>
+                                    </td>
 
-                                        <td>
-                                            <span class="badge bg-light text-dark border">
-                                                <?= htmlspecialchars($v['folio']) ?>
-                                            </span>
-                                        </td>
+                                    <td class="text-end fw-semibold text-dark">
+                                        $<?= number_format($v['total'], 2) ?>
+                                    </td>
 
-                                        <td class="text-end fw-semibold text-dark">
-                                            $<?= number_format($v['total'], 2) ?>
-                                        </td>
+                                    <td class="text-end fw-semibold text-success">
+                                        $<?= number_format($v['total_pagado'], 2) ?>
+                                    </td>
 
-                                        <td class="text-end fw-semibold text-success">
-                                            $<?= number_format($v['total_pagado'], 2) ?>
-                                        </td>
+                                    <td class="text-end fw-bold <?= $saldoFolio > 0 ? 'text-danger' : 'text-info' ?>">
+                                        $<?= number_format(abs($saldoFolio), 2) ?>
+                                    </td>
 
-                                        <td class="text-end fw-bold <?= $saldoFolio > 0 ? 'text-danger' : 'text-info' ?>">
-                                            $<?= number_format(abs($saldoFolio), 2) ?>
-                                        </td>
+                                    <td class="text-center">
+                                        <?php if ($esCancelada): ?>
+                                            <span class="badge bg-secondary px-3 py-2">CANCELADA</span>
+                                        <?php elseif ($folioLiquidado): ?>
+                                            <span class="badge bg-success px-3 py-2">LIQUIDADO</span>
+                                        <?php elseif ($folioAFavorIndividual): ?>
+                                            <span class="badge bg-info px-3 py-2">A FAVOR</span>
+                                        <?php endif; ?>
+                                    </td>
 
-                                        <td class="text-center">
-                                            <?php if ($esCancelada): ?>
-                                                <span class="badge bg-secondary px-3 py-2">CANCELADA</span>
-                                            <?php elseif ($folioLiquidado): ?>
-                                                <span class="badge bg-success px-3 py-2">LIQUIDADO</span>
-                                            <?php elseif ($folioAFavorIndividual): ?>
-                                                <span class="badge bg-info px-3 py-2">A FAVOR</span>
-                                            <?php else: ?>
-                                                <!-- <button
-                                class="btn btn-primary btn-sm px-3"
-                                onclick="abrirFlujoAbono(
-                                < ?= intval($idActual) ?>,
-                                    < ?= intval($v['cliente_id']) ?>,
-                                    '< ?= $v['folio'] ?>',
-                                    < ?= floatval($saldoFolio) ?>
-                                )">
-                                <i class="bi bi-plus-circle"></i> Abonar
-                            </button> -->
-                                            <?php endif; ?>
-                                        </td>
+                                    <td class="text-center pe-3">
+                                        <div class="d-flex gap-1 justify-content-center">
+                                            <a class="btn btn-outline-primary btn-sm"
+                                                href="/cfsistem/app/backend/ventas/ticket_venta.php?id=<?= $idActual ?>"
+                                                target="_blank" title="Ticket">
+                                                <i class="bi bi-receipt"></i>
+                                            </a>
+                                            <a class="btn btn-outline-secondary btn-sm"
+                                                href="/cfsistem/app/backend/ventas/ticketFormal.php?id=<?= $idActual ?>"
+                                                target="_blank" title="Remisión">
+                                                <i class="bi bi-file-earmark-text"></i>
+                                            </a>
+                                            <button class="btn btn-sm btn-dark"
+                                                onclick="verDetalle(<?= intval($idActual) ?>)" title="Ver Detalle">
+                                                <i class="bi bi-eye-fill"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
-                                        <td class="text-center pe-3">
-                                            <div class="d-flex gap-1 justify-content-center">
-                                                <a class="btn btn-outline-primary btn-sm"
-                                                    href="/cfsistem/app/backend/ventas/ticket_venta.php?id=<?= $idActual ?>"
-                                                    target="_blank" title="Ticket">
-                                                    <i class="bi bi-receipt"></i>
-                                                </a>
-                                                <a class="btn btn-outline-secondary btn-sm"
-                                                    href="/cfsistem/app/backend/ventas/ticketFormal.php?id=<?= $idActual ?>"
-                                                    target="_blank" title="Remisión">
-                                                    <i class="bi bi-file-earmark-text"></i>
-                                                </a>
-                                                <button class="btn btn-sm btn-dark"
-                                                    onclick="verDetalle(<?= intval($idActual) ?>)" title="Ver Detalle">
-                                                    <i class="bi bi-eye-fill"></i>
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
+    <div class="modal fade" id="modalDetalle" tabindex="-1">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-dark text-white">
+                    <h6 class="modal-title fw-bold">
+                        Información Venta: <span id="spanFolio" class="text-warning"></span>
+                    </h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
 
-                <div class="modal fade" id="modalDetalle" tabindex="-1">
-                    <div class="modal-dialog modal-xl modal-dialog-centered">
-                        <div class="modal-content border-0 shadow">
-
-                            <div class="modal-header bg-dark text-white">
-                                <h6 class="modal-title fw-bold">
-                                    Información Venta: <span id="spanFolio" class="text-warning"></span>
-                                </h6>
-                                <button type="button" class="btn-close btn-close-white"
-                                    data-bs-dismiss="modal"></button>
+                <div class="modal-body p-0">
+                    <div class="row g-0">
+                        <div class="col-md-3 bg-light border-end p-4">
+                            <div class="mb-3">
+                                <small class="text-uppercase text-body-secondary fw-bold">Cliente</small>
+                                <div id="detCliente" class="fw-semibold"></div>
                             </div>
 
-                            <div class="modal-body p-0">
-                                <div class="row g-0">
+                            <div class="mb-4">
+                                <small class="text-uppercase text-body-secondary fw-bold">Almacén</small>
+                                <div id="detAlmacen" class="fw-semibold"></div>
+                            </div>
 
-                                    <div class="col-md-3 bg-light border-end p-4">
-
-                                        <div class="mb-3">
-                                            <small class="text-uppercase text-body-secondary fw-bold">Cliente</small>
-                                            <div id="detCliente" class="fw-semibold"></div>
-                                        </div>
-
-                                        <div class="mb-4">
-                                            <small class="text-uppercase text-body-secondary fw-bold">Almacén</small>
-                                            <div id="detAlmacen" class="fw-semibold"></div>
-                                        </div>
-
-                                        <div class="card border-0 shadow-sm mb-3">
-                                            <div class="card-body text-center">
-
-                                                <div class="mb-3">
-                                                    <small class="text-uppercase text-body-secondary fw-bold d-block">
-                                                        Total de Venta
-                                                    </small>
-                                                    <span id="detTotalLabel" class="fs-5 fw-bold text-primary">
-                                                        $0.00
-                                                    </span>
-                                                </div>
-
-                                                <hr>
-
-                                                <div>
-                                                    <small class="text-uppercase text-body-secondary fw-bold d-block">
-                                                        Saldo Pendiente
-                                                    </small>
-                                                    <span id="detSaldoLabel" class="fs-4 fw-bold text-danger">
-                                                        $0.00
-                                                    </span>
-                                                </div>
-
-
-                                            </div>
-                                        </div>
-                                        <button type="button" class="btn btn-outline-primary rounded-pill px-3"
-                                            onclick="imprimirContenidoModal()">
-                                            <i class="bi bi-printer-fill me-1"></i> Imprimir a PDF
-                                        </button>
-
-                                        <!-- <div id="boton"></div> -->
+                            <div class="card border-0 shadow-sm mb-3">
+                                <div class="card-body text-center">
+                                    <div class="mb-3">
+                                        <small class="text-uppercase text-body-secondary fw-bold d-block">Total de
+                                            Venta</small>
+                                        <span id="detTotalLabel" class="fs-5 fw-bold text-primary">$0.00</span>
                                     </div>
-
-                                    <div class="col-md-9 p-4">
-
-                                        <div class="card border-0 shadow-sm mb-3">
-                                            <div
-                                                class="card-header bg-white fw-bold small text-uppercase text-body-secondary">
-                                                Productos
-                                            </div>
-                                            <div class="table-responsive" style="max-height: 180px;">
-                                                <table class="table table-sm align-middle mb-0">
-                                                    <thead class="table-light">
-                                                        <tr class="small text-uppercase">
-                                                            <th>Producto</th>
-                                                            <th class="text-center">Venta</th>
-                                                            <th class="text-center">Surtido</th>
-                                                            <th class="text-center text-danger">Falta</th>
-                                                            <th class="text-center d-none">Entrega</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody id="tbodyDetalle"></tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-
-                                        <div class="row g-3">
-
-                                            <div class="col-12">
-                                                <div class="card border-0 shadow-sm">
-                                                    <div
-                                                        class="card-header bg-white fw-bold small text-uppercase text-body-secondary">
-                                                        Historial de Pagos
-                                                    </div>
-                                                    <div class="table-responsive" style="max-height: 180px;">
-                                                        <table class="table table-sm align-middle mb-0">
-                                                            <thead class="table-light">
-                                                                <tr class="small text-uppercase">
-                                                                    <th>Fecha</th>
-                                                                    <th>Monto</th>
-                                                                    <th>Método</th>
-                                                                    <th>REFERENCIA</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody id="tbodyPagos"></tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="col-12 d-none">
-                                                <div class="card border-0 shadow-sm">
-                                                    <div
-                                                        class="card-header bg-white fw-bold small text-uppercase text-body-secondary">
-                                                        Historial de Entregas
-                                                    </div>
-                                                    <div class="table-responsive" style="max-height: 180px;">
-                                                        <table class="table table-sm align-middle mb-0">
-                                                            <thead class="table-light">
-                                                                <tr class="small text-uppercase">
-                                                                    <th>Fecha</th>
-                                                                    <th>Responsable</th>
-                                                                    <th>Producto</th>
-                                                                    <th class="text-center">Cant</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody id="tbodyHistorial"></tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div class="col-12 d-none">
-                                                <div class="card border-0 shadow-sm">
-                                                    <div
-                                                        class="card-header bg-white fw-bold small text-uppercase text-body-secondary">
-                                                        Repartos
-                                                    </div>
-                                                    <div class="table-responsive" style="max-height: 220px;">
-                                                        <table class="table table-sm align-middle mb-0">
-                                                            <thead class="table-light">
-                                                                <tr class="small text-uppercase">
-                                                                    <th># Reparto</th>
-                                                                    <th>Fecha Entrega</th>
-                                                                    <th>Estado</th>
-                                                                    <th class="text-center">Ruta</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody id="tbodyRepartos"></tbody>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                        </div>
-
+                                    <hr>
+                                    <div>
+                                        <small class="text-uppercase text-body-secondary fw-bold d-block">Saldo
+                                            Pendiente</small>
+                                        <span id="detSaldoLabel" class="fs-4 fw-bold text-danger">$0.00</span>
                                     </div>
                                 </div>
                             </div>
-
+                            <button type="button" class="btn btn-outline-primary rounded-pill px-3"
+                                onclick="imprimirContenidoModal()">
+                                <i class="bi bi-printer-fill me-1"></i> Imprimir a PDF
+                            </button>
                         </div>
-                    </div>
-                </div>
-                <!-- 2. Despúes carga tu archivo modal.js -->
-                <!-- ✅ jQuery PRIMERO -->
-                <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 
-                <!-- ✅ Select2 DESPUÉS -->
-                <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+                        <div class="col-md-9 p-4">
+                            <div class="card border-0 shadow-sm mb-3">
+                                <div class="card-header bg-white fw-bold small text-uppercase text-body-secondary">
+                                    Productos
+                                </div>
+                                <div class="table-responsive" style="max-height: 180px;">
+                                    <table class="table table-sm align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr class="small text-uppercase">
+                                                <th>Producto</th>
+                                                <th class="text-center">Venta</th>
+                                                <th class="text-center">Surtido</th>
+                                                <th class="text-center text-danger">Falta</th>
+                                                <th class="text-center d-none">Entrega</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tbodyDetalle"></tbody>
+                                    </table>
+                                </div>
+                            </div>
 
-                <!-- ✅ Otros que dependan de jQuery -->
-                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-                <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>>
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <div class="card border-0 shadow-sm">
+                                        <div
+                                            class="card-header bg-white fw-bold small text-uppercase text-body-secondary">
+                                            Historial de Pagos
+                                        </div>
+                                        <div class="table-responsive" style="max-height: 180px;">
+                                            <table class="table table-sm align-middle mb-0">
+                                                <thead class="table-light">
+                                                    <tr class="small text-uppercase">
+                                                        <th>Fecha</th>
+                                                        <th>Monto</th>
+                                                        <th>Método</th>
+                                                        <th>REFERENCIA</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="tbodyPagos"></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
 
-                <?php require_once __DIR__ . '/../ventasHistorialModales/registarAbonoCliente.php' ?>
+                                <div class="col-12 d-none">
+                                    <div class="card border-0 shadow-sm">
+                                        <div
+                                            class="card-header bg-white fw-bold small text-uppercase text-body-secondary">
+                                            Historial de Entregas
+                                        </div>
+                                        <div class="table-responsive" style="max-height: 180px;">
+                                            <table class="table table-sm align-middle mb-0">
+                                                <thead class="table-light">
+                                                    <tr class="small text-uppercase">
+                                                        <th>Fecha</th>
+                                                        <th>Responsable</th>
+                                                        <th>Producto</th>
+                                                        <th class="text-center">Cant</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="tbodyHistorial"></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
 
-
-                <script>
-                    cargarClientes();
-                    async function cargarClientes() {
-                        console.log("cargo clientes");
-
-                        const select = document.getElementById('cliente_id_editar');
-                        if (!select) return;
-
-                        // 🔥 1. Capturamos el ID del cliente desde la URL
-                        const urlParams = new URLSearchParams(window.location.search);
-                        const clienteIdUrl = urlParams.get('id');
-                        console.log('[cargarClientes] ID desde URL:', clienteIdUrl);
-
-                        try {
-                            const url = '/cfsistem/app/controllers/accesoController.php?action=obtenerClientes';
-                            const respuesta = await fetch(url);
-
-                            if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
-
-                            const resultado = await respuesta.json();
-                            console.log(resultado);
-
-                            if (resultado.success && Array.isArray(resultado.data)) {
-
-                                const clientes = resultado.data;
-
-                                // 🔥 2. Construir y vaciar opciones en el select nativo primero
-                                const fragment = document.createDocumentFragment();
-
-                                const first = document.createElement('option');
-                                first.value = '';
-                                first.textContent = '-- Seleccione un cliente --';
-                                fragment.appendChild(first);
-
-                                clientes.forEach(cliente => {
-                                    const opcion = document.createElement('option');
-                                    opcion.value = cliente.id;
-                                    opcion.textContent = String(cliente.nombre_comercial || '').toUpperCase();
-
-                                    opcion.dataset.nombre = String(cliente.nombre_comercial || '');
-                                    opcion.dataset.razonSocial = String(cliente.razon_social || '');
-                                    opcion.dataset.contacto = String(cliente.contacto || '');
-
-                                    fragment.appendChild(opcion);
-                                });
-
-                                select.replaceChildren(fragment);
-
-                                // 🔥 3. Destruir Select2 si ya estaba inicializado previamente
-                                if ($(select).hasClass('select2-hidden-accessible')) {
-                                    $(select).select2('destroy');
-                                }
-
-                                // 🔥 4. Inicializar Select2 con el DOM ya completamente poblado
-                                $(select).select2({
-                                    theme: 'bootstrap-5',
-                                    width: '100%',
-                                    dropdownParent: $(select).parent(),
-                                    matcher: function (params, data) {
-                                        if (!params.term || params.term.trim() === '') return data;
-
-                                        const term = String(params.term).toLowerCase().trim();
-                                        const text = String(data.text || '').toLowerCase();
-
-                                        const $el = $(data.element);
-                                        const razonSocial = String($el.data('razonSocial') || '').toLowerCase();
-                                        const contacto = String($el.data('contacto') || '').toLowerCase();
-
-                                        if (text.includes(term) || razonSocial.includes(term) || contacto.includes(term)) {
-                                            return data;
-                                        }
-
-                                        return null;
-                                    },
-                                    templateResult: function (state) {
-                                        if (!state.id) return state.text;
-
-                                        const $opt = $(state.element);
-                                        const nombre = String($opt.data('nombre') || state.text || '');
-                                        const razonSocial = String($opt.data('razonSocial') || '');
-                                        const contacto = String($opt.data('contacto') || '');
-
-                                        if (!razonSocial && !contacto) {
-                                            return $(`<span class="fw-semibold">${nombre.toUpperCase()}</span>`);
-                                        }
-
-                                        return $(`
-                        <div class="d-flex flex-column">
-                            <span class="fw-semibold">${nombre.toUpperCase()}</span>
-                            <div class="d-flex justify-content-between align-items-center gap-2 mt-1">
-                                <small class="text-truncate" style="max-width:65%;">${razonSocial.toUpperCase()}</small>
-                                <small class="fw-semibold text-nowrap">${contacto ? `👤 ${contacto.toUpperCase()}` : ''}</small>
+                                <div class="col-12 d-none">
+                                    <div class="card border-0 shadow-sm">
+                                        <div
+                                            class="card-header bg-white fw-bold small text-uppercase text-body-secondary">
+                                            Repartos
+                                        </div>
+                                        <div class="table-responsive" style="max-height: 220px;">
+                                            <table class="table table-sm align-middle mb-0">
+                                                <thead class="table-light">
+                                                    <tr class="small text-uppercase">
+                                                        <th># Reparto</th>
+                                                        <th>Fecha Entrega</th>
+                                                        <th>Estado</th>
+                                                        <th class="text-center">Ruta</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="tbodyRepartos"></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    `);
-                                    },
-                                    templateSelection: function (state) {
-                                        if (!state.id) return state.text;
-                                        const nombre = String($(state.element).data('nombre') || state.text || '');
-                                        return nombre.toUpperCase();
-                                    }
-                                });
-
-                                // 🔥 5. Validar la coincidencia con el ID de la URL una vez cargado y pintado todo el sistema
-                                const targetId = clienteIdUrl ? String(clienteIdUrl).trim() : null;
-
-                                if (targetId) {
-                                    let coincide = false;
-
-                                    Array.from(select.options).forEach(opt => {
-                                        if (String(opt.value).trim() === targetId) {
-                                            coincide = true;
-                                        }
-                                    });
-
-                                    if (coincide) {
-                                        console.log("coincidencia:", targetId);
-                                        // Asignamos el valor directamente y actualizamos Select2
-                                        $(select).val(targetId).trigger('change.select2');
-                                        console.log('[cargarClientes] Selección final:', $(select).val());
-                                    } else {
-                                        console.warn('[cargarClientes] Cliente id', targetId, 'no está en la lista.');
-                                    }
-                                }
-
-                            } else {
-                                select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
-                                $(select).trigger('change.select2');
-                            }
-                        } catch (error) {
-                            select.innerHTML = '<option value="">Error al cargar la lista</option>';
-                            $(select).trigger('change.select2');
-                            console.error('Error al ejecutar cargarClientes:', error);
-                        }
-                    }
-
-                    const modalNuevoAbonoObj = new bootstrap.Modal('#modalNuevoAbono');
-
-
-                    let ventaActual = null;
-                    // La ruta al controlador (ajusta si el nombre del archivo varía)
-                    const URL_CONTROLLER = '/cfsistem/app/controllers/ventasHistorialController.php';
-                    $(document).ready(function () {
-                        renderCharts();
-                    });
-
-                    function renderCharts() {
-                        const ctx = document.getElementById('chartDona');
-                        if (!ctx) return;
-
-                        new Chart(ctx, {
-                            type: 'doughnut',
-                            data: {
-                                datasets: [{
-                                    data: [
-                                        <?= isset($resumen['total_pagado']) ? floatval($resumen['total_pagado']) : 0 ?>,
-                                        <?= isset($resumen['saldo_total']) ? max(0, floatval($resumen['saldo_total'])) : 0 ?>
-                                    ],
-                                    backgroundColor: ['#1cc88a', '#e74a3b'],
-                                    borderWidth: 0
-                                }]
-                            },
-                            options: {
-                                cutout: '75%',
-                                plugins: {
-                                    legend: {
-                                        display: false
-                                    }
-                                },
-                                responsive: true,
-                                maintainAspectRatio: false
-                            }
-                        });
-                    }
-
-                    function abrirModalSaldarFavor(favorDisponible, deudaPendiente) {
-                        // Calculamos el límite: no podemos usar más de lo que hay, ni pagar más de lo que se debe
-                        const montoMaximo = Math.min(favorDisponible, deudaPendiente);
-
-                        Swal.fire({
-                            title: 'Compensación de Saldos',
-                            icon: 'info',
-                            html: `
-            <div class="text-start border-bottom pb-2 mb-3" style="font-size: 0.9rem;">
-                <div class="d-flex justify-content-between mb-1">
-                    <span>Saldo a Favor:</span>
-                    <b class="text-success">$ ${favorDisponible.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</b>
-                </div>
-                <div class="d-flex justify-content-between">
-                    <span>Deuda en Contra:</span>
-                    <b class="text-danger">$ ${deudaPendiente.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</b>
-                </div>
-            </div>
-            <div class="text-start">
-                <label class="form-label fw-bold small">Monto a compensar:</label>
-                <div class="input-group">
-                    <span class="input-group-text">$</span>
-                    <input type="number" id="monto_cruce" class="form-control form-control-lg fw-bold" 
-                           value="${montoMaximo.toFixed(2)}" 
-                           max="${montoMaximo}" min="0.01" step="0.01">
-                </div>
-                <p class="text-body-secondary mt-2" style="font-size: 0.75rem;">
-                    <i class="bi bi-info-circle"></i> Este ajuste restará el monto de ambas cuentas para limpiar el historial del cliente.
-                </p>
-            </div>
-        `,
-                            showCancelButton: true,
-                            confirmButtonText: 'Aplicar Ajuste',
-                            cancelButtonText: 'Cancelar',
-                            confirmButtonColor: '#f6c23e',
-                            reverseButtons: true,
-                            preConfirm: () => {
-                                const monto = document.getElementById('monto_cruce').value;
-                                if (!monto || monto <= 0 || monto > montoMaximo) {
-                                    Swal.showValidationMessage(
-                                        `Monto inválido. Máximo permitido: $${montoMaximo.toFixed(2)}`);
-                                }
-                                return monto;
-                            }
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                procesarAjusteContable(result.value);
-                            }
-                        });
-                    }
-
-                    function procesarAjusteContable(monto) {
-                        Swal.fire({
-                            title: 'Procesando ajuste...',
-                            allowOutsideClick: false,
-                            didOpen: () => Swal.showLoading()
-                        });
-
-                        // Ajustamos la llamada para que coincida con tu estructura de 'accion'
-                        $.post('/cfsistem/app/controllers/clienteExpedienteController.php', {
-                            accion: 'saldar_deuda_con_favor', // El nombre del case que definimos
-                            id_cliente: <?= json_encode($id_cliente ?? 0) ?>,
-                            monto_a_usar: monto
-                        }, function (res) {
-                            if (res.status === 'success') {
-                                Swal.fire({
-                                    title: '¡Éxito!',
-                                    text: res.message,
-                                    icon: 'success',
-                                    confirmButtonColor: '#007aff'
-                                }).then(() => {
-                                    location.reload(); // Recarga para actualizar los KPIs con los nuevos saldos
-                                });
-                            } else {
-                                Swal.fire('Error', res.message || 'Error al procesar el ajuste.', 'error');
-                            }
-                        }, 'json').fail(function () {
-                            Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
-                        });
-                    }
-                </script>
-                <script>
-                    async function imprimirEstadoCuenta() {
-                        try {
-
-                            const params = new URLSearchParams(window.location.search);
-                            const id = params.get('id');
-
-                            const fechaInicio = document.getElementById('fecha_inicio')?.value || '';
-                            const fechaFin = document.getElementById('fecha_fin')?.value || '';
-
-                            const res = await fetch(
-                                `/cfsistem/app/controllers/clienteExpedienteController.php?action=getEstadoCuentaCliente&id_cliente=${id}&fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`
-                            );
-
-                            const data = await res.json();
-
-                            if (data?.status !== 'success') {
-                                return Swal.fire(
-                                    'Error',
-                                    'No se pudo cargar el estado de cuenta',
-                                    'error'
-                                );
-                            }
-
-                            const {
-                                cliente,
-                                expediente = [],
-                                resumen = {}
-                            } = data;
-
-                            const w = window.open('', '_blank', 'width=1100,height=700');
-
-                            if (!w) {
-                                return Swal.fire(
-                                    'Error',
-                                    'El navegador bloqueó la ventana emergente',
-                                    'error'
-                                );
-                            }
-
-                            const diasTranscurridos = (fecha) => {
-                                const inicio = new Date(fecha);
-                                return Math.floor(
-                                    (Date.now() - inicio.getTime()) / 86400000
-                                );
-                            };
-
-                            const formatoMoneda = (valor) =>
-                                `$${parseFloat(valor || 0).toFixed(2)}`;
-
-                            // SOLO FILAS
-                            const filas = expediente.map(v => `
-            <tr>
-            <td>   <small style="font-size:7px;color:#6c757d;">vencio hace: ${diasTranscurridos(v.fecha)} días</small>
-              </td>
-                <td>
-                  <small style="font-size:7px;color:#6c757d;">
-        ${new Date(v.fecha).toLocaleDateString('es-MX', {
-                                day: '2-digit',
-                                month: '2-digit',
-                                year: 'numeric'
-                            })}
-    </small>
-                   
-                  </td>
-
-                <td>${v.folio}</td>
-
-                <td style="text-align:right;">
-                    ${formatoMoneda(v.total)}
-                </td>
-
-                <td style="text-align:right;">
-                    ${formatoMoneda(v.total_pagado)}
-                </td>
-
-                <td style="text-align:right;">
-                    ${formatoMoneda(
-                                (parseFloat(v.total) || 0) -
-                                (parseFloat(v.total_pagado) || 0)
-                            )}
-                </td>
-            </tr>
-        `).join('');
-
-                            const doc = `
-        <html>
-        <head>
-            <title>Estado de Cuenta</title>
-      <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
-
-    <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
-
-            <style>
-                body{
-                    font-family:Arial,sans-serif;
-                    font-size:10px;
-                    padding:20px;
-                }
-
-                table{
-                    border-collapse:collapse;
-                    width:100%;
-                }
-
-                th,td{
-                    border:1px solid #ccc;
-                    padding:8px;
-                    font-size:8px;
-                }
-
-                th{
-                    background:#f3f4f6;
-                }
-            </style>
-        </head>
-
-        <body>
-          <img
-    src="/cfsistem/public/assets/logo.ico"
-    style="
-        position: fixed;
-        top: 19.5%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 180px;
-        opacity: 0.08;
-        z-index: -1;
-    "
->
-      
-            <div style="
-                border-bottom:2px solid #007aff;
-                padding-bottom:12px;
-                margin-bottom:20px;
-            ">
-                <h1 style="margin:0; color: #007aff">
-                    ESTADO DE CUENTA
-                </h1> <h2 style="margin:0;color:#1f2937;">
-                    ${cliente.nombre_comercial}
-                </h2>
-
-                <p style="margin:4px 0;color:#6b7280;">
-                    RFC:
-                    <b>${cliente.rfc || ''}</b>
-                </p>
-
-                <p style="margin:4px 0;color:#6b7280;">
-                    Dirección:
-                    <b>${cliente.direccion || ''}</b>
-                </p>
-            </div>
-
-            <div style="
-                display:flex;
-                gap:10px;
-                margin-bottom:20px;
-            ">
-
-                <div style="
-                    flex:1;
-                    background:#f3f4f6;
-                    border-left:4px solid #3b82f6;
-                    padding:10px;
-                    border-radius:8px;
-                ">
-                    <div style="font-size:10px;color:#6b7280;">
-                        TOTAL COMPRADO
-                    </div>
-
-                    <div style="font-size:16px;font-weight:bold;">
-                        $${(resumen.total_comprado || 0)
-                                    .toLocaleString('es-MX', { minimumFractionDigits: 2 })}
                     </div>
                 </div>
-
-                <div style="
-                    flex:1;
-                    background:#f3f4f6;
-                    border-left:4px solid #10b981;
-                    padding:10px;
-                    border-radius:8px;
-                ">
-                    <div style="font-size:10px;color:#6b7280;">
-                        TOTAL PAGADO
-                    </div>
-
-                    <div style="font-size:16px;font-weight:bold;">
-                        $${(resumen.total_pagado || 0)
-                                    .toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                    </div>
-                </div>
-
-                <div style="
-                    flex:1;
-                    background:#f3f4f6;
-                    border-left:4px solid #ef4444;
-                    padding:10px;
-                    border-radius:8px;
-                ">
-                    <div style="font-size:10px;color:#6b7280;">
-                        SALDO
-                    </div>
-
-                    <div style="font-size:16px;font-weight:bold;">
-                        $${(resumen.saldo_total || 0)
-                                    .toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                    </div>
-                </div>
-
             </div>
-
-            <div style="
-            
-                border:1px solid #e5e7eb;
-                border-radius:10px;
-                overflow:hidden;
-                background:#fff;
-            ">
-
-                <table cellpadding="6" cellspacing="0" style="width:60%; margin:0 auto;">
-                    <thead>
-                        <tr>
-                        <th style="text-align:left;">Dias vencidos</th>
-                            <th style="text-align:left;">Fecha</th>
-                            <th style="text-align:left;">Folio de venta</th>
-                            <th style="text-align:right;">Total Compra</th>
-                            <th style="text-align:right;">Abono</th>
-                            <th style="text-align:right;">Saldo</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        ${filas}
-                    </tbody>
-                </table>
-
-            </div>
-
-        </body>
-        </html>
-        `;
-
-                            w.document.write(doc);
-                            w.document.close();
-
-                            w.onload = () => {
-                                w.print();
-                            };
-
-                        } catch (error) {
-                            console.error(error);
-
-                            Swal.fire(
-                                'Error',
-                                'Ocurrió un error al generar el estado de cuenta',
-                                'error'
-                            );
-                        }
-                    }
-                </script>
-                <script>
-                    function filtrarExpediente() {
-                        const fechaInicio = document.getElementById('fecha_inicio').value;
-                        const fechaFin = document.getElementById('fecha_fin').value;
-
-                        const urlParams = new URLSearchParams(window.location.search);
-
-                        const id = $('#cliente_id_editar').val();
-                        //urlParams.get('id');
-
-                        console.log("ID:", id);
-
-                        // REDIRECCIÓN
-                        window.location.href =
-                            `/cfsistem/app/controllers/clienteExpedienteController.php?id=${id}&fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
-
-
-                    }
-                </script>
-                <script>
-                    async function verDetalle(id) {
-                        console.log(id);
-                        let venta = parseInt(id);
-                        try {
-                            // 🔥 OBTENER IDS PENDIENTES
-                            const respIds = await fetch(
-                                `/cfsistem/app/controllers/accesoController.php?action=get_ids_pendientes_venta&venta_id=${id}`
-                            );
-                            const resNAlmacen = await fetch(
-                                `/cfsistem/app/controllers/accesoController.php?action=obtener_id_almacen&id=${id}`
-                            );
-
-                            const dataAlmacen = await resNAlmacen.json();
-                            const almacen_id_conseguido = dataAlmacen.almacen.almacen_id;
-                            console.log(dataAlmacen.almacen.almacen_id);
-
-                            const dataIds = await respIds.json();
-                            console.log(dataIds.ids);
-
-                            // =====================================================
-                            // 🔥 HABILITAR / DESHABILITAR BOTÓN GESTIÓN
-                            // =====================================================
-                            if (Array.isArray(dataIds.ids) && dataIds.ids.length > 0) {
-                                console.log('hola');
-                                $('#btnGestionVenta')
-                                    .removeClass('d-none')
-                                    .prop('disabled', false)
-                                    .attr(
-                                        'onclick',
-                                        `abrirModalDespachoVentaTotal(${id}, ${almacen_id_conseguido})`
-                                    );
-                            } else {
-                                $('#btnGestionVenta')
-                                    .addClass('d-none')
-                                    .prop('disabled', true)
-                                    .removeAttr('onclick');
-                            }
-
-                            const res = await fetch(`/cfsistem/app/controllers/historialPedidosVendedorController.php?action=obtenerDetalle&id=${id}`);
-                            cargarRepartos(id);
-                            const data = await res.json();
-
-
-
-                            $('#spanFolio').text(data.info.folio);
-                            $('#detCliente').text(data.info.nombre_comercial);
-                            $('#detAlmacen').text(data.info.almacen);
-
-                            // =====================================================
-                            // CORRECCIÓN: PRIMERO INYECTAMOS EL BOTÓN EN EL DOM
-                            // =====================================================
-                            const htmlboton = `
-            <button id="btnAbonar"
-                class="btn btn-primary w-100 fw-bold shadow-sm"
-                onclick="abrirNuevoAbono(${id})">
-                <i class="bi bi-cash-coin me-1"></i> Registrar Abono
-            </button>
-        `;
-                            $('#boton').html(htmlboton);
-
-                            // =====================================================
-                            // AHORA QUE EXISTE, VALIDAMOS EL SALDO Y SU VISIBILIDAD
-                            // =====================================================
-                            const total = parseFloat(data.info.total) || 0;
-                            const pagado = parseFloat(data.info.total_pagado) || 0;
-                            const deuda = total - pagado;
-                            $('#detTotalLabel').text('$' + total.toFixed(2));
-
-                            if (deuda <= 0) {
-                                $('#detSaldoLabel').text('LIQUIDADO').removeClass('text-danger').addClass('text-success');
-                                $('#btnAbonar').addClass('d-none'); // <-- Ya funciona porque el botón ya existe
-                            } else {
-                                $('#detSaldoLabel').text('$' + deuda.toFixed(2)).removeClass('text-success').addClass('text-danger');
-                                $('#btnAbonar').removeClass('d-none');
-                            }
-
-                            // --- RENDERIZADO DE PRODUCTOS CON CONVERSIÓN ---
-                            $('#tbodyDetalle').html(data.productos.map(p => {
-                                let cant = parseFloat(p.cantidad) || 0;
-                                let pendiente = (cant - (parseFloat(p.cantidad_entregada) || 0)).toFixed(3);
-
-                                let factor = parseFloat(p.factor_conversion) || 1;
-                                let cantPendiente = pendiente / factor;
-
-                                let pen = Number(pendiente);
-                                let pendi = Number(cantPendiente);
-                                let disponible = (p.disponible / factor);
-                                console.log(disponible);
-                                let entregada = p.cantidad_entregada / factor;
-
-                                console.log({
-                                    pen,
-                                    tipo: typeof pen,
-                                    comparacion: pen > 0
-                                });
-
-                                let visualizacionVenta = "";
-                                let infoEquivalenciaSub = "";
-                                let unm = (parseFloat(p.cantidad_entregada) / (1 / parseFloat(p.equivalencia)));
-                                console.log(unm);
-                                unm = unm % 1 !== 0 ? unm.toFixed(0) : unm;
-
-                                if (factor > 1 && cant >= factor) {
-                                    let unidadesMayores = (cant / factor);
-                                    let totalUnidadesStr = Number.isInteger(unidadesMayores) ? unidadesMayores : unidadesMayores.toFixed(2);
-
-                                    visualizacionVenta = `<span class="fw-bold">${totalUnidadesStr} ${p.unidad_reporte}</span> <br> <small class="text-body-secondary">(${cant} ${p.unidad_medida})</small>`;
-                                    infoEquivalenciaSub = `<div class="text-body-secondary small" style="font-size: 0.65rem;">1 ${p.unidad_reporte} = ${factor} ${p.unidad_medida}</div>`;
-                                } else {
-                                    visualizacionVenta = `<span>${cant} ${p.unidad_medida}</span>`;
-                                }
-
-                                return `<tr>
-                <td>
-                    <div class="fw-bold text-dark">${p.producto}</div>
-                    ${infoEquivalenciaSub}
-                </td>
-                <td class="text-center">
-                    ${cant} ${p.unidad_medida} 
-                    (${p.equivalencia >= 1 ? cant / (1 / p.equivalencia).toFixed(2) : (cant * (p.equivalencia)).toFixed(2)} ${p.nombre})
-                </td>
-                <td class="text-center">${entregada > 1 ? entregada + p.unidad_reporte : p.cantidad_entregada + p.unidad_medida}</td>
-                <td class="text-center text-danger fw-bold">${(cantPendiente >= 1 ? cantPendiente.toFixed(3) : pen)} ${cantPendiente >= 1 ? p.unidad_reporte : p.unidad_medida}</td>
-                <td class="text-center col-input d-none">
-                    ${pen.toFixed(4) > 0 ?
-                                        `<input type="number"
-                            class="form-control form-control-sm input-entrega1 mx-auto"
-                            max="${pen <= p.disponible ? (pendi >= 1 ? pendi : pen) : (disponible > 1 ? disponible : p.disponible)}"
-                            min="0"
-                            step="0.01"
-                            value="0.00"
-                            data-dvid="${p.dvid}"
-                            data-id="${p.producto_id}"
-                            data-factor="${(pendi >= 1 && disponible >= 1) ? factor : 1}"
-                            style="width:70px">
-                        <input type="hidden" class="form-control form-control-sm input-entrega mx-auto" 
-                            value="0" data-dvid=${p.dvid} data-id="${p.producto_id}" style="width:70px" step="0.01" min="0">
-                        <span class="badge bg-success">${(pendi >= 1 && disponible >= 1) ? p.unidad_reporte : p.unidad_medida}</span>`
-                                        : '<span class="badge bg-success">Completo</span>'}
-                </td>
-            </tr>`;
-                            }).join(''));
-
-                            // --- RENDERIZADO DE HISTORIAL DE ENTREGAS ---
-                            $('#tbodyHistorial').html(data.historial && data.historial.length > 0 ? data.historial.map(h => {
-                                let cantH = parseFloat(h.cantidad) || 0;
-                                let factorH = parseFloat(h.factor_conversion) || 1;
-                                let uReporteH = h.unidad_reporte || '';
-                                let uMedidaH = h.unidad_medida || '';
-                                let visualizacionHistorial = "";
-
-                                if (factorH > 1 && cantH >= factorH) {
-                                    let unidadesMayoresH = (cantH / factorH);
-                                    let totalUnidadesStrH = Number.isInteger(unidadesMayoresH) ? unidadesMayoresH : unidadesMayoresH.toFixed(2);
-                                    visualizacionHistorial = `<span class="fw-bold text-primary">${totalUnidadesStrH} ${uReporteH}</span><br><small class="text-body-secondary">(${cantH} ${uMedidaH})</small>`;
-                                } else {
-                                    visualizacionHistorial = `<span>${cantH} ${uMedidaH}</span>`;
-                                }
-
-                                return `<tr>
-                    <td class="small">${h.fecha}</td>
-                    <td class="small">${h.usuario_nombre}</td>
-                    <td><div class="fw-bold" style="font-size:0.85rem;">${h.producto}</div></td>
-                    <td class="text-center">${visualizacionHistorial}</td>
-                </tr>`;
-                            }).join('') :
-                                '<tr><td colspan="4" class="text-center text-body-secondary p-3">No hay entregas registradas</td></tr>'
-                            );
-
-                            // --- RENDERIZADO DE HISTORIAL DE PAGOS ---
-                            if (data.pagos && data.pagos.length > 0) {
-                                $('#tbodyPagos').html(data.pagos.map(p => `
-                <tr>
-                    <td class="small">${p.fecha}</td>
-                    <td class="fw-bold text-success">$${parseFloat(p.monto).toFixed(2)}</td>
-                    <td>
-                        <span class="badge bg-light text-dark border fw-normal">${p.metodo_pago}</span>
-                        <div class="text-body-secondary" style="font-size:0.65rem">Recibió: ${p.usuario_nombre}</div>
-                    </td>
-                    <td>
-                     <span>
-    ${p.metodo_pago !== 'Efectivo' &&
-                                        p.metodo_pago !== 'Saldo a Favor'
-                                        ? (p.referencia ?? '')
-                                        : '-'
-                                    }
-</span> 
-                </tr>
-            `).join(''));
-                            } else {
-                                $('#tbodyPagos').html('<tr><td colspan="3" class="text-center text-body-secondary p-3">No hay abonos registrados</td></tr>');
-                            }
-
-                            const modalObj = new bootstrap.Modal('#modalDetalle');
-                            modalObj.show();
-                        } catch (error) {
-                            console.error("Error al obtener detalle:", error);
-                        }
-                    }
-                    async function cargarRepartos(idVenta) {
-
-                        const resp = await fetch(
-                            `/cfsistem/app/controllers/repartosController.php?action=get_repartos_venta&id=${idVenta}`
-                        );
-
-                        const repartoViaje = await resp.json();
-
-                        const tbody = document.getElementById('tbodyRepartos');
-                        tbody.innerHTML = '';
-
-                        if (!repartoViaje.success) return;
-
-                        // ================================
-                        // AGRUPAR POR FOLIO VIAJE
-                        // ================================
-                        const grupos = {};
-
-                        repartoViaje.data.forEach(item => {
-
-                            if (!grupos[item.folio_viaje]) {
-
-                                grupos[item.folio_viaje] = {
-                                    folio_viaje: item.folio_viaje,
-                                    fecha_viaje: item.fecha_viaje,
-                                    estatus_logistico: item.estatus_logistico,
-                                    productos: [],
-                                    clientes: new Set()
-                                };
-                            }
-
-                            grupos[item.folio_viaje].productos.push(item.productos);
-                            grupos[item.folio_viaje].clientes.add(item.cliente);
-                        });
-
-                        // ================================
-                        // RENDER TABLA
-                        // ================================
-                        Object.values(grupos).forEach(g => {
-
-                            const estadoClass =
-                                g.estatus_logistico === 'completado'
-                                    ? 'bg-success'
-                                    : 'bg-warning text-dark';
-
-                            const tr = `
-            <tr>
-
-                <td class="fw-bold">
-                    ${g.folio_viaje}
-                </td>
-
-                <td>
-                    ${g.fecha_viaje}
-                </td>
-
-                <td>
-                    <span class="badge ${estadoClass}">
-                        ${g.estatus_logistico}
-                    </span>
-                </td>
-
-                <td class="text-center">
-
-                    <button class="btn btn-sm btn-outline-primary"
-                      onclick="imprimirRuta('${idVenta}','${g.folio_viaje}')">
-
-                      
-                        Ver Reparto 
-                    </button>
-
-                </td>
-
-            </tr>
-        `;
-
-                            tbody.insertAdjacentHTML('beforeend', tr);
-                        });
-                    }
-
-                    function togglePerso() {
-                        $('#div_p').toggleClass('d-none', $('#f_rango').val() !== 'personalizado');
-                        getVentas();
-                    }
-                    function imprimirContenidoModal() {
-                        // 1. Obtener los elementos clave del modal actual
-                        const folio = $('#spanFolio').text();
-                        const cliente = $('#detCliente').text();
-                        const almacen = $('#detAlmacen').text();
-
-                        // 2. Clonar las tablas de datos para no alterar el modal visual
-                        const tablaProductos = $('#tbodyDetalle').html();
-                        const tablaEntregas = $('#tbodyHistorial').html();
-                        const tablaPagos = $('#tbodyPagos').html();
-
-                        const total = $('#detTotalLabel').text();
-                        const saldo = $('#detSaldoLabel').text();
-
-                        // 3. Crear una nueva ventana temporal en el navegador
-                        const ventanaImpresion = window.open('', '_blank');
-
-                        // 4. Inyectar el HTML estructurado con estilos limpios y profesionales
-                        ventanaImpresion.document.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>Venta - Folio ${folio}</title>
-      <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
-
-    <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
-
-            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-            <style>
-                body {font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 30px; color: #333; }
-                .ticket-header { border-bottom: 2px solid #007aff; padding-bottom: 15px; margin-bottom: 20px; }
-                .meta-box { background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 15px; }
-                .section-title { font-size: 0.85rem; font-weight: bold; text-transform: uppercase; color: #666; margin-top: 25px; margin-bottom: 10px; letter-spacing: 0.5px; }
-                .table-responsive { max-height: none !important; overflow: visible !important; }
-                .d-none { display: none !important; } /* Oculta columnas de inputs si están activas */
-                @media print {
-                    body { padding: 20px;  }
-                    .btn-imprimir { display: none; }
-                }
-                     @page { 
-                        margin: 0; /* Esto elimina el título de arriba y la fecha/hora de abajo */
-                    }
-            </style>
-        </head>
-        <body>
-         <div id="areaImpresion" class="text-uppercase  bg-white" style="min-height: 650px; font-size: 0.95rem;">
- <img
-    src="/cfsistem/public/assets/logo.ico"
-    style="
-        position: fixed;
-        top: 30%;                  /* Centro vertical */
-        left: 50%;                 /* Centro horizontal */
-        transform: translate(-50%, -50%); /* Compensa el propio tamaño de la imagen */
-        width: 240px;
-        opacity: 0.08;
-        z-index: 1;               /* Cambiado a -1 para que quede detrás del texto y no tape los clics */
-        pointer-events: none;      /* Evita que interfiera si alguien intenta hacer clic sobre ella */
-    "
->
-                        <!-- ENCABEZADO -->
-                        
-<div class=" ">
-
-    <!-- Logo + Título -->
-    <div class="">
-
-        <img src="/cfsistem/public/assets/logo.ico"
-             alt="Logo"
-             width="55"
-             height="55"
-             class="me-3">
-
-         <div class="ticket-header d-flex justify-content-between align-items-center">
-                <div>
-                    <h4 class="fw-bold m-0">CF SYSTEM</h4>
-                    <small class="text-body-secondary">Reporte de Operación de Venta</small>
-                </div>
-                <div class="text-end">
-                    <h5 class="text-primary fw-bold m-0">Folio: ${folio}</h5>
-                </div>
-            </div>
-
-            
+        </div>
     </div>
 
-  
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <?php require_once __DIR__ . '/../ventasHistorialModales/registarAbonoCliente.php' ?>
 
+    <script>
+        // ============================================================
+        // 🔹 FLAGS GLOBALES ANTI-LOOP
+        // ============================================================
+        window.__cargandoClientes = false;   // Bloquea filtrar mientras carga
+        window.__navegandoExpediente = false;   // Bloquea doble navegación
+
+        // ============================================================
+        // 🔹 CARGAR CLIENTES (con protección anti-loop)
+        // ============================================================
+        async function cargarClientes() {
+            window.__cargandoClientes = true;
+            console.log('🔓 cargarClientes() INICIO — filtros bloqueados');
+
+            const select = document.getElementById('cliente_id_editar');
+            if (!select) {
+                window.__cargandoClientes = false;
+                return;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const clienteIdUrl = urlParams.get('id');
+            console.log('[cargarClientes] ID desde URL:', clienteIdUrl);
+
+            try {
+                const url = '/cfsistem/app/controllers/accesoController.php?action=obtenerClientes';
+                const respuesta = await fetch(url);
+                if (!respuesta.ok) throw new Error('Error en la respuesta del servidor');
+
+                const resultado = await respuesta.json();
+                console.log(resultado);
+
+                if (resultado.success && Array.isArray(resultado.data)) {
+                    const clientes = resultado.data;
+                    const fragment = document.createDocumentFragment();
+
+                    const first = document.createElement('option');
+                    first.value = '';
+                    first.textContent = '-- Seleccione un cliente --';
+                    fragment.appendChild(first);
+
+                    clientes.forEach(cliente => {
+                        const opcion = document.createElement('option');
+                        opcion.value = cliente.id;
+                        opcion.textContent = String(cliente.nombre_comercial || '').toUpperCase();
+                        opcion.dataset.nombre = String(cliente.nombre_comercial || '');
+                        opcion.dataset.razonSocial = String(cliente.razon_social || '');
+                        opcion.dataset.contacto = String(cliente.contacto || '');
+                        fragment.appendChild(opcion);
+                    });
+
+                    select.replaceChildren(fragment);
+
+                    if ($(select).hasClass('select2-hidden-accessible')) {
+                        $(select).select2('destroy');
+                    }
+
+                    $(select).select2({
+                        theme: 'bootstrap-5',
+                        width: '100%',
+                        dropdownParent: $(select).parent(),
+                        matcher: function (params, data) {
+                            if (!params.term || params.term.trim() === '') return data;
+                            const term = String(params.term).toLowerCase().trim();
+                            const text = String(data.text || '').toLowerCase();
+                            const $el = $(data.element);
+                            const razonSocial = String($el.data('razonSocial') || '').toLowerCase();
+                            const contacto = String($el.data('contacto') || '').toLowerCase();
+                            if (text.includes(term) || razonSocial.includes(term) || contacto.includes(term)) {
+                                return data;
+                            }
+                            return null;
+                        },
+                        templateResult: function (state) {
+                            if (!state.id) return state.text;
+                            const $opt = $(state.element);
+                            const nombre = String($opt.data('nombre') || state.text || '');
+                            const razonSocial = String($opt.data('razonSocial') || '');
+                            const contacto = String($opt.data('contacto') || '');
+                            if (!razonSocial && !contacto) {
+                                return $(`<span class="fw-semibold">${nombre.toUpperCase()}</span>`);
+                            }
+                            return $(`
+                                <div class="d-flex flex-column">
+                                    <span class="fw-semibold">${nombre.toUpperCase()}</span>
+                                    <div class="d-flex justify-content-between align-items-center gap-2 mt-1">
+                                        <small class="text-truncate" style="max-width:65%;">${razonSocial.toUpperCase()}</small>
+                                        <small class="fw-semibold text-nowrap">${contacto ? `👤 ${contacto.toUpperCase()}` : ''}</small>
+                                    </div>
+                                </div>
+                            `);
+                        },
+                        templateSelection: function (state) {
+                            if (!state.id) return state.text;
+                            const nombre = String($(state.element).data('nombre') || state.text || '');
+                            return nombre.toUpperCase();
+                        }
+                    });
+
+                    const targetId = clienteIdUrl ? String(clienteIdUrl).trim() : null;
+
+                    if (targetId) {
+                        let coincide = false;
+                        Array.from(select.options).forEach(opt => {
+                            if (String(opt.value).trim() === targetId) coincide = true;
+                        });
+
+                        if (coincide) {
+                            // 🔑 change.select2 NO dispara handlers 'change' genéricos
+                            $(select).val(targetId).trigger('change.select2');
+                            console.log('[cargarClientes] Selección final:', $(select).val());
+                        } else {
+                            console.warn('[cargarClientes] Cliente id', targetId, 'no está en la lista.');
+                        }
+                    }
+
+                } else {
+                    select.innerHTML = '<option value="">No se pudieron cargar los usuarios</option>';
+                }
+            } catch (error) {
+                select.innerHTML = '<option value="">Error al cargar la lista</option>';
+                console.error('Error al ejecutar cargarClientes:', error);
+            } finally {
+                // 🛡️ SIEMPRE desbloquear
+                window.__cargandoClientes = false;
+                console.log('🔒 cargarClientes() FIN — filtros desbloqueados');
+            }
+        }
+
+        // 🔹 Arrancar carga de clientes
+        cargarClientes();
+
+        const modalNuevoAbonoObj = new bootstrap.Modal('#modalNuevoAbono');
+
+        let ventaActual = null;
+        const URL_CONTROLLER = '/cfsistem/app/controllers/ventasHistorialController.php';
+
+        $(document).ready(function () {
+            renderCharts();
+        });
+
+        function renderCharts() {
+            const ctx = document.getElementById('chartDona');
+            if (!ctx) return;
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    datasets: [{
+                        data: [
+                            <?= isset($resumen['total_pagado']) ? floatval($resumen['total_pagado']) : 0 ?>,
+                            <?= isset($resumen['saldo_total']) ? max(0, floatval($resumen['saldo_total'])) : 0 ?>
+                        ],
+                        backgroundColor: ['#1cc88a', '#e74a3b'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    cutout: '75%',
+                    plugins: { legend: { display: false } },
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        function abrirModalSaldarFavor(favorDisponible, deudaPendiente) {
+            const montoMaximo = Math.min(favorDisponible, deudaPendiente);
+
+            Swal.fire({
+                title: 'Compensación de Saldos',
+                icon: 'info',
+                html: `
+                    <div class="text-start border-bottom pb-2 mb-3" style="font-size: 0.9rem;">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Saldo a Favor:</span>
+                            <b class="text-success">$ ${favorDisponible.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</b>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Deuda en Contra:</span>
+                            <b class="text-danger">$ ${deudaPendiente.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</b>
+                        </div>
+                    </div>
+                    <div class="text-start">
+                        <label class="form-label fw-bold small">Monto a compensar:</label>
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" id="monto_cruce" class="form-control form-control-lg fw-bold"
+                                   value="${montoMaximo.toFixed(2)}"
+                                   max="${montoMaximo}" min="0.01" step="0.01">
+                        </div>
+                        <p class="text-body-secondary mt-2" style="font-size: 0.75rem;">
+                            <i class="bi bi-info-circle"></i> Este ajuste restará el monto de ambas cuentas para limpiar el historial del cliente.
+                        </p>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonText: 'Aplicar Ajuste',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#f6c23e',
+                reverseButtons: true,
+                preConfirm: () => {
+                    const monto = document.getElementById('monto_cruce').value;
+                    if (!monto || monto <= 0 || monto > montoMaximo) {
+                        Swal.showValidationMessage(`Monto inválido. Máximo permitido: $${montoMaximo.toFixed(2)}`);
+                    }
+                    return monto;
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    procesarAjusteContable(result.value);
+                }
+            });
+        }
+
+        function procesarAjusteContable(monto) {
+            Swal.fire({
+                title: 'Procesando ajuste...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            $.post('/cfsistem/app/controllers/clienteExpedienteController.php', {
+                accion: 'saldar_deuda_con_favor',
+                id_cliente: <?= json_encode($id_cliente ?? 0) ?>,
+                monto_a_usar: monto
+            }, function (res) {
+                if (res.status === 'success') {
+                    Swal.fire({
+                        title: '¡Éxito!',
+                        text: res.message,
+                        icon: 'success',
+                        confirmButtonColor: '#007aff'
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Error', res.message || 'Error al procesar el ajuste.', 'error');
+                }
+            }, 'json').fail(function () {
+                Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
+            });
+        }
+    </script>
+
+    <script>
+        async function imprimirEstadoCuenta() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                const id = params.get('id');
+
+                const fechaInicio = document.getElementById('fecha_inicio')?.value || '';
+                const fechaFin = document.getElementById('fecha_fin')?.value || '';
+
+                const res = await fetch(
+                    `/cfsistem/app/controllers/clienteExpedienteController.php?action=getEstadoCuentaCliente&id_cliente=${id}&fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`
+                );
+
+                const data = await res.json();
+
+                if (data?.status !== 'success') {
+                    return Swal.fire('Error', 'No se pudo cargar el estado de cuenta', 'error');
+                }
+
+                const { cliente, expediente = [], resumen = {} } = data;
+
+                const w = window.open('', '_blank', 'width=1100,height=700');
+                if (!w) {
+                    return Swal.fire('Error', 'El navegador bloqueó la ventana emergente', 'error');
+                }
+
+                const diasTranscurridos = (fecha) => {
+                    const inicio = new Date(fecha);
+                    return Math.floor((Date.now() - inicio.getTime()) / 86400000);
+                };
+
+                const formatoMoneda = (valor) => `$${parseFloat(valor || 0).toFixed(2)}`;
+
+                const filas = expediente.map(v => `
+                    <tr>
+                        <td><small style="font-size:7px;color:#6c757d;">vencio hace: ${diasTranscurridos(v.fecha)} días</small></td>
+                        <td>
+                            <small style="font-size:7px;color:#6c757d;">
+                                ${new Date(v.fecha).toLocaleDateString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+                            </small>
+                        </td>
+                        <td>${v.folio}</td>
+                        <td style="text-align:right;">${formatoMoneda(v.total)}</td>
+                        <td style="text-align:right;">${formatoMoneda(v.total_pagado)}</td>
+                        <td style="text-align:right;">${formatoMoneda((parseFloat(v.total) || 0) - (parseFloat(v.total_pagado) || 0))}</td>
+                    </tr>
+                `).join('');
+
+                const doc = `
+                <html>
+                <head>
+                    <title>Estado de Cuenta</title>
+                    <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
+                    <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
+                    <style>
+                        body { font-family:Arial,sans-serif; font-size:10px; padding:20px; }
+                        table { border-collapse:collapse; width:100%; }
+                        th,td { border:1px solid #ccc; padding:8px; font-size:8px; }
+                        th { background:#f3f4f6; }
+                    </style>
+                </head>
+                <body>
+                    <img src="/cfsistem/public/assets/logo.ico"
+                        style="position: fixed; top: 19.5%; left: 50%; transform: translate(-50%, -50%);
+                               width: 180px; opacity: 0.08; z-index: -1;">
+                    <div style="border-bottom:2px solid #007aff; padding-bottom:12px; margin-bottom:20px;">
+                        <h1 style="margin:0; color: #007aff">ESTADO DE CUENTA</h1>
+                        <h2 style="margin:0;color:#1f2937;">${cliente.nombre_comercial}</h2>
+                        <p style="margin:4px 0;color:#6b7280;">RFC: <b>${cliente.rfc || ''}</b></p>
+                        <p style="margin:4px 0;color:#6b7280;">Dirección: <b>${cliente.direccion || ''}</b></p>
+                    </div>
+                    <div style="display:flex; gap:10px; margin-bottom:20px;">
+                        <div style="flex:1; background:#f3f4f6; border-left:4px solid #3b82f6; padding:10px; border-radius:8px;">
+                            <div style="font-size:10px;color:#6b7280;">TOTAL COMPRADO</div>
+                            <div style="font-size:16px;font-weight:bold;">
+                                $${(resumen.total_comprado || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                            </div>
+                        </div>
+                        <div style="flex:1; background:#f3f4f6; border-left:4px solid #10b981; padding:10px; border-radius:8px;">
+                            <div style="font-size:10px;color:#6b7280;">TOTAL PAGADO</div>
+                            <div style="font-size:16px;font-weight:bold;">
+                                $${(resumen.total_pagado || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                            </div>
+                        </div>
+                        <div style="flex:1; background:#f3f4f6; border-left:4px solid #ef4444; padding:10px; border-radius:8px;">
+                            <div style="font-size:10px;color:#6b7280;">SALDO</div>
+                            <div style="font-size:16px;font-weight:bold;">
+                                $${(resumen.saldo_total || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                            </div>
+                        </div>
+                    </div>
+                    <div style="border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; background:#fff;">
+                        <table cellpadding="6" cellspacing="0" style="width:60%; margin:0 auto;">
+                            <thead>
+                                <tr>
+                                    <th style="text-align:left;">Dias vencidos</th>
+                                    <th style="text-align:left;">Fecha</th>
+                                    <th style="text-align:left;">Folio de venta</th>
+                                    <th style="text-align:right;">Total Compra</th>
+                                    <th style="text-align:right;">Abono</th>
+                                    <th style="text-align:right;">Saldo</th>
+                                </tr>
+                            </thead>
+                            <tbody>${filas}</tbody>
+                        </table>
+                    </div>
+                </body>
+                </html>
+                `;
+
+                w.document.write(doc);
+                w.document.close();
+                w.onload = () => { w.print(); };
+
+            } catch (error) {
+                console.error(error);
+                Swal.fire('Error', 'Ocurrió un error al generar el estado de cuenta', 'error');
+            }
+        }
+    </script>
+
+    <script>
+        // ============================================================
+        // 🔹 FILTRAR EXPEDIENTE (con protección anti-loop)
+        // ============================================================
+        function filtrarExpediente() {
+            // 🛡️ Capa 1: bloquea si cargarClientes está corriendo
+            if (window.__cargandoClientes) {
+                console.log('⏸️ filtrarExpediente() bloqueado: cargarClientes en curso');
+                return;
+            }
+
+            // 🛡️ Capa 2: bloquea si ya estamos navegando
+            if (window.__navegandoExpediente) {
+                console.log('⏸️ filtrarExpediente() bloqueado: navegación en curso');
+                return;
+            }
+
+            const fechaInicio = document.getElementById('fecha_inicio').value;
+            const fechaFin = document.getElementById('fecha_fin').value;
+            const id = $('#cliente_id_editar').val();
+
+            if (!id) {
+                Swal.fire('Sin cliente', 'Selecciona un cliente antes de filtrar', 'warning');
+                return;
+            }
+
+            const targetUrl = `/cfsistem/app/controllers/clienteExpedienteController.php?id=${id}&fecha_inicio=${fechaInicio}&fecha_fin=${fechaFin}`;
+            const currentUrl = window.location.pathname + window.location.search;
+
+            // 🛡️ Capa 3: si la URL destino es igual a la actual, no navegar
+            if (currentUrl === targetUrl) {
+                console.log('✅ Misma URL, no se requiere recarga');
+                return;
+            }
+
+            window.__navegandoExpediente = true;
+            console.log('🔀 Navegando a:', targetUrl);
+            window.location.href = targetUrl;
+        }
+    </script>
+
+    <script>
+        async function verDetalle(id) {
+            console.log(id);
+            let venta = parseInt(id);
+            try {
+                const respIds = await fetch(
+                    `/cfsistem/app/controllers/accesoController.php?action=get_ids_pendientes_venta&venta_id=${id}`
+                );
+                const resNAlmacen = await fetch(
+                    `/cfsistem/app/controllers/accesoController.php?action=obtener_id_almacen&id=${id}`
+                );
+
+                const dataAlmacen = await resNAlmacen.json();
+                const almacen_id_conseguido = dataAlmacen.almacen.almacen_id;
+                console.log(dataAlmacen.almacen.almacen_id);
+
+                const dataIds = await respIds.json();
+                console.log(dataIds.ids);
+
+                if (Array.isArray(dataIds.ids) && dataIds.ids.length > 0) {
+                    console.log('hola');
+                    $('#btnGestionVenta')
+                        .removeClass('d-none')
+                        .prop('disabled', false)
+                        .attr('onclick', `abrirModalDespachoVentaTotal(${id}, ${almacen_id_conseguido})`);
+                } else {
+                    $('#btnGestionVenta')
+                        .addClass('d-none')
+                        .prop('disabled', true)
+                        .removeAttr('onclick');
+                }
+
+                const res = await fetch(`/cfsistem/app/controllers/historialPedidosVendedorController.php?action=obtenerDetalle&id=${id}`);
+                cargarRepartos(id);
+                const data = await res.json();
+
+                $('#spanFolio').text(data.info.folio);
+                $('#detCliente').text(data.info.nombre_comercial);
+                $('#detAlmacen').text(data.info.almacen);
+
+                const htmlboton = `
+                    <button id="btnAbonar"
+                        class="btn btn-primary w-100 fw-bold shadow-sm"
+                        onclick="abrirNuevoAbono(${id})">
+                        <i class="bi bi-cash-coin me-1"></i> Registrar Abono
+                    </button>
+                `;
+                $('#boton').html(htmlboton);
+
+                const total = parseFloat(data.info.total) || 0;
+                const pagado = parseFloat(data.info.total_pagado) || 0;
+                const deuda = total - pagado;
+                $('#detTotalLabel').text('$' + total.toFixed(2));
+
+                if (deuda <= 0) {
+                    $('#detSaldoLabel').text('LIQUIDADO').removeClass('text-danger').addClass('text-success');
+                    $('#btnAbonar').addClass('d-none');
+                } else {
+                    $('#detSaldoLabel').text('$' + deuda.toFixed(2)).removeClass('text-success').addClass('text-danger');
+                    $('#btnAbonar').removeClass('d-none');
+                }
+
+                $('#tbodyDetalle').html(data.productos.map(p => {
+                    let cant = parseFloat(p.cantidad) || 0;
+                    let pendiente = (cant - (parseFloat(p.cantidad_entregada) || 0)).toFixed(3);
+
+                    let factor = parseFloat(p.factor_conversion) || 1;
+                    let cantPendiente = pendiente / factor;
+
+                    let pen = Number(pendiente);
+                    let pendi = Number(cantPendiente);
+                    let disponible = (p.disponible / factor);
+                    let entregada = p.cantidad_entregada / factor;
+
+                    let visualizacionVenta = "";
+                    let infoEquivalenciaSub = "";
+                    let unm = (parseFloat(p.cantidad_entregada) / (1 / parseFloat(p.equivalencia)));
+                    unm = unm % 1 !== 0 ? unm.toFixed(0) : unm;
+
+                    if (factor > 1 && cant >= factor) {
+                        let unidadesMayores = (cant / factor);
+                        let totalUnidadesStr = Number.isInteger(unidadesMayores) ? unidadesMayores : unidadesMayores.toFixed(2);
+                        visualizacionVenta = `<span class="fw-bold">${totalUnidadesStr} ${p.unidad_reporte}</span> <br> <small class="text-body-secondary">(${cant} ${p.unidad_medida})</small>`;
+                        infoEquivalenciaSub = `<div class="text-body-secondary small" style="font-size: 0.65rem;">1 ${p.unidad_reporte} = ${factor} ${p.unidad_medida}</div>`;
+                    } else {
+                        visualizacionVenta = `<span>${cant} ${p.unidad_medida}</span>`;
+                    }
+
+                    return `<tr>
+                        <td>
+                            <div class="fw-bold text-dark">${p.producto}</div>
+                            ${infoEquivalenciaSub}
+                        </td>
+                        <td class="text-center">
+                            ${cant} ${p.unidad_medida}
+                            (${p.equivalencia >= 1 ? cant / (1 / p.equivalencia).toFixed(2) : (cant * (p.equivalencia)).toFixed(2)} ${p.nombre})
+                        </td>
+                        <td class="text-center">${entregada > 1 ? entregada + p.unidad_reporte : p.cantidad_entregada + p.unidad_medida}</td>
+                        <td class="text-center text-danger fw-bold">${(cantPendiente >= 1 ? cantPendiente.toFixed(3) : pen)} ${cantPendiente >= 1 ? p.unidad_reporte : p.unidad_medida}</td>
+                        <td class="text-center col-input d-none">
+                            ${pen.toFixed(4) > 0 ?
+                            `<input type="number"
+                                    class="form-control form-control-sm input-entrega1 mx-auto"
+                                    max="${pen <= p.disponible ? (pendi >= 1 ? pendi : pen) : (disponible > 1 ? disponible : p.disponible)}"
+                                    min="0"
+                                    step="0.01"
+                                    value="0.00"
+                                    data-dvid="${p.dvid}"
+                                    data-id="${p.producto_id}"
+                                    data-factor="${(pendi >= 1 && disponible >= 1) ? factor : 1}"
+                                    style="width:70px">
+                                <input type="hidden" class="form-control form-control-sm input-entrega mx-auto"
+                                    value="0" data-dvid=${p.dvid} data-id="${p.producto_id}" style="width:70px" step="0.01" min="0">
+                                <span class="badge bg-success">${(pendi >= 1 && disponible >= 1) ? p.unidad_reporte : p.unidad_medida}</span>`
+                            : '<span class="badge bg-success">Completo</span>'}
+                        </td>
+                    </tr>`;
+                }).join(''));
+
+                $('#tbodyHistorial').html(data.historial && data.historial.length > 0 ? data.historial.map(h => {
+                    let cantH = parseFloat(h.cantidad) || 0;
+                    let factorH = parseFloat(h.factor_conversion) || 1;
+                    let uReporteH = h.unidad_reporte || '';
+                    let uMedidaH = h.unidad_medida || '';
+                    let visualizacionHistorial = "";
+
+                    if (factorH > 1 && cantH >= factorH) {
+                        let unidadesMayoresH = (cantH / factorH);
+                        let totalUnidadesStrH = Number.isInteger(unidadesMayoresH) ? unidadesMayoresH : unidadesMayoresH.toFixed(2);
+                        visualizacionHistorial = `<span class="fw-bold text-primary">${totalUnidadesStrH} ${uReporteH}</span><br><small class="text-body-secondary">(${cantH} ${uMedidaH})</small>`;
+                    } else {
+                        visualizacionHistorial = `<span>${cantH} ${uMedidaH}</span>`;
+                    }
+
+                    return `<tr>
+                        <td class="small">${h.fecha}</td>
+                        <td class="small">${h.usuario_nombre}</td>
+                        <td><div class="fw-bold" style="font-size:0.85rem;">${h.producto}</div></td>
+                        <td class="text-center">${visualizacionHistorial}</td>
+                    </tr>`;
+                }).join('') :
+                    '<tr><td colspan="4" class="text-center text-body-secondary p-3">No hay entregas registradas</td></tr>'
+                );
+
+                if (data.pagos && data.pagos.length > 0) {
+                    $('#tbodyPagos').html(data.pagos.map(p => `
+                        <tr>
+                            <td class="small">${p.fecha}</td>
+                            <td class="fw-bold text-success">$${parseFloat(p.monto).toFixed(2)}</td>
+                            <td>
+                                <span class="badge bg-light text-dark border fw-normal">${p.metodo_pago}</span>
+                                <div class="text-body-secondary" style="font-size:0.65rem">Recibió: ${p.usuario_nombre}</div>
+                            </td>
+                            <td>
+                                <span>
+                                    ${p.metodo_pago !== 'Efectivo' && p.metodo_pago !== 'Saldo a Favor' ? (p.referencia ?? '') : '-'}
+                                </span>
+                            </td>
+                        </tr>
+                    `).join(''));
+                } else {
+                    $('#tbodyPagos').html('<tr><td colspan="3" class="text-center text-body-secondary p-3">No hay abonos registrados</td></tr>');
+                }
+
+                const modalObj = new bootstrap.Modal('#modalDetalle');
+                modalObj.show();
+            } catch (error) {
+                console.error("Error al obtener detalle:", error);
+            }
+        }
+
+        async function cargarRepartos(idVenta) {
+            const resp = await fetch(
+                `/cfsistem/app/controllers/repartosController.php?action=get_repartos_venta&id=${idVenta}`
+            );
+
+            const repartoViaje = await resp.json();
+            const tbody = document.getElementById('tbodyRepartos');
+            tbody.innerHTML = '';
+
+            if (!repartoViaje.success) return;
+
+            const grupos = {};
+
+            repartoViaje.data.forEach(item => {
+                if (!grupos[item.folio_viaje]) {
+                    grupos[item.folio_viaje] = {
+                        folio_viaje: item.folio_viaje,
+                        fecha_viaje: item.fecha_viaje,
+                        estatus_logistico: item.estatus_logistico,
+                        productos: [],
+                        clientes: new Set()
+                    };
+                }
+                grupos[item.folio_viaje].productos.push(item.productos);
+                grupos[item.folio_viaje].clientes.add(item.cliente);
+            });
+
+            Object.values(grupos).forEach(g => {
+                const estadoClass = g.estatus_logistico === 'completado'
+                    ? 'bg-success'
+                    : 'bg-warning text-dark';
+
+                const tr = `
+                    <tr>
+                        <td class="fw-bold">${g.folio_viaje}</td>
+                        <td>${g.fecha_viaje}</td>
+                        <td><span class="badge ${estadoClass}">${g.estatus_logistico}</span></td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-outline-primary"
+                                onclick="imprimirRuta('${idVenta}','${g.folio_viaje}')">
+                                Ver Reparto
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tbody.insertAdjacentHTML('beforeend', tr);
+            });
+        }
+
+        function togglePerso() {
+            $('#div_p').toggleClass('d-none', $('#f_rango').val() !== 'personalizado');
+            getVentas();
+        }
+
+        function imprimirContenidoModal() {
+            const folio = $('#spanFolio').text();
+            const cliente = $('#detCliente').text();
+            const almacen = $('#detAlmacen').text();
+
+            const tablaProductos = $('#tbodyDetalle').html();
+            const tablaEntregas = $('#tbodyHistorial').html();
+            const tablaPagos = $('#tbodyPagos').html();
+
+            const total = $('#detTotalLabel').text();
+            const saldo = $('#detSaldoLabel').text();
+
+            const ventanaImpresion = window.open('', '_blank');
+
+            ventanaImpresion.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Venta - Folio ${folio}</title>
+                    <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
+                    <link rel="shortcut icon" href="/cfsistem/public/assets/logo.ico" type="image/x-icon">
+                    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+                    <style>
+                        body {font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 30px; color: #333; }
+                        .ticket-header { border-bottom: 2px solid #007aff; padding-bottom: 15px; margin-bottom: 20px; }
+                        .meta-box { background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 15px; }
+                        .section-title { font-size: 0.85rem; font-weight: bold; text-transform: uppercase; color: #666; margin-top: 25px; margin-bottom: 10px; letter-spacing: 0.5px; }
+                        .table-responsive { max-height: none !important; overflow: visible !important; }
+                        .d-none { display: none !important; }
+                        @media print {
+                            body { padding: 20px; }
+                            .btn-imprimir { display: none; }
+                        }
+                        @page { margin: 0; }
+                    </style>
+                </head>
+                <body>
+                    <div id="areaImpresion" class="text-uppercase bg-white" style="min-height: 650px; font-size: 0.95rem;">
+                        <img src="/cfsistem/public/assets/logo.ico"
+                            style="position: fixed; top: 30%; left: 50%; transform: translate(-50%, -50%);
+                                   width: 240px; opacity: 0.08; z-index: 1; pointer-events: none;">
+                        <div>
+                            <div>
+                                <img src="/cfsistem/public/assets/logo.ico" alt="Logo" width="55" height="55" class="me-3">
+                                <div class="ticket-header d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h4 class="fw-bold m-0">CF SYSTEM</h4>
+                                        <small class="text-body-secondary">Reporte de Operación de Venta</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <h5 class="text-primary fw-bold m-0">Folio: ${folio}</h5>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="row g-3">
-                <div class="col-6">
-                    <div class="meta-box">
-                        <small class="text-body-secondary d-block text-uppercase fw-semibold" style="font-size:0.7rem;">Cliente</small>
-                        <span class="fw-bold">${cliente}</span>
-                    </div>
-                </div>
-                <div class="col-6">
-                    <div class="meta-box">
-                        <small class="text-body-secondary d-block text-uppercase fw-semibold" style="font-size:0.7rem;">Almacén Origen</small>
-                        <span class="fw-bold">${almacen}</span>
-                    </div>
-                </div>
-            </div>
-<div class="section-title">📦 Productos</div>
-            <div class="table-responsive" style="max-height: 180px;">
-                                <table class="table table-sm align-middle mb-0">
-                                    <thead class="table-light">
-                                        <tr class="small text-uppercase">
-                                            <th>Producto</th>
-                                            <th class="text-center">Venta</th>
-                                            <th class="text-center">Surtido</th>
-                                            <th class="text-center text-danger">Falta</th>
-                                            <th class="text-center d-none">Entrega</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody >${tablaProductos}</tbody>
-                                </table>
+                            <div class="col-6">
+                                <div class="meta-box">
+                                    <small class="text-body-secondary d-block text-uppercase fw-semibold" style="font-size:0.7rem;">Cliente</small>
+                                    <span class="fw-bold">${cliente}</span>
+                                </div>
                             </div>
+                            <div class="col-6">
+                                <div class="meta-box">
+                                    <small class="text-body-secondary d-block text-uppercase fw-semibold" style="font-size:0.7rem;">Almacén Origen</small>
+                                    <span class="fw-bold">${almacen}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="section-title">📦 Productos</div>
+                        <div class="table-responsive" style="max-height: 180px;">
+                            <table class="table table-sm align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr class="small text-uppercase">
+                                        <th>Producto</th>
+                                        <th class="text-center">Venta</th>
+                                        <th class="text-center">Surtido</th>
+                                        <th class="text-center text-danger">Falta</th>
+                                        <th class="text-center d-none">Entrega</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${tablaProductos}</tbody>
+                            </table>
+                        </div>
                         <div class="row g-3 py-5">
-
                             <div class="col-12">
                                 <div class="card border-0 shadow-sm">
                                     <div class="card-header bg-white fw-bold small text-uppercase text-body-secondary">
@@ -1479,9 +1207,7 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <div class="col-12  d-none">
-                           
+                            <div class="col-12 d-none">
                                 <div class="card border-0 shadow-sm">
                                     <div class="card-header bg-white fw-bold small text-uppercase text-body-secondary">
                                         Historial de Entregas
@@ -1496,74 +1222,55 @@
                                                     <th class="text-center">Cant</th>
                                                 </tr>
                                             </thead>
-                                            <tbody ">${tablaEntregas}</tbody>
+                                            <tbody>${tablaEntregas}</tbody>
                                         </table>
                                     </div>
                                 </div>
                             </div>
-            
-            
-
-            <div class="row justify-content-end mt-4">
-                <div class="col-5">
-                    <table class="table table-sm table-borderless border-top pt-2">
-                        <tr>
-                            <td class="text-end text-body-secondary">Total Venta:</td>
-                            <td class="text-end fw-bold">${total}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-end text-body-secondary">Saldo Pendiente:</td>
-                            <td class="text-end fw-bold text-danger">${saldo}</td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-
-
-</div>
-                       
-
-                        
-
+                        </div>
+                        <div class="row justify-content-end mt-4">
+                            <div class="col-5">
+                                <table class="table table-sm table-borderless border-top pt-2">
+                                    <tr>
+                                        <td class="text-end text-body-secondary">Total Venta:</td>
+                                        <td class="text-end fw-bold">${total}</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-end text-body-secondary">Saldo Pendiente:</td>
+                                        <td class="text-end fw-bold text-danger">${saldo}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-             <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script> 
-                <script>
-   window.addEventListener('DOMContentLoaded', () => {
-        // 1. Detectar si el usuario está en un dispositivo móvil
-        const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"><\/script>
+                    <script>
+                        window.addEventListener('DOMContentLoaded', () => {
+                            const esMovil = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                            setTimeout(() => {
+                                if (esMovil) {
+                                    const elementoParaConvertir = document.getElementById('areaImpresion');
+                                    const opciones = {
+                                        margin: 1,
+                                        filename: 'expediente_${folio}.pdf',
+                                        image: { type: 'jpeg', quality: 0.98 },
+                                        html2canvas: { scale: 2, useCORS: true },
+                                        jsPDF: { unit: 'cm', format: 'letter', orientation: 'portrait' }
+                                    };
+                                    html2pdf().set(opciones).from(elementoParaConvertir).save();
+                                } else {
+                                    window.print();
+                                }
+                            }, 1000);
+                        });
+                    <\/script>
+                </body>
+                </html>
+            `);
 
-        // 2. Esperar 1 segundo a que carguen estilos, fuentes e imágenes
-        setTimeout(() => {
-            if (esMovil) {
-                // --- COMPORTAMIENTO EN CELULARES: DESCARGA DE PDF AUTOMÁTICA ---
-                const elementoParaConvertir = document.getElementById('areaImpresion');
-
-                const opciones = {
-                    margin:       1,
-                    filename:     'expediente_${folio}.pdf',
-                    image:        { type: 'jpeg', quality: 0.98 },
-                    html2canvas:  { scale: 2, useCORS: true }, // Mayor calidad visual
-                    jsPDF:        { unit: 'cm', format: 'letter', orientation: 'portrait' }
-                };
-
-                // Generar y descargar el PDF directamente
-                html2pdf().set(opciones).from(elementoParaConvertir).save();
-                
-            } else {
-                // --- COMPORTAMIENTO EN COMPUTADORAS: DIÁLOGO NATIVO DE IMPRESIÓN ---
-                window.print();
-            }
-        }, 1000); // 1000 milisegundos = 1 segundo de espera
-    });
- <\/script>
-        </body>
-        </html>
-    `);
-
-                        ventanaImpresion.document.close();
-                    }
-
-                </script>
+            ventanaImpresion.document.close();
+        }
+    </script>
 
 </body>
 

@@ -13,7 +13,7 @@ $modulos = [
             ['id' => 'cajaRapida', 'url' => '/cfsistem/app/controllers/cajaRapidaController.php', 'icon' => 'bi-lightning-charge', 'label' => 'Caja Rápida', 'active' => ($archivoActual == 'cajaRapidaController.php'), 'color' => '#198754'],
             ['id' => 'cotizaciones', 'url' => '/cfsistem/app/controllers/cotizacionesController.php', 'icon' => 'bi-person-badge-fill', 'label' => 'Cotizaciones', 'active' => ($archivoActual == 'cotizacionesController.php'), 'color' => '#198754'],
             ['id' => 'clientes', 'url' => '/cfsistem/app/controllers/clientesController.php', 'icon' => 'bi-person-lines-fill', 'label' => 'Clientes', 'active' => ($archivoActual == 'clientesController.php'), 'color' => '#198754'],
-            ['id' => 'clientesEstatus', 'url' => '/cfsistem/app/controllers/clientesEstatusController.php', 'icon' => 'bi-person-badge', 'label' => 'Estatus Clientes', 'active' => ($archivoActual == 'clientesEstatus.php'), 'color' => '#198754'],
+            ['id' => 'clientesEstatus', 'url' => '/cfsistem/app/controllers/clientesEstatusController.php', 'icon' => 'bi-person-badge', 'label' => 'Historial de Clientes', 'active' => ($archivoActual == 'clientesEstatus.php'), 'color' => '#198754'],
             ['id' => 'ventasVendedor', 'url' => '/cfsistem/app/controllers/historialPedidosVendedorController.php', 'icon' => 'bi-person-badge-fill', 'label' => 'Ventas Vendedor', 'active' => ($archivoActual == 'historialPedidosVendedorController.php'), 'color' => '#198754'],
             ['id' => 'ventashistorial', 'url' => '/cfsistem/app/controllers/ventasHistorialController.php', 'icon' => 'bi-receipt', 'label' => 'Historial de Ventas', 'active' => ($archivoActual == 'ventasHistorialController.php'), 'color' => '#198754'],
             ['id' => 'comprobantes', 'url' => '/cfsistem/app/controllers/comprobantesPagoController.php', 'icon' => 'bi-file-earmark-check', 'label' => 'Comprobantes de Pago', 'active' => ($archivoActual == 'comprobantesPagoController.php'), 'color' => '#198754'],
@@ -101,7 +101,7 @@ $modulos = [
 
 <link rel="icon" type="image/png" href="/cfsistem/public/assets/logo.png">
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-<nav class="navbar fixed-top navbar-expand navbar-dark navbar-premium shadow-sm py-0" style="min-height:56px;">
+<nav class="navbar fixed-top navbar-expand navbar-dark navbar-premium shadow-sm py-0">
     <div class="container-fluid px-2 px-md-4">
         <div class="d-flex align-items-center gap-2 gap-md-3">
             <button class="btn btn-toggle border-0 py-1" id="toggleSidebar" aria-label="Abrir Menú">
@@ -219,10 +219,10 @@ $modulos = [
 
                 <li class="nav-item">
                     <a href="#drop-<?= $grupo['id_grupo'] ?>"
-                        class="nav-link d-flex align-items-center justify-content-between gap-3 <?= $grupoActivo ? 'bg-body-secondary text-body fw-bold' : 'text-body' ?>"
+                        class="nav-link d-flex align-items-center justify-content-between gap-2 <?= $grupoActivo ? 'bg-body-secondary text-body fw-bold' : 'text-body' ?>"
                         data-bs-toggle="collapse" aria-expanded="<?= $grupoActivo ? 'true' : 'false' ?>">
 
-                        <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center gap-2">
                             <span class="icon-reflect" data-icon="<?= $grupo['icono'] ?>">
                                 <i class="<?= $grupo['icono'] ?> fs-5" style="color: <?= $colorGrupo ?>;"></i>
                             </span>
@@ -232,12 +232,12 @@ $modulos = [
                     </a>
 
                     <div class="collapse <?= $grupoActivo ? 'show' : '' ?>" id="drop-<?= $grupo['id_grupo'] ?>">
-                        <ul class="nav nav-pills flex-column gap-1 ps-4 pt-1 pb-1">
+                        <ul class="nav nav-pills flex-column gap-1 ps-3 pt-1 pb-1">
                             <?php foreach ($submodulosPermitidos as $m): ?>
                                 <?php $colorSub = $m['color'] ?? $colorGrupo; ?>
                                 <li class="nav-item">
                                     <a href="<?= $m['url'] ?>"
-                                        class="nav-link d-flex align-items-center gap-3 <?= $m['active'] ? 'active shadow-sm' : 'text-body-secondary' ?>"
+                                        class="nav-link d-flex align-items-center gap-2 <?= $m['active'] ? 'active shadow-sm' : 'text-body-secondary' ?>"
                                         style="font-size: 0.95rem;">
                                         <span class="icon-reflect" data-icon="<?= $m['icon'] ?>">
                                             <i class="<?= $m['icon'] ?> fs-6"

@@ -772,5 +772,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     exit;
 }
+require_once __DIR__ . '/../views/entregas_view.php';
 // --- CARGA NORMAL DE LA VISTA ---
 $paginaActual = 'Entregas';

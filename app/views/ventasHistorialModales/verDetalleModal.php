@@ -79,11 +79,38 @@
         z-index: 100000 !important;
         position: relative;
     }
+
+    /* Tamaño del modal de detalle */
+    #modalDetalle .modal-dialog {
+        width: 80vw;
+        max-width: 80vw;
+        margin: 0.5rem auto;
+    }
+
+    /* En móvil: pantalla completa */
+    @media (max-width: 575.98px) {
+        #modalDetalle .modal-dialog {
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+            min-height: 100dvh;
+            /* dvh maneja mejor la barra del navegador móvil */
+        }
+
+        #modalDetalle .modal-content {
+            border-radius: 0;
+            min-height: 100dvh;
+        }
+
+        #modalDetalle .modal-body {
+            padding-bottom: 1rem;
+        }
+    }
 </style>
 
 
 <div class="modal fade" id="modalDetalle" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered" style="width: 80vw; max-width: 80vw;">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0">
             <div class="modal-header">
                 <h6 class="modal-title fw-bold">Gestión de Venta: <span id="spanFolio"></span></h6>

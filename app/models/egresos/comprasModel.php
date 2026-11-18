@@ -412,31 +412,49 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                                 continue;
 
                             $sqlI = "INSERT INTO inventario (almacen_id, producto_id, stock) 
-                                 VALUES (?, ?, ?) 
-                                 ON DUPLICATE KEY UPDATE stock = stock + VALUES(stock)";
+         VALUES (?, ?, ?) 
+         ON DUPLICATE KEY UPDATE stock = stock + VALUES(stock)";
                             $stmtI = $this->db->prepare($sqlI);
                             $stmtI->bind_param("iid", $id_alm_dest, $p_id, $cant_reparto);
                             $stmtI->execute();
 
-                            $codigo_lote = "LOTE-" . $compra_id . "-" . $p_id . "-" . $id_alm_dest;
+                            // 🔹 Consultar folio de compra
+                            $folioCompra = (string) $compra_id;
+                            $stmtFolio = $this->db->prepare("
+        SELECT folio 
+        FROM compras 
+        WHERE id = ? 
+        LIMIT 1
+    ");
+                            $stmtFolio->bind_param("i", $compra_id);
+                            $stmtFolio->execute();
+                            $rowFolio = $stmtFolio->get_result()->fetch_assoc();
+                            if ($rowFolio && !empty($rowFolio['folio'])) {
+                                $folioCompra = $rowFolio['folio'];
+                            }
+                            $stmtFolio->close();
+
+                            // 🔹 Código de lote con FOLIO
+                            $codigo_lote = "C" . $id_alm_dest . "-" . $p_id . "-" . $folioCompra;
+
                             $sqlL = "INSERT INTO lotes_stock (producto_id, almacen_id, codigo_lote, cantidad_inicial, cantidad_actual, precio_compra_unitario, estado_lote) 
-                                 VALUES (?, ?, ?, ?, ?, ?, 'activo')";
+         VALUES (?, ?, ?, ?, ?, ?, 'activo')";
                             $stmtL = $this->db->prepare($sqlL);
                             $stmtL->bind_param("iisddd", $p_id, $id_alm_dest, $codigo_lote, $cant_reparto, $cant_reparto, $precio_unitario);
                             $stmtL->execute();
                             $lote_id = $stmtL->insert_id;
 
                             $sqlLI = "INSERT INTO lotes_ingresos_detalle 
-                                  (lote_id, detalle_compra_id, cantidad_recibida, costo_aplicado) 
-                                  VALUES (?, ?, ?, ?)";
+          (lote_id, detalle_compra_id, cantidad_recibida, costo_aplicado) 
+          VALUES (?, ?, ?, ?)";
                             $stmtLI = $this->db->prepare($sqlLI);
                             $stmtLI->bind_param("iidd", $lote_id, $detalle_id, $cant_reparto, $subtotal);
                             $stmtLI->execute();
 
                             $sqlM = "INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_destino_id, usuario_registra_id, referencia_id, observaciones) 
-                                 VALUES (?, 'entrada', ?, ?, ?, ?, ?)";
+         VALUES (?, 'entrada', ?, ?, ?, ?, ?)";
                             $stmtM = $this->db->prepare($sqlM);
-                            $obs = "Compra Folio: $folio (Lote: $codigo_lote)";
+                            $obs = "Compra Folio: $folioCompra (Lote: $codigo_lote)";
                             $stmtM->bind_param("idiiis", $p_id, $cant_reparto, $id_alm_dest, $user_id, $compra_id, $obs);
                             $stmtM->execute();
                         }

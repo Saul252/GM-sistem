@@ -2425,34 +2425,44 @@ ORDER BY t.fecha_viaje DESC";
     public function DespachoLotesMasivo($prodId, $almId)
     {
         try {
-
             $prodId = intval($prodId);
             $almId = intval($almId);
 
-            $sqlLotes = "
-            SELECT id, codigo_lote, cantidad_actual, fecha_ingreso,producto_id
-            FROM lotes_stock 
-            WHERE producto_id = $prodId
-              AND almacen_id = $almId
-              AND cantidad_actual > 0
-              AND estado_lote = 'activo'
-            ORDER BY fecha_ingreso ASC
+            // Usamos una consulta preparada para mayor seguridad y robustez
+            $sql = "
+            SELECT l.id, l.codigo_lote, l.cantidad_actual, l.fecha_ingreso, l.producto_id, p.factor_conversion,p.unidad_reporte
+            FROM lotes_stock l
+            JOIN productos p ON p.id = l.producto_id
+            WHERE l.producto_id = ?
+              AND l.almacen_id = ?
+              AND l.cantidad_actual > 0
+              AND l.estado_lote = 'activo'
+            ORDER BY l.fecha_ingreso ASC
         ";
 
-            $resLotes = $this->db->query($sqlLotes);
+            // Asumiendo que usas MySQLi con prepared statements:
+            $stmt = $this->db->prepare($sql);
+            if (!$stmt) {
+                throw new Exception("Error al preparar la consulta: " . $this->db->error);
+            }
+
+            $stmt->bind_param("ii", $prodId, $almId);
+            $stmt->execute();
+            $resLotes = $stmt->get_result();
 
             $lotes = [];
-
             while ($row = $resLotes->fetch_assoc()) {
                 $lotes[] = $row;
             }
+
+            $stmt->close();
 
             return [
                 'success' => true,
                 'data' => $lotes
             ];
 
-        } catch (Exception $e) {
+        } catch (Throwable $e) { // Usar Throwable captura tanto Exceptions como errores fatales de PHP
             return [
                 'success' => false,
                 'message' => $e->getMessage()

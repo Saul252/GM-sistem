@@ -13,7 +13,7 @@
 
     <style>
         @page {
-            margin: 0;
+            margin: 8mm;
         }
 
         body {
@@ -128,9 +128,11 @@
 
     <div id="contenedor-ticket" style="display: none;">
         <div class="text-center">
-            <span class="bold" style="font-size: 14px;" id="almacen-nombre"></span><br>
-            <span id="almacen-direccion"></span><br>
-            <span class="bold" id="ticket-titulo">TICKET DE VENTA</span>
+            <span class="bold" style="font-size: 14px;">BODEGA FORTALEZA CENTRO</span><br>
+            <span style="font-size: 14px;">SUCURSAL </span> <span class="bold" style="font-size: 14px;"
+                id="almacen-nombre"></span><br>
+
+            <span id="ticket-titulo">TICKET DE VENTA</span>
         </div>
 
         <div class="divider"></div>
@@ -256,7 +258,7 @@
 
             // ============ CABECERA ============
             document.getElementById('almacen-nombre').innerText = (venta.nombre_almacen || '').toUpperCase();
-            document.getElementById('almacen-direccion').innerText = venta.direccion_almacen || '';
+
             document.getElementById('ticket-titulo').innerText = mostrarPrecios ? 'TICKET DE VENTA' : 'VALE DE ENTREGA';
             document.getElementById('ticket-folio').innerText = venta.folio || '';
             document.getElementById('ticket-fecha').innerText = formatearFecha(venta.fecha);

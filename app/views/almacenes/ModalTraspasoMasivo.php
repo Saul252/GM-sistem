@@ -307,10 +307,11 @@
 
                 if (data && Array.isArray(data.data)) {
                     data.data.forEach(lote => {
-                        const opt = document.createElement('option');
-                        opt.value = lote.id;
-                        opt.textContent = `${lote.codigo_lote} (${lote.cantidad_actual})`;
-                        select.appendChild(opt);
+                        const cant = lote.cantidad_actual / lote.factor_conversion;
+                        const option = document.createElement('option');
+                        option.value = lote.id;
+                        option.textContent = `${lote.codigo_lote} (${cant} ${lote.unidad_reporte})`;
+                        select.appendChild(option);
                     });
                 }
             } catch (e) {

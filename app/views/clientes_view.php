@@ -92,7 +92,6 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
                 overflow-x: hidden;
             }
 
-            /* Scroll horizontal real para la tabla */
             .table-responsive {
                 overflow-x: auto !important;
                 -webkit-overflow-scrolling: touch;
@@ -100,7 +99,6 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
                 border-radius: 12px;
             }
 
-            /* La tabla debe ser más ancha que la pantalla para que scrollee */
             #tablaClientes {
                 min-width: 720px;
                 white-space: nowrap;
@@ -110,30 +108,25 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
                 white-space: nowrap;
             }
 
-            /* Permitir que el card no limite el ancho */
             .card-premium {
                 overflow: visible;
             }
 
-            /* Compactar botón Nuevo Cliente */
             .btn-primary.rounded-pill {
                 font-size: 0.8rem;
                 padding-left: 1rem !important;
                 padding-right: 1rem !important;
             }
 
-            /* Header más compacto */
             h2.card-title-text {
                 font-size: 1.5rem !important;
             }
 
-            /* Inputs de filtros en móvil */
             .row.mb-4>div {
                 width: 100%;
             }
         }
 
-        /* Mejora visual del scrollbar (opcional) */
         .table-responsive::-webkit-scrollbar {
             height: 8px;
         }
@@ -150,6 +143,155 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
 
         .table-responsive::-webkit-scrollbar-thumb:hover {
             background: #a1a1a6;
+        }
+
+        /* ============================================================
+           MODAL CLIENTE — iOS look & feel + 90% ancho + footer fijo
+           ============================================================ */
+        #modalCliente .modal-dialog {
+            max-width: 90vw;
+            width: 90vw;
+            max-height: 92vh;
+            margin: 4vh auto;
+        }
+
+        #modalCliente .modal-content {
+            max-height: 92vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border-radius: 24px;
+            background-color: var(--bs-body-bg, #ffffff);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        #modalCliente .modal-header {
+            flex-shrink: 0;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            background: transparent !important;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        #modalCliente form {
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        #modalCliente .modal-body {
+            flex: 1 1 auto;
+            overflow-y: auto;
+            min-height: 0;
+        }
+
+        #modalCliente .modal-footer {
+            flex-shrink: 0;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+            background: transparent;
+        }
+
+        @media (max-width: 991px) {
+            #modalCliente .modal-dialog {
+                max-width: 95vw;
+                width: 95vw;
+            }
+        }
+
+        #modalCliente .modal-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #modalCliente .modal-body::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        #modalCliente .modal-body::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        /* Inputs iOS compactos */
+        #modalCliente .form-control,
+        #modalCliente .form-select {
+            border-radius: 8px;
+            padding: 0.35rem 0.65rem;
+            font-size: 0.85rem;
+            background-color: rgba(0, 0, 0, 0.02);
+            border: 1px solid rgba(0, 0, 0, 0.12);
+            transition: all 0.2s ease-in-out;
+        }
+
+        #modalCliente .form-control:focus,
+        #modalCliente .form-select:focus {
+            background-color: transparent;
+            border-color: #007aff;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+        }
+
+        #modalCliente .form-label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #6c757d;
+            margin-bottom: 0;
+        }
+
+        #modalCliente .btn {
+            border-radius: 10px;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            font-size: 0.85rem;
+            transition: transform 0.1s ease, background-color 0.2s;
+        }
+
+        #modalCliente .btn:active {
+            transform: scale(0.97);
+        }
+
+        /* Títulos de sección */
+        #modalCliente .form-section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #007aff;
+            margin: 1rem 0 0.75rem;
+            padding-bottom: 0.35rem;
+            border-bottom: 2px solid rgba(0, 122, 255, 0.15);
+        }
+
+        #modalCliente .form-section-title:first-child {
+            margin-top: 0;
+        }
+
+        /* Modo oscuro */
+        [data-bs-theme="dark"] #modalCliente .modal-content,
+        body.dark-mode #modalCliente .modal-content {
+            background-color: #1c1c1e;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        [data-bs-theme="dark"] #modalCliente .form-control,
+        [data-bs-theme="dark"] #modalCliente .form-select,
+        body.dark-mode #modalCliente .form-control,
+        body.dark-mode #modalCliente .form-select {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #f5f5f7;
+        }
+
+        [data-bs-theme="dark"] #modalCliente .form-label,
+        body.dark-mode #modalCliente .form-label {
+            color: #98989f;
+        }
+
+        [data-bs-theme="dark"] #modalCliente .modal-header,
+        body.dark-mode #modalCliente .modal-header {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
     </style>
 </head>
@@ -273,107 +415,210 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
         </div>
     </main>
 
+    <!-- ============================================================
+         MODAL CLIENTE — Estilo iOS
+         ============================================================ -->
     <div class="modal fade" id="modalCliente" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow: hidden;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+
+                <!-- Cabecera minimalista tipo iOS -->
+                <div class="modal-header px-4 pt-4 pb-2">
+                    <h5 class="modal-title fw-bold fs-5" id="modalTitulo">Nuevo Cliente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
                 <form id="formCliente">
-                    <div class="modal-header bg-dark text-white border-0 py-3">
-                        <h5 class="modal-title fw-bold px-2" id="modalTitulo">Nuevo Cliente</h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body p-4">
+                    <div class="modal-body px-4 py-3">
                         <input type="hidden" name="cliente_id" id="cliente_id" value="0">
 
-                        <div class="row g-3">
-                            <div class="col-md-12">
-                                <label class="form-label small fw-bold text-body-secondary">NOMBRE COMERCIAL *</label>
-                                <input type="text" name="nombre_comercial" id="nombre_comercial"
-                                    class="form-control rounded-3" placeholder="Ej: Abarrotes La Esperanza" required>
-                            </div>
-                            <div class="col-md-12">
-                                <label class="form-label small fw-bold text-body-secondary">RAZÓN SOCIAL</label>
-                                <input type="text" name="razon_social" id="razon_social" class="form-control rounded-3"
-                                    placeholder="Ej: Comercializadora Pérez S.A. de C.V.">
+                        <!-- ============================================ -->
+                        <!-- SECCIÓN 1: INFORMACIÓN GENERAL                -->
+                        <!-- ============================================ -->
+                        <div class="form-section-title">Información General</div>
+
+                        <div class="d-flex flex-column gap-2 mb-2">
+
+                            <div class="row align-items-center g-0">
+                                <div class="col-md-4 text-md-end pe-md-3 mb-1 mb-md-0">
+                                    <label class="form-label">Nombre Comercial *</label>
+                                </div>
+                                <div class="col-md-8">
+                                    <input type="text" name="nombre_comercial" id="nombre_comercial"
+                                        class="form-control text-uppercase" placeholder="EJ. ABARROTES LA ESPERANZA"
+                                        required>
+                                </div>
                             </div>
 
-                            <div class="col-md-12">
-                                <label class="form-label fw-bold">Contacto *</label>
-                                <input type="text" name="contacto" id="contacto" class="form-control"
-                                    placeholder="Nombre de la persona de contacto">
-                            </div>
-                            <div class="col-md-12">
-                                <label class="form-label small fw-bold text-body-secondary">TELEFONO</label>
-                                <input type="text" name="telefono" id="telefono" class="form-control rounded-3"
-                                    placeholder="Ej: 555 123 4567">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold text-body-secondary">RFC *</label>
-                                <input type="text" name="rfc" id="rfc" class="form-control text-uppercase rounded-3"
-                                    maxlength="13" placeholder="Ej: XAXX010101000">
-                            </div>
-                            <div class="col-md-12">
-                                <label class="form-label fw-bold">Calle</label>
-                                <textarea name="calle" id="calle" class="form-control text-uppercase" rows="2"
-                                    placeholder="Calle y número"></textarea>
-                            </div>
-                            <div class="col-md-12">
-                                <label class="form-label fw-bold">Colonia</label>
-                                <textarea name="colonia" id="colonia" class="form-control text-uppercase" rows="2"
-                                    placeholder="Colonia"></textarea>
-                            </div>
-                            <div class="col-md-12">
-                                <label class="form-label fw-bold">Pueblo</label>
-                                <textarea name="pueblo" id="pueblo" class="form-control text-uppercase" rows="2"
-                                    placeholder="Pueblo"></textarea>
-                            </div>
-                            <div class="col-md-12">
-                                <label class="form-label fw-bold">Ciudad</label>
-                                <textarea name="ciudad" id="ciudad" class="form-control text-uppercase" rows="2"
-                                    placeholder="Ciudad"></textarea>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold text-body-secondary">CÓDIGO POSTAL</label>
-                                <input type="text" name="codigo_postal" id="codigo_postal"
-                                    class="form-control text-uppercase rounded-3" maxlength="5" placeholder="Ej: 12345">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold text-body-secondary">USO CFDI</label>
-                                <select name="uso_cfdi" id="uso_cfdi" class="form-select rounded-3">
-                                    <?php foreach ($usosCFDI as $key => $val): ?>
-                                        <option value="<?= $key ?>"><?= $key ?> - <?= $val ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-bold text-body-secondary">CORREO</label>
-                                <input type="email" name="correo" id="correo" class="form-control rounded-3"
-                                    placeholder="Ej: cliente@correo.com">
+                            <div class="row align-items-center g-0">
+                                <div class="col-md-4 text-md-end pe-md-3 mb-1 mb-md-0">
+                                    <label class="form-label">Razón Social</label>
+                                </div>
+                                <div class="col-md-8">
+                                    <input type="text" name="razon_social" id="razon_social"
+                                        class="form-control text-uppercase" placeholder="NOMBRE LEGAL COMPLETO">
+                                </div>
                             </div>
 
-                            <?php if ($almacen_usuario == 0): ?>
-                                <div class="col-md-12" style="visibility: hidden;">
-                                    <div class="bg-light p-3 rounded-4 mt-2 border border-dashed">
-                                        <label class="form-label small fw-bold text-primary">ASIGNAR A SUCURSAL *</label>
-                                        <select name="almacen_id" id="almacen_id_modal"
-                                            class="form-select border-primary shadow-none" required>
-                                            <option value="1">-- Seleccionar Almacén --</option>
+                            <div class="row align-items-center g-0">
+                                <div class="col-md-4 text-md-end pe-md-3 mb-1 mb-md-0">
+                                    <label class="form-label">Contacto *</label>
+                                </div>
+                                <div class="col-md-8">
+                                    <input type="text" name="contacto" id="contacto" class="form-control text-uppercase"
+                                        placeholder="NOMBRE DEL CONTACTO">
+                                </div>
+                            </div>
+
+                            <div class="row align-items-center g-0">
+                                <div class="col-md-4 text-md-end pe-md-3 mb-1 mb-md-0">
+                                    <label class="form-label">Correo Electrónico</label>
+                                </div>
+                                <div class="col-md-8">
+                                    <input type="email" name="correo" id="correo" class="form-control"
+                                        placeholder="CLIENTE@CORREO.COM">
+                                </div>
+                            </div>
+
+                            <div class="row align-items-center g-0">
+                                <div class="col-md-4 text-md-end pe-md-3 mb-1 mb-md-0">
+                                    <label class="form-label">Teléfono</label>
+                                </div>
+                                <div class="col-md-8">
+                                    <input type="tel" name="telefono" id="telefono" class="form-control"
+                                        placeholder="55 0000 0000">
+                                </div>
+                            </div>
+
+                            <div class="row align-items-center g-0">
+                                <div class="col-md-4 text-md-end pe-md-3 mb-1 mb-md-0">
+                                    <label class="form-label">Código Postal *</label>
+                                </div>
+                                <div class="col-md-8">
+                                    <input type="text" name="codigo_postal" id="codigo_postal"
+                                        class="form-control text-uppercase" maxlength="5" placeholder="00000">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ============================================ -->
+                        <!-- SECCIÓN 2: DATOS FISCALES                     -->
+                        <!-- ============================================ -->
+                        <div class="form-section-title">Datos Fiscales</div>
+
+                        <div class="d-flex flex-column gap-2 mb-2">
+
+                            <div class="row align-items-center g-0">
+                                <div class="col-md-4 text-md-end pe-md-3 mb-1 mb-md-0">
+                                    <label class="form-label">RFC *</label>
+                                </div>
+                                <div class="col-md-8">
+                                    <input type="text" name="rfc" id="rfc" class="form-control text-uppercase"
+                                        maxlength="13" placeholder="ABCD000000XXX">
+                                </div>
+                            </div>
+
+                            <div class="row align-items-center g-0 d-none">
+                                <div class="col-md-4 text-md-end pe-md-3 mb-1 mb-md-0">
+                                    <label class="form-label">Uso de CFDI</label>
+                                </div>
+                                <div class="col-md-8">
+                                    <select name="uso_cfdi" id="uso_cfdi" class="form-select">
+                                        <?php foreach ($usosCFDI as $key => $val): ?>
+                                            <option value="<?= $key ?>"><?= $key ?> - <?= $val ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ============================================ -->
+                        <!-- SECCIÓN 3: DIRECCIÓN                          -->
+                        <!-- ============================================ -->
+                        <div class="form-section-title">Dirección</div>
+
+                        <div class="d-flex flex-column gap-2 mb-2">
+
+                            <div class="row align-items-start g-0">
+                                <div class="col-md-4 text-md-end pe-md-3 pt-1 mb-1 mb-md-0">
+                                    <label class="form-label">Calle</label>
+                                </div>
+                                <div class="col-md-8">
+                                    <textarea name="calle" id="calle" class="form-control text-uppercase" rows="2"
+                                        placeholder="CALLE Y NÚMERO"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="row align-items-start g-0">
+                                <div class="col-md-4 text-md-end pe-md-3 pt-1 mb-1 mb-md-0">
+                                    <label class="form-label">Colonia</label>
+                                </div>
+                                <div class="col-md-8">
+                                    <textarea name="colonia" id="colonia" class="form-control text-uppercase" rows="2"
+                                        placeholder="COLONIA..."></textarea>
+                                </div>
+                            </div>
+
+                            <div class="row align-items-start g-0">
+                                <div class="col-md-4 text-md-end pe-md-3 pt-1 mb-1 mb-md-0">
+                                    <label class="form-label">Población</label>
+                                </div>
+                                <div class="col-md-8">
+                                    <textarea name="pueblo" id="pueblo" class="form-control text-uppercase" rows="2"
+                                        placeholder="POBLACION"></textarea>
+                                </div>
+                            </div>
+
+                            <div class="row align-items-start g-0">
+                                <div class="col-md-4 text-md-end pe-md-3 pt-1 mb-1 mb-md-0">
+                                    <label class="form-label">Ciudad</label>
+                                </div>
+                                <div class="col-md-8">
+                                    <textarea name="ciudad" id="ciudad" class="form-control text-uppercase" rows="2"
+                                        placeholder="CIUDAD"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ============================================ -->
+                        <!-- SECCIÓN 4: ASIGNACIÓN (solo admin)            -->
+                        <!-- ============================================ -->
+                        <?php if ($almacen_usuario == 0): ?>
+                            <!-- Usamos d-none para ocultar visualmente la sección y el select sin romper el DOM -->
+                            <div class="d-none">
+                                <div class="form-section-title">Asignación</div>
+
+                                <div class="row align-items-center g-0 mb-2">
+                                    <div class="col-md-4 text-md-end pe-md-3 mb-1 mb-md-0">
+                                        <label class="form-label text-primary">Asignar a Sucursal *</label>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <!-- Se quitó el 'required' para que no bloquee el envío al estar oculto, y se asigna un valor por defecto o se maneja por backend -->
+                                        <select name="almacen_id" id="almacen_id_modal" class="form-select border-primary">
                                             <?php foreach ($almacenes as $alm): ?>
-                                                <option value="<?= $alm['id'] ?>"><?= htmlspecialchars($alm['nombre']) ?>
+                                                <option value="<?= $alm['id'] ?>">
+                                                    <?= htmlspecialchars($alm['nombre']) ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
                                 </div>
-                            <?php else: ?>
-                                <input type="hidden" name="almacen_id" value="<?= $almacen_usuario ?>">
-                            <?php endif; ?>
-                        </div>
+                            </div>
+                            <!-- Input oculto de respaldo para enviar un ID por defecto si el select está oculto -->
+                            <input type="hidden" name="almacen_id" value="1">
+                        <?php else: ?>
+                            <input type="hidden" name="almacen_id" value="<?= $almacen_usuario ?>">
+                        <?php endif; ?>
                     </div>
-                    <div class="modal-footer bg-light border-0 px-4 pb-4">
-                        <button type="button" class="btn btn-link text-secondary fw-bold text-decoration-none"
-                            data-bs-dismiss="modal">CANCELAR</button>
-                        <button type="submit" class="btn btn-primary px-5 rounded-pill fw-bold shadow">GUARDAR
-                            DATOS</button>
+
+                    <!-- Footer delicado (siempre visible) -->
+                    <div class="modal-footer px-4 py-3 border-0">
+                        <button type="button" class="btn btn-light border px-4" data-bs-dismiss="modal">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary px-4 shadow-sm">
+                            Guardar Cliente
+                        </button>
                     </div>
                 </form>
             </div>
@@ -523,15 +768,15 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 es Admin
             window.location.href = `clientesController.php?action=detalles&id=${id}`;
         }
     </script>
+
+    <script>
+        // Convierte a mayúsculas en tiempo real
+        document.querySelectorAll('input[type="text"], textarea').forEach(elemento => {
+            elemento.addEventListener('input', function () {
+                this.value = this.value.toUpperCase();
+            });
+        });
+    </script>
 </body>
 
 </html>
-<script>
-    // Selecciona todos los inputs de texto y también los textareas
-    document.querySelectorAll('input[type="text"], textarea').forEach(elemento => {
-        elemento.addEventListener('input', function () {
-            // Convierte el valor a mayúsculas en tiempo real
-            this.value = this.value.toUpperCase();
-        });
-    });
-</script>
