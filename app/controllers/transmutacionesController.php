@@ -8,17 +8,17 @@ ob_start();
 
 // Blindaje contra errores: Loguear todo pero no mostrar en pantalla para no romper el JSON
 error_reporting(E_ALL);
-ini_set('display_errors', 0); 
+ini_set('display_errors', 0);
 
 require_once __DIR__ . '/../../includes/auth.php';
 require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../models/transmutacionesModel.php';
 require_once __DIR__ . '/../models/almacen_model.php';
-require_once __DIR__ . '/../models/mermasModel.php'; 
+require_once __DIR__ . '/../models/mermasModel.php';
 require_once __DIR__ . '/../models/almacen/productosModel.php';
 require_once __DIR__ . '/../controllers/LayoutController.php';
 
-protegerPagina('transmutaciones'); 
+protegerPagina('transmutaciones');
 $paginaActual = 'transmutaciones';
 $usuario_id = $_SESSION['id'] ?? $_SESSION['usuario_id'] ?? null;
 
@@ -33,12 +33,12 @@ if (!$usuario_id) {
     exit;
 }
 
-$transModel   = new TransmutacionesModel($conexion);
+$transModel = new TransmutacionesModel($conexion);
 $almacenModel = new AlmacenModel($conexion);
-$mermasModel  = new MermasModel($conexion);
+$mermasModel = new MermasModel($conexion);
 $productoModel = new ProductoModel($conexion);
-        
-$action = $_GET['action'] ?? 'index';
+
+$action = $_POST['action'] ?? $_GET['action'] ?? 'index';
 
 // ============================================
 // 💾 POST: GUARDAR TRANSMUTACIÓN
@@ -46,53 +46,74 @@ $action = $_GET['action'] ?? 'index';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'guardar') {
     ob_clean();
     header('Content-Type: application/json');
-    
+
     try {
         $responsable = $_SESSION['nombre'] ?? 'Usuario #' . $usuario_id;
 
         $datos = [
-            'almacen_id'          => intval($_POST['almacen_id'] ?? 0),
-            'producto_origen_id'  => intval($_POST['producto_origen_id'] ?? 0),
-            'lote_origen_id'      => intval($_POST['lote_origen_id'] ?? 0),
-            'cant_origen'         => floatval($_POST['cantidad_origen'] ?? 0),
+            'almacen_id' => intval($_POST['almacen_id'] ?? 0),
+            'producto_origen_id' => intval($_POST['producto_origen_id'] ?? 0),
+            'lote_origen_id' => intval($_POST['lote_origen_id'] ?? 0),
+            'cant_origen' => floatval($_POST['cantidad_origen'] ?? 0),
             'producto_destino_id' => intval($_POST['producto_destino_id'] ?? 0),
-            'lote_destino_id'     => intval($_POST['lote_destino_id'] ?? 0),
-            'cant_destino'        => floatval($_POST['cantidad_destino'] ?? 0),
-            'observaciones'       => trim($_POST['observaciones'] ?? ''),
-            'usuario_id'          => $usuario_id,
-            'responsable'         => $responsable
+            'lote_destino_id' => intval($_POST['lote_destino_id'] ?? 0),
+            'cant_destino' => floatval($_POST['cantidad_destino'] ?? 0),
+            'observaciones' => trim($_POST['observaciones'] ?? ''),
+            'usuario_id' => $usuario_id,
+            'responsable' => $responsable
         ];
 
-        if ($datos['almacen_id'] <= 0) throw new Exception("Error: Almacén no seleccionado.");
-        if ($datos['producto_origen_id'] <= 0 || $datos['producto_destino_id'] <= 0) throw new Exception("Error: Productos no válidos.");
-        if ($datos['cant_origen'] <= 0) throw new Exception("Error: Cantidad de origen insuficiente.");
+        if ($datos['almacen_id'] <= 0)
+            throw new Exception("Error: Almacén no seleccionado.");
+        if ($datos['producto_origen_id'] <= 0 || $datos['producto_destino_id'] <= 0)
+            throw new Exception("Error: Productos no válidos.");
+        if ($datos['cant_origen'] <= 0)
+            throw new Exception("Error: Cantidad de origen insuficiente.");
 
         $resultado = $transModel->registrarTransmutacion($datos);
         echo json_encode($resultado);
-        
+
     } catch (Exception $e) {
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }
     exit;
 }
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'eliminar') {
+    ob_clean();
+    header('Content-Type: application/json');
 
+    try {
+        $transmutacion_id = intval($_POST['id'] ?? $_POST['transmutacion_id'] ?? 0);
+
+        if ($transmutacion_id <= 0) {
+            throw new Exception("Error: ID de transmutación no válido.");
+        }
+
+        $resultado = $transModel->eliminarTransmutacion($transmutacion_id);
+        echo json_encode($resultado);
+
+    } catch (Exception $e) {
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
+    exit;
+}
 // ============================================
 // 🔍 AJAX: LISTAR HISTORIAL CON FILTROS (Para DataTables / Fetch)
 // ============================================
 if ($action === 'listar') {
     ob_clean();
     header('Content-Type: application/json');
-    
+
     try {
         $filtros = [
-            'search'   => $_GET['f_search']   ?? $_GET['search'] ?? '',
+            'search' => $_GET['f_search'] ?? $_GET['search'] ?? '',
             'producto' => $_GET['f_producto'] ?? $_GET['producto'] ?? 0,
-            'almacen'  => $_GET['f_almacen']  ?? $_GET['almacen_id'] ?? 0,
-            'rango'    => $_GET['f_rango']    ?? $_GET['rango'] ?? 'todos',
-            'inicio'   => $_GET['f_inicio']   ?? $_GET['inicio'] ?? '',
-            'fin'      => $_GET['f_fin']      ?? $_GET['fin'] ?? ''
+            'almacen' => $_GET['f_almacen'] ?? $_GET['almacen_id'] ?? 0,
+            'rango' => $_GET['f_rango'] ?? $_GET['rango'] ?? 'todos',
+            'inicio' => $_GET['f_inicio'] ?? $_GET['inicio'] ?? '',
+            'fin' => $_GET['f_fin'] ?? $_GET['fin'] ?? ''
         ];
-        
+
         $rol_id = $_SESSION['rol_id'] ?? 2;
         $id_almacen_usuario = $_SESSION['almacen_id'] ?? 0;
 
@@ -140,12 +161,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === 'guardarEquivalencia') 
         $almacen_sesion = intval($_SESSION['almacen_id'] ?? 0);
         $almacen_id = ($almacen_sesion === 0) ? intval($_POST['almacen_id'] ?? 0) : $almacen_sesion;
 
-        if ($almacen_id === 0) throw new Exception("Almacén obligatorio.");
+        if ($almacen_id === 0)
+            throw new Exception("Almacén obligatorio.");
 
-        $p_origen  = intval($_POST['p_origen'] ?? 0);
+        $p_origen = intval($_POST['p_origen'] ?? 0);
         $p_destino = intval($_POST['p_destino'] ?? 0);
-        $factor    = floatval($_POST['factor'] ?? 0);
-        $notas     = trim($_POST['notas'] ?? '');
+        $factor = floatval($_POST['factor'] ?? 0);
+        $notas = trim($_POST['notas'] ?? '');
 
         $res = $transModel->agregarConfiguracion($almacen_id, $p_origen, $p_destino, $factor, $usuario_id, $notas);
         echo json_encode(['status' => 'success', 'message' => '✅ Regla guardada correctamente']);
@@ -167,15 +189,15 @@ if ($action === 'index') {
             $almacen_sesion = 0;
             $rol_id = 1;
         }
-        
+
         $almacenes = $almacenModel->getAlmacenes($almacen_sesion);
-        $todosLosProductos = $productoModel->getProductos() ?: []; 
-        
+        $todosLosProductos = $productoModel->getProductos() ?: [];
+
         // Carga inicial (trae el historial con filtro por defecto 'todos')
         $filtrosIniciales = ['rango' => 'todos'];
         $historial = $transModel->listarTransmutaciones($filtrosIniciales, $rol_id, $almacen_sesion);
-        
-        $almacen_param = (int)($_SESSION['almacen_id'] ?? 0);
+
+        $almacen_param = (int) ($_SESSION['almacen_id'] ?? 0);
         $listaConversiones = $transModel->listarConfiguraciones($almacen_param);
 
         include __DIR__ . '/../views/transmutaciones.php';

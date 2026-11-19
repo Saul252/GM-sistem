@@ -1181,6 +1181,7 @@ $modulos = [
                 if (btn && window.bootstrap?.Dropdown) {
                     bootstrap.Dropdown.getOrCreateInstance(btn).hide();
                 }
+                location.reload();
             });
         }
     }

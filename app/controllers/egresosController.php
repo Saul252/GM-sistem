@@ -1213,7 +1213,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && empty($action)) {
     date_default_timezone_set('America/Mexico_City');
 
     // 1. Lógica de Fechas Dinámica (Filtro Rápido)
-    $periodo_sel = $_GET['periodo_filtro'] ?? 'mes';
+    $periodo_sel = $_GET['periodo_filtro'] ?? 'hoy';
     $fecha_desde = $_GET['desde'] ?? date('Y-m-01');
     $fecha_hasta = $_GET['hasta'] ?? date('Y-m-d');
 

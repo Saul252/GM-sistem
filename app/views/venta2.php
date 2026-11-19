@@ -483,6 +483,7 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <?php require_once __DIR__ . '/ventasModales/modalIframe.php'; ?>
 
     <script>
 
@@ -1232,17 +1233,25 @@
                         customClass: {
                             popup: 'rounded-4 border-0 shadow-lg bg-body text-body'
                         }
-                    }).then((result) => {
-                        let url = '';
-                        if (result.isConfirmed) {
-                            url = `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`;
-                        } else if (result.isDenied) {
-                            url = `/cfsistem/app/backend/ventas/ticketFormal.php?id=${res.id_venta}`;
-                        }
+                    })
+                        .then((result) => {
+                            let url = '', titulo = '', tipo = 'normal';
 
-                        if (url !== '') window.open(url, '_blank');
-                        location.reload();
-                    });
+                            if (result.isConfirmed) {
+                                url = `/cfsistem/app/backend/ventas/ticket_venta.php?id=${res.id_venta}`;
+                                titulo = 'Ticket Térmico';
+                                tipo = 'ticket';
+                            } else if (result.isDenied) {
+                                url = `/cfsistem/app/backend/ventas/ticketFormal.php?id=${res.id_venta}`;
+                                titulo = 'Remisión';
+                            }
+
+                            if (url !== '') {
+                                VisorCP.abrir(url, titulo, { tipo, alCerrar: () => location.reload() });
+                            } else {
+                                location.reload();
+                            }
+                        });
                 } else {
                     Swal.fire({
                         title: 'Error',

@@ -1,10 +1,12 @@
 <?php
 
-class HistorialLotesModel {
+class HistorialLotesModel
+{
 
     private $db;
 
-    public function __construct($conexion) {
+    public function __construct($conexion)
+    {
         $this->db = $conexion;
     }
 
@@ -31,7 +33,8 @@ class HistorialLotesModel {
     // =====================================================
     // 🔥 LISTADO DE LOTES (CON FECHA)
     // =====================================================
-    public function obtenerLotes($producto_id, $almacen_id, $fecha_inicio, $fecha_fin) {
+    public function obtenerLotes($producto_id, $almacen_id, $fecha_inicio, $fecha_fin)
+    {
 
         $sql = "SELECT 
     ls.id AS lote_id,
@@ -92,9 +95,10 @@ ORDER BY ls.fecha_ingreso DESC";
     // =====================================================
     // 🧾 VENTAS POR LOTE (SIN CAMBIO)
     // =====================================================
-  public function obtenerVentasLote($lote_id) {
+    public function obtenerVentasLote($lote_id)
+    {
 
-   $sql = "SELECT 
+        $sql = "SELECT 
         tipo_movimiento,
         almacen_id,
         producto_id,
@@ -279,35 +283,38 @@ ORDER BY ls.fecha_ingreso DESC";
     -- CORRECCIÓN: El ordenamiento final debe ser estrictamente por fecha para no quebrar los saldos acumulados
     ORDER BY fecha_movimiento, orden_registro";
 
-    $stmt = $this->db->prepare($sql);
+        $stmt = $this->db->prepare($sql);
 
-    if (!$stmt) {
-        throw new Exception($this->db->error);
+        if (!$stmt) {
+            throw new Exception($this->db->error);
+        }
+
+        $stmt->bind_param("iiii", $lote_id, $lote_id, $lote_id, $lote_id);
+
+        if (!$stmt->execute()) {
+            throw new Exception($stmt->error);
+        }
+
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
-
-    $stmt->bind_param("iiii", $lote_id, $lote_id, $lote_id, $lote_id);
-
-    if (!$stmt->execute()) {
-        throw new Exception($stmt->error);
-    }
-
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
     // =====================================================
     // 📊 CONSUMO POR PRODUCTO (CON FECHAS CORREGIDO)
     // =====================================================
-  public function obtenerConsumoLotesPorProducto($producto_id, $almacen_id = 0, $fecha_inicio = null, $fecha_fin = null) {
-    try {
+    public function obtenerConsumoLotesPorProducto($producto_id, $almacen_id = 0, $fecha_inicio = null, $fecha_fin = null)
+    {
+        try {
 
-        date_default_timezone_set('America/Mexico_City');
+            date_default_timezone_set('America/Mexico_City');
 
-        if (empty($fecha_inicio)) $fecha_inicio = date('Y-m-d');
-        if (empty($fecha_fin)) $fecha_fin = date('Y-m-d');
+            if (empty($fecha_inicio))
+                $fecha_inicio = date('Y-m-d');
+            if (empty($fecha_fin))
+                $fecha_fin = date('Y-m-d');
 
-        $f_inicio_full = $fecha_inicio . " 00:00:00";
-        $f_fin_full    = $fecha_fin . " 23:59:59";
+            $f_inicio_full = $fecha_inicio . " 00:00:00";
+            $f_fin_full = $fecha_fin . " 23:59:59";
 
-        $sql = "SELECT 
+            $sql = "SELECT 
             v.id AS venta_id,
             v.folio,
             c.nombre_comercial AS cliente,
@@ -358,52 +365,53 @@ ORDER BY ls.fecha_ingreso DESC";
         WHERE dv.producto_id = ?
         AND lms.fecha_movimiento BETWEEN ? AND ?";
 
-        // 🔥 filtro opcional de almacén
-        if ($almacen_id != 0) {
-            $sql .= " AND lt.almacen_id = ?";
+            // 🔥 filtro opcional de almacén
+            if ($almacen_id != 0) {
+                $sql .= " AND lt.almacen_id = ?";
+            }
+
+            $sql .= " ORDER BY lt.id ASC, lms.id ASC";
+
+            $stmt = $this->db->prepare($sql);
+
+            if ($almacen_id != 0) {
+                $stmt->bind_param(
+                    "issi",
+                    $producto_id,
+                    $f_inicio_full,
+                    $f_fin_full,
+                    $almacen_id
+                );
+            } else {
+                $stmt->bind_param(
+                    "iss",
+                    $producto_id,
+                    $f_inicio_full,
+                    $f_fin_full
+                );
+            }
+
+            $stmt->execute();
+
+            return [
+                'success' => true,
+                'data' => $stmt->get_result()->fetch_all(MYSQLI_ASSOC)
+            ];
+
+        } catch (Throwable $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
         }
-
-        $sql .= " ORDER BY lt.id ASC, lms.id ASC";
-
-        $stmt = $this->db->prepare($sql);
-
-        if ($almacen_id != 0) {
-            $stmt->bind_param(
-                "issi",
-                $producto_id,
-                $f_inicio_full,
-                $f_fin_full,
-                $almacen_id
-            );
-        } else {
-            $stmt->bind_param(
-                "iss",
-                $producto_id,
-                $f_inicio_full,
-                $f_fin_full
-            );
-        }
-
-        $stmt->execute();
-
-        return [
-            'success' => true,
-            'data' => $stmt->get_result()->fetch_all(MYSQLI_ASSOC)
-        ];
-
-    } catch (Throwable $e) {
-        return [
-            'success' => false,
-            'message' => $e->getMessage()
-        ];
     }
-}
     // =====================================================
     // 🔁 TRASPASOS (CORREGIDO SQL)
     // =====================================================
- public function obtenerTraspasos($lote_id, $fecha_inicio = null, $fecha_fin = null) {
+    public function obtenerTraspasos($lote_id, $fecha_inicio = null, $fecha_fin = null)
+    {
 
-    $sql = "SELECT        
+        $sql = "SELECT        
         m.id AS movimiento_id,
 
         lt.codigo_lote AS codigo_lote_origen,
@@ -443,31 +451,32 @@ ORDER BY ls.fecha_ingreso DESC";
     WHERE km.lote_origen_id = ?
     AND m.tipo = 'traspaso'";
 
-    // 🔥 FECHAS
-    if (!empty($fecha_inicio) && !empty($fecha_fin)) {
-        $sql .= " AND DATE(m.fecha) BETWEEN ? AND ?";
+        // 🔥 FECHAS
+        if (!empty($fecha_inicio) && !empty($fecha_fin)) {
+            $sql .= " AND DATE(m.fecha) BETWEEN ? AND ?";
+        }
+
+        $sql .= " ORDER BY m.fecha ASC";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!empty($fecha_inicio) && !empty($fecha_fin)) {
+            $stmt->bind_param("iss", $lote_id, $fecha_inicio, $fecha_fin);
+        } else {
+            $stmt->bind_param("i", $lote_id);
+        }
+
+        $stmt->execute();
+
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
-
-    $sql .= " ORDER BY m.fecha ASC";
-
-    $stmt = $this->db->prepare($sql);
-
-    if (!empty($fecha_inicio) && !empty($fecha_fin)) {
-        $stmt->bind_param("iss", $lote_id, $fecha_inicio, $fecha_fin);
-    } else {
-        $stmt->bind_param("i", $lote_id);
-    }
-
-    $stmt->execute();
-
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
     // =====================================================
     // ⚙️ AJUSTES
     // =====================================================
-   public function obtenerAjustes($producto_id, $almacen_id, $fecha_inicio = null, $fecha_fin = null) {
+    public function obtenerAjustes($producto_id, $almacen_id, $fecha_inicio = null, $fecha_fin = null)
+    {
 
-    $sql = "SELECT 
+        $sql = "SELECT 
         'AJUSTE' AS tipo_movimiento,
         m.id,
         m.fecha,
@@ -481,32 +490,33 @@ ORDER BY ls.fecha_ingreso DESC";
   AND m.observaciones LIKE '%Salida Transmutación%'
     AND m.almacen_origen_id = ?";
 
-    // 🔥 filtro opcional por fecha
-    if ($fecha_inicio && $fecha_fin) {
-        $sql .= " AND m.fecha BETWEEN ? AND ?";
+        // 🔥 filtro opcional por fecha
+        if ($fecha_inicio && $fecha_fin) {
+            $sql .= " AND m.fecha BETWEEN ? AND ?";
+        }
+
+        $sql .= " ORDER BY m.fecha ASC";
+
+        $stmt = $this->db->prepare($sql);
+
+        // 🔥 binding dinámico
+        if ($fecha_inicio && $fecha_fin) {
+            $stmt->bind_param("iiss", $producto_id, $almacen_id, $fecha_inicio, $fecha_fin);
+        } else {
+            $stmt->bind_param("ii", $producto_id, $almacen_id);
+        }
+
+        $stmt->execute();
+
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
-
-    $sql .= " ORDER BY m.fecha ASC";
-
-    $stmt = $this->db->prepare($sql);
-
-    // 🔥 binding dinámico
-    if ($fecha_inicio && $fecha_fin) {
-        $stmt->bind_param("iiss", $producto_id, $almacen_id, $fecha_inicio, $fecha_fin);
-    } else {
-        $stmt->bind_param("ii", $producto_id, $almacen_id);
-    }
-
-    $stmt->execute();
-
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
     // =====================================================
     // 📦 ENTRADAS
     // =====================================================
-    public function obtenerEntradasLote($lote_id, $fecha_inicio = null, $fecha_fin = null) {
+    public function obtenerEntradasLote($lote_id, $fecha_inicio = null, $fecha_fin = null)
+    {
 
-    $sql = "SELECT 
+        $sql = "SELECT 
         'ENTRADA' AS tipo_movimiento,
         li.lote_id,
         li.fecha_registro,
@@ -521,36 +531,266 @@ ORDER BY ls.fecha_ingreso DESC";
 
     WHERE li.lote_id = ?";
 
-    // 🔥 filtro opcional por fecha
-    if ($fecha_inicio && $fecha_fin) {
-        $sql .= " AND li.fecha_registro BETWEEN ? AND ?";
+        // 🔥 filtro opcional por fecha
+        if ($fecha_inicio && $fecha_fin) {
+            $sql .= " AND li.fecha_registro BETWEEN ? AND ?";
+        }
+
+        $sql .= " ORDER BY li.fecha_registro ASC";
+
+        $stmt = $this->db->prepare($sql);
+
+        // 🔥 binding dinámico
+        if ($fecha_inicio && $fecha_fin) {
+            $stmt->bind_param("iss", $lote_id, $fecha_inicio, $fecha_fin);
+        } else {
+            $stmt->bind_param("i", $lote_id);
+        }
+
+        $stmt->execute();
+
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
-
-    $sql .= " ORDER BY li.fecha_registro ASC";
-
-    $stmt = $this->db->prepare($sql);
-
-    // 🔥 binding dinámico
-    if ($fecha_inicio && $fecha_fin) {
-        $stmt->bind_param("iss", $lote_id, $fecha_inicio, $fecha_fin);
-    } else {
-        $stmt->bind_param("i", $lote_id);
-    }
-
-    $stmt->execute();
-
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
     // =====================================================
     // 🔥 HISTORIAL COMPLETO
     // =====================================================
-    public function obtenerHistorialCompleto($producto_id, $almacen_id, $lote_id) {
+    public function obtenerHistorialCompleto($producto_id, $almacen_id, $lote_id)
+    {
 
         return [
-            'ventas'    => $this->obtenerVentasLote($lote_id),
+            'ventas' => $this->obtenerVentasLote($lote_id),
             'traspasos' => $this->obtenerTraspasos($producto_id, $almacen_id),
-            'ajustes'   => $this->obtenerAjustes($producto_id, $almacen_id),
-            'entradas'  => $this->obtenerEntradasLote($lote_id)
+            'ajustes' => $this->obtenerAjustes($producto_id, $almacen_id),
+            'entradas' => $this->obtenerEntradasLote($lote_id)
         ];
+    }
+    /**
+     * Actualiza lotes y reconcilia el inventario.
+     *
+     * Reglas:
+     *  - Lote con estado_lote = 'agotado'  => cantidad_actual = 0 (equivale a "eliminar").
+     *  - Lote con cantidad_actual = 0      => estado_lote = 'agotado'.
+     *  - Lote con cantidad_actual > 0      => estado_lote = 'activo'.
+     *  - Lote en BD que no viene en $lotes => se marca agotado con cantidad 0.
+     *  - Inventario.stock se RECALCULA como SUM(cantidad_actual) de los lotes.
+     *
+     * @param int   $almacen_id
+     * @param int   $producto_id
+     * @param array $lotes       Lista COMPLETA de lotes del almacén+producto
+     *                           (misma estructura que devuelve obtenerLotesEInventario).
+     * @param array $inventario  Opcional: ['stock_minimo' => x, 'stock_maximo' => y]
+     *                           (el campo 'stock' se ignora porque se recalcula).
+     *
+     * @return array
+     */
+    public function actualizarLotesEInventario($almacen_id, $producto_id, array $lotes, $inventario = null)
+    {
+        $this->db->begin_transaction();
+
+        try {
+            $almacen_id = (int) $almacen_id;
+            $producto_id = (int) $producto_id;
+
+            // ------------------------------------------------------------------
+            // 1) Lotes actuales en BD para este almacén y producto
+            // ------------------------------------------------------------------
+            $stmt = $this->db->prepare(
+                "SELECT id, cantidad_actual, estado_lote
+             FROM lotes_stock
+             WHERE almacen_id = ? AND producto_id = ?"
+            );
+            $stmt->bind_param("ii", $almacen_id, $producto_id);
+            $stmt->execute();
+            $actuales = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+            $stmt->close();
+
+            $actualesPorId = [];
+            foreach ($actuales as $r) {
+                $actualesPorId[(int) $r['id']] = $r;
+            }
+
+            $idsProcesados = [];
+            $cambios = [];
+
+            // ------------------------------------------------------------------
+            // 2) Evaluar solo los lotes que llegaron en $lotes
+            //    Campos esperados: id, cantidad_actual, estado_lote
+            // ------------------------------------------------------------------
+            // ------------------------------------------------------------------
+            // 2) Evaluar solo los lotes que llegaron en $lotes
+            //    Campos esperados: id, cantidad_actual, estado_lote
+            // ------------------------------------------------------------------
+            foreach ($lotes as $lote) {
+                $loteId = isset($lote['id']) ? (int) $lote['id'] : 0;
+
+                if ($loteId <= 0 || !isset($actualesPorId[$loteId]) || isset($idsProcesados[$loteId])) {
+                    continue;
+                }
+                $idsProcesados[$loteId] = true;
+
+                $old = $actualesPorId[$loteId];
+                $viejaCantidad = (float) $old['cantidad_actual'];
+                $viejoEstado = (string) $old['estado_lote'];
+
+                $cantidadEntrante = isset($lote['cantidad_actual']) ? max(0.0, (float) $lote['cantidad_actual']) : 0.0;
+                $estadoEntrante = $lote['estado_lote'] ?? null;
+
+                if ($estadoEntrante === 'agotado') {
+                    $nuevaCantidad = 0.0;
+                    $nuevoEstado = 'agotado';
+                    $accion = ($viejaCantidad > 0.0) ? 'eliminado' : 'actualizado';
+                } else {
+                    $nuevaCantidad = $cantidadEntrante;
+                    $nuevoEstado = ($nuevaCantidad > 0.0) ? 'activo' : 'agotado';
+
+                    if ($viejaCantidad <= 0.0 && $nuevaCantidad > 0.0) {
+                        $accion = 'reactivado';
+                    } elseif ($nuevaCantidad === 0.0 && $viejaCantidad > 0.0) {
+                        $accion = 'eliminado';
+                    } else {
+                        $accion = 'actualizado';
+                    }
+                }
+
+                // Si no cambió ni cantidad ni estado, no hace UPDATE
+                if ($viejaCantidad === $nuevaCantidad && $viejoEstado === $nuevoEstado) {
+                    continue;
+                }
+
+                $stmt = $this->db->prepare(
+                    "UPDATE lotes_stock
+                     SET cantidad_actual = ?, estado_lote = ?
+                     WHERE id = ? AND almacen_id = ? AND producto_id = ?"
+                );
+                $stmt->bind_param("dsiii", $nuevaCantidad, $nuevoEstado, $loteId, $almacen_id, $producto_id);
+                $stmt->execute();
+                $stmt->close();
+
+                $cambios[] = [
+                    'lote_id' => $loteId,
+                    'accion' => $accion,
+                    'cantidad_anterior' => $viejaCantidad,
+                    'cantidad_nueva' => $nuevaCantidad,
+                    'delta' => $nuevaCantidad - $viejaCantidad,
+                    'estado_anterior' => $viejoEstado,
+                    'estado_nuevo' => $nuevoEstado
+                ];
+            }
+            // ------------------------------------------------------------------
+            // 3) Actualizar stock en inventario (número o null; sin tocar min/max)
+            // ------------------------------------------------------------------
+            $nuevoStock = ($inventario !== null && is_numeric($inventario))
+                ? max(0.0, (float) $inventario)
+                : null;
+
+            $stmt = $this->db->prepare(
+                "SELECT id, stock FROM inventario WHERE almacen_id = ? AND producto_id = ?"
+            );
+            $stmt->bind_param("ii", $almacen_id, $producto_id);
+            $stmt->execute();
+            $invActual = $stmt->get_result()->fetch_assoc();
+            $stmt->close();
+
+            if (!$invActual) {
+                $stockAInsertar = $nuevoStock ?? 0.0;
+                $minDefault = 0.0;
+                $maxDefault = 0.0;
+
+                $stmt = $this->db->prepare(
+                    "INSERT INTO inventario (almacen_id, producto_id, stock, stock_minimo, stock_maximo)
+                 VALUES (?, ?, ?, ?, ?)"
+                );
+                $stmt->bind_param("iiddd", $almacen_id, $producto_id, $stockAInsertar, $minDefault, $maxDefault);
+                $stmt->execute();
+                $inventarioId = (int) $stmt->insert_id;
+                $stmt->close();
+                $stockAnterior = 0.0;
+                $stockFinal = $stockAInsertar;
+            } else {
+                $inventarioId = (int) $invActual['id'];
+                $stockAnterior = (float) $invActual['stock'];
+                $stockFinal = $nuevoStock ?? $stockAnterior;
+
+                if ($nuevoStock !== null) {
+                    $stmt = $this->db->prepare("UPDATE inventario SET stock = ? WHERE id = ?");
+                    $stmt->bind_param("di", $stockFinal, $inventarioId);
+                    $stmt->execute();
+                    $stmt->close();
+                }
+            }
+
+            $this->db->commit();
+
+            return [
+                'ok' => true,
+                'inventario_id' => $inventarioId,
+                'stock_anterior' => $stockAnterior,
+                'stock_final' => $stockFinal,
+                'delta_inventario' => $stockFinal - $stockAnterior,
+                'cambios' => $cambios
+            ];
+        } catch (\Throwable $e) {
+            $this->db->rollback();
+            return [
+                'ok' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+    /**
+     * Devuelve los lotes y el inventario de un almacén + producto.
+     */
+    public function obtenerLotesEInventario($almacen_id, $producto_id, $fecha_inicio = null, $fecha_fin = null)
+    {
+        $resultado = [
+            'lotes' => [],
+            'inventario' => null
+        ];
+
+        // Si no vienen fechas, usar el mes actual (desde el día 1 hasta el último día del mes)
+        $fechaInicioValida = (!empty($fecha_inicio))
+            ? $fecha_inicio
+            : date('Y-m-01');
+
+        $fechaFinValida = (!empty($fecha_fin))
+            ? $fecha_fin
+            : date('Y-m-t');
+
+        // Si el usuario envía solo fecha (YYYY-MM-DD), cubrimos todo el día con DATETIME o DATE
+        $inicioSql = (strlen($fechaInicioValida) === 10)
+            ? $fechaInicioValida . ' 00:00:00'
+            : $fechaInicioValida;
+
+        $finSql = (strlen($fechaFinValida) === 10)
+            ? $fechaFinValida . ' 23:59:59'
+            : $fechaFinValida;
+
+        // Lotes filtrados por rango de fecha_ingreso
+        $sql = "SELECT `id`, `producto_id`, `almacen_id`, `codigo_lote`,
+                   `cantidad_inicial`, `cantidad_actual`,
+                   `precio_compra_unitario`, `fecha_ingreso`, `estado_lote`
+            FROM `lotes_stock`
+            WHERE `almacen_id` = ?
+              AND `producto_id` = ?
+              AND `fecha_ingreso` BETWEEN ? AND ?
+            ORDER BY `fecha_ingreso` ASC, `id` ASC";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("iiss", $almacen_id, $producto_id, $inicioSql, $finSql);
+        $stmt->execute();
+        $resultado['lotes'] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+
+        // Inventario (stock general del producto en el almacén)
+        $sql = "SELECT `id`, `almacen_id`, `producto_id`,
+                   `stock`, `stock_minimo`, `stock_maximo`
+            FROM `inventario`
+            WHERE `almacen_id` = ? AND `producto_id` = ?";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param("ii", $almacen_id, $producto_id);
+        $stmt->execute();
+        $resultado['inventario'] = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        return $resultado;
     }
 }

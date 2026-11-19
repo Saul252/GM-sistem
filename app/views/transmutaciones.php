@@ -223,12 +223,13 @@
                         <div class="col-md-3">
                             <label class="form-label text-xs fw-bold text-secondary mb-1">Rango de Fecha</label>
                             <select id="f_rango" class="form-select form-select-sm">
-                                <option value="todos">Todas las fechas</option>
+
                                 <option value="hoy">Hoy</option>
                                 <option value="ayer">Ayer</option>
                                 <option value="semana">Esta Semana</option>
                                 <option value="mes">Este Mes</option>
                                 <option value="personalizado">Personalizado</option>
+                                <option value="todos">Todas las fechas</option>
                             </select>
                         </div>
 
@@ -259,6 +260,7 @@
                                     <th>Destino (Entra)</th>
                                     <th>Cant.</th>
                                     <th>Responsable</th>
+                                    <th>ACCION</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -399,11 +401,13 @@
     </div>
 
     <!-- Scripts de Librerías Corregidos -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 
     <script>
         const baseUrl = '/cfsistem/app/controllers/transmutacionesController.php';
@@ -497,6 +501,22 @@
                         "render": function (data) {
                             return `<i class="fas fa-user-circle me-1 text-body-secondary"></i><small>${data || 'Sistema'}</small>`;
                         }
+                    },
+                    {
+                        "data": null,
+                        "orderable": false,
+                        "searchable": false,
+                        "className": "text-center",
+                        "render": function (data, type, row) {
+                            return `
+                    <button type="button"
+                            class="btn btn-outline-danger btn-sm"
+                            title="Revertir y eliminar transmutación #${row.id}"
+                            onclick="eliminarTransmutacion(${row.id})">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                `;
+                        }
                     }
                 ],
                 "order": [[0, "desc"]],
@@ -507,7 +527,6 @@
                     $('.dataTables_paginate > .pagination').addClass('pagination-sm');
                 }
             });
-
             // Eventos para recargar la tabla dinámicamente al cambiar Selects o Fechas
             $('#f_almacen, #f_rango, #f_inicio, #f_fin').on('change', function () {
                 tablaHistorial.ajax.reload();
@@ -744,6 +763,102 @@
                 } finally { btn.disabled = false; }
             });
         });
+        async function eliminarTransmutacion(id) {
+            const transmutacionId = parseInt(id, 10);
+            if (!transmutacionId || transmutacionId <= 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'ID no válido',
+                    text: 'No se encontró un identificador válido para la transmutación.'
+                });
+                return;
+            }
+
+            const confirmacion = await Swal.fire({
+                title: `¿Revertir y eliminar transmutación #${transmutacionId}?`,
+                text: 'Se devolverá el stock al lote de origen (reactivándolo si estaba agotado), se restará lo convertido del inventario y se eliminará el lote creado y los movimientos del Kardex.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar',
+                reverseButtons: true
+            });
+
+            if (!confirmacion.isConfirmed) {
+                return;
+            }
+
+            Swal.fire({
+                title: 'Revirtiendo transmutación...',
+                text: 'Por favor espere, actualizando lotes, inventario y Kardex.',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            try {
+                const urlControlador = '/cfsistem/app/controllers/transmutacionesController.php';
+
+                const formData = new URLSearchParams();
+                formData.append('action', 'eliminar');
+                formData.append('id', transmutacionId);
+
+                const response = await fetch(urlControlador, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+                    },
+                    body: formData.toString()
+                });
+
+                const rawText = await response.text();
+
+                if (!response.ok) {
+                    throw new Error(`Error HTTP ${response.status}: ${rawText}`);
+                }
+
+                let data;
+                try {
+                    data = JSON.parse(rawText);
+                } catch (parseErr) {
+                    console.error('Respuesta no JSON del servidor:', rawText);
+                    throw new Error('La respuesta del servidor no es un JSON válido.');
+                }
+
+                if (data.status === 'success') {
+                    await Swal.fire({
+                        icon: 'success',
+                        title: '¡Eliminada!',
+                        text: data.message || `Transmutación #${transmutacionId} revertida y eliminada correctamente.`,
+                        timer: 1800,
+                        showConfirmButton: false
+                    });
+
+                    if ($.fn.DataTable && $.fn.DataTable.isDataTable('#tablaHistorial')) {
+                        $('#tablaHistorial').DataTable().ajax.reload(null, false);
+                    } else {
+                        location.reload();
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'No se pudo eliminar',
+                        text: data.message || 'Ocurrió un error al revertir la transmutación.'
+                    });
+                }
+            } catch (error) {
+                console.error('Error al eliminar transmutación:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error de comunicación',
+                    text: error.message || 'No se pudo conectar con el servidor para eliminar la transmutación.'
+                });
+            }
+        }
     </script>
 </body>
 

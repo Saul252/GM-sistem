@@ -642,6 +642,7 @@ class EntregaModel
                
               
                 v.folio AS folio_venta,
+                c.id as cliente_id,
                 c.nombre_comercial AS cliente_nombre,
                 c.direccion AS cliente_direccion_fiscal,
                 c.telefono AS cliente_telefono

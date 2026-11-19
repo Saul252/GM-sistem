@@ -242,17 +242,19 @@
         function formatearDireccion(direccion) {
             if (!direccion) return '';
 
-            const etiquetas = ['calle', 'col', 'ciudad', 'pueblo'];
-            let texto = String(direccion);
-
-            etiquetas.forEach(etq => {
-                const regex = new RegExp(`\\b${etq}\\s*:?\\s*`, 'gi');
-                texto = texto.replace(regex, `${etq}: `);
-            });
-
-            return texto.toUpperCase().trim();
+            return String(direccion)
+                .split(',')
+                .map(seg => seg
+                    .trim()
+                    // Elimina SOLO la etiqueta al inicio de cada segmento
+                    .replace(/^(?:calle|col|ciudad|pueblo)\s*:?\s*/i, '')
+                    .replace(/\s+/g, ' ')
+                    .trim()
+                )
+                .filter(Boolean)
+                .join(', ')
+                .toUpperCase();
         }
-
         function renderizarTicket(data) {
             const { venta, detalles, pagos } = data;
 

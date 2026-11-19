@@ -437,7 +437,7 @@ join opciones_de_medida_adicional odma on odma.id= dv.unidadMedida
 
         // 4. Historial de Pagos
         $historialPagos = [];
-        $sqlPagos = "SELECT hp.fecha, hp.monto, hp.metodo_pago, hp.referencia, u.nombre as usuario_nombre 
+        $sqlPagos = "SELECT hp.id, hp.fecha, hp.monto, hp.metodo_pago, hp.referencia, u.nombre as usuario_nombre 
                  FROM historial_pagos hp
                  JOIN usuarios u ON hp.usuario_id = u.id 
                  WHERE hp.venta_id = $id 
@@ -954,7 +954,96 @@ join opciones_de_medida_adicional odma on odma.id= dv.unidadMedida
             throw $e; // Ahora el controlador sí capturará el mensaje limpiamente
         }
     }
+    public function eliminarPago($pago_id)
+    {
+        // Iniciamos la transacción usando la conexión interna
+        $this->db->begin_transaction();
 
+        try {
+            $pago_id = intval($pago_id);
+
+            // 1. Obtener el venta_id ligado al pago antes de eliminarlo
+            $stmtVenta = $this->db->prepare("SELECT venta_id FROM historial_pagos WHERE id = ?");
+            $stmtVenta->bind_param("i", $pago_id);
+            $stmtVenta->execute();
+            $resultado = $stmtVenta->get_result()->fetch_assoc();
+            $stmtVenta->close();
+
+            if (!$resultado) {
+                throw new Exception("El pago con ID {$pago_id} no existe o ya fue eliminado.");
+            }
+
+            $venta_id = intval($resultado['venta_id']);
+
+            // 2. Eliminar el registro del historial de pagos
+            $stmtDelete = $this->db->prepare("DELETE FROM historial_pagos WHERE id = ?");
+            $stmtDelete->bind_param("i", $pago_id);
+
+            if (!$stmtDelete->execute()) {
+                throw new Exception("Error al eliminar el pago: " . $stmtDelete->error);
+            }
+            $stmtDelete->close();
+
+            // 3. Consultar el total de la venta
+            $stmtTotalVenta = $this->db->prepare("SELECT total FROM ventas WHERE id = ?");
+            $stmtTotalVenta->bind_param("i", $venta_id);
+            $stmtTotalVenta->execute();
+            $resVenta = $stmtTotalVenta->get_result()->fetch_assoc();
+            $stmtTotalVenta->close();
+
+            if (!$resVenta) {
+                throw new Exception("La venta asociada al pago no existe.");
+            }
+            $totalVenta = floatval($resVenta['total']);
+
+            // 4. Sumar los pagos restantes que siguen asociados a esta venta
+            $stmtSumaPagos = $this->db->prepare("SELECT SUM(monto) as total_pagado FROM historial_pagos WHERE venta_id = ?");
+            $stmtSumaPagos->bind_param("i", $venta_id);
+            $stmtSumaPagos->execute();
+            $resSuma = $stmtSumaPagos->get_result()->fetch_assoc();
+            $stmtSumaPagos->close();
+
+            $totalPagadoRestante = floatval($resSuma['total_pagado'] ?? 0);
+
+            // 5. Determinar el nuevo estado de pago según lo que resta abonado
+            if ($totalPagadoRestante >= $totalVenta) {
+                $nuevo_estado_pago = 'pagado';
+            } elseif ($totalPagadoRestante > 0) {
+                $nuevo_estado_pago = 'parcial';
+            } else {
+                $nuevo_estado_pago = 'pendiente'; // Aquí es donde cambia a pendiente si ya no quedan pagos
+            }
+
+            // 6. Actualizar el estado de pago en la tabla ventas
+            $stmtUpdateVenta = $this->db->prepare("UPDATE ventas SET estado_pago = ? WHERE id = ?");
+            $stmtUpdateVenta->bind_param("si", $nuevo_estado_pago, $venta_id);
+
+            if (!$stmtUpdateVenta->execute()) {
+                throw new Exception("Error al actualizar el estado de la venta: " . $stmtUpdateVenta->error);
+            }
+            $stmtUpdateVenta->close();
+
+            // Si todo salió bien, confirmamos los cambios
+            $this->db->commit();
+
+            return [
+                'status' => 'success',
+                'message' => 'Pago eliminado correctamente y estado de venta actualizado.',
+                'venta_id' => $venta_id,
+                'nuevo_estado_pago' => $nuevo_estado_pago
+            ];
+
+        } catch (Exception $e) {
+            // En caso de cualquier error, revertimos la transacción
+            $this->db->rollback();
+            error_log("Error en eliminarPago: " . $e->getMessage());
+
+            return [
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ];
+        }
+    }
     public function registrarAbono($venta_id, $monto, $usuario_id, $metodo_pago, $fecha_pago, $referencia)
     {
         // 1. Lógica para la referencia: cadena vacía por defecto

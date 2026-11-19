@@ -403,8 +403,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 // if ($rutaActiva) {
                                 //     $folioViaje = $rutaActiva['viaje_folio'];
                                 // } else {
-                                $folioViaje = "RUT-" . date('ymd') . "-" . str_pad($vehiculoId, 2, "0", STR_PAD_LEFT) . "-" . rand(10, 99);
-
+                                $folioViaje = "RUT-" . date('dmyHis');
                                 if (method_exists($vehiculoM, 'actualizarEstado')) {
                                     $vehiculoM->actualizarEstado($vehiculoId, 'en_ruta');
                                 }

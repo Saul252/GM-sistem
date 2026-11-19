@@ -50,7 +50,7 @@ class RepartoModel
                     entrega_venta_id, 
                     fecha_programada, 
                     estado_reparto
-                ) VALUES (?, ?, ?, CURDATE(), 'en_transito')";
+                ) VALUES (?, ?, ?, CURDATE(), 'completado')";
 
             $stmtM = $this->db->prepare($sqlM);
             $stmtM->bind_param("iii", $vehiculo_id, $chofer_id, $movimiento_id);
@@ -78,7 +78,7 @@ class RepartoModel
                     reparto_id, 
                     estatus_consolidado,
                     entrega_id
-                ) VALUES (?, ?, ?, 'abierto', ?)";
+                ) VALUES (?, ?, ?, 'cerrado', ?)";
 
             $stmtC = $this->db->prepare($sqlC);
             $stmtC->bind_param("siii", $folio_viaje, $vehiculo_id, $reparto_id, $entrega_id);
@@ -91,7 +91,7 @@ class RepartoModel
                     descripcion_punto, 
                     estado_punto,
                     entrega_id
-                ) VALUES (?, 1, ?, 'pendiente', ?)";
+                ) VALUES (?, 1, ?, 'visitado', ?)";
 
             $stmtP = $this->db->prepare($sqlP);
             $stmtP->bind_param("isi", $reparto_id, $direccion, $entrega_id);

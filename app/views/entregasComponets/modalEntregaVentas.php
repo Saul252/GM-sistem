@@ -77,48 +77,82 @@
                     <!-- Formulario de Ruta / Logística -->
                     <div id="formRutaIntegrado" class="animate__animated animate__fadeInUp">
                         <div id="wrapperLogistica"
-                            class="p-4 rounded-4 shadow-sm bg-body-tertiary border border-secondary-subtle"
-                            style="transition: all 0.3s ease;">
+                            class="p-4 rounded-4 shadow-sm bg-body-tertiary border border-secondary-subtle">
                             <div class="row g-3">
+
+                                <!-- BLOQUE DE DIRECCIÓN Y SUCURSALES (100% Bootstrap 5.3) -->
                                 <div class="col-12">
                                     <div id="contenedorDireccion"
                                         class="p-3 rounded-4 bg-body border border-secondary-subtle shadow-sm">
-                                        <label id="lblDinamicoPrincipal" class="small fw-bold text-body-secondary mb-1"
-                                            style="font-size: 0.65rem;">PUNTO DE ENTREGA / OBRA</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text bg-transparent border-0 pe-2">
-                                                <i id="iconDinamico" class="bi bi-geo-alt-fill text-danger fs-5"></i>
+
+                                        <!-- Cabecera -->
+                                        <div
+                                            class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom border-secondary-subtle">
+                                            <label id="lblDinamicoPrincipal"
+                                                class="small fw-bold text-uppercase text-primary d-flex align-items-center m-0">
+                                                <i id="iconDinamico"
+                                                    class="bi bi-geo-alt-fill text-danger me-2 fs-5"></i>
+                                                Punto de Entrega / Obra
+                                            </label>
+                                            <span
+                                                class="badge bg-secondary-subtle text-secondary-emphasis fw-normal rounded-pill px-2 py-1">
+                                                Sucursal opcional
                                             </span>
-                                            <textarea id="mv_direccion"
-                                                class="form-control bg-transparent border-0 text-body p-1 text-uppercase shadow-none"
-                                                rows="2" style="font-size: 0.9rem; resize: none;"
-                                                placeholder="Dirección exacta..."></textarea>
                                         </div>
+
+                                        <!-- Contenedor alineado: Select compacto a la izquierda + Textarea a la derecha -->
+                                        <div class="row align-items-stretch g-2 pt-1">
+
+                                            <!-- Columna Izquierda: Selector Compacto (col-lg-3) -->
+                                            <div class="col-lg-3 d-flex flex-column justify-content-between">
+                                                <select name="select-ubicacion" id="select-ubicacion"
+                                                    class="form-select form-select-sm border-secondary-subtle shadow-none rounded-3 select2-pagina bg-body-tertiary fw-medium">
+                                                    <option value="">📍 Sucursal guardada...</option>
+                                                </select>
+                                                <small class="text-body-secondary mt-1 d-flex align-items-center">
+                                                    <i
+                                                        class="bi bi-arrow-return-right me-1 text-primary"></i>Autocompleta
+                                                    dirección
+                                                </small>
+                                            </div>
+
+                                            <!-- Columna Derecha: Textarea Dirección Exacta (col-lg-9) -->
+                                            <div class="col-lg-9">
+                                                <textarea id="mv_direccion"
+                                                    class="form-control form-control-sm bg-body-tertiary border-secondary-subtle text-body px-3 py-2 text-uppercase rounded-3 shadow-none h-100"
+                                                    rows="2" style="resize: none;"
+                                                    placeholder="Escribe o selecciona la dirección exacta de entrega..."></textarea>
+                                            </div>
+
+                                        </div>
+
                                     </div>
                                 </div>
+
                                 <div class="col-md-6" id="colVehiculo">
                                     <label class="small fw-bold text-body-secondary mb-1">UNIDAD / VEHÍCULO</label>
                                     <select id="mv_vehiculo_id"
-                                        class="form-select bg-body shadow-sm rounded-3 p-2.5 border-secondary-subtle text-body"></select>
+                                        class="form-select bg-body shadow-sm rounded-3 py-2 border-secondary-subtle text-body"></select>
                                 </div>
+
                                 <div class="col-md-6">
                                     <label id="lblPersonal" class="small fw-bold text-body-secondary mb-1">CHOFER
                                         RESPONSABLE</label>
                                     <select id="mv_chofer_id"
-                                        class="form-select bg-body shadow-sm rounded-3 p-2.5 border-secondary-subtle text-body"></select>
+                                        class="form-select bg-body shadow-sm rounded-3 py-2 border-secondary-subtle text-body"></select>
                                 </div>
 
                                 <div class="col-12">
                                     <label class="small fw-bold text-body-secondary mb-1">AYUDANTES DE CARGA
                                         (OPCIONAL)</label>
                                     <select id="mv_tripulantes"
-                                        class="form-select bg-body shadow-sm rounded-3 p-2 border-secondary-subtle text-body"
-                                        style="font-size: 0.85rem;"></select>
-                                    <small class="text-body-secondary mt-1 d-block" style="font-size: 0.65rem;">
+                                        class="form-select form-select-sm bg-body shadow-sm rounded-3 py-2 border-secondary-subtle text-body"></select>
+                                    <small class="text-body-secondary mt-1 d-block">
                                         <i class="bi bi-info-circle me-1"></i>Mantén presionada la tecla <b>Ctrl</b>
                                         para elegir varios.
                                     </small>
                                 </div>
+
                             </div>
                         </div>
                     </div>
@@ -145,7 +179,80 @@
                 this.value = this.value.toUpperCase();
             });
         });
+    /**
+     * Carga las ubicaciones de un cliente en un select y actualiza el textarea al seleccionarlas.
+     * @param {number} clienteId - ID del cliente a consultar.
+     */
+    /**
+ * Carga las ubicaciones de un cliente en un select y actualiza el textarea al seleccionarlas.
+ * @param {number} clienteId - ID del cliente a consultar.
+ */
+    async function cargarUbicacionesEnSelect(clienteId) {
+        const $select = $('#select-ubicacion');
+        const $textarea = $('#mv_direccion');
 
+        // Limpiamos el select y el textarea de entrada por seguridad
+        $select.html('<option value="">Seleccione una ubicación...</option>');
+        $textarea.val('');
+
+        if (!clienteId || clienteId <= 0) {
+            return; // Si no hay un ID válido, no hacemos nada
+        }
+
+        try {
+            const resp = await fetch(`/cfsistem/app/controllers/clientesController.php?action=listarUbicaciones&cliente_id=${clienteId}`);
+            const textResponse = await resp.text();
+            console.log("Respuesta cruda [Listar para Select]:", textResponse);
+
+            let res;
+            try {
+                res = JSON.parse(textResponse);
+            } catch (e) {
+                throw new Error("El servidor no devolvió un JSON válido.");
+            }
+
+            if (res.success && res.data && res.data.length > 0) {
+                let opcionesHtml = '<option value="">Seleccione una ubicación...</option>';
+
+                res.data.forEach(u => {
+                    // Usamos la función interna de escape de forma segura
+                    opcionesHtml += `<option value="${u.id}" data-direccion="${_cliEscHtml(u.direccion_completa)}">${_cliEscHtml(u.nombre)}</option>`;
+                });
+
+                $select.html(opcionesHtml);
+
+                // Si usas Select2 en tu proyecto, actualizamos el componente
+                if ($select.hasClass('select2-hidden-accessible')) {
+                    $select.trigger('change.select2');
+                }
+            } else {
+                $select.html('<option value="">Sin ubicaciones registradas</option>');
+                if ($select.hasClass('select2-hidden-accessible')) {
+                    $select.trigger('change.select2');
+                }
+            }
+        } catch (error) {
+            console.error("Error al cargar ubicaciones para el select:", error);
+        }
+    }
+
+    // Función auxiliar interna para escapar HTML y evitar conflictos
+    function _cliEscHtml(text) {
+        if (!text) return '';
+        return String(text)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+
+    // Evento para cambiar el valor del textarea cuando se seleccione una opción del select
+    $(document).on('change', '#select-ubicacion', function () {
+        const direccionSeleccionada = $(this).find('option:selected').attr('data-direccion') || '';
+        $('#mv_direccion').val(direccionSeleccionada);
+    });
     /* ═══════════════════════════════════════════════════════════
        HELPER GLOBAL — definido ANTES de cualquier función que lo use
        ═══════════════════════════════════════════════════════════ */
@@ -181,7 +288,7 @@
             $('#mv_vehiculo_id').prop('required', true);
 
         } else {
-            $('#lblDinamicoPrincipal').text('NOTAS / QUIÉN RECIBE (OPCIONAL)');
+            $('#lblDinamicoPrincipal').text('UBICACION DE ENTREGA Y NÓTAS');
             $('#iconDinamico').removeClass('bi-geo-alt-fill text-danger').addClass('bi-person-fill text-success');
             $('#mv_direccion').attr('placeholder', 'Ej. Se lo lleva el cliente en su camioneta...');
             $('#lblPersonal').text('DESPACHADOR RESPONSABLE (PATIO)');
@@ -205,7 +312,39 @@
         return await resp.json();
     }
 
+    /**
+     * Limpia etiquetas comunes de direcciones.
+     *   "calle La Cima 11, col. Santa Catarina, pueblo Ayotzingo, ciudad Chalco, Estado de México"
+     *   → "La Cima 11 Santa Catarina Ayotzingo Chalco Estado de México"
+     */
+    function limpiarDireccion(dir) {
+        if (!dir || typeof dir !== 'string') return '';
 
+        // Etiquetas que se eliminan al inicio de cada segmento.
+        // Ordenadas de más larga a más corta para evitar falsos positivos.
+        const etiquetas = [
+            'código postal', 'codigo postal',
+            'avenida', 'fraccionamiento', 'delegación', 'delegacion',
+            'municipio', 'alcaldía', 'alcaldia', 'localidad',
+            'colonia', 'unidad habitacional',
+            'calle', 'pueblo', 'ciudad', 'barrio',
+            'c.p.', 'fracc.', 'col.', 'av.', 'loc.', 'cd.', 'bo.', 'uh.', 'u.h.',
+            'cp', 'col', 'av', 'cd', 'loc', 'bo', 'pblo', 'fracc', 'uh'
+        ];
+
+        const ordenadas = etiquetas.slice().sort((a, b) => b.length - a.length);
+        // Escapamos caracteres especiales de regex (los puntos de "c.p.", "col.", etc.)
+        const patron = ordenadas
+            .map(e => e.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+            .join('|');
+        const regex = new RegExp('^\\s*(' + patron + ')\\s+', 'i');
+
+        return dir
+            .split(',')
+            .map(seg => seg.trim().replace(regex, '').trim())
+            .filter(Boolean)      // descarta segmentos vacíos (",,,")
+            .join(' ');           // ← aquí decides el separador
+    }
 
     async function abrirModalDespachoVentaTotal(almacenId, ventaId) {
         console.log('[Despacho] almacenId:', almacenId, 'ventaId:', ventaId);
@@ -363,7 +502,10 @@
 
             if (resDetalle.success && resRecursos.success) {
                 console.log(resDetalle);
-                $('#mv_direccion').val(resDetalle.data.entrega.cliente_direccion_fiscal || '');
+                cargarUbicacionesEnSelect(resDetalle.data.entrega.cliente_id);
+                let direccionCliente = limpiarDireccion(resDetalle.data.entrega.cliente_direccion_fiscal || '')
+
+                $('#mv_direccion').val(direccionCliente);
 
                 const selectV = $('#mv_vehiculo_id')
                     .empty()

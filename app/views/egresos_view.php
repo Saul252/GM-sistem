@@ -434,7 +434,7 @@
             <div class="card mb-4 shadow-sm border-0" style="border-radius: 15px;">
                 <div class="card-body p-3">
                     <?php
-                    $periodo_sel = $_GET['periodo_filtro'] ?? 'mes';
+                    $periodo_sel = $_GET['periodo_filtro'] ?? 'hoy';
                     $tipo_sel = $_GET['tipo_filtro'] ?? 'todos';
                     $categoria_gasto_id = $_GET['categoria_gasto_filtro'] ?? 0;
                     ?>
@@ -621,9 +621,9 @@
                         <thead class="table align-middle" style="border-bottom: 2px solid #dee2e6;">
                             <tr class="text-secondary">
                                 <th class="py-3 fw-bold text-uppercase text-center"
-                                    style="font-size: 0.75rem; letter-spacing: 0.5px;">Folio</th>
+                                    style="font-size: 0.75rem; letter-spacing: 0.5px;">RECEPCION</th>
                                 <th class="py-3 fw-bold text-uppercase text-center"
-                                    style="font-size: 0.75rem; letter-spacing: 0.5px;">OC</th>
+                                    style="font-size: 0.75rem; letter-spacing: 0.5px;">Compra</th>
                                 <th class="py-3 fw-bold text-uppercase text-center"
                                     style="font-size: 0.75rem; letter-spacing: 0.5px;">Almacén</th>
                                 <th class="py-3 fw-bold text-uppercase text-center"
@@ -645,21 +645,68 @@
                             </tr>
                         </thead>
                         <tbody class="border-top-0">
-                            <?php if (!empty($egresos)): ?>
+                            <?php if (!empty($egresos) && is_array($egresos)): ?>
                                 <?php foreach ($egresos as $e): ?>
+                                    <?php
+                                    $id = (int) ($e['id'] ?? 0);
+                                    $tipo = (string) ($e['tipo'] ?? '');
+                                    $folio = (string) ($e['folio'] ?? '');
+                                    $solicitudId = (int) ($e['solicitud_id'] ?? 0);
+                                    $almacenNom = (string) ($e['almacen_nombre'] ?? 'N/A');
+                                    $fechaRaw = $e['fecha'] ?? '';
+                                    $tsFecha = (!empty($fechaRaw) && $fechaRaw !== '0000-00-00 00:00:00') ? strtotime((string) $fechaRaw) : false;
+                                    $fechaFmt = $tsFecha ? date('d/m/Y H:i', $tsFecha) : '—';
+                                    $entidad = (string) ($e['entidad'] ?? '—');
+                                    $total = is_numeric($e['total'] ?? null) ? (float) $e['total'] : 0.0;
+                                    $tieneDeuda = (int) ($e['tiene_deuda'] ?? 0);
+                                    $pagadoCpp = (int) ($e['pagado_cpp'] ?? 0);
+                                    $faltantes = is_numeric($e['piezas_faltantes'] ?? null) ? (float) $e['piezas_faltantes'] : 0.0;
+                                    $docUrl = (string) ($e['documento_url'] ?? '');
+
+                                    $prefijo = match ($tipo) {
+                                        'compra' => 'FC-',
+                                        'gasto' => 'FG-',
+                                        'pago_deuda' => 'PD-',
+                                        default => ''
+                                    };
+
+                                    $bg_tipo = match ($tipo) {
+                                        'compra' => 'bg-success bg-opacity-10 text-success border-info-subtle',
+                                        'gasto' => 'bg-dark bg-opacity-10 text-dark-emphasis border-dark-subtle',
+                                        'pago_deuda' => 'bg-primary bg-opacity-10 text-primary border-primary-subtle',
+                                        default => 'bg-secondary bg-opacity-10 text-secondary border-secondary-subtle'
+                                    };
+
+                                    $metodo = strtoupper(trim((string) ($e['metodo_pago'] ?? 'EFECTIVO')));
+                                    if ($metodo === '') {
+                                        $metodo = 'EFECTIVO';
+                                    }
+                                    $dot_color = 'text-secondary';
+                                    if (str_contains($metodo, 'EFECT')) {
+                                        $dot_color = 'text-success';
+                                    } elseif (str_contains($metodo, 'TARJ')) {
+                                        $dot_color = 'text-primary';
+                                    } elseif (str_contains($metodo, 'TRANS')) {
+                                        $dot_color = 'text-warning';
+                                    }
+
+                                    $folioEsc = htmlspecialchars($folio, ENT_QUOTES, 'UTF-8');
+                                    $tipoEsc = htmlspecialchars($tipo, ENT_QUOTES, 'UTF-8');
+                                    $fnCancel = ($tipo === 'compra') ? 'confirmarCancelacionCompra' : 'confirmarCancelacionGasto';
+                                    ?>
                                     <tr class="border-bottom" style="transition: background-color 0.15s ease;">
                                         <td class="text-center">
                                             <span class="fw-bold card-title-text" style="letter-spacing: -0.3px;">
-                                                <?= ($e['tipo'] == 'compra' ? 'FC-' : ($e['tipo'] == 'gasto' ? 'FG-' : 'PD-')) . $e['folio'] ?>
+                                                <?= htmlspecialchars($prefijo . $folio, ENT_QUOTES, 'UTF-8') ?>
                                             </span>
                                         </td>
 
                                         <td class="text-center">
-                                            <?php if (!empty($e['solicitud_id']) && $e['solicitud_id'] != 0): ?>
+                                            <?php if ($solicitudId > 0): ?>
                                                 <span
                                                     class="badge bg-success bg-opacity-10 text-success border border-success-subtle py-1.5 px-2.5 fw-bold text-uppercase shadow-none"
                                                     style="font-size: 0.78rem; border-radius: 6px; letter-spacing: 0.5px;">
-                                                    OC #<?= htmlspecialchars($e['solicitud_id']) ?>
+                                                    OC #<?= $solicitudId ?>
                                                 </span>
                                             <?php else: ?>
                                                 <span class="text-muted">-</span>
@@ -674,70 +721,52 @@
                                                 </div>
                                                 <span class="fw-medium card-title-text small text-truncate"
                                                     style="max-width: 130px;"
-                                                    title="<?= htmlspecialchars($e['almacen_nombre'] ?? 'N/A') ?>">
-                                                    <?= htmlspecialchars($e['almacen_nombre'] ?? 'N/A') ?>
+                                                    title="<?= htmlspecialchars($almacenNom, ENT_QUOTES, 'UTF-8') ?>">
+                                                    <?= htmlspecialchars($almacenNom, ENT_QUOTES, 'UTF-8') ?>
                                                 </span>
                                             </div>
                                         </td>
 
-                                        <td class="text-center text-secondary small" data-order="<?= $e['fecha'] ?>">
-                                            <?= date('d/m/Y H:i', strtotime($e['fecha'])) ?>
+                                        <td class="text-center text-secondary small"
+                                            data-order="<?= htmlspecialchars((string) $fechaRaw, ENT_QUOTES, 'UTF-8') ?>">
+                                            <?= $fechaFmt ?>
                                         </td>
 
                                         <td class="text-center">
-                                            <?php
-                                            $bg_tipo = match ($e['tipo']) {
-                                                'compra' => 'bg-success bg-opacity-10 text-success border-info-subtle',
-                                                'gasto' => 'bg-dark bg-opacity-10 text-dark-emphasis border-dark-subtle',
-                                                'pago_deuda' => 'bg-primary bg-opacity-10 text-primary border-primary-subtle',
-                                                default => 'bg-secondary bg-opacity-10 text-secondary border-secondary-subtle'
-                                            };
-                                            if ($e['tipo'] == 'pago_deuda')
-                                                $bg_tipo = 'bg-primary bg-opacity-10 text-primary border-primary-subtle';
-                                            ?>
                                             <span class="badge border py-1 px-2 fw-semibold text-uppercase <?= $bg_tipo ?>"
                                                 style="font-size: 0.65rem; border-radius: 6px;">
-                                                <?= str_replace('_', ' ', strtoupper($e['tipo'])) ?>
+                                                <?= htmlspecialchars(str_replace('_', ' ', $tipo !== '' ? $tipo : 'N/A'), ENT_QUOTES, 'UTF-8') ?>
                                             </span>
                                         </td>
 
                                         <td>
                                             <div class="card-title-text fw-medium small text-truncate mx-auto text-center"
-                                                style="max-width: 150px;" title="<?= htmlspecialchars($e['entidad']) ?>">
-                                                <?= htmlspecialchars($e['entidad']) ?>
+                                                style="max-width: 150px;"
+                                                title="<?= htmlspecialchars($entidad, ENT_QUOTES, 'UTF-8') ?>">
+                                                <?= htmlspecialchars($entidad, ENT_QUOTES, 'UTF-8') ?>
                                             </div>
                                         </td>
 
                                         <td class="fw-bold text-center card-title-text text-nowrap">
-                                            <?php if (($e['tiene_deuda'] ?? 0) == 1): ?>
+                                            <?php if ($tieneDeuda === 1): ?>
                                                 <span class="text-danger me-1" title="Pendiente de pago">
                                                     <i class="bi bi-clock-history"></i>
                                                 </span>
                                             <?php endif; ?>
-                                            $<?= number_format($e['total'], 2) ?>
+                                            $<?= number_format($total, 2) ?>
                                         </td>
 
                                         <td class="text-center">
-                                            <?php
-                                            $metodo = strtoupper($e['metodo_pago'] ?? 'EFECTIVO');
-                                            $dot_color = 'text-secondary';
-                                            if (str_contains($metodo, 'EFECT'))
-                                                $dot_color = 'text-success';
-                                            elseif (str_contains($metodo, 'TARJ'))
-                                                $dot_color = 'text-primary';
-                                            elseif (str_contains($metodo, 'TRANS'))
-                                                $dot_color = 'text-warning';
-                                            ?>
                                             <span class="small fw-semibold text-secondary text-nowrap">
                                                 <i class="bi bi-circle-fill me-1 <?= $dot_color ?>"
                                                     style="font-size: 0.45rem;"></i>
-                                                <?= $metodo ?>
+                                                <?= htmlspecialchars($metodo, ENT_QUOTES, 'UTF-8') ?>
                                             </span>
                                         </td>
 
                                         <td class="text-center">
-                                            <?php if ($e['tipo'] == 'compra'): ?>
-                                                <?php if (($e['piezas_faltantes'] ?? 0) > 0): ?>
+                                            <?php if ($tipo === 'compra'): ?>
+                                                <?php if ($faltantes > 0): ?>
                                                     <span
                                                         class="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle fw-semibold px-2 py-1 d-inline-flex align-items-center gap-1 shadow-none"
                                                         style="font-size: 0.7rem;" title="Ingreso parcial / Faltantes pendientes">
@@ -758,69 +787,78 @@
 
                                         <td class="text-center">
                                             <div class="d-flex justify-content-center align-items-center gap-1">
-                                                <?php if (!empty($e['documento_url'])): ?>
-                                                    <?php $documentos = explode(';;;', $e['documento_url']); ?>
-                                                    <div class="dropdown">
-                                                        <button class="btn btn-sm btn-light border position-relative px-2 py-1"
-                                                            type="button" data-bs-toggle="dropdown" title="Ver documentos">
-                                                            <i class="bi bi-folder2-open text-success"></i>
-                                                            <span
-                                                                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary"
-                                                                style="font-size: 0.55rem;">
-                                                                <?= count($documentos) ?>
-                                                            </span>
-                                                        </button>
-                                                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2"
-                                                            style="min-width:280px;">
-                                                            <li>
-                                                                <div
-                                                                    class="d-flex justify-content-between align-items-center px-3 py-2">
-                                                                    <span class="fw-bold text-dark small">
-                                                                        <i class="bi bi-files me-1 text-primary"></i> Adjuntos
-                                                                    </span>
-                                                                    <button
-                                                                        class="btn btn-sm btn-outline-primary py-0 px-2 text-nowrap"
-                                                                        style="font-size: 0.75rem;"
-                                                                        onclick="subirDocumentoCompra(<?= $e['id'] ?>, '<?= $e['folio'] ?? '' ?>', '<?= $e['documento_url'] ?? '' ?>', '<?= $e['tipo'] ?? '' ?>')">
-                                                                        Agregar <i class="bi bi-upload"></i>
-                                                                    </button>
-                                                                </div>
-                                                            </li>
-                                                            <li>
-                                                                <hr class="dropdown-divider my-1">
-                                                            </li>
-                                                            <?php foreach ($documentos as $doc): ?>
-                                                                <?php
-                                                                $partes = explode('|||', $doc);
-                                                                $nombre = $partes[0] ?? '';
-                                                                $direccion = $partes[1] ?? '';
-                                                                $idDoc = $partes[2] ?? 0;
-                                                                if (empty($direccion))
-                                                                    continue;
-                                                                ?>
+                                                <?php if ($docUrl !== ''): ?>
+                                                    <?php
+                                                    $documentos = array_values(array_filter(
+                                                        explode(';;;', $docUrl),
+                                                        fn($item) => trim($item) !== ''
+                                                    ));
+                                                    ?>
+                                                    <?php if (!empty($documentos)): ?>
+                                                        <div class="dropdown">
+                                                            <button class="btn btn-sm btn-light border position-relative px-2 py-1"
+                                                                type="button" data-bs-toggle="dropdown" title="Ver documentos">
+                                                                <i class="bi bi-folder2-open text-success"></i>
+                                                                <span
+                                                                    class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary"
+                                                                    style="font-size: 0.55rem;">
+                                                                    <?= count($documentos) ?>
+                                                                </span>
+                                                            </button>
+                                                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2"
+                                                                style="min-width:280px;">
                                                                 <li>
                                                                     <div
-                                                                        class="d-flex justify-content-between align-items-center px-2 py-1 rounded hover-bg-light">
-                                                                        <a href="../../<?= $direccion ?>" target="_blank"
-                                                                            class="text-decoration-none text-dark text-truncate flex-grow-1 me-2 small">
-                                                                            <i class="bi bi-file-earmark-pdf text-danger me-1"></i>
-                                                                            <?= htmlspecialchars($nombre) ?>
-                                                                        </a>
-                                                                        <button class="btn btn-sm text-danger p-0 border-0"
-                                                                            title="Eliminar" onclick="eliminarDocumento(<?= $idDoc ?>)">
-                                                                            <i class="bi bi-trash" style="font-size: 0.85rem;"></i>
+                                                                        class="d-flex justify-content-between align-items-center px-3 py-2">
+                                                                        <span class="fw-bold text-dark small">
+                                                                            <i class="bi bi-files me-1 text-primary"></i> Adjuntos
+                                                                        </span>
+                                                                        <button
+                                                                            class="btn btn-sm btn-outline-primary py-0 px-2 text-nowrap"
+                                                                            style="font-size: 0.75rem;"
+                                                                            onclick="subirDocumentoCompra(<?= $id ?>, '<?= $folioEsc ?>', '<?= htmlspecialchars($docUrl, ENT_QUOTES, 'UTF-8') ?>', '<?= $tipoEsc ?>')">
+                                                                            Agregar <i class="bi bi-upload"></i>
                                                                         </button>
                                                                     </div>
                                                                 </li>
-                                                            <?php endforeach; ?>
-                                                        </ul>
-                                                    </div>
+                                                                <li>
+                                                                    <hr class="dropdown-divider my-1">
+                                                                </li>
+                                                                <?php foreach ($documentos as $doc): ?>
+                                                                    <?php
+                                                                    $partes = explode('|||', $doc);
+                                                                    $nombre = (string) ($partes[0] ?? 'Documento');
+                                                                    $direccion = trim((string) ($partes[1] ?? ''));
+                                                                    $idDoc = (int) ($partes[2] ?? 0);
+                                                                    if ($direccion === '') {
+                                                                        continue;
+                                                                    }
+                                                                    ?>
+                                                                    <li>
+                                                                        <div
+                                                                            class="d-flex justify-content-between align-items-center px-2 py-1 rounded hover-bg-light">
+                                                                            <a href="../../<?= htmlspecialchars(ltrim($direccion, '/'), ENT_QUOTES, 'UTF-8') ?>"
+                                                                                target="_blank"
+                                                                                class="text-decoration-none text-dark text-truncate flex-grow-1 me-2 small">
+                                                                                <i class="bi bi-file-earmark-pdf text-danger me-1"></i>
+                                                                                <?= htmlspecialchars($nombre, ENT_QUOTES, 'UTF-8') ?>
+                                                                            </a>
+                                                                            <button class="btn btn-sm text-danger p-0 border-0"
+                                                                                title="Eliminar" onclick="eliminarDocumento(<?= $idDoc ?>)">
+                                                                                <i class="bi bi-trash" style="font-size: 0.85rem;"></i>
+                                                                            </button>
+                                                                        </div>
+                                                                    </li>
+                                                                <?php endforeach; ?>
+                                                            </ul>
+                                                        </div>
+                                                    <?php endif; ?>
                                                 <?php endif; ?>
 
-                                                <?php if (($e['tipo'] == 'compra' || $e['tipo'] == 'gasto') && empty($e['documento_url'])): ?>
+                                                <?php if (($tipo === 'compra' || $tipo === 'gasto') && $docUrl === ''): ?>
                                                     <button class="btn btn-sm btn-outline-primary py-0 px-2"
                                                         style="font-size: 0.75rem;"
-                                                        onclick="subirDocumentoCompra(<?= $e['id'] ?>, '<?= $e['folio'] ?? '' ?>', '<?= $e['documento_url'] ?? '' ?>', '<?= $e['tipo'] ?>')">
+                                                        onclick="subirDocumentoCompra(<?= $id ?>, '<?= $folioEsc ?>', '', '<?= $tipoEsc ?>')">
                                                         <i class="bi bi-upload"></i>
                                                     </button>
                                                 <?php endif; ?>
@@ -829,51 +867,49 @@
 
                                         <td class="text-center pe-3">
                                             <div class="d-flex justify-content-center align-items-center gap-1">
-                                                <?php if ($e['tipo'] == 'compra' && ($e['piezas_faltantes'] ?? 0) > 0): ?>
+                                                <?php if ($tipo === 'compra' && $faltantes > 0): ?>
                                                     <button class="btn btn-sm btn-outline-danger py-1 px-2" title="Ajustar piezas"
-                                                        onclick="abrirModalAjuste(<?= $e['id'] ?>, '<?= $e['folio'] ?>')">
+                                                        onclick="abrirModalAjuste(<?= $id ?>, '<?= $folioEsc ?>')">
                                                         <i class="bi bi-wrench-adjustable" style="font-size: 0.8rem;"></i>
                                                     </button>
                                                 <?php endif; ?>
 
-                                                <?php if ($e['tipo'] == 'pago_deuda'): ?>
+                                                <?php if ($tipo === 'pago_deuda'): ?>
                                                     <button class="btn btn-sm btn-dark py-1 px-2" title="Ver detalle de pago"
-                                                        onclick="abrirDetallePago(<?= $e['id'] ?>)">
+                                                        onclick="abrirDetallePago(<?= $id ?>)">
                                                         <i class="bi bi-eye" style="font-size: 0.8rem;"></i>
                                                     </button>
                                                 <?php endif; ?>
 
-                                                <?php if (($e['tiene_deuda'] ?? 0) == 1): ?>
+                                                <?php if ($tieneDeuda === 1): ?>
                                                     <button class="btn btn-sm btn-danger py-1 px-2" title="Pagar Deuda"
-                                                        onclick="abrirDeudaCompra(<?= $e['id'] ?>)">
+                                                        onclick="abrirDeudaCompra(<?= $id ?>)">
                                                         <i class="bi bi-wallet2" style="font-size: 0.8rem;"></i>
                                                     </button>
                                                 <?php endif; ?>
 
-                                                <?php if (($e['pagado_cpp'] ?? 0) == 1): ?>
+                                                <?php if ($pagadoCpp === 1): ?>
                                                     <button class="btn btn-sm btn-success py-1 px-2" disabled title="Pagado">
                                                         <i class="bi bi-patch-check-fill" style="font-size: 0.8rem;"></i>
                                                     </button>
                                                 <?php endif; ?>
 
-                                                <?php if ($e['tipo'] != 'pago_deuda'): ?>
-                                                    <?php if ($e['tipo'] != 'gasto'): ?>
+                                                <?php if ($tipo !== 'pago_deuda'): ?>
+                                                    <?php if ($tipo !== 'gasto'): ?>
                                                         <button class="btn btn-sm btn-light border py-1 px-2 text-primary"
-                                                            title="Ver detalle"
-                                                            onclick="verDetalle('<?= $e['tipo'] ?>', <?= $e['id'] ?>)">
+                                                            title="Ver detalle" onclick="verDetalle('<?= $tipoEsc ?>', <?= $id ?>)">
                                                             <i class="bi bi-eye-fill" style="font-size: 0.8rem;"></i>
                                                         </button>
                                                     <?php else: ?>
                                                         <button class="btn btn-sm btn-light border py-1 px-2 text-primary"
                                                             title="Ver detalle de gasto"
-                                                            onclick="gastoDetalle_cargarVista('gasto', <?= $e['id'] ?>)">
+                                                            onclick="gastoDetalle_cargarVista('gasto', <?= $id ?>)">
                                                             <i class="bi bi-eye-fill" style="font-size: 0.8rem;"></i>
                                                         </button>
                                                     <?php endif; ?>
 
                                                     <button class="btn btn-sm btn-light border py-1 px-2 text-danger"
-                                                        title="Cancelar"
-                                                        onclick="<?= ($e['tipo'] == 'compra') ? 'confirmarCancelacionCompra' : 'confirmarCancelacionGasto' ?>('<?= $e['id'] ?>','<?= $e['folio'] ?>')">
+                                                        title="Cancelar" onclick="<?= $fnCancel ?>(<?= $id ?>, '<?= $folioEsc ?>')">
                                                         <i class="bi bi-trash3" style="font-size: 0.8rem;"></i>
                                                     </button>
                                                 <?php endif; ?>
@@ -881,13 +917,6 @@
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="11" class="text-center py-5 text-body-secondary">
-                                        <i class="bi bi-inbox h1 d-block opacity-25 mb-2"></i>
-                                        No se encontraron movimientos registrados.
-                                    </td>
-                                </tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
@@ -948,7 +977,13 @@
         }
         var table = $('#egresosTabla').DataTable({
             language: {
-                url: "https://cdn.datatables.net/plug-ins/1.13.8/i18n/es-ES.json"
+                url: "https://cdn.datatables.net/plug-ins/1.13.8/i18n/es-ES.json",
+                emptyTable: `
+            <div class="text-center py-4 text-body-secondary">
+                <i class="bi bi-inbox h1 d-block opacity-25 mb-2"></i>
+                No se encontraron movimientos registrados.
+            </div>
+        `
             },
 
             // 🔹 DESACTIVAR stateSave — así el order:[[3,'desc']] SIEMPRE se aplica
