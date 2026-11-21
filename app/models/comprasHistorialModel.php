@@ -1,10 +1,12 @@
 <?php
 
-class HistorialComprasModel {
+class HistorialComprasModel
+{
 
     private $db;
 
-    public function __construct($conexion) {
+    public function __construct($conexion)
+    {
         $this->db = $conexion;
     }
 
@@ -31,9 +33,10 @@ class HistorialComprasModel {
     // =====================================================
     // 🔥 LISTADO DE LOTES (CON FECHA)
     // =====================================================
-    public function obtenerVentasCompra($compra_id) {
+    public function obtenerVentasCompra($compra_id)
+    {
 
-    $sql = "SELECT 
+        $sql = "SELECT 
         tipo_movimiento,
         almacen_id,
         producto_id,
@@ -233,29 +236,30 @@ class HistorialComprasModel {
 
     ORDER BY nombre, fecha_movimiento, movimiento_id";
 
-    $stmt = $this->db->prepare($sql);
+        $stmt = $this->db->prepare($sql);
 
-    if (!$stmt) {
-        throw new Exception($this->db->error);
+        if (!$stmt) {
+            throw new Exception($this->db->error);
+        }
+
+        $stmt->bind_param(
+            "iiii",
+            $compra_id,
+            $compra_id,
+            $compra_id,
+            $compra_id
+        );
+
+        if (!$stmt->execute()) {
+            throw new Exception($stmt->error);
+        }
+
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
+    public function obtenerDistribucionCompra($compra_id, $producto_id)
+    {
 
-    $stmt->bind_param(
-        "iiii",
-        $compra_id,
-        $compra_id,
-        $compra_id,
-        $compra_id
-    );
-
-    if (!$stmt->execute()) {
-        throw new Exception($stmt->error);
-    }
-
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
-public function obtenerDistribucionCompra($compra_id, $producto_id) {
-
-    $sql = "SELECT 
+        $sql = "SELECT 
                 a.id AS almacen_id,
                 a.nombre AS almacen,
                 lt.id AS lote_id,
@@ -291,85 +295,86 @@ public function obtenerDistribucionCompra($compra_id, $producto_id) {
 
             ORDER BY a.nombre, lt.id";
 
-    $stmt = $this->db->prepare($sql);
+        $stmt = $this->db->prepare($sql);
 
-    if (!$stmt) {
-        throw new Exception($this->db->error);
+        if (!$stmt) {
+            throw new Exception($this->db->error);
+        }
+
+        $stmt->bind_param("ii", $compra_id, $producto_id);
+
+        if (!$stmt->execute()) {
+            throw new Exception($stmt->error);
+        }
+
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
 
-    $stmt->bind_param("ii", $compra_id, $producto_id);
+    public function obtenerLotes($almacen_id, $fecha_inicio, $fecha_fin)
+    {
+        $sql = "SELECT 
+                c.id,
+                c.folio,
+                c.fecha_compra,
+                oc.id AS orden_compra,
+                c.total,
+                c.estado,
+                dc.cantidad_faltante AS faltante,
+                dc.cantidad_excedente AS sobrante,
+                a.nombre AS almacen,
+                pro.nombre_comercial AS proveedor,
+                prod.id AS producto_id,
+                prod.factor_conversion,
+                prod.unidad_medida,
+                prod.unidad_reporte,
+                prod.nombre AS productos,
+                dc.cantidad AS cantidadProd
+            FROM compras c
+            INNER JOIN detalle_compra dc ON dc.compra_id = c.id
+            INNER JOIN almacenes a ON a.id = c.almacen_id
+            INNER JOIN proveedores pro ON pro.id = c.proveedor
+            LEFT JOIN solicitudes_compra oc ON oc.compra_id_final = c.folio
+            INNER JOIN productos prod ON prod.id = dc.producto_id
+            WHERE c.fecha_compra BETWEEN ? AND ?";
 
-    if (!$stmt->execute()) {
-        throw new Exception($stmt->error);
+        if ((int) $almacen_id !== 0) {
+            $sql .= " AND c.almacen_id = ?";
+        }
+
+        $sql .= " ORDER BY c.id DESC, dc.id ASC";
+
+        $stmt = $this->db->prepare($sql);
+        if (!$stmt) {
+            error_log("Error preparando obtenerLotes: " . $this->db->error);
+            return [];
+        }
+
+        if ((int) $almacen_id !== 0) {
+            $almId = (int) $almacen_id;
+            $stmt->bind_param("ssi", $fecha_inicio, $fecha_fin, $almId);
+        } else {
+            $stmt->bind_param("ss", $fecha_inicio, $fecha_fin);
+        }
+
+        if (!$stmt->execute()) {
+            error_log("Error ejecutando obtenerLotes: " . $stmt->error);
+            $stmt->close();
+            return [];
+        }
+
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt->close();
+
+        return $rows;
     }
-
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
-
-       public function obtenerLotes($almacen_id, $fecha_inicio, $fecha_fin) {
-
-    $sql = "SELECT 
-    c.id,
-    c.folio,
-    c.fecha_compra,
-    c.total,
-    c.estado,
-    dc.cantidad_faltante as faltante,
-    dc.cantidad_excedente sobrante,
-    a.nombre AS almacen,
-    pro.nombre_comercial AS proveedor,
-    prod.id as producto_id,
-    prod.factor_conversion,
-    prod.unidad_medida,
-    prod.unidad_reporte,
-
-   
-        prod.nombre  AS productos,
-        dc.cantidad as cantidadProd 
-
-FROM compras c
-JOIN detalle_compra dc ON dc.compra_id = c.id
-JOIN almacenes a ON a.id = c.almacen_id
-JOIN proveedores pro ON pro.id = c.proveedor
-JOIN productos prod ON prod.id = dc.producto_id
-
-    WHERE c.fecha_compra BETWEEN ? AND ?";
-
-    // Solo filtrar almacén si es distinto de 0
-    if ($almacen_id != 0) {
-        $sql .= " AND c.almacen_id = ?";
-    }
-
-    $sql .= " GROUP BY 
-        c.id,
-        c.folio,
-        a.nombre,
-        pro.nombre_comercial,
-        prod.factor_conversion,
-        prod.unidad_medida,
-        prod.unidad_reporte
-
-    ORDER BY c.id DESC";
-
-    $stmt = $this->db->prepare($sql);
-
-    if ($almacen_id != 0) {
-        $stmt->bind_param("ssi", $fecha_inicio, $fecha_fin, $almacen_id);
-    } else {
-        $stmt->bind_param("ss", $fecha_inicio, $fecha_fin);
-    }
-
-    $stmt->execute();
-
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
 
     // =====================================================
     // 🧾 VENTAS POR LOTE (SIN CAMBIO)
     // =====================================================
-   public function obtenerVentasLote($lote_id) {
+    public function obtenerVentasLote($lote_id)
+    {
 
-   $sql = "SELECT 
+        $sql = "SELECT 
         tipo_movimiento,
         almacen_id,
         producto_id,
@@ -554,35 +559,38 @@ JOIN productos prod ON prod.id = dc.producto_id
     -- CORRECCIÓN: El ordenamiento final debe ser estrictamente por fecha para no quebrar los saldos acumulados
     ORDER BY fecha_movimiento, orden_registro";
 
-    $stmt = $this->db->prepare($sql);
+        $stmt = $this->db->prepare($sql);
 
-    if (!$stmt) {
-        throw new Exception($this->db->error);
+        if (!$stmt) {
+            throw new Exception($this->db->error);
+        }
+
+        $stmt->bind_param("iiii", $lote_id, $lote_id, $lote_id, $lote_id);
+
+        if (!$stmt->execute()) {
+            throw new Exception($stmt->error);
+        }
+
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
-
-    $stmt->bind_param("iiii", $lote_id, $lote_id, $lote_id, $lote_id);
-
-    if (!$stmt->execute()) {
-        throw new Exception($stmt->error);
-    }
-
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
     // =====================================================
     // 📊 CONSUMO POR PRODUCTO (CON FECHAS CORREGIDO)
     // =====================================================
-  public function obtenerConsumoLotesPorProducto($producto_id, $almacen_id = 0, $fecha_inicio = null, $fecha_fin = null) {
-    try {
+    public function obtenerConsumoLotesPorProducto($producto_id, $almacen_id = 0, $fecha_inicio = null, $fecha_fin = null)
+    {
+        try {
 
-        date_default_timezone_set('America/Mexico_City');
+            date_default_timezone_set('America/Mexico_City');
 
-        if (empty($fecha_inicio)) $fecha_inicio = date('Y-m-d');
-        if (empty($fecha_fin)) $fecha_fin = date('Y-m-d');
+            if (empty($fecha_inicio))
+                $fecha_inicio = date('Y-m-d');
+            if (empty($fecha_fin))
+                $fecha_fin = date('Y-m-d');
 
-        $f_inicio_full = $fecha_inicio . " 00:00:00";
-        $f_fin_full    = $fecha_fin . " 23:59:59";
+            $f_inicio_full = $fecha_inicio . " 00:00:00";
+            $f_fin_full = $fecha_fin . " 23:59:59";
 
-        $sql = "SELECT 
+            $sql = "SELECT 
             v.id AS venta_id,
             v.folio,
             c.nombre_comercial AS cliente,
@@ -633,52 +641,53 @@ JOIN productos prod ON prod.id = dc.producto_id
         WHERE dv.producto_id = ?
         AND lms.fecha_movimiento BETWEEN ? AND ?";
 
-        // 🔥 filtro opcional de almacén
-        if ($almacen_id != 0) {
-            $sql .= " AND lt.almacen_id = ?";
+            // 🔥 filtro opcional de almacén
+            if ($almacen_id != 0) {
+                $sql .= " AND lt.almacen_id = ?";
+            }
+
+            $sql .= " ORDER BY lt.id ASC, lms.id ASC";
+
+            $stmt = $this->db->prepare($sql);
+
+            if ($almacen_id != 0) {
+                $stmt->bind_param(
+                    "issi",
+                    $producto_id,
+                    $f_inicio_full,
+                    $f_fin_full,
+                    $almacen_id
+                );
+            } else {
+                $stmt->bind_param(
+                    "iss",
+                    $producto_id,
+                    $f_inicio_full,
+                    $f_fin_full
+                );
+            }
+
+            $stmt->execute();
+
+            return [
+                'success' => true,
+                'data' => $stmt->get_result()->fetch_all(MYSQLI_ASSOC)
+            ];
+
+        } catch (Throwable $e) {
+            return [
+                'success' => false,
+                'message' => $e->getMessage()
+            ];
         }
-
-        $sql .= " ORDER BY lt.id ASC, lms.id ASC";
-
-        $stmt = $this->db->prepare($sql);
-
-        if ($almacen_id != 0) {
-            $stmt->bind_param(
-                "issi",
-                $producto_id,
-                $f_inicio_full,
-                $f_fin_full,
-                $almacen_id
-            );
-        } else {
-            $stmt->bind_param(
-                "iss",
-                $producto_id,
-                $f_inicio_full,
-                $f_fin_full
-            );
-        }
-
-        $stmt->execute();
-
-        return [
-            'success' => true,
-            'data' => $stmt->get_result()->fetch_all(MYSQLI_ASSOC)
-        ];
-
-    } catch (Throwable $e) {
-        return [
-            'success' => false,
-            'message' => $e->getMessage()
-        ];
     }
-}
     // =====================================================
     // 🔁 TRASPASOS (CORREGIDO SQL)
     // =====================================================
- public function obtenerTraspasos($lote_id, $fecha_inicio = null, $fecha_fin = null) {
+    public function obtenerTraspasos($lote_id, $fecha_inicio = null, $fecha_fin = null)
+    {
 
-    $sql = "SELECT        
+        $sql = "SELECT        
         m.id AS movimiento_id,
 
         lt.codigo_lote AS codigo_lote_origen,
@@ -718,31 +727,32 @@ JOIN productos prod ON prod.id = dc.producto_id
     WHERE km.lote_origen_id = ?
     AND m.tipo = 'traspaso'";
 
-    // 🔥 FECHAS
-    if (!empty($fecha_inicio) && !empty($fecha_fin)) {
-        $sql .= " AND DATE(m.fecha) BETWEEN ? AND ?";
+        // 🔥 FECHAS
+        if (!empty($fecha_inicio) && !empty($fecha_fin)) {
+            $sql .= " AND DATE(m.fecha) BETWEEN ? AND ?";
+        }
+
+        $sql .= " ORDER BY m.fecha ASC";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!empty($fecha_inicio) && !empty($fecha_fin)) {
+            $stmt->bind_param("iss", $lote_id, $fecha_inicio, $fecha_fin);
+        } else {
+            $stmt->bind_param("i", $lote_id);
+        }
+
+        $stmt->execute();
+
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
-
-    $sql .= " ORDER BY m.fecha ASC";
-
-    $stmt = $this->db->prepare($sql);
-
-    if (!empty($fecha_inicio) && !empty($fecha_fin)) {
-        $stmt->bind_param("iss", $lote_id, $fecha_inicio, $fecha_fin);
-    } else {
-        $stmt->bind_param("i", $lote_id);
-    }
-
-    $stmt->execute();
-
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
     // =====================================================
     // ⚙️ AJUSTES
     // =====================================================
-   public function obtenerAjustes($producto_id, $almacen_id, $fecha_inicio = null, $fecha_fin = null) {
+    public function obtenerAjustes($producto_id, $almacen_id, $fecha_inicio = null, $fecha_fin = null)
+    {
 
-    $sql = "SELECT 
+        $sql = "SELECT 
         'AJUSTE' AS tipo_movimiento,
         m.id,
         m.fecha,
@@ -756,32 +766,33 @@ JOIN productos prod ON prod.id = dc.producto_id
   AND m.observaciones LIKE '%Salida Transmutación%'
     AND m.almacen_origen_id = ?";
 
-    // 🔥 filtro opcional por fecha
-    if ($fecha_inicio && $fecha_fin) {
-        $sql .= " AND m.fecha BETWEEN ? AND ?";
+        // 🔥 filtro opcional por fecha
+        if ($fecha_inicio && $fecha_fin) {
+            $sql .= " AND m.fecha BETWEEN ? AND ?";
+        }
+
+        $sql .= " ORDER BY m.fecha ASC";
+
+        $stmt = $this->db->prepare($sql);
+
+        // 🔥 binding dinámico
+        if ($fecha_inicio && $fecha_fin) {
+            $stmt->bind_param("iiss", $producto_id, $almacen_id, $fecha_inicio, $fecha_fin);
+        } else {
+            $stmt->bind_param("ii", $producto_id, $almacen_id);
+        }
+
+        $stmt->execute();
+
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
-
-    $sql .= " ORDER BY m.fecha ASC";
-
-    $stmt = $this->db->prepare($sql);
-
-    // 🔥 binding dinámico
-    if ($fecha_inicio && $fecha_fin) {
-        $stmt->bind_param("iiss", $producto_id, $almacen_id, $fecha_inicio, $fecha_fin);
-    } else {
-        $stmt->bind_param("ii", $producto_id, $almacen_id);
-    }
-
-    $stmt->execute();
-
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
     // =====================================================
     // 📦 ENTRADAS
     // =====================================================
-    public function obtenerEntradasLote($lote_id, $fecha_inicio = null, $fecha_fin = null) {
+    public function obtenerEntradasLote($lote_id, $fecha_inicio = null, $fecha_fin = null)
+    {
 
-    $sql = "SELECT 
+        $sql = "SELECT 
         'ENTRADA' AS tipo_movimiento,
         li.lote_id,
         li.fecha_registro,
@@ -796,36 +807,37 @@ JOIN productos prod ON prod.id = dc.producto_id
 
     WHERE li.lote_id = ?";
 
-    // 🔥 filtro opcional por fecha
-    if ($fecha_inicio && $fecha_fin) {
-        $sql .= " AND li.fecha_registro BETWEEN ? AND ?";
+        // 🔥 filtro opcional por fecha
+        if ($fecha_inicio && $fecha_fin) {
+            $sql .= " AND li.fecha_registro BETWEEN ? AND ?";
+        }
+
+        $sql .= " ORDER BY li.fecha_registro ASC";
+
+        $stmt = $this->db->prepare($sql);
+
+        // 🔥 binding dinámico
+        if ($fecha_inicio && $fecha_fin) {
+            $stmt->bind_param("iss", $lote_id, $fecha_inicio, $fecha_fin);
+        } else {
+            $stmt->bind_param("i", $lote_id);
+        }
+
+        $stmt->execute();
+
+        return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
     }
-
-    $sql .= " ORDER BY li.fecha_registro ASC";
-
-    $stmt = $this->db->prepare($sql);
-
-    // 🔥 binding dinámico
-    if ($fecha_inicio && $fecha_fin) {
-        $stmt->bind_param("iss", $lote_id, $fecha_inicio, $fecha_fin);
-    } else {
-        $stmt->bind_param("i", $lote_id);
-    }
-
-    $stmt->execute();
-
-    return $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-}
     // =====================================================
     // 🔥 HISTORIAL COMPLETO
     // =====================================================
-    public function obtenerHistorialCompleto($producto_id, $almacen_id, $lote_id) {
+    public function obtenerHistorialCompleto($producto_id, $almacen_id, $lote_id)
+    {
 
         return [
-            'ventas'    => $this->obtenerVentasLote($lote_id),
+            'ventas' => $this->obtenerVentasLote($lote_id),
             'traspasos' => $this->obtenerTraspasos($producto_id, $almacen_id),
-            'ajustes'   => $this->obtenerAjustes($producto_id, $almacen_id),
-            'entradas'  => $this->obtenerEntradasLote($lote_id)
+            'ajustes' => $this->obtenerAjustes($producto_id, $almacen_id),
+            'entradas' => $this->obtenerEntradasLote($lote_id)
         ];
     }
 }

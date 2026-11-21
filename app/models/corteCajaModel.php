@@ -705,17 +705,9 @@ class CorteCajaModel
         $tipo_op = $data['tipo_operacion'] ?? 'entrada';
         $metodo = $data['metodo_pago'] ?? 'efectivo';
 
-        $almacen_dest_id = intval(
-            $data['almacen_destino_id'] ?? 0
-        );
-
-        $caja_fuerte_id = intval(
-            $data['caja_fuerte_id'] ?? 0
-        );
-
-        $banco_id = intval(
-            $data['banco_id'] ?? 0
-        );
+        $almacen_dest_id = intval($data['almacen_destino_id'] ?? 0);
+        $caja_fuerte_id = intval($data['caja_fuerte_id'] ?? 0);
+        $banco_id = intval($data['banco_id'] ?? 0);
 
 
         // ============================================================
@@ -735,10 +727,7 @@ class CorteCajaModel
         // 3. LÓGICA CAJA / BANCO
         // ============================================================
 
-        if (
-            $tipo_op === 'salida' ||
-            $tipo_op === 'traspaso'
-        ) {
+        if ($tipo_op === 'salida' || $tipo_op === 'traspaso') {
             $operador = 1;
         } else {
             $operador = -1;
@@ -751,47 +740,22 @@ class CorteCajaModel
         // 4. DESGLOSE DEL MOVIMIENTO
         // ============================================================
 
-        $efectivo = floatval(
-            $data['monto_efectivo'] ?? 0
-        );
-
-        $tarjeta = floatval(
-            $data['monto_tarjeta'] ?? 0
-        );
-
-        $transferencia = floatval(
-            $data['monto_transferencia'] ?? 0
-        );
-
-        $monto = $efectivo + $tarjeta + $transferencia;
+        $mov_efectivo = floatval($data['monto_efectivo'] ?? 0);
+        $mov_tarjeta = floatval($data['monto_tarjeta'] ?? 0);
+        $mov_transferencia = floatval($data['monto_transferencia'] ?? 0);
 
 
         // ============================================================
         // 5. FECHA
         // ============================================================
 
-        $fecha_base = $data['fecha_movimiento']
-            ?? date('Y-m-d');
+        $fecha_base = $data['fecha_movimiento'] ?? date('Y-m-d');
+        $fecha_base_formateada = date('Y-m-d', strtotime($fecha_base));
 
-        $fecha_base_formateada = date(
-            'Y-m-d',
-            strtotime($fecha_base)
-        );
-
-        if (
-            $fecha_base_formateada ===
-            date('Y-m-d')
-        ) {
-
-            $fecha_apertura = date(
-                'Y-m-d H:i:s'
-            );
-
+        if ($fecha_base_formateada === date('Y-m-d')) {
+            $fecha_apertura = date('Y-m-d H:i:s');
         } else {
-
-            $fecha_apertura =
-                $fecha_base_formateada .
-                ' 00:00:01';
+            $fecha_apertura = $fecha_base_formateada . ' 00:00:01';
         }
 
 
@@ -811,16 +775,163 @@ class CorteCajaModel
 
 
         try {
-
             $this->db->begin_transaction();
 
 
             // ========================================================
             // PASO A
-            // REGISTRO DEL MOVIMIENTO EN EL ALMACÉN DE ORIGEN
+            // SALDOS ACUMULADOS Y REGISTRO EN ALMACÉN DE ORIGEN
             // ========================================================
 
+            $actualOrigen = $this->obtenerSaldosAcumuladosAlmacen($almacen_id);
+
+            // Si es retiro (salida o traspaso) resta (-1); si es entrada suma (+1)
+            $factorOrigen = ($tipo_op === 'salida' || $tipo_op === 'traspaso') ? -1 : 1;
+
+            $acum_efectivo = $actualOrigen['monto_efectivo'] + ($mov_efectivo * $factorOrigen);
+            $acum_tarjeta = $actualOrigen['monto_tarjeta'] + ($mov_tarjeta * $factorOrigen);
+            $acum_transferencia = $actualOrigen['monto_transferencia'] + ($mov_transferencia * $factorOrigen);
+            $acum_monto = $acum_efectivo + $acum_tarjeta + $acum_transferencia;
+
+            if (
+                $acum_efectivo < 0 ||
+                $acum_tarjeta < 0 ||
+                $acum_transferencia < 0 ||
+                $acum_monto < 0
+            ) {
+                throw new Exception(
+                    "Saldo acumulado insuficiente en el almacén de origen para completar el movimiento."
+                );
+            }
+
             $sql = "
+        INSERT INTO historial_capital (
+            categoria_id,
+            almacen_origen_id,
+            almacen_destino_id,
+            caja_fuerte_destino_id,
+            banco_destino_id,
+            monto,
+            monto_efectivo,
+            monto_tarjeta,
+            monto_transferencia,
+            usuario_registro_id,
+            concepto,
+            fecha_movimiento
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ";
+
+            $stmtOrigen = $this->db->prepare($sql);
+
+            if (!$stmtOrigen) {
+                throw new Exception(
+                    "Error preparando movimiento de origen: " . $this->db->error
+                );
+            }
+
+            $almacen_destino_db = $almacen_dest_id > 0 ? $almacen_dest_id : null;
+            $caja_fuerte_db = $caja_fuerte_id > 0 ? $caja_fuerte_id : null;
+            $banco_db = $banco_id > 0 ? $banco_id : null;
+
+            $stmtOrigen->bind_param(
+                "iiiiiddddiss",
+                $categoria_id,
+                $almacen_id,
+                $almacen_destino_db,
+                $caja_fuerte_db,
+                $banco_db,
+                $acum_monto,
+                $acum_efectivo,
+                $acum_tarjeta,
+                $acum_transferencia,
+                $usuario_id,
+                $concepto_final,
+                $fecha_apertura
+            );
+
+            if (!$stmtOrigen->execute()) {
+                throw new Exception(
+                    "Error al registrar movimiento de origen: " . $stmtOrigen->error
+                );
+            }
+
+            $idMovimientoCreado = (int) $this->db->insert_id;
+            $stmtOrigen->close();
+
+
+            // ========================================================
+            // PASO B
+            // TRASPASO AL ALMACÉN DESTINO
+            // ========================================================
+
+            if ($tipo_op === 'traspaso' && $almacen_dest_id > 0) {
+                if ($almacen_dest_id === $almacen_id) {
+                    throw new Exception(
+                        "El almacén de destino no puede ser igual al almacén de origen."
+                    );
+                }
+
+                $stmtDestinoCheck = $this->db->prepare("
+            SELECT id
+            FROM almacenes
+            WHERE id = ?
+              AND activo = 1
+        ");
+
+                if (!$stmtDestinoCheck) {
+                    throw new Exception(
+                        "Error preparando validación del almacén destino: " . $this->db->error
+                    );
+                }
+
+                $stmtDestinoCheck->bind_param("i", $almacen_dest_id);
+
+                if (!$stmtDestinoCheck->execute()) {
+                    throw new Exception(
+                        "Error validando almacén destino: " . $stmtDestinoCheck->error
+                    );
+                }
+
+                $resDestino = $stmtDestinoCheck->get_result();
+
+                if ($resDestino->num_rows === 0) {
+                    throw new Exception(
+                        "El almacén destino no existe o está inactivo."
+                    );
+                }
+                $stmtDestinoCheck->close();
+
+                $concepto_destino =
+                    "Entrada por traspaso desde Almacén ID: " .
+                    $almacen_id .
+                    " Monto: " .
+                    $monto_mov .
+                    " | " .
+                    date('Y-m-d H:i:s');
+
+                $entrada_efectivo = 0.0;
+                $entrada_tarjeta = 0.0;
+                $entrada_transferencia = 0.0;
+
+                if ($metodo === 'efectivo') {
+                    $entrada_efectivo = $monto_mov;
+                } elseif ($metodo === 'tarjeta') {
+                    $entrada_tarjeta = $monto_mov;
+                } elseif ($metodo === 'transferencia') {
+                    $entrada_transferencia = $monto_mov;
+                } else {
+                    throw new Exception("Método de pago no válido: " . $metodo);
+                }
+
+                $actualDestino = $this->obtenerSaldosAcumuladosAlmacen($almacen_dest_id);
+
+                $dest_acum_efectivo = $actualDestino['monto_efectivo'] + $entrada_efectivo;
+                $dest_acum_tarjeta = $actualDestino['monto_tarjeta'] + $entrada_tarjeta;
+                $dest_acum_transferencia = $actualDestino['monto_transferencia'] + $entrada_transferencia;
+                $dest_acum_monto = $dest_acum_efectivo + $dest_acum_tarjeta + $dest_acum_transferencia;
+
+                $stmtDestino = $this->db->prepare("
             INSERT INTO historial_capital (
                 categoria_id,
                 almacen_origen_id,
@@ -836,197 +947,13 @@ class CorteCajaModel
                 fecha_movimiento
             )
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ";
-
-            $stmtOrigen = $this->db->prepare($sql);
-
-            if (!$stmtOrigen) {
-                throw new Exception(
-                    "Error preparando movimiento de origen: " .
-                    $this->db->error
-                );
-            }
-
-
-            // Convertimos los valores opcionales a NULL
-            $almacen_destino_db =
-                $almacen_dest_id > 0
-                ? $almacen_dest_id
-                : null;
-
-            $caja_fuerte_db =
-                $caja_fuerte_id > 0
-                ? $caja_fuerte_id
-                : null;
-
-            $banco_db =
-                $banco_id > 0
-                ? $banco_id
-                : null;
-
-
-            $stmtOrigen->bind_param(
-                "iiiiiddddiss",
-                $categoria_id,
-                $almacen_id,
-                $almacen_destino_db,
-                $caja_fuerte_db,
-                $banco_db,
-                $monto,
-                $efectivo,
-                $tarjeta,
-                $transferencia,
-                $usuario_id,
-                $concepto_final,
-                $fecha_apertura
-            );
-
-
-            if (!$stmtOrigen->execute()) {
-
-                throw new Exception(
-                    "Error al registrar movimiento de origen: " .
-                    $stmtOrigen->error
-                );
-            }
-
-
-            // ========================================================
-            // PASO B
-            // TRASPASO AL ALMACÉN DESTINO
-            // ========================================================
-
-            if (
-                $tipo_op === 'traspaso' &&
-                $almacen_dest_id > 0
-            ) {
-
-                // ----------------------------------------------------
-                // Verificar que el destino sea diferente al origen
-                // ----------------------------------------------------
-
-                if ($almacen_dest_id === $almacen_id) {
-
-                    throw new Exception(
-                        "El almacén de destino no puede ser igual al almacén de origen."
-                    );
-                }
-
-
-                // ----------------------------------------------------
-                // Verificar que el almacén destino exista
-                // ----------------------------------------------------
-
-                $stmtDestinoCheck = $this->db->prepare("
-                SELECT id
-                FROM almacenes
-                WHERE id = ?
-                  AND activo = 1
-            ");
-
-                if (!$stmtDestinoCheck) {
-                    throw new Exception(
-                        "Error preparando validación del almacén destino: " .
-                        $this->db->error
-                    );
-                }
-
-                $stmtDestinoCheck->bind_param(
-                    "i",
-                    $almacen_dest_id
-                );
-
-                if (!$stmtDestinoCheck->execute()) {
-                    throw new Exception(
-                        "Error validando almacén destino: " .
-                        $stmtDestinoCheck->error
-                    );
-                }
-
-                $resDestino =
-                    $stmtDestinoCheck->get_result();
-
-                if ($resDestino->num_rows === 0) {
-
-                    throw new Exception(
-                        "El almacén destino no existe o está inactivo."
-                    );
-                }
-
-
-                // ----------------------------------------------------
-                // REGISTRO DE ENTRADA EN EL DESTINO
-                // ----------------------------------------------------
-
-                $concepto_destino =
-                    "Entrada por traspaso desde Almacén ID: " .
-                    $almacen_id .
-                    " Monto: " .
-                    $monto_mov .
-                    " | " .
-                    date('Y-m-d H:i:s');
-
-
-                /*
-                 * IMPORTANTE:
-                 *
-                 * Aquí NO usamos el saldo acumulado del destino.
-                 *
-                 * Solamente registramos lo que está entrando
-                 * mediante este traspaso.
-                 */
-
-                $entrada_efectivo = 0;
-                $entrada_tarjeta = 0;
-                $entrada_transferencia = 0;
-
-
-                if ($metodo === 'efectivo') {
-
-                    $entrada_efectivo = $monto_mov;
-
-                } elseif ($metodo === 'tarjeta') {
-
-                    $entrada_tarjeta = $monto_mov;
-
-                } elseif ($metodo === 'transferencia') {
-
-                    $entrada_transferencia = $monto_mov;
-
-                } else {
-
-                    throw new Exception(
-                        "Método de pago no válido: " .
-                        $metodo
-                    );
-                }
-
-
-                $stmtDestino = $this->db->prepare("
-                INSERT INTO historial_capital (
-                    categoria_id,
-                    almacen_origen_id,
-                    almacen_destino_id,
-                    caja_fuerte_destino_id,
-                    banco_destino_id,
-                    monto,
-                    monto_efectivo,
-                    monto_tarjeta,
-                    monto_transferencia,
-                    usuario_registro_id,
-                    concepto,
-                    fecha_movimiento
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ");
+        ");
 
                 if (!$stmtDestino) {
                     throw new Exception(
-                        "Error preparando movimiento destino: " .
-                        $this->db->error
+                        "Error preparando movimiento destino: " . $this->db->error
                     );
                 }
-
 
                 $null = null;
 
@@ -1037,23 +964,21 @@ class CorteCajaModel
                     $null,
                     $null,
                     $null,
-                    $monto_mov,
-                    $entrada_efectivo,
-                    $entrada_tarjeta,
-                    $entrada_transferencia,
+                    $dest_acum_monto,
+                    $dest_acum_efectivo,
+                    $dest_acum_tarjeta,
+                    $dest_acum_transferencia,
                     $usuario_id,
                     $concepto_destino,
                     $fecha_apertura
                 );
 
-
                 if (!$stmtDestino->execute()) {
-
                     throw new Exception(
-                        "Error al registrar entrada en almacén destino: " .
-                        $stmtDestino->error
+                        "Error al registrar entrada en almacén destino: " . $stmtDestino->error
                     );
                 }
+                $stmtDestino->close();
             }
 
 
@@ -1063,11 +988,7 @@ class CorteCajaModel
             // ========================================================
 
             if ($caja_fuerte_id > 0) {
-
-                $this->actualizarSaldoCajaFuerte(
-                    $caja_fuerte_id,
-                    $ajuste_saldo
-                );
+                $this->actualizarSaldoCajaFuerte($caja_fuerte_id, $ajuste_saldo);
             }
 
 
@@ -1077,11 +998,7 @@ class CorteCajaModel
             // ========================================================
 
             if ($banco_id > 0) {
-
-                $this->actualizarSaldoBanco(
-                    $banco_id,
-                    $ajuste_saldo
-                );
+                $this->actualizarSaldoBanco($banco_id, $ajuste_saldo);
             }
 
 
@@ -1091,11 +1008,9 @@ class CorteCajaModel
 
             $this->db->commit();
 
-            return true;
-
+            return $idMovimientoCreado > 0 ? $idMovimientoCreado : false;
 
         } catch (Exception $e) {
-
             $this->db->rollback();
 
             error_log(
@@ -1105,6 +1020,57 @@ class CorteCajaModel
 
             return false;
         }
+    }
+
+    private function obtenerSaldosAcumuladosAlmacen(int $almacen_id): array
+    {
+        $sql = "
+        SELECT
+            COALESCE(monto, 0) AS monto,
+            COALESCE(monto_efectivo, 0) AS monto_efectivo,
+            COALESCE(monto_tarjeta, 0) AS monto_tarjeta,
+            COALESCE(monto_transferencia, 0) AS monto_transferencia
+        FROM historial_capital
+        WHERE almacen_origen_id = ?
+        ORDER BY fecha_movimiento DESC, id DESC
+        LIMIT 1
+        FOR UPDATE
+    ";
+
+        $stmt = $this->db->prepare($sql);
+
+        if (!$stmt) {
+            throw new Exception(
+                "Error preparando consulta de saldos acumulados: " . $this->db->error
+            );
+        }
+
+        $stmt->bind_param("i", $almacen_id);
+
+        if (!$stmt->execute()) {
+            throw new Exception(
+                "Error ejecutando consulta de saldos acumulados: " . $stmt->error
+            );
+        }
+
+        $res = $stmt->get_result();
+        $row = $res->fetch_assoc();
+
+        if (!$row) {
+            return [
+                'monto' => 0.0,
+                'monto_efectivo' => 0.0,
+                'monto_tarjeta' => 0.0,
+                'monto_transferencia' => 0.0,
+            ];
+        }
+
+        return [
+            'monto' => floatval($row['monto']),
+            'monto_efectivo' => floatval($row['monto_efectivo']),
+            'monto_tarjeta' => floatval($row['monto_tarjeta']),
+            'monto_transferencia' => floatval($row['monto_transferencia']),
+        ];
     }
     public function registrarAperturaDesdeCierreConceptoAbono($data)
     {
@@ -1378,12 +1344,7 @@ class CorteCajaModel
              */
             $sql = "SELECT 
                     a.nombre AS almacen, 
-                    h.monto, 
-                    h.monto_efectivo, 
-                    h.monto_tarjeta, 
-                    h.monto_transferencia,
-                    h.fecha_movimiento,
-                    h.concepto -- O la columna que uses para describir el movimiento
+                    h.*
                 FROM historial_capital h
                 INNER JOIN almacenes a ON h.almacen_origen_id = a.id
                 WHERE h.fecha_movimiento BETWEEN ? AND ?

@@ -78,7 +78,6 @@
             color: var(--apple-blue);
         }
 
-        /* Estilos para el Avatar de Almacén */
         .avatar-sucursal {
             width: 38px;
             height: 38px;
@@ -119,7 +118,6 @@
 
             <div class="glass-card p-4 mb-4 animate__animated animate__fadeIn">
                 <form id="formFiltrosTesoreria" class="row g-3 align-items-end">
-
                     <div class="col-md-3">
                         <label class="small fw-bold text-body-secondary text-uppercase mb-2 d-block">Fecha de
                             Corte</label>
@@ -152,19 +150,15 @@
             </div>
 
             <div class="row g-4">
-
                 <!-- 🔵 CAJAS FUERTES -->
                 <div class="col-lg-6">
                     <div class="glass-card h-100 position-relative overflow-hidden animate__animated animate__fadeInUp"
                         style="border-radius:18px; backdrop-filter: blur(12px);">
-
-                        <div class="p-3 border-bottom  bg-opacity-50">
-                            <h6 class="mb-0 fw-semibold ">🏦 Cajas Fuertes</h6>
+                        <div class="p-3 border-bottom bg-opacity-50">
+                            <h6 class="mb-0 fw-semibold">🏦 Cajas Fuertes</h6>
                         </div>
-
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0">
-
                                 <thead class="table-light">
                                     <tr>
                                         <th class="ps-3">Almacén</th>
@@ -172,7 +166,6 @@
                                         <th class="text-end pe-3">Saldo</th>
                                     </tr>
                                 </thead>
-
                                 <tbody>
                                     <?php foreach ($saldoCajas as $caja): ?>
                                         <tr>
@@ -184,10 +177,8 @@
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
-
                             </table>
                         </div>
-
                     </div>
                 </div>
 
@@ -195,14 +186,11 @@
                 <div class="col-lg-6">
                     <div class="glass-card h-100 position-relative overflow-hidden animate__animated animate__fadeInUp"
                         style="border-radius:18px; backdrop-filter: blur(12px);">
-
-                        <div class="p-3 border-bottom  bg-opacity-50">
-                            <h6 class="mb-0 fw-semibold ">🏛️ Cuentas Bancarias</h6>
+                        <div class="p-3 border-bottom bg-opacity-50">
+                            <h6 class="mb-0 fw-semibold">🏛️ Cuentas Bancarias</h6>
                         </div>
-
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0">
-
                                 <thead class="table-light">
                                     <tr>
                                         <th class="ps-3">Almacén</th>
@@ -210,7 +198,6 @@
                                         <th class="text-end pe-3">Saldo</th>
                                     </tr>
                                 </thead>
-
                                 <tbody>
                                     <?php foreach ($saldosCuentasBancarias as $cb): ?>
                                         <tr>
@@ -222,13 +209,10 @@
                                         </tr>
                                     <?php endforeach; ?>
                                 </tbody>
-
                             </table>
                         </div>
-
                     </div>
                 </div>
-
             </div>
 
             <div class="glass-card position-relative overflow-hidden animate__animated animate__fadeInUp mt-3">
@@ -242,7 +226,7 @@
                             class="form-control ios-input ps-5" placeholder="Escribe para buscar...">
                     </div>
                 </div>
-                <div class="p-3  border-bottom">
+                <div class="p-3 border-bottom">
                     <h6 class="m-0 fw-bold text-body-secondary"><i class="bi bi-list-check me-2"></i>DETALLE DE
                         AFECTACIONES</h6>
                 </div>
@@ -256,7 +240,9 @@
                                 <th class="text-end">EFECTIVO</th>
                                 <th class="text-end">TARJETA</th>
                                 <th class="text-end">TRANSFERENCIA</th>
-                                <th class="text-end pe-4">SUBTOTAL</th>
+                                <th class="text-end">SUBTOTAL</th>
+                                <!-- 🔧 FIX: faltaba este <th> (había 7 ths y 8 tds) -->
+                                <th class="text-end pe-4">ACCIÓN</th>
                             </tr>
                         </thead>
                         <tbody id="tbodyAfectaciones"></tbody>
@@ -270,10 +256,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        // Selecciona todos los inputs de texto y también los textareas
         document.querySelectorAll('input[type="text"], textarea').forEach(elemento => {
             elemento.addEventListener('input', function () {
-                // Convierte el valor a mayúsculas en tiempo real
                 this.value = this.value.toUpperCase();
             });
         });
@@ -281,7 +265,7 @@
     <script>
         const Tesoreria = {
             url: '/cfsistem/app/controllers/tesoreriaController.php',
-            datosHistorial: [], // Memoria para el filtrado en el front
+            datosHistorial: [],
 
             init: function () {
                 this.listar();
@@ -299,7 +283,6 @@
                     let htmlHistorial = '';
 
                     if (res.status === 'success') {
-                        // 1. Renderizar Resumen General (res.data)
                         if (res.data) {
                             if (Array.isArray(res.data)) {
                                 res.data.forEach(m => html += this.renderFila(m));
@@ -308,30 +291,28 @@
                             }
                         }
 
-                        // 2. Guardar en memoria y renderizar Historial (movimientosHistorial)
                         if (res.movimientosHistorial) {
-                            // Guardamos siempre como array para el filtro
                             this.datosHistorial = Array.isArray(res.movimientosHistorial)
                                 ? res.movimientosHistorial
                                 : [res.movimientosHistorial];
 
-                            // Renderizamos inicialmente el historial completo
                             this.datosHistorial.forEach(mh => {
                                 htmlHistorial += this.renderFilaHistorial(mh);
                             });
                         }
                     }
 
-                    // Inyección en los contenedores correctos
                     $('#tbodyTesoreria').html(html || '<tr><td colspan="5" class="text-center py-5 text-body-secondary">No hay registros de saldos</td></tr>');
-                    $('#tbodyAfectaciones').html(htmlHistorial || '<tr><td colspan="7" class="text-center py-5 text-body-secondary">Sin movimientos detallados</td></tr>');
+                    $('#tbodyAfectaciones').html(htmlHistorial || '<tr><td colspan="8" class="text-center py-5 text-body-secondary">Sin movimientos detallados</td></tr>');
 
-                    // Limpiamos el buscador al recargar datos del servidor
                     $('#filtro_concepto').val('');
+                }).fail(function (xhr, status, err) {
+                    /* 🔧 FIX: visibilidad si la carga principal falla */
+                    console.error('Error al listar tesorería:', status, err, xhr.responseText);
+                    Swal.fire('Error', 'No se pudo cargar la información de tesorería.', 'error');
                 });
             },
 
-            // Nueva función para filtrar solo en el front
             filtrarLocal: function () {
                 const busqueda = $('#filtro_concepto').val().toLowerCase();
 
@@ -343,7 +324,7 @@
 
                 let html = '';
                 filtrados.forEach(m => html += this.renderFilaHistorial(m));
-                $('#tbodyAfectaciones').html(html || '<tr><td colspan="7" class="text-center py-5 text-body-secondary">No se encontraron coincidencias</td></tr>');
+                $('#tbodyAfectaciones').html(html || '<tr><td colspan="8" class="text-center py-5 text-body-secondary">No se encontraron coincidencias</td></tr>');
             },
 
             renderFila: function (m) {
@@ -355,7 +336,7 @@
                         <div class="d-flex align-items-center">
                             <div class="icon-box me-3"><i class="bi bi-shop"></i></div>
                             <div>
-                                <span class="fw-bold d-block ">${m.almacen || 'Sucursal'}</span>
+                                <span class="fw-bold d-block">${m.almacen || 'Sucursal'}</span>
                                 <span class="text-body-secondary" style="font-size:10px;">SALDO ACTUAL</span>
                             </div>
                         </div>
@@ -372,29 +353,41 @@
             },
 
             renderFilaHistorial: function (m) {
+
+                /* 🔧 FIX: resolver el id desde varios posibles nombres que devuelva el controlador */
+                const idMov = m.id ?? m.movimiento_id ?? m.id_movimiento ?? m.mov_id ?? null;
+                const idSeguro = (idMov !== null && !isNaN(parseInt(idMov, 10))) ? parseInt(idMov, 10) : '';
+
                 return `
                 <tr class="animate__animated animate__fadeIn">
                     <td class="ps-4">
-                        <span class="d-block fw-bold ">${m.fecha_movimiento || 'S/F'}</span>
+                        <span class="d-block fw-bold">${m.fecha_movimiento || 'S/F'}</span>
                     </td>
                     <td>
                         <div class="d-flex align-items-center">
                             <div class="avatar-sucursal me-3">
                                 ${m.almacen ? m.almacen.substring(0, 1).toUpperCase() : 'A'}
                             </div>
-                            <span class="fw-bold ">${m.almacen || 'Almacén'}</span>
+                            <span class="fw-bold">${m.almacen || 'Almacén'}</span>
                         </div>
                     </td>
                     <td>
-                        <span class="d-block fw-bold  text-uppercase small">${m.concepto || 'Sin Concepto'}</span>
+                        <span class="d-block fw-bold text-uppercase small">${m.concepto || 'Sin Concepto'}</span>
                     </td>
-                    <td class="text-end fw-medium ">${this.f(m.monto_efectivo)}</td>
-                    <td class="text-end fw-medium ">${this.f(m.monto_tarjeta)}</td>
-                    <td class="text-end fw-medium ">${this.f(m.monto_transferencia)}</td>
-                    <td class="text-end pe-4">
+                    <td class="text-end fw-medium">${this.f(m.monto_efectivo)}</td>
+                    <td class="text-end fw-medium">${this.f(m.monto_tarjeta)}</td>
+                    <td class="text-end fw-medium">${this.f(m.monto_transferencia)}</td>
+                    <td class="text-end">
                         <span class="fw-bolder fs-6 text-primary">
                             ${this.f(m.monto)}
                         </span>
+                    </td>
+                    <td class="text-end pe-4">
+                        <button type="button"
+                            class="btn btn-sm btn-outline-primary rounded-pill"
+                            onclick="abrirModalDetalleMovimiento('${idSeguro}')">
+                            📄 Ver detalle
+                        </button>
                     </td>
                 </tr>`;
             },
@@ -407,13 +400,303 @@
         $(document).ready(() => {
             Tesoreria.init();
 
-            // Vincular el evento de escritura al buscador
             $('#filtro_concepto').on('keyup', function () {
                 Tesoreria.filtrarLocal();
             });
         });
     </script>
+    <div class="modal fade" id="modalDetalleMovimiento" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-card p-2">
+                <div class="modal-header">
+                    <h5 class="fw-bold m-0">
+                        Detalle de Movimiento
+                        <span id="det_folio_badge" class="badge bg-primary-subtle text-primary ms-1">#—</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
 
+                <div class="modal-body" id="areaImpresionMovimiento">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="text-xs fw-bold text-body-secondary text-uppercase d-block">Concepto /
+                                Observación</label>
+                            <div class="p-2 rounded-4 bg-light border">
+                                <span id="det_concepto" class="fw-medium text-uppercase">—</span>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 rounded-4 bg-light border">
+                                <small class="text-xs fw-bold text-body-secondary text-uppercase d-block">Método /
+                                    Fecha</small>
+                                <span id="det_metodo_pago" class="fw-bold text-uppercase d-block">—</span>
+
+                            </div>
+                        </div>
+
+
+
+                        <div class="col-6">
+                            <label class="text-xs fw-bold text-body-secondary text-uppercase d-block">Usuario Registro
+                                ID</label>
+                            <span id="det_usuario_registro_id" class="fw-semibold">—</span>
+                        </div>
+
+
+                    </div>
+
+                    <div class="mt-4 d-flex gap-2">
+                        <button type="button" onclick="imprimirDetalleMovimiento()"
+                            class="btn btn-primary w-100 btn-ios py-3 shadow">
+                            🖨️ Imprimir Ticket (70 mm)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let ultimoMovimientoDetalle = null;
+
+        function fmtMonedaDetalle(valor) {
+            const num = parseFloat(valor) || 0;
+            return '$' + num.toLocaleString('es-MX', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function fmtTextoDetalle(valor, fallback = '—') {
+            if (valor === null || valor === undefined || String(valor).trim() === '') return fallback;
+            return String(valor);
+        }
+
+        function escapeHtmlTicket(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function mostrarModalDetalleBS() {
+            const el = document.getElementById('modalDetalleMovimiento');
+            if (!el) return;
+            if (window.bootstrap && bootstrap.Modal) {
+                bootstrap.Modal.getOrCreateInstance(el).show();
+            } else if (typeof window.$ !== 'undefined' && typeof $(el).modal === 'function') {
+                $(el).modal('show');
+            }
+        }
+
+        function abrirModalDetalleMovimiento(movimientoId) {
+            const id = parseInt(movimientoId, 10) || 0;
+            if (id <= 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Sin ID válido',
+                    html: 'El movimiento no tiene un <b>ID</b> válido para consultar el detalle.'
+                });
+                return;
+            }
+
+            $.getJSON('/cfsistem/app/controllers/tesoreriaController.php', {
+                action: 'obtener_movimiento_capital',
+                id: id
+            }, function (res) {
+                if (res && res.status === 'success' && res.data) {
+                    const d = res.data;
+                    ultimoMovimientoDetalle = d;
+
+                    const idTexto = '#' + fmtTextoDetalle(d.id, id);
+                    $('#det_folio_badge').text(idTexto);
+                    $('#det_metodo_pago').text(fmtTextoDetalle(d.metodo_pago));
+
+
+                    $('#det_usuario_registro_id').text(d.usuario_que_registro);
+                    $('#det_concepto').text(fmtTextoDetalle(d.concepto, 'Sin concepto'));
+
+                    mostrarModalDetalleBS();
+                } else {
+                    Swal.fire('Aviso', (res && res.message) || 'No se pudo cargar el detalle.', 'warning');
+                }
+            }).fail(function () {
+                Swal.fire('Error', 'No se pudo consultar el detalle del movimiento.', 'error');
+            });
+        }
+
+        function imprimirDetalleMovimiento() {
+            const d = ultimoMovimientoDetalle || {};
+            const folio = escapeHtmlTicket(fmtTextoDetalle(d.id, $('#det_folio_badge').text().replace('#', '') || '—'));
+            const metodo = escapeHtmlTicket(fmtTextoDetalle(d.metodo_pago, $('#det_metodo_pago').text()).toUpperCase());
+
+            const usuarioId = escapeHtmlTicket(fmtTextoDetalle(d.usuario_que_registro, $('#det_usuario_registro_id').text()));
+            const concepto = escapeHtmlTicket(fmtTextoDetalle(d.concepto, $('#det_concepto').text()).toUpperCase());
+            const fechaImp = escapeHtmlTicket(new Date().toLocaleString('es-MX'));
+
+            const htmlTicket = `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ticket Movimiento #${folio}</title>
+<style>
+  @page {
+    size: 70mm auto;
+    margin: 2mm;
+  }
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    font-family: 'Courier New', Courier, monospace, Arial, sans-serif;
+    font-size: 11px;
+    line-height: 1.35;
+    color: #000;
+    background: #f4f4f4;
+    padding: 12px;
+  }
+  .ticket {
+    width: 70mm;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 4mm;
+    background: #fff;
+    border: 1px dashed #999;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .center { text-align: center; }
+  .title {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+  }
+  .sub {
+    font-size: 9px;
+    margin-top: 2px;
+  }
+  .divider {
+    border-top: 1px dashed #000;
+    margin: 6px 0;
+  }
+  .row-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+    margin-bottom: 4px;
+    word-break: break-word;
+  }
+  .label {
+    font-weight: 700;
+  }
+  .monto-box {
+    border: 1px solid #000;
+    padding: 5px;
+    margin: 6px 0;
+    text-align: center;
+  }
+  .monto-label {
+    font-size: 9px;
+    text-transform: uppercase;
+  }
+  .monto-val {
+    font-size: 15px;
+    font-weight: 800;
+    margin-top: 2px;
+  }
+  .concepto-box {
+    margin-top: 4px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  .firma-area {
+    margin-top: 16mm;
+    text-align: center;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .firma-linea {
+    border-top: 1px solid #000;
+    width: 85%;
+    margin: 0 auto 4px auto;
+  }
+  .firma-texto {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  @media print {
+    body {
+      background: #fff;
+      padding: 0;
+      width: 66mm;
+      font-size: 10px;
+      line-height: 1.3;
+    }
+    .ticket {
+      width: 100%;
+      margin: 0;
+      padding: 1mm 0;
+      border: none;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="ticket">
+    <div class="center">
+      <div class="title">COMPROBANTE DE MOVIMIENTO</div>
+      <div class="sub">TESORERÍA · FOLIO #${folio}</div>
+      <div class="sub">Impreso: ${fechaImp}</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="concepto-box">
+      <div class="label">Concepto:</div>
+      <div>${concepto}</div>
+    </div>
+
+    <div class="row-line"><span class="label">Método:</span><span>${metodo}</span></div>
+    
+    <div class="row-line"><span class="label">Usuario ID:</span><span>${usuarioId}</span></div>
+
+    <div class="divider"></div>
+
+    
+
+    <div class="firma-area">
+      <div class="firma-linea"></div>
+      <div class="firma-texto">FIRMA DE RECIBIDO</div>
+    </div>
+  </div>
+
+  <script>
+    window.addEventListener('load', function () {
+      setTimeout(function () {
+        window.focus();
+        window.print();
+      }, 150);
+    });
+  <\/script>
+</body>
+</html>`;
+
+            const win = window.open('', '_blank');
+            if (!win) {
+                Swal.fire('Bloqueador de ventanas', 'Permite las ventanas emergentes para imprimir el ticket.', 'warning');
+                return;
+            }
+            win.document.open();
+            win.document.write(htmlTicket);
+            win.document.close();
+        }
+    </script>
     <?php require_once __DIR__ . '/tesoreriaModal/ajusteModal.php'; ?>
 </body>
 
