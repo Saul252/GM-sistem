@@ -435,7 +435,7 @@ error_reporting(E_ALL);
                                     <!-- -->
                                     <div class="col-6">
                                         <div class="fw-bold text-uppercase mb-0" style="letter-spacing:.5px;">
-                                            BODEGA FORTALEZA CHALCO S.A DE C,V
+                                            BODEGA FORTALEZA CHALCO S.A DE C.V
                                         </div>
                                     </div>
                                     <div class="col-6">
@@ -904,6 +904,7 @@ error_reporting(E_ALL);
 
 
 
+    <?php require_once __DIR__ . '/solicitudesCompra/editarSolicitud.php'; ?>
     <?php require_once __DIR__ . '/solicitudesCompra/ModalSolicitud.php'; ?>
     <?php require_once __DIR__ . '/solicitudesCompra/imprimirModal.php'; ?>
     <?php require_once __DIR__ . '/solicitudesCompra/modalAjuste.php'; ?>
@@ -1063,7 +1064,11 @@ error_reporting(E_ALL);
 
                     // 6.5 Botones de acción principal (solo PENDIENTE)
                     const botonesAccion = status === 'PENDIENTE' ? `
-        <button class="btn btn-sm btn-outline-primary border shadow-sm"
+      <button type="button" class="btn btn-sm btn-outline-primary border shadow-sm"
+        onclick="edS_abrirModalEditar(${s.id})">
+    <i class="bi bi-pencil-square"></i> Editar
+</button>
+                    <button class="btn btn-sm btn-outline-primary border shadow-sm"
                 onclick="gestionarSolicitud(${s.id})">
             <i class="bi bi-eye"></i> Gestionar
         </button>
@@ -1371,7 +1376,7 @@ error_reporting(E_ALL);
                            class="form-control form-control-sm border-success shadow-sm i-llegado"
                            name="items[${index}][cantidad_llegado]"
                            value="${cantidadSolicitada}"
-                           step=".001"
+                           step=".00001"
                            min="0"
                            oninput="recalcularFila(${index})">
                     <input type="hidden"
@@ -1379,14 +1384,14 @@ error_reporting(E_ALL);
                            class="i-faltante"
                            name="items[${index}][cantidad_faltante]"
                            value="0"
-                           step=".001"
+                           step=".00001"
                            min="0">
                     <input type="hidden"
                            name="items[${index}][cantidad_excedente]"
                            class="i-excedente"
                            value="0"
                            min="0"
-                           step="0.001">
+                           step="0.0001">
                 </td>
 
                 <td>

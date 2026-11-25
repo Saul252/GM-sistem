@@ -862,7 +862,7 @@
                 // 🔥 Cantidad TAL CUAL desde BD (sin dividir)
                 const valorCalculado = parseFloat((i.cantidad) * factorUnidad) || 0;
                 const cantidadMostrada = Number.isInteger(valorCalculado) ? valorCalculado : parseFloat(valorCalculado.toFixed(2));
-                const minimoMostrado = parseFloat(i.cantidad_entregada * factorUnidad) || 0;
+                const minimoMostrado = parseFloat(((parseFloat(i.cantidad_entregada) || 0) * factorUnidad).toFixed(4)) || 0;
 
                 // Opciones de unidad (marcar la actual)
                 let opcionesUnidadHtml = '';

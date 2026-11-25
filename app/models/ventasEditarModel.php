@@ -55,7 +55,7 @@ class VentaHistorialModel
                       LEFT JOIN opciones_de_medida_adicional o
     ON dv.unidadMedida = o.id
                     LEFT JOIN precios_producto pp ON p.id = pp.producto_id AND pp.almacen_id = $almacen_id
-                   left join opciones_medida_adicional odma on odma.id = dv.unidadMedida
+                   left join opciones_de_medida_adicional odma on odma.id = dv.unidadMedida
                     LEFT JOIN inventario inv ON p.id = inv.producto_id AND inv.almacen_id = $almacen_id
                     WHERE dv.venta_id = $id";
 

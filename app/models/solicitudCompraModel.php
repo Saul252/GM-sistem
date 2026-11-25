@@ -213,6 +213,78 @@ WHERE 1=1"; // <-- Clave para que los "AND" funcionen directamente
         // IMPORTANTE: Aquí es donde entregamos los datos al controlador
         return $result->fetch_all(MYSQLI_ASSOC);
     }
+    public function actualizarSolicitud($sid, $data, $items)
+    {
+        try {
+            $this->db->begin_transaction();
+
+            // ══════════════════════════════════════════════════
+            // 1. Actualizar cabecera
+            //    (mismas columnas que crear, sin tocar estado)
+            // ══════════════════════════════════════════════════
+            $sqlCab = "UPDATE solicitudes_compra
+                   SET almacen_id   = ?,
+                       proveedor_id = ?,
+                       ubicacion_id = ?
+                   WHERE id = ?";
+
+            $stmt = $this->db->prepare($sqlCab);
+            $stmt->bind_param(
+                "iiii",
+                $data['almacen_id'],
+                $data['proveedor_id'],
+                $data['ubicacion_proveedor_id'],
+                $sid
+            );
+
+            if (!$stmt->execute()) {
+                throw new Exception("Error al actualizar cabecera: " . $stmt->error);
+            }
+            $stmt->close();
+
+            // ══════════════════════════════════════════════════
+            // 2. Eliminar TODOS los detalles existentes
+            // ══════════════════════════════════════════════════
+            $sqlDel = "DELETE FROM detalle_solicitud_compra WHERE solicitud_id = ?";
+            $stmtDel = $this->db->prepare($sqlDel);
+            $stmtDel->bind_param("i", $sid);
+
+            if (!$stmtDel->execute()) {
+                throw new Exception("Error al eliminar detalles: " . $stmtDel->error);
+            }
+            $stmtDel->close();
+
+            // ══════════════════════════════════════════════════
+            // 3. Insertar los nuevos detalles
+            //    MISMO formato que crear: solo 4 columnas
+            // ══════════════════════════════════════════════════
+            $sqlDet = "INSERT INTO detalle_solicitud_compra
+                   (solicitud_id, producto_id, cantidad, costo)
+                   VALUES (?, ?, ?, ?)";
+
+            $stmtDet = $this->db->prepare($sqlDet);
+
+            foreach ($items as $id_producto => $item) {
+                $id_prod = intval($id_producto);
+                $cant = floatval($item['cantidad'] ?? 0);
+                $costo = floatval($item['costo'] ?? 0);
+
+                $stmtDet->bind_param("iidd", $sid, $id_prod, $cant, $costo);
+
+                if (!$stmtDet->execute()) {
+                    throw new Exception("Error al insertar detalle: " . $stmtDet->error);
+                }
+            }
+            $stmtDet->close();
+
+            $this->db->commit();
+            return $sid;
+
+        } catch (Throwable $e) {
+            $this->db->rollback();
+            return $e->getMessage();   // ← mismo patrón que crear()
+        }
+    }
     public function cancelarOrden($id)
     {
         try {

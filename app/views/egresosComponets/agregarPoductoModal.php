@@ -92,7 +92,7 @@
                                 <div class="col-md-4">
                                     <label class="form-label small text-body-secondary">Factor de conversión</label>
                                     <input type="number" id="f_conversion" name="factor_conversion"
-                                        class="form-control shadow-sm" value="1">
+                                        class="form-control shadow-sm" value="1" step="0.001">
                                     <small id="helper-conversion" class="text-primary"></small>
                                 </div>
 

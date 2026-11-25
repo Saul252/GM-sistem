@@ -897,6 +897,9 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
      */
     public function procesarAjusteFaltante($compra_id, $distribucion, $user_id)
     {
+        $compra_id = intval($compra_id);
+        $user_id = intval($user_id);
+
         $this->db->begin_transaction();
         try {
             // 1. Obtener Folio para el historial (Kardex)
@@ -907,91 +910,178 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $resC = $stmtC->get_result()->fetch_assoc();
             $folio = $resC['folio'] ?? 'S/F';
 
+            // Consultas preparadas reutilizables
+            $sqlPend = "SELECT COALESCE(SUM(cantidad_pendiente), 0) AS pendiente
+                    FROM faltantes_ingreso
+                    WHERE compra_id = ? AND producto_id = ?";
+            $stmtPend = $this->db->prepare($sqlPend);
+
+            $sqldc = "SELECT id, cantidad_faltante, cantidad_excedente, precio_unitario, subtotal
+                  FROM detalle_compra
+                  WHERE compra_id = ? AND producto_id = ?";
+            $stmtdc = $this->db->prepare($sqldc);
+
+            $sqlInv = "INSERT INTO inventario (almacen_id, producto_id, stock)
+                   VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE stock = stock + VALUES(stock)";
+            $stmtInv = $this->db->prepare($sqlInv);
+
+            $sqlUltimoLote = "SELECT ls.id AS lote_id
+                          FROM lotes_ingresos_detalle lid
+                          INNER JOIN detalle_compra dc ON lid.detalle_compra_id = dc.id
+                          INNER JOIN lotes_stock ls ON lid.lote_id = ls.id
+                          WHERE dc.compra_id = ?
+                            AND dc.producto_id = ?
+                            AND ls.almacen_id = ?
+                          ORDER BY lid.id DESC, ls.id DESC
+                          LIMIT 1";
+            $stmtUltimoLote = $this->db->prepare($sqlUltimoLote);
+
+            $sqlUpdLote = "UPDATE lotes_stock
+                       SET cantidad_inicial = cantidad_inicial + ?,
+                           cantidad_actual = cantidad_actual + ?,
+                           estado_lote = 'activo'
+                       WHERE id = ?";
+            $stmtUpdLote = $this->db->prepare($sqlUpdLote);
+
+            $sqlL = "INSERT INTO lotes_stock
+                 (producto_id, almacen_id, codigo_lote, cantidad_inicial, cantidad_actual, precio_compra_unitario, estado_lote)
+                 VALUES (?, ?, ?, ?, ?, ?, 'activo')";
+            $stmtL = $this->db->prepare($sqlL);
+
+            $sqlLI = "INSERT INTO lotes_ingresos_detalle
+                  (lote_id, detalle_compra_id, cantidad_recibida, costo_aplicado)
+                  VALUES (?, ?, ?, ?)";
+            $stmtLI = $this->db->prepare($sqlLI);
+
+            $sqlK = "INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_destino_id, usuario_registra_id, referencia_id, observaciones)
+                 VALUES (?, 'entrada', ?, ?, ?, ?, ?)";
+            $stmtK = $this->db->prepare($sqlK);
+
+            $sqlUpdFalt = "UPDATE faltantes_ingreso
+                       SET cantidad_pendiente = GREATEST(0, cantidad_pendiente - ?)
+                       WHERE compra_id = ? AND producto_id = ?";
+            $stmtUpdFalt = $this->db->prepare($sqlUpdFalt);
+
+            $sqlUpdDet = "UPDATE detalle_compra
+                      SET cantidad_faltante = ?,
+                          cantidad_excedente = cantidad_excedente + ?
+                      WHERE id = ?";
+            $stmtUpdDet = $this->db->prepare($sqlUpdDet);
 
             foreach ($distribucion as $p_id => $almacenes) {
-                $sqldc = "SELECT id, precio_unitario ,subtotal
-              FROM detalle_compra 
-              WHERE compra_id = ? AND producto_id = ?";
+                $p_id = intval($p_id);
 
-                $stmtdc = $this->db->prepare($sqldc);
+                $totalSolicitadoProducto = 0;
+                foreach ($almacenes as $cantidad) {
+                    $cant = floatval($cantidad);
+                    if ($cant > 0) {
+                        $totalSolicitadoProducto += $cant;
+                    }
+                }
+
+                if ($totalSolicitadoProducto <= 0) {
+                    continue;
+                }
+
+                $stmtPend->bind_param("ii", $compra_id, $p_id);
+                $stmtPend->execute();
+                $pendienteActual = floatval($stmtPend->get_result()->fetch_assoc()['pendiente'] ?? 0);
+
                 $stmtdc->bind_param("ii", $compra_id, $p_id);
                 $stmtdc->execute();
-
                 $resdc = $stmtdc->get_result()->fetch_assoc();
 
-                $id_dc = $resdc['id'] ?? 0;
-                $precio_unitario = $resdc['precio_unitario'] ?? 0;
+                $id_dc = intval($resdc['id'] ?? 0);
+                $faltanteActualDC = floatval($resdc['cantidad_faltante'] ?? $pendienteActual);
+                $precio_unitario = floatval($resdc['precio_unitario'] ?? 0);
+                $subtotal = floatval($resdc['subtotal'] ?? 0);
 
-                $subtotal = $resdc['subtotal'] ?? 0;
+                // Calcular cuánto supera el ingreso a lo pendiente (con margen decimal 1e-4)
+                $excedenteAjuste = 0.0;
+                if ($totalSolicitadoProducto - $pendienteActual > 1e-4) {
+                    $excedenteAjuste = round($totalSolicitadoProducto - $pendienteActual, 4);
+                }
 
                 $total_recibido_producto = 0;
 
                 foreach ($almacenes as $alm_id => $cantidad) {
+                    $alm_id = intval($alm_id);
                     $cantidad = floatval($cantidad);
-                    if ($cantidad <= 0)
-                        continue; // Si el switch estaba ON pero la cantidad es 0, ignoramos
+                    if ($cantidad <= 0) {
+                        continue;
+                    }
 
                     $total_recibido_producto += $cantidad;
 
-
-                    // A. Actualizar Inventario (Suma en el almacén destino seleccionado)
-                    $sqlInv = "INSERT INTO inventario (almacen_id, producto_id, stock) 
-                           VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE stock = stock + VALUES(stock)";
-                    $stmtInv = $this->db->prepare($sqlInv);
+                    // A. Actualizar Inventario en el almacén destino
                     $stmtInv->bind_param("iid", $alm_id, $p_id, $cantidad);
+                    $stmtInv->execute();
 
-                    $codigo_lote = "LOTE-A-" . $compra_id . "-" . $p_id . "-" . $alm_id;
+                    // Buscar el último lote ligado a esta compra, producto y almacén
+                    $stmtUltimoLote->bind_param("iii", $compra_id, $p_id, $alm_id);
+                    $stmtUltimoLote->execute();
+                    $loteRow = $stmtUltimoLote->get_result()->fetch_assoc();
 
-                    $sqlL = "INSERT INTO lotes_stock 
-                        (producto_id, almacen_id, codigo_lote, cantidad_inicial, cantidad_actual, precio_compra_unitario, estado_lote) 
-                        VALUES (?, ?, ?, ?, ?, ?, 'activo')";
+                    if ($loteRow && !empty($loteRow['lote_id'])) {
+                        $lote_id = intval($loteRow['lote_id']);
 
-                    $stmtL = $this->db->prepare($sqlL);
-                    $stmtL->bind_param("iisddd", $p_id, $alm_id, $codigo_lote, $cantidad, $cantidad, $precio_unitario);
-                    $stmtL->execute();
+                        // Sumar al lote existente (cantidad_inicial y cantidad_actual)
+                        $stmtUpdLote->bind_param("ddi", $cantidad, $cantidad, $lote_id);
+                        $stmtUpdLote->execute();
+                    } else {
+                        // Si el almacén destino aún no tiene lote de esta compra/producto, se crea
+                        $codigo_lote = "LOTE-A-" . $compra_id . "-" . $p_id . "-" . $alm_id;
+                        $stmtL->bind_param("iisddd", $p_id, $alm_id, $codigo_lote, $cantidad, $cantidad, $precio_unitario);
+                        $stmtL->execute();
+                        $lote_id = $stmtL->insert_id;
+                    }
 
-                    $lote_id = $stmtL->insert_id;
-
-                    // Relación lote-detalle
-                    $sqlLI = "INSERT INTO lotes_ingresos_detalle 
-                                  (lote_id, detalle_compra_id, cantidad_recibida, costo_aplicado) 
-                                  VALUES (?, ?, ?, ?)";
-                    $stmtLI = $this->db->prepare($sqlLI);
+                    // Trazabilidad en lotes_ingresos_detalle
                     $stmtLI->bind_param("iidd", $lote_id, $id_dc, $cantidad, $subtotal);
                     $stmtLI->execute();
 
-                    $stmtInv->execute();
-
                     // B. Registrar Movimiento (Kardex)
-                    $obs = "Entrada Faltante (Compra: $folio)";
-                    $sqlK = "INSERT INTO movimientos (producto_id, tipo, cantidad, almacen_destino_id, usuario_registra_id, referencia_id, observaciones) 
-                         VALUES (?, 'entrada', ?, ?, ?, ?, ?)";
-                    $stmtK = $this->db->prepare($sqlK);
+                    $obs = $excedenteAjuste > 0
+                        ? "Entrada Faltante + Excedente ($excedenteAjuste) (Compra: $folio)"
+                        : "Entrada Faltante (Compra: $folio)";
                     $stmtK->bind_param("idiiis", $p_id, $cantidad, $alm_id, $user_id, $compra_id, $obs);
                     $stmtK->execute();
                 }
 
-                // C. Si hubo ingresos para este producto, descontamos de los saldos pendientes
+                // C. Actualizar faltantes_ingreso y detalle_compra
                 if ($total_recibido_producto > 0) {
-                    // Descontar de la tabla operativa de faltantes
-                    $this->db->query("UPDATE faltantes_ingreso 
-                                  SET cantidad_pendiente = cantidad_pendiente - $total_recibido_producto 
-                                  WHERE compra_id = $compra_id AND producto_id = $p_id");
+                    $stmtUpdFalt->bind_param("dii", $total_recibido_producto, $compra_id, $p_id);
+                    $stmtUpdFalt->execute();
 
-                    // Descontar del detalle histórico de la compra
-                    $this->db->query("UPDATE detalle_compra 
-                                  SET cantidad_faltante = cantidad_faltante - $total_recibido_producto 
-                                  WHERE compra_id = $compra_id AND producto_id = $p_id");
+                    $nuevoFaltanteDC = max(0.0, round($faltanteActualDC - $total_recibido_producto, 4));
+                    if ($nuevoFaltanteDC <= 1e-4) {
+                        $nuevoFaltanteDC = 0.0;
+                    }
+
+                    if ($id_dc > 0) {
+                        $stmtUpdDet->bind_param("ddi", $nuevoFaltanteDC, $excedenteAjuste, $id_dc);
+                        $stmtUpdDet->execute();
+                    }
                 }
             }
 
             // 3. LIMPIEZA: Eliminar registros de pendientes que ya llegaron a 0
-            $this->db->query("DELETE FROM faltantes_ingreso WHERE cantidad_pendiente <= 0");
+            $sqlDelPend = "DELETE FROM faltantes_ingreso WHERE cantidad_pendiente <= 1e-4";
+            $stmtDelPend = $this->db->prepare($sqlDelPend);
+            $stmtDelPend->execute();
 
-            // 4. ACTUALIZAR CABECERA: Si ya no queda NADA pendiente de esta compra, marcar como finalizada
-            $check = $this->db->query("SELECT COUNT(*) as total FROM faltantes_ingreso WHERE compra_id = $compra_id");
-            if ($check->fetch_assoc()['total'] == 0) {
-                $this->db->query("UPDATE compras SET tiene_faltantes = 0 WHERE id = $compra_id");
+            // 4. ACTUALIZAR CABECERA: Si ya no queda nada pendiente de esta compra, marcar como finalizada
+            $sqlCheck = "SELECT COUNT(*) AS total FROM faltantes_ingreso WHERE compra_id = ?";
+            $stmtCheck = $this->db->prepare($sqlCheck);
+            $stmtCheck->bind_param("i", $compra_id);
+            $stmtCheck->execute();
+            $totalRestante = intval($stmtCheck->get_result()->fetch_assoc()['total'] ?? 0);
+
+            if ($totalRestante === 0) {
+                $sqlUpdCompra = "UPDATE compras SET tiene_faltantes = 0 WHERE id = ?";
+                $stmtUpdCompra = $this->db->prepare($sqlUpdCompra);
+                $stmtUpdCompra->bind_param("i", $compra_id);
+                $stmtUpdCompra->execute();
             }
 
             $this->db->commit();

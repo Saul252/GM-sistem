@@ -17,6 +17,9 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+        rel="stylesheet">
     <?php require_once __DIR__ . '/layout/icono.php' ?>
 
     <?php if (function_exists('cargarEstilos')) {
@@ -107,16 +110,32 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
 
 
         <div class="card p-3">
-            <div class="col-md-9">
-                <label class="form-label small fw-bold">Buscar en resultados</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-white">
-                        <i class="bi bi-search"></i>
-                    </span>
-                    <input type="search" id="buscarTabla" class="form-control"
-                        placeholder="Folio, proveedor, producto, estado...">
+            <div class="row g-3 mb-3 align-items-end">
+                <div class="col-md-6">
+                    <label for="buscarTabla" class="form-label small fw-bold">Buscar en resultados</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="search" id="buscarTabla" class="form-control"
+                            placeholder="Folio, proveedor, producto, estado...">
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="proveedor_id" class="form-label small fw-bold">Proveedor</label>
+                    <select name="proveedor_id" id="proveedor_id" class="form-select border-slate-200" required>
+                        <option value="">Seleccionar proveedor...</option>
+                        <?php foreach ($proveedores as $p): ?>
+                            <option value="<?= $p['id'] ?>" data-razon="<?= htmlspecialchars($p['razon_social'] ?? '') ?>">
+                                <?= htmlspecialchars($p['nombre_comercial']) ?>
+                                <?= !empty($p['razon_social']) ? ' | ' . htmlspecialchars($p['razon_social']) : '' ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
             </div>
+
             <div id="contenedorTablaHistorial" class="table-responsive overflow-auto"
                 style="max-height: calc(100dvh - 280px);">
                 <table class="table table-hover align-middle mb-0">
@@ -150,7 +169,8 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/i18n/es.js"></script>
     <script>
         function ajustarAltoTablaHistorial() {
             const el = document.getElementById('contenedorTablaHistorial');
@@ -168,21 +188,66 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
             ajustarAltoTablaHistorial();
             $(window).on('resize', ajustarAltoTablaHistorial);
         });
+
+        $(function () {
+            // Almacén
+            $('#filtroAlmacen').select2({
+                theme: 'bootstrap-5',
+                language: 'es',
+                width: '100%'
+            });
+
+            // Proveedor: el texto del option ya incluye "nombre | razón", así busca por ambos
+            $('#proveedor_id').select2({
+                theme: 'bootstrap-5',
+                language: 'es',
+                width: '100%',
+                placeholder: 'Seleccionar proveedor...',
+                allowClear: true,
+
+                templateResult: function (state) {
+                    if (!state.id) return state.text;
+
+                    const razon = $(state.element).data('razon') || '';
+                    const nombre = state.text.split(' | ')[0].trim();
+
+                    return $(`
+                <div style="line-height:1.15; padding:2px 0;">
+                    <div style="font-weight:600; color:#052a52; font-size:0.9rem;">${nombre}</div>
+                    ${razon ? `<div style="font-size:0.72rem; color:#5a7090; margin-top:2px;">${razon}</div>` : ''}
+                </div>`);
+                },
+
+                templateSelection: function (state) {
+                    return state.id ? state.text.split(' | ')[0].trim() : state.text;
+                }
+            });
+
+            $('#proveedor_id').on('change', filtrarTablaHistorial);
+
+            // Carga inicial respetando filtros actuales si ya existieran
+            cargarHistorial();
+        });
+
         function filtrarTablaHistorial() {
             const termino = ($('#buscarTabla').val() || '').toLowerCase().trim();
-            const $filas = $('#tablaHistorial tr');
+
+            // Proveedor seleccionado: nombre comercial y razón social
+            const $opt = $('#proveedor_id option:selected');
+            const provNombre = $opt.val() ? $opt.text().split(' | ')[0].trim().toLowerCase() : '';
+            const provRazon = $opt.val() ? String($opt.data('razon') || '').trim().toLowerCase() : '';
 
             // Quitar fila previa de "sin coincidencias" si existía
             $('#filaSinCoincidencias').remove();
 
-            // Si es una fila de estado vacía/cargando (con colspan), no la ocultamos
-            const $filasDatos = $filas.filter(function () {
+            // Las filas de estado (vacío / cargando) tienen una sola celda y no se filtran
+            const $filasDatos = $('#tablaHistorial tr').filter(function () {
                 return $(this).find('td').length > 1;
             });
 
             if (!$filasDatos.length) return;
 
-            if (!termino) {
+            if (!termino && !provNombre) {
                 $filasDatos.show();
                 return;
             }
@@ -190,14 +255,21 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
             let visibles = 0;
             $filasDatos.each(function () {
                 const $fila = $(this);
-                // .text() toma todo el texto visible de la fila (incluidos los <li> de productos)
-                // También revisamos atributos title por si algún producto está truncado
+
+                // 1) Coincidencia con el buscador de texto (toda la fila + títulos)
                 const textoFila = $fila.text().toLowerCase();
                 const titulosFila = $fila.find('[title]').map(function () {
                     return $(this).attr('title');
                 }).get().join(' ').toLowerCase();
+                const coincideTexto = !termino || textoFila.includes(termino) || titulosFila.includes(termino);
 
-                const coincide = textoFila.includes(termino) || titulosFila.includes(termino);
+                // 2) Coincidencia con el proveedor (columna 4 = Proveedor)
+                const celdaProveedor = $fila.find('td').eq(3).text().toLowerCase();
+                const coincideProveedor = !provNombre ||
+                    celdaProveedor.includes(provNombre) ||
+                    (provRazon !== '' && celdaProveedor.includes(provRazon));
+
+                const coincide = coincideTexto && coincideProveedor;
                 $fila.toggle(coincide);
                 if (coincide) visibles++;
             });
@@ -206,10 +278,9 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
                 $('#tablaHistorial').append(`
             <tr id="filaSinCoincidencias">
                 <td colspan="9" class="text-center text-body-secondary py-3">
-                    No se encontraron compras que coincidan con "<strong>${$('<div>').text(termino).html()}</strong>".
+                    No se encontraron compras que coincidan con los filtros.
                 </td>
-            </tr>
-        `);
+            </tr>`);
             }
         }
 
@@ -217,42 +288,31 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
         $(document).on('input search keyup', '#buscarTabla', function () {
             filtrarTablaHistorial();
         });
+
         function cargarHistorial() {
             const producto = $('#filtroProducto').val();
             const almacen = $('#filtroAlmacen').val() ?? 0;
-            // NUEVO: Captura de fechas
             const f_ini = $('#fecha_inicio').val();
             const f_fin = $('#fecha_fin').val();
-            //cargarTraspasos(producto, almacen);
-
-
-
-
-
-            //cargarTraspasos(producto, almacen);
-            // cargarConsumoLotes(producto, almacen);
 
             $.ajax({
                 url: '/cfsistem/app/controllers/comprasHistorialController.php',
                 type: 'GET',
                 data: {
                     action: 'obtenerCompras',
-
                     almacen_id: almacen,
-                    periodo: 'personalizado', // Enviamos el periodo para que el controller sepa usar f_inicio
+                    periodo: 'personalizado',
                     f_inicio: f_ini,
                     f_fin: f_fin
                 },
                 dataType: 'json',
                 success: function (res) {
-                    // $('#total_inicial').text(res.totales.total_cantidad_inicial || 0);
-                    // $('#total_actual').text(res.totales.total_cantidad_actual || 0);
                     console.log(res.data);
 
                     let html = '';
                     if (!res.success || !res.data.length) {
                         $('#tablaHistorial').html(
-                            '<tr><td colspan="10" class="text-center">Sin datos</td></tr>');
+                            '<tr><td colspan="9" class="text-center">Sin datos</td></tr>');
                         return;
                     }
 
@@ -271,8 +331,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
                                 estado_compra: item.estado_compra,
                                 total: item.total,
                                 proveedor: item.proveedor,
-
-                                productosList: [] // Aquí acumulamos los productos de esta compra
+                                productosList: []
                             });
                         }
                         comprasMap.get(item.id).productosList.push({
@@ -283,113 +342,112 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
                             sobrante: item.sobrante,
                             factor: item.factor_conversion,
                             uMedida: item.unidad_medida,
-                            uReporte: item.unidad_reporte,
-
+                            uReporte: item.unidad_reporte
                         });
                     });
 
                     // 2. Generamos el HTML manteniendo el orden original
                     comprasMap.forEach(compra => {
-                        let color = compra.estado === 'activo' ? 'success' : (compra.estado_compra ===
-                            'agotado' ? 'danger' : 'secondary');
-
-                        // En lugar del .join(', '), creamos una lista limpia de Bootstrap
                         let nombresProductos =
                             '<ul class="list-unstyled m-0 p-0" style="font-size: 11px; line-height: 1.3;">';
                         compra.productosList.forEach(p => {
                             let cantidad = p.cantidad / p.factor;
-                            let totalC = cantidad >= 1 ? p.nombre + ' ' + cantidad + ' ' + p
-                                .uReporte : p.nombre + ' ' + p.cantidad + ' ' + p.uMedida;
+                            let totalC = cantidad >= 1
+                                ? p.nombre + ' ' + cantidad + ' ' + p.uReporte
+                                : p.nombre + ' ' + p.cantidad + ' ' + p.uMedida;
 
                             nombresProductos +=
                                 `<li class="text-truncate" style="max-width: 250px;" title="${totalC}">• ${totalC}</li>`;
                         });
                         nombresProductos += '</ul>';
+
                         let columnaAccion = '';
 
-                        // Si es un solo producto, botón directo. Si son más, Dropdown de Bootstrap
                         if (compra.productosList.length === 1) {
                             let prod = compra.productosList[0];
 
                             columnaAccion = `
-        <button
-            class="btn btn-sm btn-outline-primary"
-            onclick='verMovimientos(
-                ${prod.id},
-                ${compra.id},
-                ${JSON.stringify(compra.folio)},
-                ${JSON.stringify(prod)}
-            )'>
-            Ver
-        </button>
-    `;
+                        <button
+                            class="btn btn-sm btn-outline-primary"
+                            onclick='verMovimientos(
+                                ${prod.id},
+                                ${compra.id},
+                                ${JSON.stringify(compra.folio)},
+                                ${JSON.stringify(prod)}
+                            )'>
+                            Ver
+                        </button>
+                    `;
                         } else {
                             let opciones = '';
                             compra.productosList.forEach(prod => {
                                 let cantidad = prod.cantidad / prod.factor;
-                                let totalC = cantidad >= 1 ? prod.nombre + ' ' + cantidad +
-                                    ' ' + prod.uReporte : prod.nombre + ' ' + prod.cantidad +
-                                    ' ' + prod.uMedida;
+                                let totalC = cantidad >= 1
+                                    ? prod.nombre + ' ' + cantidad + ' ' + prod.uReporte
+                                    : prod.nombre + ' ' + prod.cantidad + ' ' + prod.uMedida;
                                 opciones += `
-               <li>
-    <a class="dropdown-item d-flex justify-content-between align-items-center gap-2"
-       href="#"
-       onclick='event.preventDefault(); verMovimientos(
-           ${prod.id},
-           ${compra.id},
-           ${JSON.stringify(compra.folio)},
-           ${JSON.stringify(prod)}
-       );'>
-        <span class="text-truncate" style="max-width: 150px;">${totalC}</span>
-        <small class="text-primary fw-bold">Ver</small>
-    </a>
-</li>
-`;
+                            <li>
+                                <a class="dropdown-item d-flex justify-content-between align-items-center gap-2"
+                                   href="#"
+                                   onclick='event.preventDefault(); verMovimientos(
+                                       ${prod.id},
+                                       ${compra.id},
+                                       ${JSON.stringify(compra.folio)},
+                                       ${JSON.stringify(prod)}
+                                   );'>
+                                    <span class="text-truncate" style="max-width: 150px;">${totalC}</span>
+                                    <small class="text-primary fw-bold">Ver</small>
+                                </a>
+                            </li>
+                        `;
                             });
 
                             columnaAccion = `
-            <div class="dropdown">
-                <button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    Opciones (${compra.productosList.length})
-                </button>
-                <ul class="dropdown-menu dropdown-menu-end" style="font-size: 11px;">
-                    ${opciones}
-                </ul>
-            </div>
-        `;
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Opciones (${compra.productosList.length})
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end" style="font-size: 11px;">
+                                ${opciones}
+                            </ul>
+                        </div>
+                    `;
                         }
 
+                        (compra.faltante > 0 && compra.estado != 'cancelada') ? compra.estado = 'pendiente' : '';
 
                         const color2 =
                             compra.estado === 'confirmada' ? 'success' :
                                 compra.estado === 'pendiente' ? 'primary' :
                                     compra.estado === 'cancelada' ? 'danger' :
                                         'secondary';
-                        (compra.faltante > 0 && compra.estado != 'cancelada') ? compra.estado = 'pendiente' : '';
 
                         html += `
-    <tr>
-        <td>${compra.almacen}</td>
-        <td class="fw-bold">#${compra.folio}</td>
-        <td class="text-body-secondary">${compra.orden_compra}</td>
-        <td class="text-body-secondary">${compra.proveedor}</td>
-        <td>${compra.fecha_compra}</td>
-        <td style="max-width: 220px;" class="text-truncate">${nombresProductos}</td>
-        <td>
-        
-            <span class="badge bg-${color2}">
-                ${compra.estado}
-            </span>
-        </td>
-        <td class="text-end fw-bold">$${parseFloat(compra.total || 0).toFixed(2)}</td>
-        <td class="text-center">${compra.estado != 'Cancelada' ? columnaAccion : ''}</td>
-    </tr>`;;
+                    <tr>
+                        <td>${compra.almacen}</td>
+                        <td class="fw-bold">#${compra.folio}</td>
+                        <td class="text-body-secondary">${compra.orden_compra}</td>
+                        <td class="text-body-secondary">${compra.proveedor}</td>
+                        <td>${compra.fecha_compra}</td>
+                        <td style="max-width: 220px;" class="text-truncate">${nombresProductos}</td>
+                        <td>
+                            <span class="badge bg-${color2}">
+                                ${compra.estado}
+                            </span>
+                        </td>
+                        <td class="text-end fw-bold">$${parseFloat(compra.total || 0).toFixed(2)}</td>
+                        <td class="text-center">${compra.estado != 'Cancelada' ? columnaAccion : ''}</td>
+                    </tr>`;
                     });
+
                     $('#tablaHistorial').html(html);
+
+                    // Aplica en automático el filtro de proveedor y búsqueda respetando la selección actual
+                    filtrarTablaHistorial();
+                    ajustarAltoTablaHistorial();
                 }
             });
         }
-
 
 
         function verMovimientos(producto_id, compra_id, compra_folio, prod) {
@@ -478,8 +536,8 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
             factor = parseFloat(factor) || 1;
             const grande = (parseFloat(cantidadBase) || 0) / factor;
             return grande >= 1
-                ? `${rmDinero(unitario * grande)} x ${rmEsc(uRep)}`
-                : `${rmDinero(unitario) * parseFloat(cantidadBase)} x ${rmEsc(uMed)}`;
+                ? unitario * grande
+                : unitario * cantidadBase;
         }
         function rmCosto(unitario, cantidadBase, factor, uRep, uMed) {
             unitario = parseFloat(unitario) || 0;
@@ -521,14 +579,25 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
             secciones.push(s);
 
             movs.forEach(m => {
+                console.log(m);
                 const salida = parseFloat(m.cantidad_salida) || 0;
                 const f = m.factor, uR = m.unidad_reporte, uM = m.unidad_medida;
 
                 if (m.tipo_movimiento !== 'TRASPASO') {
+
                     const factor = parseFloat(f) || 1;
+                    let costoUnit = m.costo_unitario;
                     const costoVendido = (salida / factor) * (parseFloat(m.costo_unitario) || 0);
-                    const g = (parseFloat(m.precio_venta) * salida) - costoVendido || 0;
-                    const precio_real = (parseFloat(m.precio_venta) * salida) / m.factor;
+                    // Si el margen sobre el costo supera 30%, la venta es de una entrega con varios lotes
+                    // y precio_venta es el precio de la entrega: se usa precio_venta / factor
+                    let precio = m.precio_venta;
+                    if (costoUnit > 0 && (precio / salida) > costoUnit * 1.30) {
+                        precio = precio / factor;
+
+                    }
+                    const g = rmPrecio(precio, salida, f, uR, uM) - (m.costo_unitario * salida);
+                    const precio_real = rmPrecio(precio, salida, f, uR, uM);
+
                     s.ganancia += g;
                     s.vendido += salida;
 
@@ -540,7 +609,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
                         <td>${rmEsc(m.cliente_proveedor)}</td>
                         <td class="num">${rmCantidad(salida, f, uR, uM)}</td>
                         <td class="num">${rmCantidad(m.saldo_final, f, uR, uM)}</td>
-                        <td class="num">${rmPrecio(m.precio_venta, salida, f, uR, uM)}</td>
+                        <td class="num">${rmDinero(precio_real)}</td>
                         <td class="num gain">${rmDinero(g)}</td>
                     </tr>`;
                     return;
@@ -624,6 +693,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
             const filasResumen = secciones.map(s => {
                 const saldo = (parseFloat(s.recibido) || 0) - s.vendido - s.traspasado;
                 const c = (v) => rmCantidad(v, s.factor, s.uRep, s.uMed);
+
                 return `
                 <tr>
                     <td style="padding-left:${8 + s.nivel * 18}px">
@@ -643,7 +713,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
 
                 const costo = rmCosto(s.costoUnit, s.recibido, s.factor, s.uRep, s.uMed);
                 const costoNumero = rmCostoNumero(s.costoUnit, s.recibido, s.factor, s.uRep, s.uMed);
-                const utilidad = ((s.ganancia / s.factor) - costoNumero);
+                const utilidad = (s.ganancia);
 
                 return `
                 <section class="almacen ${s.tipo}" id="almacen-${s.id}">
@@ -654,7 +724,7 @@ $almacen_usuario = intval($_SESSION['almacen_id'] ?? 0); // 0 = admin
                         </div>
                         <div class="recibio">
                             Recibió <b>${rmCantidad(s.recibido, s.factor, s.uRep, s.uMed)}</b>
-                            · Costo <b>${costoNumero} </b>
+                            · Costo <b> ${rmDinero(costoNumero)} </b>
                         </div>
                     </header>
                     <table>

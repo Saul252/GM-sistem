@@ -24,7 +24,7 @@
                                 <!-- -->
                                 <div class="col-6">
                                     <div class="fw-bold text-uppercase mb-0" style="letter-spacing:.5px;">
-                                        BODEGA FORTALEZA CHALCO S.A DE C,V
+                                        BODEGA FORTALEZA CHALCO S.A DE C.V
                                     </div>
                                 </div>
                                 <div class="col-6">

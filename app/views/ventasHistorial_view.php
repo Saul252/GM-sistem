@@ -107,6 +107,7 @@
         }
 
         .main-content {
+            margin-top: 20px !important;
             margin-left: var(--sidebar-width);
             padding: 2rem;
             min-height: 100vh;
@@ -268,11 +269,7 @@
                 <h3 class="fw-bold card-title-text m-0">Historial de Ventas</h3>
                 <div id="loader" class="spinner-border spinner-border-sm text-secondary d-none"></div>
             </div>
-            <a class="d-inline-flex align-items-center gap-2 btn btn-outline-primary btn-sm rounded-pill px-3 py-2"
-                href="/cfsistem/app/controllers/misRepartosController.php">
-                <i class="bi bi-list-ul"></i>
-                Gestionar mis repartos
-            </a>
+           
             <div class="card border-0 shadow-sm rounded-4 mb-4 filter-card">
                 <div class="card-body p-4">
 
@@ -661,6 +658,7 @@ function filtrarConDebounce() {
                 try {
                     const res = await fetch(`${URL_CONTROLLER}?${params.toString()}`);
                     const data = await res.json();
+                    console.log(data);
                     //<td class="ps-3 small">${v.id}</td>
 
                     let totalVendido = 0;

@@ -18,12 +18,6 @@
 
                     <input type="hidden" name="compra_id" id="ajF_compra_id">
 
-                    <!-- Campos ocultos para almacenar la selección de excedente si se confirma -->
-                    <input type="hidden" name="excedente_confirmado" id="ajF_excedente_confirmado" value="0">
-                    <input type="hidden" name="excedente_almacen_id" id="ajF_excedente_almacen_id" value="">
-                    <input type="hidden" name="excedente_cantidad" id="ajF_excedente_cantidad" value="0">
-                    <input type="hidden" name="excedente_producto_id" id="ajF_excedente_producto_id" value="">
-
                     <!-- ALERTA PREMIUM -->
                     <div
                         class="d-flex align-items-start gap-3 p-3 mb-4 rounded-4 shadow-sm border-start border-4 border-danger">
@@ -69,51 +63,6 @@
     </div>
 </div>
 
-<!-- MODAL PARA CONFIRMAR Y ASIGNAR EXCEDENTE -->
-<div class="modal fade" id="modalConfirmarExcedente" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg rounded-4">
-            <div class="modal-header bg-warning text-dark border-0">
-                <h5 class="modal-title fw-bold">
-                    <i class="bi bi-exclamation-circle-fill me-2"></i>Cantidad Excedida Detectada
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-                <p class="mb-3 fs-6">
-                    Has sobrepasado la cantidad pendiente asignada. ¿Deseas guardar este sobrante como un
-                    <b>excedente</b> en el inventario?
-                </p>
-
-                <div class="bg-light p-3 rounded-3 mb-3 border">
-                    <div class="d-flex justify-content-between mb-1 align-items-center gap-2">
-                        <span class="text-secondary">Cantidad Sobrante:</span>
-                        <input type="number" id="ajF_excedente_cantidadReal"
-                            class="form-control form-control-sm w-auto">
-                        <span id="ajF_excedente_lbl" class="fw-bold text-danger">0.00</span>
-                    </div>
-                </div>
-
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">Selecciona el Almacén para el Excedente:</label>
-                    <select id="ajF_excedente_almacen" class="form-select border-warning">
-                        <!-- Opciones cargadas dinámicamente -->
-                    </select>
-                </div>
-            </div>
-            <div class="modal-footer border-0 d-flex justify-content-end gap-2">
-                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal"
-                    onclick="ajF_cancelarExcedente()">
-                    Cancelar edición
-                </button>
-                <button type="button" class="btn btn-warning rounded-pill px-4 fw-bold" onclick="ajF_asignarExtra()">
-                    Continuar y Asignar Excedente
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <style>
     .ajF-pointer {
         cursor: pointer;
@@ -131,10 +80,11 @@
     // ═══════════════════════════════════════════════════════════
     const ajF_State = {
         almacenes: [],
-        idCompra: 0,
-        prodIdTemp: 0,
-        excedenteTemp: { prodId: null, cantidad: 0, factor: 1, inputElem: null }
+        idCompra: 0
     };
+
+    // Set para no repetir el toast en cada tecla mientras el usuario sigue en exceso
+    const ajF_productosConExcedenteNotificado = new Set();
 
     // ═══════════════════════════════════════════════════════════
     // Abrir modal principal
@@ -146,6 +96,9 @@
         document.getElementById('ajF_folio').innerText = folio;
         document.getElementById('ajF_compra_id').value = id;
         ajF_State.idCompra = id;
+
+        // Limpiar set de notificaciones al abrir
+        ajF_productosConExcedenteNotificado.clear();
 
         const contenedor = document.getElementById('ajF_lista_productos');
         contenedor.innerHTML = '<div class="col-12 text-center py-5"><div class="spinner-border text-danger"></div></div>';
@@ -267,7 +220,7 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // Recalcular restante — itera por ID/data-attr
+    // Recalcular restante + TOAST de excedente (SIN modal)
     // ═══════════════════════════════════════════════════════════
     function ajF_recalcularRestante(prodId, factor = 1, inputModificado = null) {
         const inputs = document.querySelectorAll(
@@ -276,7 +229,6 @@
 
         let suma = 0;
         let maximo = 0;
-        ajF_State.prodIdTemp = prodId;
 
         inputs.forEach(input => {
             if (!input.disabled) {
@@ -294,138 +246,43 @@
 
         suma = Math.round(suma * 1000) / 1000;
 
-        // Si excede el máximo → modal de confirmación
-        if (suma > maximo) {
-            const exceso = (suma - maximo) / factor;
+        const restanteRaw = (maximo - suma) / factor;
+        const restante = Math.max(0, restanteRaw);
+        const excede = suma > maximo;
+        const exceso = excede ? Math.abs(restanteRaw) : 0;
 
-            ajF_State.excedenteTemp = {
-                prodId: prodId,
-                cantidad: exceso,
-                factor: factor,
-                inputElem: inputModificado || document.activeElement
-            };
-
-            document.getElementById('ajF_excedente_lbl').innerText = exceso.toFixed(2);
-            document.getElementById('ajF_excedente_cantidadReal').value = exceso * factor;
-
-            const selAlmacen = document.getElementById('ajF_excedente_almacen');
-            selAlmacen.innerHTML = '';
-            ajF_State.almacenes.forEach(alm => {
-                selAlmacen.innerHTML += `<option value="${alm.id}">${alm.nombre}</option>`;
-            });
-
-            const modalExcedente = new bootstrap.Modal(document.getElementById('modalConfirmarExcedente'));
-            modalExcedente.show();
-            return;
-        }
-
-        const restante = Math.max(0, (Math.round((maximo - suma) * 1000) / 1000) / factor);
-
+        // Texto "Restante por asignar" con badge amarillo si hay excedente
         const textos = document.querySelectorAll(`.ajF-restante-prod[data-restante="${prodId}"]`);
         textos.forEach(texto => {
-            texto.innerHTML = `Restante por asignar: <b>${restante.toFixed(2)}</b>`;
-        });
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // Asignar extra → endpoint actualizarExcedente
-    // ═══════════════════════════════════════════════════════════
-    async function ajF_asignarExtra() {
-        Swal.fire({
-            title: 'Consultando servidor...',
-            text: 'Por favor espere un momento',
-            allowOutsideClick: false,
-            didOpen: () => Swal.showLoading()
-        });
-
-        const id = ajF_State.idCompra;
-        const cantidad = document.getElementById('ajF_excedente_cantidadReal').value;
-        const prodId = ajF_State.prodIdTemp;
-
-        const formData = new FormData();
-        formData.append('compra_id', id);
-        formData.append('producto_id', prodId);
-        formData.append('excedente', cantidad);
-
-        try {
-            const url = '/cfsistem/app/controllers/egresosController.php?action=actualizarExcedente';
-            const respuesta = await fetch(url, { method: 'POST', body: formData });
-
-            if (!respuesta.ok) {
-                throw new Error(`Respuesta no válida del servidor (HTTP ${respuesta.status})`);
-            }
-
-            const resultado = await respuesta.json();
-            console.log('Respuesta del servidor:', resultado);
-
-            if (resultado.success) {
-                Swal.fire({
-                    icon: 'success',
-                    title: '¡Operación Exitosa!',
-                    text: resultado.message || 'La consulta se procesó correctamente.',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-                ajF_aplicarFaltantesCompra();
+            if (excede) {
+                texto.innerHTML =
+                    `Restante por asignar: <b>0.00</b>
+                     <span class="badge bg-warning text-dark ms-2">
+                         <i class="bi bi-exclamation-triangle-fill"></i>
+                         Excedente: ${exceso.toFixed(2)}
+                     </span>`;
             } else {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Aviso del Servidor',
-                    text: resultado.message || 'No se pudo completar la solicitud.',
-                    confirmButtonColor: '#3085d6'
-                });
+                texto.innerHTML = `Restante por asignar: <b>${restante.toFixed(2)}</b>`;
             }
-        } catch (error) {
-            console.error('Error al consultar el servidor:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error de Conexión',
-                text: 'No se pudo establecer comunicación con el servidor.',
-                confirmButtonColor: '#d33'
-            });
-        }
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // Guardar excedente en campos ocultos
-    // ═══════════════════════════════════════════════════════════
-    function ajF_guardarExcedenteModal() {
-        const almacenId = document.getElementById('ajF_excedente_almacen').value;
-
-        document.getElementById('ajF_excedente_confirmado').value = "1";
-        document.getElementById('ajF_excedente_almacen_id').value = almacenId;
-        document.getElementById('ajF_excedente_cantidad').value = ajF_State.excedenteTemp.cantidad;
-        document.getElementById('ajF_excedente_producto_id').value = ajF_State.excedenteTemp.prodId;
-
-        const modalExcedenteElem = document.getElementById('modalConfirmarExcedente');
-        const modalExcedente = bootstrap.Modal.getInstance(modalExcedenteElem);
-        if (modalExcedente) modalExcedente.hide();
-
-        const textos = document.querySelectorAll(`.ajF-restante-prod[data-restante="${ajF_State.excedenteTemp.prodId}"]`);
-        textos.forEach(texto => {
-            texto.innerHTML = `Restante por asignar: <b>0.00</b> <span class="badge bg-warning text-dark ms-2">Excedente asignado</span>`;
         });
-    }
 
-    // ═══════════════════════════════════════════════════════════
-    // Cancelar excedente
-    // ═══════════════════════════════════════════════════════════
-    function ajF_cancelarExcedente() {
-        const temp = ajF_State.excedenteTemp;
+        // SweetAlert toast: solo una vez por producto hasta que vuelva a estar dentro del límite
+        if (excede && !ajF_productosConExcedenteNotificado.has(prodId)) {
+            ajF_productosConExcedenteNotificado.add(prodId);
 
-        if (temp.inputElem) {
-            temp.inputElem.value = '';
-            const almId = temp.inputElem.dataset.almId;
-            const hidden = document.getElementById(`ajF_in_hid_${temp.prodId}_${almId}`);
-            if (hidden) hidden.value = '0';
-
-            ajF_recalcularRestante(temp.prodId, temp.factor, temp.inputElem);
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'warning',
+                title: 'Material excedente detectado',
+                html: `Ingresaste más de lo pendiente.<br><b>Exceso: ${exceso.toFixed(2)}</b>`,
+                showConfirmButton: false,
+                timer: 3500,
+                timerProgressBar: true
+            });
+        } else if (!excede) {
+            ajF_productosConExcedenteNotificado.delete(prodId);
         }
-
-        document.getElementById('ajF_excedente_confirmado').value = "0";
-        document.getElementById('ajF_excedente_almacen_id').value = "";
-        document.getElementById('ajF_excedente_cantidad').value = "0";
-        document.getElementById('ajF_excedente_producto_id').value = "";
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -483,22 +340,12 @@
     }
 
     // ═══════════════════════════════════════════════════════════
-    // Procesar ajuste → construye FormData MANUALMENTE por IDs
+    // Procesar ajuste → envía TODO al backend (con o sin exceso)
     // ═══════════════════════════════════════════════════════════
     function ajF_procesarAjuste() {
         const formData = new FormData();
 
-        // Datos base (todos por ID)
-        formData.append('compra_id',
-            document.getElementById('ajF_compra_id').value);
-        formData.append('excedente_confirmado',
-            document.getElementById('ajF_excedente_confirmado').value);
-        formData.append('excedente_almacen_id',
-            document.getElementById('ajF_excedente_almacen_id').value);
-        formData.append('excedente_cantidad',
-            document.getElementById('ajF_excedente_cantidad').value);
-        formData.append('excedente_producto_id',
-            document.getElementById('ajF_excedente_producto_id').value);
+        formData.append('compra_id', document.getElementById('ajF_compra_id').value);
 
         // Distribución: iterar SOLO los hidden habilitados (fuente de verdad)
         let hayDatos = false;
@@ -512,7 +359,7 @@
             const prodId = hidden.dataset.prodId;
             const almId = hidden.dataset.almId;
 
-            // Cantidad base (lo que realmente se descuenta)
+            // Cantidad base (valor × factor) — se envía aunque exceda el pendiente
             formData.append(`distribucion[${prodId}][${almId}]`, hidden.value);
 
             // Cantidad visible con sufijo "1" (compatibilidad con backend actual)
@@ -530,7 +377,7 @@
 
         Swal.fire({
             title: '¿Confirmar Ingreso?',
-            text: "Se afectará el stock de los almacenes habilitados.",
+            text: 'Se afectará el stock de los almacenes habilitados.',
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#dc3545',

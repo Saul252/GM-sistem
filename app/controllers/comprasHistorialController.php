@@ -8,11 +8,13 @@ require_once __DIR__ . '/../../config/conexion.php';
 require_once __DIR__ . '/../controllers/LayoutController.php';
 require_once __DIR__ . '/../models/comprasHistorialModel.php';
 require_once __DIR__ . '/../models/almacen_model.php';
+require_once __DIR__ . '/../models/proveedoresModel.php';
 require_once __DIR__ . '/../models/productosModel.php';
 
 protegerPagina('historialLotes');
 
 $model = new HistorialComprasModel($conexion);
+$proveedorModel = new ProveedoresModel($conexion);
 $productosModel = new ProductosModel($conexion);
 $paginaActual = 'historialLotes';
 
@@ -22,6 +24,7 @@ $almacen_usuario = $_SESSION['rol_id'] == 3 ? 0 : $_SESSION['almacen_id'] ?? 0;
 $almacenModel = new AlmacenModel($conexion);
 // Obtenemos los almacenes para la vista
 $almacenes = $almacenModel->getAlmacenes($almacen_usuario);
+$proveedores = $proveedorModel->listarTodos();
 
 /**
  * Helper para obtener rango de fechas
