@@ -1188,3 +1188,313 @@ $modulos = [
 
     window.initModuloNotificaciones = initModuloNotificaciones;
 </script>
+<script>
+    /* ==========================================================================
+       DETECTOR DE CONEXIÓN (SweetAlert bloqueante + Toastify)
+       - Sin polling mientras hay internet
+       - Polling cada 3s solo mientras está offline
+       - Pausa si la pestaña está oculta (y no hay problemas)
+       ========================================================================== */
+    const MonitorConexion = {
+        offline: false,
+        intervalo: null,
+        verificando: false,
+
+        init() {
+            window.addEventListener('offline', () => this.marcarOffline());
+            window.addEventListener('online', () => this.verificarReal());
+
+            // Al volver a la pestaña, comprueba una vez
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden) this.verificarReal();
+            });
+
+            // Comprobación única al cargar/recargar
+            if (!navigator.onLine) {
+                this.marcarOffline();
+            } else {
+                this.verificarReal();
+            }
+        },
+
+        async verificarReal() {
+            if (this.verificando) return;
+
+            // Pestaña oculta y sin problemas → no gastar peticiones
+            if (document.hidden && !this.offline) return;
+
+            this.verificando = true;
+
+            const ctrl = new AbortController();
+            const timeout = setTimeout(() => ctrl.abort(), 4000);
+            try {
+                await fetch('/cfsistem/public/assets/logo.png?_=' + Date.now(), {
+                    method: 'HEAD',
+                    cache: 'no-store',
+                    signal: ctrl.signal
+                });
+                this.marcarOnline();
+            } catch (e) {
+                this.marcarOffline();
+            } finally {
+                clearTimeout(timeout);
+                this.verificando = false;
+            }
+        },
+
+        marcarOffline() {
+            if (this.offline) return;
+            this.offline = true;
+            document.body.classList.add('sin-conexion');
+
+            // Polling SOLO mientras no hay internet
+            clearInterval(this.intervalo);
+            this.intervalo = setInterval(() => this.verificarReal(), 3000);
+
+            const esOscuro = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+
+            const borreguito = `
+    <style>
+        .bor-wrap { display:flex; justify-content:center; margin-bottom:8px; }
+        .bor-body { animation: borFlota 2.4s ease-in-out infinite; }
+        .bor-ear-l { transform-origin: 82px 86px; animation: borOrejaL 1.6s ease-in-out infinite; }
+        .bor-ear-r { transform-origin: 158px 86px; animation: borOrejaR 1.6s ease-in-out infinite; }
+        .bor-plug-l { animation: borPlugL 1.4s ease-in-out infinite; }
+        .bor-plug-r { animation: borPlugR 1.4s ease-in-out infinite; }
+        .bor-q1 { animation: borDuda 2s ease-in-out infinite; }
+        .bor-q2 { animation: borDuda 2s ease-in-out infinite 0.35s; }
+        .bor-q3 { animation: borDuda 2.2s ease-in-out infinite 0.7s; }
+        .bor-q4 { animation: borDuda 1.9s ease-in-out infinite 1s; }
+        .bor-q5 { animation: borDuda 2.3s ease-in-out infinite 1.35s; }
+        @keyframes borFlota { 0%,100%{transform:translateY(0)} 50%{transform:translateY(4px)} }
+        @keyframes borOrejaL { 0%,100%{transform:rotate(-5deg)} 50%{transform:rotate(7deg)} }
+        @keyframes borOrejaR { 0%,100%{transform:rotate(5deg)} 50%{transform:rotate(-7deg)} }
+        @keyframes borPlugL { 0%,100%{transform:translateX(0)} 50%{transform:translateX(-3px)} }
+        @keyframes borPlugR { 0%,100%{transform:translateX(0)} 50%{transform:translateX(3px)} }
+        @keyframes borDuda { 0%,100%{transform:translateY(0);opacity:.4} 50%{transform:translateY(-6px);opacity:1} }
+    </style>
+
+    <div class="bor-wrap">
+    <svg viewBox="0 0 240 170" width="240" height="170" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- CABLE ROTO -->
+        <path d="M0 20 Q40 8 70 22" fill="none" stroke="#6c757d" stroke-width="5" stroke-linecap="round"/>
+        <path d="M240 20 Q200 8 170 22" fill="none" stroke="#6c757d" stroke-width="5" stroke-linecap="round"/>
+        <g class="bor-plug-l">
+            <rect x="70" y="14" width="20" height="16" rx="3" fill="#343a40"/>
+            <rect x="90" y="17" width="8" height="3" fill="#adb5bd"/>
+            <rect x="90" y="24" width="8" height="3" fill="#adb5bd"/>
+        </g>
+        <g class="bor-plug-r">
+            <rect x="150" y="14" width="20" height="16" rx="3" fill="#343a40"/>
+            <rect x="142" y="17" width="8" height="3" fill="#adb5bd"/>
+            <rect x="142" y="24" width="8" height="3" fill="#adb5bd"/>
+        </g>
+
+        <!-- SIGNOS DE DUDA -->
+        <text class="bor-q1" x="115" y="42" font-family="system-ui, sans-serif" font-size="18" font-weight="800" fill="#6366f1">?</text>
+        <text class="bor-q2" x="54" y="64" font-family="system-ui, sans-serif" font-size="22" font-weight="800" fill="#8b5cf6">?</text>
+        <text class="bor-q3" x="174" y="58" font-family="system-ui, sans-serif" font-size="25" font-weight="800" fill="#6366f1">?</text>
+        <text class="bor-q4" x="34" y="102" font-family="system-ui, sans-serif" font-size="17" font-weight="800" fill="#a855f7">?</text>
+        <text class="bor-q5" x="194" y="104" font-family="system-ui, sans-serif" font-size="19" font-weight="800" fill="#8b5cf6">?</text>
+
+        <!-- BORREGUITO -->
+        <g class="bor-body">
+            <!-- patitas -->
+            <rect x="93" y="140" width="9" height="14" rx="4" fill="#d9a782"/>
+            <rect x="138" y="140" width="9" height="14" rx="4" fill="#d9a782"/>
+            <ellipse cx="97.5" cy="153" rx="5.5" ry="3.5" fill="#495057"/>
+            <ellipse cx="142.5" cy="153" rx="5.5" ry="3.5" fill="#495057"/>
+
+            <!-- lana del cuerpo -->
+            <circle cx="92" cy="126" r="14" fill="#f1f3f5"/>
+            <circle cx="106" cy="133" r="15" fill="#f8f9fa"/>
+            <circle cx="120" cy="134" r="16" fill="#f1f3f5"/>
+            <circle cx="134" cy="133" r="15" fill="#f8f9fa"/>
+            <circle cx="148" cy="126" r="14" fill="#f1f3f5"/>
+            <circle cx="120" cy="120" r="22" fill="#f8f9fa"/>
+
+            <!-- orejas -->
+            <g class="bor-ear-l">
+                <ellipse cx="76" cy="88" rx="12" ry="6" transform="rotate(-18 76 88)" fill="#e6be9a"/>
+            </g>
+            <g class="bor-ear-r">
+                <ellipse cx="164" cy="88" rx="12" ry="6" transform="rotate(18 164 88)" fill="#e6be9a"/>
+            </g>
+
+            <!-- cara -->
+            <ellipse cx="120" cy="94" rx="31" ry="26" fill="#f3cfa8"/>
+
+            <!-- copete -->
+            <circle cx="98" cy="70" r="11" fill="#f8f9fa"/>
+            <circle cx="112" cy="65" r="12" fill="#ffffff"/>
+            <circle cx="127" cy="65" r="12" fill="#f8f9fa"/>
+            <circle cx="141" cy="70" r="11" fill="#ffffff"/>
+            <circle cx="120" cy="68" r="13" fill="#ffffff"/>
+
+            <!-- mejillas -->
+            <ellipse cx="97" cy="101" rx="6" ry="3.5" fill="#f4978e" opacity=".65"/>
+            <ellipse cx="143" cy="101" rx="6" ry="3.5" fill="#f4978e" opacity=".65"/>
+
+            <!-- ojos -->
+            <circle cx="105" cy="91" r="5" fill="#212529"/>
+            <circle cx="135" cy="91" r="5" fill="#212529"/>
+            <circle cx="106.5" cy="89.5" r="1.8" fill="#fff"/>
+            <circle cx="136.5" cy="89.5" r="1.8" fill="#fff"/>
+
+            <!-- cejas de duda -->
+            <path d="M98 81 L111 84" stroke="#212529" stroke-width="2.3" stroke-linecap="round"/>
+            <path d="M129 83 L142 78" stroke="#212529" stroke-width="2.3" stroke-linecap="round"/>
+
+            <!-- hocico y boquita confundida -->
+            <ellipse cx="120" cy="98" rx="4.5" ry="3" fill="#d48c70"/>
+            <path d="M113 108 Q117 104 120 108 Q123 112 127 107" fill="none" stroke="#212529" stroke-width="2.3" stroke-linecap="round"/>
+        </g>
+    </svg>
+    </div>`;
+
+            Swal.fire({
+                title: 'Sin conexión a internet',
+                html: borreguito +
+                    'Se rompió el cable y ni el borreguito sabe qué pasó... no podemos hacer nada hasta que regrese la conexión.<br>' +
+                    '<small class="text-muted">Esta ventana se cerrará sola cuando vuelva el internet.</small>',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                allowEnterKey: false,
+                showConfirmButton: false,
+                showCancelButton: false,
+                customClass: { popup: 'swal-offline' },
+                background: esOscuro ? '#1e293b' : '#ffffff',
+                color: esOscuro ? '#f8fafc' : '#1e2022'
+            });
+        },
+
+        marcarOnline() {
+            if (!this.offline) return;
+            this.offline = false;
+            document.body.classList.remove('sin-conexion');
+
+            // Ya hay internet: deja de preguntar
+            clearInterval(this.intervalo);
+            this.intervalo = null;
+
+            const esOscuro = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+
+            // Cierra el modal solo si es el de sin conexión
+            const popup = Swal.getPopup();
+            if (popup && popup.classList.contains('swal-offline')) {
+                Swal.close();
+            }
+
+            const borreguitoOnline = `
+    <style>
+        .bor-on-wrap { display:flex; justify-content:center; margin-bottom:8px; }
+        .bor-on-body { animation: borFeliz 1.8s ease-in-out infinite; }
+        .bor-on-ear-l { transform-origin: 82px 86px; animation: borFelizOrejaL 1.2s ease-in-out infinite; }
+        .bor-on-ear-r { transform-origin: 158px 86px; animation: borFelizOrejaR 1.2s ease-in-out infinite; }
+        .bor-on-glow { animation: borPulso 1.5s ease-in-out infinite; }
+        @keyframes borFeliz { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
+        @keyframes borFelizOrejaL { 0%,100%{transform:rotate(-8deg)} 50%{transform:rotate(10deg)} }
+        @keyframes borFelizOrejaR { 0%,100%{transform:rotate(8deg)} 50%{transform:rotate(-10deg)} }
+        @keyframes borPulso { 0%,100%{opacity:.65} 50%{opacity:1} }
+    </style>
+
+    <div class="bor-on-wrap">
+    <svg viewBox="0 0 240 170" width="240" height="170" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- CABLE CONECTADO -->
+        <path d="M0 22 Q60 14 120 22 Q180 30 240 22" fill="none" stroke="#198754" stroke-width="5" stroke-linecap="round"/>
+        <rect x="104" y="14" width="32" height="16" rx="4" fill="#212529"/>
+        <rect x="117" y="17" width="6" height="10" rx="1.5" fill="#20c997"/>
+        <circle class="bor-on-glow" cx="120" cy="22" r="14" fill="none" stroke="#20c997" stroke-width="2"/>
+
+        <!-- BORREGUITO FELIZ CON GAFAS -->
+        <g class="bor-on-body">
+            <!-- patitas -->
+            <rect x="93" y="140" width="9" height="14" rx="4" fill="#d9a782"/>
+            <rect x="138" y="140" width="9" height="14" rx="4" fill="#d9a782"/>
+            <ellipse cx="97.5" cy="153" rx="5.5" ry="3.5" fill="#495057"/>
+            <ellipse cx="142.5" cy="153" rx="5.5" ry="3.5" fill="#495057"/>
+
+            <!-- lana del cuerpo -->
+            <circle cx="92" cy="126" r="14" fill="#f1f3f5"/>
+            <circle cx="106" cy="133" r="15" fill="#f8f9fa"/>
+            <circle cx="120" cy="134" r="16" fill="#f1f3f5"/>
+            <circle cx="134" cy="133" r="15" fill="#f8f9fa"/>
+            <circle cx="148" cy="126" r="14" fill="#f1f3f5"/>
+            <circle cx="120" cy="120" r="22" fill="#f8f9fa"/>
+
+            <!-- orejas -->
+            <g class="bor-on-ear-l">
+                <ellipse cx="76" cy="88" rx="12" ry="6" transform="rotate(-18 76 88)" fill="#e6be9a"/>
+            </g>
+            <g class="bor-on-ear-r">
+                <ellipse cx="164" cy="88" rx="12" ry="6" transform="rotate(18 164 88)" fill="#e6be9a"/>
+            </g>
+
+            <!-- cara -->
+            <ellipse cx="120" cy="94" rx="31" ry="26" fill="#f3cfa8"/>
+
+            <!-- copete -->
+            <circle cx="98" cy="70" r="11" fill="#f8f9fa"/>
+            <circle cx="112" cy="65" r="12" fill="#ffffff"/>
+            <circle cx="127" cy="65" r="12" fill="#f8f9fa"/>
+            <circle cx="141" cy="70" r="11" fill="#ffffff"/>
+            <circle cx="120" cy="68" r="13" fill="#ffffff"/>
+
+            <!-- mejillas rosadas -->
+            <ellipse cx="96" cy="102" rx="6.5" ry="4" fill="#f28482" opacity=".75"/>
+            <ellipse cx="144" cy="102" rx="6.5" ry="4" fill="#f28482" opacity=".75"/>
+
+            <!-- gafas oscuras -->
+            <rect x="92" y="84" width="24" height="13" rx="4" fill="#111827" stroke="#0f172a" stroke-width="2"/>
+            <rect x="124" y="84" width="24" height="13" rx="4" fill="#111827" stroke="#0f172a" stroke-width="2"/>
+            <line x1="116" y1="89" x2="124" y2="89" stroke="#0f172a" stroke-width="2.5"/>
+            <line x1="89" y1="88" x2="92" y2="89" stroke="#0f172a" stroke-width="2"/>
+            <line x1="148" y1="89" x2="151" y2="88" stroke="#0f172a" stroke-width="2"/>
+            <line x1="96" y1="87" x2="102" y2="94" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round"/>
+            <line x1="128" y1="87" x2="134" y2="94" stroke="#94a3b8" stroke-width="1.6" stroke-linecap="round"/>
+
+            <!-- hocico y sonrisa -->
+            <ellipse cx="120" cy="99" rx="4.5" ry="3" fill="#d48c70"/>
+            <path d="M111 106 Q120 115 129 106" fill="none" stroke="#212529" stroke-width="2.5" stroke-linecap="round"/>
+        </g>
+    </svg>
+    </div>`;
+
+            Swal.fire({
+                title: '¡Ya hay internet!',
+                html: borreguitoOnline +
+                    'El cable volvió a conectarse y ya podemos continuar.<br>',
+                timer: 1000,
+                timerProgressBar: true,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                allowEnterKey: false,
+                showConfirmButton: false,
+                showCancelButton: false,
+                customClass: { popup: 'swal-online' },
+                background: esOscuro ? '#1e293b' : '#ffffff',
+                color: esOscuro ? '#f8fafc' : '#1e2022'
+            });
+
+            if (typeof Toastify === 'function') {
+                Toastify({
+                    text: '✅ Ya estás online',
+                    duration: 3000,
+                    gravity: 'top',
+                    position: 'center',
+                    style: {
+                        background: '#198754',
+                        color: '#fff',
+                        borderRadius: '12px',
+                        fontWeight: '600',
+                        padding: '12px 18px'
+                    }
+                }).showToast();
+            }
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => MonitorConexion.init());
+</script>

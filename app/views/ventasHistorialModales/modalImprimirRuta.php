@@ -157,6 +157,7 @@
         const cont = document.getElementById('contenidoRutaPrint');
         const datos = data.data;
         const info = datos[0] || {};
+        console.log(datos);
 
         const stringEntrega = String(entrega_ida || '').toUpperCase();
         const stringFolio = String(info.folio_viaje || '').toUpperCase();
@@ -169,10 +170,11 @@
 
             filas += `
             <tr>
-                <td class=" info-value font-monospace fw-semibold text-body">${codigoProd}</td>
+                <td class="info-value font-monospace fw-semibold text-body">${codigoProd}</td>
                 <td class="info-value text-body">${prod.nombreProducto}</td>
-                <td class="info-value text-end ">${fmtNumRuta(fmt.cantidad)}</td>
-                <td class="info-value text-center ">${fmt.unidad}</td>
+                <td class="info-value text-end">${fmtNumRuta(fmt.cantidad)}</td>
+                <td class="info-value text-center">${fmt.unidad}</td>
+                <td class="info-value text-center no-print-lote">${prod.codigo_lote ?? '-'}</td>
             </tr>
         `;
         });
@@ -180,43 +182,41 @@
         const tituloDocumento = esEntregaPatio ? 'ORDEN DE ENTREGA EN PATIO' : 'ORDEN DE ENTREGA / HOJA DE RUTA';
         const direccionLimpia = limpiarDireccion(info.direccion_entrega) || '-';
 
-        // Bloque operador unificado con el mismo tono de texto
         const bloqueOperador = esEntregaPatio ? `
-    <div class="info-card h-100">
-        <span class="info-value text-body">Punto de Entrega</span>
-        <div class="info-value text-body mb-1">ENTREGA EN PATIO / MOSTRADOR</div>
-        <div class="info-meta">
-            <span class="meta-title text-body">Entrego:</span>
-            <span class="meta-value text-body">${info.nombre_chofer ?? '-'}</span>
-        </div>
-    </div>
-` : `
-    <div class="info-card h-100">
-        <div class="info-split d-flex align-items-center justify-content-between">
-            <div class="info-col text-center" style="flex:1;">
-                <span class="info-value text-body">Operador / Chofer</span>
-                <div class="info-value text-body">${info.nombre_chofer ?? '-'}</div>
-               
+        <div class="info-card h-100">
+            <span class="info-value text-body">Punto de Entrega</span>
+            <div class="info-value text-body mb-1">ENTREGA EN PATIO / MOSTRADOR</div>
+            <div class="info-meta">
+                <span class="meta-title text-body">Entrego:</span>
+                <span class="meta-value text-body">${info.nombre_chofer ?? '-'}</span>
             </div>
-            <div class="info-divider-v mx-2"></div>
-            <div class="info-col text-center" style="flex:1;">
-                <span class="info-value text-body">Unidad de Transporte</span>
-                <div class="info-value text-body">${info.unidad_nombre ?? '-'}</div>
-                <div class="info-meta justify-content-center gap-1">
-                    <span class="meta-title text-body">Placas:</span>
-                    <span class="meta-value text-body">${info.unidad_placas ?? '-'}</span>
+        </div>
+    ` : `
+        <div class="info-card h-100">
+            <div class="info-split d-flex align-items-center justify-content-between">
+                <div class="info-col text-center" style="flex:1;">
+                    <span class="info-value text-body">Operador / Chofer</span>
+                    <div class="info-value text-body">${info.nombre_chofer ?? '-'}</div>
+                </div>
+                <div class="info-divider-v mx-2"></div>
+                <div class="info-col text-center" style="flex:1;">
+                    <span class="info-value text-body">Unidad de Transporte</span>
+                    <div class="info-value text-body">${info.unidad_nombre ?? '-'}</div>
+                    <div class="info-meta justify-content-center gap-1">
+                        <span class="meta-title text-body">Placas:</span>
+                        <span class="meta-value text-body">${info.unidad_placas ?? '-'}</span>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-`;
+    `;
 
         const fechasHeader = esEntregaPatio ? `
-        <div class="info-value mb-1" >Fecha Despacho:____________________</div>
-        <div class="info-value mb-1" >Hora Entrega:____________________</div>
+        <div class="info-value mb-1">Fecha Despacho:____________________</div>
+        <div class="info-value mb-1">Hora Entrega:____________________</div>
     ` : `
-        <div class="info-value mb-1" >Fecha de Salida:____________________</div>
-        <div class="info-value mb-1" >Fecha de llegada:____________________</div>
+        <div class="info-value mb-1">Fecha de Salida:____________________</div>
+        <div class="info-value mb-1">Fecha de llegada:____________________</div>
     `;
 
         const firmasSeccion = esEntregaPatio ? `
@@ -394,9 +394,12 @@
                 font-weight: 700;
                 color: var(--bs-body-color);
             }
+            @media print {
+                .no-print-lote {
+                    display: none !important;
+                }
+            }
         </style>
-
-       
 
         <div class="header-orden">
             <div class="d-flex align-items-center gap-2">
@@ -408,7 +411,7 @@
             </div>
 
             <div class="sucursal-info">
-                <div class=" info-value fw-bold text-body">BODEGA FORTALEZA CENTRO</div>
+                <div class="info-value fw-bold text-body">BODEGA FORTALEZA CENTRO</div>
                 <div class="info-value text-body">ÁLVARO OBREGÓN #13 COLONIA CENTRO</div>
                 <div class="info-value text-body">SAN MARTÍN CUAUTLALPAN C.P. 62574, CHALCO, EDOMEX</div>
             </div>
@@ -416,15 +419,15 @@
             <div class="folios-grid">
                 <div class="folio-box">
                     <div class="info-value folio-box-header"># ENTREGA</div>
-                    <div class=" info-value folio-box-val font-monospace">${info.folio_viaje ?? entrega_ida}</div>
+                    <div class="info-value folio-box-val font-monospace">${info.folio_viaje ?? entrega_ida}</div>
                 </div>
                 <div class="folio-box">
                     <div class="info-value folio-box-header"># VENTA</div>
-                    <div class=" info-value folio-box-val font-monospace">${info.folio_venta ?? '-'}</div>
+                    <div class="info-value folio-box-val font-monospace">${info.folio_venta ?? '-'}</div>
                 </div>
                 <div class="folio-box full-span">
-                    <span class="info-value p-0" >FECHA</span>
-                    <span class="info-value " >${info.fecha_viaje ?? '-'}</span>
+                    <span class="info-value p-0">FECHA</span>
+                    <span class="info-value">${info.fecha_viaje ?? '-'}</span>
                 </div>
             </div>
         </div>
@@ -438,7 +441,6 @@
                         <span class="meta-title text-body">Teléfono:</span>
                         <span class="meta-value text-body font-monospace">${info.tel_cliente ?? 'SIN TELÉFONO'}</span>
                     </div>
-                  
                     <div class="info-meta">
                         <span class="meta-title text-body">Dirección:</span>
                         <span class="meta-value text-body">${direccionLimpia}</span>
@@ -459,6 +461,7 @@
                         <th style="width: 53%">PRODUCTO</th>
                         <th style="width: 16%" class="text-end">CANTIDAD</th>
                         <th style="width: 16%" class="text-center">UNIDAD</th>
+                        <th style="width: 16%" class="text-center no-print-lote">LOTE</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -474,7 +477,6 @@
         <div class="mt-2 pt-1">
             ${firmasSeccion}
         </div>
-
     </div>
     `;
 
@@ -484,37 +486,33 @@
         modal.show();
     }
 
-
-
-    /**
-     * Imprime el contenido de #contenidoRutaPrint usando un iframe oculto.
-     * Al terminar de imprimir (o cancelar), el iframe se elimina automáticamente
-     * para que el sistema NO se trabe si el diálogo de impresión queda abierto.
-     */
-
-
     function imprimirModalRuta() {
-        // Detectar si es un dispositivo móvil (por User-Agent o ancho de pantalla menor a 768px)
         const esMovil = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 768;
 
         if (esMovil) {
-            // 📱 EN MÓVILES: Descarga directa en PDF usando html3pdf
             descargarPDFModalRuta();
         } else {
-            // 💻 EN COMPUTADORA: Tu método original con iframe y diálogo de impresión
             imprimirConIframeEscritorio();
         }
     }
 
-    // 1. Función para móviles (Genera y descarga el PDF)
     function descargarPDFModalRuta() {
-        const elemento = document.getElementById('contenidoRutaPrint');
+        const elementoOriginal = document.getElementById('contenidoRutaPrint');
         const folio = document.getElementById('folioRutaPrint')?.textContent?.trim() || 'RUTA';
 
-        if (!elemento) {
+        if (!elementoOriginal) {
             Swal.fire('Error', 'No se encontró el contenido para generar el PDF.', 'error');
             return;
         }
+
+        // Clon temporal sin la columna LOTE para no alterar el modal visible
+        const clon = elementoOriginal.cloneNode(true);
+        clon.querySelectorAll('.no-print-lote').forEach(el => el.remove());
+
+        const wrapper = document.createElement('div');
+        wrapper.style.cssText = 'position:fixed;left:-9999px;top:0;width:820px;background:#ffffff;color:#000000;';
+        wrapper.appendChild(clon);
+        document.body.appendChild(wrapper);
 
         const opt = {
             margin: [5, 5, 5, 5],
@@ -531,17 +529,22 @@
             didOpen: () => { Swal.showLoading(); }
         });
 
-        html3pdf().from(elemento).set(opt).save().then(() => {
+        html3pdf().from(clon).set(opt).save().then(() => {
+            wrapper.remove();
             Swal.close();
         }).catch(err => {
+            wrapper.remove();
             console.error('Error al generar PDF:', err);
             Swal.fire('Error', 'No se pudo generar el archivo PDF en este dispositivo.', 'error');
         });
     }
 
-    // 2. Tu función original de iframe para computadora (sin cambios)
     function imprimirConIframeEscritorio() {
-        const contenido = document.getElementById('contenidoRutaPrint').innerHTML;
+        const origen = document.getElementById('contenidoRutaPrint');
+        const clon = origen.cloneNode(true);
+        clon.querySelectorAll('.no-print-lote').forEach(el => el.remove());
+
+        const contenido = clon.innerHTML;
         const folio = document.getElementById('folioRutaPrint')?.textContent?.trim() || 'RUTA';
 
         const iframe = document.createElement('iframe');
@@ -572,11 +575,12 @@
             table { border-collapse: collapse !important; width: 100%; }
             table thead th { background: #e5e7eb !important; color: #000000 !important; font-size: 9.5px; font-weight: 700; padding: 6px 8px !important; border-bottom: 2px solid #000000 !important; }
             table tbody td { padding: 5px 8px !important; font-size: 11px; color: #000000; border-bottom: 1px solid #cccccc; }
+            .no-print-lote { display: none !important; }
             @media print {
                 html, body { margin: 0 !important; padding: 0 !important; background: transparent !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
                 .ticket { width: 100% !important; max-width: 100% !important; border: none !important; box-shadow: none !important; margin: 0 !important; }
                 .hoja-ruta-container { padding: 0 !important; }
-                .no-print { display: none !important; }
+                .no-print, .no-print-lote { display: none !important; }
             }
             @page { size: A4 portrait; margin: 10mm; }
         </style>

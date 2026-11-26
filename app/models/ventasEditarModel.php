@@ -409,12 +409,12 @@ class VentaHistorialModel
             // 1. ACTUALIZAR CABECERA DE LA VENTA
             // -----------------------------------------------------------------
             $sqlCab = "UPDATE ventas 
-                   SET id_cliente = ?, 
-                       almacen_id = ?, 
-                       subtotal = ?, 
-                       total = ?, 
-                       vendedor_id = ? 
-                   WHERE id = ?";
+               SET id_cliente = ?, 
+                   almacen_id = ?, 
+                   subtotal = ?, 
+                   total = ?, 
+                   vendedor_id = ? 
+               WHERE id = ?";
             $stmtV = $this->db->prepare($sqlCab);
 
             // Tipos de datos: id_cliente(i), almacen_id(i), subtotal(d), total(d), vendedor_id(i), id_venta(i) -> "iidddi"
@@ -423,7 +423,7 @@ class VentaHistorialModel
             if (!$stmtV->execute()) {
                 throw new Exception("Error al actualizar la cabecera de la venta: " . $stmtV->error);
             }
-
+            $stmtV->close();
 
             // -----------------------------------------------------------------
             // 2. ELIMINAR DETALLES NO INCLUIDOS EN "noEliminar" Y REVERTIR STOCK
@@ -440,12 +440,12 @@ class VentaHistorialModel
             if (!empty($ids_a_conservar)) {
                 $in_ids = implode(',', $ids_a_conservar);
                 $sqlAEliminar = "SELECT id, producto_id, cantidad_entregada 
-                             FROM detalle_venta 
-                             WHERE venta_id = ? AND id NOT IN ($in_ids)";
+                         FROM detalle_venta 
+                         WHERE venta_id = ? AND id NOT IN ($in_ids)";
             } else {
                 $sqlAEliminar = "SELECT id, producto_id, cantidad_entregada 
-                             FROM detalle_venta 
-                             WHERE venta_id = ?";
+                         FROM detalle_venta 
+                         WHERE venta_id = ?";
             }
 
             $stmtElim = $this->db->prepare($sqlAEliminar);
@@ -457,6 +457,26 @@ class VentaHistorialModel
                 $dv_id = intval($detDel['id']);
                 $p_id = intval($detDel['producto_id']);
                 $cant_entregada = floatval($detDel['cantidad_entregada']);
+
+                // Verificar si algún movimiento en lotes_movimientos_salida referencia este detalle_venta_id
+                $stmtChkLote = $this->db->prepare("SELECT id, lote_id, entrega_venta_id, cantidad_salida 
+                                               FROM lotes_movimientos_salida 
+                                               WHERE detalle_venta_id = ?");
+                $stmtChkLote->bind_param("i", $dv_id);
+                $stmtChkLote->execute();
+                $resChkLote = $stmtChkLote->get_result();
+                $bloqueos = [];
+                while ($rowLote = $resChkLote->fetch_assoc()) {
+                    $bloqueos[] = "mov_id={$rowLote['id']} (lote_id={$rowLote['lote_id']}, entrega_id={$rowLote['entrega_venta_id']}, cant={$rowLote['cantidad_salida']})";
+                }
+                $stmtChkLote->close();
+
+                if (!empty($bloqueos)) {
+                    throw new Exception(
+                        "No se puede eliminar detalle_venta ID {$dv_id} (producto ID {$p_id}): bloqueado por lotes_movimientos_salida -> "
+                        . implode(', ', $bloqueos)
+                    );
+                }
 
                 // Eliminar entregas previas de este ítem
                 $stmtDelEntrega = $this->db->prepare("DELETE FROM detalle_entrega WHERE detalle_venta_id = ?");
@@ -522,8 +542,8 @@ class VentaHistorialModel
                     if ($dv_id == 0) {
                         // Producto Nuevo
                         $sqlIns = "INSERT INTO detalle_venta 
-                               (venta_id, producto_id, cantidad, unidadMedida, cantidad_entregada, precio_unitario, subtotal, tipo_precio, estado_entrega) 
-                               VALUES (?, ?, ?, ?, 0, ?, ?, ?, 'pendiente')";
+                           (venta_id, producto_id, cantidad, unidadMedida, cantidad_entregada, precio_unitario, subtotal, tipo_precio, estado_entrega) 
+                           VALUES (?, ?, ?, ?, 0, ?, ?, ?, 'pendiente')";
                         $stmtIns = $this->db->prepare($sqlIns);
                         $stmtIns->bind_param("iididds", $v_id, $p_id, $n_cant_guardar, $unidad_medida, $precio_unitario, $subtotal_fila, $tipo_p);
 
@@ -534,8 +554,8 @@ class VentaHistorialModel
                     } else {
                         // Actualizar Producto existente
                         $sqlUpd = "UPDATE detalle_venta 
-                               SET cantidad = ?, unidadMedida = ?, precio_unitario = ?, subtotal = ?, tipo_precio = ? 
-                               WHERE id = ?";
+                           SET cantidad = ?, unidadMedida = ?, precio_unitario = ?, subtotal = ?, tipo_precio = ? 
+                           WHERE id = ?";
                         $stmtUpd = $this->db->prepare($sqlUpd);
                         $stmtUpd->bind_param("diddsi", $n_cant_guardar, $unidad_medida, $precio_unitario, $subtotal_fila, $tipo_p, $dv_id);
 

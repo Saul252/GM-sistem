@@ -911,6 +911,7 @@ error_reporting(E_ALL);
 
     <?php require_once __DIR__ . '/egresosComponets/agregarPoductoModal.php'; ?>
     <?php require_once __DIR__ . '/solicitudesCompra/modalProveedoresCompra.php'; ?>
+    <?php require_once __DIR__ . '/solicitudesCompra/detalleCompraModal.php'; ?>
 
     <?php require_once __DIR__ . '/egresosComponets/direccionUbicacionModal.php'; ?>
     <?php require_once __DIR__ . '/egresosComponets/verEditarUbicaciones.php'; ?>
@@ -1062,22 +1063,35 @@ error_reporting(E_ALL);
                             break;
                     }
 
-                    // 6.5 Botones de acción principal (solo PENDIENTE)
+                    // 6.5 Botones de acción principal
                     const botonesAccion = status === 'PENDIENTE' ? `
-      <button type="button" class="btn btn-sm btn-outline-primary border shadow-sm"
-        onclick="edS_abrirModalEditar(${s.id})">
-    <i class="bi bi-pencil-square"></i> Editar
-</button>
-                    <button class="btn btn-sm btn-outline-primary border shadow-sm"
-                onclick="gestionarSolicitud(${s.id})">
-            <i class="bi bi-eye"></i> Gestionar
-        </button>
-        <button class="btn btn-sm btn-outline-danger border shadow-sm"
-                onclick="eliminarSolicitud(${s.id})">
-            <i class="bi bi-trash"></i>
-        </button>
-    ` : '';
+    <button type="button" class="btn btn-sm btn-outline-warning shadow-sm"
+            onclick="edS_abrirModalEditar(${s.id})">
+        <i class="bi bi-pencil-square"></i> Editar
+    </button>
+    <button type="button" class="btn btn-sm btn-outline-success shadow-sm"
+            onclick="gestionarSolicitud(${s.id})">
+        <i class="bi bi-check2-circle"></i> Procesar
+    </button>
+    <button type="button" class="btn btn-sm btn-outline-danger shadow-sm"
+            onclick="eliminarSolicitud(${s.id})">
+        <i class="bi bi-trash3"></i>
+    </button>
+` : '';
 
+                    const botonesAccionCancelada = status === 'CANCELADO' ? `
+    <button type="button" class="btn btn-sm btn-outline-purple shadow-sm"
+            onclick="gestionarSolicitud(${s.id})">
+        <i class="bi bi-arrow-repeat"></i> REUTILIZAR
+    </button>
+` : '';
+
+                    const botonCompraDetalle = status === 'RECIBIDO' ? `
+    <button type="button" class="btn btn-sm btn-outline-primary border shadow-sm"
+        onclick="cfcd_abrir('compra',${s.compra_id})">
+    <i class="bi bi-box-arrow-in-down"></i> Ver recepción
+</button>
+`: '';
                     // 6.7 Fila final con textos en MAYÚSCULAS y badge extra pequeño en blanco
                     tablaHTML += `
         <tr>
@@ -1101,7 +1115,11 @@ error_reporting(E_ALL);
             <td class="text-end">
                 <div class="d-flex justify-content-end align-items-center gap-1">
                     ${botonFaltantes}
+                    ${botonCompraDetalle}
                     ${botonesAccion}
+                     ${botonesAccionCancelada}
+                    
+     
                     <button class="btn btn-sm btn-outline-primary border shadow-sm px-3 small"
                         onclick="prepararImpresion(${s.id})"
                         title="Imprimir solicitud">

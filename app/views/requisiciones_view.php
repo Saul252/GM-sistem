@@ -55,7 +55,7 @@
         }
 
         .main-content {
-            padding-top: 45px !important;
+
             background-color: var(--bg-main) !important;
         }
 

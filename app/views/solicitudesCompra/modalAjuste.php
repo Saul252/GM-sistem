@@ -157,6 +157,7 @@
                                        name="distribucion[${p.producto_id}][${alm.id}]"
                                        class="ajF-input-hidden"
                                        data-prod-id="${p.producto_id}"
+                                       data-factor="${p.factor_conversion}"
                                        data-alm-id="${alm.id}"
                                        data-max="${p.cantidad_pendiente}"
                                        disabled>
@@ -344,29 +345,34 @@
     // ═══════════════════════════════════════════════════════════
     function ajF_procesarAjuste() {
         const formData = new FormData();
-
         formData.append('compra_id', document.getElementById('ajF_compra_id').value);
 
-        // Distribución: iterar SOLO los hidden habilitados (fuente de verdad)
         let hayDatos = false;
 
-        document.querySelectorAll('input.ajF-input-hidden').forEach(hidden => {
-            if (hidden.disabled) return;
+        // Iteramos los VISIBLES habilitados (ahí es donde el usuario escribió)
+        document.querySelectorAll('input.ajF-input-visible').forEach(vis => {
+            if (vis.disabled) return;
 
-            const cant = parseFloat(hidden.value) || 0;
-            if (cant <= 0) return;
+            const visibleVal = parseFloat(vis.value) || 0;
+            if (visibleVal <= 0) return;
 
-            const prodId = hidden.dataset.prodId;
-            const almId = hidden.dataset.almId;
+            const factor = parseFloat(vis.dataset.factor) || 1;
+            const base = visibleVal * factor;          // ← visible × factor ✅
 
-            // Cantidad base (valor × factor) — se envía aunque exceda el pendiente
-            formData.append(`distribucion[${prodId}][${almId}]`, hidden.value);
+            const prodId = vis.dataset.prodId;
+            const almId = vis.dataset.almId;
 
-            // Cantidad visible con sufijo "1" (compatibilidad con backend actual)
-            const vis = document.getElementById(`ajF_in_vis_${prodId}_${almId}`);
-            if (vis && vis.value !== '') {
-                formData.append(`distribucion[${prodId}][${almId}]1`, vis.value);
-            }
+            // 1) Cantidad en unidades BASE (lo que debe afectar stock)
+            formData.append(`distribucion[${prodId}][${almId}]`, base.toFixed(2));
+
+            // 2) Cantidad visible (compatibilidad con backend)
+            //    ⚠️ Tú decides: si tu backend usa esta clave para stock,
+            //    debe llevar también "visible × factor", NO el valor crudo.
+            formData.append(`distribucion[${prodId}][${almId}]1`, base.toFixed(2));
+
+            // 3) (Opcional) el valor crudo del input, por si lo necesitas en
+            //    auditoría / log. Renómbralo para no confundir con stock.
+            // formData.append(`distribucion[${prodId}][${almId}]_raw`, visibleVal);
 
             hayDatos = true;
         });
@@ -382,25 +388,25 @@
             showCancelButton: true,
             confirmButtonColor: '#dc3545',
             confirmButtonText: 'Sí, registrar'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                fetch('/cfsistem/app/controllers/egresosController.php?action=procesarAjusteFaltante', {
-                    method: 'POST',
-                    body: formData
+        }).then(result => {
+            if (!result.isConfirmed) return;
+
+            fetch('/cfsistem/app/controllers/egresosController.php?action=procesarAjusteFaltante', {
+                method: 'POST',
+                body: formData
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire('¡Éxito!', data.message, 'success').then(() => location.reload());
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
                 })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire('¡Éxito!', data.message, 'success').then(() => location.reload());
-                        } else {
-                            Swal.fire('Error', data.message, 'error');
-                        }
-                    })
-                    .catch(err => {
-                        Swal.fire('Error', 'No se pudo procesar la solicitud.', 'error');
-                        console.error(err);
-                    });
-            }
+                .catch(err => {
+                    Swal.fire('Error', 'No se pudo procesar la solicitud.', 'error');
+                    console.error(err);
+                });
         });
     }
 </script>

@@ -140,7 +140,7 @@
 /* --- CONTENIDO PRINCIPAL --- */
 .main-content {
     margin-left: var(--sidebar-width);
-    padding-top: calc(var(--nav-height) + 20px);
+    padding-top: calc(var(--nav-height) + 10px) !important;
     padding-left: 20px;
     padding-right: 20px;
     transition: all .3s ease;

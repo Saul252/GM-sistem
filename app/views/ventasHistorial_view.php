@@ -107,7 +107,7 @@
         }
 
         .main-content {
-            margin-top: 20px !important;
+           
             margin-left: var(--sidebar-width);
             padding: 2rem;
             min-height: 100vh;

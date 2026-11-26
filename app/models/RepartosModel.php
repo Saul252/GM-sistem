@@ -1591,125 +1591,132 @@ ORDER BY t.fecha_viaje DESC";
     }
     public function obtenerRutaDeEntregaPorEntrega($entrega_id, $idRuta)
     {
-
         $sql = "SELECT 
-    t.folio_viaje,
-    t.fecha_viaje,
-    t.fecha_llegada,
-    t.estatus_logistico,
-    t.unidad_nombre,
-    t.unidad_placas,
-    t.nombre_chofer,
-    t.ayudantes,
-    t.orden_visita,
-    t.direccion_entrega,
-    t.estatus_parada,
-    t.latitud,
-    t.longitud,
-    t.numeroVenta,
-    t.folio_venta,
-    t.cliente,
-    t.tel_cliente,
-    t.nombreProducto,
-    t.totalCantidad,
-    t.unidadMedida,
-    t.factor,
-    t.unidadReporte,
-    t.equi,
-    t.nombreEqui
+            t.folio_viaje,
+            t.fecha_viaje,
+            t.fecha_llegada,
+            t.estatus_logistico,
+            t.unidad_nombre,
+            t.unidad_placas,
+            t.nombre_chofer,
+            t.ayudantes,
+            t.orden_visita,
+            t.direccion_entrega,
+            t.estatus_parada,
+            t.latitud,
+            t.longitud,
+            t.numeroVenta,
+            t.folio_venta,
+            t.cliente,
+            t.tel_cliente,
+            t.nombreProducto,
+            t.totalCantidad,
+            t.unidadMedida,
+            t.factor,
+            t.unidadReporte,
+            t.equi,
+            t.nombreEqui,
+            t.codigo_lote
 
-FROM (
+        FROM (
 
-    SELECT 
-        tc.viaje_folio AS folio_viaje,
-        tc.fecha_creacion AS fecha_viaje,
-        trm.hora_llegada_real AS fecha_llegada,
-        trm.estado_reparto AS estatus_logistico,
-        tv.nombre AS unidad_nombre,
-        tv.placas AS unidad_placas,
-        u_chofer.nombre AS nombre_chofer,
+            SELECT 
+                tc.viaje_folio AS folio_viaje,
+                tc.fecha_creacion AS fecha_viaje,
+                trm.hora_llegada_real AS fecha_llegada,
+                trm.estado_reparto AS estatus_logistico,
+                tv.nombre AS unidad_nombre,
+                tv.placas AS unidad_placas,
+                u_chofer.nombre AS nombre_chofer,
 
-        (
-            SELECT GROUP_CONCAT(u_ayu.nombre SEPARATOR ' / ') 
-            FROM transporte_tripulantes_detalle ttd
-            INNER JOIN trabajadores u_ayu 
-                ON ttd.usuario_id = u_ayu.id
-            WHERE ttd.reparto_id = tc.reparto_id
-        ) AS ayudantes,
+                (
+                    SELECT GROUP_CONCAT(u_ayu.nombre SEPARATOR ' / ') 
+                    FROM transporte_tripulantes_detalle ttd
+                    INNER JOIN trabajadores u_ayu 
+                        ON ttd.usuario_id = u_ayu.id
+                    WHERE ttd.reparto_id = tc.reparto_id
+                ) AS ayudantes,
 
-        trp.orden_visita,
-        trp.descripcion_punto AS direccion_entrega,
-        trp.estado_punto AS estatus_parada,
-        trp.latitud, 
-        trp.longitud,
+                trp.orden_visita,
+                trp.descripcion_punto AS direccion_entrega,
+                trp.estado_punto AS estatus_parada,
+                trp.latitud, 
+                trp.longitud,
 
-        v.id AS numeroVenta,
-        v.folio AS folio_venta,
+                v.id AS numeroVenta,
+                v.folio AS folio_venta,
 
-        c.nombre_comercial AS cliente,
-        c.telefono AS tel_cliente,
+                c.nombre_comercial AS cliente,
+                c.telefono AS tel_cliente,
 
-        p.nombre AS nombreProducto,
-        p.factor_conversion AS factor,
-        p.unidad_reporte AS unidadReporte,
-        vd.equivalencia AS equi,
-        vd.nombre_odma AS nombreEqui,
+                p.nombre AS nombreProducto,
+                p.factor_conversion AS factor,
+                p.unidad_reporte AS unidadReporte,
+                vd.equivalencia AS equi,
+                vd.nombre_odma AS nombreEqui,
 
-        m.cantidad AS totalCantidad,
-        p.unidad_medida AS unidadMedida
+                m.cantidad AS totalCantidad,
+                p.unidad_medida AS unidadMedida,
 
-    FROM transporte_consolidacion tc
+                (
+                    SELECT GROUP_CONCAT(DISTINCT ls.codigo_lote SEPARATOR ', ')
+                    FROM lotes_movimientos_salida lms
+                    INNER JOIN lotes_stock ls 
+                        ON ls.id = lms.lote_id
+                    WHERE lms.entrega_venta_id = ?
+                ) AS codigo_lote
 
-    INNER JOIN transporte_repartos_maestro trm 
-        ON tc.reparto_id = trm.id
+            FROM transporte_consolidacion tc
 
-    INNER JOIN transporte_vehiculos tv 
-        ON tc.vehiculo_id = tv.id
+            INNER JOIN transporte_repartos_maestro trm 
+                ON tc.reparto_id = trm.id
 
-    INNER JOIN transporte_rutas_puntos trp 
-        ON trm.id = trp.reparto_id 
+            INNER JOIN transporte_vehiculos tv 
+                ON tc.vehiculo_id = tv.id
 
-    INNER JOIN movimientos m 
-        ON trm.entrega_venta_id = m.id
+            INNER JOIN transporte_rutas_puntos trp 
+                ON trm.id = trp.reparto_id 
 
-    INNER JOIN productos p 
-        ON m.producto_id = p.id
-       
-    LEFT JOIN ventas v 
-        ON m.referencia_id = v.id
+            INNER JOIN movimientos m 
+                ON trm.entrega_venta_id = m.id
 
-    -- Subconsulta limpia para separar odma y detalle_venta
-    LEFT JOIN (
-        SELECT 
-            dv.venta_id,
-            dv.producto_id,
-            odma.equivalencia,
-            odma.nombre AS nombre_odma
-        FROM detalle_venta dv
-        INNER JOIN opciones_de_medida_adicional odma 
-            ON odma.id = dv.unidadMedida
-    ) vd ON vd.venta_id = v.id AND vd.producto_id = p.id
+            INNER JOIN productos p 
+                ON m.producto_id = p.id
+               
+            LEFT JOIN ventas v 
+                ON m.referencia_id = v.id
 
-    LEFT JOIN clientes c 
-        ON v.id_cliente = c.id
+            LEFT JOIN (
+                SELECT 
+                    dv.venta_id,
+                    dv.producto_id,
+                    odma.equivalencia,
+                    odma.nombre AS nombre_odma
+                FROM detalle_venta dv
+                INNER JOIN opciones_de_medida_adicional odma 
+                    ON odma.id = dv.unidadMedida
+            ) vd ON vd.venta_id = v.id AND vd.producto_id = p.id
 
-    LEFT JOIN trabajadores u_chofer 
-        ON trm.usuario_encargado_id = u_chofer.id
-   
-    JOIN entregas_venta en 
-        ON en.venta_id = v.id
+            LEFT JOIN clientes c 
+                ON v.id_cliente = c.id
 
-    WHERE en.id = ?
-    AND tc.entrega_id = ?
+            LEFT JOIN trabajadores u_chofer 
+                ON trm.usuario_encargado_id = u_chofer.id
+           
+            JOIN entregas_venta en 
+                ON en.venta_id = v.id
 
-    GROUP BY 
-        tc.viaje_folio,
-        trp.descripcion_punto,
-        p.id
+            WHERE en.id = ?
+            AND tc.entrega_id = ?
 
-) t
+            GROUP BY 
+                tc.viaje_folio,
+                trp.descripcion_punto,
+                p.id
 
-ORDER BY t.fecha_viaje DESC";
+        ) t
+
+        ORDER BY t.fecha_viaje DESC";
 
         $stmt = $this->db->prepare($sql);
 
@@ -1717,7 +1724,7 @@ ORDER BY t.fecha_viaje DESC";
             die($this->db->error);
         }
 
-        $stmt->bind_param("ii", $entrega_id, $entrega_id);
+        $stmt->bind_param("iii", $entrega_id, $entrega_id, $entrega_id);
 
         $stmt->execute();
 
@@ -3547,6 +3554,7 @@ LEFT JOIN clientes c
                 "DELETE FROM lotes_movimientos_salida WHERE entrega_venta_id = ?",
                 "DELETE FROM detalle_entrega WHERE entrega_id = ?",
                 "DELETE FROM transporte_rutas_puntos WHERE entrega_id = ?",
+                "DELETE FROM `lotes_movimientos_salida` WHERE entrega_venta_id = ?",
                 "DELETE FROM transporte_repartos_maestro WHERE entrega_venta_id = ?",
                 "DELETE FROM transporte_consolidacion WHERE entrega_id = ?",
                 "DELETE FROM entregas_venta WHERE id = ?"
